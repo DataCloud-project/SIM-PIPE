@@ -11,6 +11,7 @@ var docker = new Docker({
     });
 var compose = new DockerodeCompose(docker, './sftp_atmoz.yml', 'stfp');
 
+//  start sftp server in host 2 using atmoz docker image
 (async () => {
   await compose.pull();
   var state = await compose.up();
