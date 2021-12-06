@@ -20,6 +20,11 @@ Host 1 settings:
  - Dockerode library (link - https://github.com/apocas/dockerode) is used in the repository
  - After cloning the repository in host 1, run 'npm install' to install node_modules, run 'npm install dockerode' to install dockerode and 'npm install dockerode-compose' to install dockerode-compose. 
  - Port forwarding setup between ports 2375 on the host 1 and host 2.
+ - Start sftp server on host 2 using atmoz sftp docker image
+	- Docker compose file provided in src
+ - Setup ssh with nodejs - node-sftp-client (https://openbase.com/js/node-sftp-client/documentation#list)
+	- npm install ssh2-sftp-client
+
 
 Host 2 settings:
 
@@ -38,4 +43,4 @@ Host 2 settings:
         $ sudo netstat -lntp
 
 ## Current working status
-The controller now can start a container on host 2 based on the specified image. It can create log files and a file containing resource usage statistics (at a single timestamp) of the container run. It can also bind 3 volumes (in, out, work)  from host 2 to the container.
+The controller now can start a container on host 2 based on the specified image. It can create log files and a file containing resource usage statistics (at a single timestamp) of the container run. It can also bind 3 volumes (in, out, work)  from host 2 to the container. The SFTP server on host 2 can be started from host 1, and (sample input) files can be sent to host 2.
