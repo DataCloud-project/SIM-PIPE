@@ -1,0 +1,5 @@
+{
+    "image": "i1",
+    "sample_input_file": "./sample_input.txt",
+    "remote_sftp_dir": "_data"
+}
