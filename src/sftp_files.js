@@ -7,9 +7,18 @@ let sftp = new Client();
 
 var flag = process.argv[2];
 
-localFile = config.get('sample_input_file')
-remoteInputFile = config.get('remote_sftp_dir') + '/in/input.txt'
-remoteOutputFile = config.get('remote_sftp_dir') + '/out/output.txt'
+const inputFile = config.get('input_file');
+// const remoteInputFile = config.get('remote_sftp_dir') + '/in/input.txt';
+// const remoteOutputFile = config.get('remote_sftp_dir') + '/out/output.txt';
+
+const remoteInputFile = 'in/input.txt';
+const remoteOutputFile = 'out/output.txt';
+
+const sim_id = config.get("sim_id");
+const run_id = config.get("run_id");
+const step_number = config.get("step_number");
+
+const target_dir = './' + sim_id + '/' + run_id + '/' + step_number;
 
 options = {
     host:"127.0.0.1",
@@ -19,10 +28,12 @@ options = {
 }
 
 function send_input(localFile, remoteFile) {
+    // store input file to the target directory
+    fs.copyFileSync(localFile, target_dir + '/input.txt');
+    
+    // send input file to the sandbox
     sftp.connect(options).then(() => {
-        // return sftp.list('_data');
         return sftp.put(localFile, remoteFile);    
-        // sftp.put(data, '_data/in/input.txt');
     }).then(() => {
         sftp.end();
     }).catch((err) => {
@@ -30,12 +41,12 @@ function send_input(localFile, remoteFile) {
     });
 }
 
-function receive_output(remoteFile) {
-    let dest = fs.createWriteStream('copy.txt');
+function receive_output(remoteOutputFile, ) { 
+    let dest = fs.createWriteStream(target_dir + '/' + 'output.txt'  );
     sftp.connect(options)
     .then(() => {
-        return sftp.get(remoteFile, dest);
-    })
+        return sftp.get(remoteOutputFile, dest);
+    })    
     .then(() => {
         sftp.end();
     })
@@ -43,8 +54,33 @@ function receive_output(remoteFile) {
         console.error(err.message);
     });
 }
+
+function clear_storage() {     
+    sftp.connect(options)
+    .then(() => {
+        return sftp.rmdir('work', true);
+    })
+    // .then(() => {
+    //     // flush out in, out and work folders in the sandbox for the next simulation
+        
+    // })
+    // .then(() => {
+    //     // flush out in, out and work folders in the sandbox for the next simulation
+    //     sftp.delete(remoteOutputFile);
+    // })
+    .then(() => {
+        sftp.end();
+    })
+    .catch(err => {
+        console.error(err.message);
+    });
+}
+
+fs.mkdirSync(target_dir, { recursive: true });
 if(flag == 'put')
-    send_input(localFile, remoteInputFile);
-else
-    receive_output(remoteOutputFile);
+    send_input(inputFile, remoteInputFile);
+else if(flag == 'get')
+    receive_output(remoteOutputFile, remoteInputFile);
+else if (flag == 'clear')
+    clear_storage()
 module.exports = {send_input, receive_output};
