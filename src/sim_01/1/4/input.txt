@@ -1,2 +1,0 @@
-This is sample input from host 1
-
