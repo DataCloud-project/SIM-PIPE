@@ -1,6 +1,8 @@
 var Docker = require('dockerode');
 var fs     = require('fs');
 let config = require('config')
+let _ = require('lodash/core');
+let async = require("async");
 
 // localFile = config.get('input_file')
 // const remoteInputFile = 'in/input.txt';
@@ -33,7 +35,7 @@ const target_dir = './' + sim_id + '/' + run_id + '/' + step_number;
 
 // execSync(sender.send_input(localFile, remoteFile));
 // .then(() => 
-var created_container; 
+var created_container, statsInterval, counter = 1; 
 docker.createContainer({
   Image: config.get('image'),
   Tty: true,  
@@ -44,91 +46,57 @@ docker.createContainer({
 })
 .then((container) => {created_container = container; return container.start({})})
 .then(() => {
-  let ID = created_container.id;  
-  console.log('Container ID: ', ID);
-  created_container.wait();
-  return ID;
-})
-.then((ID) => {
-  created_container.logs({follow: false,stdout: true,stderr: true,stdin: true}, (err, stream) => {
-    if(err) {
-      return logger.error(err.message);
-    }
-    // let filename = './logs_'+ ID +'.txt'	//filename with container id
-    let filename = target_dir + '/logs.txt';
-    fs.writeFile(filename, stream.toString('utf8'), (err, result) => {
-      if(err) console.log('error', err);
+  console.log('Container created with ID: ', created_container.id);
+  statsInterval = setInterval(function(){ getStats(created_container) }, 1000);    
+});
+
+async function getStats(created_container) {
+  // if container stops, then stop the timer
+  docker.listContainers((err, containers) => {
+    let ids = [];
+    containers.forEach(function (containerInfo) {
+      ids.push(docker.getContainer(containerInfo.Id).id);
+      // console.log('id', docker.getContainer(containerInfo.Id).id);
     });
-    // console.log('Container logs saved to file', filename);
-  });
-});
-
-
-// async function controller() {
-//   await start_container();
-
-// }
-
-// function start_container() {
-//   return new Promise(resolve => {
-//     container.start();
-//     resolve();
-//   });
-// }
-
-// function wait_for_container(container) {
-//   let ID = container.id  
-//   console.log('Container ID: ', ID);
-//   container.wait(
-// }
-/*
-docker.createContainer({
-  Image: config.get('image'),
-  Tty: true,  
-  Binds: ['/var/lib/docker/volumes/volume_vm/_data/in:/app/in', 
-          '/var/lib/docker/volumes/volume_vm/_data/out:/app/out',
-          '/var/lib/docker/volumes/volume_vm/_data/work:/app/work'],
-}, (err, container) => {
-    
-      container.start({}, (err, data) => {  
-        let ID = container.id  
-        console.log('Container ID: ', ID);
-
-        container.wait((err, data) => {
-          // get container logs on exit
-          container.logs({follow: false,stdout: true,stderr: true,stdin: true}, (err, stream) => {
-            if(err) {
-              return logger.error(err.message);
-            }
-            let filename = './logs_'+ ID +'.txt'	//filename with container id
-            fs.writeFile(filename, stream.toString('utf8'), (err, result) => {
-              if(err) console.log('error', err);
-            });
-            console.log('Container logs saved to file', filename);
-          
-          });
-        });    
+    // console.log(ids);
+    // console.log(""+created_container.id);
+    if(!ids.includes("" + created_container.id)) {
+      // console.log('Stopping stats');
+      stopStats();
+      // console.log('getting logs');
+      // collect logs of th stoppped container
+      created_container.logs({follow: false,stdout: true,stderr: true,stdin: true}, (err, stream) => {
+        if(err) {
+          return logger.error(err.message);
+        }
+        let filename = target_dir + '/logs.txt';
+        fs.writeFile(filename, stream.toString('utf8'), (err, result) => {
+          if(err) console.log('error', err);
+        });
       });
-});
- volumes: 'volume_vm:/app'
- volumes: ['volume_vm:/app']
- volumes: {'volume_vm:/app'} - compile error
- volumes: "volume_vm:/app"
- volumes: {
-    "volume_vm": "/app" 
+      return;
     }
- volumes: {
-    "/var/lib/docker/volumes/volume_vm/_data": "/app" 
+    // collect statstics as long as the container is running
+    else {  
+      // console.log('Collecting statistics');
+      created_container.stats({ stream: false }, function (err, stream) {
+        if (err) { console.log('error'); }
+        var filename = target_dir + '/stats.' + counter + '.txt';
+        counter = counter + 1;
+        var subset = _.pick(stream, ['cpu_stats', 'memory_stats', 'name', 'id']); //store only required details
+        // var subset = _.pick(_.flatten(stream), ['cpu_stats:{cpu_usage}', 'memory_stats', 'name', 'id']); //store only required details
+        // fs.writeFile(filename, JSON.stringify(subset, null, ' '), (err, result) => {
+        fs.writeFile(filename, JSON.stringify(subset, null, ' '), (err, result) => {
+          if(err) console.log('error', err);
+        });
+        // console.log(stream);
+        console.log('Saved to file', filename);
+     });
     }
- volumes: {
-    "/var/lib/docker/volumes/volume_vm/": "/app" 
-    }
-  HostConfig : {
-    Binds: ["/var/lib/docker/volumes/volume_vm/_data:/app"]
-  }
-  HostConfig: {
-    Binds: ['/var/lib/docker/volumes/volume_vm/_data:/app']
-  }
-  Binds: ['/var/lib/docker/volumes/volume_vm/_data:/app']
+  }); 
+}
 
-  */
+function stopStats() {
+  clearInterval(statsInterval);
+}
+

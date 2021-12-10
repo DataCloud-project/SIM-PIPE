@@ -1,0 +1,17 @@
+{
+ "cpu_stats": {
+  "cpu_usage": {
+   "total_usage": 0,
+   "usage_in_kernelmode": 0,
+   "usage_in_usermode": 0
+  },
+  "throttling_data": {
+   "periods": 0,
+   "throttled_periods": 0,
+   "throttled_time": 0
+  }
+ },
+ "memory_stats": {},
+ "name": "/recursing_neumann",
+ "id": "132e8136217252e9bc7b32df08f359ad1ca950093882f05ff7c93591891d6798"
+}
