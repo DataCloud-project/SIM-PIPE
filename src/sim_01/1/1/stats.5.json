@@ -1,6 +1,6 @@
 {
- "read": "2021-12-10T16:32:56.105969028Z",
- "preread": "2021-12-10T16:32:55.079214226Z",
+ "read": "2021-12-13T15:06:52.131760138Z",
+ "preread": "2021-12-13T15:06:51.128016634Z",
  "pids_stats": {
   "current": 2
  },
@@ -18,15 +18,15 @@
  "storage_stats": {},
  "cpu_stats": {
   "cpu_usage": {
-   "total_usage": 75871677,
+   "total_usage": 61785956,
    "percpu_usage": [
-    9704343,
-    66167334
+    20113860,
+    41672096
    ],
-   "usage_in_kernelmode": 20000000,
-   "usage_in_usermode": 10000000
+   "usage_in_kernelmode": 40000000,
+   "usage_in_usermode": 0
   },
-  "system_cpu_usage": 386250000000,
+  "system_cpu_usage": 10834400000000,
   "online_cpus": 2,
   "throttling_data": {
    "periods": 0,
@@ -36,15 +36,15 @@
  },
  "precpu_stats": {
   "cpu_usage": {
-   "total_usage": 75871677,
+   "total_usage": 61785956,
    "percpu_usage": [
-    9704343,
-    66167334
+    20113860,
+    41672096
    ],
-   "usage_in_kernelmode": 20000000,
-   "usage_in_usermode": 10000000
+   "usage_in_kernelmode": 40000000,
+   "usage_in_usermode": 0
   },
-  "system_cpu_usage": 384370000000,
+  "system_cpu_usage": 10832470000000,
   "online_cpus": 2,
   "throttling_data": {
    "periods": 0,
@@ -53,8 +53,8 @@
   }
  },
  "memory_stats": {
-  "usage": 688128,
-  "max_usage": 4108288,
+  "usage": 716800,
+  "max_usage": 4009984,
   "stats": {
    "active_anon": 0,
    "active_file": 0,
@@ -62,27 +62,27 @@
    "dirty": 0,
    "hierarchical_memory_limit": 9223372036854772000,
    "hierarchical_memsw_limit": 9223372036854772000,
-   "inactive_anon": 270336,
+   "inactive_anon": 135168,
    "inactive_file": 0,
    "mapped_file": 0,
-   "pgfault": 1419,
+   "pgfault": 1353,
    "pgmajfault": 0,
-   "pgpgin": 924,
-   "pgpgout": 871,
-   "rss": 270336,
+   "pgpgin": 891,
+   "pgpgout": 840,
+   "rss": 135168,
    "rss_huge": 0,
    "total_active_anon": 0,
    "total_active_file": 0,
    "total_cache": 0,
    "total_dirty": 0,
-   "total_inactive_anon": 270336,
+   "total_inactive_anon": 135168,
    "total_inactive_file": 0,
    "total_mapped_file": 0,
-   "total_pgfault": 1419,
+   "total_pgfault": 1353,
    "total_pgmajfault": 0,
-   "total_pgpgin": 924,
-   "total_pgpgout": 871,
-   "total_rss": 270336,
+   "total_pgpgin": 891,
+   "total_pgpgout": 840,
+   "total_rss": 135168,
    "total_rss_huge": 0,
    "total_unevictable": 0,
    "total_writeback": 0,
@@ -91,12 +91,12 @@
   },
   "limit": 2076495872
  },
- "name": "/practical_wozniak",
- "id": "44559d0e5013c326b80e122c2bd478ea2a7608402aa7a947d38594d06643eadf",
+ "name": "/dazzling_gates",
+ "id": "0c07c540e27bbeeba89c66bd7a152e87d3fc57fdeedec90a22bf5e73f2f624db",
  "networks": {
   "eth0": {
-   "rx_bytes": 2301,
-   "rx_packets": 17,
+   "rx_bytes": 2086,
+   "rx_packets": 16,
    "rx_errors": 0,
    "rx_dropped": 0,
    "tx_bytes": 0,
