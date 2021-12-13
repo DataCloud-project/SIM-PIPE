@@ -1,6 +1,10 @@
 var Docker = require('dockerode');
 var fs     = require('fs');
 let config = require('config')
+let _ = require('lodash/core');
+let async = require("async");
+const path = require('path'); 
+
 
 // localFile = config.get('input_file')
 // const remoteInputFile = 'in/input.txt';
@@ -30,10 +34,11 @@ const sim_id = config.get("sim_id");
 const run_id = config.get("run_id");
 const step_number = config.get("step_number");
 const target_dir = './' + sim_id + '/' + run_id + '/' + step_number;
+const pollingInterval = 500;
 
 // execSync(sender.send_input(localFile, remoteFile));
 // .then(() => 
-var created_container; 
+var created_container, statsInterval, counter = 1; 
 docker.createContainer({
   Image: config.get('image'),
   Tty: true,  
@@ -44,91 +49,82 @@ docker.createContainer({
 })
 .then((container) => {created_container = container; return container.start({})})
 .then(() => {
-  let ID = created_container.id;  
-  console.log('Container ID: ', ID);
-  created_container.wait();
-  return ID;
-})
-.then((ID) => {
-  created_container.logs({follow: false,stdout: true,stderr: true,stdin: true}, (err, stream) => {
-    if(err) {
-      return logger.error(err.message);
-    }
-    // let filename = './logs_'+ ID +'.txt'	//filename with container id
-    let filename = target_dir + '/logs.txt';
-    fs.writeFile(filename, stream.toString('utf8'), (err, result) => {
-      if(err) console.log('error', err);
+  console.log('Container created with ID: ', created_container.id);
+  statsInterval = setInterval(function(){ getStats(created_container) }, pollingInterval);    
+});
+
+async function getStats(created_container) {
+  // if container stops, then stop the timer
+  docker.listContainers((err, containers) => {
+    let ids = [];
+    containers.forEach(function (containerInfo) {
+      ids.push(docker.getContainer(containerInfo.Id).id);
     });
-    // console.log('Container logs saved to file', filename);
-  });
-});
 
+    if(!ids.includes("" + created_container.id)) {
+      stopStats();
+      parseStats();
 
-// async function controller() {
-//   await start_container();
-
-// }
-
-// function start_container() {
-//   return new Promise(resolve => {
-//     container.start();
-//     resolve();
-//   });
-// }
-
-// function wait_for_container(container) {
-//   let ID = container.id  
-//   console.log('Container ID: ', ID);
-//   container.wait(
-// }
-/*
-docker.createContainer({
-  Image: config.get('image'),
-  Tty: true,  
-  Binds: ['/var/lib/docker/volumes/volume_vm/_data/in:/app/in', 
-          '/var/lib/docker/volumes/volume_vm/_data/out:/app/out',
-          '/var/lib/docker/volumes/volume_vm/_data/work:/app/work'],
-}, (err, container) => {
-    
-      container.start({}, (err, data) => {  
-        let ID = container.id  
-        console.log('Container ID: ', ID);
-
-        container.wait((err, data) => {
-          // get container logs on exit
-          container.logs({follow: false,stdout: true,stderr: true,stdin: true}, (err, stream) => {
-            if(err) {
-              return logger.error(err.message);
-            }
-            let filename = './logs_'+ ID +'.txt'	//filename with container id
-            fs.writeFile(filename, stream.toString('utf8'), (err, result) => {
-              if(err) console.log('error', err);
-            });
-            console.log('Container logs saved to file', filename);
-          
-          });
-        });    
+      // collect logs of the stoppped container
+      created_container.logs({follow: false,stdout: true,stderr: true,stdin: true}, (err, stream) => {
+        if(err) {
+          return logger.error(err.message);
+        }
+        let filename = target_dir + '/logs.txt';
+        fs.writeFile(filename, stream.toString('utf8'), (err, result) => {
+          if(err) console.log('error', err);
+        });
       });
-});
- volumes: 'volume_vm:/app'
- volumes: ['volume_vm:/app']
- volumes: {'volume_vm:/app'} - compile error
- volumes: "volume_vm:/app"
- volumes: {
-    "volume_vm": "/app" 
+      return;
     }
- volumes: {
-    "/var/lib/docker/volumes/volume_vm/_data": "/app" 
+    // collect statstics as long as the container is running
+    else {  
+      created_container.stats({ stream: false }, function (err, stream) {
+        if (err) { console.log('error'); }
+        var filename = target_dir + '/stats.' + counter + '.json';
+        counter = counter + 1;
+        fs.writeFile(filename, JSON.stringify(stream, null, ' '), (err, result) => {
+          if(err) console.log('error', err);
+        });
+     });
     }
- volumes: {
-    "/var/lib/docker/volumes/volume_vm/": "/app" 
-    }
-  HostConfig : {
-    Binds: ["/var/lib/docker/volumes/volume_vm/_data:/app"]
-  }
-  HostConfig: {
-    Binds: ['/var/lib/docker/volumes/volume_vm/_data:/app']
-  }
-  Binds: ['/var/lib/docker/volumes/volume_vm/_data:/app']
+  }); 
+}
 
-  */
+function stopStats() {
+  clearInterval(statsInterval);
+}
+
+async function parseStats() {
+  const dirName = target_dir;
+  fileList = fs.readdirSync(dirName);
+  let stats = [];
+  for (let i = 0; i < fileList.length; i++) {
+    const filename = fileList[i];
+    if (!filename.startsWith("stats")) continue;
+
+    const fullFilename = path.join(dirName, filename);
+    data = fs.readFileSync(fullFilename, { encoding: "utf-8" });
+      
+        try {
+          const fileContent = JSON.parse(data);
+          if(fileContent['read'].startsWith("0001-01-01T00:00:00Z"))
+            break;
+          
+          let timestamp = fileContent['read'];
+          let cpu = fileContent['cpu_stats']['cpu_usage']['total_usage'];
+          let memory = fileContent['memory_stats']['usage'];
+          let memory_max = fileContent['memory_stats']['max_usage'];
+          let net = fileContent['networks']['eth0']['rx_bytes'];
+          stats.push({timestamp, cpu, memory, memory_max, net});
+          
+        } catch (err) {
+          console.error(`error while parsing file: ${fullFilename}`);
+        }
+       
+  }
+  console.log(stats);
+  let json = JSON.stringify(stats, null, ' ');
+  fs.appendFileSync(target_dir + '/statistics.json', json);
+
+}
