@@ -27,9 +27,9 @@ options = {
     password: 'user1'
 }
 
-function send_input(localFile, remoteFile) {
+async function put_to_Sandbox(localFile, remoteFile, storageFile) {
     // store input file to the target directory
-    fs.copyFileSync(localFile, target_dir + '/input.txt');
+    fs.copyFileSync(localFile, storageFile);
     
     // send input file to the sandbox
     sftp.connect(options).then(() => {
@@ -41,8 +41,8 @@ function send_input(localFile, remoteFile) {
     });
 }
 
-function receive_output(remoteOutputFile, ) { 
-    let dest = fs.createWriteStream(target_dir + '/' + 'output.txt'  );
+async function get_from_Sandbox(remoteOutputFile, storeOutputFile) { 
+    let dest = fs.createWriteStream( storeOutputFile );
     sftp.connect(options)
     .then(() => {
         return sftp.get(remoteOutputFile, dest);
@@ -55,32 +55,24 @@ function receive_output(remoteOutputFile, ) {
     });
 }
 
-function clear_storage() {     
-    sftp.connect(options)
-    .then(() => {
-        return sftp.rmdir('work', true);
-    })
-    // .then(() => {
-    //     // flush out in, out and work folders in the sandbox for the next simulation
-        
-    // })
-    // .then(() => {
-    //     // flush out in, out and work folders in the sandbox for the next simulation
-    //     sftp.delete(remoteOutputFile);
-    // })
-    .then(() => {
-        sftp.end();
-    })
-    .catch(err => {
-        console.error(err.message);
-    });
-}
+async function clear_Sandbox() {
+    await sftp.connect(options);
+    let dirList = ['./in/', './out/', './work/'];
+    for (const dir of dirList) {
+      let fileList = await sftp.list(dir);
+      for (const file of fileList) {
+        console.log(file['name']);
+        await sftp.delete(dir + file['name']);
+      }
+    }
+    await sftp.end();
+  }
 
 fs.mkdirSync(target_dir, { recursive: true });
 if(flag == 'put')
-    send_input(inputFile, remoteInputFile);
+    put_to_Sandbox(inputFile, remoteInputFile, target_dir + '/input.txt');
 else if(flag == 'get')
-    receive_output(remoteOutputFile, remoteInputFile);
+    get_from_Sandbox(remoteOutputFile, target_dir + '/' + 'output.txt');
 else if (flag == 'clear')
-    clear_storage()
-module.exports = {send_input, receive_output};
+    clear_Sandbox();
+module.exports = {put_to_Sandbox, get_from_Sandbox, clear_Sandbox};
