@@ -1,6 +1,2 @@
-import yaml from 'js-yaml';
-
-import message from './prout.js';
-
-console.log(message);
-console.log('fuck');
+// eslint-disable-next-line no-console
+console.log('Here should be the HTTP API');

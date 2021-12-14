@@ -51,6 +51,10 @@ module.exports = {
       ignorePattern: "\/\/ eslint-disable-next-line",
     }],
     'indent': 'off',
+    'function-paren-newline': 'off',
+    '@typescript-eslint/consistent-type-imports': ['warn', {
+      prefer: 'type-imports',
+    }],
   },
   settings: {
     'import/parsers': {
