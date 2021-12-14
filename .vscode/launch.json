@@ -7,14 +7,38 @@
     {
       "type": "pwa-node",
       "request": "launch",
-      "name": "Launch Program",
+      "name": "Launch controller",
       "skipFiles": [
         "<node_internals>/**"
       ],
-      "program": "${workspaceFolder}/src/index.ts",
-      "outFiles": [
-        "${workspaceFolder}/**/*.js"
-      ]
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        "--nolazy",
+        "--experimental-specifier-resolution=node",
+        "--loader",
+        "ts-node/esm/transpile-only",
+      ],
+      "args": ["src/controller.ts"],
+      "cwd": "${workspaceRoot}",
+      "internalConsoleOptions": "openOnSessionStart"
+    },
+    {
+      "type": "pwa-node",
+      "request": "launch",
+      "name": "Launch sftp-utils",
+      "skipFiles": [
+        "<node_internals>/**"
+      ],
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        "--nolazy",
+        "--experimental-specifier-resolution=node",
+        "--loader",
+        "ts-node/esm/transpile-only",
+      ],
+      "args": ["src/sftp-utils.ts", "get"],
+      "cwd": "${workspaceRoot}",
+      "internalConsoleOptions": "openOnSessionStart"
     }
   ]
 }
