@@ -1,5 +1,4 @@
-module.exports = {
-  'getImages': function (recipe) {
+  export function getImages (recipe) {
     var images = [];
     var serviceNames = Object.keys(recipe.services || []);
 

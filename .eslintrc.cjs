@@ -5,14 +5,14 @@ module.exports = {
   },
   extends: [
     'plugin:node/recommended',
-    'airbnb-base',
-    'airbnb-typescript/base',
     'plugin:import/recommended',
     'plugin:import/typescript',
-    'plugin:unicorn/recommended',
     'plugin:eslint-comments/recommended',
     "plugin:@typescript-eslint/recommended",
     'plugin:@typescript-eslint/recommended-requiring-type-checking',
+    'airbnb-base',
+    'airbnb-typescript/base',
+    'plugin:unicorn/recommended',
   ],
   parser: '@typescript-eslint/parser',
   parserOptions: {
@@ -50,6 +50,7 @@ module.exports = {
       tabWidth: 2,
       ignorePattern: "\/\/ eslint-disable-next-line",
     }],
+    'indent': 'off',
   },
   settings: {
     'import/parsers': {
