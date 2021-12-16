@@ -18,9 +18,10 @@ The back end of the SIM-PIPE tool will perform simulations and analytics related
 ## Prerequisite
 
 SIM-PIPE Backend Sandbox (https://github.com/DataCloud-project/SIM-PIPE-Sandbox) should be installed and setup before using the Simulation controller. This is an isolated environment where execution of the simulations takes place.
+
 ## Description
 
-There are two hosts: host 1 and host 2. The SIM-PIPE simulation controller will run in host 1. Host 2 acts as a sandbox. As the request with a pipeline description comes in from the UI, the controller will run each step in host 2. The controller uses dockerode remote docker library and serves the following purposes:
+The SIM-PIPE tool works on two hosts. The SIM-PIPE simulation controller and SIM-PIPE Sandbox will run on these separate hosts. As the request with a pipeline description comes in from the UI, the controller will run each step in the sandbox. The controller uses dockerode remote docker library and serves the following purposes:
  - Transfer the input file from to host 2 using SFTP
  - Start a container on host 2 attaching volume on host 2's local storage with binds to 3 directories: in, out, and work
  - Resume/pause/stop a container if a request comes from UI
@@ -37,15 +38,47 @@ There are two hosts: host 1 and host 2. The SIM-PIPE simulation controller will 
                     ├── logs         # logs generated from stdout and stderr
                     └── statistics   # CPU, memory, and network usage of the execution
 
-## Environment settings
+## Install
 
-The setup for the implementation is given below. 
+The simulation controller can be set up in a windows machine by following the steps below.
 
-Host 1 settings: 
+### Install VirtualBox
 
- - System Windows 10 with docker desktop installed.
- - Dockerode library (link - https://github.com/apocas/dockerode) is used in the repository
- - After cloning the repository in host 1, run 'npm install' to install node_modules, run 'npm install dockerode' to install dockerode. 
- - Port forwarding setup between ports 2375 on the host 1 and host 2.
- - Setup ssh with nodejs - node-sftp-client (https://openbase.com/js/node-sftp-client/documentation#list)
-	- npm install ssh2-sftp-client
+Install Oracle >VM VirtualBox on windows machine by following the installation instructions from [VirtualBox official site] (https://www.virtualbox.org/). The SIM-PIPE Sandbox component will be deployed in it. Please check the [SIM-PIPE Backend Sandbox repository] (https://github.com/DataCloud-project/SIM-PIPE-Sandbox) to install the sandbox. Port forwarding should be set up for port 2375.
+
+### Install Docker in Windows
+
+You can find more information about the installation of Docker Desktop for Windows on the [official Docker website](https://docs.docker.com/get-docker/). Make sure that in settings docker daemon is not exposed in port 2375.
+
+    
+    > Expose daemon on tcp://localhost:2375 without TLS option should be unchecked.
+
+### Install Node.js on Windows
+
+Install Node.js on windows machine by following the installation instructions from [Node.js official site] (https://nodejs.org/en/download/).
+
+### Install Simulation Controller
+
+Clone the SIM-PIPE Simulation Controller into a folder using the command
+
+    $ git clone https://github.com/DataCloud-project/SIM-PIPE-Simulation-Controller.git
+
+After entering into the cloned folder, run the following commands to install Node.js, [Dockerode] (https://github.com/apocas/dockerode), and [ssh2-ftp-client] (https://github.com/theophilusx/ssh2-sftp-client). Also install winston logger for loggin.
+
+    $ npm install # installs node_modules in the current folder
+    $ npm install dockerode
+    $ npm install ssh2-sftp-client
+    $ npm install winston
+
+## Usage 
+
+### Starting a simulation
+
+Set the following envrionment variables with details about the simulation. 
+
+    $ SET SIM_ID=sim_id             # simulation ID of the simulation you wish to start
+    $ SET RUN_ID=run_id             # run ID corresponding to the current execution of simulation
+    $ SET STEP_NUMBER=step_number   # number of pipeline step you wish to run
+    $ SET IMAGE=image               # container image of the pipeline step
+    $ SET INPUT_PATH=path/to/input  # path to the input file of pipeline step
+
