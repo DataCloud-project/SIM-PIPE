@@ -3,17 +3,29 @@
 [![GitHub Issues](https://img.shields.io/github/issues/DataCloud-project/SIM-PIPE-backend.svg)](https://github.com/DataCloud-project/SIM-PIPE-backend/issues)
 [![License](https://img.shields.io/badge/license-Apache2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
-# SIM-PIPE-backend
+# CONTENTS
+
+ * SIM-PIPE-Backend Introduction
+ * SIM-PIPE Simulation Controller
+    * Prerequisite
+    * Description
+    * Installation
+    * Usage
+
+
+# SIM-PIPE-Backend Introduction
 
 The back end of the SIM-PIPE tool will perform simulations and analytics related to a specific simulation job or run and will expose REST APIs for the front end and other services. 
 - The back-end will expose a dispatcher service that will dispatch requests and jobs to other sub-components of the back-end and will be implemented as a thin RESTful web service. The back-end includes a sandbox that implements the actual simulation. 
 - The sandbox will provide metrics to a monitoring service. These metrics will be stored and associated with a simulation and particular run in a database. 
 - Intermediate files that are produced by each step that takes part in the simulation will be stored on disk to feed further steps of the pipeline and can be provided to the user of the simulator to analyse the performance/function of the steps. 
 - Simulation runs will be performed in an asynchronous manner. The simulation API will provide a controllable queue of pending simulations (allowing adding/removing items by the user as well as starting and ending a “run”).
-- Finally, a simulation analytics service will be implemented that will use metrics data gathered for each run and perform statistical analysis. The results of these analyses will be provided through the REST API and can be displayed to the user during or after a simulation run.
+- Finally, a simulation analytics service will be implemented that will use metrics data gathered for each run and perform statistical analysis. The results of these analyses will be provided through the REST API and can be displayed to the user during or after a simulation run.  
+  
 
 
-# SIM-PIPE simulation controller setup
+
+# SIM-PIPE Simulation Controller
 
 ## Prerequisite
 
@@ -21,9 +33,9 @@ SIM-PIPE Backend Sandbox (https://github.com/DataCloud-project/SIM-PIPE-Sandbox)
 
 ## Description
 
-The SIM-PIPE tool works on two hosts. The SIM-PIPE simulation controller and SIM-PIPE Sandbox will run on these separate hosts. As the request with a pipeline description comes in from the UI, the controller will run each step in the sandbox. The controller uses dockerode remote docker library and serves the following purposes:
- - Transfer the input file from to host 2 using SFTP
- - Start a container on host 2 attaching volume on host 2's local storage with binds to 3 directories: in, out, and work
+The SIM-PIPE tool works on two hosts. The SIM-PIPE simulation controller and SIM-PIPE Sandbox will run on these separate hosts. As the request with a pipeline description comes in from the UI, the controller will run each step in the Sandbox. The controller uses Dockerode remote docker library and serves the following purposes:
+ - Transfer the input file from to Sandbox using SFTP
+ - Start a container on Sandbox attaching volume on its's local storage with binds to 3 directories: in, out, and work. The containers follow the template to take input from /in, put intermedaiate files to /work and store output in /output.
  - Resume/pause/stop a container if a request comes from UI
  - Get the output and work files from the local storage to the persistent database in host 1
  - For each container started, get the resource usage statistics (time series of CPU, memory and network usage) and logs of the run.
@@ -38,7 +50,8 @@ The SIM-PIPE tool works on two hosts. The SIM-PIPE simulation controller and SIM
                     ├── logs         # logs generated from stdout and stderr
                     └── statistics   # CPU, memory, and network usage of the execution
 
-## Install
+ - Once the simulation is completed and all relevant files have been retreived, the simulation controller then cleans out the /in, /work and /out folders in Sandbox local storage to prepare for the next run. 
+## Installation
 
 The simulation controller can be set up in a windows machine by following the steps below.
 
@@ -63,7 +76,7 @@ Clone the SIM-PIPE Simulation Controller into a folder using the command
 
     $ git clone https://github.com/DataCloud-project/SIM-PIPE-Simulation-Controller.git
 
-After entering into the cloned folder, run the following commands to install Node.js, [Dockerode] (https://github.com/apocas/dockerode), and [ssh2-ftp-client] (https://github.com/theophilusx/ssh2-sftp-client). Also install winston logger for loggin.
+After entering into the cloned folder, run the following commands to install Node.js, [Dockerode] (https://github.com/apocas/dockerode), and [ssh2-ftp-client] (https://github.com/theophilusx/ssh2-sftp-client). Also install winston logger for logging.
 
     $ npm install # installs node_modules in the current folder
     $ npm install dockerode
@@ -74,6 +87,8 @@ After entering into the cloned folder, run the following commands to install Nod
 
 ### Starting a simulation
 
+[SIM-PIPE Backend Sandbox] (https://github.com/DataCloud-project/SIM-PIPE-Sandbox) should be set up before starting the simulation. Ensure that the docker daemon in Sandbox is listening to port 2375.
+
 Set the following envrionment variables with details about the simulation. 
 
     $ SET SIM_ID=sim_id             # simulation ID of the simulation you wish to start
@@ -81,4 +96,24 @@ Set the following envrionment variables with details about the simulation.
     $ SET STEP_NUMBER=step_number   # number of pipeline step you wish to run
     $ SET IMAGE=image               # container image of the pipeline step
     $ SET INPUT_PATH=path/to/input  # path to the input file of pipeline step
+
+Go to src folder and run controller.js
+
+    $ cd src
+    $ node controller.js
+
+The simulation controller will then send the input files to the sandbox and start the simulation. Once the simulation completes, the output file, run time resource usage metrics, and log files will be stored in a new folder. Below is an example of a test simulation.
+
+    $ node controller.js
+    info: Dec-16-2021 15:28:30: Sent simulation input to Sandbox
+    info: Dec-16-2021 15:28:30: Starting simulation in Sandbox
+    info: Dec-16-2021 15:28:31: New container created with ID: 5c3a722a8348d31c184b4bb10632dcfe2ccdd237cbe8fafad5bb04d5bd4e48eb
+    info: Dec-16-2021 15:28:42: Completed execution of container
+    info: Dec-16-2021 15:28:42: Collected logs from Sandbox
+    info: Dec-16-2021 15:28:42: Collected simulation output from Sandbox
+    info: Dec-16-2021 15:28:45: Deleting files from Sandbox after simulation
+    info: Dec-16-2021 15:28:45: ./in/input.txt deleted
+    info: Dec-16-2021 15:28:45: ./out/output.txt deleted
+    info: Dec-16-2021 15:28:45: ./work/temp.txt deleted
+    info: Dec-16-2021 15:28:45: Stored simulation details to ./sim_01/1/1
 
