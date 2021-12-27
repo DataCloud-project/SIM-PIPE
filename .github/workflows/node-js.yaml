@@ -1,0 +1,25 @@
+
+name: Node.js CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Use Node.js 16
+      uses: actions/setup-node@v2
+      with:
+        node-version: 16
+        cache: 'npm'
+    - run: npm ci
+    - run: npm run lint
+    - run: npm run build
+    # TODO enable when we have tests
+    #- run: npm test
