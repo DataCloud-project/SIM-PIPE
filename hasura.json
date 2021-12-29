@@ -1,0 +1,317 @@
+{
+  "resource_version": 108,
+  "metadata": {
+    "version": 3,
+    "sources": [
+      {
+        "name": "default",
+        "kind": "postgres",
+        "tables": [
+          {
+            "table": {
+              "schema": "dev",
+              "name": "cpu"
+            },
+            "select_permissions": [
+              {
+                "role": "anonymous",
+                "permission": {
+                  "columns": [
+                    "id",
+                    "step_id",
+                    "value",
+                    "time"
+                  ],
+                  "filter": {}
+                }
+              }
+            ]
+          },
+          {
+            "table": {
+              "schema": "dev",
+              "name": "logs"
+            },
+            "select_permissions": [
+              {
+                "role": "anonymous",
+                "permission": {
+                  "columns": [
+                    "step_id",
+                    "text"
+                  ],
+                  "filter": {}
+                }
+              }
+            ]
+          },
+          {
+            "table": {
+              "schema": "dev",
+              "name": "memory"
+            },
+            "select_permissions": [
+              {
+                "role": "anonymous",
+                "permission": {
+                  "columns": [
+                    "id",
+                    "step_id",
+                    "value",
+                    "time"
+                  ],
+                  "filter": {}
+                }
+              }
+            ]
+          },
+          {
+            "table": {
+              "schema": "dev",
+              "name": "runs"
+            },
+            "configuration": {
+              "custom_root_fields": {
+                "insert": "start_run",
+                "select_by_pk": "get_run",
+                "select": "runs",
+                "delete": "delete_previous_run"
+              },
+              "custom_name": "runs",
+              "custom_column_names": {}
+            },
+            "object_relationships": [
+              {
+                "name": "simulation",
+                "using": {
+                  "foreign_key_constraint_on": "simulation_id"
+                }
+              }
+            ],
+            "array_relationships": [
+              {
+                "name": "steps",
+                "using": {
+                  "foreign_key_constraint_on": {
+                    "column": "run_id",
+                    "table": {
+                      "schema": "dev",
+                      "name": "steps"
+                    }
+                  }
+                }
+              }
+            ],
+            "select_permissions": [
+              {
+                "role": "anonymous",
+                "permission": {
+                  "columns": [
+                    "simulation_id",
+                    "dsl",
+                    "created",
+                    "status",
+                    "started",
+                    "ended",
+                    "run_id"
+                  ],
+                  "filter": {}
+                }
+              }
+            ]
+          },
+          {
+            "table": {
+              "schema": "dev",
+              "name": "simulations"
+            },
+            "configuration": {
+              "custom_root_fields": {
+                "insert": "create_simulations",
+                "insert_one": "create_simulation",
+                "select_by_pk": "get_simulation",
+                "select": "simulations",
+                "delete": "delete_simulations",
+                "delete_by_pk": "delete_simulation"
+              },
+              "custom_name": "simulations",
+              "custom_column_names": {}
+            },
+            "array_relationships": [
+              {
+                "name": "runs",
+                "using": {
+                  "foreign_key_constraint_on": {
+                    "column": "simulation_id",
+                    "table": {
+                      "schema": "dev",
+                      "name": "runs"
+                    }
+                  }
+                }
+              }
+            ],
+            "select_permissions": [
+              {
+                "role": "anonymous",
+                "permission": {
+                  "columns": [
+                    "created",
+                    "simulation_id",
+                    "model_id"
+                  ],
+                  "filter": {}
+                }
+              }
+            ]
+          },
+          {
+            "table": {
+              "schema": "dev",
+              "name": "steps"
+            },
+            "configuration": {
+              "custom_root_fields": {},
+              "custom_name": "steps",
+              "custom_column_names": {}
+            },
+            "object_relationships": [
+              {
+                "name": "log",
+                "using": {
+                  "foreign_key_constraint_on": {
+                    "column": "step_id",
+                    "table": {
+                      "schema": "dev",
+                      "name": "logs"
+                    }
+                  }
+                }
+              }
+            ],
+            "array_relationships": [
+              {
+                "name": "cpu",
+                "using": {
+                  "foreign_key_constraint_on": {
+                    "column": "step_id",
+                    "table": {
+                      "schema": "dev",
+                      "name": "cpu"
+                    }
+                  }
+                }
+              },
+              {
+                "name": "memory",
+                "using": {
+                  "foreign_key_constraint_on": {
+                    "column": "step_id",
+                    "table": {
+                      "schema": "dev",
+                      "name": "memory"
+                    }
+                  }
+                }
+              }
+            ],
+            "select_permissions": [
+              {
+                "role": "anonymous",
+                "permission": {
+                  "columns": [
+                    "created",
+                    "ended",
+                    "name",
+                    "run_id",
+                    "started",
+                    "status",
+                    "step_id"
+                  ],
+                  "filter": {}
+                }
+              }
+            ]
+          }
+        ],
+        "configuration": {
+          "connection_info": {
+            "use_prepared_statements": false,
+            "database_url": "postgres://postgres:example_password_do_not_use_in_prod@postgres:5432/postgres",
+            "isolation_level": "read-committed"
+          }
+        }
+      }
+    ],
+    "query_collections": [
+      {
+        "name": "allowed-queries",
+        "definition": {
+          "queries": [
+            {
+              "name": "simulations",
+              "query": "query simulations {\n  simulations(order_by: {created: desc}) {\n    created\n    simulation_id\n    runs(order_by: {started: desc}) {\n      run_id\n      created\n      status\n      started\n      ended\n    }\n  }\n}"
+            },
+            {
+              "name": "get_simulation",
+              "query": "query prout($simulation_id: uuid!) {\n  get_simulation(simulation_id: $simulation_id) {\n    created\n    runs {\n      created\n      ended\n      status\n      started\n      dsl\n      steps(order_by: {step_id: asc}) {\n        name\n        status\n        log {\n          text\n        }\n        cpu(order_by: {time: asc}) {\n          value\n          time\n        }\n        memory(order_by: {time: asc}) {\n          time\n          value\n        }\n      }\n    }\n  }\n}"
+            },
+            {
+              "name": "get_run",
+              "query": "query get_run($run_id: uuid!) {\n  get_run(run_id: $run_id) {\n    created\n    started\n    ended\n    dsl\n    steps(order_by: {step_id: asc}) {\n      created\n      started\n      ended\n      cpu(order_by: {time: asc}) {\n        time\n        value\n      }\n      log {\n        text\n      }\n      memory(order_by: {time: asc}) {\n        time\n        value\n      }\n      name\n      status\n    }\n  }\n}"
+            }
+          ]
+        }
+      }
+    ],
+    "allowlist": [
+      {
+        "collection": "allowed-queries"
+      }
+    ],
+    "rest_endpoints": [
+      {
+        "definition": {
+          "query": {
+            "collection_name": "allowed-queries",
+            "query_name": "get_run"
+          }
+        },
+        "url": "runs/:run_id",
+        "methods": [
+          "GET"
+        ],
+        "name": "get_run",
+        "comment": null
+      },
+      {
+        "definition": {
+          "query": {
+            "collection_name": "allowed-queries",
+            "query_name": "simulations"
+          }
+        },
+        "url": "simulations",
+        "methods": [
+          "GET"
+        ],
+        "name": "simulations",
+        "comment": "Fetch all simulations and runs sorted by date"
+      },
+      {
+        "definition": {
+          "query": {
+            "collection_name": "allowed-queries",
+            "query_name": "get_simulation"
+          }
+        },
+        "url": "simulations/:simulation_id",
+        "methods": [
+          "GET"
+        ],
+        "name": "get_simulation",
+        "comment": "Get the simulation and the relevant data."
+      }
+    ]
+  }
+}
