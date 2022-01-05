@@ -72,8 +72,16 @@ async function createContainer() : Promise<void> {
   })) as unknown as Docker.Container;
   await createdContainer.start({});
 
-  logger.info('Container created with ID:', createdContainer.id);
+  logger.info(`Container created with ID: ${createdContainer.id}`);
 }
+
+type StatSample = {
+  timestamp: string,
+  cpu: number,
+  memory: number,
+  memory_max: number,
+  net: number,
+};
 
 export async function parseStats() : Promise<void> {
   const directoryName = targetDirectory;
@@ -87,13 +95,7 @@ export async function parseStats() : Promise<void> {
       const fullFilename = path.join(directoryName, fileName);
       const data = await fsAsync.readFile(fullFilename, { encoding: 'utf-8' });
 
-      let sample: {
-        timestamp: string,
-        cpu: number,
-        memory: number,
-        memory_max: number,
-        net: number,
-      };
+      let sample: StatSample;
       try {
         const fileContent = JSON.parse(data) as {
           read: string;
@@ -112,8 +114,9 @@ export async function parseStats() : Promise<void> {
             };
           };
         };
+
         if (fileContent.read.startsWith('0001-01-01T00:00:00Z')) {
-          throw new Error('Invalid date');
+          return undefined;
         }
 
         const timestamp = fileContent.read;
@@ -125,16 +128,20 @@ export async function parseStats() : Promise<void> {
         sample = {
           timestamp, cpu, memory, memory_max, net,
         };
-      } catch {
-        throw new Error(`error while parsing file: ${fullFilename}`);
+      } catch (error) {
+        logger.error(`Error parsing stats file: ${fullFilename}`);
+        logger.error(error);
+        return undefined;
       }
       // Delete temporary stat file after extracting required values
       await fsAsync.unlink(fullFilename);
       return sample;
     }));
 
+  const definedStats = stats.filter((stat) : stat is StatSample => stat !== undefined);
+
   // We need to sort the stats by timestamp because we read them in parallel
-  const sortedStats = stats.sort((a, b) => a.timestamp.localeCompare(b.timestamp));
+  const sortedStats = definedStats.sort((a, b) => a.timestamp.localeCompare(b.timestamp));
 
   const json = JSON.stringify(sortedStats, undefined, ' ');
   await fsAsync.appendFile(path.join(directoryName, 'statistics.json'), json);
@@ -185,7 +192,11 @@ export default async function getStats(container: Docker.Container) : Promise<vo
 
 function startStatsPolling() : void {
   timer = setIntervalAsync(async () => {
-    await getStats(createdContainer);
+    try {
+      await getStats(createdContainer);
+    } catch (error) {
+      logger.error(error);
+    }
   }, pollingInterval);
 }
 
@@ -196,5 +207,4 @@ async function start() : Promise<void> {
   await createContainer();
   startStatsPolling();
 }
-
 await start();
