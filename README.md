@@ -78,10 +78,7 @@ Clone the SIM-PIPE Simulation Controller into a folder using the command
 
 After entering into the cloned folder, run the following commands to install Node.js, [Dockerode] (https://github.com/apocas/dockerode), and [ssh2-ftp-client] (https://github.com/theophilusx/ssh2-sftp-client). Also install winston logger for logging.
 
-    $ npm install # installs node_modules in the current folder
-    $ npm install dockerode
-    $ npm install ssh2-sftp-client
-    $ npm install winston
+    $ npm install
 
 ## Usage 
 

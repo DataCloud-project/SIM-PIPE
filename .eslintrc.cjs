@@ -55,6 +55,7 @@ module.exports = {
     '@typescript-eslint/consistent-type-imports': ['warn', {
       prefer: 'type-imports',
     }],
+    'unicorn/no-useless-undefined': 'off',
   },
   settings: {
     'import/parsers': {
