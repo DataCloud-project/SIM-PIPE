@@ -20,7 +20,8 @@
       ],
       "args": ["src/controller.ts"],
       "cwd": "${workspaceRoot}",
-      "internalConsoleOptions": "openOnSessionStart"
+      "internalConsoleOptions": "openOnSessionStart",
+      "envFile": "${workspaceFolder}/.env"
     },
     {
       "type": "pwa-node",
@@ -38,7 +39,8 @@
       ],
       "args": ["src/sftp-utils.ts", "get"],
       "cwd": "${workspaceRoot}",
-      "internalConsoleOptions": "openOnSessionStart"
+      "internalConsoleOptions": "openOnSessionStart",
+      "envFile": "${workspaceFolder}/.env"
     }
   ]
 }
