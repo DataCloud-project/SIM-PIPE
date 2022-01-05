@@ -18,9 +18,10 @@
         "--loader",
         "ts-node/esm/transpile-only",
       ],
-      "args": ["src/controller.ts"],
+      "args": ["src/controller.ts", "remote"],
       "cwd": "${workspaceRoot}",
       "internalConsoleOptions": "openOnSessionStart",
+      "outputCapture": "std",
       "envFile": "${workspaceFolder}/.env"
     },
     {
@@ -40,6 +41,7 @@
       "args": ["src/sftp-utils.ts", "get"],
       "cwd": "${workspaceRoot}",
       "internalConsoleOptions": "openOnSessionStart",
+      "outputCapture": "std",
       "envFile": "${workspaceFolder}/.env"
     }
   ]
