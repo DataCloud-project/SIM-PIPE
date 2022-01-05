@@ -1,2 +1,3 @@
-// eslint-disable-next-line no-console
-console.log('Here should be the HTTP API');
+import logger from './logger.js';
+
+logger.info('Here should be the HTTP API');

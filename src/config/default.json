@@ -1,8 +1,0 @@
-{
-    "image": "i1",
-    "input_file": "./sample_input.txt",
-    "remote_sftp_dir": "_data",
-    "sim_id": "sim_01",
-    "run_id": 1,
-    "step_number": 1
-}

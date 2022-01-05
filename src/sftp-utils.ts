@@ -1,26 +1,23 @@
-// https://openbase.com/js/node-sftp-client/documentation
-
-import config from 'config';
 import fs from 'node:fs';
 import asyncFs from 'node:fs/promises';
 import Client from 'ssh2-sftp-client';
 
+import logger from './logger.js';
+
+// https://openbase.com/js/node-sftp-client/documentation
 const sftp = new Client();
 
-const flag = process.argv[2];
+const simId = process.env.SIM_ID;
+const runId = process.env.RUN_ID;
+const stepNumber = process.env.STEP_NUMBER;
 
-const inputFile = config.get<string>('input_file');
-// const remoteInputFile = config.get('remote_sftp_dir') + '/in/input.txt';
-// const remoteOutputFile = config.get('remote_sftp_dir') + '/out/output.txt';
+if (!simId || !runId || !stepNumber) {
+  throw new Error('Missing environment variables: SIM_ID, RUN_ID, STEP_NUMBER');
+}
 
-const remoteInputFile = 'in/input.txt';
-const remoteOutputFile = 'out/output.txt';
-
-const simId = config.get<string>('sim_id');
-const runId = config.get<string>('run_id');
-const stepNumber = config.get<string>('step_number');
-
+// Create folder to store the simulation details
 const targetDirectory = `./${simId}/${runId}/${stepNumber}`;
+fs.mkdirSync(targetDirectory, { recursive: true });
 
 const options = {
   host: '127.0.0.1',
@@ -39,6 +36,7 @@ export async function putToSandbox(
   await sftp.connect(options);
   try {
     await sftp.put(localFile, remoteFile);
+    logger.info('Sent similation input to Sandbox');
   } finally {
     await sftp.end();
   }
@@ -50,6 +48,7 @@ export async function getFromSandbox(
   await sftp.connect(options);
   try {
     await sftp.get(remoteFile, destination);
+    logger.info('Collected simulation output from Sandbox');
   } finally {
     await sftp.end();
   }
@@ -68,26 +67,9 @@ export async function clearSandbox() : Promise<void> {
     // consider using the p-limit package
     await Promise.all(fileList.flat().map(async (file) => {
       await sftp.delete(file);
+      logger.info(`Deleted ${file} from Sandbox`);
     }));
   } finally {
     await sftp.end();
   }
-}
-
-fs.mkdirSync(targetDirectory, { recursive: true });
-switch (flag) {
-  case 'put': {
-    await putToSandbox(inputFile, remoteInputFile, `${targetDirectory}/input.txt`);
-    break;
-  }
-  case 'get': {
-    await getFromSandbox(remoteOutputFile, `${targetDirectory}/output.txt`);
-    break;
-  }
-  case 'clear': {
-    await clearSandbox();
-    break;
-  }
-  default:
-    throw new Error('Unknown flag');
 }
