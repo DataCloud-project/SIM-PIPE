@@ -140,8 +140,10 @@ export async function parseStats() : Promise<void> {
   await fsAsync.appendFile(path.join(directoryName, 'statistics.json'), json);
 }
 
-async function stopStats() : Promise<void> {
-  await clearIntervalAsync(timer);
+function stopStats() : void {
+  clearIntervalAsync(timer).catch((error) => {
+    logger.error(error);
+  });
 }
 
 export default async function getStats(container: Docker.Container) : Promise<void> {
@@ -151,7 +153,7 @@ export default async function getStats(container: Docker.Container) : Promise<vo
 
   if (!ids.includes(createdContainer.id)) {
     logger.info('Completed execution of container');
-    await stopStats();
+    stopStats();
     await setTimeout(1000); // Wait 1s before parsing the stats
     await parseStats();
 
