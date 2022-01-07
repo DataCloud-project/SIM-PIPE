@@ -86,13 +86,13 @@ After entering into the cloned folder, run the following commands to install Nod
 
 [SIM-PIPE Backend Sandbox] (https://github.com/DataCloud-project/SIM-PIPE-Sandbox) should be set up before starting the simulation. Ensure that the docker daemon in Sandbox is listening to port 2375.
 
-Set the following envrionment variables with details about the simulation. 
+Place the following envrionment variables with details about the simulation in .env file. 
 
-    $ SET SIM_ID=sim_id             # simulation ID of the simulation you wish to start
-    $ SET RUN_ID=run_id             # run ID corresponding to the current execution of simulation
-    $ SET STEP_NUMBER=step_number   # number of pipeline step you wish to run
-    $ SET IMAGE=image               # container image of the pipeline step
-    $ SET INPUT_PATH=path/to/input  # path to the input file of pipeline step
+    SIM_ID=sim_id             # simulation ID of the simulation you wish to start
+    RUN_ID=run_id             # run ID corresponding to the current execution of simulation
+    STEP_NUMBER=step_number   # number of pipeline step you wish to run
+    IMAGE=image               # container image of the pipeline step
+    INPUT_PATH=path/to/input  # path to the input file of pipeline step
 
 Go to src folder and run controller.js
 
