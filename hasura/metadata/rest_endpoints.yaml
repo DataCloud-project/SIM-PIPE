@@ -1,0 +1,27 @@
+- definition:
+    query:
+      collection_name: allowed-queries
+      query_name: get_run
+  url: runs/:run_id
+  methods:
+  - GET
+  name: get_run
+  comment: null
+- definition:
+    query:
+      collection_name: allowed-queries
+      query_name: simulations
+  url: simulations
+  methods:
+  - GET
+  name: simulations
+  comment: Fetch all simulations and runs sorted by date
+- definition:
+    query:
+      collection_name: allowed-queries
+      query_name: get_simulation
+  url: simulations/:simulation_id
+  methods:
+  - GET
+  name: get_simulation
+  comment: Get the simulation and the relevant data.

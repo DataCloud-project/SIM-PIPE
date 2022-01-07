@@ -1,0 +1,35 @@
+table:
+  name: runs
+  schema: simpipe
+configuration:
+  custom_column_names: {}
+  custom_name: runs
+  custom_root_fields:
+    delete: delete_previous_run
+    insert: start_run
+    select: runs
+    select_by_pk: get_run
+object_relationships:
+- name: simulation
+  using:
+    foreign_key_constraint_on: simulation_id
+array_relationships:
+- name: steps
+  using:
+    foreign_key_constraint_on:
+      column: run_id
+      table:
+        name: steps
+        schema: simpipe
+select_permissions:
+- permission:
+    columns:
+    - simulation_id
+    - dsl
+    - created
+    - status
+    - started
+    - ended
+    - run_id
+    filter: {}
+  role: anonymous

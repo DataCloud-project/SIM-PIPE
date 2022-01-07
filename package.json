@@ -10,7 +10,8 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "lint": "eslint --ext .ts src",
     "build": "tsc",
-    "start-compiled": "node --experimental-specifier-resolution=node ./dist/index.js"
+    "start-compiled": "node --experimental-specifier-resolution=node ./dist/index.js",
+    "hasura-console": "npx hasura-cli console --project hasura"
   },
   "engines": {
     "node": ">=16.0.0"
@@ -41,6 +42,7 @@
     "eslint-plugin-node": "^11.1.0",
     "eslint-plugin-simple-import-sort": "^7.0.0",
     "eslint-plugin-unicorn": "^39.0.0",
+    "hasura-cli": "^2.1.1",
     "ts-node": "^10.4.0",
     "typescript": "^4.5.4"
   },
