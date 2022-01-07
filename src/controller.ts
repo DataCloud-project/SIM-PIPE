@@ -116,6 +116,8 @@ export async function parseStats() : Promise<void> {
         };
 
         if (fileContent.read.startsWith('0001-01-01T00:00:00Z')) {
+          // Delete stats file with null values
+          await fsAsync.unlink(fullFilename);
           return undefined;
         }
 
