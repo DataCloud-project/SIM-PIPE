@@ -1,0 +1,12 @@
+table:
+  name: memory
+  schema: simpipe
+select_permissions:
+- permission:
+    columns:
+    - id
+    - step_id
+    - value
+    - time
+    filter: {}
+  role: anonymous

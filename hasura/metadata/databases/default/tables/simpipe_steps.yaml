@@ -1,0 +1,42 @@
+table:
+  name: steps
+  schema: simpipe
+configuration:
+  custom_column_names: {}
+  custom_name: steps
+  custom_root_fields: {}
+object_relationships:
+- name: log
+  using:
+    foreign_key_constraint_on:
+      column: step_id
+      table:
+        name: logs
+        schema: simpipe
+array_relationships:
+- name: cpu
+  using:
+    foreign_key_constraint_on:
+      column: step_id
+      table:
+        name: cpu
+        schema: simpipe
+- name: memory
+  using:
+    foreign_key_constraint_on:
+      column: step_id
+      table:
+        name: memory
+        schema: simpipe
+select_permissions:
+- permission:
+    columns:
+    - created
+    - ended
+    - name
+    - run_id
+    - started
+    - status
+    - step_id
+    filter: {}
+  role: anonymous

@@ -1,3 +1,4 @@
-node_modules
-dist
-src/temp.js
+/node_modules
+/dist
+/src/temp.js
+/[0-9]*
