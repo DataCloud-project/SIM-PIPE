@@ -1,0 +1,31 @@
+# Get all simulations
+query AllSimulations {
+  simulations {
+    simulation_id
+    runs {
+      created
+      simulation {
+        created
+      }
+    }
+  }
+}
+
+query allRunsAndSteps {
+  runs {
+    created
+    started
+    status
+    steps {
+      created
+      ended
+    }
+  }
+}
+
+mutation startNewRun($simulation_id: uuid!) {
+  start_run(object: {dsl: {test: true}, simulation_id: $simulation_id}) {
+    run_id
+    created
+  }
+}

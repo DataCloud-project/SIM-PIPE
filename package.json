@@ -11,7 +11,9 @@
     "lint": "eslint --ext .ts src",
     "build": "tsc",
     "start-compiled": "node --experimental-specifier-resolution=node ./dist/index.js",
-    "hasura-console": "npx hasura-cli console --project hasura"
+    "hasura-console": "npx hasura-cli console --project hasura",
+    "download-db-schema": "npx @apollo/rover graph introspect http://localhost:8080/v1/graphql > src/db/schema.graphql",
+    "codegen-db": "graphql-codegen --config src/db/codegen.yaml"
   },
   "engines": {
     "node": ">=16.0.0"
@@ -27,6 +29,11 @@
   },
   "homepage": "https://github.com/DataCloud-project/SIM-PIPE-Simulation-Controller#readme",
   "devDependencies": {
+    "@graphql-codegen/cli": "2.3.1",
+    "@graphql-codegen/introspection": "2.1.1",
+    "@graphql-codegen/typescript": "2.4.2",
+    "@graphql-codegen/typescript-graphql-request": "^4.3.3",
+    "@graphql-codegen/typescript-operations": "^2.2.2",
     "@types/config": "^0.0.40",
     "@types/dockerode": "^3.3.0",
     "@types/node": "^17.0.5",
@@ -48,6 +55,9 @@
   },
   "dependencies": {
     "dockerode": "^3.3.1",
+    "graphql": "^16.2.0",
+    "graphql-request": "^3.7.0",
+    "graphql-tag": "^2.12.6",
     "set-interval-async": "^2.0.3",
     "ssh2-sftp-client": "^7.2.1",
     "winston": "^3.3.3"

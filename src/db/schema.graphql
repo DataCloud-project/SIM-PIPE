@@ -1,0 +1,1969 @@
+schema {
+  query: query_root
+  mutation: mutation_root
+  subscription: subscription_root
+}
+"whether this query should be cached (Hasura Cloud only)"
+directive @cached("measured in seconds" ttl: Int! = 60, "refresh the cache entry" refresh: Boolean! = false) on QUERY
+scalar Float
+"""
+Boolean expression to compare columns of type "Int". All fields are combined with logical 'AND'.
+"""
+input Int_comparison_exp {
+  _eq: Int
+  _gt: Int
+  _gte: Int
+  _in: [Int!]
+  _is_null: Boolean
+  _lt: Int
+  _lte: Int
+  _neq: Int
+  _nin: [Int!]
+}
+"""
+Boolean expression to compare columns of type "String". All fields are combined with logical 'AND'.
+"""
+input String_comparison_exp {
+  _eq: String
+  _gt: String
+  _gte: String
+  "does the column match the given case-insensitive pattern"
+  _ilike: String
+  _in: [String!]
+  "does the column match the given POSIX regular expression, case insensitive"
+  _iregex: String
+  _is_null: Boolean
+  "does the column match the given pattern"
+  _like: String
+  _lt: String
+  _lte: String
+  _neq: String
+  "does the column NOT match the given case-insensitive pattern"
+  _nilike: String
+  _nin: [String!]
+  "does the column NOT match the given POSIX regular expression, case insensitive"
+  _niregex: String
+  "does the column NOT match the given pattern"
+  _nlike: String
+  "does the column NOT match the given POSIX regular expression, case sensitive"
+  _nregex: String
+  "does the column NOT match the given SQL regular expression"
+  _nsimilar: String
+  "does the column match the given POSIX regular expression, case sensitive"
+  _regex: String
+  "does the column match the given SQL regular expression"
+  _similar: String
+}
+scalar bigint
+"""
+Boolean expression to compare columns of type "bigint". All fields are combined with logical 'AND'.
+"""
+input bigint_comparison_exp {
+  _eq: bigint
+  _gt: bigint
+  _gte: bigint
+  _in: [bigint!]
+  _is_null: Boolean
+  _lt: bigint
+  _lte: bigint
+  _neq: bigint
+  _nin: [bigint!]
+}
+scalar jsonb
+"""
+Boolean expression to compare columns of type "jsonb". All fields are combined with logical 'AND'.
+"""
+input jsonb_comparison_exp {
+  "is the column contained in the given json value"
+  _contained_in: jsonb
+  "does the column contain the given json value at the top level"
+  _contains: jsonb
+  _eq: jsonb
+  _gt: jsonb
+  _gte: jsonb
+  "does the string exist as a top-level key in the column"
+  _has_key: String
+  "do all of these strings exist as top-level keys in the column"
+  _has_keys_all: [String!]
+  "do any of these strings exist as top-level keys in the column"
+  _has_keys_any: [String!]
+  _in: [jsonb!]
+  _is_null: Boolean
+  _lt: jsonb
+  _lte: jsonb
+  _neq: jsonb
+  _nin: [jsonb!]
+}
+"mutation root"
+type mutation_root {
+  """
+  insert a single row into the table: "simpipe.simulations"
+  """
+  create_simulation("the row to be inserted" object: simulations_insert_input!, "on conflict condition" on_conflict: simulations_on_conflict): simulations
+  """
+  insert data into the table: "simpipe.simulations"
+  """
+  create_simulations("the rows to be inserted" objects: [simulations_insert_input!]!, "on conflict condition" on_conflict: simulations_on_conflict): simulations_mutation_response
+  """
+  delete data from the table: "simpipe.runs"
+  """
+  delete_previous_run("filter the rows which have to be deleted" where: runs_bool_exp!): runs_mutation_response
+  """
+  delete single row from the table: "simpipe.runs"
+  """
+  delete_runs_by_pk(run_id: uuid!): runs
+  """
+  delete data from the table: "simpipe.cpu"
+  """
+  delete_simpipe_cpu("filter the rows which have to be deleted" where: simpipe_cpu_bool_exp!): simpipe_cpu_mutation_response
+  """
+  delete single row from the table: "simpipe.cpu"
+  """
+  delete_simpipe_cpu_by_pk(id: bigint!): simpipe_cpu
+  """
+  delete data from the table: "simpipe.logs"
+  """
+  delete_simpipe_logs("filter the rows which have to be deleted" where: simpipe_logs_bool_exp!): simpipe_logs_mutation_response
+  """
+  delete single row from the table: "simpipe.logs"
+  """
+  delete_simpipe_logs_by_pk(step_id: Int!): simpipe_logs
+  """
+  delete data from the table: "simpipe.memory"
+  """
+  delete_simpipe_memory("filter the rows which have to be deleted" where: simpipe_memory_bool_exp!): simpipe_memory_mutation_response
+  """
+  delete single row from the table: "simpipe.memory"
+  """
+  delete_simpipe_memory_by_pk(id: bigint!): simpipe_memory
+  """
+  delete single row from the table: "simpipe.simulations"
+  """
+  delete_simulation("UUID of the simulation" simulation_id: uuid!): simulations
+  """
+  delete data from the table: "simpipe.simulations"
+  """
+  delete_simulations("filter the rows which have to be deleted" where: simulations_bool_exp!): simulations_mutation_response
+  """
+  delete data from the table: "simpipe.steps"
+  """
+  delete_steps("filter the rows which have to be deleted" where: steps_bool_exp!): steps_mutation_response
+  """
+  delete single row from the table: "simpipe.steps"
+  """
+  delete_steps_by_pk(step_id: Int!): steps
+  """
+  insert data into the table: "simpipe.cpu"
+  """
+  insert_simpipe_cpu("the rows to be inserted" objects: [simpipe_cpu_insert_input!]!, "on conflict condition" on_conflict: simpipe_cpu_on_conflict): simpipe_cpu_mutation_response
+  """
+  insert a single row into the table: "simpipe.cpu"
+  """
+  insert_simpipe_cpu_one("the row to be inserted" object: simpipe_cpu_insert_input!, "on conflict condition" on_conflict: simpipe_cpu_on_conflict): simpipe_cpu
+  """
+  insert data into the table: "simpipe.logs"
+  """
+  insert_simpipe_logs("the rows to be inserted" objects: [simpipe_logs_insert_input!]!, "on conflict condition" on_conflict: simpipe_logs_on_conflict): simpipe_logs_mutation_response
+  """
+  insert a single row into the table: "simpipe.logs"
+  """
+  insert_simpipe_logs_one("the row to be inserted" object: simpipe_logs_insert_input!, "on conflict condition" on_conflict: simpipe_logs_on_conflict): simpipe_logs
+  """
+  insert data into the table: "simpipe.memory"
+  """
+  insert_simpipe_memory("the rows to be inserted" objects: [simpipe_memory_insert_input!]!, "on conflict condition" on_conflict: simpipe_memory_on_conflict): simpipe_memory_mutation_response
+  """
+  insert a single row into the table: "simpipe.memory"
+  """
+  insert_simpipe_memory_one("the row to be inserted" object: simpipe_memory_insert_input!, "on conflict condition" on_conflict: simpipe_memory_on_conflict): simpipe_memory
+  """
+  insert data into the table: "simpipe.steps"
+  """
+  insert_steps("the rows to be inserted" objects: [steps_insert_input!]!, "on conflict condition" on_conflict: steps_on_conflict): steps_mutation_response
+  """
+  insert a single row into the table: "simpipe.steps"
+  """
+  insert_steps_one("the row to be inserted" object: steps_insert_input!, "on conflict condition" on_conflict: steps_on_conflict): steps
+  """
+  insert a single row into the table: "simpipe.runs"
+  """
+  start_run("the row to be inserted" object: runs_insert_input!, "on conflict condition" on_conflict: runs_on_conflict): runs
+  """
+  insert data into the table: "simpipe.runs"
+  """
+  start_runs("the rows to be inserted" objects: [runs_insert_input!]!, "on conflict condition" on_conflict: runs_on_conflict): runs_mutation_response
+  """
+  update data of the table: "simpipe.runs"
+  """
+  update_runs("append existing jsonb value of filtered columns with new jsonb value" _append: runs_append_input, "delete the field or element with specified path (for JSON arrays, negative integers count from the end)" _delete_at_path: runs_delete_at_path_input, "delete the array element with specified index (negative integers count from the end). throws an error if top level container is not an array" _delete_elem: runs_delete_elem_input, "delete key/value pair or string element. key/value pairs are matched based on their key value" _delete_key: runs_delete_key_input, "prepend existing jsonb value of filtered columns with new jsonb value" _prepend: runs_prepend_input, "sets the columns of the filtered rows to the given values" _set: runs_set_input, "filter the rows which have to be updated" where: runs_bool_exp!): runs_mutation_response
+  """
+  update single row of the table: "simpipe.runs"
+  """
+  update_runs_by_pk("append existing jsonb value of filtered columns with new jsonb value" _append: runs_append_input, "delete the field or element with specified path (for JSON arrays, negative integers count from the end)" _delete_at_path: runs_delete_at_path_input, "delete the array element with specified index (negative integers count from the end). throws an error if top level container is not an array" _delete_elem: runs_delete_elem_input, "delete key/value pair or string element. key/value pairs are matched based on their key value" _delete_key: runs_delete_key_input, "prepend existing jsonb value of filtered columns with new jsonb value" _prepend: runs_prepend_input, "sets the columns of the filtered rows to the given values" _set: runs_set_input, pk_columns: runs_pk_columns_input!): runs
+  """
+  update data of the table: "simpipe.cpu"
+  """
+  update_simpipe_cpu("increments the numeric columns with given value of the filtered values" _inc: simpipe_cpu_inc_input, "sets the columns of the filtered rows to the given values" _set: simpipe_cpu_set_input, "filter the rows which have to be updated" where: simpipe_cpu_bool_exp!): simpipe_cpu_mutation_response
+  """
+  update single row of the table: "simpipe.cpu"
+  """
+  update_simpipe_cpu_by_pk("increments the numeric columns with given value of the filtered values" _inc: simpipe_cpu_inc_input, "sets the columns of the filtered rows to the given values" _set: simpipe_cpu_set_input, pk_columns: simpipe_cpu_pk_columns_input!): simpipe_cpu
+  """
+  update data of the table: "simpipe.logs"
+  """
+  update_simpipe_logs("increments the numeric columns with given value of the filtered values" _inc: simpipe_logs_inc_input, "sets the columns of the filtered rows to the given values" _set: simpipe_logs_set_input, "filter the rows which have to be updated" where: simpipe_logs_bool_exp!): simpipe_logs_mutation_response
+  """
+  update single row of the table: "simpipe.logs"
+  """
+  update_simpipe_logs_by_pk("increments the numeric columns with given value of the filtered values" _inc: simpipe_logs_inc_input, "sets the columns of the filtered rows to the given values" _set: simpipe_logs_set_input, pk_columns: simpipe_logs_pk_columns_input!): simpipe_logs
+  """
+  update data of the table: "simpipe.memory"
+  """
+  update_simpipe_memory("increments the numeric columns with given value of the filtered values" _inc: simpipe_memory_inc_input, "sets the columns of the filtered rows to the given values" _set: simpipe_memory_set_input, "filter the rows which have to be updated" where: simpipe_memory_bool_exp!): simpipe_memory_mutation_response
+  """
+  update single row of the table: "simpipe.memory"
+  """
+  update_simpipe_memory_by_pk("increments the numeric columns with given value of the filtered values" _inc: simpipe_memory_inc_input, "sets the columns of the filtered rows to the given values" _set: simpipe_memory_set_input, pk_columns: simpipe_memory_pk_columns_input!): simpipe_memory
+  """
+  update data of the table: "simpipe.simulations"
+  """
+  update_simulations("sets the columns of the filtered rows to the given values" _set: simulations_set_input, "filter the rows which have to be updated" where: simulations_bool_exp!): simulations_mutation_response
+  """
+  update single row of the table: "simpipe.simulations"
+  """
+  update_simulations_by_pk("sets the columns of the filtered rows to the given values" _set: simulations_set_input, pk_columns: simulations_pk_columns_input!): simulations
+  """
+  update data of the table: "simpipe.steps"
+  """
+  update_steps("increments the numeric columns with given value of the filtered values" _inc: steps_inc_input, "sets the columns of the filtered rows to the given values" _set: steps_set_input, "filter the rows which have to be updated" where: steps_bool_exp!): steps_mutation_response
+  """
+  update single row of the table: "simpipe.steps"
+  """
+  update_steps_by_pk("increments the numeric columns with given value of the filtered values" _inc: steps_inc_input, "sets the columns of the filtered rows to the given values" _set: steps_set_input, pk_columns: steps_pk_columns_input!): steps
+}
+scalar numeric
+"""
+Boolean expression to compare columns of type "numeric". All fields are combined with logical 'AND'.
+"""
+input numeric_comparison_exp {
+  _eq: numeric
+  _gt: numeric
+  _gte: numeric
+  _in: [numeric!]
+  _is_null: Boolean
+  _lt: numeric
+  _lte: numeric
+  _neq: numeric
+  _nin: [numeric!]
+}
+"column ordering options"
+enum order_by {
+  "in ascending order, nulls last"
+  asc
+  "in ascending order, nulls first"
+  asc_nulls_first
+  "in ascending order, nulls last"
+  asc_nulls_last
+  "in descending order, nulls first"
+  desc
+  "in descending order, nulls first"
+  desc_nulls_first
+  "in descending order, nulls last"
+  desc_nulls_last
+}
+type query_root {
+  """
+  fetch data from the table: "simpipe.runs" using primary key columns
+  """
+  get_run(run_id: uuid!): runs
+  """
+  fetch data from the table: "simpipe.simulations" using primary key columns
+  """
+  get_simulation("UUID of the simulation" simulation_id: uuid!): simulations
+  "An array relationship"
+  runs("distinct select on columns" distinct_on: [runs_select_column!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" order_by: [runs_order_by!], "filter the rows returned" where: runs_bool_exp): [runs!]!
+  "An aggregate relationship"
+  runs_aggregate("distinct select on columns" distinct_on: [runs_select_column!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" order_by: [runs_order_by!], "filter the rows returned" where: runs_bool_exp): runs_aggregate!
+  """
+  fetch data from the table: "simpipe.cpu"
+  """
+  simpipe_cpu("distinct select on columns" distinct_on: [simpipe_cpu_select_column!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" order_by: [simpipe_cpu_order_by!], "filter the rows returned" where: simpipe_cpu_bool_exp): [simpipe_cpu!]!
+  """
+  fetch aggregated fields from the table: "simpipe.cpu"
+  """
+  simpipe_cpu_aggregate("distinct select on columns" distinct_on: [simpipe_cpu_select_column!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" order_by: [simpipe_cpu_order_by!], "filter the rows returned" where: simpipe_cpu_bool_exp): simpipe_cpu_aggregate!
+  """
+  fetch data from the table: "simpipe.cpu" using primary key columns
+  """
+  simpipe_cpu_by_pk(id: bigint!): simpipe_cpu
+  """
+  fetch data from the table: "simpipe.logs"
+  """
+  simpipe_logs("distinct select on columns" distinct_on: [simpipe_logs_select_column!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" order_by: [simpipe_logs_order_by!], "filter the rows returned" where: simpipe_logs_bool_exp): [simpipe_logs!]!
+  """
+  fetch aggregated fields from the table: "simpipe.logs"
+  """
+  simpipe_logs_aggregate("distinct select on columns" distinct_on: [simpipe_logs_select_column!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" order_by: [simpipe_logs_order_by!], "filter the rows returned" where: simpipe_logs_bool_exp): simpipe_logs_aggregate!
+  """
+  fetch data from the table: "simpipe.logs" using primary key columns
+  """
+  simpipe_logs_by_pk(step_id: Int!): simpipe_logs
+  """
+  fetch data from the table: "simpipe.memory"
+  """
+  simpipe_memory("distinct select on columns" distinct_on: [simpipe_memory_select_column!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" order_by: [simpipe_memory_order_by!], "filter the rows returned" where: simpipe_memory_bool_exp): [simpipe_memory!]!
+  """
+  fetch aggregated fields from the table: "simpipe.memory"
+  """
+  simpipe_memory_aggregate("distinct select on columns" distinct_on: [simpipe_memory_select_column!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" order_by: [simpipe_memory_order_by!], "filter the rows returned" where: simpipe_memory_bool_exp): simpipe_memory_aggregate!
+  """
+  fetch data from the table: "simpipe.memory" using primary key columns
+  """
+  simpipe_memory_by_pk(id: bigint!): simpipe_memory
+  """
+  fetch data from the table: "simpipe.simulations"
+  """
+  simulations("distinct select on columns" distinct_on: [simulations_select_column!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" order_by: [simulations_order_by!], "filter the rows returned" where: simulations_bool_exp): [simulations!]!
+  """
+  fetch aggregated fields from the table: "simpipe.simulations"
+  """
+  simulations_aggregate("distinct select on columns" distinct_on: [simulations_select_column!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" order_by: [simulations_order_by!], "filter the rows returned" where: simulations_bool_exp): simulations_aggregate!
+  """
+  fetch data from the table: "simpipe.steps"
+  """
+  steps("distinct select on columns" distinct_on: [steps_select_column!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" order_by: [steps_order_by!], "filter the rows returned" where: steps_bool_exp): [steps!]!
+  """
+  fetch aggregated fields from the table: "simpipe.steps"
+  """
+  steps_aggregate("distinct select on columns" distinct_on: [steps_select_column!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" order_by: [steps_order_by!], "filter the rows returned" where: steps_bool_exp): steps_aggregate!
+  """
+  fetch data from the table: "simpipe.steps" using primary key columns
+  """
+  steps_by_pk(step_id: Int!): steps
+}
+scalar run_status
+"""
+Boolean expression to compare columns of type "run_status". All fields are combined with logical 'AND'.
+"""
+input run_status_comparison_exp {
+  _eq: run_status
+  _gt: run_status
+  _gte: run_status
+  _in: [run_status!]
+  _is_null: Boolean
+  _lt: run_status
+  _lte: run_status
+  _neq: run_status
+  _nin: [run_status!]
+}
+"""
+Simulation run
+
+
+columns and relationships of "simpipe.runs"
+
+"""
+type runs {
+  created: timestamptz!
+  dsl("JSON select path" path: String): jsonb!
+  ended: timestamptz
+  run_id: uuid!
+  "An object relationship"
+  simulation: simulations!
+  simulation_id: uuid!
+  started: timestamptz
+  status: run_status!
+  """
+  fetch data from the table: "simpipe.steps"
+  """
+  steps("distinct select on columns" distinct_on: [steps_select_column!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" order_by: [steps_order_by!], "filter the rows returned" where: steps_bool_exp): [steps!]!
+  """
+  fetch aggregated fields from the table: "simpipe.steps"
+  """
+  steps_aggregate("distinct select on columns" distinct_on: [steps_select_column!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" order_by: [steps_order_by!], "filter the rows returned" where: steps_bool_exp): steps_aggregate!
+}
+"""
+aggregated selection of "simpipe.runs"
+"""
+type runs_aggregate {
+  aggregate: runs_aggregate_fields
+  nodes: [runs!]!
+}
+"""
+aggregate fields of "simpipe.runs"
+"""
+type runs_aggregate_fields {
+  count(columns: [runs_select_column!], distinct: Boolean): Int!
+  max: runs_max_fields
+  min: runs_min_fields
+}
+"""
+order by aggregate values of table "simpipe.runs"
+"""
+input runs_aggregate_order_by {
+  count: order_by
+  max: runs_max_order_by
+  min: runs_min_order_by
+}
+"append existing jsonb value of filtered columns with new jsonb value"
+input runs_append_input {
+  dsl: jsonb
+}
+"""
+input type for inserting array relation for remote table "simpipe.runs"
+"""
+input runs_arr_rel_insert_input {
+  data: [runs_insert_input!]!
+  "on conflict condition"
+  on_conflict: runs_on_conflict
+}
+"""
+Boolean expression to filter rows from the table "simpipe.runs". All fields are combined with a logical 'AND'.
+"""
+input runs_bool_exp {
+  _and: [runs_bool_exp!]
+  _not: runs_bool_exp
+  _or: [runs_bool_exp!]
+  created: timestamptz_comparison_exp
+  dsl: jsonb_comparison_exp
+  ended: timestamptz_comparison_exp
+  run_id: uuid_comparison_exp
+  simulation: simulations_bool_exp
+  simulation_id: uuid_comparison_exp
+  started: timestamptz_comparison_exp
+  status: run_status_comparison_exp
+  steps: steps_bool_exp
+}
+"""
+unique or primary key constraints on table "simpipe.runs"
+"""
+enum runs_constraint {
+  "unique or primary key constraint"
+  runs_pkey
+}
+"delete the field or element with specified path (for JSON arrays, negative integers count from the end)"
+input runs_delete_at_path_input {
+  dsl: [String!]
+}
+"delete the array element with specified index (negative integers count from the end). throws an error if top level container is not an array"
+input runs_delete_elem_input {
+  dsl: Int
+}
+"delete key/value pair or string element. key/value pairs are matched based on their key value"
+input runs_delete_key_input {
+  dsl: String
+}
+"""
+input type for inserting data into table "simpipe.runs"
+"""
+input runs_insert_input {
+  created: timestamptz
+  dsl: jsonb
+  ended: timestamptz
+  run_id: uuid
+  simulation: simulations_obj_rel_insert_input
+  simulation_id: uuid
+  started: timestamptz
+  status: run_status
+  steps: steps_arr_rel_insert_input
+}
+"aggregate max on columns"
+type runs_max_fields {
+  created: timestamptz
+  ended: timestamptz
+  run_id: uuid
+  simulation_id: uuid
+  started: timestamptz
+}
+"""
+order by max() on columns of table "simpipe.runs"
+"""
+input runs_max_order_by {
+  created: order_by
+  ended: order_by
+  run_id: order_by
+  simulation_id: order_by
+  started: order_by
+}
+"aggregate min on columns"
+type runs_min_fields {
+  created: timestamptz
+  ended: timestamptz
+  run_id: uuid
+  simulation_id: uuid
+  started: timestamptz
+}
+"""
+order by min() on columns of table "simpipe.runs"
+"""
+input runs_min_order_by {
+  created: order_by
+  ended: order_by
+  run_id: order_by
+  simulation_id: order_by
+  started: order_by
+}
+"""
+response of any mutation on the table "simpipe.runs"
+"""
+type runs_mutation_response {
+  "number of rows affected by the mutation"
+  affected_rows: Int!
+  "data from the rows affected by the mutation"
+  returning: [runs!]!
+}
+"""
+on conflict condition type for table "simpipe.runs"
+"""
+input runs_on_conflict {
+  constraint: runs_constraint!
+  update_columns: [runs_update_column!]! = []
+  where: runs_bool_exp
+}
+"""
+Ordering options when selecting data from "simpipe.runs".
+"""
+input runs_order_by {
+  created: order_by
+  dsl: order_by
+  ended: order_by
+  run_id: order_by
+  simulation: simulations_order_by
+  simulation_id: order_by
+  started: order_by
+  status: order_by
+  steps_aggregate: steps_aggregate_order_by
+}
+"primary key columns input for table: runs"
+input runs_pk_columns_input {
+  run_id: uuid!
+}
+"prepend existing jsonb value of filtered columns with new jsonb value"
+input runs_prepend_input {
+  dsl: jsonb
+}
+"""
+select columns of table "simpipe.runs"
+"""
+enum runs_select_column {
+  "column name"
+  created
+  "column name"
+  dsl
+  "column name"
+  ended
+  "column name"
+  run_id
+  "column name"
+  simulation_id
+  "column name"
+  started
+  "column name"
+  status
+}
+"""
+input type for updating data in table "simpipe.runs"
+"""
+input runs_set_input {
+  created: timestamptz
+  dsl: jsonb
+  ended: timestamptz
+  run_id: uuid
+  simulation_id: uuid
+  started: timestamptz
+  status: run_status
+}
+"""
+update columns of table "simpipe.runs"
+"""
+enum runs_update_column {
+  "column name"
+  created
+  "column name"
+  dsl
+  "column name"
+  ended
+  "column name"
+  run_id
+  "column name"
+  simulation_id
+  "column name"
+  started
+  "column name"
+  status
+}
+"""
+columns and relationships of "simpipe.cpu"
+"""
+type simpipe_cpu {
+  id: bigint!
+  step_id: Int!
+  time: timestamp!
+  value: numeric!
+}
+"""
+aggregated selection of "simpipe.cpu"
+"""
+type simpipe_cpu_aggregate {
+  aggregate: simpipe_cpu_aggregate_fields
+  nodes: [simpipe_cpu!]!
+}
+"""
+aggregate fields of "simpipe.cpu"
+"""
+type simpipe_cpu_aggregate_fields {
+  avg: simpipe_cpu_avg_fields
+  count(columns: [simpipe_cpu_select_column!], distinct: Boolean): Int!
+  max: simpipe_cpu_max_fields
+  min: simpipe_cpu_min_fields
+  stddev: simpipe_cpu_stddev_fields
+  stddev_pop: simpipe_cpu_stddev_pop_fields
+  stddev_samp: simpipe_cpu_stddev_samp_fields
+  sum: simpipe_cpu_sum_fields
+  var_pop: simpipe_cpu_var_pop_fields
+  var_samp: simpipe_cpu_var_samp_fields
+  variance: simpipe_cpu_variance_fields
+}
+"""
+order by aggregate values of table "simpipe.cpu"
+"""
+input simpipe_cpu_aggregate_order_by {
+  avg: simpipe_cpu_avg_order_by
+  count: order_by
+  max: simpipe_cpu_max_order_by
+  min: simpipe_cpu_min_order_by
+  stddev: simpipe_cpu_stddev_order_by
+  stddev_pop: simpipe_cpu_stddev_pop_order_by
+  stddev_samp: simpipe_cpu_stddev_samp_order_by
+  sum: simpipe_cpu_sum_order_by
+  var_pop: simpipe_cpu_var_pop_order_by
+  var_samp: simpipe_cpu_var_samp_order_by
+  variance: simpipe_cpu_variance_order_by
+}
+"""
+input type for inserting array relation for remote table "simpipe.cpu"
+"""
+input simpipe_cpu_arr_rel_insert_input {
+  data: [simpipe_cpu_insert_input!]!
+  "on conflict condition"
+  on_conflict: simpipe_cpu_on_conflict
+}
+"aggregate avg on columns"
+type simpipe_cpu_avg_fields {
+  id: Float
+  step_id: Float
+  value: Float
+}
+"""
+order by avg() on columns of table "simpipe.cpu"
+"""
+input simpipe_cpu_avg_order_by {
+  id: order_by
+  step_id: order_by
+  value: order_by
+}
+"""
+Boolean expression to filter rows from the table "simpipe.cpu". All fields are combined with a logical 'AND'.
+"""
+input simpipe_cpu_bool_exp {
+  _and: [simpipe_cpu_bool_exp!]
+  _not: simpipe_cpu_bool_exp
+  _or: [simpipe_cpu_bool_exp!]
+  id: bigint_comparison_exp
+  step_id: Int_comparison_exp
+  time: timestamp_comparison_exp
+  value: numeric_comparison_exp
+}
+"""
+unique or primary key constraints on table "simpipe.cpu"
+"""
+enum simpipe_cpu_constraint {
+  "unique or primary key constraint"
+  cpu_pkey
+}
+"""
+input type for incrementing numeric columns in table "simpipe.cpu"
+"""
+input simpipe_cpu_inc_input {
+  id: bigint
+  step_id: Int
+  value: numeric
+}
+"""
+input type for inserting data into table "simpipe.cpu"
+"""
+input simpipe_cpu_insert_input {
+  id: bigint
+  step_id: Int
+  time: timestamp
+  value: numeric
+}
+"aggregate max on columns"
+type simpipe_cpu_max_fields {
+  id: bigint
+  step_id: Int
+  time: timestamp
+  value: numeric
+}
+"""
+order by max() on columns of table "simpipe.cpu"
+"""
+input simpipe_cpu_max_order_by {
+  id: order_by
+  step_id: order_by
+  time: order_by
+  value: order_by
+}
+"aggregate min on columns"
+type simpipe_cpu_min_fields {
+  id: bigint
+  step_id: Int
+  time: timestamp
+  value: numeric
+}
+"""
+order by min() on columns of table "simpipe.cpu"
+"""
+input simpipe_cpu_min_order_by {
+  id: order_by
+  step_id: order_by
+  time: order_by
+  value: order_by
+}
+"""
+response of any mutation on the table "simpipe.cpu"
+"""
+type simpipe_cpu_mutation_response {
+  "number of rows affected by the mutation"
+  affected_rows: Int!
+  "data from the rows affected by the mutation"
+  returning: [simpipe_cpu!]!
+}
+"""
+on conflict condition type for table "simpipe.cpu"
+"""
+input simpipe_cpu_on_conflict {
+  constraint: simpipe_cpu_constraint!
+  update_columns: [simpipe_cpu_update_column!]! = []
+  where: simpipe_cpu_bool_exp
+}
+"""
+Ordering options when selecting data from "simpipe.cpu".
+"""
+input simpipe_cpu_order_by {
+  id: order_by
+  step_id: order_by
+  time: order_by
+  value: order_by
+}
+"primary key columns input for table: simpipe_cpu"
+input simpipe_cpu_pk_columns_input {
+  id: bigint!
+}
+"""
+select columns of table "simpipe.cpu"
+"""
+enum simpipe_cpu_select_column {
+  "column name"
+  id
+  "column name"
+  step_id
+  "column name"
+  time
+  "column name"
+  value
+}
+"""
+input type for updating data in table "simpipe.cpu"
+"""
+input simpipe_cpu_set_input {
+  id: bigint
+  step_id: Int
+  time: timestamp
+  value: numeric
+}
+"aggregate stddev on columns"
+type simpipe_cpu_stddev_fields {
+  id: Float
+  step_id: Float
+  value: Float
+}
+"""
+order by stddev() on columns of table "simpipe.cpu"
+"""
+input simpipe_cpu_stddev_order_by {
+  id: order_by
+  step_id: order_by
+  value: order_by
+}
+"aggregate stddev_pop on columns"
+type simpipe_cpu_stddev_pop_fields {
+  id: Float
+  step_id: Float
+  value: Float
+}
+"""
+order by stddev_pop() on columns of table "simpipe.cpu"
+"""
+input simpipe_cpu_stddev_pop_order_by {
+  id: order_by
+  step_id: order_by
+  value: order_by
+}
+"aggregate stddev_samp on columns"
+type simpipe_cpu_stddev_samp_fields {
+  id: Float
+  step_id: Float
+  value: Float
+}
+"""
+order by stddev_samp() on columns of table "simpipe.cpu"
+"""
+input simpipe_cpu_stddev_samp_order_by {
+  id: order_by
+  step_id: order_by
+  value: order_by
+}
+"aggregate sum on columns"
+type simpipe_cpu_sum_fields {
+  id: bigint
+  step_id: Int
+  value: numeric
+}
+"""
+order by sum() on columns of table "simpipe.cpu"
+"""
+input simpipe_cpu_sum_order_by {
+  id: order_by
+  step_id: order_by
+  value: order_by
+}
+"""
+update columns of table "simpipe.cpu"
+"""
+enum simpipe_cpu_update_column {
+  "column name"
+  id
+  "column name"
+  step_id
+  "column name"
+  time
+  "column name"
+  value
+}
+"aggregate var_pop on columns"
+type simpipe_cpu_var_pop_fields {
+  id: Float
+  step_id: Float
+  value: Float
+}
+"""
+order by var_pop() on columns of table "simpipe.cpu"
+"""
+input simpipe_cpu_var_pop_order_by {
+  id: order_by
+  step_id: order_by
+  value: order_by
+}
+"aggregate var_samp on columns"
+type simpipe_cpu_var_samp_fields {
+  id: Float
+  step_id: Float
+  value: Float
+}
+"""
+order by var_samp() on columns of table "simpipe.cpu"
+"""
+input simpipe_cpu_var_samp_order_by {
+  id: order_by
+  step_id: order_by
+  value: order_by
+}
+"aggregate variance on columns"
+type simpipe_cpu_variance_fields {
+  id: Float
+  step_id: Float
+  value: Float
+}
+"""
+order by variance() on columns of table "simpipe.cpu"
+"""
+input simpipe_cpu_variance_order_by {
+  id: order_by
+  step_id: order_by
+  value: order_by
+}
+"""
+columns and relationships of "simpipe.logs"
+"""
+type simpipe_logs {
+  step_id: Int!
+  text: String!
+}
+"""
+aggregated selection of "simpipe.logs"
+"""
+type simpipe_logs_aggregate {
+  aggregate: simpipe_logs_aggregate_fields
+  nodes: [simpipe_logs!]!
+}
+"""
+aggregate fields of "simpipe.logs"
+"""
+type simpipe_logs_aggregate_fields {
+  avg: simpipe_logs_avg_fields
+  count(columns: [simpipe_logs_select_column!], distinct: Boolean): Int!
+  max: simpipe_logs_max_fields
+  min: simpipe_logs_min_fields
+  stddev: simpipe_logs_stddev_fields
+  stddev_pop: simpipe_logs_stddev_pop_fields
+  stddev_samp: simpipe_logs_stddev_samp_fields
+  sum: simpipe_logs_sum_fields
+  var_pop: simpipe_logs_var_pop_fields
+  var_samp: simpipe_logs_var_samp_fields
+  variance: simpipe_logs_variance_fields
+}
+"aggregate avg on columns"
+type simpipe_logs_avg_fields {
+  step_id: Float
+}
+"""
+Boolean expression to filter rows from the table "simpipe.logs". All fields are combined with a logical 'AND'.
+"""
+input simpipe_logs_bool_exp {
+  _and: [simpipe_logs_bool_exp!]
+  _not: simpipe_logs_bool_exp
+  _or: [simpipe_logs_bool_exp!]
+  step_id: Int_comparison_exp
+  text: String_comparison_exp
+}
+"""
+unique or primary key constraints on table "simpipe.logs"
+"""
+enum simpipe_logs_constraint {
+  "unique or primary key constraint"
+  logs_pkey
+}
+"""
+input type for incrementing numeric columns in table "simpipe.logs"
+"""
+input simpipe_logs_inc_input {
+  step_id: Int
+}
+"""
+input type for inserting data into table "simpipe.logs"
+"""
+input simpipe_logs_insert_input {
+  step_id: Int
+  text: String
+}
+"aggregate max on columns"
+type simpipe_logs_max_fields {
+  step_id: Int
+  text: String
+}
+"aggregate min on columns"
+type simpipe_logs_min_fields {
+  step_id: Int
+  text: String
+}
+"""
+response of any mutation on the table "simpipe.logs"
+"""
+type simpipe_logs_mutation_response {
+  "number of rows affected by the mutation"
+  affected_rows: Int!
+  "data from the rows affected by the mutation"
+  returning: [simpipe_logs!]!
+}
+"""
+input type for inserting object relation for remote table "simpipe.logs"
+"""
+input simpipe_logs_obj_rel_insert_input {
+  data: simpipe_logs_insert_input!
+  "on conflict condition"
+  on_conflict: simpipe_logs_on_conflict
+}
+"""
+on conflict condition type for table "simpipe.logs"
+"""
+input simpipe_logs_on_conflict {
+  constraint: simpipe_logs_constraint!
+  update_columns: [simpipe_logs_update_column!]! = []
+  where: simpipe_logs_bool_exp
+}
+"""
+Ordering options when selecting data from "simpipe.logs".
+"""
+input simpipe_logs_order_by {
+  step_id: order_by
+  text: order_by
+}
+"primary key columns input for table: simpipe_logs"
+input simpipe_logs_pk_columns_input {
+  step_id: Int!
+}
+"""
+select columns of table "simpipe.logs"
+"""
+enum simpipe_logs_select_column {
+  "column name"
+  step_id
+  "column name"
+  text
+}
+"""
+input type for updating data in table "simpipe.logs"
+"""
+input simpipe_logs_set_input {
+  step_id: Int
+  text: String
+}
+"aggregate stddev on columns"
+type simpipe_logs_stddev_fields {
+  step_id: Float
+}
+"aggregate stddev_pop on columns"
+type simpipe_logs_stddev_pop_fields {
+  step_id: Float
+}
+"aggregate stddev_samp on columns"
+type simpipe_logs_stddev_samp_fields {
+  step_id: Float
+}
+"aggregate sum on columns"
+type simpipe_logs_sum_fields {
+  step_id: Int
+}
+"""
+update columns of table "simpipe.logs"
+"""
+enum simpipe_logs_update_column {
+  "column name"
+  step_id
+  "column name"
+  text
+}
+"aggregate var_pop on columns"
+type simpipe_logs_var_pop_fields {
+  step_id: Float
+}
+"aggregate var_samp on columns"
+type simpipe_logs_var_samp_fields {
+  step_id: Float
+}
+"aggregate variance on columns"
+type simpipe_logs_variance_fields {
+  step_id: Float
+}
+"""
+columns and relationships of "simpipe.memory"
+"""
+type simpipe_memory {
+  id: bigint!
+  step_id: Int!
+  time: timestamp!
+  value: numeric!
+}
+"""
+aggregated selection of "simpipe.memory"
+"""
+type simpipe_memory_aggregate {
+  aggregate: simpipe_memory_aggregate_fields
+  nodes: [simpipe_memory!]!
+}
+"""
+aggregate fields of "simpipe.memory"
+"""
+type simpipe_memory_aggregate_fields {
+  avg: simpipe_memory_avg_fields
+  count(columns: [simpipe_memory_select_column!], distinct: Boolean): Int!
+  max: simpipe_memory_max_fields
+  min: simpipe_memory_min_fields
+  stddev: simpipe_memory_stddev_fields
+  stddev_pop: simpipe_memory_stddev_pop_fields
+  stddev_samp: simpipe_memory_stddev_samp_fields
+  sum: simpipe_memory_sum_fields
+  var_pop: simpipe_memory_var_pop_fields
+  var_samp: simpipe_memory_var_samp_fields
+  variance: simpipe_memory_variance_fields
+}
+"""
+order by aggregate values of table "simpipe.memory"
+"""
+input simpipe_memory_aggregate_order_by {
+  avg: simpipe_memory_avg_order_by
+  count: order_by
+  max: simpipe_memory_max_order_by
+  min: simpipe_memory_min_order_by
+  stddev: simpipe_memory_stddev_order_by
+  stddev_pop: simpipe_memory_stddev_pop_order_by
+  stddev_samp: simpipe_memory_stddev_samp_order_by
+  sum: simpipe_memory_sum_order_by
+  var_pop: simpipe_memory_var_pop_order_by
+  var_samp: simpipe_memory_var_samp_order_by
+  variance: simpipe_memory_variance_order_by
+}
+"""
+input type for inserting array relation for remote table "simpipe.memory"
+"""
+input simpipe_memory_arr_rel_insert_input {
+  data: [simpipe_memory_insert_input!]!
+  "on conflict condition"
+  on_conflict: simpipe_memory_on_conflict
+}
+"aggregate avg on columns"
+type simpipe_memory_avg_fields {
+  id: Float
+  step_id: Float
+  value: Float
+}
+"""
+order by avg() on columns of table "simpipe.memory"
+"""
+input simpipe_memory_avg_order_by {
+  id: order_by
+  step_id: order_by
+  value: order_by
+}
+"""
+Boolean expression to filter rows from the table "simpipe.memory". All fields are combined with a logical 'AND'.
+"""
+input simpipe_memory_bool_exp {
+  _and: [simpipe_memory_bool_exp!]
+  _not: simpipe_memory_bool_exp
+  _or: [simpipe_memory_bool_exp!]
+  id: bigint_comparison_exp
+  step_id: Int_comparison_exp
+  time: timestamp_comparison_exp
+  value: numeric_comparison_exp
+}
+"""
+unique or primary key constraints on table "simpipe.memory"
+"""
+enum simpipe_memory_constraint {
+  "unique or primary key constraint"
+  memory_pkey
+}
+"""
+input type for incrementing numeric columns in table "simpipe.memory"
+"""
+input simpipe_memory_inc_input {
+  id: bigint
+  step_id: Int
+  value: numeric
+}
+"""
+input type for inserting data into table "simpipe.memory"
+"""
+input simpipe_memory_insert_input {
+  id: bigint
+  step_id: Int
+  time: timestamp
+  value: numeric
+}
+"aggregate max on columns"
+type simpipe_memory_max_fields {
+  id: bigint
+  step_id: Int
+  time: timestamp
+  value: numeric
+}
+"""
+order by max() on columns of table "simpipe.memory"
+"""
+input simpipe_memory_max_order_by {
+  id: order_by
+  step_id: order_by
+  time: order_by
+  value: order_by
+}
+"aggregate min on columns"
+type simpipe_memory_min_fields {
+  id: bigint
+  step_id: Int
+  time: timestamp
+  value: numeric
+}
+"""
+order by min() on columns of table "simpipe.memory"
+"""
+input simpipe_memory_min_order_by {
+  id: order_by
+  step_id: order_by
+  time: order_by
+  value: order_by
+}
+"""
+response of any mutation on the table "simpipe.memory"
+"""
+type simpipe_memory_mutation_response {
+  "number of rows affected by the mutation"
+  affected_rows: Int!
+  "data from the rows affected by the mutation"
+  returning: [simpipe_memory!]!
+}
+"""
+on conflict condition type for table "simpipe.memory"
+"""
+input simpipe_memory_on_conflict {
+  constraint: simpipe_memory_constraint!
+  update_columns: [simpipe_memory_update_column!]! = []
+  where: simpipe_memory_bool_exp
+}
+"""
+Ordering options when selecting data from "simpipe.memory".
+"""
+input simpipe_memory_order_by {
+  id: order_by
+  step_id: order_by
+  time: order_by
+  value: order_by
+}
+"primary key columns input for table: simpipe_memory"
+input simpipe_memory_pk_columns_input {
+  id: bigint!
+}
+"""
+select columns of table "simpipe.memory"
+"""
+enum simpipe_memory_select_column {
+  "column name"
+  id
+  "column name"
+  step_id
+  "column name"
+  time
+  "column name"
+  value
+}
+"""
+input type for updating data in table "simpipe.memory"
+"""
+input simpipe_memory_set_input {
+  id: bigint
+  step_id: Int
+  time: timestamp
+  value: numeric
+}
+"aggregate stddev on columns"
+type simpipe_memory_stddev_fields {
+  id: Float
+  step_id: Float
+  value: Float
+}
+"""
+order by stddev() on columns of table "simpipe.memory"
+"""
+input simpipe_memory_stddev_order_by {
+  id: order_by
+  step_id: order_by
+  value: order_by
+}
+"aggregate stddev_pop on columns"
+type simpipe_memory_stddev_pop_fields {
+  id: Float
+  step_id: Float
+  value: Float
+}
+"""
+order by stddev_pop() on columns of table "simpipe.memory"
+"""
+input simpipe_memory_stddev_pop_order_by {
+  id: order_by
+  step_id: order_by
+  value: order_by
+}
+"aggregate stddev_samp on columns"
+type simpipe_memory_stddev_samp_fields {
+  id: Float
+  step_id: Float
+  value: Float
+}
+"""
+order by stddev_samp() on columns of table "simpipe.memory"
+"""
+input simpipe_memory_stddev_samp_order_by {
+  id: order_by
+  step_id: order_by
+  value: order_by
+}
+"aggregate sum on columns"
+type simpipe_memory_sum_fields {
+  id: bigint
+  step_id: Int
+  value: numeric
+}
+"""
+order by sum() on columns of table "simpipe.memory"
+"""
+input simpipe_memory_sum_order_by {
+  id: order_by
+  step_id: order_by
+  value: order_by
+}
+"""
+update columns of table "simpipe.memory"
+"""
+enum simpipe_memory_update_column {
+  "column name"
+  id
+  "column name"
+  step_id
+  "column name"
+  time
+  "column name"
+  value
+}
+"aggregate var_pop on columns"
+type simpipe_memory_var_pop_fields {
+  id: Float
+  step_id: Float
+  value: Float
+}
+"""
+order by var_pop() on columns of table "simpipe.memory"
+"""
+input simpipe_memory_var_pop_order_by {
+  id: order_by
+  step_id: order_by
+  value: order_by
+}
+"aggregate var_samp on columns"
+type simpipe_memory_var_samp_fields {
+  id: Float
+  step_id: Float
+  value: Float
+}
+"""
+order by var_samp() on columns of table "simpipe.memory"
+"""
+input simpipe_memory_var_samp_order_by {
+  id: order_by
+  step_id: order_by
+  value: order_by
+}
+"aggregate variance on columns"
+type simpipe_memory_variance_fields {
+  id: Float
+  step_id: Float
+  value: Float
+}
+"""
+order by variance() on columns of table "simpipe.memory"
+"""
+input simpipe_memory_variance_order_by {
+  id: order_by
+  step_id: order_by
+  value: order_by
+}
+"""
+Simulations
+
+
+columns and relationships of "simpipe.simulations"
+
+"""
+type simulations {
+  "DateTime of when the simulation was created"
+  created: timestamptz!
+  "UUID of the model"
+  model_id: uuid!
+  "An array relationship"
+  runs("distinct select on columns" distinct_on: [runs_select_column!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" order_by: [runs_order_by!], "filter the rows returned" where: runs_bool_exp): [runs!]!
+  "An aggregate relationship"
+  runs_aggregate("distinct select on columns" distinct_on: [runs_select_column!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" order_by: [runs_order_by!], "filter the rows returned" where: runs_bool_exp): runs_aggregate!
+  "UUID of the simulation"
+  simulation_id: uuid!
+}
+"""
+aggregated selection of "simpipe.simulations"
+"""
+type simulations_aggregate {
+  aggregate: simulations_aggregate_fields
+  nodes: [simulations!]!
+}
+"""
+aggregate fields of "simpipe.simulations"
+"""
+type simulations_aggregate_fields {
+  count(columns: [simulations_select_column!], distinct: Boolean): Int!
+  max: simulations_max_fields
+  min: simulations_min_fields
+}
+"""
+Boolean expression to filter rows from the table "simpipe.simulations". All fields are combined with a logical 'AND'.
+"""
+input simulations_bool_exp {
+  _and: [simulations_bool_exp!]
+  _not: simulations_bool_exp
+  _or: [simulations_bool_exp!]
+  created: timestamptz_comparison_exp
+  model_id: uuid_comparison_exp
+  runs: runs_bool_exp
+  simulation_id: uuid_comparison_exp
+}
+"""
+unique or primary key constraints on table "simpipe.simulations"
+"""
+enum simulations_constraint {
+  "unique or primary key constraint"
+  simulations_modelId_key
+  "unique or primary key constraint"
+  simulations_pkey
+}
+"""
+input type for inserting data into table "simpipe.simulations"
+"""
+input simulations_insert_input {
+  "DateTime of when the simulation was created"
+  created: timestamptz
+  "UUID of the model"
+  model_id: uuid
+  runs: runs_arr_rel_insert_input
+  "UUID of the simulation"
+  simulation_id: uuid
+}
+"aggregate max on columns"
+type simulations_max_fields {
+  "DateTime of when the simulation was created"
+  created: timestamptz
+  "UUID of the model"
+  model_id: uuid
+  "UUID of the simulation"
+  simulation_id: uuid
+}
+"aggregate min on columns"
+type simulations_min_fields {
+  "DateTime of when the simulation was created"
+  created: timestamptz
+  "UUID of the model"
+  model_id: uuid
+  "UUID of the simulation"
+  simulation_id: uuid
+}
+"""
+response of any mutation on the table "simpipe.simulations"
+"""
+type simulations_mutation_response {
+  "number of rows affected by the mutation"
+  affected_rows: Int!
+  "data from the rows affected by the mutation"
+  returning: [simulations!]!
+}
+"""
+input type for inserting object relation for remote table "simpipe.simulations"
+"""
+input simulations_obj_rel_insert_input {
+  data: simulations_insert_input!
+  "on conflict condition"
+  on_conflict: simulations_on_conflict
+}
+"""
+on conflict condition type for table "simpipe.simulations"
+"""
+input simulations_on_conflict {
+  constraint: simulations_constraint!
+  update_columns: [simulations_update_column!]! = []
+  where: simulations_bool_exp
+}
+"""
+Ordering options when selecting data from "simpipe.simulations".
+"""
+input simulations_order_by {
+  created: order_by
+  model_id: order_by
+  runs_aggregate: runs_aggregate_order_by
+  simulation_id: order_by
+}
+"primary key columns input for table: simulations"
+input simulations_pk_columns_input {
+  "UUID of the simulation"
+  simulation_id: uuid!
+}
+"""
+select columns of table "simpipe.simulations"
+"""
+enum simulations_select_column {
+  "column name"
+  created
+  "column name"
+  model_id
+  "column name"
+  simulation_id
+}
+"""
+input type for updating data in table "simpipe.simulations"
+"""
+input simulations_set_input {
+  "DateTime of when the simulation was created"
+  created: timestamptz
+  "UUID of the model"
+  model_id: uuid
+  "UUID of the simulation"
+  simulation_id: uuid
+}
+"""
+update columns of table "simpipe.simulations"
+"""
+enum simulations_update_column {
+  "column name"
+  created
+  "column name"
+  model_id
+  "column name"
+  simulation_id
+}
+scalar step_status
+"""
+Boolean expression to compare columns of type "step_status". All fields are combined with logical 'AND'.
+"""
+input step_status_comparison_exp {
+  _eq: step_status
+  _gt: step_status
+  _gte: step_status
+  _in: [step_status!]
+  _is_null: Boolean
+  _lt: step_status
+  _lte: step_status
+  _neq: step_status
+  _nin: [step_status!]
+}
+"""
+columns and relationships of "simpipe.steps"
+"""
+type steps {
+  "An array relationship"
+  cpu("distinct select on columns" distinct_on: [simpipe_cpu_select_column!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" order_by: [simpipe_cpu_order_by!], "filter the rows returned" where: simpipe_cpu_bool_exp): [simpipe_cpu!]!
+  "An aggregate relationship"
+  cpu_aggregate("distinct select on columns" distinct_on: [simpipe_cpu_select_column!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" order_by: [simpipe_cpu_order_by!], "filter the rows returned" where: simpipe_cpu_bool_exp): simpipe_cpu_aggregate!
+  created: timestamptz!
+  ended: timestamptz
+  "An object relationship"
+  log: simpipe_logs
+  "An array relationship"
+  memory("distinct select on columns" distinct_on: [simpipe_memory_select_column!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" order_by: [simpipe_memory_order_by!], "filter the rows returned" where: simpipe_memory_bool_exp): [simpipe_memory!]!
+  "An aggregate relationship"
+  memory_aggregate("distinct select on columns" distinct_on: [simpipe_memory_select_column!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" order_by: [simpipe_memory_order_by!], "filter the rows returned" where: simpipe_memory_bool_exp): simpipe_memory_aggregate!
+  name: String!
+  run_id: uuid!
+  started: timestamptz
+  status: step_status!
+  step_id: Int!
+}
+"""
+aggregated selection of "simpipe.steps"
+"""
+type steps_aggregate {
+  aggregate: steps_aggregate_fields
+  nodes: [steps!]!
+}
+"""
+aggregate fields of "simpipe.steps"
+"""
+type steps_aggregate_fields {
+  avg: steps_avg_fields
+  count(columns: [steps_select_column!], distinct: Boolean): Int!
+  max: steps_max_fields
+  min: steps_min_fields
+  stddev: steps_stddev_fields
+  stddev_pop: steps_stddev_pop_fields
+  stddev_samp: steps_stddev_samp_fields
+  sum: steps_sum_fields
+  var_pop: steps_var_pop_fields
+  var_samp: steps_var_samp_fields
+  variance: steps_variance_fields
+}
+"""
+order by aggregate values of table "simpipe.steps"
+"""
+input steps_aggregate_order_by {
+  avg: steps_avg_order_by
+  count: order_by
+  max: steps_max_order_by
+  min: steps_min_order_by
+  stddev: steps_stddev_order_by
+  stddev_pop: steps_stddev_pop_order_by
+  stddev_samp: steps_stddev_samp_order_by
+  sum: steps_sum_order_by
+  var_pop: steps_var_pop_order_by
+  var_samp: steps_var_samp_order_by
+  variance: steps_variance_order_by
+}
+"""
+input type for inserting array relation for remote table "simpipe.steps"
+"""
+input steps_arr_rel_insert_input {
+  data: [steps_insert_input!]!
+  "on conflict condition"
+  on_conflict: steps_on_conflict
+}
+"aggregate avg on columns"
+type steps_avg_fields {
+  step_id: Float
+}
+"""
+order by avg() on columns of table "simpipe.steps"
+"""
+input steps_avg_order_by {
+  step_id: order_by
+}
+"""
+Boolean expression to filter rows from the table "simpipe.steps". All fields are combined with a logical 'AND'.
+"""
+input steps_bool_exp {
+  _and: [steps_bool_exp!]
+  _not: steps_bool_exp
+  _or: [steps_bool_exp!]
+  cpu: simpipe_cpu_bool_exp
+  created: timestamptz_comparison_exp
+  ended: timestamptz_comparison_exp
+  log: simpipe_logs_bool_exp
+  memory: simpipe_memory_bool_exp
+  name: String_comparison_exp
+  run_id: uuid_comparison_exp
+  started: timestamptz_comparison_exp
+  status: step_status_comparison_exp
+  step_id: Int_comparison_exp
+}
+"""
+unique or primary key constraints on table "simpipe.steps"
+"""
+enum steps_constraint {
+  "unique or primary key constraint"
+  steps_pkey
+  "unique or primary key constraint"
+  steps_run_id_name_key
+}
+"""
+input type for incrementing numeric columns in table "simpipe.steps"
+"""
+input steps_inc_input {
+  step_id: Int
+}
+"""
+input type for inserting data into table "simpipe.steps"
+"""
+input steps_insert_input {
+  cpu: simpipe_cpu_arr_rel_insert_input
+  created: timestamptz
+  ended: timestamptz
+  log: simpipe_logs_obj_rel_insert_input
+  memory: simpipe_memory_arr_rel_insert_input
+  name: String
+  run_id: uuid
+  started: timestamptz
+  status: step_status
+  step_id: Int
+}
+"aggregate max on columns"
+type steps_max_fields {
+  created: timestamptz
+  ended: timestamptz
+  name: String
+  run_id: uuid
+  started: timestamptz
+  step_id: Int
+}
+"""
+order by max() on columns of table "simpipe.steps"
+"""
+input steps_max_order_by {
+  created: order_by
+  ended: order_by
+  name: order_by
+  run_id: order_by
+  started: order_by
+  step_id: order_by
+}
+"aggregate min on columns"
+type steps_min_fields {
+  created: timestamptz
+  ended: timestamptz
+  name: String
+  run_id: uuid
+  started: timestamptz
+  step_id: Int
+}
+"""
+order by min() on columns of table "simpipe.steps"
+"""
+input steps_min_order_by {
+  created: order_by
+  ended: order_by
+  name: order_by
+  run_id: order_by
+  started: order_by
+  step_id: order_by
+}
+"""
+response of any mutation on the table "simpipe.steps"
+"""
+type steps_mutation_response {
+  "number of rows affected by the mutation"
+  affected_rows: Int!
+  "data from the rows affected by the mutation"
+  returning: [steps!]!
+}
+"""
+on conflict condition type for table "simpipe.steps"
+"""
+input steps_on_conflict {
+  constraint: steps_constraint!
+  update_columns: [steps_update_column!]! = []
+  where: steps_bool_exp
+}
+"""
+Ordering options when selecting data from "simpipe.steps".
+"""
+input steps_order_by {
+  cpu_aggregate: simpipe_cpu_aggregate_order_by
+  created: order_by
+  ended: order_by
+  log: simpipe_logs_order_by
+  memory_aggregate: simpipe_memory_aggregate_order_by
+  name: order_by
+  run_id: order_by
+  started: order_by
+  status: order_by
+  step_id: order_by
+}
+"primary key columns input for table: steps"
+input steps_pk_columns_input {
+  step_id: Int!
+}
+"""
+select columns of table "simpipe.steps"
+"""
+enum steps_select_column {
+  "column name"
+  created
+  "column name"
+  ended
+  "column name"
+  name
+  "column name"
+  run_id
+  "column name"
+  started
+  "column name"
+  status
+  "column name"
+  step_id
+}
+"""
+input type for updating data in table "simpipe.steps"
+"""
+input steps_set_input {
+  created: timestamptz
+  ended: timestamptz
+  name: String
+  run_id: uuid
+  started: timestamptz
+  status: step_status
+  step_id: Int
+}
+"aggregate stddev on columns"
+type steps_stddev_fields {
+  step_id: Float
+}
+"""
+order by stddev() on columns of table "simpipe.steps"
+"""
+input steps_stddev_order_by {
+  step_id: order_by
+}
+"aggregate stddev_pop on columns"
+type steps_stddev_pop_fields {
+  step_id: Float
+}
+"""
+order by stddev_pop() on columns of table "simpipe.steps"
+"""
+input steps_stddev_pop_order_by {
+  step_id: order_by
+}
+"aggregate stddev_samp on columns"
+type steps_stddev_samp_fields {
+  step_id: Float
+}
+"""
+order by stddev_samp() on columns of table "simpipe.steps"
+"""
+input steps_stddev_samp_order_by {
+  step_id: order_by
+}
+"aggregate sum on columns"
+type steps_sum_fields {
+  step_id: Int
+}
+"""
+order by sum() on columns of table "simpipe.steps"
+"""
+input steps_sum_order_by {
+  step_id: order_by
+}
+"""
+update columns of table "simpipe.steps"
+"""
+enum steps_update_column {
+  "column name"
+  created
+  "column name"
+  ended
+  "column name"
+  name
+  "column name"
+  run_id
+  "column name"
+  started
+  "column name"
+  status
+  "column name"
+  step_id
+}
+"aggregate var_pop on columns"
+type steps_var_pop_fields {
+  step_id: Float
+}
+"""
+order by var_pop() on columns of table "simpipe.steps"
+"""
+input steps_var_pop_order_by {
+  step_id: order_by
+}
+"aggregate var_samp on columns"
+type steps_var_samp_fields {
+  step_id: Float
+}
+"""
+order by var_samp() on columns of table "simpipe.steps"
+"""
+input steps_var_samp_order_by {
+  step_id: order_by
+}
+"aggregate variance on columns"
+type steps_variance_fields {
+  step_id: Float
+}
+"""
+order by variance() on columns of table "simpipe.steps"
+"""
+input steps_variance_order_by {
+  step_id: order_by
+}
+type subscription_root {
+  """
+  fetch data from the table: "simpipe.runs" using primary key columns
+  """
+  get_run(run_id: uuid!): runs
+  """
+  fetch data from the table: "simpipe.simulations" using primary key columns
+  """
+  get_simulation("UUID of the simulation" simulation_id: uuid!): simulations
+  "An array relationship"
+  runs("distinct select on columns" distinct_on: [runs_select_column!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" order_by: [runs_order_by!], "filter the rows returned" where: runs_bool_exp): [runs!]!
+  "An aggregate relationship"
+  runs_aggregate("distinct select on columns" distinct_on: [runs_select_column!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" order_by: [runs_order_by!], "filter the rows returned" where: runs_bool_exp): runs_aggregate!
+  """
+  fetch data from the table: "simpipe.cpu"
+  """
+  simpipe_cpu("distinct select on columns" distinct_on: [simpipe_cpu_select_column!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" order_by: [simpipe_cpu_order_by!], "filter the rows returned" where: simpipe_cpu_bool_exp): [simpipe_cpu!]!
+  """
+  fetch aggregated fields from the table: "simpipe.cpu"
+  """
+  simpipe_cpu_aggregate("distinct select on columns" distinct_on: [simpipe_cpu_select_column!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" order_by: [simpipe_cpu_order_by!], "filter the rows returned" where: simpipe_cpu_bool_exp): simpipe_cpu_aggregate!
+  """
+  fetch data from the table: "simpipe.cpu" using primary key columns
+  """
+  simpipe_cpu_by_pk(id: bigint!): simpipe_cpu
+  """
+  fetch data from the table: "simpipe.logs"
+  """
+  simpipe_logs("distinct select on columns" distinct_on: [simpipe_logs_select_column!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" order_by: [simpipe_logs_order_by!], "filter the rows returned" where: simpipe_logs_bool_exp): [simpipe_logs!]!
+  """
+  fetch aggregated fields from the table: "simpipe.logs"
+  """
+  simpipe_logs_aggregate("distinct select on columns" distinct_on: [simpipe_logs_select_column!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" order_by: [simpipe_logs_order_by!], "filter the rows returned" where: simpipe_logs_bool_exp): simpipe_logs_aggregate!
+  """
+  fetch data from the table: "simpipe.logs" using primary key columns
+  """
+  simpipe_logs_by_pk(step_id: Int!): simpipe_logs
+  """
+  fetch data from the table: "simpipe.memory"
+  """
+  simpipe_memory("distinct select on columns" distinct_on: [simpipe_memory_select_column!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" order_by: [simpipe_memory_order_by!], "filter the rows returned" where: simpipe_memory_bool_exp): [simpipe_memory!]!
+  """
+  fetch aggregated fields from the table: "simpipe.memory"
+  """
+  simpipe_memory_aggregate("distinct select on columns" distinct_on: [simpipe_memory_select_column!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" order_by: [simpipe_memory_order_by!], "filter the rows returned" where: simpipe_memory_bool_exp): simpipe_memory_aggregate!
+  """
+  fetch data from the table: "simpipe.memory" using primary key columns
+  """
+  simpipe_memory_by_pk(id: bigint!): simpipe_memory
+  """
+  fetch data from the table: "simpipe.simulations"
+  """
+  simulations("distinct select on columns" distinct_on: [simulations_select_column!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" order_by: [simulations_order_by!], "filter the rows returned" where: simulations_bool_exp): [simulations!]!
+  """
+  fetch aggregated fields from the table: "simpipe.simulations"
+  """
+  simulations_aggregate("distinct select on columns" distinct_on: [simulations_select_column!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" order_by: [simulations_order_by!], "filter the rows returned" where: simulations_bool_exp): simulations_aggregate!
+  """
+  fetch data from the table: "simpipe.steps"
+  """
+  steps("distinct select on columns" distinct_on: [steps_select_column!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" order_by: [steps_order_by!], "filter the rows returned" where: steps_bool_exp): [steps!]!
+  """
+  fetch aggregated fields from the table: "simpipe.steps"
+  """
+  steps_aggregate("distinct select on columns" distinct_on: [steps_select_column!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" order_by: [steps_order_by!], "filter the rows returned" where: steps_bool_exp): steps_aggregate!
+  """
+  fetch data from the table: "simpipe.steps" using primary key columns
+  """
+  steps_by_pk(step_id: Int!): steps
+}
+scalar timestamp
+"""
+Boolean expression to compare columns of type "timestamp". All fields are combined with logical 'AND'.
+"""
+input timestamp_comparison_exp {
+  _eq: timestamp
+  _gt: timestamp
+  _gte: timestamp
+  _in: [timestamp!]
+  _is_null: Boolean
+  _lt: timestamp
+  _lte: timestamp
+  _neq: timestamp
+  _nin: [timestamp!]
+}
+scalar timestamptz
+"""
+Boolean expression to compare columns of type "timestamptz". All fields are combined with logical 'AND'.
+"""
+input timestamptz_comparison_exp {
+  _eq: timestamptz
+  _gt: timestamptz
+  _gte: timestamptz
+  _in: [timestamptz!]
+  _is_null: Boolean
+  _lt: timestamptz
+  _lte: timestamptz
+  _neq: timestamptz
+  _nin: [timestamptz!]
+}
+scalar uuid
+"""
+Boolean expression to compare columns of type "uuid". All fields are combined with logical 'AND'.
+"""
+input uuid_comparison_exp {
+  _eq: uuid
+  _gt: uuid
+  _gte: uuid
+  _in: [uuid!]
+  _is_null: Boolean
+  _lt: uuid
+  _lte: uuid
+  _neq: uuid
+  _nin: [uuid!]
+}
