@@ -9,7 +9,9 @@ import type { SetIntervalAsyncTimer } from 'set-interval-async';
 import logger from './logger.js';
 import * as sftp from './sftp-utils.js';
 
-const remote = process.argv[2] === 'remote';
+// remote is true by default
+const remote:boolean = !process.argv[2] ? true : process.argv[2] === 'remote';
+
 let docker: Docker;
 
 if (remote) {
@@ -202,11 +204,12 @@ function startStatsPolling() : void {
   }, pollingInterval);
 }
 
-async function start() : Promise<void> {
+export async function start() : Promise<void> {
   logger.info('Start simulation');
   logger.info('Copying file into sandbox');
   await sftp.putToSandbox(inputFile, remoteInputFile, storeInputFile);
   await createContainer();
   startStatsPolling();
 }
-await start();
+
+// await start();
