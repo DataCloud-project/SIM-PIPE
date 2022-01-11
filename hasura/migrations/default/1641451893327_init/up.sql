@@ -2,19 +2,14 @@ SET check_function_bodies = false;
 CREATE SCHEMA simpipe;
 CREATE EXTENSION IF NOT EXISTS pgcrypto WITH SCHEMA public;
 COMMENT ON EXTENSION pgcrypto IS 'cryptographic functions';
-CREATE TYPE public.canards AS ENUM (
-    'beau',
-    'gentil',
-    'merveilleux'
-);
-CREATE TYPE public.run_status AS ENUM (
+CREATE TYPE simpipe.run_status AS ENUM (
     'waiting',
     'active',
     'completed',
     'failed',
     'cancelled'
 );
-CREATE TYPE public.step_status AS ENUM (
+CREATE TYPE simpipe.step_status AS ENUM (
     'waiting',
     'active',
     'completed',
@@ -55,11 +50,11 @@ CREATE TABLE simpipe.runs (
     simulation_id uuid NOT NULL,
     dsl jsonb NOT NULL,
     created timestamp with time zone DEFAULT now() NOT NULL,
-    status public.run_status DEFAULT 'waiting'::public.run_status NOT NULL,
+    status simpipe.run_status DEFAULT 'waiting'::simpipe.run_status NOT NULL,
     started timestamp with time zone,
     ended timestamp with time zone,
     run_id uuid DEFAULT public.gen_random_uuid() NOT NULL,
-    CONSTRAINT "ended started constraint" CHECK ((((status = 'waiting'::public.run_status) AND (started IS NULL) AND (ended IS NULL)) OR ((status = 'active'::public.run_status) AND (started IS NOT NULL) AND (ended IS NULL)) OR ((status = 'completed'::public.run_status) AND (started IS NOT NULL) AND (ended IS NOT NULL)) OR (((status = 'failed'::public.run_status) OR (status = 'cancelled'::public.run_status)) AND ((ended IS NULL) OR (started IS NOT NULL)))))
+    CONSTRAINT "ended started constraint" CHECK ((((status = 'waiting'::simpipe.run_status) AND (started IS NULL) AND (ended IS NULL)) OR ((status = 'active'::simpipe.run_status) AND (started IS NOT NULL) AND (ended IS NULL)) OR ((status = 'completed'::simpipe.run_status) AND (started IS NOT NULL) AND (ended IS NOT NULL)) OR (((status = 'failed'::simpipe.run_status) OR (status = 'cancelled'::simpipe.run_status)) AND ((ended IS NULL) OR (started IS NOT NULL)))))
 );
 COMMENT ON TABLE simpipe.runs IS 'Simulation run';
 CREATE TABLE simpipe.simulations (
@@ -75,7 +70,7 @@ CREATE TABLE simpipe.steps (
     run_id uuid NOT NULL,
     name text NOT NULL,
     step_id integer NOT NULL,
-    status public.step_status DEFAULT 'waiting'::public.step_status NOT NULL,
+    status simpipe.step_status DEFAULT 'waiting'::simpipe.step_status NOT NULL,
     created timestamp with time zone DEFAULT now() NOT NULL,
     started timestamp with time zone,
     ended timestamp with time zone
