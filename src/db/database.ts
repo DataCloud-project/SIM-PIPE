@@ -2544,6 +2544,19 @@ export type StartNewRunMutationVariables = Exact<{
 
 export type StartNewRunMutation = { __typename?: 'mutation_root', start_run?: { __typename?: 'runs', run_id: string, created: string } | null | undefined };
 
+export type TestMutationVariables = Exact<{ [key: string]: never; }>;
+
+
+export type TestMutation = { __typename?: 'mutation_root', start_run?: { __typename?: 'runs', run_id: string } | null | undefined };
+
+export type CreateStepMutationVariables = Exact<{
+  run_id: Scalars['uuid'];
+  name: Scalars['String'];
+}>;
+
+
+export type CreateStepMutation = { __typename?: 'mutation_root', insert_steps_one?: { __typename?: 'steps', created: string, run_id: string, step_id: number, status: 'waiting'|'active'|'completed'|'failed'|'cancelled', name: string } | null | undefined };
+
 
 export const AllSimulationsDocument = gql`
     query AllSimulations {
@@ -2579,6 +2592,24 @@ export const StartNewRunDocument = gql`
   }
 }
     `;
+export const TestDocument = gql`
+    mutation test {
+  start_run(object: {simulation_id: "1"}) {
+    run_id
+  }
+}
+    `;
+export const CreateStepDocument = gql`
+    mutation createStep($run_id: uuid!, $name: String!) {
+  insert_steps_one(object: {run_id: $run_id, name: $name}) {
+    created
+    run_id
+    step_id
+    status
+    name
+  }
+}
+    `;
 
 export type SdkFunctionWrapper = <T>(action: (requestHeaders?:Record<string, string>) => Promise<T>, operationName: string) => Promise<T>;
 
@@ -2595,6 +2626,12 @@ export function getSdk(client: GraphQLClient, withWrapper: SdkFunctionWrapper = 
     },
     startNewRun(variables: StartNewRunMutationVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<StartNewRunMutation> {
       return withWrapper((wrappedRequestHeaders) => client.request<StartNewRunMutation>(StartNewRunDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'startNewRun');
+    },
+    test(variables?: TestMutationVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<TestMutation> {
+      return withWrapper((wrappedRequestHeaders) => client.request<TestMutation>(TestDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'test');
+    },
+    createStep(variables: CreateStepMutationVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<CreateStepMutation> {
+      return withWrapper((wrappedRequestHeaders) => client.request<CreateStepMutation>(CreateStepDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'createStep');
     }
   };
 }

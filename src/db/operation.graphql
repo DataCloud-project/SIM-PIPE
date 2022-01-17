@@ -29,3 +29,20 @@ mutation startNewRun($simulation_id: uuid!) {
     created
   }
 }
+
+mutation test{
+  start_run(object: {simulation_id: "1"}) {
+    run_id
+  }
+}
+
+
+mutation createStep($run_id: uuid!, $name: String!) {
+  insert_steps_one(object: {run_id: $run_id, name:$name}){
+    created
+    run_id
+    step_id
+    status
+    name
+  }
+}
