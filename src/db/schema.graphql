@@ -1655,6 +1655,8 @@ input steps_insert_input {
   started: timestamptz
   status: step_status
   step_id: Int
+  image: String
+  pipeline_step_number: Int
 }
 "aggregate max on columns"
 type steps_max_fields {

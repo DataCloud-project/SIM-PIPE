@@ -14,7 +14,7 @@ const typeDefs = gql`
   }
   type Mutation {
     Create_Run(simulation_id: String): String
-    Create_Step(run_id: String, name:String): String
+    Create_Step(run_id: String, name:String, image:String, pipeline_step_number:Int): String
   }
 `;
 
@@ -48,10 +48,12 @@ async function createRun(simulation_id:string):Promise<string> {
   logger.info(`Run created with id ${result.start_run.run_id}`);
   return result.start_run.run_id;
 }
-async function createStep(run_id:string, name:string):Promise<string> {
+async function createStep(run_id:string, name:string, image:string, pipeline_step_number:int):Promise<string> {
   const result = await sdk.createStep({
   run_id: run_id,
   name: name,
+  image: image,
+  pipeline_step_number: pipeline_step_number,
   });
   if (!result.insert_steps_one?.step_id) {
     throw new Error('Undefined results from createStep');
@@ -71,7 +73,7 @@ const resolvers = {
       return run_id;
     },
     async Create_Step (parent, args:any):Promise<string> {
-      const step_id:string = await createStep(args.run_id, args.name);
+      const step_id:string = await createStep(args.run_id, args.name, args.image, args.pipeline_step_number);
       return step_id+'';
     },
   },

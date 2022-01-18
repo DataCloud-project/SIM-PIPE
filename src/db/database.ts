@@ -2100,9 +2100,11 @@ export type Steps_Insert_Input = {
   cpu?: InputMaybe<Simpipe_Cpu_Arr_Rel_Insert_Input>;
   created?: InputMaybe<Scalars['timestamptz']>;
   ended?: InputMaybe<Scalars['timestamptz']>;
+  image?: InputMaybe<Scalars['String']>;
   log?: InputMaybe<Simpipe_Logs_Obj_Rel_Insert_Input>;
   memory?: InputMaybe<Simpipe_Memory_Arr_Rel_Insert_Input>;
   name?: InputMaybe<Scalars['String']>;
+  pipeline_step_number?: InputMaybe<Scalars['Int']>;
   run_id?: InputMaybe<Scalars['uuid']>;
   started?: InputMaybe<Scalars['timestamptz']>;
   status?: InputMaybe<Scalars['step_status']>;
@@ -2552,6 +2554,8 @@ export type TestMutation = { __typename?: 'mutation_root', start_run?: { __typen
 export type CreateStepMutationVariables = Exact<{
   run_id: Scalars['uuid'];
   name: Scalars['String'];
+  image: Scalars['String'];
+  pipeline_step_number: Scalars['Int'];
 }>;
 
 
@@ -2600,8 +2604,10 @@ export const TestDocument = gql`
 }
     `;
 export const CreateStepDocument = gql`
-    mutation createStep($run_id: uuid!, $name: String!) {
-  insert_steps_one(object: {run_id: $run_id, name: $name}) {
+    mutation createStep($run_id: uuid!, $name: String!, $image: String!, $pipeline_step_number: Int!) {
+  insert_steps_one(
+    object: {run_id: $run_id, name: $name, image: $image, pipeline_step_number: $pipeline_step_number}
+  ) {
     created
     run_id
     step_id

@@ -36,9 +36,8 @@ mutation test{
   }
 }
 
-
-mutation createStep($run_id: uuid!, $name: String!) {
-  insert_steps_one(object: {run_id: $run_id, name:$name}){
+mutation createStep($run_id: uuid!, $name: String!, $image: String!, $pipeline_step_number: Int!) {
+  insert_steps_one(object: {run_id: $run_id, name:$name, image:$image, pipeline_step_number:$pipeline_step_number}){
     created
     run_id
     step_id
@@ -46,3 +45,4 @@ mutation createStep($run_id: uuid!, $name: String!) {
     name
   }
 }
+
