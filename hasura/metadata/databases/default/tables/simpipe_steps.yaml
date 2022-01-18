@@ -33,7 +33,9 @@ select_permissions:
     columns:
     - created
     - ended
+    - image
     - name
+    - pipeline_step_number
     - run_id
     - started
     - status
