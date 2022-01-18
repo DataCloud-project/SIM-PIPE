@@ -1,6 +1,8 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { ApolloServer, gql } from 'apollo-server';
 import { GraphQLClient } from 'graphql-request';
+import GraphQLJSON from 'graphql-type-json';
+
 
 import { getSdk } from '../db/database.js';
 import logger from '../logger.js';
@@ -13,7 +15,7 @@ const typeDefs = gql`
       # Start: String
   }
   type Mutation {
-    Create_Run(simulation_id: String): String
+    Create_Run(simulation_id: String, dsl:String): String
     Create_Step(run_id: String, name:String, image:String, pipeline_step_number:Int): String
   }
 `;
@@ -29,16 +31,17 @@ const sdk = getSdk(client);
 // create new step - done
 // start new step
 // start new run - dsl argument
-// stop container - stop current running step 
+// stop container - stop current running step
 // stop run -- later
 
 async function allSimulations():Promise<string> {
-  const result1 = JSON.stringify(await sdk.AllSimulations());
-  return result1;
+  const result:string = JSON.stringify(await sdk.AllSimulations());
+  return result;
 }
-async function createRun(simulation_id:string):Promise<string> {
-  const result = await sdk.startNewRun({
-    simulation_id: simulation_id,
+async function createRun(simulation_id:string, dsl:string):Promise<string> {
+  const result = await sdk.createRun({
+    simulation_id,
+    dsl: JSON.parse(dsl),
   });
   // await controller.start();
   // queue to follow
@@ -48,13 +51,16 @@ async function createRun(simulation_id:string):Promise<string> {
   logger.info(`Run created with id ${result.start_run.run_id}`);
   return result.start_run.run_id;
 }
-async function createStep(run_id:string, name:string, image:string, pipeline_step_number:int):Promise<string> {
+async function createStep(run_id:string, name:string, image:string,
+  pipeline_step_number:int):Promise<string> {
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-call
   const result = await sdk.createStep({
-  run_id: run_id,
-  name: name,
-  image: image,
-  pipeline_step_number: pipeline_step_number,
+    run_id,
+    name,
+    image,
+    pipeline_step_number,
   });
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
   if (!result.insert_steps_one?.step_id) {
     throw new Error('Undefined results from createStep');
   }
@@ -68,13 +74,12 @@ const resolvers = {
     // stop
   },
   Mutation: {
-    async Create_Run (parent, args:any):Promise<string> {
-      const run_id:string = await createRun(args.simulation_id);
-      return run_id;
+    async Create_Run(parent, arguments_):Promise<string> {
+      return await createRun(arguments_.simulation_id, arguments_.dsl);
     },
-    async Create_Step (parent, args:any):Promise<string> {
-      const step_id:string = await createStep(args.run_id, args.name, args.image, args.pipeline_step_number);
-      return step_id+'';
+    async Create_Step(parent, arguments_):Promise<string> {
+      return `${await createStep(arguments_.run_id, arguments_.name, arguments_.image, 
+        arguments_.pipeline_step_number)}`;
     },
   },
 };

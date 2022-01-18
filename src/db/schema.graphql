@@ -1550,6 +1550,8 @@ type steps {
   started: timestamptz
   status: step_status!
   step_id: Int!
+  pipeline_step_number: Int!
+  image: String!
 }
 """
 aggregated selection of "simpipe.steps"
@@ -1625,6 +1627,7 @@ input steps_bool_exp {
   started: timestamptz_comparison_exp
   status: step_status_comparison_exp
   step_id: Int_comparison_exp
+  pipeline_step_number: Int_comparison_exp
 }
 """
 unique or primary key constraints on table "simpipe.steps"
@@ -1666,6 +1669,8 @@ type steps_max_fields {
   run_id: uuid
   started: timestamptz
   step_id: Int
+  image: String
+  pipeline_step_number: Int
 }
 """
 order by max() on columns of table "simpipe.steps"
@@ -1677,6 +1682,8 @@ input steps_max_order_by {
   run_id: order_by
   started: order_by
   step_id: order_by
+  image: String
+  pipeline_step_number: Int
 }
 "aggregate min on columns"
 type steps_min_fields {
@@ -1686,6 +1693,8 @@ type steps_min_fields {
   run_id: uuid
   started: timestamptz
   step_id: Int
+  image: String
+  pipeline_step_number: Int
 }
 """
 order by min() on columns of table "simpipe.steps"
@@ -1697,6 +1706,8 @@ input steps_min_order_by {
   run_id: order_by
   started: order_by
   step_id: order_by
+  image: String
+  pipeline_step_number: Int
 }
 """
 response of any mutation on the table "simpipe.steps"
@@ -1752,6 +1763,10 @@ enum steps_select_column {
   status
   "column name"
   step_id
+  "column name"
+  image
+  "column name"
+  pipeline_step_number
 }
 """
 input type for updating data in table "simpipe.steps"
@@ -1764,6 +1779,8 @@ input steps_set_input {
   started: timestamptz
   status: step_status
   step_id: Int
+  image: String
+  pipeline_step_number: Int
 }
 "aggregate stddev on columns"
 type steps_stddev_fields {
@@ -1823,6 +1840,10 @@ enum steps_update_column {
   status
   "column name"
   step_id
+  "column name"
+  image
+  "column name"
+  pipeline_step_number
 }
 "aggregate var_pop on columns"
 type steps_var_pop_fields {

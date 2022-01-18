@@ -22,6 +22,12 @@ array_relationships:
       table:
         name: steps
         schema: simpipe
+insert_permissions:
+- permission:
+    backend_only: false
+    check: {}
+    columns: []
+  role: anonymous
 select_permissions:
 - permission:
     columns:
@@ -32,5 +38,11 @@ select_permissions:
     - started
     - ended
     - run_id
+    filter: {}
+  role: anonymous
+update_permissions:
+- permission:
+    check: null
+    columns: []
     filter: {}
   role: anonymous

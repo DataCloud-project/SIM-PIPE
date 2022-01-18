@@ -29,10 +29,12 @@ mutation startNewRun($simulation_id: uuid!) {
     created
   }
 }
-
-mutation test{
-  start_run(object: {simulation_id: "1"}) {
+# api functions ..
+mutation createRun($simulation_id: uuid!, $dsl: jsonb!) {
+  start_run(object: {dsl: $dsl, simulation_id: $simulation_id}) {
     run_id
+    created
+    status
   }
 }
 
@@ -46,3 +48,13 @@ mutation createStep($run_id: uuid!, $name: String!, $image: String!, $pipeline_s
   }
 }
 
+mutation startStep($step_id: Int!) {
+  update_steps_by_pk(pk_columns: {step_id: $step_id}, _set: {started: "now()", status: "'active'"}) {
+    step_id
+    started
+    status
+    name
+    pipeline_step_number
+    created
+  }
+}

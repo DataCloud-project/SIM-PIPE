@@ -1949,6 +1949,7 @@ export type Steps = {
   cpu_aggregate: Simpipe_Cpu_Aggregate;
   created: Scalars['timestamptz'];
   ended?: Maybe<Scalars['timestamptz']>;
+  image: Scalars['String'];
   /** An object relationship */
   log?: Maybe<Simpipe_Logs>;
   /** An array relationship */
@@ -1956,6 +1957,7 @@ export type Steps = {
   /** An aggregate relationship */
   memory_aggregate: Simpipe_Memory_Aggregate;
   name: Scalars['String'];
+  pipeline_step_number: Scalars['Int'];
   run_id: Scalars['uuid'];
   started?: Maybe<Scalars['timestamptz']>;
   status: Scalars['step_status'];
@@ -2076,6 +2078,7 @@ export type Steps_Bool_Exp = {
   log?: InputMaybe<Simpipe_Logs_Bool_Exp>;
   memory?: InputMaybe<Simpipe_Memory_Bool_Exp>;
   name?: InputMaybe<String_Comparison_Exp>;
+  pipeline_step_number?: InputMaybe<Int_Comparison_Exp>;
   run_id?: InputMaybe<Uuid_Comparison_Exp>;
   started?: InputMaybe<Timestamptz_Comparison_Exp>;
   status?: InputMaybe<Step_Status_Comparison_Exp>;
@@ -2116,7 +2119,9 @@ export type Steps_Max_Fields = {
   __typename?: 'steps_max_fields';
   created?: Maybe<Scalars['timestamptz']>;
   ended?: Maybe<Scalars['timestamptz']>;
+  image?: Maybe<Scalars['String']>;
   name?: Maybe<Scalars['String']>;
+  pipeline_step_number?: Maybe<Scalars['Int']>;
   run_id?: Maybe<Scalars['uuid']>;
   started?: Maybe<Scalars['timestamptz']>;
   step_id?: Maybe<Scalars['Int']>;
@@ -2126,7 +2131,9 @@ export type Steps_Max_Fields = {
 export type Steps_Max_Order_By = {
   created?: InputMaybe<Order_By>;
   ended?: InputMaybe<Order_By>;
+  image?: InputMaybe<Scalars['String']>;
   name?: InputMaybe<Order_By>;
+  pipeline_step_number?: InputMaybe<Scalars['Int']>;
   run_id?: InputMaybe<Order_By>;
   started?: InputMaybe<Order_By>;
   step_id?: InputMaybe<Order_By>;
@@ -2137,7 +2144,9 @@ export type Steps_Min_Fields = {
   __typename?: 'steps_min_fields';
   created?: Maybe<Scalars['timestamptz']>;
   ended?: Maybe<Scalars['timestamptz']>;
+  image?: Maybe<Scalars['String']>;
   name?: Maybe<Scalars['String']>;
+  pipeline_step_number?: Maybe<Scalars['Int']>;
   run_id?: Maybe<Scalars['uuid']>;
   started?: Maybe<Scalars['timestamptz']>;
   step_id?: Maybe<Scalars['Int']>;
@@ -2147,7 +2156,9 @@ export type Steps_Min_Fields = {
 export type Steps_Min_Order_By = {
   created?: InputMaybe<Order_By>;
   ended?: InputMaybe<Order_By>;
+  image?: InputMaybe<Scalars['String']>;
   name?: InputMaybe<Order_By>;
+  pipeline_step_number?: InputMaybe<Scalars['Int']>;
   run_id?: InputMaybe<Order_By>;
   started?: InputMaybe<Order_By>;
   step_id?: InputMaybe<Order_By>;
@@ -2195,7 +2206,11 @@ export enum Steps_Select_Column {
   /** column name */
   Ended = 'ended',
   /** column name */
+  Image = 'image',
+  /** column name */
   Name = 'name',
+  /** column name */
+  PipelineStepNumber = 'pipeline_step_number',
   /** column name */
   RunId = 'run_id',
   /** column name */
@@ -2210,7 +2225,9 @@ export enum Steps_Select_Column {
 export type Steps_Set_Input = {
   created?: InputMaybe<Scalars['timestamptz']>;
   ended?: InputMaybe<Scalars['timestamptz']>;
+  image?: InputMaybe<Scalars['String']>;
   name?: InputMaybe<Scalars['String']>;
+  pipeline_step_number?: InputMaybe<Scalars['Int']>;
   run_id?: InputMaybe<Scalars['uuid']>;
   started?: InputMaybe<Scalars['timestamptz']>;
   status?: InputMaybe<Scalars['step_status']>;
@@ -2268,7 +2285,11 @@ export enum Steps_Update_Column {
   /** column name */
   Ended = 'ended',
   /** column name */
+  Image = 'image',
+  /** column name */
   Name = 'name',
+  /** column name */
+  PipelineStepNumber = 'pipeline_step_number',
   /** column name */
   RunId = 'run_id',
   /** column name */
@@ -2546,10 +2567,13 @@ export type StartNewRunMutationVariables = Exact<{
 
 export type StartNewRunMutation = { __typename?: 'mutation_root', start_run?: { __typename?: 'runs', run_id: string, created: string } | null | undefined };
 
-export type TestMutationVariables = Exact<{ [key: string]: never; }>;
+export type CreateRunMutationVariables = Exact<{
+  simulation_id: Scalars['uuid'];
+  dsl: Scalars['jsonb'];
+}>;
 
 
-export type TestMutation = { __typename?: 'mutation_root', start_run?: { __typename?: 'runs', run_id: string } | null | undefined };
+export type CreateRunMutation = { __typename?: 'mutation_root', start_run?: { __typename?: 'runs', run_id: string, created: string, status: 'waiting'|'active'|'completed'|'failed'|'cancelled' } | null | undefined };
 
 export type CreateStepMutationVariables = Exact<{
   run_id: Scalars['uuid'];
@@ -2560,6 +2584,13 @@ export type CreateStepMutationVariables = Exact<{
 
 
 export type CreateStepMutation = { __typename?: 'mutation_root', insert_steps_one?: { __typename?: 'steps', created: string, run_id: string, step_id: number, status: 'waiting'|'active'|'completed'|'failed'|'cancelled', name: string } | null | undefined };
+
+export type StartStepMutationVariables = Exact<{
+  step_id: Scalars['Int'];
+}>;
+
+
+export type StartStepMutation = { __typename?: 'mutation_root', update_steps_by_pk?: { __typename?: 'steps', step_id: number, started?: string | null | undefined, status: 'waiting'|'active'|'completed'|'failed'|'cancelled', name: string, pipeline_step_number: number, created: string } | null | undefined };
 
 
 export const AllSimulationsDocument = gql`
@@ -2596,10 +2627,12 @@ export const StartNewRunDocument = gql`
   }
 }
     `;
-export const TestDocument = gql`
-    mutation test {
-  start_run(object: {simulation_id: "1"}) {
+export const CreateRunDocument = gql`
+    mutation createRun($simulation_id: uuid!, $dsl: jsonb!) {
+  start_run(object: {dsl: $dsl, simulation_id: $simulation_id}) {
     run_id
+    created
+    status
   }
 }
     `;
@@ -2613,6 +2646,21 @@ export const CreateStepDocument = gql`
     step_id
     status
     name
+  }
+}
+    `;
+export const StartStepDocument = gql`
+    mutation startStep($step_id: Int!) {
+  update_steps_by_pk(
+    pk_columns: {step_id: $step_id}
+    _set: {started: "now()", status: "'active'"}
+  ) {
+    step_id
+    started
+    status
+    name
+    pipeline_step_number
+    created
   }
 }
     `;
@@ -2633,11 +2681,14 @@ export function getSdk(client: GraphQLClient, withWrapper: SdkFunctionWrapper = 
     startNewRun(variables: StartNewRunMutationVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<StartNewRunMutation> {
       return withWrapper((wrappedRequestHeaders) => client.request<StartNewRunMutation>(StartNewRunDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'startNewRun');
     },
-    test(variables?: TestMutationVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<TestMutation> {
-      return withWrapper((wrappedRequestHeaders) => client.request<TestMutation>(TestDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'test');
+    createRun(variables: CreateRunMutationVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<CreateRunMutation> {
+      return withWrapper((wrappedRequestHeaders) => client.request<CreateRunMutation>(CreateRunDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'createRun');
     },
     createStep(variables: CreateStepMutationVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<CreateStepMutation> {
       return withWrapper((wrappedRequestHeaders) => client.request<CreateStepMutation>(CreateStepDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'createStep');
+    },
+    startStep(variables: StartStepMutationVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<StartStepMutation> {
+      return withWrapper((wrappedRequestHeaders) => client.request<StartStepMutation>(StartStepDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'startStep');
     }
   };
 }
