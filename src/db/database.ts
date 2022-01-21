@@ -2585,12 +2585,73 @@ export type CreateStepMutationVariables = Exact<{
 
 export type CreateStepMutation = { __typename?: 'mutation_root', insert_steps_one?: { __typename?: 'steps', created: string, run_id: string, step_id: number, status: 'waiting'|'active'|'completed'|'failed'|'cancelled', name: string } | null | undefined };
 
-export type StartStepMutationVariables = Exact<{
+export type SetStepAsStartedMutationVariables = Exact<{
   step_id: Scalars['Int'];
 }>;
 
 
-export type StartStepMutation = { __typename?: 'mutation_root', update_steps_by_pk?: { __typename?: 'steps', step_id: number, started?: string | null | undefined, status: 'waiting'|'active'|'completed'|'failed'|'cancelled', name: string, pipeline_step_number: number, created: string } | null | undefined };
+export type SetStepAsStartedMutation = { __typename?: 'mutation_root', update_steps_by_pk?: { __typename?: 'steps', step_id: number, started?: string | null | undefined, status: 'waiting'|'active'|'completed'|'failed'|'cancelled', name: string, pipeline_step_number: number, created: string } | null | undefined };
+
+export type SetStepAsEndedSuccessMutationVariables = Exact<{
+  step_id: Scalars['Int'];
+}>;
+
+
+export type SetStepAsEndedSuccessMutation = { __typename?: 'mutation_root', update_steps_by_pk?: { __typename?: 'steps', step_id: number, started?: string | null | undefined, status: 'waiting'|'active'|'completed'|'failed'|'cancelled', name: string, pipeline_step_number: number, created: string, ended?: string | null | undefined } | null | undefined };
+
+export type SetRunAsStartedMutationVariables = Exact<{
+  run_id: Scalars['uuid'];
+}>;
+
+
+export type SetRunAsStartedMutation = { __typename?: 'mutation_root', update_runs_by_pk?: { __typename?: 'runs', run_id: string } | null | undefined };
+
+export type SetRunAsEndedSuccessMutationVariables = Exact<{
+  run_id: Scalars['uuid'];
+}>;
+
+
+export type SetRunAsEndedSuccessMutation = { __typename?: 'mutation_root', update_runs_by_pk?: { __typename?: 'runs', run_id: string } | null | undefined };
+
+export type CreateSimulationMutationVariables = Exact<{
+  model_id: Scalars['uuid'];
+}>;
+
+
+export type CreateSimulationMutation = { __typename?: 'mutation_root', create_simulation?: { __typename?: 'simulations', model_id: string, simulation_id: string, created: string } | null | undefined };
+
+export type GetSimulationIdandStepsQueryVariables = Exact<{
+  _eq: Scalars['uuid'];
+}>;
+
+
+export type GetSimulationIdandStepsQuery = { __typename?: 'query_root', runs: Array<{ __typename?: 'runs', simulation_id: string, steps: Array<{ __typename?: 'steps', step_id: number, pipeline_step_number: number, image: string, name: string }> }> };
+
+export type InsertCpuUsageMutationVariables = Exact<{
+  step_id?: InputMaybe<Scalars['Int']>;
+  time?: InputMaybe<Scalars['timestamp']>;
+  value?: InputMaybe<Scalars['numeric']>;
+}>;
+
+
+export type InsertCpuUsageMutation = { __typename?: 'mutation_root', insert_simpipe_cpu_one?: { __typename?: 'simpipe_cpu', id: number } | null | undefined };
+
+export type InsertMemoryUsageMutationVariables = Exact<{
+  step_id?: InputMaybe<Scalars['Int']>;
+  time?: InputMaybe<Scalars['timestamp']>;
+  value?: InputMaybe<Scalars['numeric']>;
+}>;
+
+
+export type InsertMemoryUsageMutation = { __typename?: 'mutation_root', insert_simpipe_memory_one?: { __typename?: 'simpipe_memory', id: number } | null | undefined };
+
+export type InsertLogMutationVariables = Exact<{
+  step_id?: InputMaybe<Scalars['Int']>;
+  text?: InputMaybe<Scalars['String']>;
+}>;
+
+
+export type InsertLogMutation = { __typename?: 'mutation_root', insert_simpipe_logs_one?: { __typename?: 'simpipe_logs', step_id: number } | null | undefined };
 
 
 export const AllSimulationsDocument = gql`
@@ -2649,11 +2710,11 @@ export const CreateStepDocument = gql`
   }
 }
     `;
-export const StartStepDocument = gql`
-    mutation startStep($step_id: Int!) {
+export const SetStepAsStartedDocument = gql`
+    mutation setStepAsStarted($step_id: Int!) {
   update_steps_by_pk(
     pk_columns: {step_id: $step_id}
-    _set: {started: "now()", status: "'active'"}
+    _set: {started: "now()", status: active}
   ) {
     step_id
     started
@@ -2661,6 +2722,87 @@ export const StartStepDocument = gql`
     name
     pipeline_step_number
     created
+  }
+}
+    `;
+export const SetStepAsEndedSuccessDocument = gql`
+    mutation setStepAsEndedSuccess($step_id: Int!) {
+  update_steps_by_pk(
+    pk_columns: {step_id: $step_id}
+    _set: {ended: "now()", status: completed}
+  ) {
+    step_id
+    started
+    status
+    name
+    pipeline_step_number
+    created
+    ended
+  }
+}
+    `;
+export const SetRunAsStartedDocument = gql`
+    mutation setRunAsStarted($run_id: uuid!) {
+  update_runs_by_pk(
+    pk_columns: {run_id: $run_id}
+    _set: {started: "now()", status: active}
+  ) {
+    run_id
+  }
+}
+    `;
+export const SetRunAsEndedSuccessDocument = gql`
+    mutation setRunAsEndedSuccess($run_id: uuid!) {
+  update_runs_by_pk(
+    pk_columns: {run_id: $run_id}
+    _set: {ended: "now()", status: completed}
+  ) {
+    run_id
+  }
+}
+    `;
+export const CreateSimulationDocument = gql`
+    mutation createSimulation($model_id: uuid!) {
+  create_simulation(object: {model_id: $model_id}) {
+    model_id
+    simulation_id
+    created
+  }
+}
+    `;
+export const GetSimulationIdandStepsDocument = gql`
+    query getSimulationIdandSteps($_eq: uuid!) {
+  runs(where: {run_id: {_eq: $_eq}}) {
+    simulation_id
+    steps {
+      step_id
+      pipeline_step_number
+      image
+      name
+    }
+  }
+}
+    `;
+export const InsertCpuUsageDocument = gql`
+    mutation insertCpuUsage($step_id: Int, $time: timestamp, $value: numeric) {
+  insert_simpipe_cpu_one(object: {step_id: $step_id, time: $time, value: $value}) {
+    id
+  }
+}
+    `;
+export const InsertMemoryUsageDocument = gql`
+    mutation insertMemoryUsage($step_id: Int, $time: timestamp, $value: numeric) {
+  insert_simpipe_memory_one(
+    object: {step_id: $step_id, time: $time, value: $value}
+  ) {
+    id
+  }
+}
+    `;
+export const InsertLogDocument = gql`
+    mutation insertLog($step_id: Int, $text: String) {
+  insert_simpipe_logs_one(object: {step_id: $step_id, text: $text}) {
+    step_id
   }
 }
     `;
@@ -2687,8 +2829,32 @@ export function getSdk(client: GraphQLClient, withWrapper: SdkFunctionWrapper = 
     createStep(variables: CreateStepMutationVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<CreateStepMutation> {
       return withWrapper((wrappedRequestHeaders) => client.request<CreateStepMutation>(CreateStepDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'createStep');
     },
-    startStep(variables: StartStepMutationVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<StartStepMutation> {
-      return withWrapper((wrappedRequestHeaders) => client.request<StartStepMutation>(StartStepDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'startStep');
+    setStepAsStarted(variables: SetStepAsStartedMutationVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<SetStepAsStartedMutation> {
+      return withWrapper((wrappedRequestHeaders) => client.request<SetStepAsStartedMutation>(SetStepAsStartedDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'setStepAsStarted');
+    },
+    setStepAsEndedSuccess(variables: SetStepAsEndedSuccessMutationVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<SetStepAsEndedSuccessMutation> {
+      return withWrapper((wrappedRequestHeaders) => client.request<SetStepAsEndedSuccessMutation>(SetStepAsEndedSuccessDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'setStepAsEndedSuccess');
+    },
+    setRunAsStarted(variables: SetRunAsStartedMutationVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<SetRunAsStartedMutation> {
+      return withWrapper((wrappedRequestHeaders) => client.request<SetRunAsStartedMutation>(SetRunAsStartedDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'setRunAsStarted');
+    },
+    setRunAsEndedSuccess(variables: SetRunAsEndedSuccessMutationVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<SetRunAsEndedSuccessMutation> {
+      return withWrapper((wrappedRequestHeaders) => client.request<SetRunAsEndedSuccessMutation>(SetRunAsEndedSuccessDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'setRunAsEndedSuccess');
+    },
+    createSimulation(variables: CreateSimulationMutationVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<CreateSimulationMutation> {
+      return withWrapper((wrappedRequestHeaders) => client.request<CreateSimulationMutation>(CreateSimulationDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'createSimulation');
+    },
+    getSimulationIdandSteps(variables: GetSimulationIdandStepsQueryVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<GetSimulationIdandStepsQuery> {
+      return withWrapper((wrappedRequestHeaders) => client.request<GetSimulationIdandStepsQuery>(GetSimulationIdandStepsDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'getSimulationIdandSteps');
+    },
+    insertCpuUsage(variables?: InsertCpuUsageMutationVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<InsertCpuUsageMutation> {
+      return withWrapper((wrappedRequestHeaders) => client.request<InsertCpuUsageMutation>(InsertCpuUsageDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'insertCpuUsage');
+    },
+    insertMemoryUsage(variables?: InsertMemoryUsageMutationVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<InsertMemoryUsageMutation> {
+      return withWrapper((wrappedRequestHeaders) => client.request<InsertMemoryUsageMutation>(InsertMemoryUsageDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'insertMemoryUsage');
+    },
+    insertLog(variables?: InsertLogMutationVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<InsertLogMutation> {
+      return withWrapper((wrappedRequestHeaders) => client.request<InsertLogMutation>(InsertLogDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'insertLog');
     }
   };
 }

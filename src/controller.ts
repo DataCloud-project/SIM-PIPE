@@ -1,18 +1,27 @@
 import Docker from 'dockerode';
+import * as dotenv from 'dotenv';
 import fsAsync from 'node:fs/promises';
 import path from 'node:path';
 import { setTimeout } from 'node:timers/promises';
 import { clearIntervalAsync } from 'set-interval-async';
 import { setIntervalAsync } from 'set-interval-async/dynamic';
 import type { SetIntervalAsyncTimer } from 'set-interval-async';
+import { getSdk } from './db/database.js';
 
 import logger from './logger.js';
 import * as sftp from './sftp-utils.js';
+import { GraphQLClient } from 'graphql-request';
+import { timeStamp } from 'node:console';
+import { cpuUsage } from 'node:process';
+
+dotenv.config({ path: '../.env' });
 
 // remote is true by default
 const remote:boolean = !process.argv[2] ? true : process.argv[2] === 'remote';
 
 let docker: Docker;
+let sdk;
+let step_id:number;
 
 if (remote) {
   // remote connection to docker daemon
@@ -32,33 +41,53 @@ if (remote) {
   docker = new Docker({ socketPath: socket });
 }
 
-const simId = process.env.SIM_ID;
-const runId = process.env.RUN_ID;
-const stepNumber = process.env.STEP_NUMBER;
-const image = process.env.IMAGE;
-const inputPath = process.env.INPUT_PATH;
+type ControllerConfig = {
+  simId: string | undefined,
+  runId: string | undefined,
+  stepNumber: string | undefined,
+  image:string | undefined,
+  inputPath: string | undefined,
+  targetDirectory:string,
+  pollingInterval:number,
+  createdContainer: Docker.Container,
+  counter:number,
+  inputFile:string,
+  remoteInputFile: string,
+  remoteOutputFile:string,
+  storeInputFile:string,
+  storeOutputFile:string
+};
 
-if (!simId || !runId || !stepNumber || !image || !inputPath) {
-  throw new Error('Missing environment variables: SIM_ID, RUN_ID, STEP_NUMBER, IMAGE, INPUT_PATH');
+const config_object:ControllerConfig = {};
+let COMPLETED:boolean;
+
+function init() {
+  config_object.simId = process.env.SIM_ID;
+  config_object.runId = process.env.RUN_ID;
+  config_object.stepNumber = process.env.STEP_NUMBER;
+  config_object.image = process.env.IMAGE;
+  config_object.inputPath = process.env.INPUT_PATH;
+
+  if (!config_object.simId || !config_object.runId || !config_object.stepNumber || !config_object.image || !config_object.inputPath) {
+    throw new Error('Missing environment variables: SIM_ID, RUN_ID, STEP_NUMBER, IMAGE, INPUT_PATH');
+  }
+  config_object.targetDirectory = path.join(config_object.simId, config_object.runId, config_object.stepNumber);
+  // Polling interval for collecting stats from running container
+  config_object.pollingInterval = 500;
+
+  config_object.counter = 1;
+  // config_object.inputFile = inputPath;
+  config_object.remoteInputFile = 'in/input.txt';
+  config_object.remoteOutputFile = 'out/output.txt';
+  config_object.storeInputFile = `${config_object.targetDirectory}/input.txt`;
+  config_object.storeOutputFile = `${config_object.targetDirectory}/output.txt`;
+  COMPLETED = true;
 }
-const targetDirectory = path.join(simId, runId, stepNumber);
-// Polling interval for collecting stats from running container
-const pollingInterval = 500;
-
-let createdContainer: Docker.Container;
-let counter = 1;
-const inputFile = inputPath;
-const remoteInputFile = 'in/input.txt';
-const remoteOutputFile = 'out/output.txt';
-const storeInputFile = `${targetDirectory}/input.txt`;
-const storeOutputFile = `${targetDirectory}/output.txt`;
-
 let timer: SetIntervalAsyncTimer;
 
 async function createContainer() : Promise<void> {
-  logger.info('Create container');
-  createdContainer = (await docker.createContainer({
-    Image: image,
+  config_object.createdContainer = (await docker.createContainer({
+    Image: config_object.image,
     Tty: true,
     // Volume specified in docker createcontainer function using Binds parameter
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -72,9 +101,10 @@ async function createContainer() : Promise<void> {
       '/var/lib/docker/volumes/volume_vm/_data/work:/app/work',
     ],
   })) as unknown as Docker.Container;
-  await createdContainer.start({});
-
-  logger.info(`Container created with ID: ${createdContainer.id}`);
+  await config_object.createdContainer.start({});
+  // change the step status in the database to active 
+  await sdk.setStepAsStarted({ 'step_id': step_id });
+  logger.info(`Container started with ID: ${config_object.createdContainer.id}`);
 }
 
 type StatSample = {
@@ -86,7 +116,7 @@ type StatSample = {
 };
 
 export async function parseStats() : Promise<void> {
-  const directoryName = targetDirectory;
+  const directoryName = config_object.targetDirectory;
   const fileList = await fsAsync.readdir(directoryName);
 
   // Load all the files in parallel
@@ -132,6 +162,8 @@ export async function parseStats() : Promise<void> {
         sample = {
           timestamp, cpu, memory, memory_max, net,
         };
+        sdk.insertCpuUsage({ 'step_id': step_id, 'time': timestamp, 'value': cpu });
+        sdk.insertMemoryUsage({ 'step_id': step_id, 'time': timestamp, 'value': memory });
       } catch (error) {
         logger.error(`Error parsing stats file: ${fullFilename}`);
         logger.error(error);
@@ -162,8 +194,10 @@ export default async function getStats(container: Docker.Container) : Promise<vo
   const containers = await docker.listContainers();
   const ids = containers.map((containerInList) => containerInList.Id);
 
-  if (!ids.includes(createdContainer.id)) {
+  if (!ids.includes(config_object.createdContainer.id)) {
     logger.info('Completed execution of container');
+    // update the step status as ended succesfully
+    sdk.setStepAsEndedSuccess({ 'step_id': step_id });
     stopStats();
     await setTimeout(1000); // Wait 1s before parsing the stats
     await parseStats();
@@ -173,43 +207,53 @@ export default async function getStats(container: Docker.Container) : Promise<vo
       follow: false, stdout: true, stderr: true, // stdin: true,
     });
 
-    const fileName = path.join(targetDirectory, 'logs.txt');
+    const fileName = path.join(config_object.targetDirectory, 'logs.txt');
     await fsAsync.writeFile(fileName, stream);
-    logger.info('Collected logs from Sandbox');
-
+    sdk.insertLog({ 'step_id': step_id, 'text': stream + ''});
     // get output from sandbox
-    await sftp.getFromSandbox(remoteOutputFile, storeOutputFile);
+    await sftp.getFromSandbox(config_object.remoteOutputFile, config_object.storeOutputFile);
+    logger.info('Collected simulation files from Sandbox');
 
     // clear all files created during simulation
     await sftp.clearSandbox();
 
-    logger.info(`Stored simulation details to ${targetDirectory}`);
-
-    // collect statstics as long as the container is running
-  } else {
+    logger.info(`Stored simulation details to ${config_object.targetDirectory}`);
+    // set variable COMPLETED to indicate completion of simulation
+    COMPLETED = false;
+  } else { // collect statstics as long as the container is running
     const stream = await container.stats({ stream: false });
-    const fileName = path.join(targetDirectory, `stats.${counter}.json`);
-    counter += 1;
+    const fileName = path.join(config_object.targetDirectory, `stats.${config_object.counter}.json`);
+    config_object.counter += 1;
     await fsAsync.writeFile(fileName, JSON.stringify(stream, undefined, ' '));
   }
 }
 
-function startStatsPolling() : void {
+function startStatsPolling() {
   timer = setIntervalAsync(async () => {
     try {
-      await getStats(createdContainer);
+      await getStats(config_object.createdContainer);
     } catch (error) {
       logger.error(error);
     }
-  }, pollingInterval);
+  }, config_object.pollingInterval);
 }
 
-export async function start() : Promise<void> {
-  logger.info('Start simulation');
-  logger.info('Copying file into sandbox');
-  await sftp.putToSandbox(inputFile, remoteInputFile, storeInputFile);
+async function waitForContainer():Promise<void> {
+  while (COMPLETED === true) {
+    await setTimeout(500);
+  }
+}
+
+export async function start(client:GraphQLClient, stepId:number) : Promise<void> {
+  init();
+  sdk = getSdk(client);
+  step_id = stepId;
+  logger.info('Starting simulation for step ' + config_object.stepNumber);
+  await sftp.putToSandbox(config_object.inputPath, config_object.remoteInputFile, 
+    config_object.storeInputFile);
   await createContainer();
   startStatsPolling();
+  await waitForContainer();
 }
 
 // await start();

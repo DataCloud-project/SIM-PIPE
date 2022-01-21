@@ -48,13 +48,71 @@ mutation createStep($run_id: uuid!, $name: String!, $image: String!, $pipeline_s
   }
 }
 
-mutation startStep($step_id: Int!) {
-  update_steps_by_pk(pk_columns: {step_id: $step_id}, _set: {started: "now()", status: "'active'"}) {
+mutation setStepAsStarted($step_id: Int!) {
+  update_steps_by_pk(pk_columns: {step_id: $step_id}, _set: {started: "now()", status: active}) {
     step_id
     started
     status
     name
     pipeline_step_number
     created
+  }
+}
+mutation setStepAsEndedSuccess($step_id: Int!) {
+  update_steps_by_pk(pk_columns: {step_id: $step_id}, _set: {ended: "now()", status: completed}) {
+    step_id
+    started
+    status
+    name
+    pipeline_step_number
+    created
+    ended
+  }
+}
+
+mutation setRunAsStarted($run_id: uuid!) {
+  update_runs_by_pk(pk_columns: {run_id: $run_id}, _set: {started: "now()", status: active}) {
+    run_id
+  }
+}
+
+mutation setRunAsEndedSuccess($run_id: uuid!) {
+  update_runs_by_pk(pk_columns: {run_id: $run_id}, _set: {ended: "now()", status: completed}) {
+    run_id
+  }
+}
+mutation createSimulation ($model_id: uuid!){
+  create_simulation(object: {model_id: $model_id}) {
+    model_id
+    simulation_id
+    created
+  }
+}
+
+query getSimulationIdandSteps($_eq: uuid!) {
+  runs(where: {run_id: {_eq: $_eq}}) {
+    simulation_id
+    steps {
+      step_id
+      pipeline_step_number
+      image
+      name   
+    }
+  }
+}
+
+mutation insertCpuUsage($step_id: Int, $time: timestamp, $value: numeric) {
+  insert_simpipe_cpu_one(object: {step_id: $step_id, time: $time, value: $value}) {
+    id
+  }
+}
+mutation insertMemoryUsage($step_id: Int, $time: timestamp, $value: numeric) {
+  insert_simpipe_memory_one(object: {step_id: $step_id, time: $time, value: $value}) {
+    id
+  }
+}
+mutation insertLog($step_id: Int, $text: String) {
+  insert_simpipe_logs_one(object: {step_id: $step_id, text: $text}) {
+    step_id
   }
 }
