@@ -1,0 +1,1 @@
+CREATE TABLE "simpipe"."resource_usage" ("id" bigserial NOT NULL, "step_id" Integer NOT NULL, "cpu" numeric NOT NULL, "memory" numeric NOT NULL, "memory_max" numeric NOT NULL, "rx_value" numeric NOT NULL, "tx_value" numeric NOT NULL, PRIMARY KEY ("id") , FOREIGN KEY ("step_id") REFERENCES "simpipe"."steps"("step_id") ON UPDATE cascade ON DELETE cascade, UNIQUE ("id"));
