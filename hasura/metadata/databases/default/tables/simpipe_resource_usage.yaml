@@ -4,12 +4,13 @@ table:
 select_permissions:
 - permission:
     columns:
-    - id
-    - step_id
     - cpu
+    - id
     - memory
     - memory_max
     - rx_value
+    - step_id
+    - time
     - tx_value
     filter: {}
   role: anonymous

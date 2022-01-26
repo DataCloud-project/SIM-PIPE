@@ -25,7 +25,8 @@ export async function allSimulations():Promise<string> {
   return result;
 }
 
-export async function createRun(simulation_id:string, dsl:string):Promise<string> {
+export async function createRun1(simulation_id:string, dsl:string):Promise<string> {
+  // TODO: parse dsl and create all steps in the run
   const result = await sdk.createRun({
     simulation_id,
     dsl: JSON.parse(dsl),
@@ -36,15 +37,9 @@ export async function createRun(simulation_id:string, dsl:string):Promise<string
   logger.info(`Run created with id ${result.start_run.run_id}`);
   return result.start_run.run_id;
 }
-export async function createSimulation(model_id:string):Promise<string> {
-  const result = await sdk.createSimulation({
-    model_id,
-  });
-  return result.create_simulation?.simulation_id;
-}
 
 export async function createStep(run_id:string, name:string, image:string,
-  pipeline_step_number:int):Promise<string> {
+  pipeline_step_number:number):Promise<string> {
   const result = await sdk.createStep({
     run_id,
     name,
@@ -58,14 +53,36 @@ export async function createStep(run_id:string, name:string, image:string,
   return `${result.insert_steps_one.step_id}`;
 }
 
-export async function startStep(step_id:number):Promise<string> {
-  const result = await sdk.setStepAsStarted({ step_id });
-  return JSON.stringify(result);
+export async function createRun(simulation_id:string, dsl:string):Promise<string> {
+  // TODO: parse dsl and create all steps in the run
+  const steps:Array<StepDSL> = parseDSL();
+  const result = await sdk.createRun({
+    simulation_id,
+    dsl: JSON.parse(dsl),
+  });
+  if (!result.start_run?.run_id) {
+    throw new Error('Undefined results from all_simulations');
+  }
+  logger.info(`Run created with id ${result.start_run.run_id}`);
+  // create all steps in the database
+  const { run_id: runId } = result.start_run;
+  for (const step of steps) {
+    await createStep(runId, step.name, step.image, step.step_number);
+  }
+  // return result.start_run.run_id;
+  return runId;
+}
+
+export async function createSimulation(model_id:string):Promise<string> {
+  const result = await sdk.createSimulation({
+    model_id,
+  });
+  return result.create_simulation?.simulation_id;
 }
 
 export async function startRun(run_id:string):Promise<string> {
   // set run as started in the database
-  sdk.setRunAsStarted({ 'run_id': run_id });
+  await sdk.setRunAsStarted({ run_id });
   // get image, inputFilePath, stepNumber,  simulationId, runId of the task to run
   const result = await sdk.getSimulationIdandSteps({ '_eq': run_id });
   const { steps } = result.runs[0];
@@ -78,20 +95,39 @@ export async function startRun(run_id:string):Promise<string> {
     // set the variable values in env file
     process.env.STEP_NUMBER = step.pipeline_step_number;
     process.env.IMAGE = step.image;
+    // TODO: change inputfiles for steps > 1
     await controller.start(client, step.step_id);
     logger.info(`Step ${step.pipeline_step_number} finished execution\n`);
   }
   // set run as completed successully in the database
-  sdk.setRunAsEndedSuccess({ 'run_id': run_id });
+  sdk.setRunAsEndedSuccess({ run_id });
   return run_id;
 }
 
-export async function executeStepEndtoEnd(step_id: number, run_id: number):Promise<string> {
-  // get image, inputFilePath, stepNumber,  simulationId, runId of the task to run
-
-  // start the backend controller with the values above
-  // set status and started columns of the step record
-  // check if controller has finished execution (try catch)
-  // set the status and ended fields of the step record
-  return 'completed';
+// function parseDSL: takes in dsl from def-pipe and return the list of steps
+// to be created
+function parseDSL():Array<StepDSL> {
+  const object:Array<StepDSL> = [{
+    'name': 'a step',
+    'step_number': 1,
+    'image': 'i1',
+  }, {
+    'name': 'another step',
+    'step_number': 2,
+    'image': 'i1',
+  }];
+  return object;
 }
+
+// interface for dsl step
+interface StepDSL {
+  name: string
+  step_number: number
+  image: string
+}
+
+
+// export async function startStep(step_id:number):Promise<string> {
+//   const result = await sdk.setStepAsStarted({ step_id });
+//   return JSON.stringify(result);
+// }

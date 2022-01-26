@@ -5,14 +5,12 @@ import path from 'node:path';
 import { setTimeout } from 'node:timers/promises';
 import { clearIntervalAsync } from 'set-interval-async';
 import { setIntervalAsync } from 'set-interval-async/dynamic';
+import type { GraphQLClient } from 'graphql-request';
 import type { SetIntervalAsyncTimer } from 'set-interval-async';
-import { getSdk } from './db/database.js';
 
+import { getSdk } from './db/database.js';
 import logger from './logger.js';
 import * as sftp from './sftp-utils.js';
-import { GraphQLClient } from 'graphql-request';
-import { timeStamp } from 'node:console';
-import { cpuUsage } from 'node:process';
 
 dotenv.config({ path: '../.env' });
 
@@ -102,17 +100,18 @@ async function createContainer() : Promise<void> {
     ],
   })) as unknown as Docker.Container;
   await config_object.createdContainer.start({});
-  // change the step status in the database to active 
-  await sdk.setStepAsStarted({ 'step_id': step_id });
+  // change the step status in the database to active
+  await sdk.setStepAsStarted({ step_id });
   logger.info(`Container started with ID: ${config_object.createdContainer.id}`);
 }
 
 type StatSample = {
-  timestamp: string,
+  time: string,
   cpu: number,
   memory: number,
   memory_max: number,
-  net: number,
+  rx_value: number,
+  tx_value: number
 };
 
 export async function parseStats() : Promise<void> {
@@ -143,6 +142,7 @@ export async function parseStats() : Promise<void> {
           networks: {
             eth0: {
               rx_bytes: number;
+              tx_bytes: number;
             };
           };
         };
@@ -153,17 +153,25 @@ export async function parseStats() : Promise<void> {
           return undefined;
         }
 
-        const timestamp = fileContent.read;
+        const time = fileContent.read;
         const cpu = fileContent.cpu_stats.cpu_usage.total_usage;
         const memory = fileContent.memory_stats.usage;
         // eslint-disable-next-line @typescript-eslint/naming-convention
         const memory_max = fileContent.memory_stats.max_usage;
-        const net = fileContent.networks.eth0.rx_bytes;
+        const rx_value = fileContent.networks.eth0.rx_bytes;
+        const tx_value = fileContent.networks.eth0.tx_bytes;
         sample = {
-          timestamp, cpu, memory, memory_max, net,
+          time, cpu, memory, memory_max, rx_value, tx_value,
         };
-        sdk.insertCpuUsage({ 'step_id': step_id, 'time': timestamp, 'value': cpu });
-        sdk.insertMemoryUsage({ 'step_id': step_id, 'time': timestamp, 'value': memory });
+        sdk.insertResourceUsage({
+          cpu,
+          memory,
+          memory_max,
+          rx_value,
+          tx_value,
+          step_id,
+          time,
+        });
       } catch (error) {
         logger.error(`Error parsing stats file: ${fullFilename}`);
         logger.error(error);
@@ -177,7 +185,7 @@ export async function parseStats() : Promise<void> {
   const definedStats = stats.filter((stat) : stat is StatSample => stat !== undefined);
 
   // We need to sort the stats by timestamp because we read them in parallel
-  const sortedStats = definedStats.sort((a, b) => a.timestamp.localeCompare(b.timestamp));
+  const sortedStats = definedStats.sort((a, b) => a.time.localeCompare(b.time));
 
   const json = JSON.stringify(sortedStats, undefined, ' ');
   await fsAsync.appendFile(path.join(directoryName, 'statistics.json'), json);
@@ -197,7 +205,7 @@ export default async function getStats(container: Docker.Container) : Promise<vo
   if (!ids.includes(config_object.createdContainer.id)) {
     logger.info('Completed execution of container');
     // update the step status as ended succesfully
-    sdk.setStepAsEndedSuccess({ 'step_id': step_id });
+    sdk.setStepAsEndedSuccess({ step_id });
     stopStats();
     await setTimeout(1000); // Wait 1s before parsing the stats
     await parseStats();
@@ -209,7 +217,7 @@ export default async function getStats(container: Docker.Container) : Promise<vo
 
     const fileName = path.join(config_object.targetDirectory, 'logs.txt');
     await fsAsync.writeFile(fileName, stream);
-    sdk.insertLog({ 'step_id': step_id, 'text': stream + ''});
+    sdk.insertLog({ step_id, text: `${stream}` });
     // get output from sandbox
     await sftp.getFromSandbox(config_object.remoteOutputFile, config_object.storeOutputFile);
     logger.info('Collected simulation files from Sandbox');
@@ -222,7 +230,8 @@ export default async function getStats(container: Docker.Container) : Promise<vo
     COMPLETED = false;
   } else { // collect statstics as long as the container is running
     const stream = await container.stats({ stream: false });
-    const fileName = path.join(config_object.targetDirectory, `stats.${config_object.counter}.json`);
+    const fileName = path.join(config_object.targetDirectory,
+      `stats.${config_object.counter}.json`);
     config_object.counter += 1;
     await fsAsync.writeFile(fileName, JSON.stringify(stream, undefined, ' '));
   }
@@ -248,9 +257,8 @@ export async function start(client:GraphQLClient, stepId:number) : Promise<void>
   init();
   sdk = getSdk(client);
   step_id = stepId;
-  logger.info('Starting simulation for step ' + config_object.stepNumber);
-  await sftp.putToSandbox(config_object.inputPath, config_object.remoteInputFile, 
-    config_object.storeInputFile);
+  logger.info(`Starting simulation for step ${config_object.stepNumber}`);
+  await sftp.putToSandbox(config_object.inputPath, config_object.remoteInputFile, config_object.storeInputFile);
   await createContainer();
   startStatsPolling();
   await waitForContainer();

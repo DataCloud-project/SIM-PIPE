@@ -101,16 +101,12 @@ query getSimulationIdandSteps($_eq: uuid!) {
   }
 }
 
-mutation insertCpuUsage($step_id: Int, $time: timestamp, $value: numeric) {
-  insert_simpipe_cpu_one(object: {step_id: $step_id, time: $time, value: $value}) {
+mutation insertResourceUsage($cpu: numeric = "", $memory: numeric = "", $memory_max: numeric = "", $rx_value: numeric = "", $tx_value: numeric = "", $step_id: Int = 10, $time: timestamptz = "") {
+  insert_simpipe_resource_usage_one(object: {cpu: $cpu, memory: $memory, memory_max: $memory_max, rx_value: $rx_value, tx_value: $tx_value, step_id: $step_id, time: $time}) {
     id
   }
 }
-mutation insertMemoryUsage($step_id: Int, $time: timestamp, $value: numeric) {
-  insert_simpipe_memory_one(object: {step_id: $step_id, time: $time, value: $value}) {
-    id
-  }
-}
+
 mutation insertLog($step_id: Int, $text: String) {
   insert_simpipe_logs_one(object: {step_id: $step_id, text: $text}) {
     step_id
