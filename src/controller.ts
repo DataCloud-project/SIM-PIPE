@@ -51,13 +51,15 @@ type ControllerConfig = {
   counter:number,
   inputFile:string,
   remoteInputFile: string,
-  remoteOutputFile:string,
+  remoteOutputDir:string,
   storeInputFile:string,
-  storeOutputFile:string
+  storeOutputDir:string
 };
 
 const config_object:ControllerConfig = {};
 let COMPLETED:boolean;
+
+// TODO: fix env variables
 
 function init() {
   config_object.simId = process.env.SIM_ID;
@@ -76,9 +78,10 @@ function init() {
   config_object.counter = 1;
   // config_object.inputFile = inputPath;
   config_object.remoteInputFile = 'in/input.txt';
-  config_object.remoteOutputFile = 'out/output.txt';
+  config_object.remoteOutputDir = 'out/';
   config_object.storeInputFile = `${config_object.targetDirectory}/input.txt`;
-  config_object.storeOutputFile = `${config_object.targetDirectory}/output.txt`;
+  // config_object.storeOutputFile = `${config_object.targetDirectory}/output.txt`;
+  config_object.storeOutputDir = ${config_object.targetDirectory};
   COMPLETED = true;
 }
 let timer: SetIntervalAsyncTimer;
@@ -219,7 +222,7 @@ export default async function getStats(container: Docker.Container) : Promise<vo
     await fsAsync.writeFile(fileName, stream);
     sdk.insertLog({ step_id, text: `${stream}` });
     // get output from sandbox
-    await sftp.getFromSandbox(config_object.remoteOutputFile, config_object.storeOutputFile);
+    await sftp.getFromSandbox(config_object.remoteOutputDir, config_object.storeOutputDir);
     logger.info('Collected simulation files from Sandbox');
 
     // clear all files created during simulation
@@ -263,5 +266,3 @@ export async function start(client:GraphQLClient, stepId:number) : Promise<void>
   startStatsPolling();
   await waitForContainer();
 }
-
-// await start();

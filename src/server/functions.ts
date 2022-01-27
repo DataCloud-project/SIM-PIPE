@@ -54,7 +54,7 @@ export async function createStep(run_id:string, name:string, image:string,
 }
 
 export async function createRun(simulation_id:string, dsl:string):Promise<string> {
-  // TODO: parse dsl and create all steps in the run
+  // TODO: parse dsl
   const steps:Array<StepDSL> = parseDSL();
   const result = await sdk.createRun({
     simulation_id,
@@ -69,7 +69,6 @@ export async function createRun(simulation_id:string, dsl:string):Promise<string
   for (const step of steps) {
     await createStep(runId, step.name, step.image, step.step_number);
   }
-  // return result.start_run.run_id;
   return runId;
 }
 
@@ -102,6 +101,14 @@ export async function startRun(run_id:string):Promise<string> {
   // set run as completed successully in the database
   sdk.setRunAsEndedSuccess({ run_id });
   return run_id;
+}
+
+export async function getSimulationRunResults(simulation_id:string,
+  run_id:string):Promise<string> {
+  const result = await sdk.getSimulationRunResults({ simulation_id, run_id });
+  logger.info(simulation_id);
+  logger.info(run_id);
+  return JSON.stringify(result);
 }
 
 // function parseDSL: takes in dsl from def-pipe and return the list of steps

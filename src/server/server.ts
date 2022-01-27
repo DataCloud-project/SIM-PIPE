@@ -6,15 +6,13 @@ import * as functions from './functions.js';
 const typeDefs = gql`
   type Query {
       All_Simulations: String
-      # Start: String
+      Get_Simulation_Run_Results(simulation_id: String, run_id:String): String
   }
   type Mutation {
     Create_Simulation(model_id:String): String
     Create_Run(simulation_id: String, dsl:String): String
-    Create_Step(run_id: String, name:String, image:String, pipeline_step_number:Int): String
-    # to implement
-    Start_Step(step_id:Int): String  
-    Start_Run(run_id:String): String  
+    Start_Run(run_id:String): String
+    #TODO: implement 
     Stop_Step(step_id:Int): String
     Stop_Run(run_id:String): String
   }
@@ -23,7 +21,10 @@ const typeDefs = gql`
 const resolvers = {
   Query: {
     All_Simulations: functions.allSimulations,
-    // stop
+    async Get_Simulation_Run_Results(p, arguments_: { simulation_id:string,
+      run_id:string }):Promise<string> {
+      return await functions.getSimulationRunResults(arguments_.simulation_id, arguments_.run_id);
+    },
   },
   Mutation: {
     async Create_Run(p, arguments_: { simulation_id:string, dsl:string }):Promise<string> {
@@ -47,6 +48,8 @@ const resolvers = {
     },
   },
 };
+
+// TODO: dockerize backend
 
 const server = new ApolloServer({ typeDefs, resolvers });
 await server.listen({ port: 9000 }).then(({ url }) => {

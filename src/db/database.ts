@@ -2813,6 +2813,14 @@ export type InsertLogMutationVariables = Exact<{
 
 export type InsertLogMutation = { __typename?: 'mutation_root', insert_simpipe_logs_one?: { __typename?: 'simpipe_logs', step_id: number } | null | undefined };
 
+export type GetSimulationRunResultsQueryVariables = Exact<{
+  simulation_id?: InputMaybe<Scalars['uuid']>;
+  run_id?: InputMaybe<Scalars['uuid']>;
+}>;
+
+
+export type GetSimulationRunResultsQuery = { __typename?: 'query_root', simulations: Array<{ __typename?: 'simulations', runs: Array<{ __typename?: 'runs', run_id: string, status: Simpipe_Run_Status_Enum, created: string, started?: string | null | undefined, ended?: string | null | undefined, dsl: unknown, steps: Array<{ __typename?: 'steps', step_id: number, status: Simpipe_Step_Status_Enum, created: string, started?: string | null | undefined, ended?: string | null | undefined, image: string, name: string, pipeline_step_number: number, resource_usages: Array<{ __typename?: 'simpipe_resource_usage', id: number, step_id: number, cpu: number, memory: number, memory_max: number, rx_value: number, time: string, tx_value: number }> }> }> }> };
+
 
 export const AllSimulationsDocument = gql`
     query AllSimulations {
@@ -2959,6 +2967,40 @@ export const InsertLogDocument = gql`
   }
 }
     `;
+export const GetSimulationRunResultsDocument = gql`
+    query getSimulationRunResults($simulation_id: uuid = "", $run_id: uuid = "") {
+  simulations(where: {simulation_id: {_eq: $simulation_id}}) {
+    runs(where: {run_id: {_eq: $run_id}}) {
+      run_id
+      status
+      created
+      started
+      ended
+      dsl
+      steps(order_by: {pipeline_step_number: asc}) {
+        step_id
+        status
+        created
+        started
+        ended
+        image
+        name
+        pipeline_step_number
+        resource_usages(order_by: {time: asc}) {
+          id
+          step_id
+          cpu
+          memory
+          memory_max
+          rx_value
+          time
+          tx_value
+        }
+      }
+    }
+  }
+}
+    `;
 
 export type SdkFunctionWrapper = <T>(action: (requestHeaders?:Record<string, string>) => Promise<T>, operationName: string) => Promise<T>;
 
@@ -3005,6 +3047,9 @@ export function getSdk(client: GraphQLClient, withWrapper: SdkFunctionWrapper = 
     },
     insertLog(variables?: InsertLogMutationVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<InsertLogMutation> {
       return withWrapper((wrappedRequestHeaders) => client.request<InsertLogMutation>(InsertLogDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'insertLog');
+    },
+    getSimulationRunResults(variables?: GetSimulationRunResultsQueryVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<GetSimulationRunResultsQuery> {
+      return withWrapper((wrappedRequestHeaders) => client.request<GetSimulationRunResultsQuery>(GetSimulationRunResultsDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'getSimulationRunResults');
     }
   };
 }

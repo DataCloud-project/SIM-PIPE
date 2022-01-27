@@ -48,11 +48,17 @@ export async function putToSandbox(
 }
 
 export async function getFromSandbox(
-  remoteFile: string, storeOutputFile: string) : Promise<void> {
-  const destination = fs.createWriteStream(storeOutputFile);
-  await sftp.connect(options);
+  remoteOutputDir: string, storeOutputDir: string) : Promise<void> {
+    // await sftp.connect(options);
   try {
-    await sftp.get(remoteFile, destination);
+    const files = await sftp.list(remoteOutputDir);
+    const fileList = files.map((file) => `${file.name}`);
+    console.log(fileList);
+    fileList.forEach(async remoteFile => {
+      const destination = fs.createWriteStream(storeOutputDir + remoteFile);
+      await sftp.get(`${remoteOutputDir}${remoteFile}`, destination);
+      // logger.info(`Deleted ${f} from Sandbox`);
+    });
   } finally {
     await sftp.end();
   }
@@ -78,3 +84,5 @@ export async function clearSandbox() : Promise<void> {
     logger.info('Cleared Sandbox for next simulation');
   }
 }
+
+// await getFromSandbox('out/', '1/');

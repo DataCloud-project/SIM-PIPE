@@ -112,3 +112,36 @@ mutation insertLog($step_id: Int, $text: String) {
     step_id
   }
 }
+
+query getSimulationRunResults($simulation_id: uuid = "", $run_id: uuid = "") {
+  simulations(where: {simulation_id: {_eq: $simulation_id}}) {
+    runs(where: {run_id: {_eq: $run_id}}) {
+      run_id
+      status
+      created
+      started
+      ended
+      dsl
+      steps(order_by: {pipeline_step_number: asc}) {
+        step_id
+        status
+        created
+        started
+        ended
+        image
+        name
+        pipeline_step_number
+        resource_usages(order_by: {time: asc}) {
+          id
+          step_id
+          cpu
+          memory
+          memory_max
+          rx_value
+          time
+          tx_value
+        }
+      }
+    }
+  }
+}
