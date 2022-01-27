@@ -57,16 +57,16 @@
               created
               started
               ended
-              cpu(order_by: {time: asc}) {
+              resource_usages(order_by: {time: asc}) {
                 time
-                value
+                cpu
+                memory
+                memory_max
+                rx_value
+                tx_value
               }
               log {
                 text
-              }
-              memory(order_by: {time: asc}) {
-                time
-                value
               }
               name
               status
