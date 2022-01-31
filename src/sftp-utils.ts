@@ -70,10 +70,10 @@ export async function putFolderToSandbox(
   fs.mkdirSync(targetOutputDirectory, { recursive: true });
 
   // copy all files in localFolder to storageFolder
-  fs.readdirSync(localFolder).forEach(async f => {
-    // copy file to storage location
+  const filelist = fs.readdirSync(localFolder);
+  await Promise.all(filelist.map(async (f) => {
     await asyncFs.copyFile(`${localFolder}${f}`, `${targetInputDirectory}${f}`);
-  });
+  }));
 
   // send input file to the sandbox
   try {
@@ -91,14 +91,6 @@ export async function getFromSandbox(
   remoteOutputDirectory: string, storeOutputDirectory: string) : Promise<void> {  
   try {
     await sftp.connect(options);
-    // const files = await sftp.list(remoteOutputDirectory);
-    // const fileList = files.map((file) => `${file.name}`);
-    // console.log(fileList);
-    // fileList.forEach(async (remoteFile) => {
-    //   const destination = fs.createWriteStream(storeOutputDirectory + remoteFile);
-    //   console.log(`${remoteOutputDirectory}${remoteFile}`);
-    //   let result = await sftp.get(`${remoteOutputDirectory}${remoteFile}`, destination);
-    // });
     await sftp.downloadDir(remoteOutputDirectory, storeOutputDirectory);
   } catch (error) {
     throw new Error(`${error} in getFromSandbox`);
@@ -132,3 +124,14 @@ export async function clearSandbox() : Promise<void> {
 
 // await getFromSandbox('out/', '1/');
 // await putFolderToSandbox('./2/', 'in/', './1/');
+
+
+// getfrom sandbox
+ // const files = await sftp.list(remoteOutputDirectory);
+    // const fileList = files.map((file) => `${file.name}`);
+    // console.log(fileList);
+    // fileList.forEach(async (remoteFile) => {
+    //   const destination = fs.createWriteStream(storeOutputDirectory + remoteFile);
+    //   console.log(`${remoteOutputDirectory}${remoteFile}`);
+    //   let result = await sftp.get(`${remoteOutputDirectory}${remoteFile}`, destination);
+    // });
