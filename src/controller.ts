@@ -50,16 +50,12 @@ type ControllerConfig = {
   createdContainer: Docker.Container,
   counter:number,
   inputFile:string,
-  remoteInputFile: string,
+  remoteInputFolder: string,
   remoteOutputDir:string,
-  storeInputFile:string,
-  storeOutputDir:string
 };
 
 const config_object:ControllerConfig = {};
 let COMPLETED:boolean;
-
-// TODO: fix env variables
 
 function init() {
   config_object.simId = process.env.SIM_ID;
@@ -69,7 +65,7 @@ function init() {
   config_object.inputPath = process.env.INPUT_PATH;
 
   if (!config_object.simId || !config_object.runId || !config_object.stepNumber || !config_object.image || !config_object.inputPath) {
-    throw new Error('Missing environment variables: SIM_ID, RUN_ID, STEP_NUMBER, IMAGE, INPUT_PATH');
+    throw new Error('Missing environment variables in controller: SIM_ID, RUN_ID, STEP_NUMBER, IMAGE, INPUT_PATH');
   }
   config_object.targetDirectory = path.join(config_object.simId, config_object.runId, config_object.stepNumber);
   // Polling interval for collecting stats from running container
@@ -77,11 +73,10 @@ function init() {
 
   config_object.counter = 1;
   // config_object.inputFile = inputPath;
-  config_object.remoteInputFile = 'in/input.txt';
+  config_object.remoteInputFolder = 'in/';
   config_object.remoteOutputDir = 'out/';
-  config_object.storeInputFile = `${config_object.targetDirectory}/input.txt`;
   // config_object.storeOutputFile = `${config_object.targetDirectory}/output.txt`;
-  config_object.storeOutputDir = ${config_object.targetDirectory};
+  // config_object.targetDir = `${config_object.targetDirectory}`;
   COMPLETED = true;
 }
 let timer: SetIntervalAsyncTimer;
@@ -101,10 +96,14 @@ async function createContainer() : Promise<void> {
       '/var/lib/docker/volumes/volume_vm/_data/out:/app/out',
       '/var/lib/docker/volumes/volume_vm/_data/work:/app/work',
     ],
+    Env: [
+      `SIM_ID=${config_object.simId}`,
+      `STEP_NUMBER=${config_object.stepNumber}`,
+    ],
   })) as unknown as Docker.Container;
   await config_object.createdContainer.start({});
   // change the step status in the database to active
-  await sdk.setStepAsStarted({ step_id });
+  // TODO: await sdk.setStepAsStarted({ step_id });
   logger.info(`Container started with ID: ${config_object.createdContainer.id}`);
 }
 
@@ -166,15 +165,15 @@ export async function parseStats() : Promise<void> {
         sample = {
           time, cpu, memory, memory_max, rx_value, tx_value,
         };
-        sdk.insertResourceUsage({
-          cpu,
-          memory,
-          memory_max,
-          rx_value,
-          tx_value,
-          step_id,
-          time,
-        });
+        // TODO: sdk.insertResourceUsage({
+        //   cpu,
+        //   memory,
+        //   memory_max,
+        //   rx_value,
+        //   tx_value,
+        //   step_id,
+        //   time,
+        // });
       } catch (error) {
         logger.error(`Error parsing stats file: ${fullFilename}`);
         logger.error(error);
@@ -208,7 +207,7 @@ export default async function getStats(container: Docker.Container) : Promise<vo
   if (!ids.includes(config_object.createdContainer.id)) {
     logger.info('Completed execution of container');
     // update the step status as ended succesfully
-    sdk.setStepAsEndedSuccess({ step_id });
+    // TODO: sdk.setStepAsEndedSuccess({ step_id });
     stopStats();
     await setTimeout(1000); // Wait 1s before parsing the stats
     await parseStats();
@@ -220,9 +219,10 @@ export default async function getStats(container: Docker.Container) : Promise<vo
 
     const fileName = path.join(config_object.targetDirectory, 'logs.txt');
     await fsAsync.writeFile(fileName, stream);
-    sdk.insertLog({ step_id, text: `${stream}` });
+    // TODO: sdk.insertLog({ step_id, text: `${stream}` });
     // get output from sandbox
-    await sftp.getFromSandbox(config_object.remoteOutputDir, config_object.storeOutputDir);
+    await sftp.getFromSandbox(config_object.remoteOutputDir,
+      `${config_object.targetDirectory}/outputs`);
     logger.info('Collected simulation files from Sandbox');
 
     // clear all files created during simulation
@@ -256,13 +256,14 @@ async function waitForContainer():Promise<void> {
   }
 }
 
-export async function start(client:GraphQLClient, stepId:number) : Promise<void> {
+export async function start(client:GraphQLClient, stepId:number) : Promise<string> {
   init();
   sdk = getSdk(client);
   step_id = stepId;
   logger.info(`Starting simulation for step ${config_object.stepNumber}`);
-  await sftp.putToSandbox(config_object.inputPath, config_object.remoteInputFile, config_object.storeInputFile);
+  await sftp.putFolderToSandbox(config_object.inputPath, config_object.remoteInputFolder);
   await createContainer();
   startStatsPolling();
   await waitForContainer();
+  return `${config_object.targetDirectory}/outputs/`;
 }

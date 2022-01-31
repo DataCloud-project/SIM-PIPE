@@ -25,19 +25,6 @@ export async function allSimulations():Promise<string> {
   return result;
 }
 
-export async function createRun1(simulation_id:string, dsl:string):Promise<string> {
-  // TODO: parse dsl and create all steps in the run
-  const result = await sdk.createRun({
-    simulation_id,
-    dsl: JSON.parse(dsl),
-  });
-  if (!result.start_run?.run_id) {
-    throw new Error('Undefined results from all_simulations');
-  }
-  logger.info(`Run created with id ${result.start_run.run_id}`);
-  return result.start_run.run_id;
-}
-
 export async function createStep(run_id:string, name:string, image:string,
   pipeline_step_number:number):Promise<string> {
   const result = await sdk.createStep({
@@ -81,25 +68,27 @@ export async function createSimulation(model_id:string):Promise<string> {
 
 export async function startRun(run_id:string):Promise<string> {
   // set run as started in the database
-  await sdk.setRunAsStarted({ run_id });
+  // TODO: await sdk.setRunAsStarted({ run_id });
   // get image, inputFilePath, stepNumber,  simulationId, runId of the task to run
   const result = await sdk.getSimulationIdandSteps({ '_eq': run_id });
   const { steps } = result.runs[0];
   // set runId and simulationId once for all runs
   process.env.RUN_ID = run_id;
   process.env.SIM_ID = result.runs[0].simulation_id;
+  // input file for step 1
+  process.env.INPUT_PATH = 'src/1/';
   // sort steps according to pipeline_step_number
   steps.sort((a, b) => a.pipeline_step_number - b.pipeline_step_number);
   for await (const step of steps) {
     // set the variable values in env file
     process.env.STEP_NUMBER = step.pipeline_step_number;
     process.env.IMAGE = step.image;
-    // TODO: change inputfiles for steps > 1
-    await controller.start(client, step.step_id);
+    // set input path for next step as output path of the previous step returned
+    process.env.INPUT_PATH = await controller.start(client, step.step_id);
     logger.info(`Step ${step.pipeline_step_number} finished execution\n`);
   }
   // set run as completed successully in the database
-  sdk.setRunAsEndedSuccess({ run_id });
+  // TODO: sdk.setRunAsEndedSuccess({ run_id });
   return run_id;
 }
 
