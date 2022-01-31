@@ -12,7 +12,9 @@ import { getSdk } from './db/database.js';
 import logger from './logger.js';
 import * as sftp from './sftp-utils.js';
 
-dotenv.config({ path: '../.env' });
+// dotenv.config({ path: '../.env' });
+
+dotenv.config();
 
 // remote is true by default
 const remote:boolean = !process.argv[2] ? true : process.argv[2] === 'remote';
@@ -103,7 +105,7 @@ async function createContainer() : Promise<void> {
   })) as unknown as Docker.Container;
   await config_object.createdContainer.start({});
   // change the step status in the database to active
-  // TODO: await sdk.setStepAsStarted({ step_id });
+  await sdk.setStepAsStarted({ step_id });
   logger.info(`Container started with ID: ${config_object.createdContainer.id}`);
 }
 
@@ -165,15 +167,15 @@ export async function parseStats() : Promise<void> {
         sample = {
           time, cpu, memory, memory_max, rx_value, tx_value,
         };
-        // TODO: sdk.insertResourceUsage({
-        //   cpu,
-        //   memory,
-        //   memory_max,
-        //   rx_value,
-        //   tx_value,
-        //   step_id,
-        //   time,
-        // });
+        sdk.insertResourceUsage({
+          cpu,
+          memory,
+          memory_max,
+          rx_value,
+          tx_value,
+          step_id,
+          time,
+        });
       } catch (error) {
         logger.error(`Error parsing stats file: ${fullFilename}`);
         logger.error(error);
@@ -207,7 +209,7 @@ export default async function getStats(container: Docker.Container) : Promise<vo
   if (!ids.includes(config_object.createdContainer.id)) {
     logger.info('Completed execution of container');
     // update the step status as ended succesfully
-    // TODO: sdk.setStepAsEndedSuccess({ step_id });
+    sdk.setStepAsEndedSuccess({ step_id });
     stopStats();
     await setTimeout(1000); // Wait 1s before parsing the stats
     await parseStats();
@@ -219,7 +221,7 @@ export default async function getStats(container: Docker.Container) : Promise<vo
 
     const fileName = path.join(config_object.targetDirectory, 'logs.txt');
     await fsAsync.writeFile(fileName, stream);
-    // TODO: sdk.insertLog({ step_id, text: `${stream}` });
+    sdk.insertLog({ step_id, text: `${stream}` });
     // get output from sandbox
     await sftp.getFromSandbox(config_object.remoteOutputDir,
       `${config_object.targetDirectory}/outputs`);

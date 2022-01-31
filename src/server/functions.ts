@@ -11,7 +11,8 @@ import * as controller from '../controller.js';
 import { getSdk } from '../db/database.js';
 import logger from '../logger.js';
 
-dotenv.config({ path: '../../.env' });
+dotenv.config();
+// dotenv.config({ path: "../../.env" });
 
 const client = new GraphQLClient('http://127.0.0.1:8080/v1/graphql', {
   headers: {
@@ -68,17 +69,16 @@ export async function createSimulation(model_id:string):Promise<string> {
 
 export async function startRun(run_id:string):Promise<string> {
   // set run as started in the database
-  // TODO: await sdk.setRunAsStarted({ run_id });
+  await sdk.setRunAsStarted({ run_id });
   // get image, inputFilePath, stepNumber,  simulationId, runId of the task to run
   const result = await sdk.getSimulationIdandSteps({ '_eq': run_id });
   const { steps } = result.runs[0];
   // set runId and simulationId once for all runs
   process.env.RUN_ID = run_id;
   process.env.SIM_ID = result.runs[0].simulation_id;
-  // input file for step 1
-  process.env.INPUT_PATH = 'src/1/';
   // sort steps according to pipeline_step_number
   steps.sort((a, b) => a.pipeline_step_number - b.pipeline_step_number);
+  // await Promise.all(steps.map(async (step) => {
   for await (const step of steps) {
     // set the variable values in env file
     process.env.STEP_NUMBER = step.pipeline_step_number;
@@ -88,7 +88,7 @@ export async function startRun(run_id:string):Promise<string> {
     logger.info(`Step ${step.pipeline_step_number} finished execution\n`);
   }
   // set run as completed successully in the database
-  // TODO: sdk.setRunAsEndedSuccess({ run_id });
+  sdk.setRunAsEndedSuccess({ run_id });
   return run_id;
 }
 
@@ -121,7 +121,6 @@ interface StepDSL {
   step_number: number
   image: string
 }
-
 
 // export async function startStep(step_id:number):Promise<string> {
 //   const result = await sdk.setStepAsStarted({ step_id });
