@@ -1,9 +1,4 @@
-/* eslint-disable quote-props */
-/* eslint-disable no-await-in-loop */
 /* eslint-disable no-restricted-syntax */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import * as dotenv from 'dotenv';
 import { GraphQLClient } from 'graphql-request';
 
@@ -12,7 +7,6 @@ import { getSdk } from '../db/database.js';
 import logger from '../logger.js';
 
 dotenv.config();
-// dotenv.config({ path: "../../.env" });
 
 const client = new GraphQLClient('http://127.0.0.1:8080/v1/graphql', {
   headers: {
@@ -22,8 +16,48 @@ const client = new GraphQLClient('http://127.0.0.1:8080/v1/graphql', {
 const sdk = getSdk(client);
 
 export async function allSimulations():Promise<string> {
-  const result:string = JSON.stringify(await sdk.AllSimulations());
-  return result;
+  return JSON.stringify(await sdk.AllSimulations(), undefined, 2);
+}
+
+export async function allRunsSteps():Promise<string> {
+  return JSON.stringify(await sdk.allRunsAndSteps(), undefined, 2);
+}
+
+export async function createSimulation(model_id:string):Promise<string> {
+  const result = await sdk.createSimulation({
+    model_id,
+  });
+  if (!result?.create_simulation?.simulation_id) {
+    throw new Error('Undefined expression in createSimulation');
+  }
+  return result.create_simulation.simulation_id;
+}
+
+// function parseDSL: takes in dsl from def-pipe and return the list of steps
+// to be created
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+function parseDSL(dsl:string):Array<StepDSL> {
+  // TODO; parse dsl argument
+  const object:Array<StepDSL> = [{
+    name: 'a step',
+    step_number: 1,
+    image: 'i1',
+    env: ['STEP_NUMBER=1'],
+  }, {
+    name: 'another step',
+    step_number: 2,
+    image: 'i1',
+    env: ['STEP_NUMBER=2'],
+  }];
+  return object;
+}
+
+// interface for dsl step
+interface StepDSL {
+  name: string
+  step_number: number
+  image: string
+  env: [string]
 }
 
 export async function createStep(run_id:string, name:string, image:string,
@@ -43,7 +77,7 @@ export async function createStep(run_id:string, name:string, image:string,
 
 export async function createRun(simulation_id:string, dsl:string):Promise<string> {
   // TODO: parse dsl
-  const steps:Array<StepDSL> = parseDSL();
+  const steps:Array<StepDSL> = parseDSL(dsl);
   const result = await sdk.createRun({
     simulation_id,
     dsl: JSON.parse(dsl),
@@ -54,75 +88,37 @@ export async function createRun(simulation_id:string, dsl:string):Promise<string
   logger.info(`Run created with id ${result.start_run.run_id}`);
   // create all steps in the database
   const { run_id: runId } = result.start_run;
-  for (const step of steps) {
+  for await (const step of steps) {
     await createStep(runId, step.name, step.image, step.step_number);
   }
   return runId;
 }
 
-export async function createSimulation(model_id:string):Promise<string> {
-  const result = await sdk.createSimulation({
-    model_id,
-  });
-  return result.create_simulation?.simulation_id;
-}
-
 export async function startRun(run_id:string):Promise<string> {
   // set run as started in the database
   await sdk.setRunAsStarted({ run_id });
-  // get image, inputFilePath, stepNumber,  simulationId, runId of the task to run
-  const result = await sdk.getSimulationIdandSteps({ '_eq': run_id });
-  const { steps } = result.runs[0];
+  // get simulationId and step details of runId
+  const result = await sdk.getSimulationIdandSteps({ run_id });
+  const { steps } = result.runs[0]; // get steps sorted acc to pipeline_step_number
   // set runId and simulationId once for all runs
   process.env.RUN_ID = run_id;
   process.env.SIM_ID = result.runs[0].simulation_id;
-  // sort steps according to pipeline_step_number
-  steps.sort((a, b) => a.pipeline_step_number - b.pipeline_step_number);
-  // await Promise.all(steps.map(async (step) => {
+  // run each step
   for await (const step of steps) {
     // set the variable values in env file
-    process.env.STEP_NUMBER = step.pipeline_step_number;
+    process.env.STEP_NUMBER = `${step.pipeline_step_number}`;
     process.env.IMAGE = step.image;
-    // set input path for next step as output path of the previous step returned
+    // set input path for next step as output path of the previous step returned and start step
     process.env.INPUT_PATH = await controller.start(client, step.step_id);
     logger.info(`Step ${step.pipeline_step_number} finished execution\n`);
   }
   // set run as completed successully in the database
-  sdk.setRunAsEndedSuccess({ run_id });
+  await sdk.setRunAsEndedSuccess({ run_id });
   return run_id;
 }
 
 export async function getSimulationRunResults(simulation_id:string,
   run_id:string):Promise<string> {
   const result = await sdk.getSimulationRunResults({ simulation_id, run_id });
-  logger.info(simulation_id);
-  logger.info(run_id);
-  return JSON.stringify(result);
+  return JSON.stringify(result, undefined, 2);
 }
-
-// function parseDSL: takes in dsl from def-pipe and return the list of steps
-// to be created
-function parseDSL():Array<StepDSL> {
-  const object:Array<StepDSL> = [{
-    'name': 'a step',
-    'step_number': 1,
-    'image': 'i1',
-  }, {
-    'name': 'another step',
-    'step_number': 2,
-    'image': 'i1',
-  }];
-  return object;
-}
-
-// interface for dsl step
-interface StepDSL {
-  name: string
-  step_number: number
-  image: string
-}
-
-// export async function startStep(step_id:number):Promise<string> {
-//   const result = await sdk.setStepAsStarted({ step_id });
-//   return JSON.stringify(result);
-// }

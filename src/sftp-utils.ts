@@ -51,7 +51,7 @@ export async function putFileToSandbox(
 }
 
 export async function putFolderToSandbox(
-  localFolder: string, remoteFolder: string, storageFolder: string,
+  localFolder: string, remoteFolder: string,
 ) : Promise<void> {
   // create the output folders for the run details
   const simId = process.env.SIM_ID;

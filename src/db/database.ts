@@ -2718,12 +2718,12 @@ export type Uuid_Comparison_Exp = {
 export type AllSimulationsQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type AllSimulationsQuery = { __typename?: 'query_root', simulations: Array<{ __typename?: 'simulations', simulation_id: string, runs: Array<{ __typename?: 'runs', created: string, simulation: { __typename?: 'simulations', created: string } }> }> };
+export type AllSimulationsQuery = { __typename?: 'query_root', simulations: Array<{ __typename?: 'simulations', simulation_id: string, created: string, runs: Array<{ __typename?: 'runs', run_id: string, status: Simpipe_Run_Status_Enum, created: string, started?: string | null | undefined, ended?: string | null | undefined }> }> };
 
 export type AllRunsAndStepsQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type AllRunsAndStepsQuery = { __typename?: 'query_root', runs: Array<{ __typename?: 'runs', created: string, started?: string | null | undefined, status: Simpipe_Run_Status_Enum, steps: Array<{ __typename?: 'steps', created: string, ended?: string | null | undefined }> }> };
+export type AllRunsAndStepsQuery = { __typename?: 'query_root', runs: Array<{ __typename?: 'runs', run_id: string, created: string, started?: string | null | undefined, status: Simpipe_Run_Status_Enum, steps: Array<{ __typename?: 'steps', step_id: number, created: string, started?: string | null | undefined, ended?: string | null | undefined, status: Simpipe_Step_Status_Enum }> }> };
 
 export type StartNewRunMutationVariables = Exact<{
   simulation_id: Scalars['uuid'];
@@ -2748,35 +2748,35 @@ export type CreateStepMutationVariables = Exact<{
 }>;
 
 
-export type CreateStepMutation = { __typename?: 'mutation_root', insert_steps_one?: { __typename?: 'steps', created: string, run_id: string, step_id: number, status: Simpipe_Step_Status_Enum, name: string } | null | undefined };
+export type CreateStepMutation = { __typename?: 'mutation_root', insert_steps_one?: { __typename?: 'steps', step_id: number, created: string, run_id: string, status: Simpipe_Step_Status_Enum, name: string } | null | undefined };
 
 export type SetStepAsStartedMutationVariables = Exact<{
   step_id: Scalars['Int'];
 }>;
 
 
-export type SetStepAsStartedMutation = { __typename?: 'mutation_root', update_steps_by_pk?: { __typename?: 'steps', step_id: number, started?: string | null | undefined, status: Simpipe_Step_Status_Enum, name: string, pipeline_step_number: number, created: string } | null | undefined };
+export type SetStepAsStartedMutation = { __typename?: 'mutation_root', update_steps_by_pk?: { __typename?: 'steps', step_id: number, status: Simpipe_Step_Status_Enum } | null | undefined };
 
 export type SetStepAsEndedSuccessMutationVariables = Exact<{
   step_id: Scalars['Int'];
 }>;
 
 
-export type SetStepAsEndedSuccessMutation = { __typename?: 'mutation_root', update_steps_by_pk?: { __typename?: 'steps', step_id: number, started?: string | null | undefined, status: Simpipe_Step_Status_Enum, name: string, pipeline_step_number: number, created: string, ended?: string | null | undefined } | null | undefined };
+export type SetStepAsEndedSuccessMutation = { __typename?: 'mutation_root', update_steps_by_pk?: { __typename?: 'steps', step_id: number, status: Simpipe_Step_Status_Enum } | null | undefined };
 
 export type SetRunAsStartedMutationVariables = Exact<{
   run_id: Scalars['uuid'];
 }>;
 
 
-export type SetRunAsStartedMutation = { __typename?: 'mutation_root', update_runs_by_pk?: { __typename?: 'runs', run_id: string } | null | undefined };
+export type SetRunAsStartedMutation = { __typename?: 'mutation_root', update_runs_by_pk?: { __typename?: 'runs', run_id: string, status: Simpipe_Run_Status_Enum } | null | undefined };
 
 export type SetRunAsEndedSuccessMutationVariables = Exact<{
   run_id: Scalars['uuid'];
 }>;
 
 
-export type SetRunAsEndedSuccessMutation = { __typename?: 'mutation_root', update_runs_by_pk?: { __typename?: 'runs', run_id: string } | null | undefined };
+export type SetRunAsEndedSuccessMutation = { __typename?: 'mutation_root', update_runs_by_pk?: { __typename?: 'runs', run_id: string, status: Simpipe_Run_Status_Enum } | null | undefined };
 
 export type CreateSimulationMutationVariables = Exact<{
   model_id: Scalars['uuid'];
@@ -2786,7 +2786,7 @@ export type CreateSimulationMutationVariables = Exact<{
 export type CreateSimulationMutation = { __typename?: 'mutation_root', create_simulation?: { __typename?: 'simulations', model_id: string, simulation_id: string, created: string } | null | undefined };
 
 export type GetSimulationIdandStepsQueryVariables = Exact<{
-  _eq: Scalars['uuid'];
+  run_id: Scalars['uuid'];
 }>;
 
 
@@ -2826,11 +2826,13 @@ export const AllSimulationsDocument = gql`
     query AllSimulations {
   simulations {
     simulation_id
+    created
     runs {
+      run_id
+      status
       created
-      simulation {
-        created
-      }
+      started
+      ended
     }
   }
 }
@@ -2838,12 +2840,16 @@ export const AllSimulationsDocument = gql`
 export const AllRunsAndStepsDocument = gql`
     query allRunsAndSteps {
   runs {
+    run_id
     created
     started
     status
     steps {
+      step_id
       created
+      started
       ended
+      status
     }
   }
 }
@@ -2870,9 +2876,9 @@ export const CreateStepDocument = gql`
   insert_steps_one(
     object: {run_id: $run_id, name: $name, image: $image, pipeline_step_number: $pipeline_step_number}
   ) {
+    step_id
     created
     run_id
-    step_id
     status
     name
   }
@@ -2885,11 +2891,7 @@ export const SetStepAsStartedDocument = gql`
     _set: {started: "now()", status: active}
   ) {
     step_id
-    started
     status
-    name
-    pipeline_step_number
-    created
   }
 }
     `;
@@ -2900,12 +2902,7 @@ export const SetStepAsEndedSuccessDocument = gql`
     _set: {ended: "now()", status: completed}
   ) {
     step_id
-    started
     status
-    name
-    pipeline_step_number
-    created
-    ended
   }
 }
     `;
@@ -2916,6 +2913,7 @@ export const SetRunAsStartedDocument = gql`
     _set: {started: "now()", status: active}
   ) {
     run_id
+    status
   }
 }
     `;
@@ -2926,6 +2924,7 @@ export const SetRunAsEndedSuccessDocument = gql`
     _set: {ended: "now()", status: completed}
   ) {
     run_id
+    status
   }
 }
     `;
@@ -2939,10 +2938,10 @@ export const CreateSimulationDocument = gql`
 }
     `;
 export const GetSimulationIdandStepsDocument = gql`
-    query getSimulationIdandSteps($_eq: uuid!) {
-  runs(where: {run_id: {_eq: $_eq}}) {
+    query getSimulationIdandSteps($run_id: uuid!) {
+  runs(where: {run_id: {_eq: $run_id}}) {
     simulation_id
-    steps {
+    steps(order_by: {pipeline_step_number: asc}) {
       step_id
       pipeline_step_number
       image

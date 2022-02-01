@@ -2,33 +2,34 @@
 query AllSimulations {
   simulations {
     simulation_id
+    created
     runs {
+      run_id
+      status
       created
-      simulation {
-        created
-      }
-    }
+      started
+      ended
+    } 
   }
 }
 
+
 query allRunsAndSteps {
   runs {
+    run_id
     created
     started
     status
     steps {
+      step_id
       created
+      started
       ended
+      status
     }
   }
 }
 
-mutation startNewRun($simulation_id: uuid!) {
-  start_run(object: {dsl: {test: true}, simulation_id: $simulation_id}) {
-    run_id
-    created
-  }
-}
 # api functions ..
 mutation createRun($simulation_id: uuid!, $dsl: jsonb!) {
   start_run(object: {dsl: $dsl, simulation_id: $simulation_id}) {
@@ -40,9 +41,9 @@ mutation createRun($simulation_id: uuid!, $dsl: jsonb!) {
 
 mutation createStep($run_id: uuid!, $name: String!, $image: String!, $pipeline_step_number: Int!) {
   insert_steps_one(object: {run_id: $run_id, name:$name, image:$image, pipeline_step_number:$pipeline_step_number}){
+    step_id
     created
     run_id
-    step_id
     status
     name
   }
@@ -51,34 +52,27 @@ mutation createStep($run_id: uuid!, $name: String!, $image: String!, $pipeline_s
 mutation setStepAsStarted($step_id: Int!) {
   update_steps_by_pk(pk_columns: {step_id: $step_id}, _set: {started: "now()", status: active}) {
     step_id
-    started
     status
-    name
-    pipeline_step_number
-    created
   }
 }
 mutation setStepAsEndedSuccess($step_id: Int!) {
   update_steps_by_pk(pk_columns: {step_id: $step_id}, _set: {ended: "now()", status: completed}) {
     step_id
-    started
     status
-    name
-    pipeline_step_number
-    created
-    ended
   }
 }
 
 mutation setRunAsStarted($run_id: uuid!) {
   update_runs_by_pk(pk_columns: {run_id: $run_id}, _set: {started: "now()", status: active}) {
     run_id
+    status
   }
 }
 
 mutation setRunAsEndedSuccess($run_id: uuid!) {
   update_runs_by_pk(pk_columns: {run_id: $run_id}, _set: {ended: "now()", status: completed}) {
     run_id
+    status
   }
 }
 mutation createSimulation ($model_id: uuid!){
@@ -89,14 +83,14 @@ mutation createSimulation ($model_id: uuid!){
   }
 }
 
-query getSimulationIdandSteps($_eq: uuid!) {
-  runs(where: {run_id: {_eq: $_eq}}) {
+query getSimulationIdandSteps($run_id: uuid!) {
+  runs(where: {run_id: {_eq: $run_id}}) {
     simulation_id
-    steps {
+    steps(order_by: {pipeline_step_number: asc}) {
       step_id
       pipeline_step_number
       image
-      name   
+      name
     }
   }
 }
