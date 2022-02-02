@@ -1,0 +1,109 @@
+
+{
+ "read": "2022-02-02T09:44:55.091898826Z",
+ "preread": "2022-02-02T09:44:54.0810541Z",
+ "pids_stats": {
+  "current": 2
+ },
+ "blkio_stats": {
+  "io_service_bytes_recursive": [],
+  "io_serviced_recursive": [],
+  "io_queue_recursive": [],
+  "io_service_time_recursive": [],
+  "io_wait_time_recursive": [],
+  "io_merged_recursive": [],
+  "io_time_recursive": [],
+  "sectors_recursive": []
+ },
+ "num_procs": 0,
+ "storage_stats": {},
+ "cpu_stats": {
+  "cpu_usage": {
+   "total_usage": 180711134,
+   "percpu_usage": [
+    126169744,
+    54541390
+   ],
+   "usage_in_kernelmode": 50000000,
+   "usage_in_usermode": 80000000
+  },
+  "system_cpu_usage": 40747240000000,
+  "online_cpus": 2,
+  "throttling_data": {
+   "periods": 0,
+   "throttled_periods": 0,
+   "throttled_time": 0
+  }
+ },
+ "precpu_stats": {
+  "cpu_usage": {
+   "total_usage": 180711134,
+   "percpu_usage": [
+    126169744,
+    54541390
+   ],
+   "usage_in_kernelmode": 50000000,
+   "usage_in_usermode": 80000000
+  },
+  "system_cpu_usage": 40745360000000,
+  "online_cpus": 2,
+  "throttling_data": {
+   "periods": 0,
+   "throttled_periods": 0,
+   "throttled_time": 0
+  }
+ },
+ "memory_stats": {
+  "usage": 679936,
+  "max_usage": 3952640,
+  "stats": {
+   "active_anon": 8192,
+   "active_file": 0,
+   "cache": 0,
+   "dirty": 0,
+   "hierarchical_memory_limit": 9223372036854772000,
+   "hierarchical_memsw_limit": 9223372036854772000,
+   "inactive_anon": 323584,
+   "inactive_file": 0,
+   "mapped_file": 0,
+   "pgfault": 1394,
+   "pgmajfault": 0,
+   "pgpgin": 930,
+   "pgpgout": 849,
+   "rss": 331776,
+   "rss_huge": 0,
+   "total_active_anon": 8192,
+   "total_active_file": 0,
+   "total_cache": 0,
+   "total_dirty": 0,
+   "total_inactive_anon": 323584,
+   "total_inactive_file": 0,
+   "total_mapped_file": 0,
+   "total_pgfault": 1394,
+   "total_pgmajfault": 0,
+   "total_pgpgin": 930,
+   "total_pgpgout": 849,
+   "total_rss": 331776,
+   "total_rss_huge": 0,
+   "total_unevictable": 0,
+   "total_writeback": 0,
+   "unevictable": 0,
+   "writeback": 0
+  },
+  "limit": 2073849856
+ },
+ "name": "/zealous_shockley",
+ "id": "584249d96965526387a7976e03599a233ed8eda8978d49b258fb768e87899907",
+ "networks": {
+  "eth0": {
+   "rx_bytes": 526,
+   "rx_packets": 5,
+   "rx_errors": 0,
+   "rx_dropped": 0,
+   "tx_bytes": 0,
+   "tx_packets": 0,
+   "tx_errors": 0,
+   "tx_dropped": 0
+  }
+ }
+}

@@ -113,7 +113,8 @@ export async function startRun(run_id:string):Promise<string> {
     logger.info(`Step ${step.pipeline_step_number} finished execution\n`);
   }
   // set run as completed successully in the database
-  await sdk.setRunAsEndedSuccess({ run_id });
+  // eslint-disable-next-line @typescript-eslint/no-floating-promises
+  sdk.setRunAsEndedSuccess({ run_id });
   return run_id;
 }
 

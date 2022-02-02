@@ -49,12 +49,11 @@ type ControllerConfig = {
   pollingInterval:number,
   createdContainer: Docker.Container,
   counter:number,
-  inputFile:string,
   remoteInputFolder: string,
   remoteOutputDir:string,
 };
 
-let configObject:ControllerConfig;
+const configObject:ControllerConfig = {};
 let COMPLETED:boolean;
 
 function init():void {
@@ -63,7 +62,6 @@ function init():void {
   configObject.stepNumber = process.env.STEP_NUMBER;
   configObject.image = process.env.IMAGE;
   configObject.inputPath = process.env.INPUT_PATH;
-
   if (!configObject.simId || !configObject.runId || !configObject.stepNumber || !configObject.image
     || !configObject.inputPath) {
     throw new Error('Missing environment variables in controller: '
@@ -72,10 +70,9 @@ function init():void {
   // eslint-disable-next-line max-len
   configObject.targetDirectory = path.join(configObject.simId, configObject.runId, configObject.stepNumber);
   // Polling interval for collecting stats from running container
-  configObject.pollingInterval = 500;
+  configObject.pollingInterval = 750;
 
   configObject.counter = 1;
-  // config_object.inputFile = inputPath;
   configObject.remoteInputFolder = 'in/';
   configObject.remoteOutputDir = 'out/';
   // config_object.storeOutputFile = `${config_object.targetDirectory}/output.txt`;
@@ -233,6 +230,13 @@ export default async function getStats(container: Docker.Container) : Promise<vo
     // set variable COMPLETED to indicate completion of simulation
     COMPLETED = false;
   } else { // collect statstics as long as the container is running
+    // eslint-disable-next-line @typescript-eslint/no-floating-promises
+    // container.stats({ stream: false }).then((data) => {
+    //   // eslint-disable-next-line @typescript-eslint/no-floating-promises
+    //   fsAsync.writeFile(path.join(configObject.targetDirectory,
+    //     `stats.${configObject.counter}.json`), JSON.stringify(data, undefined, ' '));
+    //   configObject.counter += 1;
+    // });
     const stream = await container.stats({ stream: false });
     const fileName = path.join(configObject.targetDirectory,
       `stats.${configObject.counter}.json`);
@@ -266,7 +270,7 @@ export async function start(client:GraphQLClient, stepIdReceived:number) : Promi
     throw new Error('Invalid expression in controller.start');
   }
   logger.info(`Starting simulation for step ${configObject.stepNumber}`);
-  await sftp.putFolderToSandbox(configObject.inputPath, configObject.remoteInputFolder);
+  await sftp.putFolderToSandbox(configObject.inputPath, configObject.remoteInputFolder, configObject.targetDirectory);
   await createContainer();
   startStatsPolling();
   await waitForContainer();

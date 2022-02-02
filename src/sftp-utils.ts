@@ -51,20 +51,11 @@ export async function putFileToSandbox(
 }
 
 export async function putFolderToSandbox(
-  localFolder: string, remoteFolder: string,
+  localFolder: string, remoteFolder: string, targetDirectory:string
 ) : Promise<void> {
-  // create the output folders for the run details
-  const simId = process.env.SIM_ID;
-  const runId = process.env.RUN_ID;
-  const stepNumber = process.env.STEP_NUMBER;
-
-  if (!simId || !runId || !stepNumber) {
-    throw new Error('Missing environment variables: SIM_ID, RUN_ID, STEP_NUMBER');
-  }  
   // Create folder to store the simulation details
-  const targetDirectory = `./${simId}/${runId}/${stepNumber}`;
-  const targetInputDirectory = `./${simId}/${runId}/${stepNumber}/inputs/`;
-  const targetOutputDirectory = `./${simId}/${runId}/${stepNumber}/outputs/`;
+  const targetInputDirectory = `./${targetDirectory}/inputs/`;
+  const targetOutputDirectory = `./${targetDirectory}/outputs/`;
   fs.mkdirSync(targetDirectory, { recursive: true });
   fs.mkdirSync(targetInputDirectory, { recursive: true });
   fs.mkdirSync(targetOutputDirectory, { recursive: true });

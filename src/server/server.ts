@@ -59,6 +59,7 @@ await server.listen({ port: 9000 }).then(({ url }) => {
 });
 
 // await functions.startRun('c5bef54f-0cb7-4331-8c19-d4ef39071682');
+// await functions.startRun('dd8baad5-f326-4484-a691-3115c8fcf62f');
 // await functions.createRun('96e79178-caef-4c2f-b656-6eb9a7c44c37',
 // "{\"dsl\" : \"second sample\"}");
 // console.log(await functions.getSimulationRunResults('16b0d320-ae24-4e93-8376-4bf4439952d6',
