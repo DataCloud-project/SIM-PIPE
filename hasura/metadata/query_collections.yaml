@@ -73,3 +73,11 @@
             }
           }
         }
+    - name: start_run
+      query: |-
+        mutation start_run($simulation_id: uuid!, $dsl: jsonb!) {
+          start_run(object: {dsl: $dsl, simulation_id: $simulation_id}) {
+            run_id
+            status
+          }
+        }

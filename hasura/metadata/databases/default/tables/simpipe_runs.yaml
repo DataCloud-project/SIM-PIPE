@@ -26,7 +26,9 @@ insert_permissions:
 - permission:
     backend_only: false
     check: {}
-    columns: []
+    columns:
+    - dsl
+    - simulation_id
   role: anonymous
 select_permissions:
 - permission:

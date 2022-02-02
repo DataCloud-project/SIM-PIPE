@@ -1,6 +1,15 @@
 - definition:
     query:
       collection_name: allowed-queries
+      query_name: start_run
+  url: runs
+  methods:
+  - POST
+  name: start_run
+  comment: Start a new run
+- definition:
+    query:
+      collection_name: allowed-queries
       query_name: get_run
   url: runs/:run_id
   methods:
