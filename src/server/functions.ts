@@ -39,15 +39,20 @@ export async function createSimulation(model_id:string):Promise<string> {
 function parseDSL(dsl:string):Array<StepDSL> {
   // TODO; parse dsl argument
   const object:Array<StepDSL> = [{
-    name: 'a step',
+    name: 'step 1',
     step_number: 1,
     image: 'i1',
     env: ['STEP_NUMBER=1'],
   }, {
-    name: 'another step',
+    name: 'step 2',
     step_number: 2,
     image: 'i1',
     env: ['STEP_NUMBER=2'],
+  }, {
+    name: 'step 3',
+    step_number: 3,
+    image: 'i1',
+    env: ['STEP_NUMBER=3'],
   }];
   return object;
 }
@@ -75,12 +80,13 @@ export async function createStep(run_id:string, name:string, image:string,
   return `${result.insert_steps_one.step_id}`;
 }
 
-export async function createRun(simulation_id:string, dsl:string):Promise<string> {
+export async function createRun(simulation_id:string, dsl:string, name:string):Promise<string> {
   // TODO: parse dsl
   const steps:Array<StepDSL> = parseDSL(dsl);
   const result = await sdk.createRun({
     simulation_id,
     dsl: JSON.parse(dsl),
+    name,
   });
   if (!result.start_run?.run_id) {
     throw new Error('Undefined results from all_simulations');

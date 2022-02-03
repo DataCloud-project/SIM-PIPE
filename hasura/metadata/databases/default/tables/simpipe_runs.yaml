@@ -33,13 +33,14 @@ insert_permissions:
 select_permissions:
 - permission:
     columns:
-    - simulation_id
-    - dsl
     - created
-    - status
-    - started
+    - dsl
     - ended
+    - name
     - run_id
+    - simulation_id
+    - started
+    - status
     filter: {}
   role: anonymous
 update_permissions:

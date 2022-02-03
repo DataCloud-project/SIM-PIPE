@@ -10,7 +10,7 @@ const typeDefs = gql`
   }
   type Mutation {
     Create_Simulation(model_id:String): String
-    Create_Run(simulation_id: String, dsl:String): String
+    Create_Run(simulation_id: String, dsl:String, name:String): String
     Start_Run(run_id:String): String
     #TODO: implement 
     # Stop_Step(step_id:Int): String
@@ -31,13 +31,14 @@ const resolvers = {
     async Create_Simulation(_p: unknown, arguments_: { model_id:string }):Promise<string> {
       return await functions.createSimulation(arguments_.model_id);
     },
-    async Create_Run(_p: unknown, arguments_: { simulation_id:string, dsl:string })
+    async Create_Run(_p: unknown, arguments_: { simulation_id:string, dsl:string, name:string })
       :Promise<string> {
-      return await functions.createRun(arguments_.simulation_id, arguments_.dsl);
+      return await functions.createRun(arguments_.simulation_id, arguments_.dsl, arguments_.name);
     },
     async Start_Run(_p: unknown, arguments_:{ run_id:string }):Promise<string> {
       // TODO: queue to follow
-      return await functions.startRun(arguments_.run_id);
+      functions.startRun(arguments_.run_id);
+      return 'ok';
     },
     // Stop_Step():string {
     //   // TODO

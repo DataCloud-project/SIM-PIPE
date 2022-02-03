@@ -5,6 +5,7 @@ query AllSimulations {
     created
     runs {
       run_id
+      name
       status
       created
       started
@@ -17,6 +18,7 @@ query AllSimulations {
 query allRunsAndSteps {
   runs {
     run_id
+    name
     created
     started
     status
@@ -31,28 +33,21 @@ query allRunsAndSteps {
 }
 
 # api functions ..
-mutation createRun($simulation_id: uuid!, $dsl: jsonb!) {
-  start_run(object: {dsl: $dsl, simulation_id: $simulation_id}) {
+mutation createRun($simulation_id: uuid!, $dsl: jsonb!, $name:String) {
+  start_run(object: {dsl: $dsl, simulation_id: $simulation_id, name: $name}) {
     run_id
-    created
-    status
   }
 }
 
 mutation createStep($run_id: uuid!, $name: String!, $image: String!, $pipeline_step_number: Int!) {
   insert_steps_one(object: {run_id: $run_id, name:$name, image:$image, pipeline_step_number:$pipeline_step_number}){
     step_id
-    created
-    run_id
-    status
-    name
   }
 }
 
 mutation setStepAsStarted($step_id: Int!) {
   update_steps_by_pk(pk_columns: {step_id: $step_id}, _set: {started: "now()", status: active}) {
     step_id
-    status
   }
 }
 mutation setStepAsEndedSuccess($step_id: Int!) {
@@ -65,27 +60,24 @@ mutation setStepAsEndedSuccess($step_id: Int!) {
 mutation setRunAsStarted($run_id: uuid!) {
   update_runs_by_pk(pk_columns: {run_id: $run_id}, _set: {started: "now()", status: active}) {
     run_id
-    status
   }
 }
 
 mutation setRunAsEndedSuccess($run_id: uuid!) {
   update_runs_by_pk(pk_columns: {run_id: $run_id}, _set: {ended: "now()", status: completed}) {
     run_id
-    status
   }
 }
 mutation createSimulation ($model_id: uuid!){
   create_simulation(object: {model_id: $model_id}) {
-    model_id
     simulation_id
-    created
   }
 }
 
 query getSimulationIdandSteps($run_id: uuid!) {
   runs(where: {run_id: {_eq: $run_id}}) {
     simulation_id
+    name
     steps(order_by: {pipeline_step_number: asc}) {
       step_id
       pipeline_step_number
@@ -111,6 +103,7 @@ query getSimulationRunResults($simulation_id: uuid = "", $run_id: uuid = "") {
   simulations(where: {simulation_id: {_eq: $simulation_id}}) {
     runs(where: {run_id: {_eq: $run_id}}) {
       run_id
+      name
       status
       created
       started

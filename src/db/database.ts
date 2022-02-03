@@ -107,11 +107,7 @@ export type Mutation_Root = {
   __typename?: 'mutation_root';
   Create_Run?: Maybe<Scalars['String']>;
   Create_Simulation?: Maybe<Scalars['String']>;
-  Create_Step?: Maybe<Scalars['String']>;
   Start_Run?: Maybe<Scalars['String']>;
-  Start_Step?: Maybe<Scalars['String']>;
-  Stop_Run?: Maybe<Scalars['String']>;
-  Stop_Step?: Maybe<Scalars['String']>;
   /** insert a single row into the table: "simpipe.simulations" */
   create_simulation?: Maybe<Simulations>;
   /** insert data into the table: "simpipe.simulations" */
@@ -213,35 +209,8 @@ export type Mutation_RootCreate_SimulationArgs = {
 
 
 /** mutation root */
-export type Mutation_RootCreate_StepArgs = {
-  image?: InputMaybe<Scalars['String']>;
-  name?: InputMaybe<Scalars['String']>;
-  pipeline_step_number?: InputMaybe<Scalars['Int']>;
-  run_id?: InputMaybe<Scalars['String']>;
-};
-
-
-/** mutation root */
 export type Mutation_RootStart_RunArgs = {
   run_id?: InputMaybe<Scalars['String']>;
-};
-
-
-/** mutation root */
-export type Mutation_RootStart_StepArgs = {
-  step_id?: InputMaybe<Scalars['Int']>;
-};
-
-
-/** mutation root */
-export type Mutation_RootStop_RunArgs = {
-  run_id?: InputMaybe<Scalars['String']>;
-};
-
-
-/** mutation root */
-export type Mutation_RootStop_StepArgs = {
-  step_id?: InputMaybe<Scalars['Int']>;
 };
 
 
@@ -571,7 +540,9 @@ export enum Order_By {
 
 export type Query_Root = {
   __typename?: 'query_root';
+  All_Runs_Steps?: Maybe<Scalars['String']>;
   All_Simulations?: Maybe<Scalars['String']>;
+  Get_Simulation_Run_Results?: Maybe<Scalars['String']>;
   /** fetch data from the table: "simpipe.runs" using primary key columns */
   get_run?: Maybe<Runs>;
   /** fetch data from the table: "simpipe.simulations" using primary key columns */
@@ -614,6 +585,12 @@ export type Query_Root = {
   steps_aggregate: Steps_Aggregate;
   /** fetch data from the table: "simpipe.steps" using primary key columns */
   steps_by_pk?: Maybe<Steps>;
+};
+
+
+export type Query_RootGet_Simulation_Run_ResultsArgs = {
+  run_id?: InputMaybe<Scalars['String']>;
+  simulation_id?: InputMaybe<Scalars['String']>;
 };
 
 
@@ -788,6 +765,7 @@ export type Runs = {
   created: Scalars['timestamptz'];
   dsl: Scalars['jsonb'];
   ended?: Maybe<Scalars['timestamptz']>;
+  name?: Maybe<Scalars['String']>;
   run_id: Scalars['uuid'];
   /** An object relationship */
   simulation: Simulations;
@@ -890,6 +868,7 @@ export type Runs_Bool_Exp = {
   created?: InputMaybe<Timestamptz_Comparison_Exp>;
   dsl?: InputMaybe<Jsonb_Comparison_Exp>;
   ended?: InputMaybe<Timestamptz_Comparison_Exp>;
+  name?: InputMaybe<String_Comparison_Exp>;
   run_id?: InputMaybe<Uuid_Comparison_Exp>;
   simulation?: InputMaybe<Simulations_Bool_Exp>;
   simulation_id?: InputMaybe<Uuid_Comparison_Exp>;
@@ -924,6 +903,7 @@ export type Runs_Insert_Input = {
   created?: InputMaybe<Scalars['timestamptz']>;
   dsl?: InputMaybe<Scalars['jsonb']>;
   ended?: InputMaybe<Scalars['timestamptz']>;
+  name?: InputMaybe<Scalars['String']>;
   run_id?: InputMaybe<Scalars['uuid']>;
   simulation?: InputMaybe<Simulations_Obj_Rel_Insert_Input>;
   simulation_id?: InputMaybe<Scalars['uuid']>;
@@ -937,6 +917,7 @@ export type Runs_Max_Fields = {
   __typename?: 'runs_max_fields';
   created?: Maybe<Scalars['timestamptz']>;
   ended?: Maybe<Scalars['timestamptz']>;
+  name?: Maybe<Scalars['String']>;
   run_id?: Maybe<Scalars['uuid']>;
   simulation_id?: Maybe<Scalars['uuid']>;
   started?: Maybe<Scalars['timestamptz']>;
@@ -946,6 +927,7 @@ export type Runs_Max_Fields = {
 export type Runs_Max_Order_By = {
   created?: InputMaybe<Order_By>;
   ended?: InputMaybe<Order_By>;
+  name?: InputMaybe<Order_By>;
   run_id?: InputMaybe<Order_By>;
   simulation_id?: InputMaybe<Order_By>;
   started?: InputMaybe<Order_By>;
@@ -956,6 +938,7 @@ export type Runs_Min_Fields = {
   __typename?: 'runs_min_fields';
   created?: Maybe<Scalars['timestamptz']>;
   ended?: Maybe<Scalars['timestamptz']>;
+  name?: Maybe<Scalars['String']>;
   run_id?: Maybe<Scalars['uuid']>;
   simulation_id?: Maybe<Scalars['uuid']>;
   started?: Maybe<Scalars['timestamptz']>;
@@ -965,6 +948,7 @@ export type Runs_Min_Fields = {
 export type Runs_Min_Order_By = {
   created?: InputMaybe<Order_By>;
   ended?: InputMaybe<Order_By>;
+  name?: InputMaybe<Order_By>;
   run_id?: InputMaybe<Order_By>;
   simulation_id?: InputMaybe<Order_By>;
   started?: InputMaybe<Order_By>;
@@ -991,6 +975,7 @@ export type Runs_Order_By = {
   created?: InputMaybe<Order_By>;
   dsl?: InputMaybe<Order_By>;
   ended?: InputMaybe<Order_By>;
+  name?: InputMaybe<Order_By>;
   run_id?: InputMaybe<Order_By>;
   simulation?: InputMaybe<Simulations_Order_By>;
   simulation_id?: InputMaybe<Order_By>;
@@ -1018,6 +1003,8 @@ export enum Runs_Select_Column {
   /** column name */
   Ended = 'ended',
   /** column name */
+  Name = 'name',
+  /** column name */
   RunId = 'run_id',
   /** column name */
   SimulationId = 'simulation_id',
@@ -1032,6 +1019,7 @@ export type Runs_Set_Input = {
   created?: InputMaybe<Scalars['timestamptz']>;
   dsl?: InputMaybe<Scalars['jsonb']>;
   ended?: InputMaybe<Scalars['timestamptz']>;
+  name?: InputMaybe<Scalars['String']>;
   run_id?: InputMaybe<Scalars['uuid']>;
   simulation_id?: InputMaybe<Scalars['uuid']>;
   started?: InputMaybe<Scalars['timestamptz']>;
@@ -1046,6 +1034,8 @@ export enum Runs_Update_Column {
   Dsl = 'dsl',
   /** column name */
   Ended = 'ended',
+  /** column name */
+  Name = 'name',
   /** column name */
   RunId = 'run_id',
   /** column name */
@@ -1989,7 +1979,7 @@ export type Simulations_Bool_Exp = {
 /** unique or primary key constraints on table "simpipe.simulations" */
 export enum Simulations_Constraint {
   /** unique or primary key constraint */
-  SimulationsModelIdKey = 'simulations_modelId_key',
+  SimulationsModelIdKey = 'simulations_model_id_key',
   /** unique or primary key constraint */
   SimulationsPkey = 'simulations_pkey'
 }
@@ -2718,27 +2708,21 @@ export type Uuid_Comparison_Exp = {
 export type AllSimulationsQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type AllSimulationsQuery = { __typename?: 'query_root', simulations: Array<{ __typename?: 'simulations', simulation_id: string, created: string, runs: Array<{ __typename?: 'runs', run_id: string, status: Simpipe_Run_Status_Enum, created: string, started?: string | null | undefined, ended?: string | null | undefined }> }> };
+export type AllSimulationsQuery = { __typename?: 'query_root', simulations: Array<{ __typename?: 'simulations', simulation_id: string, created: string, runs: Array<{ __typename?: 'runs', run_id: string, name?: string | null | undefined, status: Simpipe_Run_Status_Enum, created: string, started?: string | null | undefined, ended?: string | null | undefined }> }> };
 
 export type AllRunsAndStepsQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type AllRunsAndStepsQuery = { __typename?: 'query_root', runs: Array<{ __typename?: 'runs', run_id: string, created: string, started?: string | null | undefined, status: Simpipe_Run_Status_Enum, steps: Array<{ __typename?: 'steps', step_id: number, created: string, started?: string | null | undefined, ended?: string | null | undefined, status: Simpipe_Step_Status_Enum }> }> };
-
-export type StartNewRunMutationVariables = Exact<{
-  simulation_id: Scalars['uuid'];
-}>;
-
-
-export type StartNewRunMutation = { __typename?: 'mutation_root', start_run?: { __typename?: 'runs', run_id: string, created: string } | null | undefined };
+export type AllRunsAndStepsQuery = { __typename?: 'query_root', runs: Array<{ __typename?: 'runs', run_id: string, name?: string | null | undefined, created: string, started?: string | null | undefined, status: Simpipe_Run_Status_Enum, steps: Array<{ __typename?: 'steps', step_id: number, created: string, started?: string | null | undefined, ended?: string | null | undefined, status: Simpipe_Step_Status_Enum }> }> };
 
 export type CreateRunMutationVariables = Exact<{
   simulation_id: Scalars['uuid'];
   dsl: Scalars['jsonb'];
+  name?: InputMaybe<Scalars['String']>;
 }>;
 
 
-export type CreateRunMutation = { __typename?: 'mutation_root', start_run?: { __typename?: 'runs', run_id: string, created: string, status: Simpipe_Run_Status_Enum } | null | undefined };
+export type CreateRunMutation = { __typename?: 'mutation_root', start_run?: { __typename?: 'runs', run_id: string } | null | undefined };
 
 export type CreateStepMutationVariables = Exact<{
   run_id: Scalars['uuid'];
@@ -2748,14 +2732,14 @@ export type CreateStepMutationVariables = Exact<{
 }>;
 
 
-export type CreateStepMutation = { __typename?: 'mutation_root', insert_steps_one?: { __typename?: 'steps', step_id: number, created: string, run_id: string, status: Simpipe_Step_Status_Enum, name: string } | null | undefined };
+export type CreateStepMutation = { __typename?: 'mutation_root', insert_steps_one?: { __typename?: 'steps', step_id: number } | null | undefined };
 
 export type SetStepAsStartedMutationVariables = Exact<{
   step_id: Scalars['Int'];
 }>;
 
 
-export type SetStepAsStartedMutation = { __typename?: 'mutation_root', update_steps_by_pk?: { __typename?: 'steps', step_id: number, status: Simpipe_Step_Status_Enum } | null | undefined };
+export type SetStepAsStartedMutation = { __typename?: 'mutation_root', update_steps_by_pk?: { __typename?: 'steps', step_id: number } | null | undefined };
 
 export type SetStepAsEndedSuccessMutationVariables = Exact<{
   step_id: Scalars['Int'];
@@ -2769,28 +2753,28 @@ export type SetRunAsStartedMutationVariables = Exact<{
 }>;
 
 
-export type SetRunAsStartedMutation = { __typename?: 'mutation_root', update_runs_by_pk?: { __typename?: 'runs', run_id: string, status: Simpipe_Run_Status_Enum } | null | undefined };
+export type SetRunAsStartedMutation = { __typename?: 'mutation_root', update_runs_by_pk?: { __typename?: 'runs', run_id: string } | null | undefined };
 
 export type SetRunAsEndedSuccessMutationVariables = Exact<{
   run_id: Scalars['uuid'];
 }>;
 
 
-export type SetRunAsEndedSuccessMutation = { __typename?: 'mutation_root', update_runs_by_pk?: { __typename?: 'runs', run_id: string, status: Simpipe_Run_Status_Enum } | null | undefined };
+export type SetRunAsEndedSuccessMutation = { __typename?: 'mutation_root', update_runs_by_pk?: { __typename?: 'runs', run_id: string } | null | undefined };
 
 export type CreateSimulationMutationVariables = Exact<{
   model_id: Scalars['uuid'];
 }>;
 
 
-export type CreateSimulationMutation = { __typename?: 'mutation_root', create_simulation?: { __typename?: 'simulations', model_id: string, simulation_id: string, created: string } | null | undefined };
+export type CreateSimulationMutation = { __typename?: 'mutation_root', create_simulation?: { __typename?: 'simulations', simulation_id: string } | null | undefined };
 
 export type GetSimulationIdandStepsQueryVariables = Exact<{
   run_id: Scalars['uuid'];
 }>;
 
 
-export type GetSimulationIdandStepsQuery = { __typename?: 'query_root', runs: Array<{ __typename?: 'runs', simulation_id: string, steps: Array<{ __typename?: 'steps', step_id: number, pipeline_step_number: number, image: string, name: string }> }> };
+export type GetSimulationIdandStepsQuery = { __typename?: 'query_root', runs: Array<{ __typename?: 'runs', simulation_id: string, name?: string | null | undefined, steps: Array<{ __typename?: 'steps', step_id: number, pipeline_step_number: number, image: string, name: string }> }> };
 
 export type InsertResourceUsageMutationVariables = Exact<{
   cpu?: InputMaybe<Scalars['numeric']>;
@@ -2819,7 +2803,7 @@ export type GetSimulationRunResultsQueryVariables = Exact<{
 }>;
 
 
-export type GetSimulationRunResultsQuery = { __typename?: 'query_root', simulations: Array<{ __typename?: 'simulations', runs: Array<{ __typename?: 'runs', run_id: string, status: Simpipe_Run_Status_Enum, created: string, started?: string | null | undefined, ended?: string | null | undefined, dsl: unknown, steps: Array<{ __typename?: 'steps', step_id: number, status: Simpipe_Step_Status_Enum, created: string, started?: string | null | undefined, ended?: string | null | undefined, image: string, name: string, pipeline_step_number: number, resource_usages: Array<{ __typename?: 'simpipe_resource_usage', id: number, step_id: number, cpu: number, memory: number, memory_max: number, rx_value: number, time: string, tx_value: number }> }> }> }> };
+export type GetSimulationRunResultsQuery = { __typename?: 'query_root', simulations: Array<{ __typename?: 'simulations', runs: Array<{ __typename?: 'runs', run_id: string, name?: string | null | undefined, status: Simpipe_Run_Status_Enum, created: string, started?: string | null | undefined, ended?: string | null | undefined, dsl: unknown, steps: Array<{ __typename?: 'steps', step_id: number, status: Simpipe_Step_Status_Enum, created: string, started?: string | null | undefined, ended?: string | null | undefined, image: string, name: string, pipeline_step_number: number, resource_usages: Array<{ __typename?: 'simpipe_resource_usage', id: number, step_id: number, cpu: number, memory: number, memory_max: number, rx_value: number, time: string, tx_value: number }> }> }> }> };
 
 
 export const AllSimulationsDocument = gql`
@@ -2829,6 +2813,7 @@ export const AllSimulationsDocument = gql`
     created
     runs {
       run_id
+      name
       status
       created
       started
@@ -2841,6 +2826,7 @@ export const AllRunsAndStepsDocument = gql`
     query allRunsAndSteps {
   runs {
     run_id
+    name
     created
     started
     status
@@ -2854,20 +2840,10 @@ export const AllRunsAndStepsDocument = gql`
   }
 }
     `;
-export const StartNewRunDocument = gql`
-    mutation startNewRun($simulation_id: uuid!) {
-  start_run(object: {dsl: {test: true}, simulation_id: $simulation_id}) {
-    run_id
-    created
-  }
-}
-    `;
 export const CreateRunDocument = gql`
-    mutation createRun($simulation_id: uuid!, $dsl: jsonb!) {
-  start_run(object: {dsl: $dsl, simulation_id: $simulation_id}) {
+    mutation createRun($simulation_id: uuid!, $dsl: jsonb!, $name: String) {
+  start_run(object: {dsl: $dsl, simulation_id: $simulation_id, name: $name}) {
     run_id
-    created
-    status
   }
 }
     `;
@@ -2877,10 +2853,6 @@ export const CreateStepDocument = gql`
     object: {run_id: $run_id, name: $name, image: $image, pipeline_step_number: $pipeline_step_number}
   ) {
     step_id
-    created
-    run_id
-    status
-    name
   }
 }
     `;
@@ -2891,7 +2863,6 @@ export const SetStepAsStartedDocument = gql`
     _set: {started: "now()", status: active}
   ) {
     step_id
-    status
   }
 }
     `;
@@ -2913,7 +2884,6 @@ export const SetRunAsStartedDocument = gql`
     _set: {started: "now()", status: active}
   ) {
     run_id
-    status
   }
 }
     `;
@@ -2924,16 +2894,13 @@ export const SetRunAsEndedSuccessDocument = gql`
     _set: {ended: "now()", status: completed}
   ) {
     run_id
-    status
   }
 }
     `;
 export const CreateSimulationDocument = gql`
     mutation createSimulation($model_id: uuid!) {
   create_simulation(object: {model_id: $model_id}) {
-    model_id
     simulation_id
-    created
   }
 }
     `;
@@ -2941,6 +2908,7 @@ export const GetSimulationIdandStepsDocument = gql`
     query getSimulationIdandSteps($run_id: uuid!) {
   runs(where: {run_id: {_eq: $run_id}}) {
     simulation_id
+    name
     steps(order_by: {pipeline_step_number: asc}) {
       step_id
       pipeline_step_number
@@ -2971,6 +2939,7 @@ export const GetSimulationRunResultsDocument = gql`
   simulations(where: {simulation_id: {_eq: $simulation_id}}) {
     runs(where: {run_id: {_eq: $run_id}}) {
       run_id
+      name
       status
       created
       started
@@ -3013,9 +2982,6 @@ export function getSdk(client: GraphQLClient, withWrapper: SdkFunctionWrapper = 
     },
     allRunsAndSteps(variables?: AllRunsAndStepsQueryVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<AllRunsAndStepsQuery> {
       return withWrapper((wrappedRequestHeaders) => client.request<AllRunsAndStepsQuery>(AllRunsAndStepsDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'allRunsAndSteps');
-    },
-    startNewRun(variables: StartNewRunMutationVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<StartNewRunMutation> {
-      return withWrapper((wrappedRequestHeaders) => client.request<StartNewRunMutation>(StartNewRunDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'startNewRun');
     },
     createRun(variables: CreateRunMutationVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<CreateRunMutation> {
       return withWrapper((wrappedRequestHeaders) => client.request<CreateRunMutation>(CreateRunDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'createRun');

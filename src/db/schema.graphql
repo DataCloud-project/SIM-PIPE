@@ -98,11 +98,7 @@ input jsonb_comparison_exp {
 type mutation_root {
   Create_Run(dsl: String, simulation_id: String): String
   Create_Simulation(model_id: String): String
-  Create_Step(image: String, name: String, pipeline_step_number: Int, run_id: String): String
   Start_Run(run_id: String): String
-  Start_Step(step_id: Int): String
-  Stop_Run(run_id: String): String
-  Stop_Step(step_id: Int): String
   """
   insert a single row into the table: "simpipe.simulations"
   """
@@ -303,7 +299,9 @@ enum order_by {
   desc_nulls_last
 }
 type query_root {
+  All_Runs_Steps: String
   All_Simulations: String
+  Get_Simulation_Run_Results(run_id: String, simulation_id: String): String
   """
   fetch data from the table: "simpipe.runs" using primary key columns
   """
@@ -396,6 +394,7 @@ type runs {
   created: timestamptz!
   dsl("JSON select path" path: String): jsonb!
   ended: timestamptz
+  name: String
   run_id: uuid!
   "An object relationship"
   simulation: simulations!
@@ -456,6 +455,7 @@ input runs_bool_exp {
   created: timestamptz_comparison_exp
   dsl: jsonb_comparison_exp
   ended: timestamptz_comparison_exp
+  name: String_comparison_exp
   run_id: uuid_comparison_exp
   simulation: simulations_bool_exp
   simulation_id: uuid_comparison_exp
@@ -489,6 +489,7 @@ input runs_insert_input {
   created: timestamptz
   dsl: jsonb
   ended: timestamptz
+  name: String
   run_id: uuid
   simulation: simulations_obj_rel_insert_input
   simulation_id: uuid
@@ -500,6 +501,7 @@ input runs_insert_input {
 type runs_max_fields {
   created: timestamptz
   ended: timestamptz
+  name: String
   run_id: uuid
   simulation_id: uuid
   started: timestamptz
@@ -510,6 +512,7 @@ order by max() on columns of table "simpipe.runs"
 input runs_max_order_by {
   created: order_by
   ended: order_by
+  name: order_by
   run_id: order_by
   simulation_id: order_by
   started: order_by
@@ -518,6 +521,7 @@ input runs_max_order_by {
 type runs_min_fields {
   created: timestamptz
   ended: timestamptz
+  name: String
   run_id: uuid
   simulation_id: uuid
   started: timestamptz
@@ -528,6 +532,7 @@ order by min() on columns of table "simpipe.runs"
 input runs_min_order_by {
   created: order_by
   ended: order_by
+  name: order_by
   run_id: order_by
   simulation_id: order_by
   started: order_by
@@ -556,6 +561,7 @@ input runs_order_by {
   created: order_by
   dsl: order_by
   ended: order_by
+  name: order_by
   run_id: order_by
   simulation: simulations_order_by
   simulation_id: order_by
@@ -582,6 +588,8 @@ enum runs_select_column {
   "column name"
   ended
   "column name"
+  name
+  "column name"
   run_id
   "column name"
   simulation_id
@@ -597,6 +605,7 @@ input runs_set_input {
   created: timestamptz
   dsl: jsonb
   ended: timestamptz
+  name: String
   run_id: uuid
   simulation_id: uuid
   started: timestamptz
@@ -612,6 +621,8 @@ enum runs_update_column {
   dsl
   "column name"
   ended
+  "column name"
+  name
   "column name"
   run_id
   "column name"
@@ -1486,7 +1497,7 @@ unique or primary key constraints on table "simpipe.simulations"
 """
 enum simulations_constraint {
   "unique or primary key constraint"
-  simulations_modelId_key
+  simulations_model_id_key
   "unique or primary key constraint"
   simulations_pkey
 }
