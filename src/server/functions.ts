@@ -23,9 +23,10 @@ export async function allRunsSteps():Promise<string> {
   return JSON.stringify(await sdk.allRunsAndSteps(), undefined, 2);
 }
 
-export async function createSimulation(model_id:string):Promise<string> {
+export async function createSimulation(model_id:string, name:string):Promise<string> {
   const result = await sdk.createSimulation({
     model_id,
+    name,
   });
   if (!result?.create_simulation?.simulation_id) {
     throw new Error('Undefined expression in createSimulation');

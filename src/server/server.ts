@@ -9,7 +9,7 @@ const typeDefs = gql`
       Get_Simulation_Run_Results(simulation_id: String, run_id:String): String
   }
   type Mutation {
-    Create_Simulation(model_id:String): String
+    Create_Simulation(model_id:String, name:String): String
     Create_Run(simulation_id: String, dsl:String, name:String): String
     Start_Run(run_id:String): String
     #TODO: implement 
@@ -28,8 +28,8 @@ const resolvers = {
     },
   },
   Mutation: {
-    async Create_Simulation(_p: unknown, arguments_: { model_id:string }):Promise<string> {
-      return await functions.createSimulation(arguments_.model_id);
+    async Create_Simulation(_p: unknown, arguments_: { model_id:string, name:string }):Promise<string> {
+      return await functions.createSimulation(arguments_.model_id, arguments_.name);
     },
     async Create_Run(_p: unknown, arguments_: { simulation_id:string, dsl:string, name:string })
       :Promise<string> {

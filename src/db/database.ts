@@ -198,6 +198,7 @@ export type Mutation_Root = {
 /** mutation root */
 export type Mutation_RootCreate_RunArgs = {
   dsl?: InputMaybe<Scalars['String']>;
+  name?: InputMaybe<Scalars['String']>;
   simulation_id?: InputMaybe<Scalars['String']>;
 };
 
@@ -1905,6 +1906,7 @@ export type Simulations = {
   created: Scalars['timestamptz'];
   /** UUID of the model */
   model_id: Scalars['uuid'];
+  name?: Maybe<Scalars['String']>;
   /** An array relationship */
   runs: Array<Runs>;
   /** An aggregate relationship */
@@ -1972,6 +1974,7 @@ export type Simulations_Bool_Exp = {
   _or?: InputMaybe<Array<Simulations_Bool_Exp>>;
   created?: InputMaybe<Timestamptz_Comparison_Exp>;
   model_id?: InputMaybe<Uuid_Comparison_Exp>;
+  name?: InputMaybe<String_Comparison_Exp>;
   runs?: InputMaybe<Runs_Bool_Exp>;
   simulation_id?: InputMaybe<Uuid_Comparison_Exp>;
 };
@@ -1990,6 +1993,7 @@ export type Simulations_Insert_Input = {
   created?: InputMaybe<Scalars['timestamptz']>;
   /** UUID of the model */
   model_id?: InputMaybe<Scalars['uuid']>;
+  name?: InputMaybe<Scalars['String']>;
   runs?: InputMaybe<Runs_Arr_Rel_Insert_Input>;
   /** UUID of the simulation */
   simulation_id?: InputMaybe<Scalars['uuid']>;
@@ -2002,6 +2006,7 @@ export type Simulations_Max_Fields = {
   created?: Maybe<Scalars['timestamptz']>;
   /** UUID of the model */
   model_id?: Maybe<Scalars['uuid']>;
+  name?: Maybe<Scalars['String']>;
   /** UUID of the simulation */
   simulation_id?: Maybe<Scalars['uuid']>;
 };
@@ -2013,6 +2018,7 @@ export type Simulations_Min_Fields = {
   created?: Maybe<Scalars['timestamptz']>;
   /** UUID of the model */
   model_id?: Maybe<Scalars['uuid']>;
+  name?: Maybe<Scalars['String']>;
   /** UUID of the simulation */
   simulation_id?: Maybe<Scalars['uuid']>;
 };
@@ -2044,6 +2050,7 @@ export type Simulations_On_Conflict = {
 export type Simulations_Order_By = {
   created?: InputMaybe<Order_By>;
   model_id?: InputMaybe<Order_By>;
+  name?: InputMaybe<Order_By>;
   runs_aggregate?: InputMaybe<Runs_Aggregate_Order_By>;
   simulation_id?: InputMaybe<Order_By>;
 };
@@ -2061,6 +2068,8 @@ export enum Simulations_Select_Column {
   /** column name */
   ModelId = 'model_id',
   /** column name */
+  Name = 'name',
+  /** column name */
   SimulationId = 'simulation_id'
 }
 
@@ -2070,6 +2079,7 @@ export type Simulations_Set_Input = {
   created?: InputMaybe<Scalars['timestamptz']>;
   /** UUID of the model */
   model_id?: InputMaybe<Scalars['uuid']>;
+  name?: InputMaybe<Scalars['String']>;
   /** UUID of the simulation */
   simulation_id?: InputMaybe<Scalars['uuid']>;
 };
@@ -2080,6 +2090,8 @@ export enum Simulations_Update_Column {
   Created = 'created',
   /** column name */
   ModelId = 'model_id',
+  /** column name */
+  Name = 'name',
   /** column name */
   SimulationId = 'simulation_id'
 }
@@ -2708,7 +2720,7 @@ export type Uuid_Comparison_Exp = {
 export type AllSimulationsQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type AllSimulationsQuery = { __typename?: 'query_root', simulations: Array<{ __typename?: 'simulations', simulation_id: string, created: string, runs: Array<{ __typename?: 'runs', run_id: string, name?: string | null | undefined, status: Simpipe_Run_Status_Enum, created: string, started?: string | null | undefined, ended?: string | null | undefined }> }> };
+export type AllSimulationsQuery = { __typename?: 'query_root', simulations: Array<{ __typename?: 'simulations', simulation_id: string, name?: string | null | undefined, created: string, runs: Array<{ __typename?: 'runs', run_id: string, name?: string | null | undefined, status: Simpipe_Run_Status_Enum, created: string, started?: string | null | undefined, ended?: string | null | undefined }> }> };
 
 export type AllRunsAndStepsQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -2764,10 +2776,11 @@ export type SetRunAsEndedSuccessMutation = { __typename?: 'mutation_root', updat
 
 export type CreateSimulationMutationVariables = Exact<{
   model_id: Scalars['uuid'];
+  name?: InputMaybe<Scalars['String']>;
 }>;
 
 
-export type CreateSimulationMutation = { __typename?: 'mutation_root', create_simulation?: { __typename?: 'simulations', simulation_id: string } | null | undefined };
+export type CreateSimulationMutation = { __typename?: 'mutation_root', create_simulation?: { __typename?: 'simulations', simulation_id: string, name?: string | null | undefined } | null | undefined };
 
 export type GetSimulationIdandStepsQueryVariables = Exact<{
   run_id: Scalars['uuid'];
@@ -2803,13 +2816,14 @@ export type GetSimulationRunResultsQueryVariables = Exact<{
 }>;
 
 
-export type GetSimulationRunResultsQuery = { __typename?: 'query_root', simulations: Array<{ __typename?: 'simulations', runs: Array<{ __typename?: 'runs', run_id: string, name?: string | null | undefined, status: Simpipe_Run_Status_Enum, created: string, started?: string | null | undefined, ended?: string | null | undefined, dsl: unknown, steps: Array<{ __typename?: 'steps', step_id: number, status: Simpipe_Step_Status_Enum, created: string, started?: string | null | undefined, ended?: string | null | undefined, image: string, name: string, pipeline_step_number: number, resource_usages: Array<{ __typename?: 'simpipe_resource_usage', id: number, step_id: number, cpu: number, memory: number, memory_max: number, rx_value: number, time: string, tx_value: number }> }> }> }> };
+export type GetSimulationRunResultsQuery = { __typename?: 'query_root', simulations: Array<{ __typename?: 'simulations', runs: Array<{ __typename?: 'runs', run_id: string, status: Simpipe_Run_Status_Enum, created: string, started?: string | null | undefined, ended?: string | null | undefined, dsl: unknown, steps: Array<{ __typename?: 'steps', step_id: number, status: Simpipe_Step_Status_Enum, created: string, started?: string | null | undefined, ended?: string | null | undefined, image: string, name: string, pipeline_step_number: number, resource_usages: Array<{ __typename?: 'simpipe_resource_usage', id: number, step_id: number, cpu: number, memory: number, memory_max: number, rx_value: number, time: string, tx_value: number }> }> }> }> };
 
 
 export const AllSimulationsDocument = gql`
     query AllSimulations {
   simulations {
     simulation_id
+    name
     created
     runs {
       run_id
@@ -2898,9 +2912,10 @@ export const SetRunAsEndedSuccessDocument = gql`
 }
     `;
 export const CreateSimulationDocument = gql`
-    mutation createSimulation($model_id: uuid!) {
-  create_simulation(object: {model_id: $model_id}) {
+    mutation createSimulation($model_id: uuid!, $name: String) {
+  create_simulation(object: {model_id: $model_id, name: $name}) {
     simulation_id
+    name
   }
 }
     `;
@@ -2939,7 +2954,6 @@ export const GetSimulationRunResultsDocument = gql`
   simulations(where: {simulation_id: {_eq: $simulation_id}}) {
     runs(where: {run_id: {_eq: $run_id}}) {
       run_id
-      name
       status
       created
       started

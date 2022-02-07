@@ -1,54 +1,21 @@
 - name: allowed-queries
   definition:
     queries:
-    - name: simulations
+    - name: Start Run
       query: |-
-        query simulations {
-          simulations(order_by: {created: desc}) {
-            created
-            simulation_id
-            runs(order_by: {started: desc}) {
-              run_id
-              created
-              status
-              started
-              ended
-            }
-          }
+        mutation start_run($run_id: String!) {
+          Start_Run(run_id: $run_id)
         }
-    - name: get_simulation
+    - name: create_run
       query: |-
-        query prout($simulation_id: uuid!) {
-          get_simulation(simulation_id: $simulation_id) {
-            created
-            runs {
-              created
-              ended
-              status
-              started
-              dsl
-              steps(order_by: {step_id: asc}) {
-                name
-                status
-                log {
-                  text
-                }
-                cpu(order_by: {time: asc}) {
-                  value
-                  time
-                }
-                memory(order_by: {time: asc}) {
-                  time
-                  value
-                }
-              }
-            }
-          }
+        mutation create_run($simulation_id: String!, $dsl: String!, $name: String!) {
+          Create_Run(dsl: $dsl, simulation_id: $simulation_id, name: $name)
         }
     - name: get_run
       query: |-
         query get_run($run_id: uuid!) {
           get_run(run_id: $run_id) {
+            name
             created
             started
             ended
@@ -73,13 +40,51 @@
             }
           }
         }
-    - name: create_run
+    - name: simulations
       query: |-
-        mutation create_run($simulation_id: String!, $dsl: String!) {
-          Create_Run(dsl: $dsl, simulation_id: $simulation_id)
+        query simulations {
+          simulations(order_by: {created: desc}) {
+            created
+            simulation_id
+            name
+            runs(order_by: {started: desc}) {
+              run_id
+              name
+              created
+              status
+              started
+              ended
+            }
+          }
         }
-    - name: Start Run
+    - name: get_simulation
       query: |-
-        mutation start_run($run_id: String!) {
-          Start_Run(run_id: $run_id)
+        query prout($simulation_id: uuid!) {
+          get_simulation(simulation_id: $simulation_id) {
+            created
+            name
+            runs {
+              name
+              created
+              ended
+              status
+              started
+              dsl
+              steps(order_by: {step_id: asc}) {
+                name
+                status
+                log {
+                  text
+                }
+                cpu(order_by: {time: asc}) {
+                  value
+                  time
+                }
+                memory(order_by: {time: asc}) {
+                  time
+                  value
+                }
+              }
+            }
+          }
         }

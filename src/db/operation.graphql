@@ -2,6 +2,7 @@
 query AllSimulations {
   simulations {
     simulation_id
+    name
     created
     runs {
       run_id
@@ -68,9 +69,10 @@ mutation setRunAsEndedSuccess($run_id: uuid!) {
     run_id
   }
 }
-mutation createSimulation ($model_id: uuid!){
-  create_simulation(object: {model_id: $model_id}) {
+mutation createSimulation ($model_id: uuid!, $name: String){
+  create_simulation(object: {model_id: $model_id, name: $name}) {
     simulation_id
+    name
   }
 }
 
@@ -103,7 +105,6 @@ query getSimulationRunResults($simulation_id: uuid = "", $run_id: uuid = "") {
   simulations(where: {simulation_id: {_eq: $simulation_id}}) {
     runs(where: {run_id: {_eq: $run_id}}) {
       run_id
-      name
       status
       created
       started

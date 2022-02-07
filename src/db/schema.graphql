@@ -96,7 +96,7 @@ input jsonb_comparison_exp {
 }
 "mutation root"
 type mutation_root {
-  Create_Run(dsl: String, simulation_id: String): String
+  Create_Run(dsl: String, name: String, simulation_id: String): String
   Create_Simulation(model_id: String): String
   Start_Run(run_id: String): String
   """
@@ -1458,6 +1458,7 @@ type simulations {
   created: timestamptz!
   "UUID of the model"
   model_id: uuid!
+  name: String
   "An array relationship"
   runs("distinct select on columns" distinct_on: [runs_select_column!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" order_by: [runs_order_by!], "filter the rows returned" where: runs_bool_exp): [runs!]!
   "An aggregate relationship"
@@ -1489,6 +1490,7 @@ input simulations_bool_exp {
   _or: [simulations_bool_exp!]
   created: timestamptz_comparison_exp
   model_id: uuid_comparison_exp
+  name: String_comparison_exp
   runs: runs_bool_exp
   simulation_id: uuid_comparison_exp
 }
@@ -1509,6 +1511,7 @@ input simulations_insert_input {
   created: timestamptz
   "UUID of the model"
   model_id: uuid
+  name: String
   runs: runs_arr_rel_insert_input
   "UUID of the simulation"
   simulation_id: uuid
@@ -1519,6 +1522,7 @@ type simulations_max_fields {
   created: timestamptz
   "UUID of the model"
   model_id: uuid
+  name: String
   "UUID of the simulation"
   simulation_id: uuid
 }
@@ -1528,6 +1532,7 @@ type simulations_min_fields {
   created: timestamptz
   "UUID of the model"
   model_id: uuid
+  name: String
   "UUID of the simulation"
   simulation_id: uuid
 }
@@ -1562,6 +1567,7 @@ Ordering options when selecting data from "simpipe.simulations".
 input simulations_order_by {
   created: order_by
   model_id: order_by
+  name: order_by
   runs_aggregate: runs_aggregate_order_by
   simulation_id: order_by
 }
@@ -1579,6 +1585,8 @@ enum simulations_select_column {
   "column name"
   model_id
   "column name"
+  name
+  "column name"
   simulation_id
 }
 """
@@ -1589,6 +1597,7 @@ input simulations_set_input {
   created: timestamptz
   "UUID of the model"
   model_id: uuid
+  name: String
   "UUID of the simulation"
   simulation_id: uuid
 }
@@ -1600,6 +1609,8 @@ enum simulations_update_column {
   created
   "column name"
   model_id
+  "column name"
+  name
   "column name"
   simulation_id
 }
