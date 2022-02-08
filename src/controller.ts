@@ -218,10 +218,10 @@ export default async function getStats(container: Docker.Container) : Promise<vo
     });
 
     const fileName = path.join(targetDirectory, 'logs.txt');
-    await fsAsync.writeFile(fileName, logStream);
+    await fsAsync.writeFile(fileName, JSON.stringify(logStream, undefined, ' '));
     // TODO: check if logstream text is readable
     // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-    await sdk.insertLog({ step_id: stepId, text: logStream });
+    await sdk.insertLog({ step_id: stepId, text: JSON.stringify(logStream, undefined, ' ') });
     // get output from sandbox
     await sftp.getFromSandbox(remoteOutputDirectory,
       `${targetDirectory}/outputs`);
