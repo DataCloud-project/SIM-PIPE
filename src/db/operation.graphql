@@ -54,10 +54,14 @@ mutation setStepAsStarted($step_id: Int!) {
 mutation setStepAsEndedSuccess($step_id: Int!) {
   update_steps_by_pk(pk_columns: {step_id: $step_id}, _set: {ended: "now()", status: completed}) {
     step_id
-    status
   }
 }
 
+mutation setStepAsCancelled($step_id: Int!) {
+  update_steps_by_pk(pk_columns: {step_id: $step_id}, _set: {status: cancelled}) {
+    step_id
+  }
+}
 mutation setRunAsStarted($run_id: uuid!) {
   update_runs_by_pk(pk_columns: {run_id: $run_id}, _set: {started: "now()", status: active}) {
     run_id
@@ -69,6 +73,14 @@ mutation setRunAsEndedSuccess($run_id: uuid!) {
     run_id
   }
 }
+
+mutation setRunAsCancelled($run_id: uuid!) {
+  update_runs_by_pk(pk_columns: {run_id: $run_id}, _set: {status: cancelled}) {
+    run_id
+  }
+}
+
+
 mutation createSimulation ($model_id: uuid!, $name: String){
   create_simulation(object: {model_id: $model_id, name: $name}) {
     simulation_id

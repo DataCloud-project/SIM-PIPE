@@ -14,7 +14,7 @@ const typeDefs = gql`
     Start_Run(run_id:String): String
     #TODO: implement 
     # Stop_Step(step_id:Int): String
-    # Stop_Run(run_id:String): String
+    Stop_Run(run_id:String): String
   }
 `;
 
@@ -28,7 +28,8 @@ const resolvers = {
     },
   },
   Mutation: {
-    async Create_Simulation(_p: unknown, arguments_: { model_id:string, name:string }):Promise<string> {
+    async Create_Simulation(_p: unknown, arguments_: { model_id:string, name:string })
+      :Promise<string> {
       return await functions.createSimulation(arguments_.model_id, arguments_.name);
     },
     async Create_Run(_p: unknown, arguments_: { simulation_id:string, dsl:string, name:string })
@@ -37,6 +38,7 @@ const resolvers = {
     },
     async Start_Run(_p: unknown, arguments_:{ run_id:string }):Promise<string> {
       // TODO: queue to follow
+      // eslint-disable-next-line @typescript-eslint/no-floating-promises
       functions.startRun(arguments_.run_id);
       return 'ok';
     },
@@ -44,10 +46,11 @@ const resolvers = {
     //   // TODO
     //   return 'stop the step';
     // },
-    // Stop_Run():string {
-    //   // TODO
-    //   return 'stop all steps in the run';
-    // },
+    Stop_Run(_p:unknown, arguments_: { run_id:string }):string {
+      // TODO
+      functions.stopRun(arguments_.run_id);
+      return 'ok';
+    },
   },
 };
 

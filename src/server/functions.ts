@@ -1,3 +1,5 @@
+/* eslint-disable eslint-comments/disable-enable-pair */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable no-restricted-syntax */
 import * as dotenv from 'dotenv';
 import { GraphQLClient } from 'graphql-request';
@@ -112,12 +114,27 @@ export async function startRun(run_id:string):Promise<string> {
   process.env.SIM_ID = result.runs[0].simulation_id;
   // run each step
   for await (const step of steps) {
+    // check if there is a stop signal set to true
+    if (process.env.STOP === 'true') {
+      // mark all the remaining steps as cancelled
+      await sdk.setStepAsCancelled({ step_id: step.step_id });
+      // eslint-disable-next-line no-continue
+      continue;
+    }
     // set the variable values in env file
     process.env.STEP_NUMBER = `${step.pipeline_step_number}`;
     process.env.IMAGE = step.image;
     // set input path for next step as output path of the previous step returned and start step
     process.env.INPUT_PATH = await controller.start(client, step.step_id);
     logger.info(`Step ${step.pipeline_step_number} finished execution\n`);
+  }
+  if (process.env.STOP === 'true') {
+    // mark the run as cancelled
+    logger.info(`Run ${run_id} execution is cancelled\n`);
+    await sdk.setRunAsCancelled({ run_id });
+    // set STOP signal to false for the next run
+    process.env.STOP = 'false';
+    return 'cancelled';
   }
   // set run as completed successully in the database
   // eslint-disable-next-line @typescript-eslint/no-floating-promises
@@ -129,4 +146,14 @@ export async function getSimulationRunResults(simulation_id:string,
   run_id:string):Promise<string> {
   const result = await sdk.getSimulationRunResults({ simulation_id, run_id });
   return JSON.stringify(result, undefined, 2);
+}
+
+export function stopRun(run_id:string):string {
+  // find the current running container
+  process.env.STOP = 'true';
+  // stop and kill current container
+  // stop the start run function to stop all the next steps
+  // change the status of runs and steps to 'cancelled'
+  // delete resource usage and logs ?
+  return run_id;
 }
