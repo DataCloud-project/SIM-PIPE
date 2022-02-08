@@ -2758,7 +2758,14 @@ export type SetStepAsEndedSuccessMutationVariables = Exact<{
 }>;
 
 
-export type SetStepAsEndedSuccessMutation = { __typename?: 'mutation_root', update_steps_by_pk?: { __typename?: 'steps', step_id: number, status: Simpipe_Step_Status_Enum } | null | undefined };
+export type SetStepAsEndedSuccessMutation = { __typename?: 'mutation_root', update_steps_by_pk?: { __typename?: 'steps', step_id: number } | null | undefined };
+
+export type SetStepAsCancelledMutationVariables = Exact<{
+  step_id: Scalars['Int'];
+}>;
+
+
+export type SetStepAsCancelledMutation = { __typename?: 'mutation_root', update_steps_by_pk?: { __typename?: 'steps', step_id: number } | null | undefined };
 
 export type SetRunAsStartedMutationVariables = Exact<{
   run_id: Scalars['uuid'];
@@ -2773,6 +2780,13 @@ export type SetRunAsEndedSuccessMutationVariables = Exact<{
 
 
 export type SetRunAsEndedSuccessMutation = { __typename?: 'mutation_root', update_runs_by_pk?: { __typename?: 'runs', run_id: string } | null | undefined };
+
+export type SetRunAsCancelledMutationVariables = Exact<{
+  run_id: Scalars['uuid'];
+}>;
+
+
+export type SetRunAsCancelledMutation = { __typename?: 'mutation_root', update_runs_by_pk?: { __typename?: 'runs', run_id: string } | null | undefined };
 
 export type CreateSimulationMutationVariables = Exact<{
   model_id: Scalars['uuid'];
@@ -2887,7 +2901,13 @@ export const SetStepAsEndedSuccessDocument = gql`
     _set: {ended: "now()", status: completed}
   ) {
     step_id
-    status
+  }
+}
+    `;
+export const SetStepAsCancelledDocument = gql`
+    mutation setStepAsCancelled($step_id: Int!) {
+  update_steps_by_pk(pk_columns: {step_id: $step_id}, _set: {status: cancelled}) {
+    step_id
   }
 }
     `;
@@ -2907,6 +2927,13 @@ export const SetRunAsEndedSuccessDocument = gql`
     pk_columns: {run_id: $run_id}
     _set: {ended: "now()", status: completed}
   ) {
+    run_id
+  }
+}
+    `;
+export const SetRunAsCancelledDocument = gql`
+    mutation setRunAsCancelled($run_id: uuid!) {
+  update_runs_by_pk(pk_columns: {run_id: $run_id}, _set: {status: cancelled}) {
     run_id
   }
 }
@@ -3009,11 +3036,17 @@ export function getSdk(client: GraphQLClient, withWrapper: SdkFunctionWrapper = 
     setStepAsEndedSuccess(variables: SetStepAsEndedSuccessMutationVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<SetStepAsEndedSuccessMutation> {
       return withWrapper((wrappedRequestHeaders) => client.request<SetStepAsEndedSuccessMutation>(SetStepAsEndedSuccessDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'setStepAsEndedSuccess');
     },
+    setStepAsCancelled(variables: SetStepAsCancelledMutationVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<SetStepAsCancelledMutation> {
+      return withWrapper((wrappedRequestHeaders) => client.request<SetStepAsCancelledMutation>(SetStepAsCancelledDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'setStepAsCancelled');
+    },
     setRunAsStarted(variables: SetRunAsStartedMutationVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<SetRunAsStartedMutation> {
       return withWrapper((wrappedRequestHeaders) => client.request<SetRunAsStartedMutation>(SetRunAsStartedDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'setRunAsStarted');
     },
     setRunAsEndedSuccess(variables: SetRunAsEndedSuccessMutationVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<SetRunAsEndedSuccessMutation> {
       return withWrapper((wrappedRequestHeaders) => client.request<SetRunAsEndedSuccessMutation>(SetRunAsEndedSuccessDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'setRunAsEndedSuccess');
+    },
+    setRunAsCancelled(variables: SetRunAsCancelledMutationVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<SetRunAsCancelledMutation> {
+      return withWrapper((wrappedRequestHeaders) => client.request<SetRunAsCancelledMutation>(SetRunAsCancelledDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'setRunAsCancelled');
     },
     createSimulation(variables: CreateSimulationMutationVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<CreateSimulationMutation> {
       return withWrapper((wrappedRequestHeaders) => client.request<CreateSimulationMutation>(CreateSimulationDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'createSimulation');

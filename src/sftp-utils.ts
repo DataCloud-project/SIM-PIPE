@@ -33,25 +33,23 @@ export async function putFileToSandbox(
   const targetDirectory = `./${simId}/${runId}/${stepNumber}`;
   fs.mkdirSync(targetDirectory, { recursive: true });
 
-
   // store input file to the target directory
   await asyncFs.copyFile(localFile, storageFile);
 
   // send input file to the sandbox
- 
   try {
     await sftp.connect(options);
     await sftp.put(localFile, remoteFile);
     logger.info('Sent similation inputs to Sandbox');
-  } catch (error) {
-    throw new Error(`${error} in putFileToSandbox`);
+  } catch {
+    throw new Error('Error in putFileToSandbox');
   } finally {
     await sftp.end();
   }
 }
 
 export async function putFolderToSandbox(
-  localFolder: string, remoteFolder: string, targetDirectory:string
+  localFolder: string, remoteFolder: string, targetDirectory:string,
 ) : Promise<void> {
   // Create folder to store the simulation details
   const targetInputDirectory = `./${targetDirectory}/inputs/`;
@@ -72,6 +70,7 @@ export async function putFolderToSandbox(
     await sftp.uploadDir(localFolder, remoteFolder);
     logger.info('Sent similation inputs to Sandbox');
   } catch (error) {
+    // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
     throw new Error(`${error} in putFolderToSandbox`);
   } finally {
     await sftp.end();
@@ -79,18 +78,19 @@ export async function putFolderToSandbox(
 }
 
 export async function getFromSandbox(
-  remoteOutputDirectory: string, storeOutputDirectory: string) : Promise<void> {  
+  remoteOutputDirectory: string, storeOutputDirectory: string) : Promise<void> {
   try {
     await sftp.connect(options);
     await sftp.downloadDir(remoteOutputDirectory, storeOutputDirectory);
   } catch (error) {
+    // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
     throw new Error(`${error} in getFromSandbox`);
   } finally {
     await sftp.end();
   }
 }
 
-export async function clearSandbox() : Promise<void> {  
+export async function clearSandbox() : Promise<void> {
   try {
     await sftp.connect(options);
     const directoryList = ['./in/', './out/', './work/'];
@@ -106,6 +106,7 @@ export async function clearSandbox() : Promise<void> {
       // logger.info(`Deleted ${file} from Sandbox`);
     }));
   } catch (error) {
+    // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
     throw new Error(`${error} in clearSandbox`);
   } finally {
     await sftp.end();
@@ -115,14 +116,3 @@ export async function clearSandbox() : Promise<void> {
 
 // await getFromSandbox('out/', '1/');
 // await putFolderToSandbox('./2/', 'in/', './1/');
-
-
-// getfrom sandbox
- // const files = await sftp.list(remoteOutputDirectory);
-    // const fileList = files.map((file) => `${file.name}`);
-    // console.log(fileList);
-    // fileList.forEach(async (remoteFile) => {
-    //   const destination = fs.createWriteStream(storeOutputDirectory + remoteFile);
-    //   console.log(`${remoteOutputDirectory}${remoteFile}`);
-    //   let result = await sftp.get(`${remoteOutputDirectory}${remoteFile}`, destination);
-    // });

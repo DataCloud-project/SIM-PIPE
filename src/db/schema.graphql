@@ -97,8 +97,9 @@ input jsonb_comparison_exp {
 "mutation root"
 type mutation_root {
   Create_Run(dsl: String, name: String, simulation_id: String): String
-  Create_Simulation(model_id: String): String
+  Create_Simulation(model_id: String, name: String): String
   Start_Run(run_id: String): String
+  Stop_Run(run_id: String): String
   """
   insert a single row into the table: "simpipe.simulations"
   """

@@ -28,6 +28,15 @@
 - definition:
     query:
       collection_name: allowed-queries
+      query_name: stop_run
+  url: runs/:run_id/stop
+  methods:
+  - POST
+  name: stop_run
+  comment: stop the run execution
+- definition:
+    query:
+      collection_name: allowed-queries
       query_name: simulations
   url: simulations
   methods:

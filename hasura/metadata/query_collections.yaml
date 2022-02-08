@@ -88,3 +88,8 @@
             }
           }
         }
+    - name: stop_run
+      query: |-
+        mutation stop_run($run_id: String) {
+          Stop_Run(run_id: $run_id)
+        }

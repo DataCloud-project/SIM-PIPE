@@ -18,7 +18,10 @@ dotenv.config();
 const remote:boolean = !process.argv[2] ? true : process.argv[2] === 'remote';
 
 let docker: Docker;
-let sdk;
+let sdk: {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  setStepAsStarted: any; insertResourceUsage: any; setStepAsEndedSuccess: any; insertLog: any;
+};
 let stepId:number;
 
 if (remote) {
@@ -39,42 +42,38 @@ if (remote) {
   docker = new Docker({ socketPath: socket });
 }
 
-type ControllerConfig = {
-  simId: string | undefined,
-  runId: string | undefined,
-  stepNumber: string | undefined,
-  image:string | undefined,
-  inputPath: string | undefined,
-  targetDirectory:string,
-  pollingInterval:number,
-  createdContainer: Docker.Container,
-  counter:number,
-  remoteInputFolder: string,
-  remoteOutputDir:string,
-};
-
-const configObject:ControllerConfig = {};
+let simId: string | undefined;
+let runId: string | undefined;
+let stepNumber: string | undefined;
+let image:string | undefined;
+let inputPath: string | undefined;
+let targetDirectory:string;
+let pollingInterval:number;
+let createdContainer: Docker.Container;
+let counter:number;
+let remoteInputFolder: string;
+let remoteOutputDirectory:string;
 let COMPLETED:boolean;
 
 function init():void {
-  configObject.simId = process.env.SIM_ID;
-  configObject.runId = process.env.RUN_ID;
-  configObject.stepNumber = process.env.STEP_NUMBER;
-  configObject.image = process.env.IMAGE;
-  configObject.inputPath = process.env.INPUT_PATH;
-  if (!configObject.simId || !configObject.runId || !configObject.stepNumber || !configObject.image
-    || !configObject.inputPath) {
+  simId = process.env.SIM_ID;
+  runId = process.env.RUN_ID;
+  stepNumber = process.env.STEP_NUMBER;
+  image = process.env.IMAGE;
+  inputPath = process.env.INPUT_PATH;
+  if (!simId || !runId || !stepNumber || !image
+    || !inputPath) {
     throw new Error('Missing environment variables in controller: '
     + 'SIM_ID, RUN_ID, STEP_NUMBER, IMAGE, or INPUT_PATH');
   }
   // eslint-disable-next-line max-len
-  configObject.targetDirectory = path.join(configObject.simId, configObject.runId, configObject.stepNumber);
+  targetDirectory = path.join(simId, runId, stepNumber);
   // Polling interval for collecting stats from running container
-  configObject.pollingInterval = 750;
+  pollingInterval = 750;
 
-  configObject.counter = 1;
-  configObject.remoteInputFolder = 'in/';
-  configObject.remoteOutputDir = 'out/';
+  counter = 1;
+  remoteInputFolder = 'in/';
+  remoteOutputDirectory = 'out/';
   // config_object.storeOutputFile = `${config_object.targetDirectory}/output.txt`;
   // config_object.targetDir = `${config_object.targetDirectory}`;
   COMPLETED = true;
@@ -82,8 +81,8 @@ function init():void {
 let timer: SetIntervalAsyncTimer;
 
 async function createContainer() : Promise<void> {
-  configObject.createdContainer = (await docker.createContainer({
-    Image: configObject.image,
+  createdContainer = (await docker.createContainer({
+    Image: image,
     Tty: true,
     // Volume specified in docker createcontainer function using Binds parameter
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -97,13 +96,14 @@ async function createContainer() : Promise<void> {
       '/var/lib/docker/volumes/volume_vm/_data/work:/app/work',
     ],
     // Env: [
-    //   `STEP_NUMBER=${configObject.stepNumber}`,
+    //   `STEP_NUMBER=${stepNumber}`,
     // ],
   })) as unknown as Docker.Container;
-  await configObject.createdContainer.start({});
+  await createdContainer.start({});
   // change the step status in the database to active
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-call
   await sdk.setStepAsStarted({ step_id: stepId });
-  logger.info(`Container started with ID: ${configObject.createdContainer.id}`);
+  logger.info(`Container started with ID: ${createdContainer.id}`);
 }
 
 type StatSample = {
@@ -116,7 +116,7 @@ type StatSample = {
 };
 
 export async function parseStats() : Promise<void> {
-  const directoryName = configObject.targetDirectory;
+  const directoryName = targetDirectory;
   const fileList = await fsAsync.readdir(directoryName);
 
   // Load all the files in parallel
@@ -163,6 +163,7 @@ export async function parseStats() : Promise<void> {
         sample = {
           time, cpu, memory, memory_max: memoryMax, rxValue, txValue,
         };
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
         await sdk.insertResourceUsage({
           cpu,
           memory,
@@ -202,45 +203,48 @@ export default async function getStats(container: Docker.Container) : Promise<vo
   const containers = await docker.listContainers();
   const ids = containers.map((containerInList) => containerInList.Id);
 
-  if (!ids.includes(configObject.createdContainer.id)) {
+  if (!ids.includes(createdContainer.id)) {
     logger.info('Completed execution of container');
     // update the step status as ended succesfully
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
     await sdk.setStepAsEndedSuccess({ step_id: stepId });
     stopStats();
     await setTimeout(1000); // Wait 1s before parsing the stats
     await parseStats();
 
     // collect logs of the stoppped container
-    const stream = await container.logs({
+    const logStream = await container.logs({
       follow: false, stdout: true, stderr: true, // stdin: true,
     });
 
-    const fileName = path.join(configObject.targetDirectory, 'logs.txt');
-    await fsAsync.writeFile(fileName, stream);
-    await sdk.insertLog({ step_id: stepId, text: `${stream}` });
+    const fileName = path.join(targetDirectory, 'logs.txt');
+    await fsAsync.writeFile(fileName, logStream);
+    // TODO: check if logstream text is readable
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+    await sdk.insertLog({ step_id: stepId, text: logStream });
     // get output from sandbox
-    await sftp.getFromSandbox(configObject.remoteOutputDir,
-      `${configObject.targetDirectory}/outputs`);
+    await sftp.getFromSandbox(remoteOutputDirectory,
+      `${targetDirectory}/outputs`);
     logger.info('Collected simulation files from Sandbox');
 
     // clear all files created during simulation
     await sftp.clearSandbox();
 
-    logger.info(`Stored simulation details to ${configObject.targetDirectory}`);
+    logger.info(`Stored simulation details to ${targetDirectory}`);
     // set variable COMPLETED to indicate completion of simulation
     COMPLETED = false;
   } else { // collect statstics as long as the container is running
     // eslint-disable-next-line @typescript-eslint/no-floating-promises
     // container.stats({ stream: false }).then((data) => {
     //   // eslint-disable-next-line @typescript-eslint/no-floating-promises
-    //   fsAsync.writeFile(path.join(configObject.targetDirectory,
-    //     `stats.${configObject.counter}.json`), JSON.stringify(data, undefined, ' '));
-    //   configObject.counter += 1;
+    //   fsAsync.writeFile(path.join(targetDirectory,
+    //     `stats.${counter}.json`), JSON.stringify(data, undefined, ' '));
+    //   counter += 1;
     // });
     const stream = await container.stats({ stream: false });
-    const fileName = path.join(configObject.targetDirectory,
-      `stats.${configObject.counter}.json`);
-    configObject.counter += 1;
+    const fileName = path.join(targetDirectory,
+      `stats.${counter}.json`);
+    counter += 1;
     await fsAsync.writeFile(fileName, JSON.stringify(stream, undefined, ' '));
   }
 }
@@ -248,11 +252,11 @@ export default async function getStats(container: Docker.Container) : Promise<vo
 function startStatsPolling():void {
   timer = setIntervalAsync(async () => {
     try {
-      await getStats(configObject.createdContainer);
+      await getStats(createdContainer);
     } catch (error) {
       logger.error(error);
     }
-  }, configObject.pollingInterval);
+  }, pollingInterval);
 }
 
 async function waitForContainer():Promise<void> {
@@ -266,13 +270,13 @@ export async function start(client:GraphQLClient, stepIdReceived:number) : Promi
   init();
   sdk = getSdk(client);
   stepId = stepIdReceived;
-  if (!configObject.inputPath || !configObject.stepNumber) {
+  if (!inputPath || !stepNumber) {
     throw new Error('Invalid expression in controller.start');
   }
-  logger.info(`Starting simulation for step ${configObject.stepNumber}`);
-  await sftp.putFolderToSandbox(configObject.inputPath, configObject.remoteInputFolder, configObject.targetDirectory);
+  logger.info(`Starting simulation for step ${stepNumber}`);
+  await sftp.putFolderToSandbox(inputPath, remoteInputFolder, targetDirectory);
   await createContainer();
   startStatsPolling();
   await waitForContainer();
-  return `${configObject.targetDirectory}/outputs/`;
+  return `${targetDirectory}/outputs/`;
 }
