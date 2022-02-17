@@ -35,7 +35,7 @@ query allRunsAndSteps {
 
 # api functions ..
 mutation createRun($simulation_id: uuid!, $dsl: jsonb!, $name:String) {
-  start_run(object: {dsl: $dsl, simulation_id: $simulation_id, name: $name}) {
+  insert_runs_one(object: {dsl: $dsl, simulation_id: $simulation_id, name: $name}) {
     run_id
   }
 }
@@ -51,8 +51,8 @@ mutation setStepAsStarted($step_id: Int!) {
     step_id
   }
 }
-mutation setStepAsEndedSuccess($step_id: Int!) {
-  update_steps_by_pk(pk_columns: {step_id: $step_id}, _set: {ended: "now()", status: completed}) {
+mutation setStepAsEndedSuccess($step_id: Int!, $started: timestamptz!, $ended: timestamptz!) {
+  update_steps_by_pk(pk_columns: {step_id: $step_id}, _set: {started: $started, ended: $ended, status: completed}) {
     step_id
   }
 }

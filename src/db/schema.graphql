@@ -5,7 +5,6 @@ schema {
 }
 "whether this query should be cached (Hasura Cloud only)"
 directive @cached("measured in seconds" ttl: Int! = 60, "refresh the cache entry" refresh: Boolean! = false) on QUERY
-scalar Float
 """
 Boolean expression to compare columns of type "Int". All fields are combined with logical 'AND'.
 """
@@ -96,10 +95,6 @@ input jsonb_comparison_exp {
 }
 "mutation root"
 type mutation_root {
-  Create_Run(dsl: String, name: String, simulation_id: String): String
-  Create_Simulation(model_id: String, name: String): String
-  Start_Run(run_id: String): String
-  Stop_Run(run_id: String): String
   """
   insert a single row into the table: "simpipe.simulations"
   """
@@ -165,6 +160,14 @@ type mutation_root {
   """
   delete_steps_by_pk(step_id: Int!): steps
   """
+  insert data into the table: "simpipe.runs"
+  """
+  insert_runs("the rows to be inserted" objects: [runs_insert_input!]!, "on conflict condition" on_conflict: runs_on_conflict): runs_mutation_response
+  """
+  insert a single row into the table: "simpipe.runs"
+  """
+  insert_runs_one("the row to be inserted" object: runs_insert_input!, "on conflict condition" on_conflict: runs_on_conflict): runs
+  """
   insert data into the table: "simpipe.logs"
   """
   insert_simpipe_logs("the rows to be inserted" objects: [simpipe_logs_insert_input!]!, "on conflict condition" on_conflict: simpipe_logs_on_conflict): simpipe_logs_mutation_response
@@ -204,14 +207,6 @@ type mutation_root {
   insert a single row into the table: "simpipe.steps"
   """
   insert_steps_one("the row to be inserted" object: steps_insert_input!, "on conflict condition" on_conflict: steps_on_conflict): steps
-  """
-  insert a single row into the table: "simpipe.runs"
-  """
-  start_run("the row to be inserted" object: runs_insert_input!, "on conflict condition" on_conflict: runs_on_conflict): runs
-  """
-  insert data into the table: "simpipe.runs"
-  """
-  start_runs("the rows to be inserted" objects: [runs_insert_input!]!, "on conflict condition" on_conflict: runs_on_conflict): runs_mutation_response
   """
   update data of the table: "simpipe.runs"
   """
@@ -300,9 +295,6 @@ enum order_by {
   desc_nulls_last
 }
 type query_root {
-  All_Runs_Steps: String
-  All_Simulations: String
-  Get_Simulation_Run_Results(run_id: String, simulation_id: String): String
   """
   fetch data from the table: "simpipe.runs" using primary key columns
   """

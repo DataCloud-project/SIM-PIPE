@@ -108,6 +108,7 @@ export type Mutation_Root = {
   Create_Run?: Maybe<Scalars['String']>;
   Create_Simulation?: Maybe<Scalars['String']>;
   Start_Run?: Maybe<Scalars['String']>;
+  Stop_Run?: Maybe<Scalars['String']>;
   /** insert a single row into the table: "simpipe.simulations" */
   create_simulation?: Maybe<Simulations>;
   /** insert data into the table: "simpipe.simulations" */
@@ -140,6 +141,10 @@ export type Mutation_Root = {
   delete_steps?: Maybe<Steps_Mutation_Response>;
   /** delete single row from the table: "simpipe.steps" */
   delete_steps_by_pk?: Maybe<Steps>;
+  /** insert data into the table: "simpipe.runs" */
+  insert_runs?: Maybe<Runs_Mutation_Response>;
+  /** insert a single row into the table: "simpipe.runs" */
+  insert_runs_one?: Maybe<Runs>;
   /** insert data into the table: "simpipe.logs" */
   insert_simpipe_logs?: Maybe<Simpipe_Logs_Mutation_Response>;
   /** insert a single row into the table: "simpipe.logs" */
@@ -160,10 +165,6 @@ export type Mutation_Root = {
   insert_steps?: Maybe<Steps_Mutation_Response>;
   /** insert a single row into the table: "simpipe.steps" */
   insert_steps_one?: Maybe<Steps>;
-  /** insert a single row into the table: "simpipe.runs" */
-  start_run?: Maybe<Runs>;
-  /** insert data into the table: "simpipe.runs" */
-  start_runs?: Maybe<Runs_Mutation_Response>;
   /** update data of the table: "simpipe.runs" */
   update_runs?: Maybe<Runs_Mutation_Response>;
   /** update single row of the table: "simpipe.runs" */
@@ -206,11 +207,18 @@ export type Mutation_RootCreate_RunArgs = {
 /** mutation root */
 export type Mutation_RootCreate_SimulationArgs = {
   model_id?: InputMaybe<Scalars['String']>;
+  name?: InputMaybe<Scalars['String']>;
 };
 
 
 /** mutation root */
 export type Mutation_RootStart_RunArgs = {
+  run_id?: InputMaybe<Scalars['String']>;
+};
+
+
+/** mutation root */
+export type Mutation_RootStop_RunArgs = {
   run_id?: InputMaybe<Scalars['String']>;
 };
 
@@ -314,6 +322,20 @@ export type Mutation_RootDelete_Steps_By_PkArgs = {
 
 
 /** mutation root */
+export type Mutation_RootInsert_RunsArgs = {
+  objects: Array<Runs_Insert_Input>;
+  on_conflict?: InputMaybe<Runs_On_Conflict>;
+};
+
+
+/** mutation root */
+export type Mutation_RootInsert_Runs_OneArgs = {
+  object: Runs_Insert_Input;
+  on_conflict?: InputMaybe<Runs_On_Conflict>;
+};
+
+
+/** mutation root */
 export type Mutation_RootInsert_Simpipe_LogsArgs = {
   objects: Array<Simpipe_Logs_Insert_Input>;
   on_conflict?: InputMaybe<Simpipe_Logs_On_Conflict>;
@@ -380,20 +402,6 @@ export type Mutation_RootInsert_StepsArgs = {
 export type Mutation_RootInsert_Steps_OneArgs = {
   object: Steps_Insert_Input;
   on_conflict?: InputMaybe<Steps_On_Conflict>;
-};
-
-
-/** mutation root */
-export type Mutation_RootStart_RunArgs = {
-  object: Runs_Insert_Input;
-  on_conflict?: InputMaybe<Runs_On_Conflict>;
-};
-
-
-/** mutation root */
-export type Mutation_RootStart_RunsArgs = {
-  objects: Array<Runs_Insert_Input>;
-  on_conflict?: InputMaybe<Runs_On_Conflict>;
 };
 
 
@@ -2734,7 +2742,7 @@ export type CreateRunMutationVariables = Exact<{
 }>;
 
 
-export type CreateRunMutation = { __typename?: 'mutation_root', start_run?: { __typename?: 'runs', run_id: string } | null | undefined };
+export type CreateRunMutation = { __typename?: 'mutation_root', insert_runs_one?: { __typename?: 'runs', run_id: string } | null | undefined };
 
 export type CreateStepMutationVariables = Exact<{
   run_id: Scalars['uuid'];
@@ -2755,6 +2763,8 @@ export type SetStepAsStartedMutation = { __typename?: 'mutation_root', update_st
 
 export type SetStepAsEndedSuccessMutationVariables = Exact<{
   step_id: Scalars['Int'];
+  started: Scalars['timestamptz'];
+  ended: Scalars['timestamptz'];
 }>;
 
 
@@ -2870,7 +2880,7 @@ export const AllRunsAndStepsDocument = gql`
     `;
 export const CreateRunDocument = gql`
     mutation createRun($simulation_id: uuid!, $dsl: jsonb!, $name: String) {
-  start_run(object: {dsl: $dsl, simulation_id: $simulation_id, name: $name}) {
+  insert_runs_one(object: {dsl: $dsl, simulation_id: $simulation_id, name: $name}) {
     run_id
   }
 }
@@ -2895,10 +2905,10 @@ export const SetStepAsStartedDocument = gql`
 }
     `;
 export const SetStepAsEndedSuccessDocument = gql`
-    mutation setStepAsEndedSuccess($step_id: Int!) {
+    mutation setStepAsEndedSuccess($step_id: Int!, $started: timestamptz!, $ended: timestamptz!) {
   update_steps_by_pk(
     pk_columns: {step_id: $step_id}
-    _set: {ended: "now()", status: completed}
+    _set: {started: $started, ended: $ended, status: completed}
   ) {
     step_id
   }
