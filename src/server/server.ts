@@ -1,6 +1,6 @@
 import { ApolloServer, gql } from 'apollo-server';
-import logger from '../logger.js';
 
+import logger from '../logger.js';
 import * as functions from './functions.js';
 // schema
 const typeDefs = gql`
@@ -72,7 +72,8 @@ await server.listen({ port: 9000, hostname: '0.0.0.0' }).then(({ url }) => {
   console.log(`🚀  Server ready at ${url}`);
 });
 
-// const runid = await functions.createRunWithInput('fbaf05f3-93ad-4df3-9429-095850b55eae', 'n', 'n',
-//  [['n1', 'content1'], ['n2', 'content2']]);
-// // const runid = await functions.createRun('fbaf05f3-93ad-4df3-9429-095850b55eae', "{\"dsl\" : \"second sample\"}");
+// const runid = await functions.createRunWithInput('fbaf05f3-93ad-4df3-9429-095850b55eae',
+//  'n', 'n', [['n1', 'content1'], ['n2', 'content2']]);
+// const runid = await functions.createRun('fbaf05f3-93ad-4df3-9429-095850b55eae',
+// "{\"dsl\" : \"second sample\"}");
 // await functions.startRun(runid);

@@ -4,7 +4,6 @@
 import * as dotenv from 'dotenv';
 import { GraphQLClient } from 'graphql-request';
 import * as fs from 'node:fs';
-import fsAsync from 'node:fs/promises';
 
 import * as controller from '../controller.js';
 import { getSdk } from '../db/database.js';
@@ -19,7 +18,7 @@ const client = new GraphQLClient(hasura, {
   },
 });
 const sdk = getSdk(client);
-const uploadDir = 'uploaded_files/';
+const uploadDirectory = 'uploaded_files/';
 
 export async function allSimulations():Promise<string> {
   return JSON.stringify(await sdk.AllSimulations(), undefined, 2);
@@ -111,13 +110,13 @@ export async function createRun(simulation_id:string, dsl:string, name:string):P
 export async function createRunWithInput(simulation_id: string, dsl: string,
   name: string, sampleInput: [[string]]): Promise<string> {
   const runId = await createRun(simulation_id, dsl, name);
-  fs.mkdirSync(`${uploadDir}${runId}`, { recursive: true });
+  fs.mkdirSync(`${uploadDirectory}${runId}`, { recursive: true });
   // write sample input to uploaded_files/runId
   for (const [inputName, inputContent] of sampleInput) {
     if (!inputContent) {
       throw new Error('Content of input file undefined in createRunWithInput');
     }
-    fs.writeFile(`${uploadDir}${runId}/${inputName}`, inputContent, (error) => {
+    fs.writeFile(`${uploadDirectory}${runId}/${inputName}`, inputContent, (error) => {
       if (error) { throw new Error('Error in createRunWithInput'); }
     });
   }
@@ -134,7 +133,7 @@ export async function startRun(run_id:string):Promise<string> {
   process.env.RUN_ID = run_id;
   process.env.SIM_ID = result.runs[0].simulation_id;
   // set input path for the first step
-  process.env.INPUT_PATH = `${uploadDir}${run_id}/`;
+  process.env.INPUT_PATH = `${uploadDirectory}${run_id}/`;
   // run each step
   for await (const step of steps) {
     // check if there is a stop signal set to true
