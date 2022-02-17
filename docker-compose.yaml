@@ -15,6 +15,7 @@ services:
       - "8080:8080"
     depends_on:
       - "timescaledb"
+      # - "controller"
     restart: unless-stopped
     volumes:
       - ./hasura/migrations:/hasura-migrations:ro
@@ -38,6 +39,17 @@ services:
     restart: unless-stopped
     volumes:
       - appsmith:/appsmith-stacks
+  
+  # controller:
+  #   image: backend-v1
+  #   ports:
+  #     - "9000:9000"
+  #   restart: unless-stopped
+  #   volumes:
+  #     - /:/backenddocker
+  #   environment:
+  #     INPUT_PATH: ./src/1/
+  #     HASURA: http://hasura:8080/v1/graphql
 volumes:
   db_data:
     null
