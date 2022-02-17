@@ -1,12 +1,12 @@
 - definition:
     query:
       collection_name: allowed-queries
-      query_name: create_run
+      query_name: create_run_withinput
   url: runs
   methods:
   - POST
-  name: create_run
-  comment: Create a new run
+  name: create_run_withinput
+  comment: create a new run with sample data from user
 - definition:
     query:
       collection_name: allowed-queries

@@ -6,8 +6,8 @@ configuration:
   custom_name: runs
   custom_root_fields:
     delete: delete_previous_run
-    insert: start_runs
-    insert_one: start_run
+    insert: insert_runs
+    insert_one: insert_runs_one
     select: runs
     select_by_pk: get_run
 object_relationships:

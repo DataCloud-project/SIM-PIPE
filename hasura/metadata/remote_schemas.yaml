@@ -1,5 +1,5 @@
 - name: SIM-PIPE-backend
   definition:
-    url: http://192.168.1.102:9000
+    url: http://10.218.149.145:9000
     timeout_seconds: 60
   comment: ""
