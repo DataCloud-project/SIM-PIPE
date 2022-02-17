@@ -30,7 +30,7 @@ export async function putFileToSandbox(
   }
 
   // Create folder to store the simulation details
-  const targetDirectory = `./${simId}/${runId}/${stepNumber}`;
+  const targetDirectory = `simulations/${simId}/${runId}/${stepNumber}`;
   fs.mkdirSync(targetDirectory, { recursive: true });
 
   // store input file to the target directory
@@ -52,8 +52,8 @@ export async function putFolderToSandbox(
   localFolder: string, remoteFolder: string, targetDirectory:string,
 ) : Promise<void> {
   // Create folder to store the simulation details
-  const targetInputDirectory = `./${targetDirectory}/inputs/`;
-  const targetOutputDirectory = `./${targetDirectory}/outputs/`;
+  const targetInputDirectory = `${targetDirectory}/inputs/`;
+  const targetOutputDirectory = `${targetDirectory}/outputs/`;
   fs.mkdirSync(targetDirectory, { recursive: true });
   fs.mkdirSync(targetInputDirectory, { recursive: true });
   fs.mkdirSync(targetOutputDirectory, { recursive: true });
@@ -113,6 +113,3 @@ export async function clearSandbox() : Promise<void> {
     logger.info('Cleared Sandbox for next simulation');
   }
 }
-
-// await getFromSandbox('out/', '1/');
-// await putFolderToSandbox('./2/', 'in/', './1/');
