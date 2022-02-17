@@ -3,6 +3,8 @@
 /* eslint-disable no-restricted-syntax */
 import * as dotenv from 'dotenv';
 import { GraphQLClient } from 'graphql-request';
+import * as fs from 'node:fs';
+import fsAsync from 'node:fs/promises';
 
 import * as controller from '../controller.js';
 import { getSdk } from '../db/database.js';
@@ -10,12 +12,14 @@ import logger from '../logger.js';
 
 dotenv.config();
 
-const client = new GraphQLClient('http://127.0.0.1:8080/v1/graphql', {
+const hasura = process.env.HASURA ?? 'http://127.0.0.1:8080/v1/graphql';
+const client = new GraphQLClient(hasura, {
   headers: {
     'x-hasura-admin-secret': 'hasuraadminsecret',
   },
 });
 const sdk = getSdk(client);
+const uploadDir = 'uploaded_files/';
 
 export async function allSimulations():Promise<string> {
   return JSON.stringify(await sdk.AllSimulations(), undefined, 2);
@@ -88,17 +92,34 @@ export async function createRun(simulation_id:string, dsl:string, name:string):P
   const steps:Array<StepDSL> = parseDSL(dsl);
   const result = await sdk.createRun({
     simulation_id,
-    dsl: JSON.parse(dsl),
+    // dsl: JSON.parse(dsl),
+    dsl,
     name,
   });
-  if (!result.start_run?.run_id) {
-    throw new Error('Undefined results from all_simulations');
+  if (!result.insert_runs_one?.run_id) {
+    throw new Error('Undefined results from createRun function');
   }
-  logger.info(`Run created with id ${result.start_run.run_id}`);
+  logger.info(`Run created with id ${result.insert_runs_one.run_id}`);
   // create all steps in the database
-  const { run_id: runId } = result.start_run;
+  const { run_id: runId } = result.insert_runs_one;
   for await (const step of steps) {
     await createStep(runId, step.name, step.image, step.step_number);
+  }
+  return runId;
+}
+
+export async function createRunWithInput(simulation_id: string, dsl: string,
+  name: string, sampleInput: [[string]]): Promise<string> {
+  const runId = await createRun(simulation_id, dsl, name);
+  fs.mkdirSync(`${uploadDir}${runId}`, { recursive: true });
+  // write sample input to uploaded_files/runId
+  for (const [inputName, inputContent] of sampleInput) {
+    if (!inputContent) {
+      throw new Error('Content of input file undefined in createRunWithInput');
+    }
+    fs.writeFile(`${uploadDir}${runId}/${inputName}`, inputContent, (error) => {
+      if (error) { throw new Error('Error in createRunWithInput'); }
+    });
   }
   return runId;
 }
@@ -112,6 +133,8 @@ export async function startRun(run_id:string):Promise<string> {
   // set runId and simulationId once for all runs
   process.env.RUN_ID = run_id;
   process.env.SIM_ID = result.runs[0].simulation_id;
+  // set input path for the first step
+  process.env.INPUT_PATH = `${uploadDir}${run_id}/`;
   // run each step
   for await (const step of steps) {
     // check if there is a stop signal set to true

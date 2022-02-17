@@ -1,3 +1,7 @@
+// eslint-disable-next-line eslint-comments/disable-enable-pair
+/* eslint-disable no-restricted-syntax */
+// eslint-disable-next-line eslint-comments/disable-enable-pair
+/* eslint-disable space-in-parens */
 import Docker from 'dockerode';
 import * as dotenv from 'dotenv';
 import fsAsync from 'node:fs/promises';
@@ -67,7 +71,7 @@ function init():void {
     + 'SIM_ID, RUN_ID, STEP_NUMBER, IMAGE, or INPUT_PATH');
   }
   // eslint-disable-next-line max-len
-  targetDirectory = path.join(simId, runId, stepNumber);
+  targetDirectory = path.join('simulations', simId, runId, stepNumber);
   // Polling interval for collecting stats from running container
   pollingInterval = 750;
 
@@ -109,6 +113,7 @@ async function createContainer() : Promise<void> {
 type StatSample = {
   time: string,
   cpu: number,
+  systemCpu: number,
   memory: number,
   memory_max: number,
   rxValue: number,
@@ -135,6 +140,7 @@ export async function parseStats() : Promise<void> {
             cpu_usage: {
               total_usage: number;
             };
+            system_cpu_usage: number;
           };
           memory_stats: {
             usage: number;
@@ -156,23 +162,14 @@ export async function parseStats() : Promise<void> {
 
         const time = fileContent.read;
         const cpu = fileContent.cpu_stats.cpu_usage.total_usage;
+        const systemCpu = fileContent.cpu_stats.system_cpu_usage;
         const memory = fileContent.memory_stats.usage;
         const memoryMax = fileContent.memory_stats.max_usage;
         const rxValue = fileContent.networks.eth0.rx_bytes;
         const txValue = fileContent.networks.eth0.tx_bytes;
         sample = {
-          time, cpu, memory, memory_max: memoryMax, rxValue, txValue,
+          time, cpu, systemCpu, memory, memory_max: memoryMax, rxValue, txValue,
         };
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-        await sdk.insertResourceUsage({
-          cpu,
-          memory,
-          memory_max: memoryMax,
-          rx_value: rxValue,
-          tx_value: txValue,
-          step_id: stepId,
-          time,
-        });
       } catch (error) {
         logger.error(`Error parsing stats file: ${fullFilename}`);
         logger.error(error);
@@ -187,6 +184,27 @@ export async function parseStats() : Promise<void> {
 
   // We need to sort the stats by timestamp because we read them in parallel
   const sortedStats = definedStats.sort((a, b) => a.time.localeCompare(b.time));
+
+  // test: adding cpu percentage
+  let previousCpu = 0;
+  let previousSystemCpu = 0;
+  // eslint-disable-next-line @typescript-eslint/no-shadow
+  for await ( const stats of sortedStats ) {
+    const temporary = stats.cpu;
+    stats.cpu = ((stats.cpu - previousCpu) / (stats.systemCpu - previousSystemCpu));
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+    await sdk.insertResourceUsage({
+      cpu: stats.cpu,
+      memory: stats.memory,
+      memory_max: stats.memory_max,
+      rx_value: stats.rxValue,
+      tx_value: stats.txValue,
+      step_id: stepId,
+      time: stats.time,
+    });
+    previousCpu = temporary;
+    previousSystemCpu = stats.systemCpu;
+  }
 
   const json = JSON.stringify(sortedStats, undefined, ' ');
   await fsAsync.appendFile(path.join(directoryName, 'statistics.json'), json);
@@ -205,23 +223,24 @@ export default async function getStats(container: Docker.Container) : Promise<vo
 
   if (!ids.includes(createdContainer.id)) {
     logger.info('Completed execution of container');
+    const result = await createdContainer.inspect();
     // update the step status as ended succesfully
     // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-    await sdk.setStepAsEndedSuccess({ step_id: stepId });
+    await sdk.setStepAsEndedSuccess({
+      step_id: stepId,
+      started: result.State.StartedAt,
+      ended: result.State.FinishedAt,
+    });
     stopStats();
     await setTimeout(1000); // Wait 1s before parsing the stats
     await parseStats();
-
     // collect logs of the stoppped container
-    const logStream = await container.logs({
-      follow: false, stdout: true, stderr: true, // stdin: true,
-    });
-
-    const fileName = path.join(targetDirectory, 'logs.txt');
-    await fsAsync.writeFile(fileName, JSON.stringify(logStream, undefined, ' '));
-    // TODO: check if logstream text is readable
+    // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+    const logStream = `${await container.logs({
+      follow: false, stdout: true, stderr: true,
+    })}`;
     // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-    await sdk.insertLog({ step_id: stepId, text: JSON.stringify(logStream, undefined, ' ') });
+    await sdk.insertLog({ step_id: stepId, text: logStream });
     // get output from sandbox
     await sftp.getFromSandbox(remoteOutputDirectory,
       `${targetDirectory}/outputs`);
@@ -229,18 +248,12 @@ export default async function getStats(container: Docker.Container) : Promise<vo
 
     // clear all files created during simulation
     await sftp.clearSandbox();
-
     logger.info(`Stored simulation details to ${targetDirectory}`);
     // set variable COMPLETED to indicate completion of simulation
     COMPLETED = false;
   } else { // collect statstics as long as the container is running
     // eslint-disable-next-line @typescript-eslint/no-floating-promises
-    // container.stats({ stream: false }).then((data) => {
-    //   // eslint-disable-next-line @typescript-eslint/no-floating-promises
-    //   fsAsync.writeFile(path.join(targetDirectory,
-    //     `stats.${counter}.json`), JSON.stringify(data, undefined, ' '));
-    //   counter += 1;
-    // });
+    // TODO: very slow; takes around 2 seconds
     const stream = await container.stats({ stream: false });
     const fileName = path.join(targetDirectory,
       `stats.${counter}.json`);
@@ -267,6 +280,7 @@ async function waitForContainer():Promise<void> {
 }
 
 export async function start(client:GraphQLClient, stepIdReceived:number) : Promise<string> {
+// export async function start(stepIdReceived:number) : Promise<string> {
   init();
   sdk = getSdk(client);
   stepId = stepIdReceived;
@@ -280,3 +294,5 @@ export async function start(client:GraphQLClient, stepIdReceived:number) : Promi
   await waitForContainer();
   return `${targetDirectory}/outputs/`;
 }
+
+// await start(1);

@@ -1,4 +1,5 @@
 import { ApolloServer, gql } from 'apollo-server';
+import logger from '../logger.js';
 
 import * as functions from './functions.js';
 // schema
@@ -11,7 +12,9 @@ const typeDefs = gql`
   type Mutation {
     Create_Simulation(model_id:String, name:String): String
     Create_Run(simulation_id: String, dsl:String, name:String): String
-    Start_Run(run_id:String): String
+    Create_Run_WithInput(simulation_id: String, dsl:String, name:String, sampleInput:[[String]]):
+     String
+    Start_Run(run_id:String, sample_input:String): String
     #TODO: implement 
     # Stop_Step(step_id:Int): String
     Stop_Run(run_id:String): String
@@ -36,7 +39,14 @@ const resolvers = {
       :Promise<string> {
       return await functions.createRun(arguments_.simulation_id, arguments_.dsl, arguments_.name);
     },
-    async Start_Run(_p: unknown, arguments_:{ run_id:string }):Promise<string> {
+    async Create_Run_WithInput(_p: unknown, arguments_:
+    { simulation_id:string, dsl:string, name:string, sampleInput:[[string]] }):Promise<string> {
+      logger.info(arguments_.sampleInput);
+      return await functions.createRunWithInput(
+        arguments_.simulation_id, arguments_.dsl, arguments_.name, arguments_.sampleInput);
+    },
+    async Start_Run(_p: unknown, arguments_:{ run_id:string, sample_input:string }):
+    Promise<string> {
       // TODO: queue to follow
       // eslint-disable-next-line @typescript-eslint/no-floating-promises
       functions.startRun(arguments_.run_id);
@@ -57,15 +67,12 @@ const resolvers = {
 // TODO: dockerize backend
 
 const server = new ApolloServer({ typeDefs, resolvers });
-await server.listen({ port: 9000 }).then(({ url }) => {
+await server.listen({ port: 9000, hostname: '0.0.0.0' }).then(({ url }) => {
   // eslint-disable-next-line no-console
   console.log(`🚀  Server ready at ${url}`);
 });
 
-// await functions.startRun('c5bef54f-0cb7-4331-8c19-d4ef39071682');
-// await functions.startRun('dd8baad5-f326-4484-a691-3115c8fcf62f');
-// await functions.createRun('96e79178-caef-4c2f-b656-6eb9a7c44c37',
-// "{\"dsl\" : \"second sample\"}");
-// console.log(await functions.getSimulationRunResults('16b0d320-ae24-4e93-8376-4bf4439952d6',
-//   'c5bef54f-0cb7-4331-8c19-d4ef39071682'));
-// console.log(await functions.allSimulations());
+// const runid = await functions.createRunWithInput('fbaf05f3-93ad-4df3-9429-095850b55eae', 'n', 'n',
+//  [['n1', 'content1'], ['n2', 'content2']]);
+// // const runid = await functions.createRun('fbaf05f3-93ad-4df3-9429-095850b55eae', "{\"dsl\" : \"second sample\"}");
+// await functions.startRun(runid);
