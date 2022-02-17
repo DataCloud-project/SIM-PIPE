@@ -14,7 +14,7 @@ const typeDefs = gql`
     Create_Run(simulation_id: String, dsl:String, name:String): String
     Create_Run_WithInput(simulation_id: String, dsl:String, name:String, sampleInput:[[String]]):
      String
-    Start_Run(run_id:String, sample_input:String): String
+    Start_Run(run_id:String): String
     #TODO: implement 
     # Stop_Step(step_id:Int): String
     Stop_Run(run_id:String): String
@@ -45,7 +45,7 @@ const resolvers = {
       return await functions.createRunWithInput(
         arguments_.simulation_id, arguments_.dsl, arguments_.name, arguments_.sampleInput);
     },
-    async Start_Run(_p: unknown, arguments_:{ run_id:string, sample_input:string }):
+    async Start_Run(_p: unknown, arguments_:{ run_id:string }):
     Promise<string> {
       // TODO: queue to follow
       // eslint-disable-next-line @typescript-eslint/no-floating-promises

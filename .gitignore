@@ -4,3 +4,5 @@
 /[0-9]*
 src/1/input1.txt
 src/1/input2.txt
+simulations/*
+uploaded_files/*
