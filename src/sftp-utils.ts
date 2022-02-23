@@ -11,8 +11,8 @@ dotenv.config({ path: '../.env' });
 const sftp = new Client();
 
 const options = {
-  host: '127.0.0.1',
-  port: 2222,
+  host: process.env.SANDBOX_IP, // ip address of windows host
+  port: 22,
   username: 'user1',
   password: 'user1',
 };
