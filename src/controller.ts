@@ -1,3 +1,4 @@
+/* eslint-disable no-await-in-loop */
 // eslint-disable-next-line eslint-comments/disable-enable-pair
 /* eslint-disable no-restricted-syntax */
 // eslint-disable-next-line eslint-comments/disable-enable-pair
@@ -18,6 +19,8 @@ import * as sftp from './sftp-utils.js';
 
 dotenv.config();
 
+// TODO: remove global variables
+
 // remote is true by default
 const remote:boolean = !process.argv[2] ? true : process.argv[2] === 'remote';
 
@@ -31,7 +34,8 @@ let stepId:number;
 if (remote) {
   // remote connection to docker daemon
   docker = new Docker({
-    host: '127.0.0.1',
+    // host: '127.0.0.1',
+    host: process.env.SANDBOX_IP, // ip address of windows host
     port: 2375,
   });
 } else {
@@ -57,7 +61,17 @@ let createdContainer: Docker.Container;
 let counter:number;
 let remoteInputFolder: string;
 let remoteOutputDirectory:string;
-let COMPLETED:boolean;
+let totalDelay:number;
+
+type StatSample = {
+  time: string,
+  cpu: number,
+  systemCpu: number,
+  memory: number,
+  memory_max: number,
+  rxValue: number,
+  txValue: number
+};
 
 function init():void {
   simId = process.env.SIM_ID;
@@ -78,13 +92,13 @@ function init():void {
   counter = 1;
   remoteInputFolder = 'in/';
   remoteOutputDirectory = 'out/';
-  // config_object.storeOutputFile = `${config_object.targetDirectory}/output.txt`;
-  // config_object.targetDir = `${config_object.targetDirectory}`;
-  COMPLETED = true;
+  process.env.PROCESS_COMPLETED = 'false';
+  process.env.STOP_SIGNAL_SENT = 'false';
+  totalDelay = 0;
 }
 let timer: SetIntervalAsyncTimer;
 
-async function createContainer() : Promise<void> {
+async function startContainer() : Promise<number> {
   createdContainer = (await docker.createContainer({
     Image: image,
     Tty: true,
@@ -99,26 +113,19 @@ async function createContainer() : Promise<void> {
       '/var/lib/docker/volumes/volume_vm/_data/out:/app/out',
       '/var/lib/docker/volumes/volume_vm/_data/work:/app/work',
     ],
+    StopTimeout: 5,
     // Env: [
     //   `STEP_NUMBER=${stepNumber}`,
     // ],
   })) as unknown as Docker.Container;
   await createdContainer.start({});
+  const startedAt:number = new Date() as unknown as number;
   // change the step status in the database to active
   // eslint-disable-next-line @typescript-eslint/no-unsafe-call
   await sdk.setStepAsStarted({ step_id: stepId });
   logger.info(`Container started with ID: ${createdContainer.id}`);
+  return startedAt;
 }
-
-type StatSample = {
-  time: string,
-  cpu: number,
-  systemCpu: number,
-  memory: number,
-  memory_max: number,
-  rxValue: number,
-  txValue: number
-};
 
 export async function parseStats() : Promise<void> {
   const directoryName = targetDirectory;
@@ -210,13 +217,35 @@ export async function parseStats() : Promise<void> {
   await fsAsync.appendFile(path.join(directoryName, 'statistics.json'), json);
 }
 
-function stopStats() : void {
+function stopStatsPolling() : void {
   clearIntervalAsync(timer).catch((error) => {
     logger.error(error);
   });
 }
 
-export default async function getStats(container: Docker.Container) : Promise<void> {
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+async function postExitCleanUp(container: Docker.Container) {
+  await parseStats();
+  // collect logs of the stoppped container
+  // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+  const logStream = `${await container.logs({
+    follow: false, stdout: true, stderr: true,
+  })}`;
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+  await sdk.insertLog({ step_id: stepId, text: logStream });
+  // get output from sandbox
+  await sftp.getFromSandbox(remoteOutputDirectory,
+    `${targetDirectory}/outputs`);
+  logger.info('Collected simulation files from Sandbox');
+
+  // clear all files created during simulation
+  await sftp.clearSandbox();
+  logger.info(`Stored simulation details to ${targetDirectory}`);
+  // set variable COMPLETED to indicate completion of simulation
+  process.env.PROCESS_COMPLETED = 'true';
+}
+
+async function getStatsUntilExit(container: Docker.Container, exitTimeout:number, startedAt:number): Promise<void> {
   // if container stops, then stop the timer
   const containers = await docker.listContainers();
   const ids = containers.map((containerInList) => containerInList.Id);
@@ -231,26 +260,22 @@ export default async function getStats(container: Docker.Container) : Promise<vo
       started: result.State.StartedAt,
       ended: result.State.FinishedAt,
     });
-    stopStats();
+    stopStatsPolling();
     await setTimeout(1000); // Wait 1s before parsing the stats
-    await parseStats();
-    // collect logs of the stoppped container
-    // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-    const logStream = `${await container.logs({
-      follow: false, stdout: true, stderr: true,
-    })}`;
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-    await sdk.insertLog({ step_id: stepId, text: logStream });
-    // get output from sandbox
-    await sftp.getFromSandbox(remoteOutputDirectory,
-      `${targetDirectory}/outputs`);
-    logger.info('Collected simulation files from Sandbox');
-
-    // clear all files created during simulation
-    await sftp.clearSandbox();
-    logger.info(`Stored simulation details to ${targetDirectory}`);
-    // set variable COMPLETED to indicate completion of simulation
-    COMPLETED = false;
+    await postExitCleanUp(container);
+  } else if ( process.env.STOP_SIGNAL_SENT === 'false'
+  && ((new Date() as unknown as number) - startedAt) >= exitTimeout ) {
+    try {
+      console.log(totalDelay);
+      console.log('total delay in controller');
+      // for continuous steps, send stop signal after configured number of seconds
+      // eslint-disable-next-line @typescript-eslint/no-floating-promises
+      createdContainer.stop();
+      process.env.STOP_SIGNAL_SENT = 'true';
+      logger.info('Sent stop signal to running container');
+    } catch {
+      logger.error('Error stopping the container');
+    }
   } else { // collect statstics as long as the container is running
     // eslint-disable-next-line @typescript-eslint/no-floating-promises
     // TODO: very slow; takes around 2 seconds
@@ -260,12 +285,20 @@ export default async function getStats(container: Docker.Container) : Promise<vo
     counter += 1;
     await fsAsync.writeFile(fileName, JSON.stringify(stream, undefined, ' '));
   }
+  totalDelay += pollingInterval;
 }
 
-function startStatsPolling():void {
+function startPollingStats(startedAt:number):void {
+  let exitTimeout:number;
+  if (!process.env.DELAYED_EXIT_TIMEOUT) {
+    throw new Error('Timeout interval to stop container is not defined');
+  } else {
+    // DELAYED_EXIT_TIMEOUT env variable is defined in seconds
+    exitTimeout = ( +process.env.DELAYED_EXIT_TIMEOUT ) * 1000;
+  }
   timer = setIntervalAsync(async () => {
     try {
-      await getStats(createdContainer);
+      await getStatsUntilExit(createdContainer, exitTimeout, startedAt);
     } catch (error) {
       logger.error(error);
     }
@@ -273,14 +306,30 @@ function startStatsPolling():void {
 }
 
 async function waitForContainer():Promise<void> {
-  while (COMPLETED === true) {
-    // eslint-disable-next-line no-await-in-loop
+  // let totalDelay = 500;
+  // let SIGNAL_SENT = false;
+  while (process.env.PROCESS_COMPLETED === 'false') {
     await setTimeout(500);
+    // totalDelay += 500;
+    // // for continuous steps, send stop signal after configured number of seconds
+    // if ( !SIGNAL_SENT && totalDelay >= (process.env.DELAYED_EXIT_TIMEOUT as unknown as number) ) {
+    //   try {
+    //     const containers = await docker.listContainers();
+    //     const ids = containers.map((containerInList) => containerInList.Id);
+    //     if (!ids.includes(createdContainer.id)) { // if container is still running
+    //       // eslint-disable-next-line @typescript-eslint/no-floating-promises
+    //       createdContainer.stop();
+    //       SIGNAL_SENT = true;
+    //       logger.info('Sent stop signal to running container');
+    //     }
+    //   } catch {
+    //     logger.error('Error stopping the container');
+    //   }
+    // }
   }
 }
 
 export async function start(client:GraphQLClient, stepIdReceived:number) : Promise<string> {
-// export async function start(stepIdReceived:number) : Promise<string> {
   init();
   sdk = getSdk(client);
   stepId = stepIdReceived;
@@ -289,10 +338,8 @@ export async function start(client:GraphQLClient, stepIdReceived:number) : Promi
   }
   logger.info(`Starting simulation for step ${stepNumber}`);
   await sftp.putFolderToSandbox(inputPath, remoteInputFolder, targetDirectory);
-  await createContainer();
-  startStatsPolling();
+  const startedAt = await startContainer();
+  startPollingStats(startedAt);
   await waitForContainer();
   return `${targetDirectory}/outputs/`;
 }
-
-// await start(1);
