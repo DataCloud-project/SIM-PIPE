@@ -53,7 +53,12 @@ services:
     environment:
       HASURA: http://hasura:8080/v1/graphql
       SANDBOX_IP: '192.168.56.1'
-      DELAYED_EXIT_TIMEOUT: 20
+      CONTAINER_TIME_LIMIT: 20
+      CONTAINER_STOP_TIMEOUT : 5
+      POLLING_INTERVAL: 1
+      REMOTE_OUTPUT_DIR: 'out/'
+      REMOTE_INPUT_DIR: 'in/'
+      
 volumes:
   db_data:
     null

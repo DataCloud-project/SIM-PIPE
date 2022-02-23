@@ -1,3 +1,4 @@
+// eslint-disable-next-line eslint-comments/disable-enable-pair
 /* eslint-disable no-await-in-loop */
 // eslint-disable-next-line eslint-comments/disable-enable-pair
 /* eslint-disable no-restricted-syntax */
@@ -50,18 +51,9 @@ if (remote) {
   docker = new Docker({ socketPath: socket });
 }
 
-let simId: string | undefined;
-let runId: string | undefined;
-let stepNumber: string | undefined;
-let image:string | undefined;
-let inputPath: string | undefined;
 let targetDirectory:string;
-let pollingInterval:number;
 let createdContainer: Docker.Container;
 let counter:number;
-let remoteInputFolder: string;
-let remoteOutputDirectory:string;
-let totalDelay:number;
 
 type StatSample = {
   time: string,
@@ -73,32 +65,24 @@ type StatSample = {
   txValue: number
 };
 
-function init():void {
-  simId = process.env.SIM_ID;
-  runId = process.env.RUN_ID;
-  stepNumber = process.env.STEP_NUMBER;
-  image = process.env.IMAGE;
-  inputPath = process.env.INPUT_PATH;
-  if (!simId || !runId || !stepNumber || !image
-    || !inputPath) {
-    throw new Error('Missing environment variables in controller: '
-    + 'SIM_ID, RUN_ID, STEP_NUMBER, IMAGE, or INPUT_PATH');
-  }
-  // eslint-disable-next-line max-len
-  targetDirectory = path.join('simulations', simId, runId, stepNumber);
-  // Polling interval for collecting stats from running container
-  pollingInterval = 750;
+type Step = {
+  simId: string;
+  runId: string;
+  stepNumber: string;
+  image:string;
+  inputPath: string;
+};
 
+function init(step:Step):void {
+  // eslint-disable-next-line max-len
+  targetDirectory = path.join('simulations', step.simId, step.runId, step.stepNumber);
   counter = 1;
-  remoteInputFolder = 'in/';
-  remoteOutputDirectory = 'out/';
   process.env.PROCESS_COMPLETED = 'false';
   process.env.STOP_SIGNAL_SENT = 'false';
-  totalDelay = 0;
 }
 let timer: SetIntervalAsyncTimer;
 
-async function startContainer() : Promise<number> {
+async function startContainer(image:string) : Promise<number> {
   createdContainer = (await docker.createContainer({
     Image: image,
     Tty: true,
@@ -113,7 +97,7 @@ async function startContainer() : Promise<number> {
       '/var/lib/docker/volumes/volume_vm/_data/out:/app/out',
       '/var/lib/docker/volumes/volume_vm/_data/work:/app/work',
     ],
-    StopTimeout: 5,
+    StopTimeout: process.env.CONTAINER_STOP_TIMEOUT ? +process.env.CONTAINER_STOP_TIMEOUT : 5,
     // Env: [
     //   `STEP_NUMBER=${stepNumber}`,
     // ],
@@ -234,7 +218,8 @@ async function postExitCleanUp(container: Docker.Container) {
   // eslint-disable-next-line @typescript-eslint/no-unsafe-call
   await sdk.insertLog({ step_id: stepId, text: logStream });
   // get output from sandbox
-  await sftp.getFromSandbox(remoteOutputDirectory,
+  const remoteOutDirectory = process.env.REMOTE_OUTPUT_DIR ? process.env.REMOTE_OUTPUT_DIR : 'out/';
+  await sftp.getFromSandbox(remoteOutDirectory,
     `${targetDirectory}/outputs`);
   logger.info('Collected simulation files from Sandbox');
 
@@ -245,7 +230,8 @@ async function postExitCleanUp(container: Docker.Container) {
   process.env.PROCESS_COMPLETED = 'true';
 }
 
-async function getStatsUntilExit(container: Docker.Container, exitTimeout:number, startedAt:number): Promise<void> {
+async function getStatsUntilExit(container: Docker.Container, exitTimeout:number, startedAt:number):
+Promise<void> {
   // if container stops, then stop the timer
   const containers = await docker.listContainers();
   const ids = containers.map((containerInList) => containerInList.Id);
@@ -266,8 +252,6 @@ async function getStatsUntilExit(container: Docker.Container, exitTimeout:number
   } else if ( process.env.STOP_SIGNAL_SENT === 'false'
   && ((new Date() as unknown as number) - startedAt) >= exitTimeout ) {
     try {
-      console.log(totalDelay);
-      console.log('total delay in controller');
       // for continuous steps, send stop signal after configured number of seconds
       // eslint-disable-next-line @typescript-eslint/no-floating-promises
       createdContainer.stop();
@@ -285,17 +269,18 @@ async function getStatsUntilExit(container: Docker.Container, exitTimeout:number
     counter += 1;
     await fsAsync.writeFile(fileName, JSON.stringify(stream, undefined, ' '));
   }
-  totalDelay += pollingInterval;
 }
 
 function startPollingStats(startedAt:number):void {
   let exitTimeout:number;
-  if (!process.env.DELAYED_EXIT_TIMEOUT) {
+  // get CONTAINER_TIME_LIMIT (seconds) env variable
+  if (!process.env.CONTAINER_TIME_LIMIT) {
     throw new Error('Timeout interval to stop container is not defined');
   } else {
-    // DELAYED_EXIT_TIMEOUT env variable is defined in seconds
-    exitTimeout = ( +process.env.DELAYED_EXIT_TIMEOUT ) * 1000;
+    exitTimeout = ( +process.env.CONTAINER_TIME_LIMIT ) * 1000;
   }
+  const pollingInterval:number = process.env.POLLING_INTERVAL ? +process.env.POLLING_INTERVAL * 1000
+    : 750;
   timer = setIntervalAsync(async () => {
     try {
       await getStatsUntilExit(createdContainer, exitTimeout, startedAt);
@@ -306,39 +291,31 @@ function startPollingStats(startedAt:number):void {
 }
 
 async function waitForContainer():Promise<void> {
-  // let totalDelay = 500;
-  // let SIGNAL_SENT = false;
   while (process.env.PROCESS_COMPLETED === 'false') {
     await setTimeout(500);
-    // totalDelay += 500;
-    // // for continuous steps, send stop signal after configured number of seconds
-    // if ( !SIGNAL_SENT && totalDelay >= (process.env.DELAYED_EXIT_TIMEOUT as unknown as number) ) {
-    //   try {
-    //     const containers = await docker.listContainers();
-    //     const ids = containers.map((containerInList) => containerInList.Id);
-    //     if (!ids.includes(createdContainer.id)) { // if container is still running
-    //       // eslint-disable-next-line @typescript-eslint/no-floating-promises
-    //       createdContainer.stop();
-    //       SIGNAL_SENT = true;
-    //       logger.info('Sent stop signal to running container');
-    //     }
-    //   } catch {
-    //     logger.error('Error stopping the container');
-    //   }
-    // }
   }
 }
 
 export async function start(client:GraphQLClient, stepIdReceived:number) : Promise<string> {
-  init();
+  if (!process.env.SIM_ID || !process.env.RUN_ID || !process.env.STEP_NUMBER || !process.env.IMAGE
+    || !process.env.INPUT_PATH) {
+    throw new Error('Missing environment variables in controller.start: '
+    + 'SIM_ID, RUN_ID, STEP_NUMBER, IMAGE, or INPUT_PATH');
+  }
+  const step:Step = {
+    simId: process.env.SIM_ID,
+    runId: process.env.RUN_ID,
+    stepNumber: process.env.STEP_NUMBER,
+    image: process.env.IMAGE,
+    inputPath: process.env.INPUT_PATH,
+  };
+  init(step);
   sdk = getSdk(client);
   stepId = stepIdReceived;
-  if (!inputPath || !stepNumber) {
-    throw new Error('Invalid expression in controller.start');
-  }
-  logger.info(`Starting simulation for step ${stepNumber}`);
-  await sftp.putFolderToSandbox(inputPath, remoteInputFolder, targetDirectory);
-  const startedAt = await startContainer();
+  logger.info(`Starting simulation for step ${step.stepNumber}`);
+  const remoteInputFolder = process.env.REMOTE_INPUT_DIR ? process.env.REMOTE_INPUT_DIR : 'in/';
+  await sftp.putFolderToSandbox(step.inputPath, remoteInputFolder, targetDirectory);
+  const startedAt = await startContainer(step.image);
   startPollingStats(startedAt);
   await waitForContainer();
   return `${targetDirectory}/outputs/`;
