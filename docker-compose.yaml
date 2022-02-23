@@ -15,7 +15,7 @@ services:
       - "8080:8080"
     depends_on:
       - "timescaledb"
-      # - "controller"
+      - "controller"
     restart: unless-stopped
     volumes:
       - ./hasura/migrations:/hasura-migrations:ro
@@ -40,16 +40,20 @@ services:
     volumes:
       - appsmith:/appsmith-stacks
   
-  # controller:
-  #   image: backend-v1
-  #   ports:
-  #     - "9000:9000"
-  #   restart: unless-stopped
-  #   volumes:
-  #     - /:/backenddocker
-  #   environment:
-  #     INPUT_PATH: ./src/1/
-  #     HASURA: http://hasura:8080/v1/graphql
+  controller:
+    image: backend-v1
+    ports:
+      - "9000:9000"
+      - "2375:2375"
+      - "22:22"
+    restart: unless-stopped
+    volumes:
+      - /simulations:/simulations
+      - /uploaded_files:/uploaded_files
+    environment:
+      HASURA: http://hasura:8080/v1/graphql
+      SANDBOX_IP: '192.168.56.1'
+      DELAYED_EXIT_TIMEOUT: 20
 volumes:
   db_data:
     null
