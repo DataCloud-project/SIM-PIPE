@@ -137,7 +137,7 @@ export async function startRun(run_id:string):Promise<string> {
   // run each step
   for await (const step of steps) {
     // check if there is a stop signal set to true
-    if (process.env.STOP === 'true') {
+    if (process.env.STOP_RUN === 'true') {
       // mark all the remaining steps as cancelled
       await sdk.setStepAsCancelled({ step_id: step.step_id });
       // eslint-disable-next-line no-continue
@@ -150,12 +150,12 @@ export async function startRun(run_id:string):Promise<string> {
     process.env.INPUT_PATH = await controller.start(client, step.step_id);
     logger.info(`Step ${step.pipeline_step_number} finished execution\n`);
   }
-  if (process.env.STOP === 'true') {
+  if (process.env.STOP_RUN === 'true') {
     // mark the run as cancelled
     logger.info(`Run ${run_id} execution is cancelled\n`);
     await sdk.setRunAsCancelled({ run_id });
     // set STOP signal to false for the next run
-    process.env.STOP = 'false';
+    process.env.STOP_RUN = 'false';
     return 'cancelled';
   }
   // set run as completed successully in the database
@@ -172,7 +172,7 @@ export async function getSimulationRunResults(simulation_id:string,
 
 export function stopRun(run_id:string):string {
   // find the current running container
-  process.env.STOP = 'true';
+  process.env.STOP_RUN = 'true';
   // stop and kill current container
   // stop the start run function to stop all the next steps
   // change the status of runs and steps to 'cancelled'

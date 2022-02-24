@@ -17,6 +17,7 @@ import type { SetIntervalAsyncTimer } from 'set-interval-async';
 import { getSdk } from './db/database.js';
 import logger from './logger.js';
 import * as sftp from './sftp-utils.js';
+import type * as types from './types.js';
 
 dotenv.config();
 
@@ -55,25 +56,7 @@ let targetDirectory:string;
 let createdContainer: Docker.Container;
 let counter:number;
 
-type StatSample = {
-  time: string,
-  cpu: number,
-  systemCpu: number,
-  memory: number,
-  memory_max: number,
-  rxValue: number,
-  txValue: number
-};
-
-type Step = {
-  simId: string;
-  runId: string;
-  stepNumber: string;
-  image:string;
-  inputPath: string;
-};
-
-function init(step:Step):void {
+function init(step:types.Step):void {
   // eslint-disable-next-line max-len
   targetDirectory = path.join('simulations', step.simId, step.runId, step.stepNumber);
   counter = 1;
@@ -123,7 +106,7 @@ export async function parseStats() : Promise<void> {
       const fullFilename = path.join(directoryName, fileName);
       const data = await fsAsync.readFile(fullFilename, { encoding: 'utf-8' });
 
-      let sample: StatSample;
+      let sample: types.StatSample;
       try {
         const fileContent = JSON.parse(data) as {
           read: string;
@@ -171,7 +154,7 @@ export async function parseStats() : Promise<void> {
       return sample;
     }));
 
-  const definedStats = stats.filter((stat) : stat is StatSample => stat !== undefined);
+  const definedStats = stats.filter((stat) : stat is types.StatSample => stat !== undefined);
 
   // We need to sort the stats by timestamp because we read them in parallel
   const sortedStats = definedStats.sort((a, b) => a.time.localeCompare(b.time));
@@ -302,7 +285,7 @@ export async function start(client:GraphQLClient, stepIdReceived:number) : Promi
     throw new Error('Missing environment variables in controller.start: '
     + 'SIM_ID, RUN_ID, STEP_NUMBER, IMAGE, or INPUT_PATH');
   }
-  const step:Step = {
+  const step:types.Step = {
     simId: process.env.SIM_ID,
     runId: process.env.RUN_ID,
     stepNumber: process.env.STEP_NUMBER,
