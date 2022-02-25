@@ -30,8 +30,9 @@ let docker: Docker;
 let sdk: {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   setStepAsStarted: any; insertResourceUsage: any; setStepAsEndedSuccess: any; insertLog: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  setStepAsCancelled: any;
 };
-let stepId:number;
 
 if (remote) {
   // remote connection to docker daemon
@@ -57,15 +58,18 @@ let createdContainer: Docker.Container;
 let counter:number;
 
 function init(step:types.Step):void {
-  // eslint-disable-next-line max-len
-  targetDirectory = path.join('simulations', step.simId, step.runId, step.stepNumber);
+  if (!step.stepNumber) {
+    throw new Error('Error in controller.init: step number not defined');
+  }
+  targetDirectory = path.join('simulations', step.simId, step.runId, `${step.stepNumber}`);
   counter = 1;
   process.env.PROCESS_COMPLETED = 'false';
   process.env.STOP_SIGNAL_SENT = 'false';
 }
 let timer: SetIntervalAsyncTimer;
 
-async function startContainer(image:string) : Promise<number> {
+// eslint-disable-next-line unicorn/prevent-abbreviations
+async function startContainer(image:string, stepId:number, env: [string]) : Promise<number> {
   createdContainer = (await docker.createContainer({
     Image: image,
     Tty: true,
@@ -81,9 +85,7 @@ async function startContainer(image:string) : Promise<number> {
       '/var/lib/docker/volumes/volume_vm/_data/work:/app/work',
     ],
     StopTimeout: process.env.CONTAINER_STOP_TIMEOUT ? +process.env.CONTAINER_STOP_TIMEOUT : 5,
-    // Env: [
-    //   `STEP_NUMBER=${stepNumber}`,
-    // ],
+    Env: env || [],
   })) as unknown as Docker.Container;
   await createdContainer.start({});
   const startedAt:number = new Date() as unknown as number;
@@ -94,7 +96,7 @@ async function startContainer(image:string) : Promise<number> {
   return startedAt;
 }
 
-export async function parseStats() : Promise<void> {
+export async function parseStats(stepId:number) : Promise<void> {
   const directoryName = targetDirectory;
   const fileList = await fsAsync.readdir(directoryName);
 
@@ -184,15 +186,24 @@ export async function parseStats() : Promise<void> {
   await fsAsync.appendFile(path.join(directoryName, 'statistics.json'), json);
 }
 
-function stopStatsPolling() : void {
+function stopPollingStats() : void {
   clearIntervalAsync(timer).catch((error) => {
     logger.error(error);
   });
 }
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-async function postExitCleanUp(container: Docker.Container) {
-  await parseStats();
+async function postExitProcessing(container: Docker.Container, stepId:number, stepNumber:number) {
+  const result = await createdContainer.inspect();
+  // update the step status as ended succesfully
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+  await sdk.setStepAsEndedSuccess({
+    step_id: stepId,
+    started: result.State.StartedAt,
+    ended: result.State.FinishedAt,
+  });
+  await setTimeout(1000); // Wait 1s before parsing the stats
+  await parseStats(stepId);
   // collect logs of the stoppped container
   // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
   const logStream = `${await container.logs({
@@ -201,7 +212,7 @@ async function postExitCleanUp(container: Docker.Container) {
   // eslint-disable-next-line @typescript-eslint/no-unsafe-call
   await sdk.insertLog({ step_id: stepId, text: logStream });
   // get output from sandbox
-  const remoteOutDirectory = process.env.REMOTE_OUTPUT_DIR ? process.env.REMOTE_OUTPUT_DIR : 'out/';
+  const remoteOutDirectory = process.env.REMOTE_OUTPUT_DIR ?? 'out/';
   await sftp.getFromSandbox(remoteOutDirectory,
     `${targetDirectory}/outputs`);
   logger.info('Collected simulation files from Sandbox');
@@ -211,50 +222,55 @@ async function postExitCleanUp(container: Docker.Container) {
   logger.info(`Stored simulation details to ${targetDirectory}`);
   // set variable COMPLETED to indicate completion of simulation
   process.env.PROCESS_COMPLETED = 'true';
+  logger.info(`Step ${stepNumber} finished execution\n`);
 }
 
-async function getStatsUntilExit(container: Docker.Container, exitTimeout:number, startedAt:number):
-Promise<void> {
+async function getStatsUntilExit(container: Docker.Container, exitTimeout:number, startedAt:number,
+  stepId:number, stepNumber:number):Promise<void> {
   // if container stops, then stop the timer
   const containers = await docker.listContainers();
   const ids = containers.map((containerInList) => containerInList.Id);
 
-  if (!ids.includes(createdContainer.id)) {
-    logger.info('Completed execution of container');
-    const result = await createdContainer.inspect();
-    // update the step status as ended succesfully
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-    await sdk.setStepAsEndedSuccess({
-      step_id: stepId,
-      started: result.State.StartedAt,
-      ended: result.State.FinishedAt,
-    });
-    stopStatsPolling();
-    await setTimeout(1000); // Wait 1s before parsing the stats
-    await postExitCleanUp(container);
-  } else if ( process.env.STOP_SIGNAL_SENT === 'false'
-  && ((new Date() as unknown as number) - startedAt) >= exitTimeout ) {
-    try {
+  if (ids.includes(createdContainer.id)) { // collect statstics as long as the container is running
+    if (process.env.STOP_SIGNAL_SENT === 'false'
+            && ( process.env.CANCEL_RUN === 'true'
+                  || ((new Date() as unknown as number) - startedAt) >= exitTimeout )) {
+      try {
       // for continuous steps, send stop signal after configured number of seconds
       // eslint-disable-next-line @typescript-eslint/no-floating-promises
-      createdContainer.stop();
-      process.env.STOP_SIGNAL_SENT = 'true';
-      logger.info('Sent stop signal to running container');
-    } catch {
-      logger.error('Error stopping the container');
+        createdContainer.stop();
+        // set STOP_SIGNAL_SENT to true to avoid sending multiple stop signals
+        process.env.STOP_SIGNAL_SENT = 'true';
+        logger.info('Sent stop signal to running container');
+      } catch {
+        logger.error('Error stopping the container');
+      }
     }
-  } else { // collect statstics as long as the container is running
-    // eslint-disable-next-line @typescript-eslint/no-floating-promises
     // TODO: very slow; takes around 2 seconds
     const stream = await container.stats({ stream: false });
     const fileName = path.join(targetDirectory,
       `stats.${counter}.json`);
     counter += 1;
     await fsAsync.writeFile(fileName, JSON.stringify(stream, undefined, ' '));
+  } else { // container is exited
+    stopPollingStats();
+    // if run is cancelled
+    if (process.env.CANCEL_RUN === 'true') {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+      await sdk.setStepAsCancelled({ step_id: stepId });
+      logger.info('Step execution is cancelled');
+      // clear all files created during simulation
+      await sftp.clearSandbox();
+      // set PROCESS_COMPLETED to indicate simulation is ready to closed
+      process.env.PROCESS_COMPLETED = 'true';
+    } else { // if step executed successfully
+      logger.info('Completed execution of container');
+      await postExitProcessing(container, stepId, stepNumber);
+    }
   }
 }
 
-function startPollingStats(startedAt:number):void {
+function startPollingStats(startedAt:number, stepId:number, stepNumber:number):void {
   let exitTimeout:number;
   // get CONTAINER_TIME_LIMIT (seconds) env variable
   if (!process.env.CONTAINER_TIME_LIMIT) {
@@ -266,7 +282,7 @@ function startPollingStats(startedAt:number):void {
     : 750;
   timer = setIntervalAsync(async () => {
     try {
-      await getStatsUntilExit(createdContainer, exitTimeout, startedAt);
+      await getStatsUntilExit(createdContainer, exitTimeout, startedAt, stepId, stepNumber);
     } catch (error) {
       logger.error(error);
     }
@@ -278,28 +294,26 @@ async function waitForContainer():Promise<void> {
     await setTimeout(500);
   }
 }
-
-export async function start(client:GraphQLClient, stepIdReceived:number) : Promise<string> {
-  if (!process.env.SIM_ID || !process.env.RUN_ID || !process.env.STEP_NUMBER || !process.env.IMAGE
-    || !process.env.INPUT_PATH) {
-    throw new Error('Missing environment variables in controller.start: '
-    + 'SIM_ID, RUN_ID, STEP_NUMBER, IMAGE, or INPUT_PATH');
+// testing step type
+// export async function start(client:GraphQLClient, stepIdReceived:number) : Promise<string> {
+export async function start(client:GraphQLClient, step:types.Step) : Promise<string> {
+  if (!step.stepNumber || !step.stepId || !step.image) {
+    throw new Error('Error in controller.start: step_number, image or step_id not defined');
   }
-  const step:types.Step = {
-    simId: process.env.SIM_ID,
-    runId: process.env.RUN_ID,
-    stepNumber: process.env.STEP_NUMBER,
-    image: process.env.IMAGE,
-    inputPath: process.env.INPUT_PATH,
-  };
+  // const step:types.Step = {
+  //   simId: process.env.SIM_ID,
+  //   runId: process.env.RUN_ID,
+  //   stepNumber: process.env.STEP_NUMBER,
+  //   image: process.env.IMAGE,
+  //   inputPath: process.env.INPUT_PATH,
+  // };
   init(step);
   sdk = getSdk(client);
-  stepId = stepIdReceived;
   logger.info(`Starting simulation for step ${step.stepNumber}`);
-  const remoteInputFolder = process.env.REMOTE_INPUT_DIR ? process.env.REMOTE_INPUT_DIR : 'in/';
+  const remoteInputFolder = process.env.REMOTE_INPUT_DIR ?? 'in/';
   await sftp.putFolderToSandbox(step.inputPath, remoteInputFolder, targetDirectory);
-  const startedAt = await startContainer(step.image);
-  startPollingStats(startedAt);
+  const startedAt = await startContainer(step.image, step.stepId, step.env);
+  startPollingStats(startedAt, step.stepId, step.stepNumber);
   await waitForContainer();
   return `${targetDirectory}/outputs/`;
 }

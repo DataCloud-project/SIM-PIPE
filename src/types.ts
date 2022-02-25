@@ -11,8 +11,9 @@ export type StatSample = {
 export type Step = {
   simId: string;
   runId: string;
-  stepNumber: string;
-  image:string;
+  stepNumber?: number;
+  image?:string;
   inputPath: string;
   env?: [string];
+  stepId?: number;
 };

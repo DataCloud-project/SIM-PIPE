@@ -8,6 +8,7 @@ import * as fs from 'node:fs';
 import * as controller from '../controller.js';
 import { getSdk } from '../db/database.js';
 import logger from '../logger.js';
+import type * as types from '../types.js';
 
 dotenv.config();
 
@@ -129,6 +130,12 @@ export async function startRun(run_id:string):Promise<string> {
   // get simulationId and step details of runId
   const result = await sdk.getSimulationIdandSteps({ run_id });
   const { steps } = result.runs[0]; // get steps sorted acc to pipeline_step_number
+  // testing step type
+  const currentStep:types.Step = {
+    simId: result.runs[0].simulation_id,
+    runId: run_id,
+    inputPath: `${uploadDirectory}${run_id}/`,
+  };
   // set runId and simulationId once for all runs
   process.env.RUN_ID = run_id;
   process.env.SIM_ID = result.runs[0].simulation_id;
@@ -137,25 +144,31 @@ export async function startRun(run_id:string):Promise<string> {
   // run each step
   for await (const step of steps) {
     // check if there is a stop signal set to true
-    if (process.env.STOP_RUN === 'true') {
+    if (process.env.CANCEL_RUN === 'true') {
       // mark all the remaining steps as cancelled
       await sdk.setStepAsCancelled({ step_id: step.step_id });
       // eslint-disable-next-line no-continue
       continue;
     }
+    // testing step type
+    currentStep.image = step.image;
+    currentStep.stepNumber = step.pipeline_step_number;
+    currentStep.stepId = step.step_id;
     // set the variable values in env file
     process.env.STEP_NUMBER = `${step.pipeline_step_number}`;
     process.env.IMAGE = step.image;
     // set input path for next step as output path of the previous step returned and start step
-    process.env.INPUT_PATH = await controller.start(client, step.step_id);
-    logger.info(`Step ${step.pipeline_step_number} finished execution\n`);
+    // process.env.INPUT_PATH = await controller.start(client, step.step_id);
+    // testing step type
+    const nextInput = await controller.start(client, currentStep);
+    currentStep.inputPath = nextInput;
   }
-  if (process.env.STOP_RUN === 'true') {
+  if (process.env.CANCEL_RUN === 'true') {
     // mark the run as cancelled
     logger.info(`Run ${run_id} execution is cancelled\n`);
     await sdk.setRunAsCancelled({ run_id });
     // set STOP signal to false for the next run
-    process.env.STOP_RUN = 'false';
+    process.env.CANCEL_RUN = 'false';
     return 'cancelled';
   }
   // set run as completed successully in the database
@@ -172,7 +185,7 @@ export async function getSimulationRunResults(simulation_id:string,
 
 export function stopRun(run_id:string):string {
   // find the current running container
-  process.env.STOP_RUN = 'true';
+  process.env.CANCEL_RUN = 'true';
   // stop and kill current container
   // stop the start run function to stop all the next steps
   // change the status of runs and steps to 'cancelled'
