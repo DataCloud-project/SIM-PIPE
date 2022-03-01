@@ -41,7 +41,7 @@ services:
       - appsmith:/appsmith-stacks
   
   controller:
-    image: backend-v1
+    image: backend-v2
     ports:
       - "9000:9000"
       - "2375:2375"
@@ -55,7 +55,7 @@ services:
       HASURA: http://hasura:8080/v1/graphql
       SANDBOX_IP: '192.168.56.1'
       # REMOTE_DOCKER: true
-      CONTAINER_TIME_LIMIT: 20
+      CONTAINER_TIME_LIMIT: 30 #20
       CONTAINER_STOP_TIMEOUT : 5
       POLLING_INTERVAL: 1
       REMOTE_OUTPUT_DIR: 'out/'

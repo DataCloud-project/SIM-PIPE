@@ -88,9 +88,23 @@ mutation createSimulation ($model_id: uuid!, $name: String){
   }
 }
 
+# not used
 query getSimulationIdandSteps($run_id: uuid!) {
   runs(where: {run_id: {_eq: $run_id}}) {
     simulation_id
+    name
+    steps(order_by: {pipeline_step_number: asc}) {
+      step_id
+      pipeline_step_number
+      image
+      name
+    }
+  }
+}
+query getRunDetails($run_id: uuid!) {
+  runs(where: {run_id: {_eq: $run_id}}) {
+    simulation_id
+    dsl
     name
     steps(order_by: {pipeline_step_number: asc}) {
       step_id

@@ -14,6 +14,6 @@ export type Step = {
   stepNumber?: number;
   image?:string;
   inputPath: string;
-  env?: [string];
+  env?: string[];
   stepId?: number;
 };

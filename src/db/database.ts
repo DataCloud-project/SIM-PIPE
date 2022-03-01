@@ -105,10 +105,6 @@ export type Jsonb_Comparison_Exp = {
 /** mutation root */
 export type Mutation_Root = {
   __typename?: 'mutation_root';
-  Create_Run?: Maybe<Scalars['String']>;
-  Create_Simulation?: Maybe<Scalars['String']>;
-  Start_Run?: Maybe<Scalars['String']>;
-  Stop_Run?: Maybe<Scalars['String']>;
   /** insert a single row into the table: "simpipe.simulations" */
   create_simulation?: Maybe<Simulations>;
   /** insert data into the table: "simpipe.simulations" */
@@ -193,33 +189,6 @@ export type Mutation_Root = {
   update_steps?: Maybe<Steps_Mutation_Response>;
   /** update single row of the table: "simpipe.steps" */
   update_steps_by_pk?: Maybe<Steps>;
-};
-
-
-/** mutation root */
-export type Mutation_RootCreate_RunArgs = {
-  dsl?: InputMaybe<Scalars['String']>;
-  name?: InputMaybe<Scalars['String']>;
-  simulation_id?: InputMaybe<Scalars['String']>;
-};
-
-
-/** mutation root */
-export type Mutation_RootCreate_SimulationArgs = {
-  model_id?: InputMaybe<Scalars['String']>;
-  name?: InputMaybe<Scalars['String']>;
-};
-
-
-/** mutation root */
-export type Mutation_RootStart_RunArgs = {
-  run_id?: InputMaybe<Scalars['String']>;
-};
-
-
-/** mutation root */
-export type Mutation_RootStop_RunArgs = {
-  run_id?: InputMaybe<Scalars['String']>;
 };
 
 
@@ -549,9 +518,6 @@ export enum Order_By {
 
 export type Query_Root = {
   __typename?: 'query_root';
-  All_Runs_Steps?: Maybe<Scalars['String']>;
-  All_Simulations?: Maybe<Scalars['String']>;
-  Get_Simulation_Run_Results?: Maybe<Scalars['String']>;
   /** fetch data from the table: "simpipe.runs" using primary key columns */
   get_run?: Maybe<Runs>;
   /** fetch data from the table: "simpipe.simulations" using primary key columns */
@@ -594,12 +560,6 @@ export type Query_Root = {
   steps_aggregate: Steps_Aggregate;
   /** fetch data from the table: "simpipe.steps" using primary key columns */
   steps_by_pk?: Maybe<Steps>;
-};
-
-
-export type Query_RootGet_Simulation_Run_ResultsArgs = {
-  run_id?: InputMaybe<Scalars['String']>;
-  simulation_id?: InputMaybe<Scalars['String']>;
 };
 
 
@@ -2813,6 +2773,13 @@ export type GetSimulationIdandStepsQueryVariables = Exact<{
 
 export type GetSimulationIdandStepsQuery = { __typename?: 'query_root', runs: Array<{ __typename?: 'runs', simulation_id: string, name?: string | null | undefined, steps: Array<{ __typename?: 'steps', step_id: number, pipeline_step_number: number, image: string, name: string }> }> };
 
+export type GetRunDetailsQueryVariables = Exact<{
+  run_id: Scalars['uuid'];
+}>;
+
+
+export type GetRunDetailsQuery = { __typename?: 'query_root', runs: Array<{ __typename?: 'runs', simulation_id: string, dsl: string, name?: string | null | undefined, steps: Array<{ __typename?: 'steps', step_id: number, pipeline_step_number: number, image: string, name: string }> }> };
+
 export type InsertResourceUsageMutationVariables = Exact<{
   cpu?: InputMaybe<Scalars['numeric']>;
   memory?: InputMaybe<Scalars['numeric']>;
@@ -2970,6 +2937,21 @@ export const GetSimulationIdandStepsDocument = gql`
   }
 }
     `;
+export const GetRunDetailsDocument = gql`
+    query getRunDetails($run_id: uuid!) {
+  runs(where: {run_id: {_eq: $run_id}}) {
+    simulation_id
+    dsl
+    name
+    steps(order_by: {pipeline_step_number: asc}) {
+      step_id
+      pipeline_step_number
+      image
+      name
+    }
+  }
+}
+    `;
 export const InsertResourceUsageDocument = gql`
     mutation insertResourceUsage($cpu: numeric = "", $memory: numeric = "", $memory_max: numeric = "", $rx_value: numeric = "", $tx_value: numeric = "", $step_id: Int = 10, $time: timestamptz = "") {
   insert_simpipe_resource_usage_one(
@@ -3063,6 +3045,9 @@ export function getSdk(client: GraphQLClient, withWrapper: SdkFunctionWrapper = 
     },
     getSimulationIdandSteps(variables: GetSimulationIdandStepsQueryVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<GetSimulationIdandStepsQuery> {
       return withWrapper((wrappedRequestHeaders) => client.request<GetSimulationIdandStepsQuery>(GetSimulationIdandStepsDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'getSimulationIdandSteps');
+    },
+    getRunDetails(variables: GetRunDetailsQueryVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<GetRunDetailsQuery> {
+      return withWrapper((wrappedRequestHeaders) => client.request<GetRunDetailsQuery>(GetRunDetailsDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'getRunDetails');
     },
     insertResourceUsage(variables?: InsertResourceUsageMutationVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<InsertResourceUsageMutation> {
       return withWrapper((wrappedRequestHeaders) => client.request<InsertResourceUsageMutation>(InsertResourceUsageDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'insertResourceUsage');
