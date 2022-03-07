@@ -297,8 +297,8 @@ async function waitForContainer():Promise<void> {
 // testing step type
 // export async function start(client:GraphQLClient, stepIdReceived:number) : Promise<string> {
 export async function start(client:GraphQLClient, step:types.Step) : Promise<string> {
-  if (!step.stepNumber || !step.stepId || !step.image) {
-    throw new Error('Error in controller.start: step_number, image or step_id not defined');
+  if (!step.stepNumber || !step.stepId || !step.image || !step.env) {
+    throw new Error('Error in controller.start: step_number, image, env or step_id not defined');
   }
   // const step:types.Step = {
   //   simId: process.env.SIM_ID,
