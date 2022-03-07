@@ -1,6 +1,5 @@
-- "!include simpipe_cpu.yaml"
 - "!include simpipe_logs.yaml"
-- "!include simpipe_memory.yaml"
+- "!include simpipe_resource_usage.yaml"
 - "!include simpipe_run_status.yaml"
 - "!include simpipe_runs.yaml"
 - "!include simpipe_simulations.yaml"

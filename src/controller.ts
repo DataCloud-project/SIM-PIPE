@@ -1,21 +1,44 @@
+// eslint-disable-next-line eslint-comments/disable-enable-pair
+/* eslint-disable no-await-in-loop */
+// eslint-disable-next-line eslint-comments/disable-enable-pair
+/* eslint-disable no-restricted-syntax */
+// eslint-disable-next-line eslint-comments/disable-enable-pair
+/* eslint-disable space-in-parens */
 import Docker from 'dockerode';
+import * as dotenv from 'dotenv';
 import fsAsync from 'node:fs/promises';
 import path from 'node:path';
 import { setTimeout } from 'node:timers/promises';
 import { clearIntervalAsync } from 'set-interval-async';
 import { setIntervalAsync } from 'set-interval-async/dynamic';
+import type { GraphQLClient } from 'graphql-request';
 import type { SetIntervalAsyncTimer } from 'set-interval-async';
 
+import { getSdk } from './db/database.js';
 import logger from './logger.js';
 import * as sftp from './sftp-utils.js';
+import type * as types from './types.js';
 
-const remote = process.argv[2] === 'remote';
+dotenv.config();
+
+// TODO: remove global variables
+
+// remote is true by default
+const remote:boolean = !process.argv[2] ? true : process.argv[2] === 'remote';
+
 let docker: Docker;
+let sdk: {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  setStepAsStarted: any; insertResourceUsage: any; setStepAsEndedSuccess: any; insertLog: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  setStepAsCancelled: any;
+};
 
 if (remote) {
   // remote connection to docker daemon
   docker = new Docker({
-    host: '127.0.0.1',
+    // host: '127.0.0.1',
+    host: process.env.SANDBOX_IP, // ip address of windows host
     port: 2375,
   });
 } else {
@@ -30,31 +53,23 @@ if (remote) {
   docker = new Docker({ socketPath: socket });
 }
 
-const simId = process.env.SIM_ID;
-const runId = process.env.RUN_ID;
-const stepNumber = process.env.STEP_NUMBER;
-const image = process.env.IMAGE;
-const inputPath = process.env.INPUT_PATH;
-
-if (!simId || !runId || !stepNumber || !image || !inputPath) {
-  throw new Error('Missing environment variables: SIM_ID, RUN_ID, STEP_NUMBER, IMAGE, INPUT_PATH');
-}
-const targetDirectory = path.join(simId, runId, stepNumber);
-// Polling interval for collecting stats from running container
-const pollingInterval = 500;
-
+let targetDirectory:string;
 let createdContainer: Docker.Container;
-let counter = 1;
-const inputFile = inputPath;
-const remoteInputFile = 'in/input.txt';
-const remoteOutputFile = 'out/output.txt';
-const storeInputFile = `${targetDirectory}/input.txt`;
-const storeOutputFile = `${targetDirectory}/output.txt`;
+let counter:number;
 
+function init(step:types.Step):void {
+  if (!step.stepNumber) {
+    throw new Error('Error in controller.init: step number not defined');
+  }
+  targetDirectory = path.join('simulations', step.simId, step.runId, `${step.stepNumber}`);
+  counter = 1;
+  process.env.PROCESS_COMPLETED = 'false';
+  process.env.STOP_SIGNAL_SENT = 'false';
+}
 let timer: SetIntervalAsyncTimer;
 
-async function createContainer() : Promise<void> {
-  logger.info('Create container');
+// eslint-disable-next-line unicorn/prevent-abbreviations
+async function startContainer(image:string, stepId:number, env?: [string]) : Promise<number> {
   createdContainer = (await docker.createContainer({
     Image: image,
     Tty: true,
@@ -69,21 +84,19 @@ async function createContainer() : Promise<void> {
       '/var/lib/docker/volumes/volume_vm/_data/out:/app/out',
       '/var/lib/docker/volumes/volume_vm/_data/work:/app/work',
     ],
+    StopTimeout: process.env.CONTAINER_STOP_TIMEOUT ? +process.env.CONTAINER_STOP_TIMEOUT : 5,
+    Env: env || [],
   })) as unknown as Docker.Container;
   await createdContainer.start({});
-
-  logger.info(`Container created with ID: ${createdContainer.id}`);
+  const startedAt:number = new Date() as unknown as number;
+  // change the step status in the database to active
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+  await sdk.setStepAsStarted({ step_id: stepId });
+  logger.info(`Container started with ID: ${createdContainer.id}`);
+  return startedAt;
 }
 
-type StatSample = {
-  timestamp: string,
-  cpu: number,
-  memory: number,
-  memory_max: number,
-  net: number,
-};
-
-export async function parseStats() : Promise<void> {
+export async function parseStats(stepId:number) : Promise<void> {
   const directoryName = targetDirectory;
   const fileList = await fsAsync.readdir(directoryName);
 
@@ -95,7 +108,7 @@ export async function parseStats() : Promise<void> {
       const fullFilename = path.join(directoryName, fileName);
       const data = await fsAsync.readFile(fullFilename, { encoding: 'utf-8' });
 
-      let sample: StatSample;
+      let sample: types.StatSample;
       try {
         const fileContent = JSON.parse(data) as {
           read: string;
@@ -103,6 +116,7 @@ export async function parseStats() : Promise<void> {
             cpu_usage: {
               total_usage: number;
             };
+            system_cpu_usage: number;
           };
           memory_stats: {
             usage: number;
@@ -111,6 +125,7 @@ export async function parseStats() : Promise<void> {
           networks: {
             eth0: {
               rx_bytes: number;
+              tx_bytes: number;
             };
           };
         };
@@ -121,14 +136,15 @@ export async function parseStats() : Promise<void> {
           return undefined;
         }
 
-        const timestamp = fileContent.read;
+        const time = fileContent.read;
         const cpu = fileContent.cpu_stats.cpu_usage.total_usage;
+        const systemCpu = fileContent.cpu_stats.system_cpu_usage;
         const memory = fileContent.memory_stats.usage;
-        // eslint-disable-next-line @typescript-eslint/naming-convention
-        const memory_max = fileContent.memory_stats.max_usage;
-        const net = fileContent.networks.eth0.rx_bytes;
+        const memoryMax = fileContent.memory_stats.max_usage;
+        const rxValue = fileContent.networks.eth0.rx_bytes;
+        const txValue = fileContent.networks.eth0.tx_bytes;
         sample = {
-          timestamp, cpu, memory, memory_max, net,
+          time, cpu, systemCpu, memory, memory_max: memoryMax, rxValue, txValue,
         };
       } catch (error) {
         logger.error(`Error parsing stats file: ${fullFilename}`);
@@ -140,73 +156,164 @@ export async function parseStats() : Promise<void> {
       return sample;
     }));
 
-  const definedStats = stats.filter((stat) : stat is StatSample => stat !== undefined);
+  const definedStats = stats.filter((stat) : stat is types.StatSample => stat !== undefined);
 
   // We need to sort the stats by timestamp because we read them in parallel
-  const sortedStats = definedStats.sort((a, b) => a.timestamp.localeCompare(b.timestamp));
+  const sortedStats = definedStats.sort((a, b) => a.time.localeCompare(b.time));
+
+  // test: adding cpu percentage
+  let previousCpu = 0;
+  let previousSystemCpu = 0;
+  // eslint-disable-next-line @typescript-eslint/no-shadow
+  for await ( const stats of sortedStats ) {
+    const temporary = stats.cpu;
+    stats.cpu = ((stats.cpu - previousCpu) / (stats.systemCpu - previousSystemCpu));
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+    await sdk.insertResourceUsage({
+      cpu: stats.cpu,
+      memory: stats.memory,
+      memory_max: stats.memory_max,
+      rx_value: stats.rxValue,
+      tx_value: stats.txValue,
+      step_id: stepId,
+      time: stats.time,
+    });
+    previousCpu = temporary;
+    previousSystemCpu = stats.systemCpu;
+  }
 
   const json = JSON.stringify(sortedStats, undefined, ' ');
   await fsAsync.appendFile(path.join(directoryName, 'statistics.json'), json);
 }
 
-function stopStats() : void {
+function stopPollingStats() : void {
   clearIntervalAsync(timer).catch((error) => {
     logger.error(error);
   });
 }
 
-export default async function getStats(container: Docker.Container) : Promise<void> {
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+async function postExitProcessing(container: Docker.Container, stepId:number, stepNumber:number) {
+  const result = await createdContainer.inspect();
+  // update the step status as ended succesfully
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+  await sdk.setStepAsEndedSuccess({
+    step_id: stepId,
+    started: result.State.StartedAt,
+    ended: result.State.FinishedAt,
+  });
+  await setTimeout(1000); // Wait 1s before parsing the stats
+  await parseStats(stepId);
+  // collect logs of the stoppped container
+  // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+  const logStream = `${await container.logs({
+    follow: false, stdout: true, stderr: true,
+  })}`;
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+  await sdk.insertLog({ step_id: stepId, text: logStream });
+  // get output from sandbox
+  const remoteOutDirectory = process.env.REMOTE_OUTPUT_DIR ?? 'out/';
+  await sftp.getFromSandbox(remoteOutDirectory,
+    `${targetDirectory}/outputs`);
+  logger.info('Collected simulation files from Sandbox');
+
+  // clear all files created during simulation
+  await sftp.clearSandbox();
+  logger.info(`Stored simulation details to ${targetDirectory}`);
+  // set variable COMPLETED to indicate completion of simulation
+  process.env.PROCESS_COMPLETED = 'true';
+  logger.info(`Step ${stepNumber} finished execution\n`);
+}
+
+async function getStatsUntilExit(container: Docker.Container, exitTimeout:number, startedAt:number,
+  stepId:number, stepNumber:number):Promise<void> {
   // if container stops, then stop the timer
   const containers = await docker.listContainers();
   const ids = containers.map((containerInList) => containerInList.Id);
 
-  if (!ids.includes(createdContainer.id)) {
-    logger.info('Completed execution of container');
-    stopStats();
-    await setTimeout(1000); // Wait 1s before parsing the stats
-    await parseStats();
-
-    // collect logs of the stoppped container
-    const stream = await container.logs({
-      follow: false, stdout: true, stderr: true, // stdin: true,
-    });
-
-    const fileName = path.join(targetDirectory, 'logs.txt');
-    await fsAsync.writeFile(fileName, stream);
-    logger.info('Collected logs from Sandbox');
-
-    // get output from sandbox
-    await sftp.getFromSandbox(remoteOutputFile, storeOutputFile);
-
-    // clear all files created during simulation
-    await sftp.clearSandbox();
-
-    logger.info(`Stored simulation details to ${targetDirectory}`);
-
-    // collect statstics as long as the container is running
-  } else {
+  if (ids.includes(createdContainer.id)) { // collect statstics as long as the container is running
+    if (process.env.STOP_SIGNAL_SENT === 'false'
+            && ( process.env.CANCEL_RUN === 'true'
+                  || ((new Date() as unknown as number) - startedAt) >= exitTimeout )) {
+      try {
+      // for continuous steps, send stop signal after configured number of seconds
+      // eslint-disable-next-line @typescript-eslint/no-floating-promises
+        createdContainer.stop();
+        // set STOP_SIGNAL_SENT to true to avoid sending multiple stop signals
+        process.env.STOP_SIGNAL_SENT = 'true';
+        logger.info('Sent stop signal to running container');
+      } catch {
+        logger.error('Error stopping the container');
+      }
+    }
+    // TODO: very slow; takes around 2 seconds
     const stream = await container.stats({ stream: false });
-    const fileName = path.join(targetDirectory, `stats.${counter}.json`);
+    const fileName = path.join(targetDirectory,
+      `stats.${counter}.json`);
     counter += 1;
     await fsAsync.writeFile(fileName, JSON.stringify(stream, undefined, ' '));
+  } else { // container is exited
+    stopPollingStats();
+    // if run is cancelled
+    if (process.env.CANCEL_RUN === 'true') {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+      await sdk.setStepAsCancelled({ step_id: stepId });
+      logger.info('Step execution is cancelled');
+      // clear all files created during simulation
+      await sftp.clearSandbox();
+      // set PROCESS_COMPLETED to indicate simulation is ready to closed
+      process.env.PROCESS_COMPLETED = 'true';
+    } else { // if step executed successfully
+      logger.info('Completed execution of container');
+      await postExitProcessing(container, stepId, stepNumber);
+    }
   }
 }
 
-function startStatsPolling() : void {
+function startPollingStats(startedAt:number, stepId:number, stepNumber:number):void {
+  let exitTimeout:number;
+  // get CONTAINER_TIME_LIMIT (seconds) env variable
+  if (!process.env.CONTAINER_TIME_LIMIT) {
+    throw new Error('Timeout interval to stop container is not defined');
+  } else {
+    exitTimeout = ( +process.env.CONTAINER_TIME_LIMIT ) * 1000;
+  }
+  const pollingInterval:number = process.env.POLLING_INTERVAL ? +process.env.POLLING_INTERVAL * 1000
+    : 750;
   timer = setIntervalAsync(async () => {
     try {
-      await getStats(createdContainer);
+      await getStatsUntilExit(createdContainer, exitTimeout, startedAt, stepId, stepNumber);
     } catch (error) {
       logger.error(error);
     }
   }, pollingInterval);
 }
 
-async function start() : Promise<void> {
-  logger.info('Start simulation');
-  logger.info('Copying file into sandbox');
-  await sftp.putToSandbox(inputFile, remoteInputFile, storeInputFile);
-  await createContainer();
-  startStatsPolling();
+async function waitForContainer():Promise<void> {
+  while (process.env.PROCESS_COMPLETED === 'false') {
+    await setTimeout(500);
+  }
 }
-await start();
+// testing step type
+// export async function start(client:GraphQLClient, stepIdReceived:number) : Promise<string> {
+export async function start(client:GraphQLClient, step:types.Step) : Promise<string> {
+  if (!step.stepNumber || !step.stepId || !step.image) {
+    throw new Error('Error in controller.start: step_number, image or step_id not defined');
+  }
+  // const step:types.Step = {
+  //   simId: process.env.SIM_ID,
+  //   runId: process.env.RUN_ID,
+  //   stepNumber: process.env.STEP_NUMBER,
+  //   image: process.env.IMAGE,
+  //   inputPath: process.env.INPUT_PATH,
+  // };
+  init(step);
+  sdk = getSdk(client);
+  logger.info(`Starting simulation for step ${step.stepNumber}`);
+  const remoteInputFolder = process.env.REMOTE_INPUT_DIR ?? 'in/';
+  await sftp.putFolderToSandbox(step.inputPath, remoteInputFolder, targetDirectory);
+  const startedAt = await startContainer(step.image, step.stepId, step.env);
+  startPollingStats(startedAt, step.stepId, step.stepNumber);
+  await waitForContainer();
+  return `${targetDirectory}/outputs/`;
+}

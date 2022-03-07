@@ -6,8 +6,8 @@ configuration:
   custom_name: runs
   custom_root_fields:
     delete: delete_previous_run
-    insert: start_runs
-    insert_one: start_run
+    insert: insert_runs
+    insert_one: insert_runs_one
     select: runs
     select_by_pk: get_run
 object_relationships:
@@ -22,15 +22,30 @@ array_relationships:
       table:
         name: steps
         schema: simpipe
+insert_permissions:
+- permission:
+    backend_only: false
+    check: {}
+    columns:
+    - dsl
+    - simulation_id
+  role: anonymous
 select_permissions:
 - permission:
     columns:
-    - simulation_id
-    - dsl
     - created
-    - status
-    - started
+    - dsl
     - ended
+    - name
     - run_id
+    - simulation_id
+    - started
+    - status
+    filter: {}
+  role: anonymous
+update_permissions:
+- permission:
+    check: null
+    columns: []
     filter: {}
   role: anonymous

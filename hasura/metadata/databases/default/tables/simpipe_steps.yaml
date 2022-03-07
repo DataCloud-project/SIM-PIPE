@@ -14,19 +14,12 @@ object_relationships:
         name: logs
         schema: simpipe
 array_relationships:
-- name: cpu
+- name: resource_usages
   using:
     foreign_key_constraint_on:
       column: step_id
       table:
-        name: cpu
-        schema: simpipe
-- name: memory
-  using:
-    foreign_key_constraint_on:
-      column: step_id
-      table:
-        name: memory
+        name: resource_usage
         schema: simpipe
 select_permissions:
 - permission:

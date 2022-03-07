@@ -23,7 +23,8 @@ select_permissions:
 - permission:
     columns:
     - created
-    - simulation_id
     - model_id
+    - name
+    - simulation_id
     filter: {}
   role: anonymous
