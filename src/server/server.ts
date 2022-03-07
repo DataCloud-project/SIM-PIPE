@@ -40,7 +40,12 @@ const resolvers = {
       return await functions.createRun(arguments_.simulation_id, arguments_.dsl, arguments_.name);
     },
     async Create_Run_WithInput(_p: unknown, arguments_:
-    { simulation_id:string, dsl:string, name:string, sampleInput:[[string]] }):Promise<string> {
+    {
+      simulation_id:string,
+      dsl:string,
+      name:string,
+      sampleInput:[[string, string]],
+    }):Promise<string> {
       logger.info(arguments_.sampleInput);
       return await functions.createRunWithInput(
         arguments_.simulation_id, arguments_.dsl, arguments_.name, arguments_.sampleInput);

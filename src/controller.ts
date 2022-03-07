@@ -69,7 +69,7 @@ function init(step:types.Step):void {
 let timer: SetIntervalAsyncTimer;
 
 // eslint-disable-next-line unicorn/prevent-abbreviations
-async function startContainer(image:string, stepId:number, env: [string]) : Promise<number> {
+async function startContainer(image:string, stepId:number, env?: [string]) : Promise<number> {
   createdContainer = (await docker.createContainer({
     Image: image,
     Tty: true,

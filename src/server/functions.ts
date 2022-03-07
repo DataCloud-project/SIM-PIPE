@@ -109,7 +109,7 @@ export async function createRun(simulation_id:string, dsl:string, name:string):P
 }
 
 export async function createRunWithInput(simulation_id: string, dsl: string,
-  name: string, sampleInput: [[string]]): Promise<string> {
+  name: string, sampleInput: [[string, string]]): Promise<string> {
   const runId = await createRun(simulation_id, dsl, name);
   fs.mkdirSync(`${uploadDirectory}${runId}`, { recursive: true });
   // write sample input to uploaded_files/runId
