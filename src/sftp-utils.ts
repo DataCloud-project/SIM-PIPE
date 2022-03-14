@@ -12,7 +12,7 @@ const sftp = new Client();
 
 const options = {
   host: process.env.SANDBOX_IP, // ip address of windows host
-  port: 22,
+  port: 2222,
   username: 'user1',
   password: 'user1',
 };
