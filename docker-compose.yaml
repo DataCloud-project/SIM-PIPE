@@ -43,7 +43,7 @@ services:
       - appsmith:/appsmith-stacks
   
   controller:
-    image: simpipe-backend-v4
+    image: simpipe-backend-v5
     ports:
       - "9000:9000"
       - "2375:2375"

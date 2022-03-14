@@ -31,7 +31,7 @@ let sdk: {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   setStepAsStarted: any; insertResourceUsage: any; setStepAsEndedSuccess: any; insertLog: any;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  setStepAsCancelled: any;
+  setStepAsCancelled: any; setStepAsFailed:any;
 };
 
 if (remote) {
@@ -307,13 +307,21 @@ export async function start(client:GraphQLClient, step:types.Step) : Promise<str
   //   image: process.env.IMAGE,
   //   inputPath: process.env.INPUT_PATH,
   // };
-  init(step);
-  sdk = getSdk(client);
-  logger.info(`Starting simulation for step ${step.stepNumber}`);
-  const remoteInputFolder = process.env.REMOTE_INPUT_DIR ?? 'in/';
-  await sftp.putFolderToSandbox(step.inputPath, remoteInputFolder, targetDirectory);
-  const startedAt = await startContainer(step.image, step.stepId, step.env);
-  startPollingStats(startedAt, step.stepId, step.stepNumber);
-  await waitForContainer();
-  return `${targetDirectory}/outputs/`;
+
+  try {
+    init(step);
+    sdk = getSdk(client);
+    logger.info(`Starting simulation for step ${step.stepNumber}`);
+    const remoteInputFolder = process.env.REMOTE_INPUT_DIR ?? 'in/';
+    await sftp.putFolderToSandbox(step.inputPath, remoteInputFolder, targetDirectory);
+    const startedAt = await startContainer(step.image, step.stepId, step.env);
+    startPollingStats(startedAt, step.stepId, step.stepNumber);
+    await waitForContainer();
+    return `${targetDirectory}/outputs/`;
+  } catch {
+    // set step as failed
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+    await sdk.setStepAsFailed({ step_id: step.stepId });
+    throw new Error('Error in step execution, step failed');
+  }
 }

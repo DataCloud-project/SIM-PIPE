@@ -176,7 +176,7 @@ export async function startRun(run_id:string):Promise<string> {
   // run each step
   for await (const step of steps) {
     // check if there is a stop signal set to true
-    if (process.env.CANCEL_RUN === 'true') {
+    if (process.env.CANCEL_RUN === 'true' || process.env.FAILED_RUN === 'true') {
       // mark all the remaining steps as cancelled
       await sdk.setStepAsCancelled({ step_id: step.step_id });
       // eslint-disable-next-line no-continue
@@ -194,8 +194,13 @@ export async function startRun(run_id:string):Promise<string> {
     // set input path for next step as output path of the previous step returned and start step
     // process.env.INPUT_PATH = await controller.start(client, step.step_id);
     // testing step type
-    const nextInput = await controller.start(client, currentStep);
-    currentStep.inputPath = nextInput;
+    // adding try catch to handle failed steps
+    try {
+      const nextInput = await controller.start(client, currentStep);
+      currentStep.inputPath = nextInput;
+    } catch {
+      process.env.FAILED_RUN = 'true';
+    }
   }
   if (process.env.CANCEL_RUN === 'true') {
     // mark the run as cancelled
@@ -204,6 +209,13 @@ export async function startRun(run_id:string):Promise<string> {
     // set STOP signal to false for the next run
     process.env.CANCEL_RUN = 'false';
     return 'cancelled';
+  } if (process.env.FAILED_RUN === 'true') {
+    // mark the run as failed
+    logger.info(`Run ${run_id} execution has failed\n`);
+    await sdk.setRunAsFailed({ run_id });
+    // set STOP signal to false for the next run
+    process.env.FAILED_RUN = 'false';
+    return 'failed';
   }
   // set run as completed successully in the database
   // eslint-disable-next-line @typescript-eslint/no-floating-promises
