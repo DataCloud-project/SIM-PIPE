@@ -648,3 +648,11 @@ info🏷️: [Mar-14-2022 09:04:14]: Cleared Sandbox for next simulation
 info🏷️: [Mar-14-2022 09:04:14]: Stored simulation details to simulations/afac933b-0234-44d7-afaf-3ab080339ba1/9c14f7a8-c527-495e-86b7-570d4731d74a/3
 info🏷️: [Mar-14-2022 09:04:14]: Step 3 finished execution
 
+info🏷️: [Mar-14-2022 14:13:15]: test1.txt,test 1
+info🏷️: [Mar-14-2022 14:13:15]: Run created with id c34cde53-c64c-4334-9b98-1d52a2836234
+info🏷️: [Mar-14-2022 14:13:15]: Step created with id 100
+info🏷️: [Mar-14-2022 14:13:15]: Step created with id 101
+info🏷️: [Mar-14-2022 14:13:15]: Step created with id 102
+info🏷️: [Mar-14-2022 14:13:20]: Starting simulation for step 1
+info🏷️: [Mar-14-2022 14:13:27]: Run c34cde53-c64c-4334-9b98-1d52a2836234 execution has failed
+

@@ -15,8 +15,6 @@ const typeDefs = gql`
     Create_Run_WithInput(simulation_id: String, dsl:String, name:String, sampleInput:[[String]]):
      String
     Start_Run(run_id:String): String
-    #TODO: implement 
-    # Stop_Step(step_id:Int): String
     Stop_Run(run_id:String): String
   }
 `;
@@ -57,28 +55,15 @@ const resolvers = {
       functions.startRun(arguments_.run_id);
       return 'ok';
     },
-    // Stop_Step():string {
-    //   // TODO
-    //   return 'stop the step';
-    // },
     Stop_Run(_p:unknown, arguments_: { run_id:string }):string {
-      // TODO
       functions.stopRun(arguments_.run_id);
       return 'ok';
     },
   },
 };
 
-// TODO: dockerize backend
-
 const server = new ApolloServer({ typeDefs, resolvers });
 await server.listen({ port: 9000, hostname: '0.0.0.0' }).then(({ url }) => {
   // eslint-disable-next-line no-console
   console.log(`🚀  Server ready at ${url}`);
 });
-
-// const runid = await functions.createRunWithInput('fbaf05f3-93ad-4df3-9429-095850b55eae',
-//  'n', 'n', [['n1', 'content1'], ['n2', 'content2']]);
-// const runid = await functions.createRun('fbaf05f3-93ad-4df3-9429-095850b55eae',
-// "{\"dsl\" : \"second sample\"}");
-// await functions.startRun(runid);

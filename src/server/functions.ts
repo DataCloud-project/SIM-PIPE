@@ -41,7 +41,7 @@ export async function createSimulation(model_id:string, name:string):Promise<str
 }
 
 // takes in dsl from def-pipe and return the list of steps
-// TLU pipeline images, TODO: parse original DSL
+// preloaded TLU pipeline images, TODO: parse original DSL
 function parseDslTLU(dsl:string):Array<StepDSL> {
   // TODO; parse dsl argument
   const object:Array<StepDSL> = dsl === 'tlu' || dsl === '' ? [{
@@ -96,7 +96,6 @@ interface StepDSL {
   name: string
   step_number: number
   image: string
-  // env: [string]
   env: string[]
 }
 
@@ -118,11 +117,11 @@ export async function createStep(run_id:string, name:string, image:string,
 export async function createRun(simulation_id:string, dsl:string, name:string):Promise<string> {
   // TODO: parse dsl
   // const steps:Array<StepDSL> = parseDSL(dsl);
-  // TLU pipeline
+  // preloaded TLU pipeline
   const steps:Array<StepDSL> = parseDslTLU(dsl);
   const result = await sdk.createRun({
     simulation_id,
-    // dsl: JSON.parse(dsl),
+    // TODO: later to parse dsl -> dsl: JSON.parse(dsl),
     dsl,
     name,
   });
@@ -158,10 +157,8 @@ export async function startRun(run_id:string):Promise<string> {
   // set run as started in the database
   await sdk.setRunAsStarted({ run_id });
   // get simulationId and step details of runId
-  // const result = await sdk.getSimulationIdandSteps({ run_id });
   const result = await sdk.getRunDetails({ run_id });
   const { steps } = result.runs[0]; // get steps sorted acc to pipeline_step_number
-  // testing step type
   // set runId and simulationId once for all runs
   const currentStep:types.Step = {
     simId: result.runs[0].simulation_id,
@@ -171,11 +168,13 @@ export async function startRun(run_id:string):Promise<string> {
   // set input path for the first step
   process.env.INPUT_PATH = `${uploadDirectory}${run_id}/`;
   // get env from piepeline dsl
-  // TLU pipeline
-  const stepsListDSL:Array<StepDSL> = parseDslTLU(result.runs[0].dsl);
+  // preloaded TLU pipeline
+  const stepsListDSL:Array<StepDSL> = parseDslTLU(typeof result.runs[0].dsl === 'string'
+    ? result.runs[0].dsl
+    : '');
   // run each step
   for await (const step of steps) {
-    // check if there is a stop signal set to true
+    // check if there is a stop signal set to true or failed run signal set
     if (process.env.CANCEL_RUN === 'true' || process.env.FAILED_RUN === 'true') {
       // mark all the remaining steps as cancelled
       await sdk.setStepAsCancelled({ step_id: step.step_id });
@@ -186,16 +185,15 @@ export async function startRun(run_id:string):Promise<string> {
     currentStep.image = step.image;
     currentStep.stepNumber = step.pipeline_step_number;
     currentStep.stepId = step.step_id;
-    // TLU pipeline
+    // preloaded TLU pipeline
     currentStep.env = stepsListDSL[step.pipeline_step_number - 1].env;
     // set the variable values in env file
     process.env.STEP_NUMBER = `${step.pipeline_step_number}`;
     process.env.IMAGE = step.image;
-    // set input path for next step as output path of the previous step returned and start step
-    // process.env.INPUT_PATH = await controller.start(client, step.step_id);
     // testing step type
     // adding try catch to handle failed steps
     try {
+      // set input path for next step as output path of the previous step returned and start step
       const nextInput = await controller.start(client, currentStep);
       currentStep.inputPath = nextInput;
     } catch {
@@ -235,6 +233,5 @@ export function stopRun(run_id:string):string {
   // stop and kill current container
   // stop the start run function to stop all the next steps
   // change the status of runs and steps to 'cancelled'
-  // delete resource usage and logs ?
   return run_id;
 }

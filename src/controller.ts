@@ -300,14 +300,6 @@ export async function start(client:GraphQLClient, step:types.Step) : Promise<str
   if (!step.stepNumber || !step.stepId || !step.image || !step.env) {
     throw new Error('Error in controller.start: step_number, image, env or step_id not defined');
   }
-  // const step:types.Step = {
-  //   simId: process.env.SIM_ID,
-  //   runId: process.env.RUN_ID,
-  //   stepNumber: process.env.STEP_NUMBER,
-  //   image: process.env.IMAGE,
-  //   inputPath: process.env.INPUT_PATH,
-  // };
-
   try {
     init(step);
     sdk = getSdk(client);
@@ -319,7 +311,7 @@ export async function start(client:GraphQLClient, step:types.Step) : Promise<str
     await waitForContainer();
     return `${targetDirectory}/outputs/`;
   } catch {
-    // set step as failed
+    // set step as failed on exception
     // eslint-disable-next-line @typescript-eslint/no-unsafe-call
     await sdk.setStepAsFailed({ step_id: step.stepId });
     throw new Error('Error in step execution, step failed');
