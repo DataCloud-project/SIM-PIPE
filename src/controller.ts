@@ -1,8 +1,7 @@
-// eslint-disable-next-line eslint-comments/disable-enable-pair
+/* eslint-disable eslint-comments/disable-enable-pair */
+/* eslint-disable @typescript-eslint/restrict-template-expressions */
 /* eslint-disable no-await-in-loop */
-// eslint-disable-next-line eslint-comments/disable-enable-pair
 /* eslint-disable no-restricted-syntax */
-// eslint-disable-next-line eslint-comments/disable-enable-pair
 /* eslint-disable space-in-parens */
 import Docker from 'dockerode';
 import * as dotenv from 'dotenv';
@@ -205,7 +204,6 @@ async function postExitProcessing(container: Docker.Container, stepId:number, st
   await setTimeout(1000); // Wait 1s before parsing the stats
   await parseStats(stepId);
   // collect logs of the stoppped container
-  // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
   const logStream = `${await container.logs({
     follow: false, stdout: true, stderr: true,
   })}`;
@@ -310,10 +308,13 @@ export async function start(client:GraphQLClient, step:types.Step) : Promise<str
     startPollingStats(startedAt, step.stepId, step.stepNumber);
     await waitForContainer();
     return `${targetDirectory}/outputs/`;
-  } catch {
+  } catch (error) {
     // set step as failed on exception
     // eslint-disable-next-line @typescript-eslint/no-unsafe-call
     await sdk.setStepAsFailed({ step_id: step.stepId });
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+    await sdk.insertLog({ step_id: step.stepId, text: `${error}` });
+    logger.info(`${error} in controller.start`);
     throw new Error('Error in step execution, step failed');
   }
 }

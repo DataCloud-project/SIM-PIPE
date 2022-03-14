@@ -656,3 +656,61 @@ info🏷️: [Mar-14-2022 14:13:15]: Step created with id 102
 info🏷️: [Mar-14-2022 14:13:20]: Starting simulation for step 1
 info🏷️: [Mar-14-2022 14:13:27]: Run c34cde53-c64c-4334-9b98-1d52a2836234 execution has failed
 
+info🏷️: [Mar-14-2022 14:25:48]: 
+info🏷️: [Mar-14-2022 14:25:48]: Run created with id 365ea816-5f9b-4a02-a3a6-3be3bee30a66
+info🏷️: [Mar-14-2022 14:25:48]: Step created with id 103
+info🏷️: [Mar-14-2022 14:25:48]: Step created with id 104
+info🏷️: [Mar-14-2022 14:25:48]: Step created with id 105
+info🏷️: [Mar-14-2022 14:25:59]: Starting simulation for step 1
+info🏷️: [Mar-14-2022 14:26:05]: Error Error: end: No SFTP connection available in controller.start
+info🏷️: [Mar-14-2022 14:26:05]: Run 365ea816-5f9b-4a02-a3a6-3be3bee30a66 execution has failed
+
+info🏷️: [Mar-14-2022 14:33:03]: 
+info🏷️: [Mar-14-2022 14:33:03]: Run created with id 1bd43f67-662a-4f82-bb47-867b9dbff3e9
+info🏷️: [Mar-14-2022 14:33:03]: Step created with id 106
+info🏷️: [Mar-14-2022 14:33:03]: Step created with id 107
+info🏷️: [Mar-14-2022 14:33:03]: Step created with id 108
+info🏷️: [Mar-14-2022 14:38:03]: Starting simulation for step 1
+info🏷️: [Mar-14-2022 14:38:09]: Run 1bd43f67-662a-4f82-bb47-867b9dbff3e9 execution has failed
+
+info🏷️: [Mar-14-2022 14:44:50]: 
+info🏷️: [Mar-14-2022 14:44:50]: Run created with id 8198795d-e4c3-44f3-93ca-69f818c22a76
+info🏷️: [Mar-14-2022 14:44:50]: Step created with id 109
+info🏷️: [Mar-14-2022 14:44:50]: Step created with id 110
+info🏷️: [Mar-14-2022 14:44:50]: Step created with id 111
+info🏷️: [Mar-14-2022 14:44:53]: Starting simulation for step 1
+info🏷️: [Mar-14-2022 14:44:59]: Run 8198795d-e4c3-44f3-93ca-69f818c22a76 execution has failed
+
+info🏷️: [Mar-14-2022 14:51:32]: 
+info🏷️: [Mar-14-2022 14:51:32]: Run created with id c48d602e-d1a2-4e04-9a61-66b21a1093fc
+info🏷️: [Mar-14-2022 14:51:32]: Step created with id 112
+info🏷️: [Mar-14-2022 14:51:32]: Step created with id 113
+info🏷️: [Mar-14-2022 14:51:32]: Step created with id 114
+info🏷️: [Mar-14-2022 14:51:40]: Starting simulation for step 1
+info🏷️: [Mar-14-2022 14:51:46]: Run c48d602e-d1a2-4e04-9a61-66b21a1093fc execution has failed
+
+info🏷️: [Mar-14-2022 14:59:21]: 
+info🏷️: [Mar-14-2022 14:59:21]: Run created with id e9b908a2-c09e-4f99-907e-fcc65ae75389
+info🏷️: [Mar-14-2022 14:59:21]: Step created with id 115
+info🏷️: [Mar-14-2022 14:59:21]: Step created with id 116
+info🏷️: [Mar-14-2022 14:59:21]: Step created with id 117
+info🏷️: [Mar-14-2022 14:59:24]: Starting simulation for step 1
+info🏷️: [Mar-14-2022 14:59:31]: Run e9b908a2-c09e-4f99-907e-fcc65ae75389 execution has failed
+
+info🏷️: [Mar-14-2022 15:03:57]: 
+info🏷️: [Mar-14-2022 15:03:57]: Run created with id a7db3f33-ed38-40b8-937e-b40cb12c5548
+info🏷️: [Mar-14-2022 15:03:57]: Step created with id 118
+info🏷️: [Mar-14-2022 15:03:57]: Step created with id 119
+info🏷️: [Mar-14-2022 15:03:57]: Step created with id 120
+info🏷️: [Mar-14-2022 15:04:05]: Starting simulation for step 1
+info🏷️: [Mar-14-2022 15:04:11]: Run a7db3f33-ed38-40b8-937e-b40cb12c5548 execution has failed
+
+info🏷️: [Mar-14-2022 15:09:21]: 
+info🏷️: [Mar-14-2022 15:09:21]: Run created with id 96b41223-b3a8-4158-8ead-44ed15716a11
+info🏷️: [Mar-14-2022 15:09:21]: Step created with id 121
+info🏷️: [Mar-14-2022 15:09:21]: Step created with id 122
+info🏷️: [Mar-14-2022 15:09:21]: Step created with id 123
+info🏷️: [Mar-14-2022 15:09:27]: Starting simulation for step 1
+info🏷️: [Mar-14-2022 15:09:33]: Error: end: No SFTP connection available in controller.start
+info🏷️: [Mar-14-2022 15:09:33]: Run 96b41223-b3a8-4158-8ead-44ed15716a11 execution has failed
+

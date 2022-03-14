@@ -207,7 +207,8 @@ export async function startRun(run_id:string):Promise<string> {
     // set STOP signal to false for the next run
     process.env.CANCEL_RUN = 'false';
     return 'cancelled';
-  } if (process.env.FAILED_RUN === 'true') {
+  }
+  if (process.env.FAILED_RUN === 'true') {
     // mark the run as failed
     logger.info(`Run ${run_id} execution has failed\n`);
     await sdk.setRunAsFailed({ run_id });
