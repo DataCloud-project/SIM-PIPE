@@ -88,9 +88,9 @@ After entering into the cloned folder, run the following commands to install Nod
 
     REMOTE_SCHEMA_URL - IP address of host 1 machine
     SANDBOX_IP - IP address of *VirtualBox Host-Only Network*
-    CONTAINER_TIME_LIMIT: number of seconds to wait before sending STOP signal to running container; default 20 seconds
-    CONTAINER_STOP_TIMEOUT: number of seconds to wait after sending STOP signal to running container; default 5 seconds
-    POLLING_INTERVAL: polling interval (in seconds) for collecting resource usage statistics; default 1 second
+    CONTAINER_TIME_LIMIT- number of seconds to wait before sending STOP signal to running container; default 20 seconds
+    CONTAINER_STOP_TIMEOUT - number of seconds to wait after sending STOP signal to running container; default 5 seconds
+    POLLING_INTERVAL - polling interval (in seconds) for collecting resource usage statistics; default 1 second
 ### Starting a simulation
 
 [SIM-PIPE Backend Sandbox] (https://github.com/DataCloud-project/SIM-PIPE-Sandbox) should be set up before starting the simulation. Ensure that the docker daemon in Sandbox is listening to port 2375.

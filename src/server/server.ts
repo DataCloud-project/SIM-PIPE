@@ -2,6 +2,24 @@ import { ApolloServer, gql } from 'apollo-server';
 
 import logger from '../logger.js';
 import * as functions from './functions.js';
+import TaskQueue from './taskqueue.js';
+
+const taskQueue = new TaskQueue();
+process.env.IS_SIMULATION_RUNNING = 'false';
+
+async function runScheduler():Promise<void> {
+  if (process.env.IS_SIMULATION_RUNNING === 'false') {
+    while (taskQueue.getItemsCount() > 0) {
+      // set variable to denote a simulation is running currently
+      process.env.IS_SIMULATION_RUNNING = 'true';
+      // eslint-disable-next-line no-await-in-loop
+      await functions.startRun(taskQueue.dequeue());
+    }
+    // set variable to denote no running simulations
+    process.env.IS_SIMULATION_RUNNING = 'false';
+  }
+}
+
 // schema
 const typeDefs = gql`
   type Query {
@@ -50,9 +68,12 @@ const resolvers = {
     },
     async Start_Run(_p: unknown, arguments_:{ run_id:string }):
     Promise<string> {
-      // TODO: queue to follow
+      if (taskQueue.getItemsCount() > 0) {
+        logger.info(`RunId ${arguments_.run_id} added to task queue`);
+      }
+      taskQueue.enqueue(arguments_.run_id);
       // eslint-disable-next-line @typescript-eslint/no-floating-promises
-      functions.startRun(arguments_.run_id);
+      runScheduler();
       return 'ok';
     },
     Stop_Run(_p:unknown, arguments_: { run_id:string }):string {
