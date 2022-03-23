@@ -82,35 +82,23 @@ After entering into the cloned folder, run the following commands to install Nod
 
 ## Usage 
 
+### Configuration of SIM-PIPE
+
+#### Environment variables in docker compose file
+
+    REMOTE_SCHEMA_URL - IP address of host 1 machine
+    SANDBOX_IP - IP address of *VirtualBox Host-Only Network*
+    CONTAINER_TIME_LIMIT- number of seconds to wait before sending STOP signal to running container; default 20 seconds
+    CONTAINER_STOP_TIMEOUT - number of seconds to wait after sending STOP signal to running container; default 5 seconds
+    POLLING_INTERVAL - polling interval (in seconds) for collecting resource usage statistics; default 1 second
 ### Starting a simulation
 
 [SIM-PIPE Backend Sandbox] (https://github.com/DataCloud-project/SIM-PIPE-Sandbox) should be set up before starting the simulation. Ensure that the docker daemon in Sandbox is listening to port 2375.
 
-Place the following envrionment variables with details about the simulation in .env file. 
+After configuring environment variables in the docker compose file, deploy SIM-PIPE tool by starting docker compose file in the parent folder of the repository. 
 
-    SIM_ID=sim_id             # simulation ID of the simulation you wish to start
-    RUN_ID=run_id             # run ID corresponding to the current execution of simulation
-    STEP_NUMBER=step_number   # number of pipeline step you wish to run
-    IMAGE=image               # container image of the pipeline step
-    INPUT_PATH=path/to/input  # path to the input file of pipeline step
+    $ docker-compose up
 
-Go to src folder and run controller.js
+This starts four docker containers with the services for SIM-PIPE including SIM-PIPE backend and frontend. 
 
-    $ cd src
-    $ node controller.js
-
-The simulation controller will then send the input files to the sandbox and start the simulation. Once the simulation completes, the output file, run time resource usage metrics, and log files will be stored in a new folder. Below is an example of a test simulation.
-
-    $ node controller.js
-    info: Dec-16-2021 15:28:30: Sent simulation input to Sandbox
-    info: Dec-16-2021 15:28:30: Starting simulation in Sandbox
-    info: Dec-16-2021 15:28:31: New container created with ID: 5c3a722a8348d31c184b4bb10632dcfe2ccdd237cbe8fafad5bb04d5bd4e48eb
-    info: Dec-16-2021 15:28:42: Completed execution of container
-    info: Dec-16-2021 15:28:42: Collected logs from Sandbox
-    info: Dec-16-2021 15:28:42: Collected simulation output from Sandbox
-    info: Dec-16-2021 15:28:45: Deleting files from Sandbox after simulation
-    info: Dec-16-2021 15:28:45: ./in/input.txt deleted
-    info: Dec-16-2021 15:28:45: ./out/output.txt deleted
-    info: Dec-16-2021 15:28:45: ./work/temp.txt deleted
-    info: Dec-16-2021 15:28:45: Stored simulation details to ./sim_01/1/1
-
+After the docker compose file is started, open the frontend url (http://localhost:8085) in a browser to access the graphical user interface of SIM-PIPE. 

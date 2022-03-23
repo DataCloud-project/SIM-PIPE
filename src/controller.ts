@@ -1,8 +1,7 @@
-// eslint-disable-next-line eslint-comments/disable-enable-pair
+/* eslint-disable eslint-comments/disable-enable-pair */
+/* eslint-disable @typescript-eslint/restrict-template-expressions */
 /* eslint-disable no-await-in-loop */
-// eslint-disable-next-line eslint-comments/disable-enable-pair
 /* eslint-disable no-restricted-syntax */
-// eslint-disable-next-line eslint-comments/disable-enable-pair
 /* eslint-disable space-in-parens */
 import Docker from 'dockerode';
 import * as dotenv from 'dotenv';
@@ -31,7 +30,7 @@ let sdk: {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   setStepAsStarted: any; insertResourceUsage: any; setStepAsEndedSuccess: any; insertLog: any;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  setStepAsCancelled: any;
+  setStepAsCancelled: any; setStepAsFailed:any;
 };
 
 if (remote) {
@@ -69,7 +68,7 @@ function init(step:types.Step):void {
 let timer: SetIntervalAsyncTimer;
 
 // eslint-disable-next-line unicorn/prevent-abbreviations
-async function startContainer(image:string, stepId:number, env?: [string]) : Promise<number> {
+async function startContainer(image:string, stepId:number, env: string[]) : Promise<number> {
   createdContainer = (await docker.createContainer({
     Image: image,
     Tty: true,
@@ -205,7 +204,6 @@ async function postExitProcessing(container: Docker.Container, stepId:number, st
   await setTimeout(1000); // Wait 1s before parsing the stats
   await parseStats(stepId);
   // collect logs of the stoppped container
-  // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
   const logStream = `${await container.logs({
     follow: false, stdout: true, stderr: true,
   })}`;
@@ -297,23 +295,26 @@ async function waitForContainer():Promise<void> {
 // testing step type
 // export async function start(client:GraphQLClient, stepIdReceived:number) : Promise<string> {
 export async function start(client:GraphQLClient, step:types.Step) : Promise<string> {
-  if (!step.stepNumber || !step.stepId || !step.image) {
-    throw new Error('Error in controller.start: step_number, image or step_id not defined');
+  if (!step.stepNumber || !step.stepId || !step.image || !step.env) {
+    throw new Error('Error in controller.start: step_number, image, env or step_id not defined');
   }
-  // const step:types.Step = {
-  //   simId: process.env.SIM_ID,
-  //   runId: process.env.RUN_ID,
-  //   stepNumber: process.env.STEP_NUMBER,
-  //   image: process.env.IMAGE,
-  //   inputPath: process.env.INPUT_PATH,
-  // };
-  init(step);
-  sdk = getSdk(client);
-  logger.info(`Starting simulation for step ${step.stepNumber}`);
-  const remoteInputFolder = process.env.REMOTE_INPUT_DIR ?? 'in/';
-  await sftp.putFolderToSandbox(step.inputPath, remoteInputFolder, targetDirectory);
-  const startedAt = await startContainer(step.image, step.stepId, step.env);
-  startPollingStats(startedAt, step.stepId, step.stepNumber);
-  await waitForContainer();
-  return `${targetDirectory}/outputs/`;
+  try {
+    init(step);
+    sdk = getSdk(client);
+    logger.info(`Starting simulation for step ${step.stepNumber}`);
+    const remoteInputFolder = process.env.REMOTE_INPUT_DIR ?? 'in/';
+    await sftp.putFolderToSandbox(step.inputPath, remoteInputFolder, targetDirectory);
+    const startedAt = await startContainer(step.image, step.stepId, step.env);
+    startPollingStats(startedAt, step.stepId, step.stepNumber);
+    await waitForContainer();
+    return `${targetDirectory}/outputs/`;
+  } catch (error) {
+    // set step as failed on exception
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+    await sdk.setStepAsFailed({ step_id: step.stepId });
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+    await sdk.insertLog({ step_id: step.stepId, text: `${error}` });
+    logger.info(`${error} in controller.start`);
+    throw new Error('Error in step execution, step failed');
+  }
 }

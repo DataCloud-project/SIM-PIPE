@@ -4,7 +4,7 @@ services:
     image: timescale/timescaledb:2.5.1-pg14
     restart: unless-stopped
     volumes:
-      - db_data:/var/lib/postgresql/data
+      - db_data1:/var/lib/postgresql/data
     environment:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD-postgrespassword}
       TIMESCALEDB_TELEMETRY: "off"
@@ -29,6 +29,8 @@ services:
       HASURA_GRAPHQL_ADMIN_SECRET: ${HASURA_ADMIN_SECRET-hasuraadminsecret}
       HASURA_GRAPHQL_UNAUTHORIZED_ROLE: anonymous
       HASURA_GRAPHQL_ENABLE_TELEMETRY: "false"
+      HASURA_GRAPHQL_LOG_LEVEL: debug
+      REMOTE_SCHEMA_URL: http://10.218.149.206:9000
   appsmith:
     image: index.docker.io/appsmith/appsmith-ce
     container_name: appsmith
@@ -41,7 +43,7 @@ services:
       - appsmith:/appsmith-stacks
   
   controller:
-    image: backend-v1
+    image: simpipe-backend
     ports:
       - "9000:9000"
       - "2375:2375"
@@ -62,7 +64,7 @@ services:
       REMOTE_INPUT_DIR: 'in/'
       
 volumes:
-  db_data:
+  db_data1:
     null
   appsmith:
     null

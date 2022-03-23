@@ -2,6 +2,24 @@ import { ApolloServer, gql } from 'apollo-server';
 
 import logger from '../logger.js';
 import * as functions from './functions.js';
+import TaskQueue from './taskqueue.js';
+
+const taskQueue = new TaskQueue();
+process.env.IS_SIMULATION_RUNNING = 'false';
+
+async function runScheduler():Promise<void> {
+  if (process.env.IS_SIMULATION_RUNNING === 'false') {
+    while (taskQueue.getItemsCount() > 0) {
+      // set variable to denote a simulation is running currently
+      process.env.IS_SIMULATION_RUNNING = 'true';
+      // eslint-disable-next-line no-await-in-loop
+      await functions.startRun(taskQueue.dequeue());
+    }
+    // set variable to denote no running simulations
+    process.env.IS_SIMULATION_RUNNING = 'false';
+  }
+}
+
 // schema
 const typeDefs = gql`
   type Query {
@@ -15,8 +33,6 @@ const typeDefs = gql`
     Create_Run_WithInput(simulation_id: String, dsl:String, name:String, sampleInput:[[String]]):
      String
     Start_Run(run_id:String): String
-    #TODO: implement 
-    # Stop_Step(step_id:Int): String
     Stop_Run(run_id:String): String
   }
 `;
@@ -52,33 +68,23 @@ const resolvers = {
     },
     async Start_Run(_p: unknown, arguments_:{ run_id:string }):
     Promise<string> {
-      // TODO: queue to follow
+      if (taskQueue.getItemsCount() > 0) {
+        logger.info(`RunId ${arguments_.run_id} added to task queue`);
+      }
+      taskQueue.enqueue(arguments_.run_id);
       // eslint-disable-next-line @typescript-eslint/no-floating-promises
-      functions.startRun(arguments_.run_id);
+      runScheduler();
       return 'ok';
     },
-    // Stop_Step():string {
-    //   // TODO
-    //   return 'stop the step';
-    // },
     Stop_Run(_p:unknown, arguments_: { run_id:string }):string {
-      // TODO
       functions.stopRun(arguments_.run_id);
       return 'ok';
     },
   },
 };
 
-// TODO: dockerize backend
-
 const server = new ApolloServer({ typeDefs, resolvers });
 await server.listen({ port: 9000, hostname: '0.0.0.0' }).then(({ url }) => {
   // eslint-disable-next-line no-console
   console.log(`🚀  Server ready at ${url}`);
 });
-
-// const runid = await functions.createRunWithInput('fbaf05f3-93ad-4df3-9429-095850b55eae',
-//  'n', 'n', [['n1', 'content1'], ['n2', 'content2']]);
-// const runid = await functions.createRun('fbaf05f3-93ad-4df3-9429-095850b55eae',
-// "{\"dsl\" : \"second sample\"}");
-// await functions.startRun(runid);

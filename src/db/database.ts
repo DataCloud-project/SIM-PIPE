@@ -2737,6 +2737,13 @@ export type SetStepAsCancelledMutationVariables = Exact<{
 
 export type SetStepAsCancelledMutation = { __typename?: 'mutation_root', update_steps_by_pk?: { __typename?: 'steps', step_id: number } | null | undefined };
 
+export type SetStepAsFailedMutationVariables = Exact<{
+  step_id: Scalars['Int'];
+}>;
+
+
+export type SetStepAsFailedMutation = { __typename?: 'mutation_root', update_steps_by_pk?: { __typename?: 'steps', step_id: number } | null | undefined };
+
 export type SetRunAsStartedMutationVariables = Exact<{
   run_id: Scalars['uuid'];
 }>;
@@ -2758,6 +2765,13 @@ export type SetRunAsCancelledMutationVariables = Exact<{
 
 export type SetRunAsCancelledMutation = { __typename?: 'mutation_root', update_runs_by_pk?: { __typename?: 'runs', run_id: string } | null | undefined };
 
+export type SetRunAsFailedMutationVariables = Exact<{
+  run_id: Scalars['uuid'];
+}>;
+
+
+export type SetRunAsFailedMutation = { __typename?: 'mutation_root', update_runs_by_pk?: { __typename?: 'runs', run_id: string } | null | undefined };
+
 export type CreateSimulationMutationVariables = Exact<{
   model_id: Scalars['uuid'];
   name?: InputMaybe<Scalars['String']>;
@@ -2772,6 +2786,13 @@ export type GetSimulationIdandStepsQueryVariables = Exact<{
 
 
 export type GetSimulationIdandStepsQuery = { __typename?: 'query_root', runs: Array<{ __typename?: 'runs', simulation_id: string, name?: string | null | undefined, steps: Array<{ __typename?: 'steps', step_id: number, pipeline_step_number: number, image: string, name: string }> }> };
+
+export type GetRunDetailsQueryVariables = Exact<{
+  run_id: Scalars['uuid'];
+}>;
+
+
+export type GetRunDetailsQuery = { __typename?: 'query_root', runs: Array<{ __typename?: 'runs', simulation_id: string, dsl: unknown, name?: string | null | undefined, steps: Array<{ __typename?: 'steps', step_id: number, pipeline_step_number: number, image: string, name: string }> }> };
 
 export type InsertResourceUsageMutationVariables = Exact<{
   cpu?: InputMaybe<Scalars['numeric']>;
@@ -2881,6 +2902,13 @@ export const SetStepAsCancelledDocument = gql`
   }
 }
     `;
+export const SetStepAsFailedDocument = gql`
+    mutation setStepAsFailed($step_id: Int!) {
+  update_steps_by_pk(pk_columns: {step_id: $step_id}, _set: {status: failed}) {
+    step_id
+  }
+}
+    `;
 export const SetRunAsStartedDocument = gql`
     mutation setRunAsStarted($run_id: uuid!) {
   update_runs_by_pk(
@@ -2908,6 +2936,13 @@ export const SetRunAsCancelledDocument = gql`
   }
 }
     `;
+export const SetRunAsFailedDocument = gql`
+    mutation setRunAsFailed($run_id: uuid!) {
+  update_runs_by_pk(pk_columns: {run_id: $run_id}, _set: {status: failed}) {
+    run_id
+  }
+}
+    `;
 export const CreateSimulationDocument = gql`
     mutation createSimulation($model_id: uuid!, $name: String) {
   create_simulation(object: {model_id: $model_id, name: $name}) {
@@ -2920,6 +2955,21 @@ export const GetSimulationIdandStepsDocument = gql`
     query getSimulationIdandSteps($run_id: uuid!) {
   runs(where: {run_id: {_eq: $run_id}}) {
     simulation_id
+    name
+    steps(order_by: {pipeline_step_number: asc}) {
+      step_id
+      pipeline_step_number
+      image
+      name
+    }
+  }
+}
+    `;
+export const GetRunDetailsDocument = gql`
+    query getRunDetails($run_id: uuid!) {
+  runs(where: {run_id: {_eq: $run_id}}) {
+    simulation_id
+    dsl
     name
     steps(order_by: {pipeline_step_number: asc}) {
       step_id
@@ -3009,6 +3059,9 @@ export function getSdk(client: GraphQLClient, withWrapper: SdkFunctionWrapper = 
     setStepAsCancelled(variables: SetStepAsCancelledMutationVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<SetStepAsCancelledMutation> {
       return withWrapper((wrappedRequestHeaders) => client.request<SetStepAsCancelledMutation>(SetStepAsCancelledDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'setStepAsCancelled');
     },
+    setStepAsFailed(variables: SetStepAsFailedMutationVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<SetStepAsFailedMutation> {
+      return withWrapper((wrappedRequestHeaders) => client.request<SetStepAsFailedMutation>(SetStepAsFailedDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'setStepAsFailed');
+    },
     setRunAsStarted(variables: SetRunAsStartedMutationVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<SetRunAsStartedMutation> {
       return withWrapper((wrappedRequestHeaders) => client.request<SetRunAsStartedMutation>(SetRunAsStartedDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'setRunAsStarted');
     },
@@ -3018,11 +3071,17 @@ export function getSdk(client: GraphQLClient, withWrapper: SdkFunctionWrapper = 
     setRunAsCancelled(variables: SetRunAsCancelledMutationVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<SetRunAsCancelledMutation> {
       return withWrapper((wrappedRequestHeaders) => client.request<SetRunAsCancelledMutation>(SetRunAsCancelledDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'setRunAsCancelled');
     },
+    setRunAsFailed(variables: SetRunAsFailedMutationVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<SetRunAsFailedMutation> {
+      return withWrapper((wrappedRequestHeaders) => client.request<SetRunAsFailedMutation>(SetRunAsFailedDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'setRunAsFailed');
+    },
     createSimulation(variables: CreateSimulationMutationVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<CreateSimulationMutation> {
       return withWrapper((wrappedRequestHeaders) => client.request<CreateSimulationMutation>(CreateSimulationDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'createSimulation');
     },
     getSimulationIdandSteps(variables: GetSimulationIdandStepsQueryVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<GetSimulationIdandStepsQuery> {
       return withWrapper((wrappedRequestHeaders) => client.request<GetSimulationIdandStepsQuery>(GetSimulationIdandStepsDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'getSimulationIdandSteps');
+    },
+    getRunDetails(variables: GetRunDetailsQueryVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<GetRunDetailsQuery> {
+      return withWrapper((wrappedRequestHeaders) => client.request<GetRunDetailsQuery>(GetRunDetailsDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'getRunDetails');
     },
     insertResourceUsage(variables?: InsertResourceUsageMutationVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<InsertResourceUsageMutation> {
       return withWrapper((wrappedRequestHeaders) => client.request<InsertResourceUsageMutation>(InsertResourceUsageDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'insertResourceUsage');

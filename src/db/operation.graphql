@@ -62,6 +62,11 @@ mutation setStepAsCancelled($step_id: Int!) {
     step_id
   }
 }
+mutation setStepAsFailed($step_id: Int!) {
+  update_steps_by_pk(pk_columns: {step_id: $step_id}, _set: {status: failed}) {
+    step_id
+  }
+}
 mutation setRunAsStarted($run_id: uuid!) {
   update_runs_by_pk(pk_columns: {run_id: $run_id}, _set: {started: "now()", status: active}) {
     run_id
@@ -79,7 +84,11 @@ mutation setRunAsCancelled($run_id: uuid!) {
     run_id
   }
 }
-
+mutation setRunAsFailed($run_id: uuid!) {
+  update_runs_by_pk(pk_columns: {run_id: $run_id}, _set: {status: failed}) {
+    run_id
+  }
+}
 
 mutation createSimulation ($model_id: uuid!, $name: String){
   create_simulation(object: {model_id: $model_id, name: $name}) {
@@ -88,9 +97,23 @@ mutation createSimulation ($model_id: uuid!, $name: String){
   }
 }
 
+# not used
 query getSimulationIdandSteps($run_id: uuid!) {
   runs(where: {run_id: {_eq: $run_id}}) {
     simulation_id
+    name
+    steps(order_by: {pipeline_step_number: asc}) {
+      step_id
+      pipeline_step_number
+      image
+      name
+    }
+  }
+}
+query getRunDetails($run_id: uuid!) {
+  runs(where: {run_id: {_eq: $run_id}}) {
+    simulation_id
+    dsl
     name
     steps(order_by: {pipeline_step_number: asc}) {
       step_id

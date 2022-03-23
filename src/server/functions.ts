@@ -40,12 +40,39 @@ export async function createSimulation(model_id:string, name:string):Promise<str
   return result.create_simulation.simulation_id;
 }
 
-// function parseDSL: takes in dsl from def-pipe and return the list of steps
-// to be created
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function parseDSL(dsl:string):Array<StepDSL> {
+// takes in dsl from def-pipe and return the list of steps
+// preloaded TLU pipeline images, TODO: parse original DSL
+function parseDslTLU(dsl:string):Array<StepDSL> {
   // TODO; parse dsl argument
-  const object:Array<StepDSL> = [{
+  const object:Array<StepDSL> = dsl === 'tlu' || dsl === '' ? [{
+    name: '01-datagen-and-routing',
+    step_number: 1,
+    image: 'registry.sintef.cloud/tellucare-edge',
+    // image: 'i1',
+    env: ['MQTT_HOST=oslo.sct.sintef.no',
+      'MQTT_USERNAME=TGW000000000',
+      'MQTT_CLIENT_ID=TGWDATACLOUD',
+      'MQTT_PASS=d47AcL0|_|D1sTh3B3St',
+      'MQTT_PORT=1883'],
+  }, {
+    name: '02-storage-and-analytics',
+    step_number: 2,
+    image: 'registry.sintef.cloud/tellucare-api:latest',
+    // image: 'i1',
+    env: ['RABBITMQ_HOST=oslo.sct.sintef.no:5672',
+      'RABBITMQ_USERNAME=tellucareapi',
+      'RABBITMQ_PASSWORD=d47AcL0|_|D1sTh3B3St',
+      'FHIR_URL=https://tellucloud-fhir.sintef.cloud'],
+  }, {
+    name: '03-application-logic',
+    step_number: 3,
+    image: 'registry.sintef.cloud/tellucare-application-logic:latest',
+    // image: 'i1',
+    env: ['FHIR_URL=https://tellucloud-fhir.sintef.cloud/',
+      'RABBITMQ_HOST=oslo.sct.sintef.no:5672',
+      'RABBITMQ_USERNAME=tellucareapplicationlogic',
+      'RABBITMQ_PASSWORD=d47AcL0|_|D1sTh3B3St'],
+  }] : [{
     name: 'step 1',
     step_number: 1,
     image: 'i1',
@@ -69,7 +96,7 @@ interface StepDSL {
   name: string
   step_number: number
   image: string
-  env: [string]
+  env: string[]
 }
 
 export async function createStep(run_id:string, name:string, image:string,
@@ -89,10 +116,12 @@ export async function createStep(run_id:string, name:string, image:string,
 
 export async function createRun(simulation_id:string, dsl:string, name:string):Promise<string> {
   // TODO: parse dsl
-  const steps:Array<StepDSL> = parseDSL(dsl);
+  // const steps:Array<StepDSL> = parseDSL(dsl);
+  // preloaded TLU pipeline
+  const steps:Array<StepDSL> = parseDslTLU(dsl);
   const result = await sdk.createRun({
     simulation_id,
-    // dsl: JSON.parse(dsl),
+    // TODO: later to parse dsl -> dsl: JSON.parse(dsl),
     dsl,
     name,
   });
@@ -128,23 +157,25 @@ export async function startRun(run_id:string):Promise<string> {
   // set run as started in the database
   await sdk.setRunAsStarted({ run_id });
   // get simulationId and step details of runId
-  const result = await sdk.getSimulationIdandSteps({ run_id });
+  const result = await sdk.getRunDetails({ run_id });
   const { steps } = result.runs[0]; // get steps sorted acc to pipeline_step_number
-  // testing step type
+  // set runId and simulationId once for all runs
   const currentStep:types.Step = {
     simId: result.runs[0].simulation_id,
     runId: run_id,
     inputPath: `${uploadDirectory}${run_id}/`,
   };
-  // set runId and simulationId once for all runs
-  process.env.RUN_ID = run_id;
-  process.env.SIM_ID = result.runs[0].simulation_id;
   // set input path for the first step
   process.env.INPUT_PATH = `${uploadDirectory}${run_id}/`;
+  // get env from piepeline dsl
+  // preloaded TLU pipeline
+  const stepsListDSL:Array<StepDSL> = parseDslTLU(typeof result.runs[0].dsl === 'string'
+    ? result.runs[0].dsl
+    : '');
   // run each step
   for await (const step of steps) {
-    // check if there is a stop signal set to true
-    if (process.env.CANCEL_RUN === 'true') {
+    // check if there is a stop signal set to true or failed run signal set
+    if (process.env.CANCEL_RUN === 'true' || process.env.FAILED_RUN === 'true') {
       // mark all the remaining steps as cancelled
       await sdk.setStepAsCancelled({ step_id: step.step_id });
       // eslint-disable-next-line no-continue
@@ -154,14 +185,20 @@ export async function startRun(run_id:string):Promise<string> {
     currentStep.image = step.image;
     currentStep.stepNumber = step.pipeline_step_number;
     currentStep.stepId = step.step_id;
+    // preloaded TLU pipeline
+    currentStep.env = stepsListDSL[step.pipeline_step_number - 1].env;
     // set the variable values in env file
     process.env.STEP_NUMBER = `${step.pipeline_step_number}`;
     process.env.IMAGE = step.image;
-    // set input path for next step as output path of the previous step returned and start step
-    // process.env.INPUT_PATH = await controller.start(client, step.step_id);
     // testing step type
-    const nextInput = await controller.start(client, currentStep);
-    currentStep.inputPath = nextInput;
+    // adding try catch to handle failed steps
+    try {
+      // set input path for next step as output path of the previous step returned and start step
+      const nextInput = await controller.start(client, currentStep);
+      currentStep.inputPath = nextInput;
+    } catch {
+      process.env.FAILED_RUN = 'true';
+    }
   }
   if (process.env.CANCEL_RUN === 'true') {
     // mark the run as cancelled
@@ -171,9 +208,16 @@ export async function startRun(run_id:string):Promise<string> {
     process.env.CANCEL_RUN = 'false';
     return 'cancelled';
   }
+  if (process.env.FAILED_RUN === 'true') {
+    // mark the run as failed
+    logger.info(`Run ${run_id} execution has failed\n`);
+    await sdk.setRunAsFailed({ run_id });
+    // set STOP signal to false for the next run
+    process.env.FAILED_RUN = 'false';
+    return 'failed';
+  }
   // set run as completed successully in the database
-  // eslint-disable-next-line @typescript-eslint/no-floating-promises
-  sdk.setRunAsEndedSuccess({ run_id });
+  await sdk.setRunAsEndedSuccess({ run_id });
   return run_id;
 }
 
@@ -189,6 +233,5 @@ export function stopRun(run_id:string):string {
   // stop and kill current container
   // stop the start run function to stop all the next steps
   // change the status of runs and steps to 'cancelled'
-  // delete resource usage and logs ?
   return run_id;
 }
