@@ -175,7 +175,8 @@ export async function startRun(run_id:string):Promise<string> {
   // run each step
   for await (const step of steps) {
     // check if there is a stop signal set to true or failed run signal set
-    if ((process.env.CANCEL_RUN_LIST as string).includes(run_id) || process.env.FAILED_RUN === 'true') {
+    if ((process.env.CANCEL_RUN_LIST as string).includes(run_id)
+    || process.env.FAILED_RUN === 'true') {
       // mark all the remaining steps as cancelled
       await sdk.setStepAsCancelled({ step_id: step.step_id });
       // eslint-disable-next-line no-continue
