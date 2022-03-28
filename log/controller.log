@@ -870,3 +870,406 @@ info🏷️: [Mar-23-2022 08:45:51]: Cleared Sandbox for next simulation
 info🏷️: [Mar-23-2022 08:45:51]: Stored simulation details to simulations/afac933b-0234-44d7-afaf-3ab080339ba1/a3a5c327-bf76-438e-8749-65b82da86cd6/3
 info🏷️: [Mar-23-2022 08:45:51]: Step 3 finished execution
 
+info🏷️: [Mar-28-2022 07:31:56]: test1.txt,test 1
+info🏷️: [Mar-28-2022 07:31:56]: Run created with id e05ec661-5583-4e37-8c89-ea5f06fc5ca5
+info🏷️: [Mar-28-2022 07:31:56]: Step created with id 253
+info🏷️: [Mar-28-2022 07:31:56]: Step created with id 254
+info🏷️: [Mar-28-2022 07:31:56]: Step created with id 255
+info🏷️: [Mar-28-2022 07:32:08]: test2.txt,test 2
+info🏷️: [Mar-28-2022 07:32:09]: Run created with id 8c970bdc-fadc-4941-9c73-d402a07da8a0
+info🏷️: [Mar-28-2022 07:32:09]: Step created with id 256
+info🏷️: [Mar-28-2022 07:32:09]: Step created with id 257
+info🏷️: [Mar-28-2022 07:32:09]: Step created with id 258
+info🏷️: [Mar-28-2022 07:32:23]: test1.txt,test 1,test2.txt,test 2
+info🏷️: [Mar-28-2022 07:32:23]: Run created with id 08f2f180-8429-4cd1-b464-d946fda29015
+info🏷️: [Mar-28-2022 07:32:24]: Step created with id 259
+info🏷️: [Mar-28-2022 07:32:24]: Step created with id 260
+info🏷️: [Mar-28-2022 07:32:24]: Step created with id 261
+info🏷️: [Mar-28-2022 07:57:19]: Starting simulation for step 1
+info🏷️: [Mar-28-2022 07:58:00]: Starting simulation for step 1
+info🏷️: [Mar-28-2022 07:58:02]: Sent similation inputs to Sandbox
+info🏷️: [Mar-28-2022 07:58:04]: Container started with ID: d7dab4e1592ef072e85a2e120ad0dc09487ab1a055b0a4174a5769033a45878c
+info🏷️: [Mar-28-2022 07:58:18]: Completed execution of container
+info🏷️: [Mar-28-2022 07:58:20]: Collected simulation files from Sandbox
+info🏷️: [Mar-28-2022 07:58:21]: Cleared Sandbox for next simulation
+info🏷️: [Mar-28-2022 07:58:21]: Stored simulation details to simulations/afac933b-0234-44d7-afaf-3ab080339ba1/8c970bdc-fadc-4941-9c73-d402a07da8a0/1
+info🏷️: [Mar-28-2022 07:58:21]: Step 1 finished execution
+
+info🏷️: [Mar-28-2022 07:58:22]: Starting simulation for step 2
+info🏷️: [Mar-28-2022 07:58:23]: Sent similation inputs to Sandbox
+info🏷️: [Mar-28-2022 07:58:25]: Container started with ID: 96d5f079ad45dd28db3e10ced1e6c82ca526e8ea5d03ce0e5ae1d745157bc71c
+info🏷️: [Mar-28-2022 08:01:33]: 
+info🏷️: [Mar-28-2022 08:01:33]: Run created with id c6f590e9-ba89-46d8-a698-72b14351d0d0
+info🏷️: [Mar-28-2022 08:01:33]: Step created with id 262
+info🏷️: [Mar-28-2022 08:01:33]: Step created with id 263
+info🏷️: [Mar-28-2022 08:01:33]: Step created with id 264
+info🏷️: [Mar-28-2022 08:01:38]: 
+info🏷️: [Mar-28-2022 08:01:38]: Run created with id 3e6b6a8f-13b6-4a0c-832f-7465f64bb198
+info🏷️: [Mar-28-2022 08:01:38]: Step created with id 265
+info🏷️: [Mar-28-2022 08:01:38]: Step created with id 266
+info🏷️: [Mar-28-2022 08:01:38]: Step created with id 267
+info🏷️: [Mar-28-2022 08:01:42]: Starting simulation for step 1
+info🏷️: [Mar-28-2022 08:01:43]: Sent similation inputs to Sandbox
+info🏷️: [Mar-28-2022 08:01:44]: Container started with ID: dc4c4ae9b6d478e81c0d42e649627eca6eb59e5ab632565be07536f2404da18d
+info🏷️: [Mar-28-2022 08:01:57]: Completed execution of container
+info🏷️: [Mar-28-2022 08:01:59]: Collected simulation files from Sandbox
+info🏷️: [Mar-28-2022 08:02:00]: Cleared Sandbox for next simulation
+info🏷️: [Mar-28-2022 08:02:00]: Stored simulation details to simulations/afac933b-0234-44d7-afaf-3ab080339ba1/c6f590e9-ba89-46d8-a698-72b14351d0d0/1
+info🏷️: [Mar-28-2022 08:02:00]: Step 1 finished execution
+
+info🏷️: [Mar-28-2022 08:02:00]: Starting simulation for step 2
+info🏷️: [Mar-28-2022 08:02:01]: Sent similation inputs to Sandbox
+info🏷️: [Mar-28-2022 08:02:02]: Container started with ID: 4675ba7bc8f6fe7f7584590ab54bfa19cc4ed1b56fd72c1e6c3a2025cf296080
+info🏷️: [Mar-28-2022 08:02:16]: Completed execution of container
+info🏷️: [Mar-28-2022 08:02:18]: Collected simulation files from Sandbox
+info🏷️: [Mar-28-2022 08:02:19]: Cleared Sandbox for next simulation
+info🏷️: [Mar-28-2022 08:02:19]: Stored simulation details to simulations/afac933b-0234-44d7-afaf-3ab080339ba1/c6f590e9-ba89-46d8-a698-72b14351d0d0/2
+info🏷️: [Mar-28-2022 08:02:19]: Step 2 finished execution
+
+info🏷️: [Mar-28-2022 08:02:20]: Starting simulation for step 3
+info🏷️: [Mar-28-2022 08:02:21]: Sent similation inputs to Sandbox
+info🏷️: [Mar-28-2022 08:02:23]: Container started with ID: e94a3243a47611ac07f10ab45ef9d8623786d180f3bc2c3150ba222257a7432d
+info🏷️: [Mar-28-2022 08:02:35]: Completed execution of container
+info🏷️: [Mar-28-2022 08:02:38]: Collected simulation files from Sandbox
+info🏷️: [Mar-28-2022 08:02:38]: Cleared Sandbox for next simulation
+info🏷️: [Mar-28-2022 08:02:38]: Stored simulation details to simulations/afac933b-0234-44d7-afaf-3ab080339ba1/c6f590e9-ba89-46d8-a698-72b14351d0d0/3
+info🏷️: [Mar-28-2022 08:02:38]: Step 3 finished execution
+
+info🏷️: [Mar-28-2022 08:02:39]: Starting simulation for step 1
+info🏷️: [Mar-28-2022 08:02:40]: Sent similation inputs to Sandbox
+info🏷️: [Mar-28-2022 08:02:41]: Container started with ID: 9e3ad5f4a6e124c3cb85245ec7537d260aaf088efb377a62213b67c3d29d6822
+info🏷️: [Mar-28-2022 08:02:49]: Completed execution of container
+info🏷️: [Mar-28-2022 08:02:51]: Collected simulation files from Sandbox
+info🏷️: [Mar-28-2022 08:02:52]: Cleared Sandbox for next simulation
+info🏷️: [Mar-28-2022 08:02:52]: Stored simulation details to simulations/afac933b-0234-44d7-afaf-3ab080339ba1/3e6b6a8f-13b6-4a0c-832f-7465f64bb198/1
+info🏷️: [Mar-28-2022 08:02:52]: Step 1 finished execution
+
+info🏷️: [Mar-28-2022 08:02:53]: Starting simulation for step 2
+info🏷️: [Mar-28-2022 08:02:54]: Sent similation inputs to Sandbox
+info🏷️: [Mar-28-2022 08:02:55]: Container started with ID: 9bbbcca5974ef54d7da1fb1952f193566b0de73eefc3bb819f3f89ede836f5df
+info🏷️: [Mar-28-2022 08:03:05]: Completed execution of container
+info🏷️: [Mar-28-2022 08:03:08]: Collected simulation files from Sandbox
+info🏷️: [Mar-28-2022 08:03:08]: Cleared Sandbox for next simulation
+info🏷️: [Mar-28-2022 08:03:08]: Stored simulation details to simulations/afac933b-0234-44d7-afaf-3ab080339ba1/3e6b6a8f-13b6-4a0c-832f-7465f64bb198/2
+info🏷️: [Mar-28-2022 08:03:08]: Step 2 finished execution
+
+info🏷️: [Mar-28-2022 08:03:09]: Starting simulation for step 3
+info🏷️: [Mar-28-2022 08:03:10]: Sent similation inputs to Sandbox
+info🏷️: [Mar-28-2022 08:03:11]: Container started with ID: 56558304d7ba7efaa0765916e6d1a1d9d1681d71266943c225a01f5cde13ff2c
+info🏷️: [Mar-28-2022 08:03:19]: Completed execution of container
+info🏷️: [Mar-28-2022 08:03:21]: Collected simulation files from Sandbox
+info🏷️: [Mar-28-2022 08:03:22]: Cleared Sandbox for next simulation
+info🏷️: [Mar-28-2022 08:03:22]: Stored simulation details to simulations/afac933b-0234-44d7-afaf-3ab080339ba1/3e6b6a8f-13b6-4a0c-832f-7465f64bb198/3
+info🏷️: [Mar-28-2022 08:03:22]: Step 3 finished execution
+
+info🏷️: [Mar-28-2022 08:06:33]: 
+info🏷️: [Mar-28-2022 08:06:33]: Run created with id ea63e7ce-9e87-4b29-8335-40e1c6d159d2
+info🏷️: [Mar-28-2022 08:06:33]: Step created with id 268
+info🏷️: [Mar-28-2022 08:06:33]: Step created with id 269
+info🏷️: [Mar-28-2022 08:06:33]: Step created with id 270
+info🏷️: [Mar-28-2022 08:09:39]: 
+info🏷️: [Mar-28-2022 08:09:39]: Run created with id af34c190-4b46-4c71-93e2-66ee478500e9
+info🏷️: [Mar-28-2022 08:09:39]: Step created with id 271
+info🏷️: [Mar-28-2022 08:09:39]: Step created with id 272
+info🏷️: [Mar-28-2022 08:09:39]: Step created with id 273
+info🏷️: [Mar-28-2022 08:09:46]: 
+info🏷️: [Mar-28-2022 08:09:46]: Run created with id cd9e0dfc-adc2-4726-9857-a7556e1e0db7
+info🏷️: [Mar-28-2022 08:09:46]: Step created with id 274
+info🏷️: [Mar-28-2022 08:09:46]: Step created with id 275
+info🏷️: [Mar-28-2022 08:09:46]: Step created with id 276
+info🏷️: [Mar-28-2022 08:10:07]: Starting simulation for step 1
+info🏷️: [Mar-28-2022 08:10:08]: Sent similation inputs to Sandbox
+info🏷️: [Mar-28-2022 08:10:09]: Container started with ID: 7a385903ecded2bc5722ff71bc242d5550600a23cf28edb3c963f59972dd0e51
+info🏷️: [Mar-28-2022 08:10:16]: Completed execution of container
+info🏷️: [Mar-28-2022 08:10:18]: Collected simulation files from Sandbox
+info🏷️: [Mar-28-2022 08:10:19]: Cleared Sandbox for next simulation
+info🏷️: [Mar-28-2022 08:10:19]: Stored simulation details to simulations/afac933b-0234-44d7-afaf-3ab080339ba1/af34c190-4b46-4c71-93e2-66ee478500e9/1
+info🏷️: [Mar-28-2022 08:10:19]: Step 1 finished execution
+
+info🏷️: [Mar-28-2022 08:10:19]: Starting simulation for step 2
+info🏷️: [Mar-28-2022 08:10:20]: Sent similation inputs to Sandbox
+info🏷️: [Mar-28-2022 08:10:21]: Container started with ID: 8fac6be4c605d09812ba54ee675c658dabea5a966500852fc4d1428c2f96f1a4
+info🏷️: [Mar-28-2022 08:10:36]: Completed execution of container
+info🏷️: [Mar-28-2022 08:10:38]: Collected simulation files from Sandbox
+info🏷️: [Mar-28-2022 08:10:39]: Cleared Sandbox for next simulation
+info🏷️: [Mar-28-2022 08:10:39]: Stored simulation details to simulations/afac933b-0234-44d7-afaf-3ab080339ba1/af34c190-4b46-4c71-93e2-66ee478500e9/2
+info🏷️: [Mar-28-2022 08:10:39]: Step 2 finished execution
+
+info🏷️: [Mar-28-2022 08:10:39]: Starting simulation for step 3
+info🏷️: [Mar-28-2022 08:10:41]: Sent similation inputs to Sandbox
+info🏷️: [Mar-28-2022 08:10:42]: Container started with ID: f2cfa9808c963fb6bbef532ac3f2895a2036d748d6df181f8d9d6a7ee4154dee
+info🏷️: [Mar-28-2022 08:10:50]: Completed execution of container
+info🏷️: [Mar-28-2022 08:10:52]: Collected simulation files from Sandbox
+info🏷️: [Mar-28-2022 08:10:53]: Cleared Sandbox for next simulation
+info🏷️: [Mar-28-2022 08:10:53]: Stored simulation details to simulations/afac933b-0234-44d7-afaf-3ab080339ba1/af34c190-4b46-4c71-93e2-66ee478500e9/3
+info🏷️: [Mar-28-2022 08:10:53]: Step 3 finished execution
+
+info🏷️: [Mar-28-2022 08:10:53]: Starting simulation for step 1
+info🏷️: [Mar-28-2022 08:10:55]: Sent similation inputs to Sandbox
+info🏷️: [Mar-28-2022 08:10:56]: Container started with ID: ab59b3f55957c3c76b65c0c2720a4b33755f7941672adcb3a75c5fb2c1f6ddb9
+info🏷️: [Mar-28-2022 08:11:07]: Completed execution of container
+info🏷️: [Mar-28-2022 08:11:09]: Collected simulation files from Sandbox
+info🏷️: [Mar-28-2022 08:11:10]: Cleared Sandbox for next simulation
+info🏷️: [Mar-28-2022 08:11:10]: Stored simulation details to simulations/afac933b-0234-44d7-afaf-3ab080339ba1/cd9e0dfc-adc2-4726-9857-a7556e1e0db7/1
+info🏷️: [Mar-28-2022 08:11:10]: Step 1 finished execution
+
+info🏷️: [Mar-28-2022 08:11:10]: Starting simulation for step 2
+info🏷️: [Mar-28-2022 08:11:11]: Sent similation inputs to Sandbox
+info🏷️: [Mar-28-2022 08:11:12]: Container started with ID: 0794984617fd57ebaca6d6dab4853ac709080c01fdc88135fefdbd3af34c53a8
+info🏷️: [Mar-28-2022 08:11:24]: Completed execution of container
+info🏷️: [Mar-28-2022 08:11:26]: Collected simulation files from Sandbox
+info🏷️: [Mar-28-2022 08:11:27]: Cleared Sandbox for next simulation
+info🏷️: [Mar-28-2022 08:11:27]: Stored simulation details to simulations/afac933b-0234-44d7-afaf-3ab080339ba1/cd9e0dfc-adc2-4726-9857-a7556e1e0db7/2
+info🏷️: [Mar-28-2022 08:11:27]: Step 2 finished execution
+
+info🏷️: [Mar-28-2022 08:11:27]: Starting simulation for step 3
+info🏷️: [Mar-28-2022 08:11:28]: Sent similation inputs to Sandbox
+info🏷️: [Mar-28-2022 08:11:29]: Container started with ID: d6c4ed8e3eec97960db7accc6a4376c4305021b04dfc9d8dd4f2ff48756c102b
+info🏷️: [Mar-28-2022 08:11:35]: Completed execution of container
+info🏷️: [Mar-28-2022 08:11:37]: Collected simulation files from Sandbox
+info🏷️: [Mar-28-2022 08:11:38]: Cleared Sandbox for next simulation
+info🏷️: [Mar-28-2022 08:11:38]: Stored simulation details to simulations/afac933b-0234-44d7-afaf-3ab080339ba1/cd9e0dfc-adc2-4726-9857-a7556e1e0db7/3
+info🏷️: [Mar-28-2022 08:11:38]: Step 3 finished execution
+
+info🏷️: [Mar-28-2022 08:13:38]: test1.txt,test 1
+info🏷️: [Mar-28-2022 08:13:38]: Run created with id f7c5e2df-81d2-4f5f-adcd-77af28e47db4
+info🏷️: [Mar-28-2022 08:13:38]: Step created with id 277
+info🏷️: [Mar-28-2022 08:13:38]: Step created with id 278
+info🏷️: [Mar-28-2022 08:13:38]: Step created with id 279
+info🏷️: [Mar-28-2022 08:14:10]: test2.txt,test 2
+info🏷️: [Mar-28-2022 08:14:10]: Run created with id bdbb651c-090d-4331-8243-498da785e20a
+info🏷️: [Mar-28-2022 08:14:10]: Step created with id 280
+info🏷️: [Mar-28-2022 08:14:10]: Step created with id 281
+info🏷️: [Mar-28-2022 08:14:10]: Step created with id 282
+info🏷️: [Mar-28-2022 08:14:27]: test1.txt,test 1,test2.txt,test 2
+info🏷️: [Mar-28-2022 08:14:27]: Run created with id 2529404a-bc68-4b56-9c46-60a591325751
+info🏷️: [Mar-28-2022 08:14:27]: Step created with id 283
+info🏷️: [Mar-28-2022 08:14:27]: Step created with id 284
+info🏷️: [Mar-28-2022 08:14:27]: Step created with id 285
+info🏷️: [Mar-28-2022 08:14:31]: Starting simulation for step 1
+info🏷️: [Mar-28-2022 08:14:32]: Sent similation inputs to Sandbox
+info🏷️: [Mar-28-2022 08:14:33]: Container started with ID: 1a055ab0f311f2a9bb53dd7749a8f4e437f5e7f5e1befb8cf08b2933255774a4
+info🏷️: [Mar-28-2022 08:14:38]: RunId 2529404a-bc68-4b56-9c46-60a591325751 added to task queue
+info🏷️: [Mar-28-2022 08:14:42]: Completed execution of container
+info🏷️: [Mar-28-2022 08:14:44]: Collected simulation files from Sandbox
+info🏷️: [Mar-28-2022 08:14:45]: Cleared Sandbox for next simulation
+info🏷️: [Mar-28-2022 08:14:45]: Stored simulation details to simulations/afac933b-0234-44d7-afaf-3ab080339ba1/f7c5e2df-81d2-4f5f-adcd-77af28e47db4/1
+info🏷️: [Mar-28-2022 08:14:45]: Step 1 finished execution
+
+info🏷️: [Mar-28-2022 08:14:45]: Starting simulation for step 2
+info🏷️: [Mar-28-2022 08:14:46]: Sent similation inputs to Sandbox
+info🏷️: [Mar-28-2022 08:14:47]: Container started with ID: 0fa46391cf9a6b51939bb584523f9c1017cbf999f6ab916310503a63231ed0ea
+info🏷️: [Mar-28-2022 08:14:57]: Completed execution of container
+info🏷️: [Mar-28-2022 08:14:59]: Collected simulation files from Sandbox
+info🏷️: [Mar-28-2022 08:15:00]: Cleared Sandbox for next simulation
+info🏷️: [Mar-28-2022 08:15:00]: Stored simulation details to simulations/afac933b-0234-44d7-afaf-3ab080339ba1/f7c5e2df-81d2-4f5f-adcd-77af28e47db4/2
+info🏷️: [Mar-28-2022 08:15:00]: Step 2 finished execution
+
+info🏷️: [Mar-28-2022 08:15:01]: Starting simulation for step 3
+info🏷️: [Mar-28-2022 08:15:02]: Sent similation inputs to Sandbox
+info🏷️: [Mar-28-2022 08:15:03]: Container started with ID: 39c57c5b175de40e98ff240ce1825692302adefdf09c2211fdd94104192ae275
+info🏷️: [Mar-28-2022 08:15:17]: Completed execution of container
+info🏷️: [Mar-28-2022 08:15:19]: Collected simulation files from Sandbox
+info🏷️: [Mar-28-2022 08:15:20]: Cleared Sandbox for next simulation
+info🏷️: [Mar-28-2022 08:15:20]: Stored simulation details to simulations/afac933b-0234-44d7-afaf-3ab080339ba1/f7c5e2df-81d2-4f5f-adcd-77af28e47db4/3
+info🏷️: [Mar-28-2022 08:15:20]: Step 3 finished execution
+
+info🏷️: [Mar-28-2022 08:15:21]: Starting simulation for step 1
+info🏷️: [Mar-28-2022 08:15:22]: Sent similation inputs to Sandbox
+info🏷️: [Mar-28-2022 08:15:23]: Container started with ID: 5c806a836ead61496c96935005c82869a3750a1e7194115147bfddfc2516e0a4
+info🏷️: [Mar-28-2022 08:15:35]: Completed execution of container
+info🏷️: [Mar-28-2022 08:15:38]: Collected simulation files from Sandbox
+info🏷️: [Mar-28-2022 08:15:39]: Cleared Sandbox for next simulation
+info🏷️: [Mar-28-2022 08:15:39]: Stored simulation details to simulations/afac933b-0234-44d7-afaf-3ab080339ba1/bdbb651c-090d-4331-8243-498da785e20a/1
+info🏷️: [Mar-28-2022 08:15:39]: Step 1 finished execution
+
+info🏷️: [Mar-28-2022 08:15:39]: Starting simulation for step 2
+info🏷️: [Mar-28-2022 08:15:40]: Sent similation inputs to Sandbox
+info🏷️: [Mar-28-2022 08:15:42]: Container started with ID: 1253f491ab1c8ee8253e5c24cb9a2ebce9f27fc7ad2e15a8ee705a96ff2be80d
+info🏷️: [Mar-28-2022 08:15:50]: Completed execution of container
+info🏷️: [Mar-28-2022 08:15:52]: Collected simulation files from Sandbox
+info🏷️: [Mar-28-2022 08:15:53]: Cleared Sandbox for next simulation
+info🏷️: [Mar-28-2022 08:15:53]: Stored simulation details to simulations/afac933b-0234-44d7-afaf-3ab080339ba1/bdbb651c-090d-4331-8243-498da785e20a/2
+info🏷️: [Mar-28-2022 08:15:53]: Step 2 finished execution
+
+info🏷️: [Mar-28-2022 08:15:53]: Starting simulation for step 3
+info🏷️: [Mar-28-2022 08:15:54]: Sent similation inputs to Sandbox
+info🏷️: [Mar-28-2022 08:15:55]: Container started with ID: 25ed8d3cb403b97b79b8579873095bcbcdf858395548b692e14e3288279801d5
+info🏷️: [Mar-28-2022 08:16:10]: Completed execution of container
+info🏷️: [Mar-28-2022 08:16:12]: Collected simulation files from Sandbox
+info🏷️: [Mar-28-2022 08:16:13]: Cleared Sandbox for next simulation
+info🏷️: [Mar-28-2022 08:16:13]: Stored simulation details to simulations/afac933b-0234-44d7-afaf-3ab080339ba1/bdbb651c-090d-4331-8243-498da785e20a/3
+info🏷️: [Mar-28-2022 08:16:13]: Step 3 finished execution
+
+info🏷️: [Mar-28-2022 08:16:13]: Starting simulation for step 1
+info🏷️: [Mar-28-2022 08:16:14]: Sent similation inputs to Sandbox
+info🏷️: [Mar-28-2022 08:16:15]: Container started with ID: 1c2e07fbf143f6d7fc48a37e7549c37b0a4071d74dc9e67641b7be6de921287d
+info🏷️: [Mar-28-2022 08:16:59]: 
+info🏷️: [Mar-28-2022 08:16:59]: Run created with id d68cbb1b-891f-4198-a0eb-df214b2d6502
+info🏷️: [Mar-28-2022 08:16:59]: Step created with id 286
+info🏷️: [Mar-28-2022 08:16:59]: Step created with id 287
+info🏷️: [Mar-28-2022 08:16:59]: Step created with id 288
+error🏷️: [Mar-28-2022 08:21:22]: socket hang up
+info🏷️: [Mar-28-2022 08:21:22]: Sent stop signal to running container
+info🏷️: [Mar-28-2022 08:29:39]: 
+info🏷️: [Mar-28-2022 08:29:39]: Run created with id f0e0372f-d3c5-4fab-9375-d1ef50e28a5a
+info🏷️: [Mar-28-2022 08:29:39]: Step created with id 289
+info🏷️: [Mar-28-2022 08:29:39]: Step created with id 290
+info🏷️: [Mar-28-2022 08:29:39]: Step created with id 291
+info🏷️: [Mar-28-2022 08:29:44]: 
+info🏷️: [Mar-28-2022 08:29:44]: Run created with id f5290a09-6e18-437e-bf94-706fdac5a7bb
+info🏷️: [Mar-28-2022 08:29:44]: Step created with id 292
+info🏷️: [Mar-28-2022 08:29:44]: Step created with id 293
+info🏷️: [Mar-28-2022 08:29:44]: Step created with id 294
+info🏷️: [Mar-28-2022 08:29:54]: Starting simulation for step 1
+info🏷️: [Mar-28-2022 08:29:55]: Sent similation inputs to Sandbox
+info🏷️: [Mar-28-2022 08:29:57]: Container started with ID: 84c592e9731b442d7658b91f90319d45c4bede33dda739e5fdb1e73271a96650
+info🏷️: [Mar-28-2022 08:30:11]: Completed execution of container
+info🏷️: [Mar-28-2022 08:30:13]: Collected simulation files from Sandbox
+info🏷️: [Mar-28-2022 08:30:14]: Cleared Sandbox for next simulation
+info🏷️: [Mar-28-2022 08:30:14]: Stored simulation details to simulations/afac933b-0234-44d7-afaf-3ab080339ba1/f0e0372f-d3c5-4fab-9375-d1ef50e28a5a/1
+info🏷️: [Mar-28-2022 08:30:14]: Step 1 finished execution
+
+info🏷️: [Mar-28-2022 08:30:14]: Starting simulation for step 2
+info🏷️: [Mar-28-2022 08:30:15]: Sent similation inputs to Sandbox
+info🏷️: [Mar-28-2022 08:30:17]: Container started with ID: af8164865d4ea74cb5d976d82132255623e2ea0a4ffedc1df31a623e219d72d3
+info🏷️: [Mar-28-2022 08:30:29]: Completed execution of container
+info🏷️: [Mar-28-2022 08:30:31]: Collected simulation files from Sandbox
+info🏷️: [Mar-28-2022 08:30:32]: Cleared Sandbox for next simulation
+info🏷️: [Mar-28-2022 08:30:32]: Stored simulation details to simulations/afac933b-0234-44d7-afaf-3ab080339ba1/f0e0372f-d3c5-4fab-9375-d1ef50e28a5a/2
+info🏷️: [Mar-28-2022 08:30:32]: Step 2 finished execution
+
+info🏷️: [Mar-28-2022 08:30:33]: Starting simulation for step 3
+info🏷️: [Mar-28-2022 08:30:34]: Sent similation inputs to Sandbox
+info🏷️: [Mar-28-2022 08:30:35]: Container started with ID: 603d40000b7bf5336cc66049319ce9021c41dd9e8eaf7f449da983593fe0b774
+info🏷️: [Mar-28-2022 08:30:42]: Completed execution of container
+info🏷️: [Mar-28-2022 08:30:44]: Collected simulation files from Sandbox
+info🏷️: [Mar-28-2022 08:30:45]: Cleared Sandbox for next simulation
+info🏷️: [Mar-28-2022 08:30:45]: Stored simulation details to simulations/afac933b-0234-44d7-afaf-3ab080339ba1/f0e0372f-d3c5-4fab-9375-d1ef50e28a5a/3
+info🏷️: [Mar-28-2022 08:30:45]: Step 3 finished execution
+
+info🏷️: [Mar-28-2022 08:30:45]: Starting simulation for step 1
+info🏷️: [Mar-28-2022 08:30:46]: Sent similation inputs to Sandbox
+info🏷️: [Mar-28-2022 08:30:48]: Container started with ID: 85823f26fac95891703106342b8f0de162633ea2364a5fdfeee2b4be2260010b
+info🏷️: [Mar-28-2022 08:30:58]: Completed execution of container
+info🏷️: [Mar-28-2022 08:31:00]: Collected simulation files from Sandbox
+info🏷️: [Mar-28-2022 08:31:01]: Cleared Sandbox for next simulation
+info🏷️: [Mar-28-2022 08:31:01]: Stored simulation details to simulations/afac933b-0234-44d7-afaf-3ab080339ba1/f5290a09-6e18-437e-bf94-706fdac5a7bb/1
+info🏷️: [Mar-28-2022 08:31:01]: Step 1 finished execution
+
+info🏷️: [Mar-28-2022 08:31:02]: Starting simulation for step 2
+info🏷️: [Mar-28-2022 08:31:03]: Sent similation inputs to Sandbox
+info🏷️: [Mar-28-2022 08:31:04]: Container started with ID: add57914ca279c767e3abc981bf1c310d0573c217b5639f9d6bb183a937e3d18
+info🏷️: [Mar-28-2022 08:31:17]: Completed execution of container
+info🏷️: [Mar-28-2022 08:31:19]: Collected simulation files from Sandbox
+info🏷️: [Mar-28-2022 08:31:20]: Cleared Sandbox for next simulation
+info🏷️: [Mar-28-2022 08:31:20]: Stored simulation details to simulations/afac933b-0234-44d7-afaf-3ab080339ba1/f5290a09-6e18-437e-bf94-706fdac5a7bb/2
+info🏷️: [Mar-28-2022 08:31:20]: Step 2 finished execution
+
+info🏷️: [Mar-28-2022 08:31:20]: Starting simulation for step 3
+info🏷️: [Mar-28-2022 08:31:21]: Sent similation inputs to Sandbox
+info🏷️: [Mar-28-2022 08:31:22]: Container started with ID: bf025fd111d0272be478fcd64701fc3cba8dd175659ca18a289d4bbcd8918ca7
+info🏷️: [Mar-28-2022 08:31:37]: Completed execution of container
+info🏷️: [Mar-28-2022 08:31:39]: Collected simulation files from Sandbox
+info🏷️: [Mar-28-2022 08:31:40]: Cleared Sandbox for next simulation
+info🏷️: [Mar-28-2022 08:31:40]: Stored simulation details to simulations/afac933b-0234-44d7-afaf-3ab080339ba1/f5290a09-6e18-437e-bf94-706fdac5a7bb/3
+info🏷️: [Mar-28-2022 08:31:40]: Step 3 finished execution
+
+info🏷️: [Mar-28-2022 08:46:55]: 
+info🏷️: [Mar-28-2022 08:46:55]: Run created with id 36bb9947-1b2f-454b-9983-917d6318dde8
+info🏷️: [Mar-28-2022 08:46:55]: Step created with id 295
+info🏷️: [Mar-28-2022 08:46:55]: Step created with id 296
+info🏷️: [Mar-28-2022 08:46:55]: Step created with id 297
+info🏷️: [Mar-28-2022 08:47:03]: 
+info🏷️: [Mar-28-2022 08:47:03]: Run created with id 1033c43d-1a6e-40d2-a17f-d45bbefa18ad
+info🏷️: [Mar-28-2022 08:47:03]: Step created with id 298
+info🏷️: [Mar-28-2022 08:47:03]: Step created with id 299
+info🏷️: [Mar-28-2022 08:47:03]: Step created with id 300
+info🏷️: [Mar-28-2022 08:47:09]: 
+info🏷️: [Mar-28-2022 08:47:09]: Run created with id f9007739-ef57-4c59-afab-8daf29d5e319
+info🏷️: [Mar-28-2022 08:47:09]: Step created with id 301
+info🏷️: [Mar-28-2022 08:47:09]: Step created with id 302
+info🏷️: [Mar-28-2022 08:47:09]: Step created with id 303
+info🏷️: [Mar-28-2022 08:47:12]: Starting simulation for step 1
+info🏷️: [Mar-28-2022 08:47:14]: Sent similation inputs to Sandbox
+info🏷️: [Mar-28-2022 08:47:15]: Container started with ID: b501db4d04f7c094ef2c577d2e12dc9cef1ce2564f2d9817768aca0660ea8653
+info🏷️: [Mar-28-2022 08:47:17]: RunId 1033c43d-1a6e-40d2-a17f-d45bbefa18ad added to task queue
+info🏷️: [Mar-28-2022 08:47:22]: Completed execution of container
+info🏷️: [Mar-28-2022 08:47:24]: Collected simulation files from Sandbox
+info🏷️: [Mar-28-2022 08:47:25]: Cleared Sandbox for next simulation
+info🏷️: [Mar-28-2022 08:47:25]: Stored simulation details to simulations/afac933b-0234-44d7-afaf-3ab080339ba1/36bb9947-1b2f-454b-9983-917d6318dde8/1
+info🏷️: [Mar-28-2022 08:47:25]: Step 1 finished execution
+
+info🏷️: [Mar-28-2022 08:47:25]: Starting simulation for step 2
+info🏷️: [Mar-28-2022 08:47:26]: RunId f9007739-ef57-4c59-afab-8daf29d5e319 added to task queue
+info🏷️: [Mar-28-2022 08:47:27]: Sent similation inputs to Sandbox
+info🏷️: [Mar-28-2022 08:47:28]: Container started with ID: 21ff71bcb2bb9613b1957f742dd1a412a4cbe18a9fbc0b5f0c64a223c252c9b8
+info🏷️: [Mar-28-2022 08:47:42]: Completed execution of container
+info🏷️: [Mar-28-2022 08:47:45]: Collected simulation files from Sandbox
+info🏷️: [Mar-28-2022 08:47:46]: Cleared Sandbox for next simulation
+info🏷️: [Mar-28-2022 08:47:46]: Stored simulation details to simulations/afac933b-0234-44d7-afaf-3ab080339ba1/36bb9947-1b2f-454b-9983-917d6318dde8/2
+info🏷️: [Mar-28-2022 08:47:46]: Step 2 finished execution
+
+info🏷️: [Mar-28-2022 08:47:47]: Starting simulation for step 3
+info🏷️: [Mar-28-2022 08:47:48]: Sent similation inputs to Sandbox
+info🏷️: [Mar-28-2022 08:47:50]: Container started with ID: f5489c986b9477f40c63fa0824c1feab24d99aa5017d53f3be68090ac673b078
+info🏷️: [Mar-28-2022 08:47:58]: Completed execution of container
+info🏷️: [Mar-28-2022 08:48:00]: Collected simulation files from Sandbox
+info🏷️: [Mar-28-2022 08:48:01]: Cleared Sandbox for next simulation
+info🏷️: [Mar-28-2022 08:48:01]: Stored simulation details to simulations/afac933b-0234-44d7-afaf-3ab080339ba1/36bb9947-1b2f-454b-9983-917d6318dde8/3
+info🏷️: [Mar-28-2022 08:48:01]: Step 3 finished execution
+
+info🏷️: [Mar-28-2022 08:48:01]: Starting simulation for step 1
+info🏷️: [Mar-28-2022 08:48:02]: Sent similation inputs to Sandbox
+info🏷️: [Mar-28-2022 08:48:04]: Container started with ID: ac330b66d3d0bbbbc3ab5fed234c0a82b3caa79d4b722e48eb9f6daf22e71b34
+info🏷️: [Mar-28-2022 08:48:18]: Completed execution of container
+info🏷️: [Mar-28-2022 08:48:20]: Collected simulation files from Sandbox
+info🏷️: [Mar-28-2022 08:48:21]: Cleared Sandbox for next simulation
+info🏷️: [Mar-28-2022 08:48:21]: Stored simulation details to simulations/afac933b-0234-44d7-afaf-3ab080339ba1/1033c43d-1a6e-40d2-a17f-d45bbefa18ad/1
+info🏷️: [Mar-28-2022 08:48:21]: Step 1 finished execution
+
+info🏷️: [Mar-28-2022 08:48:21]: Starting simulation for step 2
+info🏷️: [Mar-28-2022 08:48:22]: Sent similation inputs to Sandbox
+info🏷️: [Mar-28-2022 08:48:24]: Container started with ID: 77d5b6d9f8081d290784888bb3187c04eca718408f5fa08c7c38d15e047ff158
+info🏷️: [Mar-28-2022 08:48:30]: Completed execution of container
+info🏷️: [Mar-28-2022 08:48:33]: Collected simulation files from Sandbox
+info🏷️: [Mar-28-2022 08:48:33]: Cleared Sandbox for next simulation
+info🏷️: [Mar-28-2022 08:48:33]: Stored simulation details to simulations/afac933b-0234-44d7-afaf-3ab080339ba1/1033c43d-1a6e-40d2-a17f-d45bbefa18ad/2
+info🏷️: [Mar-28-2022 08:48:33]: Step 2 finished execution
+
+info🏷️: [Mar-28-2022 08:48:34]: Starting simulation for step 3
+info🏷️: [Mar-28-2022 08:48:35]: Sent similation inputs to Sandbox
+info🏷️: [Mar-28-2022 08:48:36]: Container started with ID: a1b4dc543254874b0d6a8de94c03707fc15d9d119c8ca0eb147d6634081bee73
+info🏷️: [Mar-28-2022 08:48:50]: Completed execution of container
+info🏷️: [Mar-28-2022 08:48:53]: Collected simulation files from Sandbox
+info🏷️: [Mar-28-2022 08:48:54]: Cleared Sandbox for next simulation
+info🏷️: [Mar-28-2022 08:48:54]: Stored simulation details to simulations/afac933b-0234-44d7-afaf-3ab080339ba1/1033c43d-1a6e-40d2-a17f-d45bbefa18ad/3
+info🏷️: [Mar-28-2022 08:48:54]: Step 3 finished execution
+
+info🏷️: [Mar-28-2022 08:48:54]: Starting simulation for step 1
+info🏷️: [Mar-28-2022 08:48:56]: Sent similation inputs to Sandbox
+info🏷️: [Mar-28-2022 08:48:57]: Container started with ID: 9512d506f39409bac839ef62a5f79005efb93072d76ecd15b4711d95c3ab6433
+info🏷️: [Mar-28-2022 08:49:09]: Completed execution of container
+info🏷️: [Mar-28-2022 08:49:12]: Collected simulation files from Sandbox
+info🏷️: [Mar-28-2022 08:49:13]: Cleared Sandbox for next simulation
+info🏷️: [Mar-28-2022 08:49:13]: Stored simulation details to simulations/afac933b-0234-44d7-afaf-3ab080339ba1/f9007739-ef57-4c59-afab-8daf29d5e319/1
+info🏷️: [Mar-28-2022 08:49:13]: Step 1 finished execution
+
+info🏷️: [Mar-28-2022 08:49:13]: Starting simulation for step 2
+info🏷️: [Mar-28-2022 08:49:14]: Sent similation inputs to Sandbox
+info🏷️: [Mar-28-2022 08:49:16]: Container started with ID: 2f2019bf44b98c48c7c61f64dda6472e13896dc4972119b6be6d8a3b0ba64187
+info🏷️: [Mar-28-2022 08:49:25]: Completed execution of container
+info🏷️: [Mar-28-2022 08:49:27]: Collected simulation files from Sandbox
+info🏷️: [Mar-28-2022 08:49:28]: Cleared Sandbox for next simulation
+info🏷️: [Mar-28-2022 08:49:28]: Stored simulation details to simulations/afac933b-0234-44d7-afaf-3ab080339ba1/f9007739-ef57-4c59-afab-8daf29d5e319/2
+info🏷️: [Mar-28-2022 08:49:28]: Step 2 finished execution
+
+info🏷️: [Mar-28-2022 08:49:29]: Starting simulation for step 3
+info🏷️: [Mar-28-2022 08:49:30]: Sent similation inputs to Sandbox
+info🏷️: [Mar-28-2022 08:49:31]: Container started with ID: 4cb527bf397c0735ce408699178ce5c6be0a0af57dfc4e4fca37bd7d31417ecd
+info🏷️: [Mar-28-2022 08:49:38]: Completed execution of container
+info🏷️: [Mar-28-2022 08:49:40]: Collected simulation files from Sandbox
+info🏷️: [Mar-28-2022 08:49:41]: Cleared Sandbox for next simulation
+info🏷️: [Mar-28-2022 08:49:41]: Stored simulation details to simulations/afac933b-0234-44d7-afaf-3ab080339ba1/f9007739-ef57-4c59-afab-8daf29d5e319/3
+info🏷️: [Mar-28-2022 08:49:41]: Step 3 finished execution
+

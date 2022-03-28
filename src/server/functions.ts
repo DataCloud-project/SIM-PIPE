@@ -8,6 +8,7 @@ import * as fs from 'node:fs';
 import * as controller from '../controller.js';
 import { getSdk } from '../db/database.js';
 import logger from '../logger.js';
+import TaskQueue from './taskqueue.js';
 import type * as types from '../types.js';
 
 dotenv.config();
@@ -237,4 +238,30 @@ export function stopRun(run_id:string):string {
   // stop the start run function to stop all the next steps
   // change the status of runs and steps to 'cancelled'
   return run_id;
+}
+
+const taskQueue = new TaskQueue();
+
+async function runScheduler():Promise<void> {
+  if (process.env.IS_SIMULATION_RUNNING === 'false') {
+    while (taskQueue.getItemsCount() > 0) {
+      // set variable to denote a simulation is running currently
+      process.env.IS_SIMULATION_RUNNING = 'true';
+      // eslint-disable-next-line no-await-in-loop
+      await startRun(taskQueue.dequeue());
+    }
+    // set variable to denote no running simulations
+    process.env.IS_SIMULATION_RUNNING = 'false';
+  }
+}
+
+export async function queueRun(run_id:string):Promise<string> {
+  if (process.env.IS_SIMULATION_RUNNING === 'true') {
+    logger.info(`RunId ${run_id} added to task queue`);
+  }
+  taskQueue.enqueue(run_id);
+  await sdk.setRunAsQueued({ run_id });
+  // eslint-disable-next-line @typescript-eslint/no-floating-promises
+  runScheduler();
+  return 'ok';
 }

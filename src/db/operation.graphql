@@ -73,6 +73,12 @@ mutation setRunAsStarted($run_id: uuid!) {
   }
 }
 
+mutation setRunAsQueued($run_id: uuid!) {
+  update_runs_by_pk(pk_columns: {run_id: $run_id}, _set: {status: queued}) {
+    run_id
+  }
+}
+
 mutation setRunAsEndedSuccess($run_id: uuid!) {
   update_runs_by_pk(pk_columns: {run_id: $run_id}, _set: {ended: "now()", status: completed}) {
     run_id

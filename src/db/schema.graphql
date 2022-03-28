@@ -95,6 +95,11 @@ input jsonb_comparison_exp {
 }
 "mutation root"
 type mutation_root {
+  Create_Run(dsl: String, name: String, simulation_id: String): String
+  Create_Run_WithInput(dsl: String, name: String, sampleInput: [[String]], simulation_id: String): String
+  Create_Simulation(model_id: String, name: String): String
+  Start_Run(run_id: String): String
+  Stop_Run(run_id: String): String
   """
   insert a single row into the table: "simpipe.simulations"
   """
@@ -295,6 +300,9 @@ enum order_by {
   desc_nulls_last
 }
 type query_root {
+  All_Runs_Steps: String
+  All_Simulations: String
+  Get_Simulation_Run_Results(run_id: String, simulation_id: String): String
   """
   fetch data from the table: "simpipe.runs" using primary key columns
   """
@@ -1251,6 +1259,7 @@ enum simpipe_run_status_enum {
   cancelled
   completed
   failed
+  queued
   waiting
 }
 """
@@ -1492,7 +1501,7 @@ unique or primary key constraints on table "simpipe.simulations"
 """
 enum simulations_constraint {
   "unique or primary key constraint"
-  simulations_model_id_key
+  simulations_modelId_key
   "unique or primary key constraint"
   simulations_pkey
 }

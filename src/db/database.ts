@@ -105,6 +105,11 @@ export type Jsonb_Comparison_Exp = {
 /** mutation root */
 export type Mutation_Root = {
   __typename?: 'mutation_root';
+  Create_Run?: Maybe<Scalars['String']>;
+  Create_Run_WithInput?: Maybe<Scalars['String']>;
+  Create_Simulation?: Maybe<Scalars['String']>;
+  Start_Run?: Maybe<Scalars['String']>;
+  Stop_Run?: Maybe<Scalars['String']>;
   /** insert a single row into the table: "simpipe.simulations" */
   create_simulation?: Maybe<Simulations>;
   /** insert data into the table: "simpipe.simulations" */
@@ -189,6 +194,42 @@ export type Mutation_Root = {
   update_steps?: Maybe<Steps_Mutation_Response>;
   /** update single row of the table: "simpipe.steps" */
   update_steps_by_pk?: Maybe<Steps>;
+};
+
+
+/** mutation root */
+export type Mutation_RootCreate_RunArgs = {
+  dsl?: InputMaybe<Scalars['String']>;
+  name?: InputMaybe<Scalars['String']>;
+  simulation_id?: InputMaybe<Scalars['String']>;
+};
+
+
+/** mutation root */
+export type Mutation_RootCreate_Run_WithInputArgs = {
+  dsl?: InputMaybe<Scalars['String']>;
+  name?: InputMaybe<Scalars['String']>;
+  sampleInput?: InputMaybe<Array<InputMaybe<Array<InputMaybe<Scalars['String']>>>>>;
+  simulation_id?: InputMaybe<Scalars['String']>;
+};
+
+
+/** mutation root */
+export type Mutation_RootCreate_SimulationArgs = {
+  model_id?: InputMaybe<Scalars['String']>;
+  name?: InputMaybe<Scalars['String']>;
+};
+
+
+/** mutation root */
+export type Mutation_RootStart_RunArgs = {
+  run_id?: InputMaybe<Scalars['String']>;
+};
+
+
+/** mutation root */
+export type Mutation_RootStop_RunArgs = {
+  run_id?: InputMaybe<Scalars['String']>;
 };
 
 
@@ -518,6 +559,9 @@ export enum Order_By {
 
 export type Query_Root = {
   __typename?: 'query_root';
+  All_Runs_Steps?: Maybe<Scalars['String']>;
+  All_Simulations?: Maybe<Scalars['String']>;
+  Get_Simulation_Run_Results?: Maybe<Scalars['String']>;
   /** fetch data from the table: "simpipe.runs" using primary key columns */
   get_run?: Maybe<Runs>;
   /** fetch data from the table: "simpipe.simulations" using primary key columns */
@@ -560,6 +604,12 @@ export type Query_Root = {
   steps_aggregate: Steps_Aggregate;
   /** fetch data from the table: "simpipe.steps" using primary key columns */
   steps_by_pk?: Maybe<Steps>;
+};
+
+
+export type Query_RootGet_Simulation_Run_ResultsArgs = {
+  run_id?: InputMaybe<Scalars['String']>;
+  simulation_id?: InputMaybe<Scalars['String']>;
 };
 
 
@@ -1671,6 +1721,7 @@ export enum Simpipe_Run_Status_Enum {
   Cancelled = 'cancelled',
   Completed = 'completed',
   Failed = 'failed',
+  Queued = 'queued',
   Waiting = 'waiting'
 }
 
@@ -1950,7 +2001,7 @@ export type Simulations_Bool_Exp = {
 /** unique or primary key constraints on table "simpipe.simulations" */
 export enum Simulations_Constraint {
   /** unique or primary key constraint */
-  SimulationsModelIdKey = 'simulations_model_id_key',
+  SimulationsModelIdKey = 'simulations_modelId_key',
   /** unique or primary key constraint */
   SimulationsPkey = 'simulations_pkey'
 }
@@ -2751,6 +2802,13 @@ export type SetRunAsStartedMutationVariables = Exact<{
 
 export type SetRunAsStartedMutation = { __typename?: 'mutation_root', update_runs_by_pk?: { __typename?: 'runs', run_id: string } | null | undefined };
 
+export type SetRunAsQueuedMutationVariables = Exact<{
+  run_id: Scalars['uuid'];
+}>;
+
+
+export type SetRunAsQueuedMutation = { __typename?: 'mutation_root', update_runs_by_pk?: { __typename?: 'runs', run_id: string } | null | undefined };
+
 export type SetRunAsEndedSuccessMutationVariables = Exact<{
   run_id: Scalars['uuid'];
 }>;
@@ -2919,6 +2977,13 @@ export const SetRunAsStartedDocument = gql`
   }
 }
     `;
+export const SetRunAsQueuedDocument = gql`
+    mutation setRunAsQueued($run_id: uuid!) {
+  update_runs_by_pk(pk_columns: {run_id: $run_id}, _set: {status: queued}) {
+    run_id
+  }
+}
+    `;
 export const SetRunAsEndedSuccessDocument = gql`
     mutation setRunAsEndedSuccess($run_id: uuid!) {
   update_runs_by_pk(
@@ -3064,6 +3129,9 @@ export function getSdk(client: GraphQLClient, withWrapper: SdkFunctionWrapper = 
     },
     setRunAsStarted(variables: SetRunAsStartedMutationVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<SetRunAsStartedMutation> {
       return withWrapper((wrappedRequestHeaders) => client.request<SetRunAsStartedMutation>(SetRunAsStartedDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'setRunAsStarted');
+    },
+    setRunAsQueued(variables: SetRunAsQueuedMutationVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<SetRunAsQueuedMutation> {
+      return withWrapper((wrappedRequestHeaders) => client.request<SetRunAsQueuedMutation>(SetRunAsQueuedDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'setRunAsQueued');
     },
     setRunAsEndedSuccess(variables: SetRunAsEndedSuccessMutationVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<SetRunAsEndedSuccessMutation> {
       return withWrapper((wrappedRequestHeaders) => client.request<SetRunAsEndedSuccessMutation>(SetRunAsEndedSuccessDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'setRunAsEndedSuccess');
