@@ -1,7 +1,7 @@
 # Ansible Playbook to setup the Sandbox virtual machine to run on a Ubuntu 20.04 LTS.
-#   Run the command: ansible-playbook -i inventory-datacloud.yaml setup-simulator-vm.yaml 
+#   Run the command: ansible-playbook -i inventory-datacloud.yaml setup-simulator-vm.yaml --ask-become-pass
 
-- name: Setup Sandbox VM
+- name: Setup sandbox VM
   hosts: sandbox-vm
   tasks:
     - name: Run software updates first
@@ -19,7 +19,7 @@
           - screen
           - docker.io
           - docker-compose
-    - name: Expose Docker Deamon to tcp://0.0.0.0
+    - name: Expose Docker daemon to tcp://0.0.0.0
       lineinfile:
         path: /lib/systemd/system/docker.service
         regexp: '^ExecStart='
@@ -27,25 +27,25 @@
     - name: SystemD reload
       systemd:
         daemon_reload: true
-    - name: Restart Docker Deamon 
+    - name: Restart Docker daemon 
       service:
         name: docker
         state: restarted
-    - name: Make the SIM-PIPE-Sandbox directory
+    - name: Make the SIM-PIPE/sandbox directory
       file:
-        path: /home/ubuntu/SIM-PIPE-Sandbox
+        path: /home/ubuntu/SIM-PIPE/sandbox
         state: directory
     - name: Copy the Docker Compose file
       copy:
-        src: ./docker-compose.yml
-        dest: /home/ubuntu/SIM-PIPE-Sandbox/docker-compose.yaml
+        src: ./docker-compose.yaml
+        dest: /home/ubuntu/SIM-PIPE/sandbox/docker-compose.yaml
     - name: Copy the users.conf file
       copy:
         src: ./users.conf
-        dest: /home/ubuntu/SIM-PIPE-Sandbox/users.conf
+        dest: /home/ubuntu/SIM-PIPE/sandbox/users.conf
     - name: Start the Docker compose
       community.docker.docker_compose:
-        project_src: /home/ubuntu/SIM-PIPE-Sandbox
+        project_src: /home/ubuntu/SIM-PIPE/sandbox
         state: present
       register: output_compose
     - name: Print the output of the compose
