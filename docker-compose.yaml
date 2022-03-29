@@ -56,17 +56,15 @@ services:
       - ./simulations:/simulations
       - ./uploaded_files:/uploaded_files
       - ./log:/log
-    env_file:
-      - ./controller.env
-    #environment:
-      # HASURA: http://hasura:8080/v1/graphql
-      # SANDBOX_IP: '192.168.56.1'
+    environment:
+      HASURA: http://hasura:8080/v1/graphql
+      SANDBOX_IP: '192.168.56.1'
       # REMOTE_DOCKER: true
-      # CONTAINER_TIME_LIMIT: 20
-      # CONTAINER_STOP_TIMEOUT: 5
-      # POLLING_INTERVAL: 1
-      # REMOTE_OUTPUT_DIR: 'out/'
-      # REMOTE_INPUT_DIR: 'in/'
+      CONTAINER_TIME_LIMIT: 20
+      CONTAINER_STOP_TIMEOUT: 5
+      POLLING_INTERVAL: 1
+      REMOTE_OUTPUT_DIR: 'out/'
+      REMOTE_INPUT_DIR: 'in/'
       
 volumes:
   db_data1:

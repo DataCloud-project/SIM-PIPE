@@ -1,5 +1,5 @@
 # Ansible Playbook to setup the Sandbox virtual machine to run on a Ubuntu 20.04 LTS.
-#   Run the command: ansible-playbook -i inventory-datacloud.yaml setup-simulator-vm.yaml --ask-become-pass
+#   Run the command: ansible-playbook -i inventory-datacloud.yaml setup-simulator-vm.yaml --ask-pass --ask-become-pass
 
 - name: Setup sandbox VM
   hosts: sandbox-vm
