@@ -1,0 +1,9 @@
+version: "3.3"
+
+services:
+  atmoz:
+    image: atmoz/sftp
+    network_mode: "host"
+    volumes:
+       - /var/lib/docker/volumes/volume_vm/_data:/home/user1
+       - ./users.conf:/etc/sftp/users.conf:ro
