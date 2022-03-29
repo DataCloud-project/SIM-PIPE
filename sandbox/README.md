@@ -20,7 +20,7 @@ The sandbox is required to be installed on a separate Ubuntu Server 20.04 LTS ho
 
 #### Setting up a Ubuntu Server in the cloud
 
-See https://ubuntu.com/server/docs/cloud-images/introduction for informations about available cloud offerings and how to set up a barebone Ubuntu Server 20.04 LTS virtual machine (VM) in the cloud.
+See https://ubuntu.com/server/docs/cloud-images/introduction for information about available cloud offerings and how to set up a barebone Ubuntu Server 20.04 LTS virtual machine (VM) in the cloud.
 
 ### Ansible
 
@@ -51,7 +51,7 @@ Note that Ansible is not natively supported on Windows, but it can run under the
 
 ## Setting up the sandbox VM using Ansible
 
-#### Step 1. Clone the SIM-PIPE Simulation Controller repository
+#### Step 1. Clone the SIM-PIPE repository
 
 Command line:
 
