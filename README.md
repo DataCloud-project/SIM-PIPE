@@ -65,8 +65,3 @@ To install SIM-PIPE follow these steps:
 ## Running your first data pipeline simulation
 
 After the SIM-PIPE tool has been installed, you are ready to run your first data pipeline simulation. Ensure that the sandbox VM is running and that the Docker daemon in the Sandbox is listending on port 2375.
-
-### Configuring the user interface in AppSmith
-
-The first time you 
-
