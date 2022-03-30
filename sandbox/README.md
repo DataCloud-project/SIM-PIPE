@@ -7,9 +7,9 @@
 
 The `Sandbox` component of SIM-PIPE is an isolated testbed for running the simulations. This folder contains the the necessary setup and configuration files for setting up the sandbox environment on a Ubuntu Server 20.03 LTS virtual machine (VM). The sandbox VM runs a Docker daemon for dispatching Docker containers (each running a step of a data pipeline) and an SFTP server for file transfers.
 
-* [setup-sandbox-vm.yaml](https://github.com/DataCloud-project/SIM-PIPE/blob/main/sandbox/setup-sandbox-vm.yaml): An [Ansible playbook file](https://docs.ansible.com/ansible/latest/user_guide/playbooks_intro.html) that provides automated setup of the sandbox VM.
-* [inventory-datacloud.yaml](https://github.com/DataCloud-project/SIM-PIPE/blob/main/sandbox/inventory-datacloud.yaml): An [Ansible inventory file](https://docs.ansible.com/ansible/latest/user_guide/intro_inventory.html) where you configure the SSH settings of the sandbox VM.
-* [docker-compose.yaml](https://github.com/DataCloud-project/SIM-PIPE/blob/main/sandbox/docker-compose.yaml): A [Docker Compose file](https://docs.docker.com/compose/) that starts the SFTP server on the sandbox VM.
+* [setup-sandbox-vm.yaml](https://github.com/DataCloud-project/SIM-PIPE/blob/main/sandbox/setup-sandbox-vm.yaml): An [Ansible playbook](https://docs.ansible.com/ansible/latest/user_guide/playbooks_intro.html) file that provides automated setup of the sandbox VM.
+* [inventory-datacloud.yaml](https://github.com/DataCloud-project/SIM-PIPE/blob/main/sandbox/inventory-datacloud.yaml): An [Ansible inventory](https://docs.ansible.com/ansible/latest/user_guide/intro_inventory.html) file where you configure the SSH settings of the sandbox VM.
+* [docker-compose.yaml](https://github.com/DataCloud-project/SIM-PIPE/blob/main/sandbox/docker-compose.yaml): A [Docker Compose](https://docs.docker.com/compose/) file that starts the SFTP server on the sandbox VM.
 * [users.conf](https://github.com/DataCloud-project/SIM-PIPE/blob/main/sandbox/users.conf): A user configuration file for the SFTP server that is run on the sandbox VM.
 
 ## Prerequisites
