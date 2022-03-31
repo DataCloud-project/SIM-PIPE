@@ -166,11 +166,3 @@ In the AppSmith homepage click the "..." button and select "Import application"
 ![alt text](https://raw.githubusercontent.com/DataCloud-project/SIM-PIPE/main/docs/appsmith_import_application.png)
 
 Import the [appsmith-frontend.json](https://github.com/DataCloud-project/SIM-PIPE/blob/main/frontend/appsmith-frontend.json) file found in the [frontend](https://github.com/DataCloud-project/SIM-PIPE/tree/main/frontend) folder.
-
-If the app is not running on localhost, you will get an error "The action 'run' has failed". In this case, you will need to click the "Edit app" button. Go to "Datasources" and click the "Edit" button marked in red in the figure below.
-
-![alt text](https://raw.githubusercontent.com/DataCloud-project/SIM-PIPE/main/docs/appsmith_edit_datasource.png)
-
-Change the URL "http://hasura:8080/api/rest" by replacing "hasura" with the IP address of the host running the SIM-PIPE tool and click "Save", and finally click "Deploy" to redeploy the application.
-
-![alt text](https://raw.githubusercontent.com/DataCloud-project/SIM-PIPE/main/docs/appsmith_hasura_url.png)
