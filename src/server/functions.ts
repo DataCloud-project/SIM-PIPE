@@ -9,6 +9,7 @@ import * as controller from '../controller.js';
 import { getSdk } from '../db/database.js';
 import logger from '../logger.js';
 import TaskQueue from './taskqueue.js';
+import type { AllSimulationsQuery } from '../db/database.js';
 import type * as types from '../types.js';
 
 dotenv.config();
@@ -22,8 +23,9 @@ const client = new GraphQLClient(hasura, {
 const sdk = getSdk(client);
 const uploadDirectory = 'uploaded_files/';
 
-export async function allSimulations():Promise<string> {
-  return JSON.stringify(await sdk.AllSimulations(), undefined, 2);
+export async function allSimulations():Promise<AllSimulationsQuery> {
+  // return JSON.stringify(await sdk.AllSimulations(), undefined, 2);
+  return await sdk.AllSimulations();
 }
 
 export async function allRunsSteps():Promise<string> {
@@ -264,4 +266,16 @@ export async function queueRun(run_id:string):Promise<string> {
   // eslint-disable-next-line @typescript-eslint/no-floating-promises
   runScheduler();
   return 'ok';
+}
+
+export async function createSampleSimulation():Promise<string> {
+  // check if there are simulations in the database
+  const result = await allSimulations();
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+  if (result.simulations.length === 0) {
+    const simId = await createSimulation('c97fc83a-b0fc-11ec-b909-0242ac120002',
+      'Sample Simulation');
+    return `Sample simulation with id ${simId} created on startup`;
+  }
+  return 'No sample simulation created as there are existing simulations';
 }

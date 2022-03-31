@@ -87,7 +87,7 @@ async function startContainer(image:string, stepId:number, env: string[]) : Prom
     Env: env || [],
   })) as unknown as Docker.Container;
   await createdContainer.start({});
-  const startedAt:number = new Date() as unknown as number;
+  const startedAt = new Date() as unknown as number;
   // change the step status in the database to active
   // eslint-disable-next-line @typescript-eslint/no-unsafe-call
   await sdk.setStepAsStarted({ step_id: stepId });
@@ -292,8 +292,7 @@ async function waitForContainer():Promise<void> {
     await setTimeout(500);
   }
 }
-// testing step type
-// export async function start(client:GraphQLClient, stepIdReceived:number) : Promise<string> {
+
 export async function start(client:GraphQLClient, step:types.Step) : Promise<string> {
   if (!step.stepNumber || !step.stepId || !step.image || !step.env) {
     throw new Error('Error in controller.start: step_number, image, env or step_id not defined');

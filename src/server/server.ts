@@ -69,3 +69,5 @@ await server.listen({ port: 9000, hostname: '0.0.0.0' }).then(({ url }) => {
   // eslint-disable-next-line no-console
   console.log(`🚀  Server ready at ${url}`);
 });
+// create a sample simulation at startup
+logger.info(await functions.createSampleSimulation());
