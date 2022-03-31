@@ -17,7 +17,7 @@ The architecture of the SIM-PIPE consists of three main components:
 
 1. [SIM-PIPE User Interface](https://github.com/DataCloud-project/SIM-PIPE/tree/main/frontend) that provides a user interface for starting, stopping and retrieiving information to a simulation run. SIM-PIPE tool performs simulations and analytics related to a specific simulation job or run and exposes REST APIs for the front-end and other services:
 
-2. [SIM-PIPE Simulation Controller](https://github.com/DataCloud-project/SIM-PIPE/controller) that performs simulations and analytics related to a specific simulation job or run and exposes REST APIs for the front-end and other services. It provides the following functionality:
+2. [SIM-PIPE Simulation Controller](https://github.com/DataCloud-project/SIM-PIPE/tree/main/controller) that performs simulations and analytics related to a specific simulation job or run and exposes REST APIs for the front-end and other services. It provides the following functionality:
 
     - It provides dispatcher service that dispatches requests and jobs to other sub-components of the back-end, including the sandbox.
     - It stores intermediate files that are produced by each step that takes part in the simulation on disk to feed further steps of the pipeline. The files can be provided to the user of the simulator to analyse the performance/function of the steps. 
@@ -65,4 +65,3 @@ To install SIM-PIPE follow these steps:
 ## Running your first data pipeline simulation
 
 After the SIM-PIPE tool has been installed, you are ready to run your first data pipeline simulation. Ensure that the sandbox VM is running and that the Docker daemon in the Sandbox is listending on port 2375.
-
