@@ -1,46 +1,49 @@
 <p align="center"><img width=50% src="https://raw.githubusercontent.com/DataCloud-project/toolbox/master/docs/img/datacloud_logo.png"></p>&nbsp;
 
-[![GitHub Issues](https://img.shields.io/github/issues/DataCloud-project/SIM-PIPE-backend.svg)](https://github.com/DataCloud-project/SIM-PIPE-backend/issues)
+[![GitHub Issues](https://img.shields.io/github/issues/DataCloud-project/SIM-PIPE.svg)](https://github.com/DataCloud-project/SIM-PIPE/issues)
 [![License](https://img.shields.io/badge/license-Apache2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
-# CONTENTS
+# SIM-PIPE
 
- * SIM-PIPE Backend Introduction
- * SIM-PIPE Simulation Controller
-    * Prerequisite
-    * Description
-    * Installation
-    * Usage
+SIM-PIPE generates and simulates a deployment configuration for the final deployment that conforms to the hardware requirements and includes any additional necessary middleware inter-step communication code. Finally, the tool provides a pipeline testing functionality, including a sandbox for evaluating individual pipeline step performance, and a simulator to determine the performance of the overall Big Data pipeline. Specifically, SIM-PIPE provides the following high-level features:
 
+-	Deploying each step of a pipeline and running it in a sandbox by providing sample input
+-	Evaluating pipeline step performance by recording and analysing metrics about its execution in order to identify bottlenecks and steps to be optimized
+-	Identification of resource requirements for pipeline by calculating step performance per resource used
 
-# SIM-PIPE Backend Introduction
+## Architecture
 
-The backend of the SIM-PIPE tool will perform simulations and analytics related to a specific simulation job or run and will expose REST APIs for the front end and other services. 
-- The back-end will expose a dispatcher service that will dispatch requests and jobs to other sub-components of the back-end and will be implemented as a thin RESTful web service. The back-end includes a sandbox that implements the actual simulation. 
-- The sandbox will provide metrics to a monitoring service. These metrics will be stored and associated with a simulation and particular run in a database. 
-- Intermediate files that are produced by each step that takes part in the simulation will be stored on disk to feed further steps of the pipeline and can be provided to the user of the simulator to analyse the performance/function of the steps. 
-- Simulation runs will be performed in an asynchronous manner. The simulation API will provide a controllable queue of pending simulations (allowing adding/removing items by the user as well as starting and ending a “run”).
-- Finally, a simulation analytics service will be implemented that will use metrics data gathered for each run and perform statistical analysis. The results of these analyses will be provided through the REST API and can be displayed to the user during or after a simulation run.  
-  
+The architecture of the SIM-PIPE consists of three main components:
 
+1. [SIM-PIPE User Interface](https://github.com/DataCloud-project/SIM-PIPE/tree/main/frontend) that provides a user interface for starting, stopping and retrieiving information to a simulation run. SIM-PIPE tool performs simulations and analytics related to a specific simulation job or run and exposes REST APIs for the front-end and other services:
 
+2. [SIM-PIPE Simulation Controller](https://github.com/DataCloud-project/SIM-PIPE/tree/main/controller) that performs simulations and analytics related to a specific simulation job or run and exposes REST APIs for the front-end and other services. It provides the following functionality:
 
-# SIM-PIPE Simulation Controller
+    - It provides dispatcher service that dispatches requests and jobs to other sub-components of the back-end, including the sandbox.
+    - It stores intermediate files that are produced by each step that takes part in the simulation on disk to feed further steps of the pipeline. The files can be provided to the user of the simulator to analyse the performance/function of the steps. 
+    - It executes simulation runs in an asynchronous manner. The simulation API will provide a controllable queue of pending simulations (allowing adding/removing items by the user as well as starting and ending a "run").
+    - It provides a simulation analytics service that gathers metrics for each run and performs statistical analysis. The results of these analyses will be provided through the REST API and can be displayed to the user during or after a simulation run.
 
-## Prerequisite
+3. [SIM-PIPE Sandbox](https://github.com/DataCloud-project/SIM-PIPE/tree/main/sandbox) that implements the actual simulation runs. The sandbox provides metrics to a monitoring service. These metrics will be stored and associated with a simulation and particular run in a database.
 
-SIM-PIPE Backend Sandbox (https://github.com/DataCloud-project/SIM-PIPE-Sandbox) should be installed and setup before using the Simulation controller. This is an isolated environment where execution of the simulations takes place.
+The figure below shows a logical architecture of SIM-PIPE where the components are grouped together as a front-end and a back-end (consisting of the simulation controller and the sandbox).
 
-## Description
+![alt text](https://raw.githubusercontent.com/DataCloud-project/SIM-PIPE/main/docs/sim-pipe_architecture.png)
 
-The SIM-PIPE tool works on two hosts. The SIM-PIPE simulation controller and SIM-PIPE Sandbox will run on these separate hosts. As the request comes in from the UI with a pipeline description, the controller will run each step of teh pipeline in the Sandbox. The controller uses Dockerode remote docker library and serves the following purposes:
- - Transfer the input file from to Sandbox using SFTP
- - Start a container on Sandbox attaching volume on its's local storage with binds to 3 directories: in, out, and work. The containers follow the template to take input from /in, put intermedaiate files to /work and store output in /output.
- - Resume/pause/stop a container if a request comes from UI
- - Get the output and work files from the local storage of the Sandbox and store it in persistent database.
- - For each container started, controller will retrieve the resource usage statistics (time series of CPU, memory and network usage) and logs of the execution.
- - The execution input, output, logs and usage statistics will be stored in the following folder structure:
+## Deployment
 
+The SIM-PIPE tool is deployed on two hosts as shown in the figure below. The SIM-PIPE Simulation Controller and SIM-PIPE Sandbox runs on two separate hosts. The sandbox is an isolated environment where execution of the simulations takes place.
+
+![alt text](https://raw.githubusercontent.com/DataCloud-project/SIM-PIPE/main/docs/sim-pipe_deployment.png)
+
+As the request comes in from the UI with a pipeline description, the controller will run each step of the pipeline in the sandbox. The controller uses Dockerode remote docker library and serves the following purposes:
+
+* Transfer the input file from to Sandbox using SFTP
+* Start a container on Sandbox attaching volume on its's local storage with binds to 3 directories: in, out, and work. The containers follow the template to take input from /in, put intermedaiate files to /work and store output in /output.
+* Resume/pause/stop a container if a request comes from UI
+* Get the output and work files from the local storage of the Sandbox and store it in persistent database.
+* For each container started, controller will retrieve the resource usage statistics (time series of CPU, memory and network usage) and logs of the execution.
+* The execution input, output, logs and usage statistics will be stored in the following folder structure:
 
         ├── SimulationID                # The simulation ID of the current simulation
             ├── runID                # The run ID of the simulation corresponding to the current run    
@@ -50,55 +53,15 @@ The SIM-PIPE tool works on two hosts. The SIM-PIPE simulation controller and SIM
                     ├── logs         # logs generated from stdout and stderr
                     └── statistics   # CPU, memory, and network usage of the execution
 
- - Once the simulation is completed and all relevant files have been retreived, the simulation controller then cleans out the /in, /work and /out folders in Sandbox local storage to prepare for the next run. 
+* Once the simulation is completed and all relevant files have been retreived, the simulation controller then cleans out the /in, /work and /out folders in Sandbox local storage to prepare for the next run. 
+
 ## Installation
 
-The simulation controller can be set up in a windows machine by following the steps below. The Simulation Controller has been assumed to be running in a Windows machine, and the Sandbox is set up in an Ubuntu 20.04 machine running in VirtualBox on the same Windows machine. This ensures that the sandbox runs in an isolated environment.
+To install SIM-PIPE follow these steps:
 
-### Install VirtualBox
+1. The SIM-PIPE Sandbox environment must be set up first. Follow the installation instructions in the [sandbox](https://github.com/DataCloud-project/SIM-PIPE-Simulation-Controller/tree/main/sandbox) folder.
+2. After the sandbox is set up, proceed to install the other components of the SIM-PIPE tool (i.e., User Interface and Simulation Controller) by following the installations instructions in the [controller](https://github.com/DataCloud-project/SIM-PIPE-Simulation-Controller/tree/main/sandbox) folder.
 
-Install Oracle >VM VirtualBox on windows machine by following the installation instructions from [VirtualBox official site] (https://www.virtualbox.org/). The SIM-PIPE Sandbox component will be deployed in it. Please check the [SIM-PIPE Backend Sandbox repository] (https://github.com/DataCloud-project/SIM-PIPE-Sandbox) to install the sandbox. Port forwarding should be set up for port 2375.
+## Running your first data pipeline simulation
 
-### Install Docker in Windows
-
-You can find more information about the installation of Docker Desktop for Windows on the [official Docker website](https://docs.docker.com/get-docker/). Make sure that in settings docker daemon is not exposed in port 2375.
-
-    
-    > Expose daemon on tcp://localhost:2375 without TLS option should be unchecked.
-
-### Install Node.js on Windows
-
-Install Node.js on windows machine by following the installation instructions from [Node.js official site] (https://nodejs.org/en/download/).
-
-### Install Simulation Controller
-
-Clone the SIM-PIPE Simulation Controller into a folder using the command
-
-    $ git clone https://github.com/DataCloud-project/SIM-PIPE-Simulation-Controller.git
-
-After entering into the cloned folder, run the following commands to install Node.js, [Dockerode] (https://github.com/apocas/dockerode), and [ssh2-ftp-client] (https://github.com/theophilusx/ssh2-sftp-client). Also install winston logger for logging.
-
-    $ npm install
-
-## Usage 
-
-### Configuration of SIM-PIPE
-
-#### Environment variables in docker compose file
-
-    REMOTE_SCHEMA_URL - IP address of host 1 machine
-    SANDBOX_IP - IP address of *VirtualBox Host-Only Network*
-    CONTAINER_TIME_LIMIT- number of seconds to wait before sending STOP signal to running container; default 20 seconds
-    CONTAINER_STOP_TIMEOUT - number of seconds to wait after sending STOP signal to running container; default 5 seconds
-    POLLING_INTERVAL - polling interval (in seconds) for collecting resource usage statistics; default 1 second
-### Starting a simulation
-
-[SIM-PIPE Backend Sandbox] (https://github.com/DataCloud-project/SIM-PIPE-Sandbox) should be set up before starting the simulation. Ensure that the docker daemon in Sandbox is listening to port 2375.
-
-After configuring environment variables in the docker compose file, deploy SIM-PIPE tool by starting docker compose file in the parent folder of the repository. 
-
-    $ docker-compose up
-
-This starts four docker containers with the services for SIM-PIPE including SIM-PIPE backend and frontend. 
-
-After the docker compose file is started, open the frontend url (http://localhost:8085) in a browser to access the graphical user interface of SIM-PIPE. 
+After the SIM-PIPE tool has been installed, you are ready to run your first data pipeline simulation. Ensure that the sandbox VM is running and that the Docker daemon in the Sandbox is listending on port 2375.

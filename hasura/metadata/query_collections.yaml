@@ -89,6 +89,7 @@
           Stop_Run(run_id: $run_id)
         }
     - name: create_run_withinput
-      query: "mutation create_run_withinput($dsl: String, $name: String, $sampleInput:
-        [[String]], $simulation_id: String) {\n  Create_Run_WithInput(dsl: $dsl, name:
-        $name, sampleInput: $sampleInput, simulation_id: $simulation_id)\n}        "
+      query: |-
+        mutation create_run_withinput($dsl: String, $name: String, $sampleInput: [[String]], $simulation_id: String) {
+          Create_Run_WithInput(dsl: $dsl, name: $name, sampleInput: $sampleInput, simulation_id: $simulation_id)
+        }    

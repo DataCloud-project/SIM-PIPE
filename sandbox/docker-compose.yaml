@@ -1,0 +1,10 @@
+version: "3.3"
+services:
+  atmoz:
+    image: atmoz/sftp
+    ports:
+      - "2222:22"
+    restart: unless-stopped
+    volumes:
+      - /var/lib/docker/volumes/volume_vm/_data:/home/user1
+      - ./users.conf:/etc/sftp/users.conf:ro
