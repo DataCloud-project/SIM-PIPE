@@ -232,14 +232,6 @@ export type Mutation_RootStop_RunArgs = {
   run_id?: InputMaybe<Scalars['String']>;
 };
 
-
-/** mutation root */
-export type Mutation_RootCreate_SimulationArgs = {
-  object: Simulations_Insert_Input;
-  on_conflict?: InputMaybe<Simulations_On_Conflict>;
-};
-
-
 /** mutation root */
 export type Mutation_RootCreate_SimulationsArgs = {
   objects: Array<Simulations_Insert_Input>;
