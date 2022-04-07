@@ -7,7 +7,7 @@ services:
     volumes:
       - db_data1:/var/lib/postgresql/data
     environment:
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD-postgrespassword}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       TIMESCALEDB_TELEMETRY: "off"
       TS_TUNE_MEMORY: "512MB"
 
@@ -23,17 +23,16 @@ services:
       - ./hasura/migrations:/hasura-migrations:ro
       - ./hasura/metadata:/hasura-metadata:ro
     environment:
-      HASURA_GRAPHQL_METADATA_DATABASE_URL: postgres://postgres:${POSTGRES_PASSWORD-postgrespassword}@timescaledb:5432/postgres
-      PG_DATABASE_URL: postgres://postgres:${POSTGRES_PASSWORD-postgrespassword}@timescaledb:5432/postgres
+      HASURA_GRAPHQL_METADATA_DATABASE_URL: postgres://postgres:${POSTGRES_PASSWORD}@timescaledb:5432/postgres
+      PG_DATABASE_URL: postgres://postgres:${POSTGRES_PASSWORD}@timescaledb:5432/postgres
       HASURA_GRAPHQL_ENABLE_CONSOLE: "false"
       HASURA_GRAPHQL_DEV_MODE: "true"
       HASURA_GRAPHQL_ENABLED_LOG_TYPES: startup, http-log, webhook-log, websocket-log, query-log
-      HASURA_GRAPHQL_ADMIN_SECRET: ${HASURA_ADMIN_SECRET-hasuraadminsecret}
+      HASURA_GRAPHQL_ADMIN_SECRET: ${HASURA_ADMIN_SECRET}
       HASURA_GRAPHQL_UNAUTHORIZED_ROLE: anonymous
       HASURA_GRAPHQL_ENABLE_TELEMETRY: "false"
       HASURA_GRAPHQL_LOG_LEVEL: debug
-      REMOTE_SCHEMA_URL: http://10.218.149.206:9000
-
+      REMOTE_SCHEMA_URL: ${REMOTE_SCHEMA_URL}
   appsmith:
     image: index.docker.io/appsmith/appsmith-ce
     container_name: appsmith
@@ -58,11 +57,11 @@ services:
       - ./log:/log
     environment:
       HASURA: http://hasura:8080/v1/graphql
-      SANDBOX_IP: '192.168.56.1'
+      SANDBOX_IP: ${SANDBOX_IP} 
       # REMOTE_DOCKER: true
-      CONTAINER_TIME_LIMIT: 20
-      CONTAINER_STOP_TIMEOUT: 5
-      POLLING_INTERVAL: 1
+      CONTAINER_TIME_LIMIT: ${CONTAINER_TIME_LIMIT}
+      CONTAINER_STOP_TIMEOUT : ${CONTAINER_STOP_TIMEOUT}
+      POLLING_INTERVAL: ${POLLING_INTERVAL}
       REMOTE_OUTPUT_DIR: 'out/'
       REMOTE_INPUT_DIR: 'in/'
       

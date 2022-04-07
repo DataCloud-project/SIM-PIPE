@@ -87,7 +87,7 @@ async function startContainer(image:string, stepId:number, env: string[]) : Prom
     Env: env || [],
   })) as unknown as Docker.Container;
   await createdContainer.start({});
-  const startedAt:number = new Date() as unknown as number;
+  const startedAt = new Date() as unknown as number;
   // change the step status in the database to active
   // eslint-disable-next-line @typescript-eslint/no-unsafe-call
   await sdk.setStepAsStarted({ step_id: stepId });
@@ -224,14 +224,14 @@ async function postExitProcessing(container: Docker.Container, stepId:number, st
 }
 
 async function getStatsUntilExit(container: Docker.Container, exitTimeout:number, startedAt:number,
-  stepId:number, stepNumber:number):Promise<void> {
+  step:types.Step):Promise<void> {
   // if container stops, then stop the timer
   const containers = await docker.listContainers();
   const ids = containers.map((containerInList) => containerInList.Id);
 
   if (ids.includes(createdContainer.id)) { // collect statstics as long as the container is running
     if (process.env.STOP_SIGNAL_SENT === 'false'
-            && ( process.env.CANCEL_RUN === 'true'
+            && ( (process.env.CANCEL_RUN_LIST as string).includes(step.runId)
                   || ((new Date() as unknown as number) - startedAt) >= exitTimeout )) {
       try {
       // for continuous steps, send stop signal after configured number of seconds
@@ -253,9 +253,9 @@ async function getStatsUntilExit(container: Docker.Container, exitTimeout:number
   } else { // container is exited
     stopPollingStats();
     // if run is cancelled
-    if (process.env.CANCEL_RUN === 'true') {
+    if ((process.env.CANCEL_RUN_LIST as string).includes(step.runId)) {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-      await sdk.setStepAsCancelled({ step_id: stepId });
+      await sdk.setStepAsCancelled({ step_id: step.stepId });
       logger.info('Step execution is cancelled');
       // clear all files created during simulation
       await sftp.clearSandbox();
@@ -263,12 +263,12 @@ async function getStatsUntilExit(container: Docker.Container, exitTimeout:number
       process.env.PROCESS_COMPLETED = 'true';
     } else { // if step executed successfully
       logger.info('Completed execution of container');
-      await postExitProcessing(container, stepId, stepNumber);
+      await postExitProcessing(container, step.stepId as number, step.stepNumber as number);
     }
   }
 }
 
-function startPollingStats(startedAt:number, stepId:number, stepNumber:number):void {
+function startPollingStats(startedAt:number, step:types.Step):void {
   let exitTimeout:number;
   // get CONTAINER_TIME_LIMIT (seconds) env variable
   if (!process.env.CONTAINER_TIME_LIMIT) {
@@ -280,7 +280,7 @@ function startPollingStats(startedAt:number, stepId:number, stepNumber:number):v
     : 750;
   timer = setIntervalAsync(async () => {
     try {
-      await getStatsUntilExit(createdContainer, exitTimeout, startedAt, stepId, stepNumber);
+      await getStatsUntilExit(createdContainer, exitTimeout, startedAt, step);
     } catch (error) {
       logger.error(error);
     }
@@ -292,8 +292,7 @@ async function waitForContainer():Promise<void> {
     await setTimeout(500);
   }
 }
-// testing step type
-// export async function start(client:GraphQLClient, stepIdReceived:number) : Promise<string> {
+
 export async function start(client:GraphQLClient, step:types.Step) : Promise<string> {
   if (!step.stepNumber || !step.stepId || !step.image || !step.env) {
     throw new Error('Error in controller.start: step_number, image, env or step_id not defined');
@@ -305,7 +304,7 @@ export async function start(client:GraphQLClient, step:types.Step) : Promise<str
     const remoteInputFolder = process.env.REMOTE_INPUT_DIR ?? 'in/';
     await sftp.putFolderToSandbox(step.inputPath, remoteInputFolder, targetDirectory);
     const startedAt = await startContainer(step.image, step.stepId, step.env);
-    startPollingStats(startedAt, step.stepId, step.stepNumber);
+    startPollingStats(startedAt, step);
     await waitForContainer();
     return `${targetDirectory}/outputs/`;
   } catch (error) {

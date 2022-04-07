@@ -1,6 +1,5 @@
 - name: SIM-PIPE-backend
   definition:
-    # url: http://10.218.149.206:9000
     url_from_env: REMOTE_SCHEMA_URL
     timeout_seconds: 60
   comment: ""
