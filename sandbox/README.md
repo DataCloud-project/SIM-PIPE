@@ -65,8 +65,8 @@ cd SIM-PIPE/sandbox
 The Ansible inventory file [inventory-datacloud.yaml](https://github.com/DataCloud-project/SIM-PIPE-Sandbox/blob/main/inventory-datacloud.yaml) contains configuration settings for the sandbox VM host, such as the IP address and the SSH port and username.
 
 * `ansible_host`: The IP address of the host. Default value is `localhost`.
-* `ansible_port`: The SSH port of the host. Default value is `2222`.
-* `ansible_user`: The SSH username to use. Default value is `ubuntu`.
+* `ansible_port`: The SSH port of the host. Default value is `22`.
+* `ansible_user`: The SSH username to use. Default value is `azureuser`.
 * `ansible_become`: Enables to run tasks as sudo. Default value is `true`.
 
 Use your favorite editor and change the inventory file settings accordingly, e.g.:
@@ -79,7 +79,13 @@ sudo pico inventory-datacloud.yaml
 
 Run the Ansible Playbook file [setup-sandbox-vm.yaml](https://github.com/DataCloud-project/SIM-PIPE-Sandbox/blob/main/setup-sandbox-vm.yaml) to setup the sandbox. For more information about Ansible Playbooks see https://docs.ansible.com/ansible/latest/user_guide/playbooks_intro.html
 
-Command line:
+Command line when using private key to authenticate: (Update the command line to point to the location of your keyfile.)
+
+```
+ansible-playbook -i inventory-datacloud.yaml setup-sandbox-vm.yaml --key-file ~/.ssh/mykey.pem
+```
+
+Command line when using password to authenticate:
 
 ```
 ansible-playbook -i inventory-datacloud.yaml setup-sandbox-vm.yaml --ask-pass --ask-become-pass

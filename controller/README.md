@@ -62,7 +62,7 @@ The SIM-PIPE tool (i.e., the SIM-PIPE User Interface and SIM-PIPE Simulation Con
 Command line:
 
 ```
-git clone -b monorepo https://github.com/DataCloud-project/SIM-PIPE.git
+git clone https://github.com/DataCloud-project/SIM-PIPE.git
 cd SIM-PIPE
 ```
 
@@ -86,11 +86,11 @@ Use your favorite eidtor and change the IP address in the URL accordingly, e.g.:
 pico .env
 ```-->
 
-#### Step 3. Configure the environment settings in the Docker Compose file
+#### Step 3. Configure the environment settings
 
-The [docker-compose.yaml](https://github.com/DataCloud-project/SIM-PIPE/blob/main/docker-compose.yaml) file contains environment settings that must be updated, such as the IP address of the host running the SIM-PIPE tool and the IP address of the host running the SIM-PIPE Sandbox.
+The [docker-compose.yaml](https://github.com/DataCloud-project/SIM-PIPE/blob/main/docker-compose.yaml) refers to environment settings that must be updated, such as the IP address of the host running the SIM-PIPE tool and the IP address of the host running the SIM-PIPE Sandbox. These settings are set in the [.env](https://github.com/DataCloud-project/SIM-PIPE/blob/main/.env) file.
 
-* `REMOTE_SCHEMA_URL`: URL to the host running the SIM-PIPE tool. Default value is `http://10.218.149.206:9000`.
+* `REMOTE_SCHEMA_URL`: URL to the host running the SIM-PIPE tool. Default value is `http://192.168.1.6:9000`.
 * `SANDBOX_IP`: IP address of the sandbox VM. Default value is `'192.168.56.1'`.
 * `CONTAINER_TIME_LIMIT`: Number of seconds to wait before sending STOP signal to running container. Default value is `20` seconds.
 * `CONTAINER_STOP_TIMEOUT`: Number of seconds to wait after sending STOP signal to running container. Default value is `5` seconds.
@@ -99,14 +99,14 @@ The [docker-compose.yaml](https://github.com/DataCloud-project/SIM-PIPE/blob/mai
 Use your favorite editor and change the IP address in the `REMOTE_SCHEMA_URL` and the `SANDBOX_IP` settings accordingly, e.g.:
 
 ```
-pico docker-compose.yaml
+pico .env
 ```
 
 #### Step 4. Run the SIM-PIPE tool using Docker Compose
 
 Command line:
 ```
-sudo docker-compose -f docker-compose.yaml up
+sudo docker-compose -f docker-compose.yaml --env-file .env up
 ```
 
 ### Running the SIM-PIPE tool on Windows
@@ -166,3 +166,7 @@ In the AppSmith homepage click the "..." button and select "Import application"
 ![alt text](https://raw.githubusercontent.com/DataCloud-project/SIM-PIPE/main/docs/appsmith_import_application.png)
 
 Import the [appsmith-frontend.json](https://github.com/DataCloud-project/SIM-PIPE/blob/main/frontend/appsmith-frontend.json) file found in the [frontend](https://github.com/DataCloud-project/SIM-PIPE/tree/main/frontend) folder.
+
+Finally, launch the SIM-PIPE Frontend app.
+
+![alt text](https://raw.githubusercontent.com/DataCloud-project/SIM-PIPE/main/docs/sim-pipe_frontend_simulations.png)
