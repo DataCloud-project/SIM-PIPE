@@ -66,7 +66,7 @@ The Ansible inventory file [inventory-datacloud.yaml](https://github.com/DataClo
 
 * `ansible_host`: The IP address of the host. Default value is `localhost`.
 * `ansible_port`: The SSH port of the host. Default value is `22`.
-* `ansible_user`: The SSH username to use. Default value is `azureuser`.
+* `ansible_user`: The SSH username to use. Default value is `ubuntu`.
 * `ansible_become`: Enables to run tasks as sudo. Default value is `true`.
 
 Use your favorite editor and change the inventory file settings accordingly, e.g.:
