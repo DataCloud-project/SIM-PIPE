@@ -60,7 +60,7 @@
                         "dsl": {
                             "widgetName": "MainContainer",
                             "backgroundColor": "none",
-                            "rightColumn": 1774,
+                            "rightColumn": 912,
                             "snapColumns": 64,
                             "detachFromLayout": true,
                             "widgetId": "0",
@@ -686,6 +686,7 @@
                                                 },
                                                 {
                                                     "widgetName": "ButtonCreateSimulation",
+                                                    "onClick": "{{showModal('ModalCreateSimulation')}}",
                                                     "buttonColor": "#F86A2B",
                                                     "displayName": "Button",
                                                     "iconSVG": "/static/media/icon.cca02633.svg",
@@ -696,10 +697,14 @@
                                                     "hideCard": false,
                                                     "animateLoading": false,
                                                     "parentColumnSpace": 4.3896484375,
-                                                    "dynamicTriggerPathList": [],
-                                                    "leftColumn": 23,
+                                                    "dynamicTriggerPathList": [
+                                                        {
+                                                            "key": "onClick"
+                                                        }
+                                                    ],
+                                                    "leftColumn": 27,
                                                     "dynamicBindingPathList": [],
-                                                    "text": "Create simulation*",
+                                                    "text": "Create simulation",
                                                     "isDisabled": false,
                                                     "key": "czwhap6n4y",
                                                     "rightColumn": 57,
@@ -871,40 +876,119 @@
                                                         "ButtonGroupRunStatus": {
                                                             "groupButtons": {
                                                                 "groupButton1": {
-                                                                    "isDisabled": false,
+                                                                    "label": "Waiting",
+                                                                    "iconName": "circle",
+                                                                    "id": "groupButton1",
+                                                                    "widgetId": "",
+                                                                    "buttonColor": "#38AFF4",
+                                                                    "buttonType": "SIMPLE",
+                                                                    "placement": "START",
                                                                     "isVisible": "{{ListRuns.listData.map((currentItem, currentIndex) => {\n              return (function(){\n                return  currentItem.status === 'waiting';\n              })();\n            })}}",
-                                                                    "buttonColor": "{{ListRuns.listData.map((currentItem, currentIndex) => {\n              return (function(){\n                return  '#38AFF4';\n              })();\n            })}}",
-                                                                    "iconName": "{{ListRuns.listData.map((currentItem, currentIndex) => {\n              return (function(){\n                return  'circle';\n              })();\n            })}}",
-                                                                    "iconAlign": "{{ListRuns.listData.map((currentItem, currentIndex) => {\n              return (function(){\n                return  'left';\n              })();\n            })}}",
-                                                                    "placement": "{{ListRuns.listData.map((currentItem, currentIndex) => {\n              return (function(){\n                return  'START';\n              })();\n            })}}"
+                                                                    "isDisabled": false,
+                                                                    "index": 0,
+                                                                    "menuItems": {},
+                                                                    "iconAlign": "left"
                                                                 },
                                                                 "groupButton2": {
-                                                                    "buttonColor": "{{ListRuns.listData.map((currentItem, currentIndex) => {\n              return (function(){\n                return  '#F86A2B';\n              })();\n            })}}",
-                                                                    "iconName": "{{ListRuns.listData.map((currentItem, currentIndex) => {\n              return (function(){\n                return  'full-circle';\n              })();\n            })}}",
+                                                                    "label": "Active",
+                                                                    "iconName": "full-circle",
+                                                                    "id": "groupButton2",
+                                                                    "buttonColor": "#F86A2B",
+                                                                    "buttonType": "SIMPLE",
+                                                                    "placement": "START",
+                                                                    "widgetId": "",
                                                                     "isVisible": "{{ListRuns.listData.map((currentItem, currentIndex) => {\n              return (function(){\n                return  currentItem.status === 'active';\n              })();\n            })}}",
-                                                                    "placement": "{{ListRuns.listData.map((currentItem, currentIndex) => {\n              return (function(){\n                return  'START';\n              })();\n            })}}",
-                                                                    "iconAlign": "{{ListRuns.listData.map((currentItem, currentIndex) => {\n              return (function(){\n                return  'left';\n              })();\n            })}}"
+                                                                    "isDisabled": false,
+                                                                    "index": 1,
+                                                                    "menuItems": {},
+                                                                    "iconAlign": "left"
                                                                 },
                                                                 "groupButton3": {
-                                                                    "buttonColor": "{{ListRuns.listData.map((currentItem, currentIndex) => {\n              return (function(){\n                return  '#2E3D49';\n              })();\n            })}}",
-                                                                    "iconName": "{{ListRuns.listData.map((currentItem, currentIndex) => {\n              return (function(){\n                return  'tick-circle';\n              })();\n            })}}",
-                                                                    "buttonType": "{{ListRuns.listData.map((currentItem, currentIndex) => {\n              return (function(){\n                return  'SIMPLE';\n              })();\n            })}}",
+                                                                    "label": "Completed",
+                                                                    "iconName": "tick-circle",
+                                                                    "id": "groupButton3",
+                                                                    "buttonType": "SIMPLE",
+                                                                    "placement": "START",
+                                                                    "buttonColor": "{{ListRuns.listData.map((currentItem, currentIndex) => {\n              return (function(){\n                return  '#03b365';\n              })();\n            })}}",
+                                                                    "widgetId": "",
                                                                     "isVisible": "{{ListRuns.listData.map((currentItem, currentIndex) => {\n              return (function(){\n                return  currentItem.status === 'completed';\n              })();\n            })}}",
-                                                                    "iconAlign": "{{ListRuns.listData.map((currentItem, currentIndex) => {\n              return (function(){\n                return  'left';\n              })();\n            })}}",
-                                                                    "placement": "{{ListRuns.listData.map((currentItem, currentIndex) => {\n              return (function(){\n                return  'START';\n              })();\n            })}}"
+                                                                    "isDisabled": false,
+                                                                    "index": 2,
+                                                                    "menuItems": {
+                                                                        "menuItem1": {
+                                                                            "label": "First Option",
+                                                                            "backgroundColor": "#FFFFFF",
+                                                                            "id": "menuItem1",
+                                                                            "widgetId": "",
+                                                                            "onClick": "",
+                                                                            "isVisible": true,
+                                                                            "isDisabled": false,
+                                                                            "index": 0
+                                                                        },
+                                                                        "menuItem2": {
+                                                                            "label": "Second Option",
+                                                                            "backgroundColor": "#FFFFFF",
+                                                                            "id": "menuItem2",
+                                                                            "widgetId": "",
+                                                                            "onClick": "",
+                                                                            "isVisible": true,
+                                                                            "isDisabled": false,
+                                                                            "index": 1
+                                                                        },
+                                                                        "menuItem3": {
+                                                                            "label": "Delete",
+                                                                            "iconName": "trash",
+                                                                            "iconColor": "#FFFFFF",
+                                                                            "iconAlign": "right",
+                                                                            "textColor": "#FFFFFF",
+                                                                            "backgroundColor": "#DD4B34",
+                                                                            "id": "menuItem3",
+                                                                            "widgetId": "",
+                                                                            "onClick": "",
+                                                                            "isVisible": true,
+                                                                            "isDisabled": false,
+                                                                            "index": 2
+                                                                        }
+                                                                    },
+                                                                    "iconAlign": "left"
                                                                 },
                                                                 "groupButton9vw61h4j5x": {
-                                                                    "buttonColor": "{{ListRuns.listData.map((currentItem, currentIndex) => {\n              return (function(){\n                return  '#DD4B34';\n              })();\n            })}}",
-                                                                    "iconName": "{{ListRuns.listData.map((currentItem, currentIndex) => {\n              return (function(){\n                return  'cross';\n              })();\n            })}}",
+                                                                    "id": "groupButton9vw61h4j5x",
+                                                                    "label": "Failed",
+                                                                    "menuItems": {},
+                                                                    "buttonType": "SIMPLE",
+                                                                    "buttonColor": "#DD4B34",
+                                                                    "widgetId": "j6wys7bnef",
+                                                                    "isDisabled": false,
                                                                     "isVisible": "{{ListRuns.listData.map((currentItem, currentIndex) => {\n              return (function(){\n                return  currentItem.status === 'failed';\n              })();\n            })}}",
-                                                                    "placement": "{{ListRuns.listData.map((currentItem, currentIndex) => {\n              return (function(){\n                return  'START';\n              })();\n            })}}",
-                                                                    "iconAlign": "{{ListRuns.listData.map((currentItem, currentIndex) => {\n              return (function(){\n                return  'left';\n              })();\n            })}}"
+                                                                    "iconName": "cross",
+                                                                    "placement": "START",
+                                                                    "iconAlign": "left"
                                                                 },
                                                                 "groupButtongia5twvs3o": {
-                                                                    "iconName": "{{ListRuns.listData.map((currentItem, currentIndex) => {\n              return (function(){\n                return  'ban-circle';\n              })();\n            })}}",
-                                                                    "buttonColor": "{{ListRuns.listData.map((currentItem, currentIndex) => {\n              return (function(){\n                return  '#999';\n              })();\n            })}}",
+                                                                    "id": "groupButtongia5twvs3o",
+                                                                    "label": "Cancelled",
+                                                                    "menuItems": {},
+                                                                    "buttonType": "SIMPLE",
+                                                                    "buttonColor": "#999",
+                                                                    "widgetId": "m8chgf6ka7",
+                                                                    "isDisabled": false,
                                                                     "isVisible": "{{ListRuns.listData.map((currentItem, currentIndex) => {\n              return (function(){\n                return  currentItem.status === 'cancelled';\n              })();\n            })}}",
+                                                                    "iconName": "ban-circle",
+                                                                    "placement": "START",
+                                                                    "iconAlign": "left"
+                                                                },
+                                                                "groupButton6zrs8t1jaz": {
+                                                                    "id": "groupButton6zrs8t1jaz",
+                                                                    "label": "{{ListRuns.listData.map((currentItem, currentIndex) => {\n              return (function(){\n                return  'Queued';\n              })();\n            })}}",
+                                                                    "menuItems": {},
+                                                                    "buttonType": "SIMPLE",
+                                                                    "buttonColor": "{{ListRuns.listData.map((currentItem, currentIndex) => {\n              return (function(){\n                return  '#2E3D49';\n              })();\n            })}}",
                                                                     "placement": "{{ListRuns.listData.map((currentItem, currentIndex) => {\n              return (function(){\n                return  'START';\n              })();\n            })}}",
+                                                                    "widgetId": "w7sxsoauhg",
+                                                                    "isDisabled": false,
+                                                                    "isVisible": "{{ListRuns.listData.map((currentItem, currentIndex) => {\n              return (function(){\n                return  currentItem.status === 'queued';\n              })();\n            })}}",
+                                                                    "iconName": "{{ListRuns.listData.map((currentItem, currentIndex) => {\n              return (function(){\n                return  'layout-linear';\n              })();\n            })}}",
                                                                     "iconAlign": "{{ListRuns.listData.map((currentItem, currentIndex) => {\n              return (function(){\n                return  'left';\n              })();\n            })}}"
                                                                 }
                                                             },
@@ -1026,6 +1110,27 @@
                                                         },
                                                         {
                                                             "key": "template.LabelRunName.fontStyle"
+                                                        },
+                                                        {
+                                                            "key": "template.ButtonGroupRunStatus.groupButtons.groupButton6zrs8t1jaz.label"
+                                                        },
+                                                        {
+                                                            "key": "template.ButtonGroupRunStatus.groupButtons.groupButton6zrs8t1jaz.isVisible"
+                                                        },
+                                                        {
+                                                            "key": "template.ButtonGroupRunStatus.groupButtons.groupButton6zrs8t1jaz.iconName"
+                                                        },
+                                                        {
+                                                            "key": "template.ButtonGroupRunStatus.groupButtons.groupButton6zrs8t1jaz.placement"
+                                                        },
+                                                        {
+                                                            "key": "template.ButtonGroupRunStatus.groupButtons.groupButton6zrs8t1jaz.iconAlign"
+                                                        },
+                                                        {
+                                                            "key": "template.ButtonGroupRunStatus.groupButtons.groupButton6zrs8t1jaz.buttonColor"
+                                                        },
+                                                        {
+                                                            "key": "template.ButtonGroupRunStatus.groupButtons.groupButton3.buttonColor"
                                                         }
                                                     ],
                                                     "gridType": "vertical",
@@ -1174,6 +1279,9 @@
                                                                                         },
                                                                                         {
                                                                                             "key": "groupButtons.groupButtongia5twvs3o.isVisible"
+                                                                                        },
+                                                                                        {
+                                                                                            "key": "groupButtons.groupButton6zrs8t1jaz.isVisible"
                                                                                         }
                                                                                     ],
                                                                                     "displayName": "Button Group",
@@ -1216,7 +1324,7 @@
                                                                                             "id": "groupButton3",
                                                                                             "buttonType": "SIMPLE",
                                                                                             "placement": "START",
-                                                                                            "buttonColor": "#2E3D49",
+                                                                                            "buttonColor": "#03b365",
                                                                                             "widgetId": "",
                                                                                             "isVisible": "{{currentItem.status === 'completed'}}",
                                                                                             "isDisabled": false,
@@ -1284,6 +1392,19 @@
                                                                                             "iconName": "ban-circle",
                                                                                             "placement": "START",
                                                                                             "iconAlign": "left"
+                                                                                        },
+                                                                                        "groupButton6zrs8t1jaz": {
+                                                                                            "id": "groupButton6zrs8t1jaz",
+                                                                                            "label": "Queued",
+                                                                                            "menuItems": {},
+                                                                                            "buttonType": "SIMPLE",
+                                                                                            "buttonColor": "#2E3D49",
+                                                                                            "placement": "START",
+                                                                                            "widgetId": "w7sxsoauhg",
+                                                                                            "isDisabled": false,
+                                                                                            "isVisible": "{{currentItem.status === 'queued'}}",
+                                                                                            "iconName": "layout-linear",
+                                                                                            "iconAlign": "left"
                                                                                         }
                                                                                     },
                                                                                     "type": "BUTTON_GROUP_WIDGET",
@@ -1307,6 +1428,9 @@
                                                                                         },
                                                                                         {
                                                                                             "key": "groupButtons.groupButton1.isVisible"
+                                                                                        },
+                                                                                        {
+                                                                                            "key": "groupButtons.groupButton6zrs8t1jaz.isVisible"
                                                                                         }
                                                                                     ],
                                                                                     "key": "9622p7rkjp",
@@ -1762,7 +1886,7 @@
                                                                     "id": "groupButton3",
                                                                     "buttonType": "SIMPLE",
                                                                     "placement": "START",
-                                                                    "buttonColor": "#2E3D49",
+                                                                    "buttonColor": "{{ListSteps.listData.map((currentItem, currentIndex) => {\n              return (function(){\n                return  '#03b365';\n              })();\n            })}}",
                                                                     "widgetId": "",
                                                                     "isVisible": "{{ListSteps.listData.map((currentItem, currentIndex) => {\n              return (function(){\n                return  currentItem.status === 'completed';\n              })();\n            })}}",
                                                                     "isDisabled": false,
@@ -2067,6 +2191,9 @@
                                                         },
                                                         {
                                                             "key": "template.LabelRunDurationCopy.text"
+                                                        },
+                                                        {
+                                                            "key": "template.ButtonGroupRunStatusCopy.groupButtons.groupButton3.buttonColor"
                                                         }
                                                     ],
                                                     "gridType": "vertical",
@@ -2257,7 +2384,7 @@
                                                                                             "id": "groupButton3",
                                                                                             "buttonType": "SIMPLE",
                                                                                             "placement": "START",
-                                                                                            "buttonColor": "#2E3D49",
+                                                                                            "buttonColor": "#03b365",
                                                                                             "widgetId": "",
                                                                                             "isVisible": "{{currentItem.status === 'completed'}}",
                                                                                             "isDisabled": false,
@@ -3193,6 +3320,7 @@
                                                 },
                                                 {
                                                     "widgetName": "CreateNewRunTitle",
+                                                    "borderColor": "",
                                                     "displayName": "Text",
                                                     "iconSVG": "/static/media/icon.97c59b52.svg",
                                                     "topRow": 1,
@@ -3204,6 +3332,7 @@
                                                     "leftColumn": 1,
                                                     "dynamicBindingPathList": [],
                                                     "shouldTruncate": false,
+                                                    "borderWidth": "",
                                                     "truncateButtonColor": "#FFC13D",
                                                     "text": "Create a new run",
                                                     "key": "5yip3e0f05",
@@ -3361,7 +3490,7 @@
                                                     "widgetId": "j5zjzlkjox",
                                                     "defaultSelectedFiles": [],
                                                     "isVisible": true,
-                                                    "label": "Select Input File",
+                                                    "label": "Sample Input File",
                                                     "maxFileSize": "5",
                                                     "version": 1,
                                                     "fileDataType": "Text",
@@ -3397,20 +3526,253 @@
                                     "renderMode": "CANVAS",
                                     "isLoading": false,
                                     "width": 456
+                                },
+                                {
+                                    "widgetName": "ModalCreateSimulation",
+                                    "isCanvas": true,
+                                    "displayName": "Modal",
+                                    "iconSVG": "/static/media/icon.4975978e.svg",
+                                    "topRow": 0,
+                                    "bottomRow": 0,
+                                    "parentRowSpace": 1,
+                                    "type": "MODAL_WIDGET",
+                                    "hideCard": false,
+                                    "shouldScrollContents": true,
+                                    "animateLoading": true,
+                                    "parentColumnSpace": 1,
+                                    "leftColumn": 0,
+                                    "children": [
+                                        {
+                                            "widgetName": "Canvas11",
+                                            "rightColumn": 0,
+                                            "detachFromLayout": true,
+                                            "displayName": "Canvas",
+                                            "widgetId": "1dyf0lt3vz",
+                                            "topRow": 0,
+                                            "bottomRow": 270,
+                                            "parentRowSpace": 1,
+                                            "isVisible": true,
+                                            "type": "CANVAS_WIDGET",
+                                            "canExtend": true,
+                                            "version": 1,
+                                            "hideCard": true,
+                                            "parentId": "kqpz9gvh1d",
+                                            "shouldScrollContents": false,
+                                            "minHeight": 270,
+                                            "renderMode": "CANVAS",
+                                            "isLoading": false,
+                                            "parentColumnSpace": 1,
+                                            "leftColumn": 0,
+                                            "children": [
+                                                {
+                                                    "widgetName": "Icon2",
+                                                    "rightColumn": 62,
+                                                    "onClick": "{{closeModal('ModalCreateSimulation')}}",
+                                                    "color": "#040627",
+                                                    "iconName": "cross",
+                                                    "displayName": "Icon",
+                                                    "iconSVG": "/static/media/icon.31d6cfe0.svg",
+                                                    "widgetId": "blbh56vitw",
+                                                    "topRow": 1,
+                                                    "bottomRow": 5,
+                                                    "isVisible": true,
+                                                    "type": "ICON_WIDGET",
+                                                    "version": 1,
+                                                    "hideCard": true,
+                                                    "parentId": "1dyf0lt3vz",
+                                                    "renderMode": "CANVAS",
+                                                    "isLoading": false,
+                                                    "leftColumn": 56,
+                                                    "iconSize": 24,
+                                                    "key": "pcqf7y54s7"
+                                                },
+                                                {
+                                                    "widgetName": "CreateSimulationTitle",
+                                                    "borderColor": "",
+                                                    "dynamicPropertyPathList": [],
+                                                    "displayName": "Text",
+                                                    "iconSVG": "/static/media/icon.97c59b52.svg",
+                                                    "topRow": 1,
+                                                    "bottomRow": 5,
+                                                    "type": "TEXT_WIDGET",
+                                                    "hideCard": false,
+                                                    "animateLoading": true,
+                                                    "dynamicTriggerPathList": [],
+                                                    "leftColumn": 1,
+                                                    "dynamicBindingPathList": [],
+                                                    "shouldTruncate": false,
+                                                    "borderWidth": "",
+                                                    "truncateButtonColor": "#FFC13D",
+                                                    "text": "Create Simulation",
+                                                    "key": "62onea2qw4",
+                                                    "rightColumn": 41,
+                                                    "backgroundColor": "",
+                                                    "textAlign": "LEFT",
+                                                    "widgetId": "8fg6385rtk",
+                                                    "isVisible": true,
+                                                    "fontStyle": "BOLD",
+                                                    "textColor": "#231F20",
+                                                    "shouldScroll": false,
+                                                    "version": 1,
+                                                    "parentId": "1dyf0lt3vz",
+                                                    "renderMode": "CANVAS",
+                                                    "isLoading": false,
+                                                    "fontSize": "HEADING1"
+                                                },
+                                                {
+                                                    "widgetName": "Button1",
+                                                    "onClick": "{{closeModal('ModalCreateSimulation')}}",
+                                                    "buttonColor": "#F86A2B",
+                                                    "displayName": "Button",
+                                                    "iconSVG": "/static/media/icon.cca02633.svg",
+                                                    "topRow": 21,
+                                                    "bottomRow": 25,
+                                                    "type": "BUTTON_WIDGET",
+                                                    "hideCard": false,
+                                                    "animateLoading": true,
+                                                    "dynamicTriggerPathList": [],
+                                                    "leftColumn": 39,
+                                                    "dynamicBindingPathList": [],
+                                                    "text": "Close",
+                                                    "isDisabled": false,
+                                                    "key": "5c2g3iplc3",
+                                                    "rightColumn": 51,
+                                                    "isDefaultClickDisabled": true,
+                                                    "widgetId": "zl6bh1p8ih",
+                                                    "buttonStyle": "PRIMARY",
+                                                    "isVisible": true,
+                                                    "recaptchaType": "V3",
+                                                    "version": 1,
+                                                    "parentId": "1dyf0lt3vz",
+                                                    "renderMode": "CANVAS",
+                                                    "isLoading": false,
+                                                    "buttonVariant": "SECONDARY",
+                                                    "placement": "CENTER"
+                                                },
+                                                {
+                                                    "widgetName": "Button2",
+                                                    "buttonColor": "#F86A2B",
+                                                    "displayName": "Button",
+                                                    "iconSVG": "/static/media/icon.cca02633.svg",
+                                                    "topRow": 21,
+                                                    "bottomRow": 25,
+                                                    "type": "BUTTON_WIDGET",
+                                                    "hideCard": false,
+                                                    "animateLoading": true,
+                                                    "dynamicTriggerPathList": [],
+                                                    "leftColumn": 51,
+                                                    "dynamicBindingPathList": [],
+                                                    "text": "Confirm",
+                                                    "isDisabled": false,
+                                                    "key": "5c2g3iplc3",
+                                                    "rightColumn": 63,
+                                                    "isDefaultClickDisabled": true,
+                                                    "widgetId": "7ybx7fkkhg",
+                                                    "buttonStyle": "PRIMARY_BUTTON",
+                                                    "isVisible": true,
+                                                    "recaptchaType": "V3",
+                                                    "version": 1,
+                                                    "parentId": "1dyf0lt3vz",
+                                                    "renderMode": "CANVAS",
+                                                    "isLoading": false,
+                                                    "buttonVariant": "PRIMARY",
+                                                    "placement": "CENTER"
+                                                },
+                                                {
+                                                    "widgetName": "PipelineFilePicker",
+                                                    "displayName": "FilePicker",
+                                                    "iconSVG": "/static/media/icon.7c5ad9c3.svg",
+                                                    "topRow": 12,
+                                                    "bottomRow": 16,
+                                                    "parentRowSpace": 10,
+                                                    "allowedFileTypes": [
+                                                        "*",
+                                                        "image/*",
+                                                        "video/*",
+                                                        "audio/*",
+                                                        "text/*",
+                                                        ".doc",
+                                                        "image/jpeg",
+                                                        ".png"
+                                                    ],
+                                                    "type": "FILE_PICKER_WIDGET_V2",
+                                                    "hideCard": false,
+                                                    "animateLoading": true,
+                                                    "parentColumnSpace": 6.9375,
+                                                    "dynamicTriggerPathList": [],
+                                                    "leftColumn": 7,
+                                                    "dynamicBindingPathList": [],
+                                                    "isDisabled": false,
+                                                    "key": "a0pkbf5528",
+                                                    "isRequired": false,
+                                                    "rightColumn": 35,
+                                                    "isDefaultClickDisabled": true,
+                                                    "widgetId": "3ac5a083jk",
+                                                    "defaultSelectedFiles": [],
+                                                    "isVisible": true,
+                                                    "label": "Import Pipeline from file",
+                                                    "maxFileSize": "5",
+                                                    "version": 1,
+                                                    "fileDataType": "Text",
+                                                    "parentId": "1dyf0lt3vz",
+                                                    "selectedFiles": [],
+                                                    "renderMode": "CANVAS",
+                                                    "isLoading": false,
+                                                    "files": [],
+                                                    "maxNumFiles": 1
+                                                },
+                                                {
+                                                    "widgetName": "ButtonImportFromDefPipe",
+                                                    "buttonColor": "#03b365",
+                                                    "displayName": "Button",
+                                                    "iconSVG": "/static/media/icon.cca02633.svg",
+                                                    "topRow": 7,
+                                                    "bottomRow": 11,
+                                                    "parentRowSpace": 10,
+                                                    "type": "BUTTON_WIDGET",
+                                                    "hideCard": false,
+                                                    "animateLoading": true,
+                                                    "parentColumnSpace": 6.9375,
+                                                    "dynamicTriggerPathList": [],
+                                                    "leftColumn": 7,
+                                                    "dynamicBindingPathList": [],
+                                                    "text": "Import from DEF-PIPE",
+                                                    "isDisabled": false,
+                                                    "key": "5c2g3iplc3",
+                                                    "rightColumn": 35,
+                                                    "isDefaultClickDisabled": true,
+                                                    "widgetId": "t7cs0j2r2z",
+                                                    "isVisible": true,
+                                                    "recaptchaType": "V3",
+                                                    "version": 1,
+                                                    "parentId": "1dyf0lt3vz",
+                                                    "renderMode": "CANVAS",
+                                                    "isLoading": false,
+                                                    "borderRadius": "SHARP",
+                                                    "buttonVariant": "SECONDARY",
+                                                    "placement": "CENTER"
+                                                }
+                                            ],
+                                            "isDisabled": false,
+                                            "key": "42mbesf7u3"
+                                        }
+                                    ],
+                                    "key": "25heqkqeg9",
+                                    "height": 270,
+                                    "rightColumn": 0,
+                                    "detachFromLayout": true,
+                                    "widgetId": "kqpz9gvh1d",
+                                    "canOutsideClickClose": true,
+                                    "canEscapeKeyClose": true,
+                                    "version": 2,
+                                    "parentId": "0",
+                                    "renderMode": "CANVAS",
+                                    "isLoading": false,
+                                    "width": 464
                                 }
                             ]
                         },
-                        "layoutOnLoadActions": [
-                            [
-                                {
-                                    "id": "Simulations_simulations",
-                                    "name": "simulations",
-                                    "pluginType": "API",
-                                    "jsonPathKeys": [],
-                                    "timeoutInMillisecond": 10000
-                                }
-                            ]
-                        ],
+                        "layoutOnLoadActions": [],
                         "new": false
                     }
                 ],
@@ -3427,7 +3789,7 @@
                         "dsl": {
                             "widgetName": "MainContainer",
                             "backgroundColor": "none",
-                            "rightColumn": 1774,
+                            "rightColumn": 912,
                             "snapColumns": 64,
                             "detachFromLayout": true,
                             "widgetId": "0",
@@ -4053,6 +4415,7 @@
                                                 },
                                                 {
                                                     "widgetName": "ButtonCreateSimulation",
+                                                    "onClick": "{{showModal('ModalCreateSimulation')}}",
                                                     "buttonColor": "#F86A2B",
                                                     "displayName": "Button",
                                                     "iconSVG": "/static/media/icon.cca02633.svg",
@@ -4063,10 +4426,14 @@
                                                     "hideCard": false,
                                                     "animateLoading": false,
                                                     "parentColumnSpace": 4.3896484375,
-                                                    "dynamicTriggerPathList": [],
-                                                    "leftColumn": 23,
+                                                    "dynamicTriggerPathList": [
+                                                        {
+                                                            "key": "onClick"
+                                                        }
+                                                    ],
+                                                    "leftColumn": 27,
                                                     "dynamicBindingPathList": [],
-                                                    "text": "Create simulation*",
+                                                    "text": "Create simulation",
                                                     "isDisabled": false,
                                                     "key": "czwhap6n4y",
                                                     "rightColumn": 57,
@@ -4238,40 +4605,119 @@
                                                         "ButtonGroupRunStatus": {
                                                             "groupButtons": {
                                                                 "groupButton1": {
-                                                                    "isDisabled": false,
+                                                                    "label": "Waiting",
+                                                                    "iconName": "circle",
+                                                                    "id": "groupButton1",
+                                                                    "widgetId": "",
+                                                                    "buttonColor": "#38AFF4",
+                                                                    "buttonType": "SIMPLE",
+                                                                    "placement": "START",
                                                                     "isVisible": "{{ListRuns.listData.map((currentItem, currentIndex) => {\n              return (function(){\n                return  currentItem.status === 'waiting';\n              })();\n            })}}",
-                                                                    "buttonColor": "{{ListRuns.listData.map((currentItem, currentIndex) => {\n              return (function(){\n                return  '#38AFF4';\n              })();\n            })}}",
-                                                                    "iconName": "{{ListRuns.listData.map((currentItem, currentIndex) => {\n              return (function(){\n                return  'circle';\n              })();\n            })}}",
-                                                                    "iconAlign": "{{ListRuns.listData.map((currentItem, currentIndex) => {\n              return (function(){\n                return  'left';\n              })();\n            })}}",
-                                                                    "placement": "{{ListRuns.listData.map((currentItem, currentIndex) => {\n              return (function(){\n                return  'START';\n              })();\n            })}}"
+                                                                    "isDisabled": false,
+                                                                    "index": 0,
+                                                                    "menuItems": {},
+                                                                    "iconAlign": "left"
                                                                 },
                                                                 "groupButton2": {
-                                                                    "buttonColor": "{{ListRuns.listData.map((currentItem, currentIndex) => {\n              return (function(){\n                return  '#F86A2B';\n              })();\n            })}}",
-                                                                    "iconName": "{{ListRuns.listData.map((currentItem, currentIndex) => {\n              return (function(){\n                return  'full-circle';\n              })();\n            })}}",
+                                                                    "label": "Active",
+                                                                    "iconName": "full-circle",
+                                                                    "id": "groupButton2",
+                                                                    "buttonColor": "#F86A2B",
+                                                                    "buttonType": "SIMPLE",
+                                                                    "placement": "START",
+                                                                    "widgetId": "",
                                                                     "isVisible": "{{ListRuns.listData.map((currentItem, currentIndex) => {\n              return (function(){\n                return  currentItem.status === 'active';\n              })();\n            })}}",
-                                                                    "placement": "{{ListRuns.listData.map((currentItem, currentIndex) => {\n              return (function(){\n                return  'START';\n              })();\n            })}}",
-                                                                    "iconAlign": "{{ListRuns.listData.map((currentItem, currentIndex) => {\n              return (function(){\n                return  'left';\n              })();\n            })}}"
+                                                                    "isDisabled": false,
+                                                                    "index": 1,
+                                                                    "menuItems": {},
+                                                                    "iconAlign": "left"
                                                                 },
                                                                 "groupButton3": {
-                                                                    "buttonColor": "{{ListRuns.listData.map((currentItem, currentIndex) => {\n              return (function(){\n                return  '#2E3D49';\n              })();\n            })}}",
-                                                                    "iconName": "{{ListRuns.listData.map((currentItem, currentIndex) => {\n              return (function(){\n                return  'tick-circle';\n              })();\n            })}}",
-                                                                    "buttonType": "{{ListRuns.listData.map((currentItem, currentIndex) => {\n              return (function(){\n                return  'SIMPLE';\n              })();\n            })}}",
+                                                                    "label": "Completed",
+                                                                    "iconName": "tick-circle",
+                                                                    "id": "groupButton3",
+                                                                    "buttonType": "SIMPLE",
+                                                                    "placement": "START",
+                                                                    "buttonColor": "{{ListRuns.listData.map((currentItem, currentIndex) => {\n              return (function(){\n                return  '#03b365';\n              })();\n            })}}",
+                                                                    "widgetId": "",
                                                                     "isVisible": "{{ListRuns.listData.map((currentItem, currentIndex) => {\n              return (function(){\n                return  currentItem.status === 'completed';\n              })();\n            })}}",
-                                                                    "iconAlign": "{{ListRuns.listData.map((currentItem, currentIndex) => {\n              return (function(){\n                return  'left';\n              })();\n            })}}",
-                                                                    "placement": "{{ListRuns.listData.map((currentItem, currentIndex) => {\n              return (function(){\n                return  'START';\n              })();\n            })}}"
+                                                                    "isDisabled": false,
+                                                                    "index": 2,
+                                                                    "menuItems": {
+                                                                        "menuItem1": {
+                                                                            "label": "First Option",
+                                                                            "backgroundColor": "#FFFFFF",
+                                                                            "id": "menuItem1",
+                                                                            "widgetId": "",
+                                                                            "onClick": "",
+                                                                            "isVisible": true,
+                                                                            "isDisabled": false,
+                                                                            "index": 0
+                                                                        },
+                                                                        "menuItem2": {
+                                                                            "label": "Second Option",
+                                                                            "backgroundColor": "#FFFFFF",
+                                                                            "id": "menuItem2",
+                                                                            "widgetId": "",
+                                                                            "onClick": "",
+                                                                            "isVisible": true,
+                                                                            "isDisabled": false,
+                                                                            "index": 1
+                                                                        },
+                                                                        "menuItem3": {
+                                                                            "label": "Delete",
+                                                                            "iconName": "trash",
+                                                                            "iconColor": "#FFFFFF",
+                                                                            "iconAlign": "right",
+                                                                            "textColor": "#FFFFFF",
+                                                                            "backgroundColor": "#DD4B34",
+                                                                            "id": "menuItem3",
+                                                                            "widgetId": "",
+                                                                            "onClick": "",
+                                                                            "isVisible": true,
+                                                                            "isDisabled": false,
+                                                                            "index": 2
+                                                                        }
+                                                                    },
+                                                                    "iconAlign": "left"
                                                                 },
                                                                 "groupButton9vw61h4j5x": {
-                                                                    "buttonColor": "{{ListRuns.listData.map((currentItem, currentIndex) => {\n              return (function(){\n                return  '#DD4B34';\n              })();\n            })}}",
-                                                                    "iconName": "{{ListRuns.listData.map((currentItem, currentIndex) => {\n              return (function(){\n                return  'cross';\n              })();\n            })}}",
+                                                                    "id": "groupButton9vw61h4j5x",
+                                                                    "label": "Failed",
+                                                                    "menuItems": {},
+                                                                    "buttonType": "SIMPLE",
+                                                                    "buttonColor": "#DD4B34",
+                                                                    "widgetId": "j6wys7bnef",
+                                                                    "isDisabled": false,
                                                                     "isVisible": "{{ListRuns.listData.map((currentItem, currentIndex) => {\n              return (function(){\n                return  currentItem.status === 'failed';\n              })();\n            })}}",
-                                                                    "placement": "{{ListRuns.listData.map((currentItem, currentIndex) => {\n              return (function(){\n                return  'START';\n              })();\n            })}}",
-                                                                    "iconAlign": "{{ListRuns.listData.map((currentItem, currentIndex) => {\n              return (function(){\n                return  'left';\n              })();\n            })}}"
+                                                                    "iconName": "cross",
+                                                                    "placement": "START",
+                                                                    "iconAlign": "left"
                                                                 },
                                                                 "groupButtongia5twvs3o": {
-                                                                    "iconName": "{{ListRuns.listData.map((currentItem, currentIndex) => {\n              return (function(){\n                return  'ban-circle';\n              })();\n            })}}",
-                                                                    "buttonColor": "{{ListRuns.listData.map((currentItem, currentIndex) => {\n              return (function(){\n                return  '#999';\n              })();\n            })}}",
+                                                                    "id": "groupButtongia5twvs3o",
+                                                                    "label": "Cancelled",
+                                                                    "menuItems": {},
+                                                                    "buttonType": "SIMPLE",
+                                                                    "buttonColor": "#999",
+                                                                    "widgetId": "m8chgf6ka7",
+                                                                    "isDisabled": false,
                                                                     "isVisible": "{{ListRuns.listData.map((currentItem, currentIndex) => {\n              return (function(){\n                return  currentItem.status === 'cancelled';\n              })();\n            })}}",
+                                                                    "iconName": "ban-circle",
+                                                                    "placement": "START",
+                                                                    "iconAlign": "left"
+                                                                },
+                                                                "groupButton6zrs8t1jaz": {
+                                                                    "id": "groupButton6zrs8t1jaz",
+                                                                    "label": "{{ListRuns.listData.map((currentItem, currentIndex) => {\n              return (function(){\n                return  'Queued';\n              })();\n            })}}",
+                                                                    "menuItems": {},
+                                                                    "buttonType": "SIMPLE",
+                                                                    "buttonColor": "{{ListRuns.listData.map((currentItem, currentIndex) => {\n              return (function(){\n                return  '#2E3D49';\n              })();\n            })}}",
                                                                     "placement": "{{ListRuns.listData.map((currentItem, currentIndex) => {\n              return (function(){\n                return  'START';\n              })();\n            })}}",
+                                                                    "widgetId": "w7sxsoauhg",
+                                                                    "isDisabled": false,
+                                                                    "isVisible": "{{ListRuns.listData.map((currentItem, currentIndex) => {\n              return (function(){\n                return  currentItem.status === 'queued';\n              })();\n            })}}",
+                                                                    "iconName": "{{ListRuns.listData.map((currentItem, currentIndex) => {\n              return (function(){\n                return  'layout-linear';\n              })();\n            })}}",
                                                                     "iconAlign": "{{ListRuns.listData.map((currentItem, currentIndex) => {\n              return (function(){\n                return  'left';\n              })();\n            })}}"
                                                                 }
                                                             },
@@ -4393,6 +4839,27 @@
                                                         },
                                                         {
                                                             "key": "template.LabelRunName.fontStyle"
+                                                        },
+                                                        {
+                                                            "key": "template.ButtonGroupRunStatus.groupButtons.groupButton6zrs8t1jaz.label"
+                                                        },
+                                                        {
+                                                            "key": "template.ButtonGroupRunStatus.groupButtons.groupButton6zrs8t1jaz.isVisible"
+                                                        },
+                                                        {
+                                                            "key": "template.ButtonGroupRunStatus.groupButtons.groupButton6zrs8t1jaz.iconName"
+                                                        },
+                                                        {
+                                                            "key": "template.ButtonGroupRunStatus.groupButtons.groupButton6zrs8t1jaz.placement"
+                                                        },
+                                                        {
+                                                            "key": "template.ButtonGroupRunStatus.groupButtons.groupButton6zrs8t1jaz.iconAlign"
+                                                        },
+                                                        {
+                                                            "key": "template.ButtonGroupRunStatus.groupButtons.groupButton6zrs8t1jaz.buttonColor"
+                                                        },
+                                                        {
+                                                            "key": "template.ButtonGroupRunStatus.groupButtons.groupButton3.buttonColor"
                                                         }
                                                     ],
                                                     "gridType": "vertical",
@@ -4541,6 +5008,9 @@
                                                                                         },
                                                                                         {
                                                                                             "key": "groupButtons.groupButtongia5twvs3o.isVisible"
+                                                                                        },
+                                                                                        {
+                                                                                            "key": "groupButtons.groupButton6zrs8t1jaz.isVisible"
                                                                                         }
                                                                                     ],
                                                                                     "displayName": "Button Group",
@@ -4583,7 +5053,7 @@
                                                                                             "id": "groupButton3",
                                                                                             "buttonType": "SIMPLE",
                                                                                             "placement": "START",
-                                                                                            "buttonColor": "#2E3D49",
+                                                                                            "buttonColor": "#03b365",
                                                                                             "widgetId": "",
                                                                                             "isVisible": "{{currentItem.status === 'completed'}}",
                                                                                             "isDisabled": false,
@@ -4651,6 +5121,19 @@
                                                                                             "iconName": "ban-circle",
                                                                                             "placement": "START",
                                                                                             "iconAlign": "left"
+                                                                                        },
+                                                                                        "groupButton6zrs8t1jaz": {
+                                                                                            "id": "groupButton6zrs8t1jaz",
+                                                                                            "label": "Queued",
+                                                                                            "menuItems": {},
+                                                                                            "buttonType": "SIMPLE",
+                                                                                            "buttonColor": "#2E3D49",
+                                                                                            "placement": "START",
+                                                                                            "widgetId": "w7sxsoauhg",
+                                                                                            "isDisabled": false,
+                                                                                            "isVisible": "{{currentItem.status === 'queued'}}",
+                                                                                            "iconName": "layout-linear",
+                                                                                            "iconAlign": "left"
                                                                                         }
                                                                                     },
                                                                                     "type": "BUTTON_GROUP_WIDGET",
@@ -4674,6 +5157,9 @@
                                                                                         },
                                                                                         {
                                                                                             "key": "groupButtons.groupButton1.isVisible"
+                                                                                        },
+                                                                                        {
+                                                                                            "key": "groupButtons.groupButton6zrs8t1jaz.isVisible"
                                                                                         }
                                                                                     ],
                                                                                     "key": "9622p7rkjp",
@@ -5129,7 +5615,7 @@
                                                                     "id": "groupButton3",
                                                                     "buttonType": "SIMPLE",
                                                                     "placement": "START",
-                                                                    "buttonColor": "#2E3D49",
+                                                                    "buttonColor": "{{ListSteps.listData.map((currentItem, currentIndex) => {\n              return (function(){\n                return  '#03b365';\n              })();\n            })}}",
                                                                     "widgetId": "",
                                                                     "isVisible": "{{ListSteps.listData.map((currentItem, currentIndex) => {\n              return (function(){\n                return  currentItem.status === 'completed';\n              })();\n            })}}",
                                                                     "isDisabled": false,
@@ -5434,6 +5920,9 @@
                                                         },
                                                         {
                                                             "key": "template.LabelRunDurationCopy.text"
+                                                        },
+                                                        {
+                                                            "key": "template.ButtonGroupRunStatusCopy.groupButtons.groupButton3.buttonColor"
                                                         }
                                                     ],
                                                     "gridType": "vertical",
@@ -5624,7 +6113,7 @@
                                                                                             "id": "groupButton3",
                                                                                             "buttonType": "SIMPLE",
                                                                                             "placement": "START",
-                                                                                            "buttonColor": "#2E3D49",
+                                                                                            "buttonColor": "#03b365",
                                                                                             "widgetId": "",
                                                                                             "isVisible": "{{currentItem.status === 'completed'}}",
                                                                                             "isDisabled": false,
@@ -6560,6 +7049,7 @@
                                                 },
                                                 {
                                                     "widgetName": "CreateNewRunTitle",
+                                                    "borderColor": "",
                                                     "displayName": "Text",
                                                     "iconSVG": "/static/media/icon.97c59b52.svg",
                                                     "topRow": 1,
@@ -6571,6 +7061,7 @@
                                                     "leftColumn": 1,
                                                     "dynamicBindingPathList": [],
                                                     "shouldTruncate": false,
+                                                    "borderWidth": "",
                                                     "truncateButtonColor": "#FFC13D",
                                                     "text": "Create a new run",
                                                     "key": "5yip3e0f05",
@@ -6728,7 +7219,7 @@
                                                     "widgetId": "j5zjzlkjox",
                                                     "defaultSelectedFiles": [],
                                                     "isVisible": true,
-                                                    "label": "Select Input File",
+                                                    "label": "Sample Input File",
                                                     "maxFileSize": "5",
                                                     "version": 1,
                                                     "fileDataType": "Text",
@@ -6764,20 +7255,253 @@
                                     "renderMode": "CANVAS",
                                     "isLoading": false,
                                     "width": 456
+                                },
+                                {
+                                    "widgetName": "ModalCreateSimulation",
+                                    "isCanvas": true,
+                                    "displayName": "Modal",
+                                    "iconSVG": "/static/media/icon.4975978e.svg",
+                                    "topRow": 0,
+                                    "bottomRow": 0,
+                                    "parentRowSpace": 1,
+                                    "type": "MODAL_WIDGET",
+                                    "hideCard": false,
+                                    "shouldScrollContents": true,
+                                    "animateLoading": true,
+                                    "parentColumnSpace": 1,
+                                    "leftColumn": 0,
+                                    "children": [
+                                        {
+                                            "widgetName": "Canvas11",
+                                            "rightColumn": 0,
+                                            "detachFromLayout": true,
+                                            "displayName": "Canvas",
+                                            "widgetId": "1dyf0lt3vz",
+                                            "topRow": 0,
+                                            "bottomRow": 270,
+                                            "parentRowSpace": 1,
+                                            "isVisible": true,
+                                            "type": "CANVAS_WIDGET",
+                                            "canExtend": true,
+                                            "version": 1,
+                                            "hideCard": true,
+                                            "parentId": "kqpz9gvh1d",
+                                            "shouldScrollContents": false,
+                                            "minHeight": 270,
+                                            "renderMode": "CANVAS",
+                                            "isLoading": false,
+                                            "parentColumnSpace": 1,
+                                            "leftColumn": 0,
+                                            "children": [
+                                                {
+                                                    "widgetName": "Icon2",
+                                                    "rightColumn": 62,
+                                                    "onClick": "{{closeModal('ModalCreateSimulation')}}",
+                                                    "color": "#040627",
+                                                    "iconName": "cross",
+                                                    "displayName": "Icon",
+                                                    "iconSVG": "/static/media/icon.31d6cfe0.svg",
+                                                    "widgetId": "blbh56vitw",
+                                                    "topRow": 1,
+                                                    "bottomRow": 5,
+                                                    "isVisible": true,
+                                                    "type": "ICON_WIDGET",
+                                                    "version": 1,
+                                                    "hideCard": true,
+                                                    "parentId": "1dyf0lt3vz",
+                                                    "renderMode": "CANVAS",
+                                                    "isLoading": false,
+                                                    "leftColumn": 56,
+                                                    "iconSize": 24,
+                                                    "key": "pcqf7y54s7"
+                                                },
+                                                {
+                                                    "widgetName": "CreateSimulationTitle",
+                                                    "borderColor": "",
+                                                    "dynamicPropertyPathList": [],
+                                                    "displayName": "Text",
+                                                    "iconSVG": "/static/media/icon.97c59b52.svg",
+                                                    "topRow": 1,
+                                                    "bottomRow": 5,
+                                                    "type": "TEXT_WIDGET",
+                                                    "hideCard": false,
+                                                    "animateLoading": true,
+                                                    "dynamicTriggerPathList": [],
+                                                    "leftColumn": 1,
+                                                    "dynamicBindingPathList": [],
+                                                    "shouldTruncate": false,
+                                                    "borderWidth": "",
+                                                    "truncateButtonColor": "#FFC13D",
+                                                    "text": "Create Simulation",
+                                                    "key": "62onea2qw4",
+                                                    "rightColumn": 41,
+                                                    "backgroundColor": "",
+                                                    "textAlign": "LEFT",
+                                                    "widgetId": "8fg6385rtk",
+                                                    "isVisible": true,
+                                                    "fontStyle": "BOLD",
+                                                    "textColor": "#231F20",
+                                                    "shouldScroll": false,
+                                                    "version": 1,
+                                                    "parentId": "1dyf0lt3vz",
+                                                    "renderMode": "CANVAS",
+                                                    "isLoading": false,
+                                                    "fontSize": "HEADING1"
+                                                },
+                                                {
+                                                    "widgetName": "Button1",
+                                                    "onClick": "{{closeModal('ModalCreateSimulation')}}",
+                                                    "buttonColor": "#F86A2B",
+                                                    "displayName": "Button",
+                                                    "iconSVG": "/static/media/icon.cca02633.svg",
+                                                    "topRow": 21,
+                                                    "bottomRow": 25,
+                                                    "type": "BUTTON_WIDGET",
+                                                    "hideCard": false,
+                                                    "animateLoading": true,
+                                                    "dynamicTriggerPathList": [],
+                                                    "leftColumn": 39,
+                                                    "dynamicBindingPathList": [],
+                                                    "text": "Close",
+                                                    "isDisabled": false,
+                                                    "key": "5c2g3iplc3",
+                                                    "rightColumn": 51,
+                                                    "isDefaultClickDisabled": true,
+                                                    "widgetId": "zl6bh1p8ih",
+                                                    "buttonStyle": "PRIMARY",
+                                                    "isVisible": true,
+                                                    "recaptchaType": "V3",
+                                                    "version": 1,
+                                                    "parentId": "1dyf0lt3vz",
+                                                    "renderMode": "CANVAS",
+                                                    "isLoading": false,
+                                                    "buttonVariant": "SECONDARY",
+                                                    "placement": "CENTER"
+                                                },
+                                                {
+                                                    "widgetName": "Button2",
+                                                    "buttonColor": "#F86A2B",
+                                                    "displayName": "Button",
+                                                    "iconSVG": "/static/media/icon.cca02633.svg",
+                                                    "topRow": 21,
+                                                    "bottomRow": 25,
+                                                    "type": "BUTTON_WIDGET",
+                                                    "hideCard": false,
+                                                    "animateLoading": true,
+                                                    "dynamicTriggerPathList": [],
+                                                    "leftColumn": 51,
+                                                    "dynamicBindingPathList": [],
+                                                    "text": "Confirm",
+                                                    "isDisabled": false,
+                                                    "key": "5c2g3iplc3",
+                                                    "rightColumn": 63,
+                                                    "isDefaultClickDisabled": true,
+                                                    "widgetId": "7ybx7fkkhg",
+                                                    "buttonStyle": "PRIMARY_BUTTON",
+                                                    "isVisible": true,
+                                                    "recaptchaType": "V3",
+                                                    "version": 1,
+                                                    "parentId": "1dyf0lt3vz",
+                                                    "renderMode": "CANVAS",
+                                                    "isLoading": false,
+                                                    "buttonVariant": "PRIMARY",
+                                                    "placement": "CENTER"
+                                                },
+                                                {
+                                                    "widgetName": "PipelineFilePicker",
+                                                    "displayName": "FilePicker",
+                                                    "iconSVG": "/static/media/icon.7c5ad9c3.svg",
+                                                    "topRow": 12,
+                                                    "bottomRow": 16,
+                                                    "parentRowSpace": 10,
+                                                    "allowedFileTypes": [
+                                                        "*",
+                                                        "image/*",
+                                                        "video/*",
+                                                        "audio/*",
+                                                        "text/*",
+                                                        ".doc",
+                                                        "image/jpeg",
+                                                        ".png"
+                                                    ],
+                                                    "type": "FILE_PICKER_WIDGET_V2",
+                                                    "hideCard": false,
+                                                    "animateLoading": true,
+                                                    "parentColumnSpace": 6.9375,
+                                                    "dynamicTriggerPathList": [],
+                                                    "leftColumn": 7,
+                                                    "dynamicBindingPathList": [],
+                                                    "isDisabled": false,
+                                                    "key": "a0pkbf5528",
+                                                    "isRequired": false,
+                                                    "rightColumn": 35,
+                                                    "isDefaultClickDisabled": true,
+                                                    "widgetId": "3ac5a083jk",
+                                                    "defaultSelectedFiles": [],
+                                                    "isVisible": true,
+                                                    "label": "Import Pipeline from file",
+                                                    "maxFileSize": "5",
+                                                    "version": 1,
+                                                    "fileDataType": "Text",
+                                                    "parentId": "1dyf0lt3vz",
+                                                    "selectedFiles": [],
+                                                    "renderMode": "CANVAS",
+                                                    "isLoading": false,
+                                                    "files": [],
+                                                    "maxNumFiles": 1
+                                                },
+                                                {
+                                                    "widgetName": "ButtonImportFromDefPipe",
+                                                    "buttonColor": "#03b365",
+                                                    "displayName": "Button",
+                                                    "iconSVG": "/static/media/icon.cca02633.svg",
+                                                    "topRow": 7,
+                                                    "bottomRow": 11,
+                                                    "parentRowSpace": 10,
+                                                    "type": "BUTTON_WIDGET",
+                                                    "hideCard": false,
+                                                    "animateLoading": true,
+                                                    "parentColumnSpace": 6.9375,
+                                                    "dynamicTriggerPathList": [],
+                                                    "leftColumn": 7,
+                                                    "dynamicBindingPathList": [],
+                                                    "text": "Import from DEF-PIPE",
+                                                    "isDisabled": false,
+                                                    "key": "5c2g3iplc3",
+                                                    "rightColumn": 35,
+                                                    "isDefaultClickDisabled": true,
+                                                    "widgetId": "t7cs0j2r2z",
+                                                    "isVisible": true,
+                                                    "recaptchaType": "V3",
+                                                    "version": 1,
+                                                    "parentId": "1dyf0lt3vz",
+                                                    "renderMode": "CANVAS",
+                                                    "isLoading": false,
+                                                    "borderRadius": "SHARP",
+                                                    "buttonVariant": "SECONDARY",
+                                                    "placement": "CENTER"
+                                                }
+                                            ],
+                                            "isDisabled": false,
+                                            "key": "42mbesf7u3"
+                                        }
+                                    ],
+                                    "key": "25heqkqeg9",
+                                    "height": 270,
+                                    "rightColumn": 0,
+                                    "detachFromLayout": true,
+                                    "widgetId": "kqpz9gvh1d",
+                                    "canOutsideClickClose": true,
+                                    "canEscapeKeyClose": true,
+                                    "version": 2,
+                                    "parentId": "0",
+                                    "renderMode": "CANVAS",
+                                    "isLoading": false,
+                                    "width": 464
                                 }
                             ]
                         },
-                        "layoutOnLoadActions": [
-                            [
-                                {
-                                    "id": "Simulations_simulations",
-                                    "name": "simulations",
-                                    "pluginType": "API",
-                                    "jsonPathKeys": [],
-                                    "timeoutInMillisecond": 10000
-                                }
-                            ]
-                        ],
+                        "layoutOnLoadActions": [],
                         "new": false
                     }
                 ],
@@ -7192,7 +7916,7 @@
                         }
                     ]
                 },
-                "executeOnLoad": true,
+                "executeOnLoad": false,
                 "dynamicBindingPathList": [],
                 "isValid": true,
                 "invalids": [],
@@ -7228,7 +7952,7 @@
                         }
                     ]
                 },
-                "executeOnLoad": true,
+                "executeOnLoad": false,
                 "dynamicBindingPathList": [],
                 "isValid": true,
                 "invalids": [],
