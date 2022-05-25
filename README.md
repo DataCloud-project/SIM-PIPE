@@ -1,4 +1,4 @@
-<p align="center"><img width=50% src="https://raw.githubusercontent.com/DataCloud-project/toolbox/master/docs/img/datacloud_logo.png"></p>&nbsp;
+<p align="center"><img width=50% src="https://raw.githubusercontent.com/DataCloud-project/SIM-PIPE/main/docs/logo/sim-pipe_logo.png"></p>&nbsp;
 
 [![GitHub Issues](https://img.shields.io/github/issues/DataCloud-project/SIM-PIPE.svg)](https://github.com/DataCloud-project/SIM-PIPE/issues)
 [![License](https://img.shields.io/badge/license-Apache2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
@@ -64,14 +64,4 @@ To install SIM-PIPE follow these steps:
 
 ## Running your first data pipeline simulation
 
-After SIM-PIPE has been installed, you are ready to run your first data pipeline simulation. Ensure that the sandbox VM is running and that the Docker daemon in the Sandbox is listening on port 2375. Launch the SIM-PIPE Frontend app:
-
-![alt text](https://raw.githubusercontent.com/DataCloud-project/SIM-PIPE/main/docs/sim-pipe_frontend_simulations.png)
-
-Select the "Sample Simulation":
-
-![alt text](https://raw.githubusercontent.com/DataCloud-project/SIM-PIPE/main/docs/sim-pipe_frontend_sample_simulation.png)
-
-Click the "Create new run" button. Specify the name of the run, the name of the DSL model defining the pipeline and select an input file for the pipeline.
-
-![alt text](https://raw.githubusercontent.com/DataCloud-project/SIM-PIPE/main/docs/sim-pipe_frontend_create_a_new_run.png)
+See the [example](https://github.com/DataCloud-project/SIM-PIPE/tree/main/example) folder for instructions on how to run your first data pipeline simulation.
