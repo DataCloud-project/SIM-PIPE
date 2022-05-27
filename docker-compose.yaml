@@ -45,16 +45,18 @@ services:
       - appsmith:/appsmith-stacks
 
   controller:
+    # image: simpipe-backend-v9
     image: simpipe-backend
     ports:
       - "9000:9000"
       - "2375:2375"
       - "22:22"
     restart: unless-stopped
+    # restart: no
     volumes:
-      - ./simulations:/simulations
-      - ./uploaded_files:/uploaded_files
-      - ./log:/log
+      - ./controller/simulations:/simulations
+      - ./controller/uploaded_files:/uploaded_files
+      - ./controller/log:/log
     environment:
       HASURA: http://hasura:8080/v1/graphql
       SANDBOX_IP: ${SANDBOX_IP} 
