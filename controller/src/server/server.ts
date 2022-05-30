@@ -72,4 +72,4 @@ await server.listen({ port: 9000, hostname: '0.0.0.0' }).then(({ url }) => {
 });
 
 // create a sample simulation at startup
-// logger.info(await functions.createSampleSimulation());
+logger.info(await functions.createSampleSimulation());
