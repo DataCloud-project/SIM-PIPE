@@ -1,4 +1,4 @@
-<p align="center"><img width=50% src="https://raw.githubusercontent.com/DataCloud-project/SIM-PIPE/main/docs/logo/sim-pipe_logo.png"></p>&nbsp;
+<p align="center"><img width=50% src="https://raw.githubusercontent.com/DataCloud-project/SIM-PIPE/main/docs/logo/sim-pipe_logo.png"></p>
 
 [![GitHub Issues](https://img.shields.io/github/issues/DataCloud-project/SIM-PIPE.svg)](https://github.com/DataCloud-project/SIM-PIPE/issues)
 [![License](https://img.shields.io/badge/license-Apache2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
@@ -65,3 +65,18 @@ To install SIM-PIPE follow these steps:
 ## Running your first data pipeline simulation
 
 See the [example](https://github.com/DataCloud-project/SIM-PIPE/tree/main/example) folder for instructions on how to run your first data pipeline simulation.
+
+## Contributing
+
+Before raising a pull request, please read our contributing guide.
+
+## Core development team
+
+* [Nikolay Nikolov](https://github.com/nvnikolov)
+* [Antoine Pultier](https://github.com/fungiboletus)
+* [Aleena Thomas](https://github.com/AleenaThomas-gh)
+* [Brian Elvesæter](https://github.com/elvesater)
+
+## License
+
+SIM-PIPE is released as open source software under the [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0).
