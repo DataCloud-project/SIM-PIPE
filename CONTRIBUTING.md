@@ -19,7 +19,7 @@ Please report any bugs on the project's [issue tracker](https://github.com/DataC
 
 ## Feature requests
 
-If you have any suggestions for new features, please raise them on the project's [issue tracker](https://github.com/DataCloud-project/SIM-PIPE/issues) using the feature requests template. 
+If you have any suggestions for new features, please raise them on the project's [issue tracker](https://github.com/DataCloud-project/SIM-PIPE/issues).
 
 We cannot promise to incorporate your suggestions, but we will as minimum respond to the request and either plan it in a future release or make it available for other contributors to tackle.
 
