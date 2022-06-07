@@ -68,24 +68,24 @@ const resolvers = {
     Promise<string> {
       try {
         await functions.queueRun(arguments_.run_id);
+        return 'Run has been added to queue';
       } catch (error) {
         const errorMessage = `---\nFailed! internal server error starting run:\n
       ${(error as Error).message}\n---\n`;
         logger.error(errorMessage);
-        throw new Error(errorMessage);
+        return 'Failed! internal server error starting run';
       }
-      return 'ok';
     },
     Stop_Run(_p:unknown, arguments_: { run_id:string }):string {
       try {
         functions.stopRun(arguments_.run_id);
+        return 'Successfully sent stop signal to current run';
       } catch (error) {
         const errorMessage = `---\nInternal server error stopping run:\n
       ${(error as Error).message}\n---\n`;
         logger.error(errorMessage);
-        throw new Error(errorMessage);
+        return 'Failed! internal server error stopping run';
       }
-      return 'ok';
     },
   },
 };

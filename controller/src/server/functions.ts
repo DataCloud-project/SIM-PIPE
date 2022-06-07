@@ -148,9 +148,9 @@ export async function createRun(simulation_id:string, dsl:string, name:string):P
   if (!result.insert_runs_one?.run_id) {
     throw new Error('Undefined results from sdk.createRun function');
   }
-  logger.info(`Run created with id ${result.insert_runs_one.run_id}`);
   // create all steps in the database
   const { run_id: runId } = result.insert_runs_one;
+  logger.info(`Run created with id ${runId}`);
   for await (const step of steps) {
     await createStep(runId, step.name, step.image, step.step_number);
   }
@@ -285,17 +285,21 @@ export async function queueRun(run_id:string):Promise<string> {
   return 'ok';
 }
 
+function connectHasuraEndpoint():void {
+  const hasura = process.env.HASURA ?? 'http://127.0.0.1:8080/v1/graphql';
+  client = new GraphQLClient(hasura, {
+    headers: {
+      'x-hasura-admin-secret': 'hasuraadminsecret',
+    },
+  });
+  sdk = getSdk(client);
+}
+
 export async function createSampleSimulation():Promise<string> {
-  await setTimeout(8000);
+  await setTimeout(7000);
   let result;
   try {
-    const hasura = process.env.HASURA ?? 'http://127.0.0.1:8080/v1/graphql';
-    client = new GraphQLClient(hasura, {
-      headers: {
-        'x-hasura-admin-secret': 'hasuraadminsecret',
-      },
-    });
-    sdk = getSdk(client);
+    connectHasuraEndpoint();
     // check if there are simulations in the database
     result = await sdk.AllSimulations();
   } catch (error) {
@@ -303,8 +307,11 @@ export async function createSampleSimulation():Promise<string> {
       ${(error as Error).message} \n Check REMOTE_SCHEMA_URL in env file, hasura endpoint and 
       admin secret\n---\n`;
     logger.error(errorMessage);
-    throw new Error(errorMessage);
+    logger.info('Retrying connecting from controller to hasura endpoint after 5 seconds');
+    await setTimeout(5000);
+    connectHasuraEndpoint();
   }
+  if (!result) { throw new Error('Error creating sample simulation at server start up'); }
   if (result.simulations.length === 0) {
     const simId = await createSimulation('c97fc83a-b0fc-11ec-b909-0242ac120002',
       'Sample Simulation');

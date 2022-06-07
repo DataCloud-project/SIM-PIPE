@@ -51,7 +51,7 @@ services:
       - "9000:9000"
       - "2375:2375"
       - "22:22"
-    restart: on-failure:3
+    restart: on-failure:2
     volumes:
       - ./controller/simulations:/simulations
       - ./controller/uploaded_files:/uploaded_files
