@@ -38,7 +38,7 @@ let sdk: { setRunAsQueued: (argument0: { run_id: string; }) => any,
 };
 const uploadDirectory = 'uploaded_files/';
 
-export async function allSimulations():Promise<String> {
+export async function allSimulations():Promise<string> {
 // export async function allSimulations():Promise<AllSimulationsQuery> {
   return JSON.stringify(await sdk.AllSimulations(), undefined, 2);
   // return await sdk.AllSimulations();
