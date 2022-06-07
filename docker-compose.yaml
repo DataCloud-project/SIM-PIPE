@@ -45,14 +45,13 @@ services:
       - appsmith:/appsmith-stacks
 
   controller:
-    # image: simpipe-backend-v9
+    # image: simpipe-backend-v10
     image: simpipe-backend
     ports:
       - "9000:9000"
       - "2375:2375"
       - "22:22"
-    restart: unless-stopped
-    # restart: no
+    restart: on-failure:3
     volumes:
       - ./controller/simulations:/simulations
       - ./controller/uploaded_files:/uploaded_files

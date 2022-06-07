@@ -8,3 +8,4 @@ simulations/*
 uploaded_files/*
 hasura/metadata/remote_schemas.yaml
 log/controller.log
+.env

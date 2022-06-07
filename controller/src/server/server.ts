@@ -16,9 +16,8 @@ const typeDefs = gql`
   type Mutation {
     # TODO: pipeline file as input
     Create_Simulation(model_id:String, name:String): String
-    # Create_Run(simulation_id: String, dsl:String, name:String): String
     Create_Run_WithInput(simulation_id: String, dsl:String, name:String, sampleInput:[[String]]):
-     String
+    String
     Start_Run(run_id:String): String
     Stop_Run(run_id:String): String
   }
@@ -36,12 +35,16 @@ const resolvers = {
   Mutation: {
     async Create_Simulation(_p: unknown, arguments_: { model_id:string, name:string })
       :Promise<string> {
-      return await functions.createSimulation(arguments_.model_id, arguments_.name);
+      try {
+        const newSimId = await functions.createSimulation(arguments_.model_id, arguments_.name);
+        return `Simulation has been created with id ${newSimId}`;
+      } catch (error) {
+        const errorMessage = `---\nInternal server error creating new simulation:\n
+      ${(error as Error).message}\n---\n`;
+        logger.error(errorMessage);
+        return 'Failed! Internal server error when creating new simulation';
+      }
     },
-    // async Create_Run(_p: unknown, arguments_: { simulation_id:string, dsl:string, name:string })
-    //   :Promise<string> {
-    //   return await functions.createRun(arguments_.simulation_id, arguments_.dsl, arguments_.name);
-    // },
     async Create_Run_WithInput(_p: unknown, arguments_:
     {
       simulation_id:string,
@@ -49,27 +52,56 @@ const resolvers = {
       name:string,
       sampleInput:[[string, string]],
     }):Promise<string> {
-      logger.info(arguments_.sampleInput);
-      return await functions.createRunWithInput(
-        arguments_.simulation_id, arguments_.dsl, arguments_.name, arguments_.sampleInput);
+      let newRunId;
+      try {
+        newRunId = await functions.createRunWithInput(
+          arguments_.simulation_id, arguments_.dsl, arguments_.name, arguments_.sampleInput);
+        return `Run has been created with id ${newRunId}`;
+      } catch (error) {
+        const errorMessage = `---\nInternal server error creating new run:\n
+      ${(error as Error).message}\n---\n`;
+        logger.error(errorMessage);
+        return 'Failed! Internal server error when creating new run';
+      }
     },
     async Start_Run(_p: unknown, arguments_:{ run_id:string }):
     Promise<string> {
-      await functions.queueRun(arguments_.run_id);
+      try {
+        await functions.queueRun(arguments_.run_id);
+      } catch (error) {
+        const errorMessage = `---\nFailed! internal server error starting run:\n
+      ${(error as Error).message}\n---\n`;
+        logger.error(errorMessage);
+        throw new Error(errorMessage);
+      }
       return 'ok';
     },
     Stop_Run(_p:unknown, arguments_: { run_id:string }):string {
-      functions.stopRun(arguments_.run_id);
+      try {
+        functions.stopRun(arguments_.run_id);
+      } catch (error) {
+        const errorMessage = `---\nInternal server error stopping run:\n
+      ${(error as Error).message}\n---\n`;
+        logger.error(errorMessage);
+        throw new Error(errorMessage);
+      }
       return 'ok';
     },
   },
 };
 
 const server = new ApolloServer({ typeDefs, resolvers });
-await server.listen({ port: 9000, hostname: '0.0.0.0' }).then(({ url }) => {
-  // eslint-disable-next-line no-console
-  console.log(`🚀  Server ready at ${url}`);
-});
+try {
+  await server.listen({ port: 9000, hostname: '0.0.0.0' }).then(({ url }) => {
+    // eslint-disable-next-line no-console
+    console.log(`🚀  Server ready at ${url}`);
+  });
+} catch (error) {
+  const errorMessage = `---\nError starting GraphQL server:\n
+      ${(error as Error).message} \n Check GraphQL server host and port\n---\n`;
+  logger.error(errorMessage);
+  throw new Error(errorMessage);
+}
 
 // create a sample simulation at startup
 logger.info(await functions.createSampleSimulation());

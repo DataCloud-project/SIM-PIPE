@@ -21,13 +21,6 @@ import type * as types from '../types.js';
 
 dotenv.config();
 
-const hasura = process.env.HASURA ?? 'http://127.0.0.1:8080/v1/graphql';
-// let client = new GraphQLClient(hasura, {
-//   headers: {
-//     'x-hasura-admin-secret': 'hasuraadminsecret',
-//   },
-// });
-// let sdk = getSdk(client);
 let client: GraphQLClient;
 let sdk: { setRunAsQueued: (argument0: { run_id: string; }) => any,
   AllSimulations: () => AllSimulationsQuery | PromiseLike<AllSimulationsQuery>,
@@ -45,9 +38,10 @@ let sdk: { setRunAsQueued: (argument0: { run_id: string; }) => any,
 };
 const uploadDirectory = 'uploaded_files/';
 
-export async function allSimulations():Promise<AllSimulationsQuery> {
-  // return JSON.stringify(await sdk.AllSimulations(), undefined, 2);
-  return await sdk.AllSimulations();
+export async function allSimulations():Promise<String> {
+// export async function allSimulations():Promise<AllSimulationsQuery> {
+  return JSON.stringify(await sdk.AllSimulations(), undefined, 2);
+  // return await sdk.AllSimulations();
 }
 
 export async function allRunsSteps():Promise<string> {
@@ -152,7 +146,7 @@ export async function createRun(simulation_id:string, dsl:string, name:string):P
     name,
   });
   if (!result.insert_runs_one?.run_id) {
-    throw new Error('Undefined results from createRun function');
+    throw new Error('Undefined results from sdk.createRun function');
   }
   logger.info(`Run created with id ${result.insert_runs_one.run_id}`);
   // create all steps in the database
@@ -170,7 +164,7 @@ export async function createRunWithInput(simulation_id: string, dsl: string,
   // write sample input to uploaded_files/runId
   for (const [inputName, inputContent] of sampleInput) {
     if (!inputContent) {
-      throw new Error('Content of input file undefined in createRunWithInput');
+      throw new Error('Content of input file undefined in functions.createRunWithInput');
     }
     fs.writeFile(`${uploadDirectory}${runId}/${inputName}`, inputContent, (error) => {
       if (error) { throw new Error('Error in createRunWithInput'); }
@@ -237,7 +231,7 @@ export async function startRun(run_id:string):Promise<string> {
   }
   if (process.env.FAILED_RUN === 'true') {
     // mark the run as failed
-    logger.info(`Run ${run_id} execution has failed\n`);
+    logger.error(`Run ${run_id} execution has failed\n`);
     await sdk.setRunAsFailed({ run_id });
     // set STOP signal to false for the next run
     process.env.FAILED_RUN = 'false';
@@ -293,14 +287,24 @@ export async function queueRun(run_id:string):Promise<string> {
 
 export async function createSampleSimulation():Promise<string> {
   await setTimeout(8000);
-  client = new GraphQLClient(hasura, {
-    headers: {
-      'x-hasura-admin-secret': 'hasuraadminsecret',
-    },
-  });
-  sdk = getSdk(client);
-  // check if there are simulations in the database
-  const result = await allSimulations();
+  let result;
+  try {
+    const hasura = process.env.HASURA ?? 'http://127.0.0.1:8080/v1/graphql';
+    client = new GraphQLClient(hasura, {
+      headers: {
+        'x-hasura-admin-secret': 'hasuraadminsecret',
+      },
+    });
+    sdk = getSdk(client);
+    // check if there are simulations in the database
+    result = await sdk.AllSimulations();
+  } catch (error) {
+    const errorMessage = `---\nError connecting from SIM-PIPE controller to hasura endpoint:\n
+      ${(error as Error).message} \n Check REMOTE_SCHEMA_URL in env file, hasura endpoint and 
+      admin secret\n---\n`;
+    logger.error(errorMessage);
+    throw new Error(errorMessage);
+  }
   if (result.simulations.length === 0) {
     const simId = await createSimulation('c97fc83a-b0fc-11ec-b909-0242ac120002',
       'Sample Simulation');
