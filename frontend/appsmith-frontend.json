@@ -60,7 +60,7 @@
                         "dsl": {
                             "widgetName": "MainContainer",
                             "backgroundColor": "none",
-                            "rightColumn": 912,
+                            "rightColumn": 1509,
                             "snapColumns": 64,
                             "detachFromLayout": true,
                             "widgetId": "0",
@@ -432,7 +432,7 @@
                                                                                             "key": "text"
                                                                                         }
                                                                                     ],
-                                                                                    "leftColumn": 42,
+                                                                                    "leftColumn": 39,
                                                                                     "text": "{{moment(currentItem.created).format('HH:mm, D MMMM YYYY')}}",
                                                                                     "key": "2mwn6p2a1j",
                                                                                     "rightColumn": 64,
@@ -497,7 +497,7 @@
                                                                                     "dynamicBindingPathList": [],
                                                                                     "isDisabled": false,
                                                                                     "key": "kanea0u6ux",
-                                                                                    "rightColumn": 3,
+                                                                                    "rightColumn": 2,
                                                                                     "iconName": "lab-test",
                                                                                     "widgetId": "tkz0cr0j44",
                                                                                     "logBlackList": {
@@ -549,7 +549,7 @@
                                                                                     "animateLoading": true,
                                                                                     "parentColumnSpace": 2.49462890625,
                                                                                     "dynamicTriggerPathList": [],
-                                                                                    "leftColumn": 5,
+                                                                                    "leftColumn": 4,
                                                                                     "dynamicBindingPathList": [
                                                                                         {
                                                                                             "key": "text"
@@ -559,7 +559,7 @@
                                                                                     "truncateButtonColor": "#FFC13D",
                                                                                     "text": "{{currentItem.name}}",
                                                                                     "key": "lmu4extcpr",
-                                                                                    "rightColumn": 42,
+                                                                                    "rightColumn": 39,
                                                                                     "textAlign": "LEFT",
                                                                                     "widgetId": "wstfe7hue5",
                                                                                     "logBlackList": {
@@ -1598,7 +1598,7 @@
                                                 },
                                                 {
                                                     "widgetName": "ButtonStartRun",
-                                                    "onClick": "{{start_run.run(() => Functions.after_run_is_started(), () => showAlert('Error starting run','error'))}}",
+                                                    "onClick": "{{Functions.start_run_fn()}}",
                                                     "buttonColor": "#F86A2B",
                                                     "dynamicPropertyPathList": [
                                                         {
@@ -1644,7 +1644,7 @@
                                                 },
                                                 {
                                                     "widgetName": "ButtonStopRun",
-                                                    "onClick": "{{stop_run.run(() => showAlert('Run has been cancelled','info'), () => showAlert('Unable to cancel run','error'))}}",
+                                                    "onClick": "{{Functions.stop_current_run_fn()}}",
                                                     "buttonColor": "#DD4B34",
                                                     "dynamicPropertyPathList": [
                                                         {
@@ -1741,7 +1741,7 @@
                                             "widgetId": "ec8nxc4ya3",
                                             "containerStyle": "none",
                                             "topRow": 0,
-                                            "bottomRow": 400,
+                                            "bottomRow": 420,
                                             "parentRowSpace": 1,
                                             "isVisible": true,
                                             "type": "CANVAS_WIDGET",
@@ -2612,7 +2612,7 @@
                                                     "dynamicBindingPathList": [],
                                                     "text": "Steps",
                                                     "key": "2mwn6p2a1j",
-                                                    "rightColumn": 43,
+                                                    "rightColumn": 13,
                                                     "textAlign": "LEFT",
                                                     "widgetId": "dh8c8882n5",
                                                     "isVisible": true,
@@ -3381,7 +3381,7 @@
                                                 },
                                                 {
                                                     "widgetName": "ButtonCreateNewRunModal",
-                                                    "onClick": "{{create_new_run.run(() => Functions.after_run_is_created(), () => showAlert('Run cannot be created','error'))}}",
+                                                    "onClick": "{{Functions.create_new_run_fn()}}",
                                                     "buttonColor": "#F86A2B",
                                                     "displayName": "Button",
                                                     "iconSVG": "/static/media/icon.cca02633.svg",
@@ -3769,10 +3769,447 @@
                                     "renderMode": "CANVAS",
                                     "isLoading": false,
                                     "width": 464
+                                },
+                                {
+                                    "widgetName": "Test1",
+                                    "isCanvas": true,
+                                    "displayName": "Modal",
+                                    "iconSVG": "/static/media/icon.4975978e.svg",
+                                    "topRow": 0,
+                                    "bottomRow": 0,
+                                    "parentRowSpace": 1,
+                                    "type": "MODAL_WIDGET",
+                                    "hideCard": false,
+                                    "shouldScrollContents": true,
+                                    "animateLoading": true,
+                                    "parentColumnSpace": 1,
+                                    "leftColumn": 0,
+                                    "children": [
+                                        {
+                                            "widgetName": "Canvas12",
+                                            "rightColumn": 0,
+                                            "detachFromLayout": true,
+                                            "displayName": "Canvas",
+                                            "widgetId": "tasysb5q17",
+                                            "topRow": 0,
+                                            "bottomRow": 550,
+                                            "parentRowSpace": 1,
+                                            "isVisible": true,
+                                            "type": "CANVAS_WIDGET",
+                                            "canExtend": true,
+                                            "version": 1,
+                                            "hideCard": true,
+                                            "parentId": "zzvrs4hy6t",
+                                            "shouldScrollContents": false,
+                                            "minHeight": 544,
+                                            "renderMode": "CANVAS",
+                                            "isLoading": false,
+                                            "parentColumnSpace": 1,
+                                            "leftColumn": 0,
+                                            "children": [
+                                                {
+                                                    "widgetName": "Icon3",
+                                                    "rightColumn": 64,
+                                                    "onClick": "{{closeModal('Test1')}}",
+                                                    "color": "#040627",
+                                                    "iconName": "cross",
+                                                    "displayName": "Icon",
+                                                    "iconSVG": "/static/media/icon.31d6cfe0.svg",
+                                                    "widgetId": "grp0fqhybe",
+                                                    "topRow": 1,
+                                                    "bottomRow": 5,
+                                                    "isVisible": true,
+                                                    "type": "ICON_WIDGET",
+                                                    "version": 1,
+                                                    "hideCard": true,
+                                                    "parentId": "tasysb5q17",
+                                                    "renderMode": "CANVAS",
+                                                    "isLoading": false,
+                                                    "leftColumn": 56,
+                                                    "iconSize": 24,
+                                                    "key": "zscke6mei2"
+                                                },
+                                                {
+                                                    "widgetName": "Test",
+                                                    "displayName": "Text",
+                                                    "iconSVG": "/static/media/icon.97c59b52.svg",
+                                                    "topRow": 1,
+                                                    "bottomRow": 5,
+                                                    "type": "TEXT_WIDGET",
+                                                    "hideCard": false,
+                                                    "animateLoading": true,
+                                                    "leftColumn": 1,
+                                                    "shouldTruncate": false,
+                                                    "truncateButtonColor": "#FFC13D",
+                                                    "text": "Modal Title",
+                                                    "key": "g93i1x4dty",
+                                                    "rightColumn": 41,
+                                                    "textAlign": "LEFT",
+                                                    "widgetId": "oc6f9edqb2",
+                                                    "isVisible": true,
+                                                    "fontStyle": "BOLD",
+                                                    "textColor": "#231F20",
+                                                    "shouldScroll": false,
+                                                    "version": 1,
+                                                    "parentId": "tasysb5q17",
+                                                    "renderMode": "CANVAS",
+                                                    "isLoading": false,
+                                                    "fontSize": "HEADING1"
+                                                },
+                                                {
+                                                    "widgetName": "Button4",
+                                                    "onClick": "{{closeModal('Test1')}}",
+                                                    "buttonColor": "#03B365",
+                                                    "displayName": "Button",
+                                                    "iconSVG": "/static/media/icon.cca02633.svg",
+                                                    "topRow": 48,
+                                                    "bottomRow": 52,
+                                                    "type": "BUTTON_WIDGET",
+                                                    "hideCard": false,
+                                                    "animateLoading": true,
+                                                    "leftColumn": 37,
+                                                    "text": "Close",
+                                                    "isDisabled": false,
+                                                    "key": "o5vd7ktukt",
+                                                    "rightColumn": 49,
+                                                    "isDefaultClickDisabled": true,
+                                                    "widgetId": "togtfm7rbz",
+                                                    "buttonStyle": "PRIMARY",
+                                                    "isVisible": true,
+                                                    "recaptchaType": "V3",
+                                                    "version": 1,
+                                                    "parentId": "tasysb5q17",
+                                                    "renderMode": "CANVAS",
+                                                    "isLoading": false,
+                                                    "buttonVariant": "SECONDARY",
+                                                    "placement": "CENTER"
+                                                },
+                                                {
+                                                    "widgetName": "Button5",
+                                                    "buttonColor": "#03B365",
+                                                    "displayName": "Button",
+                                                    "iconSVG": "/static/media/icon.cca02633.svg",
+                                                    "topRow": 48,
+                                                    "bottomRow": 52,
+                                                    "type": "BUTTON_WIDGET",
+                                                    "hideCard": false,
+                                                    "animateLoading": true,
+                                                    "leftColumn": 49,
+                                                    "text": "Confirm",
+                                                    "isDisabled": false,
+                                                    "key": "o5vd7ktukt",
+                                                    "rightColumn": 61,
+                                                    "isDefaultClickDisabled": true,
+                                                    "widgetId": "iy37052bxr",
+                                                    "buttonStyle": "PRIMARY_BUTTON",
+                                                    "isVisible": true,
+                                                    "recaptchaType": "V3",
+                                                    "version": 1,
+                                                    "parentId": "tasysb5q17",
+                                                    "renderMode": "CANVAS",
+                                                    "isLoading": false,
+                                                    "buttonVariant": "PRIMARY",
+                                                    "placement": "CENTER"
+                                                },
+                                                {
+                                                    "widgetName": "Text3",
+                                                    "displayName": "Text",
+                                                    "iconSVG": "/static/media/icon.97c59b52.svg",
+                                                    "topRow": 8,
+                                                    "bottomRow": 12,
+                                                    "parentRowSpace": 10,
+                                                    "type": "TEXT_WIDGET",
+                                                    "hideCard": false,
+                                                    "animateLoading": true,
+                                                    "parentColumnSpace": 6.9375,
+                                                    "dynamicTriggerPathList": [],
+                                                    "leftColumn": 1,
+                                                    "dynamicBindingPathList": [],
+                                                    "shouldTruncate": false,
+                                                    "truncateButtonColor": "#FFC13D",
+                                                    "text": "Name",
+                                                    "key": "g93i1x4dty",
+                                                    "rightColumn": 17,
+                                                    "textAlign": "LEFT",
+                                                    "widgetId": "cmiarcp76f",
+                                                    "isVisible": true,
+                                                    "fontStyle": "BOLD",
+                                                    "textColor": "#231F20",
+                                                    "shouldScroll": false,
+                                                    "version": 1,
+                                                    "parentId": "tasysb5q17",
+                                                    "renderMode": "CANVAS",
+                                                    "isLoading": false,
+                                                    "fontSize": "PARAGRAPH"
+                                                },
+                                                {
+                                                    "widgetName": "Input1",
+                                                    "displayName": "Input",
+                                                    "iconSVG": "/static/media/icon.9f505595.svg",
+                                                    "topRow": 8,
+                                                    "bottomRow": 12,
+                                                    "parentRowSpace": 10,
+                                                    "autoFocus": false,
+                                                    "type": "INPUT_WIDGET_V2",
+                                                    "hideCard": false,
+                                                    "animateLoading": true,
+                                                    "parentColumnSpace": 6.9375,
+                                                    "resetOnSubmit": true,
+                                                    "leftColumn": 17,
+                                                    "labelStyle": "",
+                                                    "inputType": "TEXT",
+                                                    "isDisabled": false,
+                                                    "key": "jsymzc3cmh",
+                                                    "isRequired": false,
+                                                    "rightColumn": 37,
+                                                    "widgetId": "yfy5q0fkhc",
+                                                    "isVisible": true,
+                                                    "label": "",
+                                                    "version": 2,
+                                                    "parentId": "tasysb5q17",
+                                                    "renderMode": "CANVAS",
+                                                    "isLoading": false,
+                                                    "iconAlign": "left",
+                                                    "defaultText": ""
+                                                },
+                                                {
+                                                    "widgetName": "Form1",
+                                                    "backgroundColor": "white",
+                                                    "rightColumn": 37,
+                                                    "isCanvas": true,
+                                                    "displayName": "Form",
+                                                    "iconSVG": "/static/media/icon.ea3e08d1.svg",
+                                                    "widgetId": "32knhvmgp6",
+                                                    "topRow": 13,
+                                                    "bottomRow": 53,
+                                                    "parentRowSpace": 10,
+                                                    "isVisible": true,
+                                                    "type": "FORM_WIDGET",
+                                                    "hideCard": false,
+                                                    "parentId": "tasysb5q17",
+                                                    "renderMode": "CANVAS",
+                                                    "isLoading": false,
+                                                    "animateLoading": true,
+                                                    "parentColumnSpace": 6.9375,
+                                                    "leftColumn": 2,
+                                                    "children": [
+                                                        {
+                                                            "widgetName": "Canvas13",
+                                                            "rightColumn": 166.5,
+                                                            "detachFromLayout": true,
+                                                            "displayName": "Canvas",
+                                                            "widgetId": "1mzg34u1xb",
+                                                            "containerStyle": "none",
+                                                            "topRow": 0,
+                                                            "bottomRow": 390,
+                                                            "parentRowSpace": 1,
+                                                            "isVisible": true,
+                                                            "type": "CANVAS_WIDGET",
+                                                            "canExtend": false,
+                                                            "version": 1,
+                                                            "hideCard": true,
+                                                            "parentId": "32knhvmgp6",
+                                                            "minHeight": 400,
+                                                            "renderMode": "CANVAS",
+                                                            "isLoading": false,
+                                                            "parentColumnSpace": 1,
+                                                            "leftColumn": 0,
+                                                            "children": [
+                                                                {
+                                                                    "resetFormOnClick": true,
+                                                                    "widgetName": "FormButton1",
+                                                                    "buttonColor": "#03B365",
+                                                                    "displayName": "FormButton",
+                                                                    "iconSVG": "/static/media/icon.c8f649ed.svg",
+                                                                    "topRow": 33,
+                                                                    "bottomRow": 37,
+                                                                    "type": "FORM_BUTTON_WIDGET",
+                                                                    "hideCard": true,
+                                                                    "animateLoading": true,
+                                                                    "leftColumn": 46,
+                                                                    "text": "Submit",
+                                                                    "key": "ru2q3fqkkx",
+                                                                    "rightColumn": 62,
+                                                                    "isDefaultClickDisabled": true,
+                                                                    "widgetId": "9qalmixphh",
+                                                                    "isVisible": true,
+                                                                    "recaptchaType": "V3",
+                                                                    "version": 1,
+                                                                    "parentId": "1mzg34u1xb",
+                                                                    "renderMode": "CANVAS",
+                                                                    "isLoading": false,
+                                                                    "disabledWhenInvalid": true,
+                                                                    "buttonVariant": "PRIMARY"
+                                                                },
+                                                                {
+                                                                    "resetFormOnClick": true,
+                                                                    "widgetName": "FormButton2",
+                                                                    "buttonColor": "#03B365",
+                                                                    "displayName": "FormButton",
+                                                                    "iconSVG": "/static/media/icon.c8f649ed.svg",
+                                                                    "topRow": 33,
+                                                                    "bottomRow": 37,
+                                                                    "type": "FORM_BUTTON_WIDGET",
+                                                                    "hideCard": true,
+                                                                    "animateLoading": true,
+                                                                    "leftColumn": 30,
+                                                                    "text": "Reset",
+                                                                    "key": "ru2q3fqkkx",
+                                                                    "rightColumn": 46,
+                                                                    "isDefaultClickDisabled": true,
+                                                                    "widgetId": "zi9kytjcdt",
+                                                                    "isVisible": true,
+                                                                    "recaptchaType": "V3",
+                                                                    "version": 1,
+                                                                    "parentId": "1mzg34u1xb",
+                                                                    "renderMode": "CANVAS",
+                                                                    "isLoading": false,
+                                                                    "disabledWhenInvalid": false,
+                                                                    "buttonVariant": "SECONDARY"
+                                                                },
+                                                                {
+                                                                    "widgetName": "MultiTreeSelect1",
+                                                                    "displayName": "Multi TreeSelect",
+                                                                    "iconSVG": "/static/media/icon.b3e28afb.svg",
+                                                                    "labelText": "Label",
+                                                                    "topRow": 4,
+                                                                    "bottomRow": 11,
+                                                                    "parentRowSpace": 10,
+                                                                    "type": "MULTI_SELECT_TREE_WIDGET",
+                                                                    "hideCard": false,
+                                                                    "mode": "SHOW_ALL",
+                                                                    "defaultOptionValue": [
+                                                                        "GREEN"
+                                                                    ],
+                                                                    "animateLoading": true,
+                                                                    "parentColumnSpace": 3.4814453125,
+                                                                    "leftColumn": 13,
+                                                                    "options": [
+                                                                        {
+                                                                            "label": "Blue",
+                                                                            "value": "BLUE",
+                                                                            "children": [
+                                                                                {
+                                                                                    "label": "Dark Blue",
+                                                                                    "value": "DARK BLUE"
+                                                                                },
+                                                                                {
+                                                                                    "label": "Light Blue",
+                                                                                    "value": "LIGHT BLUE"
+                                                                                }
+                                                                            ]
+                                                                        },
+                                                                        {
+                                                                            "label": "Green",
+                                                                            "value": "GREEN"
+                                                                        },
+                                                                        {
+                                                                            "label": "Red",
+                                                                            "value": "RED"
+                                                                        }
+                                                                    ],
+                                                                    "placeholderText": "Select option(s)",
+                                                                    "isDisabled": false,
+                                                                    "key": "a2it1y6qjl",
+                                                                    "isRequired": false,
+                                                                    "rightColumn": 64,
+                                                                    "widgetId": "qlueru5xcd",
+                                                                    "isVisible": true,
+                                                                    "version": 1,
+                                                                    "expandAll": false,
+                                                                    "parentId": "1mzg34u1xb",
+                                                                    "renderMode": "CANVAS",
+                                                                    "isLoading": false,
+                                                                    "allowClear": false
+                                                                }
+                                                            ],
+                                                            "key": "bnt0e613gn"
+                                                        }
+                                                    ],
+                                                    "key": "gs3jjf7wqf"
+                                                },
+                                                {
+                                                    "isCompact": false,
+                                                    "widgetName": "MenuButton1",
+                                                    "dynamicPropertyPathList": [],
+                                                    "displayName": "Menu Button",
+                                                    "iconSVG": "/static/media/icon.0341d17d.svg",
+                                                    "topRow": 14,
+                                                    "bottomRow": 18,
+                                                    "parentRowSpace": 10,
+                                                    "type": "MENU_BUTTON_WIDGET",
+                                                    "hideCard": false,
+                                                    "animateLoading": true,
+                                                    "parentColumnSpace": 6.9375,
+                                                    "dynamicTriggerPathList": [],
+                                                    "leftColumn": 45,
+                                                    "dynamicBindingPathList": [
+                                                        {
+                                                            "key": "menuItems.menuItemcshqyfrsgd.label"
+                                                        }
+                                                    ],
+                                                    "isDisabled": false,
+                                                    "key": "z2ft8ytnw0",
+                                                    "rightColumn": 61,
+                                                    "menuVariant": "PRIMARY",
+                                                    "widgetId": "05lm3ye0ea",
+                                                    "menuItems": {
+                                                        "menuItem1": {
+                                                            "label": "First Menu Item",
+                                                            "id": "menuItem1",
+                                                            "widgetId": "",
+                                                            "isVisible": true,
+                                                            "isDisabled": false,
+                                                            "index": 0
+                                                        },
+                                                        "menuItemcshqyfrsgd": {
+                                                            "id": "menuItemcshqyfrsgd",
+                                                            "label": "{{steps}}",
+                                                            "widgetId": "wh3wizsxmt",
+                                                            "isDisabled": false,
+                                                            "isVisible": true
+                                                        }
+                                                    },
+                                                    "isVisible": true,
+                                                    "label": "Open Menu",
+                                                    "version": 1,
+                                                    "parentId": "tasysb5q17",
+                                                    "renderMode": "CANVAS",
+                                                    "isLoading": false,
+                                                    "menuColor": "#03B365",
+                                                    "placement": "CENTER"
+                                                }
+                                            ],
+                                            "isDisabled": false,
+                                            "key": "bnt0e613gn"
+                                        }
+                                    ],
+                                    "key": "hhfeigsl88",
+                                    "height": 544,
+                                    "rightColumn": 0,
+                                    "detachFromLayout": true,
+                                    "widgetId": "zzvrs4hy6t",
+                                    "canOutsideClickClose": true,
+                                    "canEscapeKeyClose": true,
+                                    "version": 2,
+                                    "parentId": "0",
+                                    "renderMode": "CANVAS",
+                                    "isLoading": false,
+                                    "width": 456
                                 }
                             ]
                         },
-                        "layoutOnLoadActions": [],
+                        "layoutOnLoadActions": [
+                            [
+                                {
+                                    "id": "Simulations_simulations",
+                                    "name": "simulations",
+                                    "pluginType": "API",
+                                    "jsonPathKeys": [],
+                                    "timeoutInMillisecond": 10000
+                                }
+                            ]
+                        ],
                         "new": false
                     }
                 ],
@@ -3789,7 +4226,7 @@
                         "dsl": {
                             "widgetName": "MainContainer",
                             "backgroundColor": "none",
-                            "rightColumn": 912,
+                            "rightColumn": 1509,
                             "snapColumns": 64,
                             "detachFromLayout": true,
                             "widgetId": "0",
@@ -4161,7 +4598,7 @@
                                                                                             "key": "text"
                                                                                         }
                                                                                     ],
-                                                                                    "leftColumn": 42,
+                                                                                    "leftColumn": 39,
                                                                                     "text": "{{moment(currentItem.created).format('HH:mm, D MMMM YYYY')}}",
                                                                                     "key": "2mwn6p2a1j",
                                                                                     "rightColumn": 64,
@@ -4226,7 +4663,7 @@
                                                                                     "dynamicBindingPathList": [],
                                                                                     "isDisabled": false,
                                                                                     "key": "kanea0u6ux",
-                                                                                    "rightColumn": 3,
+                                                                                    "rightColumn": 2,
                                                                                     "iconName": "lab-test",
                                                                                     "widgetId": "tkz0cr0j44",
                                                                                     "logBlackList": {
@@ -4278,7 +4715,7 @@
                                                                                     "animateLoading": true,
                                                                                     "parentColumnSpace": 2.49462890625,
                                                                                     "dynamicTriggerPathList": [],
-                                                                                    "leftColumn": 5,
+                                                                                    "leftColumn": 4,
                                                                                     "dynamicBindingPathList": [
                                                                                         {
                                                                                             "key": "text"
@@ -4288,7 +4725,7 @@
                                                                                     "truncateButtonColor": "#FFC13D",
                                                                                     "text": "{{currentItem.name}}",
                                                                                     "key": "lmu4extcpr",
-                                                                                    "rightColumn": 42,
+                                                                                    "rightColumn": 39,
                                                                                     "textAlign": "LEFT",
                                                                                     "widgetId": "wstfe7hue5",
                                                                                     "logBlackList": {
@@ -5327,7 +5764,7 @@
                                                 },
                                                 {
                                                     "widgetName": "ButtonStartRun",
-                                                    "onClick": "{{start_run.run(() => Functions.after_run_is_started(), () => showAlert('Error starting run','error'))}}",
+                                                    "onClick": "{{Functions.start_run_fn()}}",
                                                     "buttonColor": "#F86A2B",
                                                     "dynamicPropertyPathList": [
                                                         {
@@ -5373,7 +5810,7 @@
                                                 },
                                                 {
                                                     "widgetName": "ButtonStopRun",
-                                                    "onClick": "{{stop_run.run(() => showAlert('Run has been cancelled','info'), () => showAlert('Unable to cancel run','error'))}}",
+                                                    "onClick": "{{Functions.stop_current_run_fn()}}",
                                                     "buttonColor": "#DD4B34",
                                                     "dynamicPropertyPathList": [
                                                         {
@@ -5470,7 +5907,7 @@
                                             "widgetId": "ec8nxc4ya3",
                                             "containerStyle": "none",
                                             "topRow": 0,
-                                            "bottomRow": 400,
+                                            "bottomRow": 420,
                                             "parentRowSpace": 1,
                                             "isVisible": true,
                                             "type": "CANVAS_WIDGET",
@@ -6341,7 +6778,7 @@
                                                     "dynamicBindingPathList": [],
                                                     "text": "Steps",
                                                     "key": "2mwn6p2a1j",
-                                                    "rightColumn": 43,
+                                                    "rightColumn": 13,
                                                     "textAlign": "LEFT",
                                                     "widgetId": "dh8c8882n5",
                                                     "isVisible": true,
@@ -7110,7 +7547,7 @@
                                                 },
                                                 {
                                                     "widgetName": "ButtonCreateNewRunModal",
-                                                    "onClick": "{{create_new_run.run(() => Functions.after_run_is_created(), () => showAlert('Run cannot be created','error'))}}",
+                                                    "onClick": "{{Functions.create_new_run_fn()}}",
                                                     "buttonColor": "#F86A2B",
                                                     "displayName": "Button",
                                                     "iconSVG": "/static/media/icon.cca02633.svg",
@@ -7498,10 +7935,447 @@
                                     "renderMode": "CANVAS",
                                     "isLoading": false,
                                     "width": 464
+                                },
+                                {
+                                    "widgetName": "Test1",
+                                    "isCanvas": true,
+                                    "displayName": "Modal",
+                                    "iconSVG": "/static/media/icon.4975978e.svg",
+                                    "topRow": 0,
+                                    "bottomRow": 0,
+                                    "parentRowSpace": 1,
+                                    "type": "MODAL_WIDGET",
+                                    "hideCard": false,
+                                    "shouldScrollContents": true,
+                                    "animateLoading": true,
+                                    "parentColumnSpace": 1,
+                                    "leftColumn": 0,
+                                    "children": [
+                                        {
+                                            "widgetName": "Canvas12",
+                                            "rightColumn": 0,
+                                            "detachFromLayout": true,
+                                            "displayName": "Canvas",
+                                            "widgetId": "tasysb5q17",
+                                            "topRow": 0,
+                                            "bottomRow": 550,
+                                            "parentRowSpace": 1,
+                                            "isVisible": true,
+                                            "type": "CANVAS_WIDGET",
+                                            "canExtend": true,
+                                            "version": 1,
+                                            "hideCard": true,
+                                            "parentId": "zzvrs4hy6t",
+                                            "shouldScrollContents": false,
+                                            "minHeight": 544,
+                                            "renderMode": "CANVAS",
+                                            "isLoading": false,
+                                            "parentColumnSpace": 1,
+                                            "leftColumn": 0,
+                                            "children": [
+                                                {
+                                                    "widgetName": "Icon3",
+                                                    "rightColumn": 64,
+                                                    "onClick": "{{closeModal('Test1')}}",
+                                                    "color": "#040627",
+                                                    "iconName": "cross",
+                                                    "displayName": "Icon",
+                                                    "iconSVG": "/static/media/icon.31d6cfe0.svg",
+                                                    "widgetId": "grp0fqhybe",
+                                                    "topRow": 1,
+                                                    "bottomRow": 5,
+                                                    "isVisible": true,
+                                                    "type": "ICON_WIDGET",
+                                                    "version": 1,
+                                                    "hideCard": true,
+                                                    "parentId": "tasysb5q17",
+                                                    "renderMode": "CANVAS",
+                                                    "isLoading": false,
+                                                    "leftColumn": 56,
+                                                    "iconSize": 24,
+                                                    "key": "zscke6mei2"
+                                                },
+                                                {
+                                                    "widgetName": "Test",
+                                                    "displayName": "Text",
+                                                    "iconSVG": "/static/media/icon.97c59b52.svg",
+                                                    "topRow": 1,
+                                                    "bottomRow": 5,
+                                                    "type": "TEXT_WIDGET",
+                                                    "hideCard": false,
+                                                    "animateLoading": true,
+                                                    "leftColumn": 1,
+                                                    "shouldTruncate": false,
+                                                    "truncateButtonColor": "#FFC13D",
+                                                    "text": "Modal Title",
+                                                    "key": "g93i1x4dty",
+                                                    "rightColumn": 41,
+                                                    "textAlign": "LEFT",
+                                                    "widgetId": "oc6f9edqb2",
+                                                    "isVisible": true,
+                                                    "fontStyle": "BOLD",
+                                                    "textColor": "#231F20",
+                                                    "shouldScroll": false,
+                                                    "version": 1,
+                                                    "parentId": "tasysb5q17",
+                                                    "renderMode": "CANVAS",
+                                                    "isLoading": false,
+                                                    "fontSize": "HEADING1"
+                                                },
+                                                {
+                                                    "widgetName": "Button4",
+                                                    "onClick": "{{closeModal('Test1')}}",
+                                                    "buttonColor": "#03B365",
+                                                    "displayName": "Button",
+                                                    "iconSVG": "/static/media/icon.cca02633.svg",
+                                                    "topRow": 48,
+                                                    "bottomRow": 52,
+                                                    "type": "BUTTON_WIDGET",
+                                                    "hideCard": false,
+                                                    "animateLoading": true,
+                                                    "leftColumn": 37,
+                                                    "text": "Close",
+                                                    "isDisabled": false,
+                                                    "key": "o5vd7ktukt",
+                                                    "rightColumn": 49,
+                                                    "isDefaultClickDisabled": true,
+                                                    "widgetId": "togtfm7rbz",
+                                                    "buttonStyle": "PRIMARY",
+                                                    "isVisible": true,
+                                                    "recaptchaType": "V3",
+                                                    "version": 1,
+                                                    "parentId": "tasysb5q17",
+                                                    "renderMode": "CANVAS",
+                                                    "isLoading": false,
+                                                    "buttonVariant": "SECONDARY",
+                                                    "placement": "CENTER"
+                                                },
+                                                {
+                                                    "widgetName": "Button5",
+                                                    "buttonColor": "#03B365",
+                                                    "displayName": "Button",
+                                                    "iconSVG": "/static/media/icon.cca02633.svg",
+                                                    "topRow": 48,
+                                                    "bottomRow": 52,
+                                                    "type": "BUTTON_WIDGET",
+                                                    "hideCard": false,
+                                                    "animateLoading": true,
+                                                    "leftColumn": 49,
+                                                    "text": "Confirm",
+                                                    "isDisabled": false,
+                                                    "key": "o5vd7ktukt",
+                                                    "rightColumn": 61,
+                                                    "isDefaultClickDisabled": true,
+                                                    "widgetId": "iy37052bxr",
+                                                    "buttonStyle": "PRIMARY_BUTTON",
+                                                    "isVisible": true,
+                                                    "recaptchaType": "V3",
+                                                    "version": 1,
+                                                    "parentId": "tasysb5q17",
+                                                    "renderMode": "CANVAS",
+                                                    "isLoading": false,
+                                                    "buttonVariant": "PRIMARY",
+                                                    "placement": "CENTER"
+                                                },
+                                                {
+                                                    "widgetName": "Text3",
+                                                    "displayName": "Text",
+                                                    "iconSVG": "/static/media/icon.97c59b52.svg",
+                                                    "topRow": 8,
+                                                    "bottomRow": 12,
+                                                    "parentRowSpace": 10,
+                                                    "type": "TEXT_WIDGET",
+                                                    "hideCard": false,
+                                                    "animateLoading": true,
+                                                    "parentColumnSpace": 6.9375,
+                                                    "dynamicTriggerPathList": [],
+                                                    "leftColumn": 1,
+                                                    "dynamicBindingPathList": [],
+                                                    "shouldTruncate": false,
+                                                    "truncateButtonColor": "#FFC13D",
+                                                    "text": "Name",
+                                                    "key": "g93i1x4dty",
+                                                    "rightColumn": 17,
+                                                    "textAlign": "LEFT",
+                                                    "widgetId": "cmiarcp76f",
+                                                    "isVisible": true,
+                                                    "fontStyle": "BOLD",
+                                                    "textColor": "#231F20",
+                                                    "shouldScroll": false,
+                                                    "version": 1,
+                                                    "parentId": "tasysb5q17",
+                                                    "renderMode": "CANVAS",
+                                                    "isLoading": false,
+                                                    "fontSize": "PARAGRAPH"
+                                                },
+                                                {
+                                                    "widgetName": "Input1",
+                                                    "displayName": "Input",
+                                                    "iconSVG": "/static/media/icon.9f505595.svg",
+                                                    "topRow": 8,
+                                                    "bottomRow": 12,
+                                                    "parentRowSpace": 10,
+                                                    "autoFocus": false,
+                                                    "type": "INPUT_WIDGET_V2",
+                                                    "hideCard": false,
+                                                    "animateLoading": true,
+                                                    "parentColumnSpace": 6.9375,
+                                                    "resetOnSubmit": true,
+                                                    "leftColumn": 17,
+                                                    "labelStyle": "",
+                                                    "inputType": "TEXT",
+                                                    "isDisabled": false,
+                                                    "key": "jsymzc3cmh",
+                                                    "isRequired": false,
+                                                    "rightColumn": 37,
+                                                    "widgetId": "yfy5q0fkhc",
+                                                    "isVisible": true,
+                                                    "label": "",
+                                                    "version": 2,
+                                                    "parentId": "tasysb5q17",
+                                                    "renderMode": "CANVAS",
+                                                    "isLoading": false,
+                                                    "iconAlign": "left",
+                                                    "defaultText": ""
+                                                },
+                                                {
+                                                    "widgetName": "Form1",
+                                                    "backgroundColor": "white",
+                                                    "rightColumn": 37,
+                                                    "isCanvas": true,
+                                                    "displayName": "Form",
+                                                    "iconSVG": "/static/media/icon.ea3e08d1.svg",
+                                                    "widgetId": "32knhvmgp6",
+                                                    "topRow": 13,
+                                                    "bottomRow": 53,
+                                                    "parentRowSpace": 10,
+                                                    "isVisible": true,
+                                                    "type": "FORM_WIDGET",
+                                                    "hideCard": false,
+                                                    "parentId": "tasysb5q17",
+                                                    "renderMode": "CANVAS",
+                                                    "isLoading": false,
+                                                    "animateLoading": true,
+                                                    "parentColumnSpace": 6.9375,
+                                                    "leftColumn": 2,
+                                                    "children": [
+                                                        {
+                                                            "widgetName": "Canvas13",
+                                                            "rightColumn": 166.5,
+                                                            "detachFromLayout": true,
+                                                            "displayName": "Canvas",
+                                                            "widgetId": "1mzg34u1xb",
+                                                            "containerStyle": "none",
+                                                            "topRow": 0,
+                                                            "bottomRow": 390,
+                                                            "parentRowSpace": 1,
+                                                            "isVisible": true,
+                                                            "type": "CANVAS_WIDGET",
+                                                            "canExtend": false,
+                                                            "version": 1,
+                                                            "hideCard": true,
+                                                            "parentId": "32knhvmgp6",
+                                                            "minHeight": 400,
+                                                            "renderMode": "CANVAS",
+                                                            "isLoading": false,
+                                                            "parentColumnSpace": 1,
+                                                            "leftColumn": 0,
+                                                            "children": [
+                                                                {
+                                                                    "resetFormOnClick": true,
+                                                                    "widgetName": "FormButton1",
+                                                                    "buttonColor": "#03B365",
+                                                                    "displayName": "FormButton",
+                                                                    "iconSVG": "/static/media/icon.c8f649ed.svg",
+                                                                    "topRow": 33,
+                                                                    "bottomRow": 37,
+                                                                    "type": "FORM_BUTTON_WIDGET",
+                                                                    "hideCard": true,
+                                                                    "animateLoading": true,
+                                                                    "leftColumn": 46,
+                                                                    "text": "Submit",
+                                                                    "key": "ru2q3fqkkx",
+                                                                    "rightColumn": 62,
+                                                                    "isDefaultClickDisabled": true,
+                                                                    "widgetId": "9qalmixphh",
+                                                                    "isVisible": true,
+                                                                    "recaptchaType": "V3",
+                                                                    "version": 1,
+                                                                    "parentId": "1mzg34u1xb",
+                                                                    "renderMode": "CANVAS",
+                                                                    "isLoading": false,
+                                                                    "disabledWhenInvalid": true,
+                                                                    "buttonVariant": "PRIMARY"
+                                                                },
+                                                                {
+                                                                    "resetFormOnClick": true,
+                                                                    "widgetName": "FormButton2",
+                                                                    "buttonColor": "#03B365",
+                                                                    "displayName": "FormButton",
+                                                                    "iconSVG": "/static/media/icon.c8f649ed.svg",
+                                                                    "topRow": 33,
+                                                                    "bottomRow": 37,
+                                                                    "type": "FORM_BUTTON_WIDGET",
+                                                                    "hideCard": true,
+                                                                    "animateLoading": true,
+                                                                    "leftColumn": 30,
+                                                                    "text": "Reset",
+                                                                    "key": "ru2q3fqkkx",
+                                                                    "rightColumn": 46,
+                                                                    "isDefaultClickDisabled": true,
+                                                                    "widgetId": "zi9kytjcdt",
+                                                                    "isVisible": true,
+                                                                    "recaptchaType": "V3",
+                                                                    "version": 1,
+                                                                    "parentId": "1mzg34u1xb",
+                                                                    "renderMode": "CANVAS",
+                                                                    "isLoading": false,
+                                                                    "disabledWhenInvalid": false,
+                                                                    "buttonVariant": "SECONDARY"
+                                                                },
+                                                                {
+                                                                    "widgetName": "MultiTreeSelect1",
+                                                                    "displayName": "Multi TreeSelect",
+                                                                    "iconSVG": "/static/media/icon.b3e28afb.svg",
+                                                                    "labelText": "Label",
+                                                                    "topRow": 4,
+                                                                    "bottomRow": 11,
+                                                                    "parentRowSpace": 10,
+                                                                    "type": "MULTI_SELECT_TREE_WIDGET",
+                                                                    "hideCard": false,
+                                                                    "mode": "SHOW_ALL",
+                                                                    "defaultOptionValue": [
+                                                                        "GREEN"
+                                                                    ],
+                                                                    "animateLoading": true,
+                                                                    "parentColumnSpace": 3.4814453125,
+                                                                    "leftColumn": 13,
+                                                                    "options": [
+                                                                        {
+                                                                            "label": "Blue",
+                                                                            "value": "BLUE",
+                                                                            "children": [
+                                                                                {
+                                                                                    "label": "Dark Blue",
+                                                                                    "value": "DARK BLUE"
+                                                                                },
+                                                                                {
+                                                                                    "label": "Light Blue",
+                                                                                    "value": "LIGHT BLUE"
+                                                                                }
+                                                                            ]
+                                                                        },
+                                                                        {
+                                                                            "label": "Green",
+                                                                            "value": "GREEN"
+                                                                        },
+                                                                        {
+                                                                            "label": "Red",
+                                                                            "value": "RED"
+                                                                        }
+                                                                    ],
+                                                                    "placeholderText": "Select option(s)",
+                                                                    "isDisabled": false,
+                                                                    "key": "a2it1y6qjl",
+                                                                    "isRequired": false,
+                                                                    "rightColumn": 64,
+                                                                    "widgetId": "qlueru5xcd",
+                                                                    "isVisible": true,
+                                                                    "version": 1,
+                                                                    "expandAll": false,
+                                                                    "parentId": "1mzg34u1xb",
+                                                                    "renderMode": "CANVAS",
+                                                                    "isLoading": false,
+                                                                    "allowClear": false
+                                                                }
+                                                            ],
+                                                            "key": "bnt0e613gn"
+                                                        }
+                                                    ],
+                                                    "key": "gs3jjf7wqf"
+                                                },
+                                                {
+                                                    "isCompact": false,
+                                                    "widgetName": "MenuButton1",
+                                                    "dynamicPropertyPathList": [],
+                                                    "displayName": "Menu Button",
+                                                    "iconSVG": "/static/media/icon.0341d17d.svg",
+                                                    "topRow": 14,
+                                                    "bottomRow": 18,
+                                                    "parentRowSpace": 10,
+                                                    "type": "MENU_BUTTON_WIDGET",
+                                                    "hideCard": false,
+                                                    "animateLoading": true,
+                                                    "parentColumnSpace": 6.9375,
+                                                    "dynamicTriggerPathList": [],
+                                                    "leftColumn": 45,
+                                                    "dynamicBindingPathList": [
+                                                        {
+                                                            "key": "menuItems.menuItemcshqyfrsgd.label"
+                                                        }
+                                                    ],
+                                                    "isDisabled": false,
+                                                    "key": "z2ft8ytnw0",
+                                                    "rightColumn": 61,
+                                                    "menuVariant": "PRIMARY",
+                                                    "widgetId": "05lm3ye0ea",
+                                                    "menuItems": {
+                                                        "menuItem1": {
+                                                            "label": "First Menu Item",
+                                                            "id": "menuItem1",
+                                                            "widgetId": "",
+                                                            "isVisible": true,
+                                                            "isDisabled": false,
+                                                            "index": 0
+                                                        },
+                                                        "menuItemcshqyfrsgd": {
+                                                            "id": "menuItemcshqyfrsgd",
+                                                            "label": "{{steps}}",
+                                                            "widgetId": "wh3wizsxmt",
+                                                            "isDisabled": false,
+                                                            "isVisible": true
+                                                        }
+                                                    },
+                                                    "isVisible": true,
+                                                    "label": "Open Menu",
+                                                    "version": 1,
+                                                    "parentId": "tasysb5q17",
+                                                    "renderMode": "CANVAS",
+                                                    "isLoading": false,
+                                                    "menuColor": "#03B365",
+                                                    "placement": "CENTER"
+                                                }
+                                            ],
+                                            "isDisabled": false,
+                                            "key": "bnt0e613gn"
+                                        }
+                                    ],
+                                    "key": "hhfeigsl88",
+                                    "height": 544,
+                                    "rightColumn": 0,
+                                    "detachFromLayout": true,
+                                    "widgetId": "zzvrs4hy6t",
+                                    "canOutsideClickClose": true,
+                                    "canEscapeKeyClose": true,
+                                    "version": 2,
+                                    "parentId": "0",
+                                    "renderMode": "CANVAS",
+                                    "isLoading": false,
+                                    "width": 456
                                 }
                             ]
                         },
-                        "layoutOnLoadActions": [],
+                        "layoutOnLoadActions": [
+                            [
+                                {
+                                    "id": "Simulations_simulations",
+                                    "name": "simulations",
+                                    "pluginType": "API",
+                                    "jsonPathKeys": [],
+                                    "timeoutInMillisecond": 10000
+                                }
+                            ]
+                        ],
                         "new": false
                     }
                 ],
@@ -7795,92 +8669,6 @@
             "new": false
         },
         {
-            "id": "Simulations_after_run_is_created",
-            "userPermissions": [
-                "read:actions",
-                "execute:actions",
-                "manage:actions"
-            ],
-            "gitSyncId": "61fbe236461376238a323de3_61fbe236461376238a323dec",
-            "pluginType": "JS",
-            "pluginId": "js-plugin",
-            "unpublishedAction": {
-                "name": "after_run_is_created",
-                "fullyQualifiedName": "Functions.after_run_is_created",
-                "datasource": {
-                    "userPermissions": [],
-                    "name": "UNUSED_DATASOURCE",
-                    "pluginId": "js-plugin",
-                    "messages": [],
-                    "isValid": true,
-                    "new": true
-                },
-                "pageId": "Simulations",
-                "collectionId": "Simulations_Functions",
-                "actionConfiguration": {
-                    "timeoutInMillisecond": 10000,
-                    "paginationType": "NONE",
-                    "encodeParamsToggle": true,
-                    "body": "() => {\n\t\tcloseModal(\"CreateNewRunModal\");\n\t\tshowAlert(\"Run has been created\", \"info\");\n\t\tsimulations.run();\n\t\tresetWidget(\"CreateNewRunModal\");\n\t}",
-                    "jsArguments": [],
-                    "isAsync": true
-                },
-                "executeOnLoad": false,
-                "dynamicBindingPathList": [
-                    {
-                        "key": "body"
-                    }
-                ],
-                "isValid": true,
-                "invalids": [],
-                "messages": [],
-                "jsonPathKeys": [
-                    "() => {\n\t\tcloseModal(\"CreateNewRunModal\");\n\t\tshowAlert(\"Run has been created\", \"info\");\n\t\tsimulations.run();\n\t\tresetWidget(\"CreateNewRunModal\");\n\t}"
-                ],
-                "confirmBeforeExecute": false,
-                "userPermissions": [],
-                "validName": "Functions.after_run_is_created"
-            },
-            "publishedAction": {
-                "name": "after_run_is_created",
-                "fullyQualifiedName": "Functions.after_run_is_created",
-                "datasource": {
-                    "userPermissions": [],
-                    "name": "UNUSED_DATASOURCE",
-                    "pluginId": "js-plugin",
-                    "messages": [],
-                    "isValid": true,
-                    "new": true
-                },
-                "pageId": "Simulations",
-                "collectionId": "Simulations_Functions",
-                "actionConfiguration": {
-                    "timeoutInMillisecond": 10000,
-                    "paginationType": "NONE",
-                    "encodeParamsToggle": true,
-                    "body": "() => {\n\t\tcloseModal(\"CreateNewRunModal\");\n\t\tshowAlert(\"Run has been created\", \"info\");\n\t\tsimulations.run();\n\t\tresetWidget(\"CreateNewRunModal\");\n\t}",
-                    "jsArguments": [],
-                    "isAsync": true
-                },
-                "executeOnLoad": false,
-                "dynamicBindingPathList": [
-                    {
-                        "key": "body"
-                    }
-                ],
-                "isValid": true,
-                "invalids": [],
-                "messages": [],
-                "jsonPathKeys": [
-                    "() => {\n\t\tcloseModal(\"CreateNewRunModal\");\n\t\tshowAlert(\"Run has been created\", \"info\");\n\t\tsimulations.run();\n\t\tresetWidget(\"CreateNewRunModal\");\n\t}"
-                ],
-                "confirmBeforeExecute": false,
-                "userPermissions": [],
-                "validName": "Functions.after_run_is_created"
-            },
-            "new": false
-        },
-        {
             "id": "Simulations_simulations",
             "userPermissions": [
                 "read:actions",
@@ -7916,7 +8704,7 @@
                         }
                     ]
                 },
-                "executeOnLoad": false,
+                "executeOnLoad": true,
                 "dynamicBindingPathList": [],
                 "isValid": true,
                 "invalids": [],
@@ -7952,7 +8740,7 @@
                         }
                     ]
                 },
-                "executeOnLoad": false,
+                "executeOnLoad": true,
                 "dynamicBindingPathList": [],
                 "isValid": true,
                 "invalids": [],
@@ -8381,92 +9169,6 @@
             "new": false
         },
         {
-            "id": "Simulations_after_run_is_started",
-            "userPermissions": [
-                "read:actions",
-                "execute:actions",
-                "manage:actions"
-            ],
-            "gitSyncId": "620f729f75fb6c688475b924_622f0b761100f50e2b1d2b30",
-            "pluginType": "JS",
-            "pluginId": "js-plugin",
-            "unpublishedAction": {
-                "name": "after_run_is_started",
-                "fullyQualifiedName": "Functions.after_run_is_started",
-                "datasource": {
-                    "userPermissions": [],
-                    "name": "UNUSED_DATASOURCE",
-                    "pluginId": "js-plugin",
-                    "messages": [],
-                    "isValid": true,
-                    "new": true
-                },
-                "pageId": "Simulations",
-                "collectionId": "Simulations_Functions",
-                "actionConfiguration": {
-                    "timeoutInMillisecond": 10000,
-                    "paginationType": "NONE",
-                    "encodeParamsToggle": true,
-                    "body": "() => {\n\t\tshowAlert(\"Run has been added to queue\", \"info\");\n\t\tsimulations.run();\n\t\tconst id = \"refreshRunStepList\";\n\t\tsetInterval( () => {run.run(); simulations.run();}, 5000, id ); //this is stopped when the run is clicked after it stops running\n\t\tstoreValue(\"interval_set\", 'true');\n\t}",
-                    "jsArguments": [],
-                    "isAsync": true
-                },
-                "executeOnLoad": false,
-                "dynamicBindingPathList": [
-                    {
-                        "key": "body"
-                    }
-                ],
-                "isValid": true,
-                "invalids": [],
-                "messages": [],
-                "jsonPathKeys": [
-                    "() => {\n\t\tshowAlert(\"Run has been added to queue\", \"info\");\n\t\tsimulations.run();\n\t\tconst id = \"refreshRunStepList\";\n\t\tsetInterval( () => {run.run(); simulations.run();}, 5000, id ); //this is stopped when the run is clicked after it stops running\n\t\tstoreValue(\"interval_set\", 'true');\n\t}"
-                ],
-                "confirmBeforeExecute": false,
-                "userPermissions": [],
-                "validName": "Functions.after_run_is_started"
-            },
-            "publishedAction": {
-                "name": "after_run_is_started",
-                "fullyQualifiedName": "Functions.after_run_is_started",
-                "datasource": {
-                    "userPermissions": [],
-                    "name": "UNUSED_DATASOURCE",
-                    "pluginId": "js-plugin",
-                    "messages": [],
-                    "isValid": true,
-                    "new": true
-                },
-                "pageId": "Simulations",
-                "collectionId": "Simulations_Functions",
-                "actionConfiguration": {
-                    "timeoutInMillisecond": 10000,
-                    "paginationType": "NONE",
-                    "encodeParamsToggle": true,
-                    "body": "() => {\n\t\tshowAlert(\"Run has been added to queue\", \"info\");\n\t\tsimulations.run();\n\t\tconst id = \"refreshRunStepList\";\n\t\tsetInterval( () => {run.run(); simulations.run();}, 5000, id ); //this is stopped when the run is clicked after it stops running\n\t\tstoreValue(\"interval_set\", 'true');\n\t}",
-                    "jsArguments": [],
-                    "isAsync": true
-                },
-                "executeOnLoad": false,
-                "dynamicBindingPathList": [
-                    {
-                        "key": "body"
-                    }
-                ],
-                "isValid": true,
-                "invalids": [],
-                "messages": [],
-                "jsonPathKeys": [
-                    "() => {\n\t\tshowAlert(\"Run has been added to queue\", \"info\");\n\t\tsimulations.run();\n\t\tconst id = \"refreshRunStepList\";\n\t\tsetInterval( () => {run.run(); simulations.run();}, 5000, id ); //this is stopped when the run is clicked after it stops running\n\t\tstoreValue(\"interval_set\", 'true');\n\t}"
-                ],
-                "confirmBeforeExecute": false,
-                "userPermissions": [],
-                "validName": "Functions.after_run_is_started"
-            },
-            "new": false
-        },
-        {
             "id": "Simulations_stop_run_refresh",
             "userPermissions": [
                 "read:actions",
@@ -8579,9 +9281,9 @@
                     "timeoutInMillisecond": 10000,
                     "paginationType": "NONE",
                     "encodeParamsToggle": true,
-                    "body": "() => {\n\t\tconst result = start_run.run();\n\t\tshowAlert(result);\n\t}",
+                    "body": "() => {\n\t\tstart_run.run(() => {\n\t\t\tconst message = start_run.data.Start_Run;\n\t\t\tif(message.includes(\"Failed\")) {\n\t\t\t\tshowAlert(message, \"error\");\n\t\t\t}\t\t\t\n\t\t\tsimulations.run();\n\t\t\tconst id = \"refreshRunStepList\";\n\t\t\tsetInterval( () => {run.run(); simulations.run();}, 5000, id ); //this is stopped when the run is clicked after it stops running\n\t\t\tstoreValue(\"interval_set\", 'true');\n\t\t\t});\n\t}",
                     "jsArguments": [],
-                    "isAsync": false
+                    "isAsync": true
                 },
                 "executeOnLoad": false,
                 "dynamicBindingPathList": [
@@ -8593,7 +9295,7 @@
                 "invalids": [],
                 "messages": [],
                 "jsonPathKeys": [
-                    "() => {\n\t\tconst result = start_run.run();\n\t\tshowAlert(result);\n\t}"
+                    "() => {\n\t\tstart_run.run(() => {\n\t\t\tconst message = start_run.data.Start_Run;\n\t\t\tif(message.includes(\"Failed\")) {\n\t\t\t\tshowAlert(message, \"error\");\n\t\t\t}\t\t\t\n\t\t\tsimulations.run();\n\t\t\tconst id = \"refreshRunStepList\";\n\t\t\tsetInterval( () => {run.run(); simulations.run();}, 5000, id ); //this is stopped when the run is clicked after it stops running\n\t\t\tstoreValue(\"interval_set\", 'true');\n\t\t\t});\n\t}"
                 ],
                 "confirmBeforeExecute": false,
                 "userPermissions": [],
@@ -8616,9 +9318,9 @@
                     "timeoutInMillisecond": 10000,
                     "paginationType": "NONE",
                     "encodeParamsToggle": true,
-                    "body": "() => {\n\t\tconst result = start_run.run();\n\t\tshowAlert(result);\n\t}",
+                    "body": "() => {\n\t\tstart_run.run(() => {\n\t\t\tconst message = start_run.data.Start_Run;\n\t\t\tif(message.includes(\"Failed\")) {\n\t\t\t\tshowAlert(message, \"error\");\n\t\t\t}\t\t\t\n\t\t\tsimulations.run();\n\t\t\tconst id = \"refreshRunStepList\";\n\t\t\tsetInterval( () => {run.run(); simulations.run();}, 5000, id ); //this is stopped when the run is clicked after it stops running\n\t\t\tstoreValue(\"interval_set\", 'true');\n\t\t\t});\n\t}",
                     "jsArguments": [],
-                    "isAsync": false
+                    "isAsync": true
                 },
                 "executeOnLoad": false,
                 "dynamicBindingPathList": [
@@ -8630,11 +9332,183 @@
                 "invalids": [],
                 "messages": [],
                 "jsonPathKeys": [
-                    "() => {\n\t\tconst result = start_run.run();\n\t\tshowAlert(result);\n\t}"
+                    "() => {\n\t\tstart_run.run(() => {\n\t\t\tconst message = start_run.data.Start_Run;\n\t\t\tif(message.includes(\"Failed\")) {\n\t\t\t\tshowAlert(message, \"error\");\n\t\t\t}\t\t\t\n\t\t\tsimulations.run();\n\t\t\tconst id = \"refreshRunStepList\";\n\t\t\tsetInterval( () => {run.run(); simulations.run();}, 5000, id ); //this is stopped when the run is clicked after it stops running\n\t\t\tstoreValue(\"interval_set\", 'true');\n\t\t\t});\n\t}"
                 ],
                 "confirmBeforeExecute": false,
                 "userPermissions": [],
                 "validName": "Functions.start_run_fn"
+            },
+            "new": false
+        },
+        {
+            "id": "Simulations_create_new_run_fn",
+            "userPermissions": [
+                "read:actions",
+                "execute:actions",
+                "manage:actions"
+            ],
+            "gitSyncId": "620f729f75fb6c688475b924_629f616b1e93255aaef2377f",
+            "pluginType": "JS",
+            "pluginId": "js-plugin",
+            "unpublishedAction": {
+                "name": "create_new_run_fn",
+                "fullyQualifiedName": "Functions.create_new_run_fn",
+                "datasource": {
+                    "userPermissions": [],
+                    "name": "UNUSED_DATASOURCE",
+                    "pluginId": "js-plugin",
+                    "messages": [],
+                    "isValid": true,
+                    "new": true
+                },
+                "pageId": "Simulations",
+                "collectionId": "Simulations_Functions",
+                "actionConfiguration": {
+                    "timeoutInMillisecond": 10000,
+                    "paginationType": "NONE",
+                    "encodeParamsToggle": true,
+                    "body": "() => {\n\t\tcreate_new_run.run(() => {\n\t\t\tcloseModal(\"CreateNewRunModal\");\n\t\t\tconst message = create_new_run.data.Create_Run_WithInput;\n\t\t\tlet level = \"success\";\n\t\t\tif(message.includes(\"Failed\")) {\n\t\t\t\tlevel = \"error\";\n\t\t\t}\n\t\t\tshowAlert(message, level);\n\t\t\tsimulations.run();\n\t\t\tresetWidget(\"CreateNewRunModal\");\n\t\t\t});\n\t}",
+                    "jsArguments": [],
+                    "isAsync": true
+                },
+                "executeOnLoad": false,
+                "dynamicBindingPathList": [
+                    {
+                        "key": "body"
+                    }
+                ],
+                "isValid": true,
+                "invalids": [],
+                "messages": [],
+                "jsonPathKeys": [
+                    "() => {\n\t\tcreate_new_run.run(() => {\n\t\t\tcloseModal(\"CreateNewRunModal\");\n\t\t\tconst message = create_new_run.data.Create_Run_WithInput;\n\t\t\tlet level = \"success\";\n\t\t\tif(message.includes(\"Failed\")) {\n\t\t\t\tlevel = \"error\";\n\t\t\t}\n\t\t\tshowAlert(message, level);\n\t\t\tsimulations.run();\n\t\t\tresetWidget(\"CreateNewRunModal\");\n\t\t\t});\n\t}"
+                ],
+                "confirmBeforeExecute": false,
+                "userPermissions": [],
+                "validName": "Functions.create_new_run_fn"
+            },
+            "publishedAction": {
+                "name": "create_new_run_fn",
+                "fullyQualifiedName": "Functions.create_new_run_fn",
+                "datasource": {
+                    "userPermissions": [],
+                    "name": "UNUSED_DATASOURCE",
+                    "pluginId": "js-plugin",
+                    "messages": [],
+                    "isValid": true,
+                    "new": true
+                },
+                "pageId": "Simulations",
+                "collectionId": "Simulations_Functions",
+                "actionConfiguration": {
+                    "timeoutInMillisecond": 10000,
+                    "paginationType": "NONE",
+                    "encodeParamsToggle": true,
+                    "body": "() => {\n\t\tcreate_new_run.run(() => {\n\t\t\tcloseModal(\"CreateNewRunModal\");\n\t\t\tconst message = create_new_run.data.Create_Run_WithInput;\n\t\t\tlet level = \"success\";\n\t\t\tif(message.includes(\"Failed\")) {\n\t\t\t\tlevel = \"error\";\n\t\t\t}\n\t\t\tshowAlert(message, level);\n\t\t\tsimulations.run();\n\t\t\tresetWidget(\"CreateNewRunModal\");\n\t\t\t});\n\t}",
+                    "jsArguments": [],
+                    "isAsync": true
+                },
+                "executeOnLoad": false,
+                "dynamicBindingPathList": [
+                    {
+                        "key": "body"
+                    }
+                ],
+                "isValid": true,
+                "invalids": [],
+                "messages": [],
+                "jsonPathKeys": [
+                    "() => {\n\t\tcreate_new_run.run(() => {\n\t\t\tcloseModal(\"CreateNewRunModal\");\n\t\t\tconst message = create_new_run.data.Create_Run_WithInput;\n\t\t\tlet level = \"success\";\n\t\t\tif(message.includes(\"Failed\")) {\n\t\t\t\tlevel = \"error\";\n\t\t\t}\n\t\t\tshowAlert(message, level);\n\t\t\tsimulations.run();\n\t\t\tresetWidget(\"CreateNewRunModal\");\n\t\t\t});\n\t}"
+                ],
+                "confirmBeforeExecute": false,
+                "userPermissions": [],
+                "validName": "Functions.create_new_run_fn"
+            },
+            "new": false
+        },
+        {
+            "id": "Simulations_stop_current_run_fn",
+            "userPermissions": [
+                "read:actions",
+                "execute:actions",
+                "manage:actions"
+            ],
+            "gitSyncId": "620f729f75fb6c688475b924_629f6c4a3ffbc648c1151da8",
+            "pluginType": "JS",
+            "pluginId": "js-plugin",
+            "unpublishedAction": {
+                "name": "stop_current_run_fn",
+                "fullyQualifiedName": "Functions.stop_current_run_fn",
+                "datasource": {
+                    "userPermissions": [],
+                    "name": "UNUSED_DATASOURCE",
+                    "pluginId": "js-plugin",
+                    "messages": [],
+                    "isValid": true,
+                    "new": true
+                },
+                "pageId": "Simulations",
+                "collectionId": "Simulations_Functions",
+                "actionConfiguration": {
+                    "timeoutInMillisecond": 10000,
+                    "paginationType": "NONE",
+                    "encodeParamsToggle": true,
+                    "body": "() => {\n\t\tstop_run.run(() => {\n\t\t\tconst message = stop_run.data.Stop_Run;\n\t\t\tlet level = \"success\";\n\t\t\tif(message.includes(\"Failed\")) {\n\t\t\t\tlevel = \"error\";\n\t\t\t}\n\t\t\tshowAlert(message, level);\n\t\t\t});\n\t}",
+                    "jsArguments": [],
+                    "isAsync": true
+                },
+                "executeOnLoad": false,
+                "dynamicBindingPathList": [
+                    {
+                        "key": "body"
+                    }
+                ],
+                "isValid": true,
+                "invalids": [],
+                "messages": [],
+                "jsonPathKeys": [
+                    "() => {\n\t\tstop_run.run(() => {\n\t\t\tconst message = stop_run.data.Stop_Run;\n\t\t\tlet level = \"success\";\n\t\t\tif(message.includes(\"Failed\")) {\n\t\t\t\tlevel = \"error\";\n\t\t\t}\n\t\t\tshowAlert(message, level);\n\t\t\t});\n\t}"
+                ],
+                "confirmBeforeExecute": false,
+                "userPermissions": [],
+                "validName": "Functions.stop_current_run_fn"
+            },
+            "publishedAction": {
+                "name": "stop_current_run_fn",
+                "fullyQualifiedName": "Functions.stop_current_run_fn",
+                "datasource": {
+                    "userPermissions": [],
+                    "name": "UNUSED_DATASOURCE",
+                    "pluginId": "js-plugin",
+                    "messages": [],
+                    "isValid": true,
+                    "new": true
+                },
+                "pageId": "Simulations",
+                "collectionId": "Simulations_Functions",
+                "actionConfiguration": {
+                    "timeoutInMillisecond": 10000,
+                    "paginationType": "NONE",
+                    "encodeParamsToggle": true,
+                    "body": "() => {\n\t\tstop_run.run(() => {\n\t\t\tconst message = stop_run.data.Stop_Run;\n\t\t\tlet level = \"success\";\n\t\t\tif(message.includes(\"Failed\")) {\n\t\t\t\tlevel = \"error\";\n\t\t\t}\n\t\t\tshowAlert(message, level);\n\t\t\t});\n\t}",
+                    "jsArguments": [],
+                    "isAsync": true
+                },
+                "executeOnLoad": false,
+                "dynamicBindingPathList": [
+                    {
+                        "key": "body"
+                    }
+                ],
+                "isValid": true,
+                "invalids": [],
+                "messages": [],
+                "jsonPathKeys": [
+                    "() => {\n\t\tstop_run.run(() => {\n\t\t\tconst message = stop_run.data.Stop_Run;\n\t\t\tlet level = \"success\";\n\t\t\tif(message.includes(\"Failed\")) {\n\t\t\t\tlevel = \"error\";\n\t\t\t}\n\t\t\tshowAlert(message, level);\n\t\t\t});\n\t}"
+                ],
+                "confirmBeforeExecute": false,
+                "userPermissions": [],
+                "validName": "Functions.stop_current_run_fn"
             },
             "new": false
         }
@@ -8691,7 +9565,7 @@
                 "archivedActionIds": [],
                 "actions": [],
                 "archivedActions": [],
-                "body": "export default {\n\tinterval_set: 0,\n\tafter_run_is_created: () => {\n\t\tcloseModal(\"CreateNewRunModal\");\n\t\tshowAlert(\"Run has been created\", \"info\");\n\t\tsimulations.run();\n\t\tresetWidget(\"CreateNewRunModal\");\n\t},\n\t\n\tafter_run_is_started: () => {\n\t\tshowAlert(\"Run has been added to queue\", \"info\");\n\t\tsimulations.run();\n\t\tconst id = \"refreshRunStepList\";\n\t\tsetInterval( () => {run.run(); simulations.run();}, 5000, id ); //this is stopped when the run is clicked after it stops running\n\t\tstoreValue(\"interval_set\", 'true');\n\t},\n\t\n\tstop_run_refresh: () => {\n\t\trun.run();\n\t\tconst id = \"refreshRunStepList\";\t\n\t\tif(appsmith.store.interval_set === 'true') {\n\t\t\tif(ListRuns.selectedItem.status !== 'active' && ListRuns.selectedItem.status !== 'waiting' && ListRuns.selectedItem.status !== 'running' ) {\n\t\t\t\tclearInterval(id);\n\t\t\t}\n\t\t\tstoreValue(\"interval_set\", 'false');\n\t\t} \n\t},\n\t\n\tstart_run_fn: () => {\n\t\tconst result = start_run.run();\n\t\tshowAlert(result);\n\t}\n}",
+                "body": "export default {\n\tinterval_set: 0,\n\t/* replaced\n\tafter_run_is_created: (response) => {\n\t\tcloseModal(\"CreateNewRunModal\");\n\t\tshowAlert(response);\n\t\tsimulations.run();\n\t\tresetWidget(\"CreateNewRunModal\");\n\t},*/\n\t/* replaced\n\tafter_run_is_started: () => {\n\t\tshowAlert(\"Run has been added to queue\", \"info\");\n\t\tsimulations.run();\n\t\tconst id = \"refreshRunStepList\";\n\t\tsetInterval( () => {run.run(); simulations.run();}, 5000, id ); //this is stopped when the run is clicked after it stops running\n\t\tstoreValue(\"interval_set\", 'true');\n\t},*/\n\t\n\tstop_run_refresh: () => {\n\t\trun.run();\n\t\tconst id = \"refreshRunStepList\";\t\n\t\tif(appsmith.store.interval_set === 'true') {\n\t\t\tif(ListRuns.selectedItem.status !== 'active' && ListRuns.selectedItem.status !== 'waiting' && ListRuns.selectedItem.status !== 'running' ) {\n\t\t\t\tclearInterval(id);\n\t\t\t}\n\t\t\tstoreValue(\"interval_set\", 'false');\n\t\t} \n\t},\n\t\t\n\tstart_run_fn: () => {\n\t\tstart_run.run(() => {\n\t\t\tconst message = start_run.data.Start_Run;\n\t\t\tif(message.includes(\"Failed\")) {\n\t\t\t\tshowAlert(message, \"error\");\n\t\t\t}\t\t\t\n\t\t\tsimulations.run();\n\t\t\tconst id = \"refreshRunStepList\";\n\t\t\tsetInterval( () => {run.run(); simulations.run();}, 5000, id ); //this is stopped when the run is clicked after it stops running\n\t\t\tstoreValue(\"interval_set\", 'true');\n\t\t\t});\n\t},\n\t\n\tstop_current_run_fn: () => {\n\t\tstop_run.run(() => {\n\t\t\tconst message = stop_run.data.Stop_Run;\n\t\t\tlet level = \"success\";\n\t\t\tif(message.includes(\"Failed\")) {\n\t\t\t\tlevel = \"error\";\n\t\t\t}\n\t\t\tshowAlert(message, level);\n\t\t\t});\n\t},\t\n\t\n\tcreate_new_run_fn: () => {\n\t\tcreate_new_run.run(() => {\n\t\t\tcloseModal(\"CreateNewRunModal\");\n\t\t\tconst message = create_new_run.data.Create_Run_WithInput;\n\t\t\tlet level = \"success\";\n\t\t\tif(message.includes(\"Failed\")) {\n\t\t\t\tlevel = \"error\";\n\t\t\t}\n\t\t\tshowAlert(message, level);\n\t\t\tsimulations.run();\n\t\t\tresetWidget(\"CreateNewRunModal\");\n\t\t\t});\n\t}\t\t\n\t\n}\n",
                 "variables": [
                     {
                         "name": "interval_set",
@@ -8708,7 +9582,7 @@
                 "archivedActionIds": [],
                 "actions": [],
                 "archivedActions": [],
-                "body": "export default {\n\tinterval_set: 0,\n\tafter_run_is_created: () => {\n\t\tcloseModal(\"CreateNewRunModal\");\n\t\tshowAlert(\"Run has been created\", \"info\");\n\t\tsimulations.run();\n\t\tresetWidget(\"CreateNewRunModal\");\n\t},\n\t\n\tafter_run_is_started: () => {\n\t\tshowAlert(\"Run has been added to queue\", \"info\");\n\t\tsimulations.run();\n\t\tconst id = \"refreshRunStepList\";\n\t\tsetInterval( () => {run.run(); simulations.run();}, 5000, id ); //this is stopped when the run is clicked after it stops running\n\t\tstoreValue(\"interval_set\", 'true');\n\t},\n\t\n\tstop_run_refresh: () => {\n\t\trun.run();\n\t\tconst id = \"refreshRunStepList\";\t\n\t\tif(appsmith.store.interval_set === 'true') {\n\t\t\tif(ListRuns.selectedItem.status !== 'active' && ListRuns.selectedItem.status !== 'waiting' && ListRuns.selectedItem.status !== 'running' ) {\n\t\t\t\tclearInterval(id);\n\t\t\t}\n\t\t\tstoreValue(\"interval_set\", 'false');\n\t\t} \n\t},\n\t\n\tstart_run_fn: () => {\n\t\tconst result = start_run.run();\n\t\tshowAlert(result);\n\t}\n}",
+                "body": "export default {\n\tinterval_set: 0,\n\t/* replaced\n\tafter_run_is_created: (response) => {\n\t\tcloseModal(\"CreateNewRunModal\");\n\t\tshowAlert(response);\n\t\tsimulations.run();\n\t\tresetWidget(\"CreateNewRunModal\");\n\t},*/\n\t/* replaced\n\tafter_run_is_started: () => {\n\t\tshowAlert(\"Run has been added to queue\", \"info\");\n\t\tsimulations.run();\n\t\tconst id = \"refreshRunStepList\";\n\t\tsetInterval( () => {run.run(); simulations.run();}, 5000, id ); //this is stopped when the run is clicked after it stops running\n\t\tstoreValue(\"interval_set\", 'true');\n\t},*/\n\t\n\tstop_run_refresh: () => {\n\t\trun.run();\n\t\tconst id = \"refreshRunStepList\";\t\n\t\tif(appsmith.store.interval_set === 'true') {\n\t\t\tif(ListRuns.selectedItem.status !== 'active' && ListRuns.selectedItem.status !== 'waiting' && ListRuns.selectedItem.status !== 'running' ) {\n\t\t\t\tclearInterval(id);\n\t\t\t}\n\t\t\tstoreValue(\"interval_set\", 'false');\n\t\t} \n\t},\n\t\t\n\tstart_run_fn: () => {\n\t\tstart_run.run(() => {\n\t\t\tconst message = start_run.data.Start_Run;\n\t\t\tif(message.includes(\"Failed\")) {\n\t\t\t\tshowAlert(message, \"error\");\n\t\t\t}\t\t\t\n\t\t\tsimulations.run();\n\t\t\tconst id = \"refreshRunStepList\";\n\t\t\tsetInterval( () => {run.run(); simulations.run();}, 5000, id ); //this is stopped when the run is clicked after it stops running\n\t\t\tstoreValue(\"interval_set\", 'true');\n\t\t\t});\n\t},\n\t\n\tstop_current_run_fn: () => {\n\t\tstop_run.run(() => {\n\t\t\tconst message = stop_run.data.Stop_Run;\n\t\t\tlet level = \"success\";\n\t\t\tif(message.includes(\"Failed\")) {\n\t\t\t\tlevel = \"error\";\n\t\t\t}\n\t\t\tshowAlert(message, level);\n\t\t\t});\n\t},\t\n\t\n\tcreate_new_run_fn: () => {\n\t\tcreate_new_run.run(() => {\n\t\t\tcloseModal(\"CreateNewRunModal\");\n\t\t\tconst message = create_new_run.data.Create_Run_WithInput;\n\t\t\tlet level = \"success\";\n\t\t\tif(message.includes(\"Failed\")) {\n\t\t\t\tlevel = \"error\";\n\t\t\t}\n\t\t\tshowAlert(message, level);\n\t\t\tsimulations.run();\n\t\t\tresetWidget(\"CreateNewRunModal\");\n\t\t\t});\n\t}\t\t\n\t\n}\n",
                 "variables": [
                     {
                         "name": "interval_set",
