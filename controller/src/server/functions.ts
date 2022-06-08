@@ -54,7 +54,7 @@ export async function createSimulation(model_id:string, name:string):Promise<str
     name,
   });
   if (!result?.create_simulation?.simulation_id) {
-    throw new Error('Undefined expression in createSimulation');
+    throw new Error('🎌 Undefined expression in createSimulation');
   }
   return result.create_simulation.simulation_id;
 }
@@ -127,7 +127,7 @@ export async function createStep(run_id:string, name:string, image:string,
     pipeline_step_number,
   });
   if (!result.insert_steps_one?.step_id) {
-    throw new Error('Undefined results from createStep');
+    throw new Error('🎌 Undefined results from createStep');
   }
   const stepId = result.insert_steps_one.step_id;
   logger.info(`Step created with id ${stepId}`);
@@ -146,7 +146,7 @@ export async function createRun(simulation_id:string, dsl:string, name:string):P
     name,
   });
   if (!result.insert_runs_one?.run_id) {
-    throw new Error('Undefined results from sdk.createRun function');
+    throw new Error('🎌 Undefined results from sdk.createRun function');
   }
   // create all steps in the database
   const { run_id: runId } = result.insert_runs_one;
@@ -296,22 +296,22 @@ function connectHasuraEndpoint():void {
 }
 
 export async function createSampleSimulation():Promise<string> {
-  await setTimeout(7000);
+  await setTimeout(3000);
   let result;
   try {
     connectHasuraEndpoint();
     // check if there are simulations in the database
     result = await sdk.AllSimulations();
   } catch (error) {
-    const errorMessage = `---\nError connecting from SIM-PIPE controller to hasura endpoint:\n
-      ${(error as Error).message} \n Check REMOTE_SCHEMA_URL in env file, hasura endpoint and 
-      admin secret\n---\n`;
+    const errorMessage = `\n 🎌 Error connecting from SIM-PIPE controller to hasura endpoint:\n
+    ${(error as Error).message}
+    Check REMOTE_SCHEMA_URL in env file, hasura endpoint and admin secret\n`;
     logger.error(errorMessage);
     logger.info('Retrying connecting from controller to hasura endpoint after 5 seconds');
     await setTimeout(5000);
     connectHasuraEndpoint();
   }
-  if (!result) { throw new Error('Error creating sample simulation at server start up'); }
+  if (!result) { throw new Error('🎌 Error creating sample simulation at server start up'); }
   if (result.simulations.length === 0) {
     const simId = await createSimulation('c97fc83a-b0fc-11ec-b909-0242ac120002',
       'Sample Simulation');

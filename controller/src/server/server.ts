@@ -39,8 +39,8 @@ const resolvers = {
         const newSimId = await functions.createSimulation(arguments_.model_id, arguments_.name);
         return `Simulation has been created with id ${newSimId}`;
       } catch (error) {
-        const errorMessage = `---\nInternal server error creating new simulation:\n
-      ${(error as Error).message}\n---\n`;
+        const errorMessage = `\n🎌 Internal server error creating new simulation:\n
+      ${(error as Error).message}\n`;
         logger.error(errorMessage);
         return 'Failed! Internal server error when creating new simulation';
       }
@@ -58,8 +58,8 @@ const resolvers = {
           arguments_.simulation_id, arguments_.dsl, arguments_.name, arguments_.sampleInput);
         return `Run has been created with id ${newRunId}`;
       } catch (error) {
-        const errorMessage = `---\nInternal server error creating new run:\n
-      ${(error as Error).message}\n---\n`;
+        const errorMessage = `\n🎌 Internal server error creating new run:\n
+      ${(error as Error).message}\n`;
         logger.error(errorMessage);
         return 'Failed! Internal server error when creating new run';
       }
@@ -70,8 +70,8 @@ const resolvers = {
         await functions.queueRun(arguments_.run_id);
         return 'Run has been added to queue';
       } catch (error) {
-        const errorMessage = `---\nFailed! internal server error starting run:\n
-      ${(error as Error).message}\n---\n`;
+        const errorMessage = `\n🎌 Failed! internal server error starting run:\n
+      ${(error as Error).message}\n`;
         logger.error(errorMessage);
         return 'Failed! internal server error starting run';
       }
@@ -81,8 +81,8 @@ const resolvers = {
         functions.stopRun(arguments_.run_id);
         return 'Successfully sent stop signal to current run';
       } catch (error) {
-        const errorMessage = `---\nInternal server error stopping run:\n
-      ${(error as Error).message}\n---\n`;
+        const errorMessage = `\n🎌 Internal server error stopping run:\n
+      ${(error as Error).message}\n`;
         logger.error(errorMessage);
         return 'Failed! internal server error stopping run';
       }
@@ -94,11 +94,11 @@ const server = new ApolloServer({ typeDefs, resolvers });
 try {
   await server.listen({ port: 9000, hostname: '0.0.0.0' }).then(({ url }) => {
     // eslint-disable-next-line no-console
-    console.log(`🚀  Server ready at ${url}`);
+    logger.info(`🚀 Server ready at ${url}`);
   });
 } catch (error) {
-  const errorMessage = `---\nError starting GraphQL server:\n
-      ${(error as Error).message} \n Check GraphQL server host and port\n---\n`;
+  const errorMessage = `\n 🎌 Error starting GraphQL server:\n
+      ${(error as Error).message} \nCheck GraphQL server host and port\n`;
   logger.error(errorMessage);
   throw new Error(errorMessage);
 }
