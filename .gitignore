@@ -1,7 +1,6 @@
 /node_modules
 /dist
 /[0-9]*
-hasura/metadata/remote_schemas.yaml
 .env
 controller/simulations/*
 controller/log/controller.log

@@ -296,7 +296,7 @@ function connectHasuraEndpoint():void {
 }
 
 export async function createSampleSimulation():Promise<string> {
-  await setTimeout(3000);
+  await setTimeout(7000);
   let result;
   try {
     connectHasuraEndpoint();
