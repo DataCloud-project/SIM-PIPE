@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: SIM-PIPE issues
+    url: https://github.com/DataCloud-project/SIM-PIPE/issues
+    about: Please report any bugs and requests for features here.
+  - name: DataCloud website
+    url: https://datacloudproject.eu/contacts
+    about: Please get in touch with us if you any questions regarding the DataCloud project.

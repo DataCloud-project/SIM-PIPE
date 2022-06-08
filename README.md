@@ -1,4 +1,4 @@
-<p align="center"><img width=50% src="https://raw.githubusercontent.com/DataCloud-project/toolbox/master/docs/img/datacloud_logo.png"></p>&nbsp;
+<p align="center"><img width=50% src="https://raw.githubusercontent.com/DataCloud-project/SIM-PIPE/main/docs/logo/sim-pipe_logo.png"></p>
 
 [![GitHub Issues](https://img.shields.io/github/issues/DataCloud-project/SIM-PIPE.svg)](https://github.com/DataCloud-project/SIM-PIPE/issues)
 [![License](https://img.shields.io/badge/license-Apache2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
@@ -64,4 +64,19 @@ To install SIM-PIPE follow these steps:
 
 ## Running your first data pipeline simulation
 
-After the SIM-PIPE tool has been installed, you are ready to run your first data pipeline simulation. Ensure that the sandbox VM is running and that the Docker daemon in the Sandbox is listending on port 2375.
+See the [example](https://github.com/DataCloud-project/SIM-PIPE/tree/main/example) folder for instructions on how to run your first data pipeline simulation.
+
+## Contributing
+
+Before raising a pull request, please read our contributing guide.
+
+## Core development team
+
+* [Nikolay Nikolov](https://github.com/nvnikolov)
+* [Antoine Pultier](https://github.com/fungiboletus)
+* [Aleena Thomas](https://github.com/AleenaThomas-gh)
+* [Brian Elvesæter](https://github.com/elvesater)
+
+## License
+
+SIM-PIPE is released as open source software under the [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0).

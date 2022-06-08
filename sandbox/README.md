@@ -1,8 +1,3 @@
-<p align="center"><img width=50% src="https://raw.githubusercontent.com/DataCloud-project/toolbox/master/docs/img/datacloud_logo.png"></p>&nbsp;
-
-[![GitHub Issues](https://img.shields.io/github/issues/DataCloud-project/SIM-PIPE-Sandbox.svg)](https://github.com/DataCloud-project/SIM-PIPE-Sandbox/issues)
-[![License](https://img.shields.io/badge/license-Apache2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-
 # SIM-PIPE Sandbox
 
 The `Sandbox` component of SIM-PIPE is an isolated testbed for running the simulations. This folder contains the the necessary setup and configuration files for setting up the sandbox environment on a Ubuntu Server 20.03 LTS virtual machine (VM). The sandbox VM runs a Docker daemon for dispatching Docker containers (each running a step of a data pipeline) and an SFTP server for file transfers.
@@ -65,7 +60,7 @@ cd SIM-PIPE/sandbox
 The Ansible inventory file [inventory-datacloud.yaml](https://github.com/DataCloud-project/SIM-PIPE-Sandbox/blob/main/inventory-datacloud.yaml) contains configuration settings for the sandbox VM host, such as the IP address and the SSH port and username.
 
 * `ansible_host`: The IP address of the host. Default value is `localhost`.
-* `ansible_port`: The SSH port of the host. Default value is `2222`.
+* `ansible_port`: The SSH port of the host. Default value is `22`.
 * `ansible_user`: The SSH username to use. Default value is `ubuntu`.
 * `ansible_become`: Enables to run tasks as sudo. Default value is `true`.
 
@@ -79,7 +74,13 @@ sudo pico inventory-datacloud.yaml
 
 Run the Ansible Playbook file [setup-sandbox-vm.yaml](https://github.com/DataCloud-project/SIM-PIPE-Sandbox/blob/main/setup-sandbox-vm.yaml) to setup the sandbox. For more information about Ansible Playbooks see https://docs.ansible.com/ansible/latest/user_guide/playbooks_intro.html
 
-Command line:
+Command line when using private key to authenticate: (Update the command line to point to the location of your keyfile.)
+
+```
+ansible-playbook -i inventory-datacloud.yaml setup-sandbox-vm.yaml --key-file ~/.ssh/mykey.pem
+```
+
+Command line when using password to authenticate:
 
 ```
 ansible-playbook -i inventory-datacloud.yaml setup-sandbox-vm.yaml --ask-pass --ask-become-pass
