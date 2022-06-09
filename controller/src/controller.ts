@@ -46,7 +46,7 @@ if (remote) {
   const stats = await fsAsync.stat(socket);
 
   if (!stats.isSocket()) {
-    throw new Error('Are you sure the docker is running?');
+    throw new Error('🎌 Are you sure the docker is running?');
   }
 
   docker = new Docker({ socketPath: socket });
@@ -58,7 +58,7 @@ let counter:number;
 
 function init(step:types.Step):void {
   if (!step.stepNumber) {
-    throw new Error('Error in controller.init: step number not defined');
+    throw new Error('🎌 Error in controller.init: step number not defined');
   }
   targetDirectory = path.join('simulations', step.simId, step.runId, `${step.stepNumber}`);
   counter = 1;
@@ -146,7 +146,7 @@ export async function parseStats(stepId:number) : Promise<void> {
           time, cpu, systemCpu, memory, memory_max: memoryMax, rxValue, txValue,
         };
       } catch (error) {
-        logger.error(`Error parsing stats file: ${fullFilename}`);
+        logger.error(`🎌 Error parsing stats file: ${fullFilename}`);
         logger.error(error);
         return undefined;
       }
@@ -241,7 +241,7 @@ async function getStatsUntilExit(container: Docker.Container, exitTimeout:number
         process.env.STOP_SIGNAL_SENT = 'true';
         logger.info('Sent stop signal to running container');
       } catch {
-        logger.error('Error stopping the container');
+        logger.error('🎌 Error stopping the container');
       }
     }
     // TODO: very slow; takes around 2 seconds
@@ -272,7 +272,7 @@ function startPollingStats(startedAt:number, step:types.Step):void {
   let exitTimeout:number;
   // get CONTAINER_TIME_LIMIT (seconds) env variable
   if (!process.env.CONTAINER_TIME_LIMIT) {
-    throw new Error('Timeout interval to stop container is not defined');
+    throw new Error('🎌 Timeout interval to stop container is not defined');
   } else {
     exitTimeout = ( +process.env.CONTAINER_TIME_LIMIT ) * 1000;
   }
@@ -295,7 +295,7 @@ async function waitForContainer():Promise<void> {
 
 export async function start(client:GraphQLClient, step:types.Step) : Promise<string> {
   if (!step.stepNumber || !step.stepId || !step.image || !step.env) {
-    throw new Error('Error in controller.start: step_number, image, env or step_id not defined');
+    throw new Error('🎌 Error in controller.start: step_number, image, env or step_id not defined');
   }
   try {
     init(step);
@@ -313,7 +313,7 @@ export async function start(client:GraphQLClient, step:types.Step) : Promise<str
     await sdk.setStepAsFailed({ step_id: step.stepId });
     // eslint-disable-next-line @typescript-eslint/no-unsafe-call
     await sdk.insertLog({ step_id: step.stepId, text: `${error}` });
-    logger.info(`${error} in controller.start`);
+    logger.info(`🎌 ${error} in controller.start`);
     throw new Error('Error in step execution, step failed');
   }
 }

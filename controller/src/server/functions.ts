@@ -1,9 +1,16 @@
 /* eslint-disable eslint-comments/disable-enable-pair */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+/* eslint-disable @typescript-eslint/restrict-template-expressions */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable node/no-unsupported-features/es-syntax */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable no-restricted-syntax */
 import * as dotenv from 'dotenv';
 import { GraphQLClient } from 'graphql-request';
 import * as fs from 'node:fs';
+import { setTimeout } from 'node:timers/promises';
 
 import * as controller from '../controller.js';
 import { getSdk } from '../db/database.js';
@@ -14,18 +21,27 @@ import type * as types from '../types.js';
 
 dotenv.config();
 
-const hasura = process.env.HASURA ?? 'http://127.0.0.1:8080/v1/graphql';
-const client = new GraphQLClient(hasura, {
-  headers: {
-    'x-hasura-admin-secret': 'hasuraadminsecret',
-  },
-});
-const sdk = getSdk(client);
+let client: GraphQLClient;
+let sdk: { setRunAsQueued: (argument0: { run_id: string; }) => any,
+  AllSimulations: () => AllSimulationsQuery | PromiseLike<AllSimulationsQuery>,
+  allRunsAndSteps: () => any,
+  createSimulation: (argument0: { model_id: string; name: string; }) => any,
+  createStep: (argument0: { run_id: string; name: string; image: string; pipeline_step_number: number; }) => any,
+  createRun: (argument0: { simulation_id: string; dsl: string; name: string; }) => any,
+  setRunAsStarted: (argument0: { run_id: string; }) => any,
+  getRunDetails: (argument0: { run_id: string; }) => any,
+  getSimulationRunResults: (argument0: { simulation_id: string; run_id: string; }) => any,
+  setRunAsCancelled: (argument0: { run_id: string; }) => any,
+  setStepAsCancelled: (argument0: { step_id: any; }) => any,
+  setRunAsFailed: (argument0: { run_id: string; }) => any,
+  setRunAsEndedSuccess: (argument0: { run_id: string; }) => any
+};
 const uploadDirectory = 'uploaded_files/';
 
-export async function allSimulations():Promise<AllSimulationsQuery> {
-  // return JSON.stringify(await sdk.AllSimulations(), undefined, 2);
-  return await sdk.AllSimulations();
+export async function allSimulations():Promise<string> {
+// export async function allSimulations():Promise<AllSimulationsQuery> {
+  return JSON.stringify(await sdk.AllSimulations(), undefined, 2);
+  // return await sdk.AllSimulations();
 }
 
 export async function allRunsSteps():Promise<string> {
@@ -38,7 +54,7 @@ export async function createSimulation(model_id:string, name:string):Promise<str
     name,
   });
   if (!result?.create_simulation?.simulation_id) {
-    throw new Error('Undefined expression in createSimulation');
+    throw new Error('🎌 Undefined expression in createSimulation');
   }
   return result.create_simulation.simulation_id;
 }
@@ -111,10 +127,11 @@ export async function createStep(run_id:string, name:string, image:string,
     pipeline_step_number,
   });
   if (!result.insert_steps_one?.step_id) {
-    throw new Error('Undefined results from createStep');
+    throw new Error('🎌 Undefined results from createStep');
   }
-  logger.info(`Step created with id ${result.insert_steps_one.step_id}`);
-  return `${result.insert_steps_one.step_id}`;
+  const stepId = result.insert_steps_one.step_id;
+  logger.info(`Step created with id ${stepId}`);
+  return `${stepId}`;
 }
 
 export async function createRun(simulation_id:string, dsl:string, name:string):Promise<string> {
@@ -129,11 +146,11 @@ export async function createRun(simulation_id:string, dsl:string, name:string):P
     name,
   });
   if (!result.insert_runs_one?.run_id) {
-    throw new Error('Undefined results from createRun function');
+    throw new Error('🎌 Undefined results from sdk.createRun function');
   }
-  logger.info(`Run created with id ${result.insert_runs_one.run_id}`);
   // create all steps in the database
   const { run_id: runId } = result.insert_runs_one;
+  logger.info(`Run created with id ${runId}`);
   for await (const step of steps) {
     await createStep(runId, step.name, step.image, step.step_number);
   }
@@ -147,7 +164,7 @@ export async function createRunWithInput(simulation_id: string, dsl: string,
   // write sample input to uploaded_files/runId
   for (const [inputName, inputContent] of sampleInput) {
     if (!inputContent) {
-      throw new Error('Content of input file undefined in createRunWithInput');
+      throw new Error('Content of input file undefined in functions.createRunWithInput');
     }
     fs.writeFile(`${uploadDirectory}${runId}/${inputName}`, inputContent, (error) => {
       if (error) { throw new Error('Error in createRunWithInput'); }
@@ -214,7 +231,7 @@ export async function startRun(run_id:string):Promise<string> {
   }
   if (process.env.FAILED_RUN === 'true') {
     // mark the run as failed
-    logger.info(`Run ${run_id} execution has failed\n`);
+    logger.error(`Run ${run_id} execution has failed\n`);
     await sdk.setRunAsFailed({ run_id });
     // set STOP signal to false for the next run
     process.env.FAILED_RUN = 'false';
@@ -268,10 +285,33 @@ export async function queueRun(run_id:string):Promise<string> {
   return 'ok';
 }
 
+function connectHasuraEndpoint():void {
+  const hasura = process.env.HASURA ?? 'http://127.0.0.1:8080/v1/graphql';
+  client = new GraphQLClient(hasura, {
+    headers: {
+      'x-hasura-admin-secret': 'hasuraadminsecret',
+    },
+  });
+  sdk = getSdk(client);
+}
+
 export async function createSampleSimulation():Promise<string> {
-  // check if there are simulations in the database
-  const result = await allSimulations();
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+  await setTimeout(7000);
+  let result;
+  try {
+    connectHasuraEndpoint();
+    // check if there are simulations in the database
+    result = await sdk.AllSimulations();
+  } catch (error) {
+    const errorMessage = `\n 🎌 Error connecting from SIM-PIPE controller to hasura endpoint:\n
+    ${(error as Error).message}
+    Check REMOTE_SCHEMA_URL in env file, hasura endpoint and admin secret\n`;
+    logger.error(errorMessage);
+    logger.info('Retrying connecting from controller to hasura endpoint after 5 seconds');
+    await setTimeout(5000);
+    connectHasuraEndpoint();
+  }
+  if (!result) { throw new Error('🎌 Error creating sample simulation at server start up'); }
   if (result.simulations.length === 0) {
     const simId = await createSimulation('c97fc83a-b0fc-11ec-b909-0242ac120002',
       'Sample Simulation');
