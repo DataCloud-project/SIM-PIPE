@@ -10,9 +10,6 @@ jobs:
   build:
 
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./controller
 
     steps:
     - uses: actions/checkout@v2
@@ -21,6 +18,8 @@ jobs:
       with:
         node-version: 16
         cache: 'npm'
+        cache-dependency-path: './controller/package-lock.json'
+
     - run: npm ci
     - run: npm run lint
     - run: npm run build
