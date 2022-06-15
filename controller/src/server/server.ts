@@ -8,8 +8,25 @@ process.env.CANCEL_RUN_LIST = '';
 
 // all API endpoints
 const typeDefs = gql`
+  type Run {
+    run_id: String
+    name: String
+    status: String
+    created: String
+    started: String
+    ended: String 
+  }
+  type Simulation {
+    simulation_id: String
+    name: String
+    created: String
+    runs: [Run]
+  }
+  type AllSimulations {
+    simulations: [Simulation] 
+  }
   type Query {
-      All_Simulations: String
+      All_Simulations: AllSimulations
       All_Runs_Steps: String
       Get_Simulation_Run_Results(simulation_id: String, run_id:String): String
   }

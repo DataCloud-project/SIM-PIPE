@@ -56,10 +56,6 @@ module.exports = {
       prefer: 'type-imports',
     }],
     'unicorn/no-useless-undefined': 'off',
-    'node/no-unsupported-features/es-syntax': [ // to allow import and export declarations in *.ts file
-      'error',
-      { ignores: ['modules'] },
-    ],
   },
   settings: {
     'import/parsers': {
