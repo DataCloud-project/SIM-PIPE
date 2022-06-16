@@ -1,7 +1,7 @@
-/node_modules
 /dist
 /[0-9]*
 .env
 controller/simulations/*
 controller/log/controller.log
 controller/uploaded_files/*
+controller/node_modules
