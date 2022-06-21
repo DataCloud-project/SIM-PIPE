@@ -8,28 +8,60 @@ import { getSdk } from '../db/database.js';
 import logger from '../logger.js';
 import TaskQueue from './taskqueue.js';
 import type {
-  AllSimulationsQuery, CreateRunMutation, CreateSimulationMutation,
-  CreateStepMutation, GetRunDetailsQuery, GetSimulationRunResultsQuery,
+  AllRunsAndStepsQuery, AllRunsAndStepsQueryVariables, AllSimulationsQuery,
+  AllSimulationsQueryVariables, CreateRunMutation, CreateRunMutationVariables,
+  CreateSimulationMutation, CreateSimulationMutationVariables, CreateStepMutation,
+  CreateStepMutationVariables, GetRunDetailsQuery, GetRunDetailsQueryVariables,
+  GetSimulationIdandStepsQuery, GetSimulationIdandStepsQueryVariables, GetSimulationRunResultsQuery,
+  GetSimulationRunResultsQueryVariables, InsertLogMutation, InsertLogMutationVariables,
+  InsertResourceUsageMutation, InsertResourceUsageMutationVariables, SetRunAsCancelledMutation,
+  SetRunAsCancelledMutationVariables, SetRunAsEndedSuccessMutation,
+  SetRunAsEndedSuccessMutationVariables, SetRunAsFailedMutation, SetRunAsFailedMutationVariables,
+  SetRunAsQueuedMutation, SetRunAsQueuedMutationVariables, SetRunAsStartedMutation,
+  SetRunAsStartedMutationVariables, SetStepAsCancelledMutation, SetStepAsCancelledMutationVariables,
+  SetStepAsEndedSuccessMutation, SetStepAsEndedSuccessMutationVariables, SetStepAsFailedMutation,
+  SetStepAsFailedMutationVariables, SetStepAsStartedMutation, SetStepAsStartedMutationVariables,
 } from '../db/database.js';
 import type * as types from '../types.js';
 
 dotenv.config();
 
 let client: GraphQLClient;
-let sdk: { setRunAsQueued: (argument0: { run_id: string; }) => any,
-  AllSimulations: () => AllSimulationsQuery | PromiseLike<AllSimulationsQuery>,
-  allRunsAndSteps: () => any,
-  createSimulation: (argument0: { model_id: string; name: string; }) => CreateSimulationMutation,
-  createStep: (argument0: { run_id: string; name: string; image: string; pipeline_step_number: number; }) => CreateStepMutation,
-  createRun: (argument0: { simulation_id: string; dsl: string; name: string; }) => CreateRunMutation,
-  setRunAsStarted: (argument0: { run_id: string; }) => any,
-  getRunDetails: (argument0: { run_id: string; }) => GetRunDetailsQuery,
-  getSimulationRunResults: (argument0: { simulation_id: string; run_id: string; }) => GetSimulationRunResultsQuery,
-  setRunAsCancelled: (argument0: { run_id: string; }) => any,
-  setStepAsCancelled: (argument0: { step_id: any; }) => any,
-  setRunAsFailed: (argument0: { run_id: string; }) => any,
-  setRunAsEndedSuccess: (argument0: { run_id: string; }) => any
+let sdk: {
+  AllSimulations(variables?: AllSimulationsQueryVariables): Promise<AllSimulationsQuery>,
+  allRunsAndSteps(variables?: AllRunsAndStepsQueryVariables): Promise<AllRunsAndStepsQuery>,
+  createRun(variables?: CreateRunMutationVariables): Promise<CreateRunMutation>,
+  createStep(variables?: CreateStepMutationVariables): Promise<CreateStepMutation>,
+  setStepAsStarted(variables?: SetStepAsStartedMutationVariables): Promise<SetStepAsStartedMutation>,
+  setStepAsEndedSuccess(variables?: SetStepAsEndedSuccessMutationVariables): Promise<SetStepAsEndedSuccessMutation>,
+  setStepAsCancelled(variables?: SetStepAsCancelledMutationVariables): Promise<SetStepAsCancelledMutation>,
+  setStepAsFailed(variables?: SetStepAsFailedMutationVariables): Promise<SetStepAsFailedMutation>,
+  setRunAsStarted(variables: SetRunAsStartedMutationVariables): Promise<SetRunAsStartedMutation>,
+  setRunAsQueued(variables: SetRunAsQueuedMutationVariables): Promise<SetRunAsQueuedMutation>,
+  setRunAsEndedSuccess(variables: SetRunAsEndedSuccessMutationVariables): Promise<SetRunAsEndedSuccessMutation>,
+  setRunAsCancelled(variables: SetRunAsCancelledMutationVariables): Promise<SetRunAsCancelledMutation>,
+  setRunAsFailed(variables: SetRunAsFailedMutationVariables): Promise<SetRunAsFailedMutation>,
+  createSimulation(variables: CreateSimulationMutationVariables): Promise<CreateSimulationMutation>,
+  getSimulationIdandSteps(variables: GetSimulationIdandStepsQueryVariables): Promise<GetSimulationIdandStepsQuery>,
+  getRunDetails(variables: GetRunDetailsQueryVariables): Promise<GetRunDetailsQuery>,
+  insertResourceUsage(variables?: InsertResourceUsageMutationVariables): Promise<InsertResourceUsageMutation>,
+  insertLog(variables?: InsertLogMutationVariables): Promise<InsertLogMutation>,
+  getSimulationRunResults(variables?: GetSimulationRunResultsQueryVariables):Promise<GetSimulationRunResultsQuery>
 };
+
+function connectHasuraEndpoint():void {
+  const hasura = process.env.HASURA ?? 'http://127.0.0.1:8080/v1/graphql';
+  if (!process.env.HASURA_ADMIN_SECRET) {
+    throw new Error('Hasura admin password not set in env file');
+  }
+  client = new GraphQLClient(hasura, {
+    headers: {
+      'x-hasura-admin-secret': process.env.HASURA_ADMIN_SECRET,
+    },
+  });
+  sdk = getSdk(client);
+}
+
 const uploadDirectory = 'uploaded_files/';
 
 export async function allSimulations():Promise<AllSimulationsQuery> {
@@ -159,7 +191,6 @@ export async function createRun(simulation_id:string, dsl:string, name:string):P
 export async function createRunWithInput(simulation_id: string, dsl: string,
   name: string, sampleInput: [[string, string]]): Promise<string> {
   const runId = await createRun(simulation_id, dsl, name);
-  console.log('create run fn called in create run with input fn');
   fs.mkdirSync(`${uploadDirectory}${runId}`, { recursive: true });
   // write sample input to uploaded_files/runId
   // eslint-disable-next-line no-restricted-syntax
@@ -180,6 +211,9 @@ export async function startRun(run_id:string):Promise<string> {
   // get simulationId and step details of runId
   // eslint-disable-next-line @typescript-eslint/await-thenable
   const result:GetRunDetailsQuery = await sdk.getRunDetails({ run_id });
+  if (!result.runs) {
+    throw new Error('GerRunDetailsQuery fetched no rows');
+  }
   const { steps } = result.runs[0]; // get steps sorted acc to pipeline_step_number
   // set runId and simulationId once for all runs
   const currentStep:types.Step = {
@@ -290,19 +324,6 @@ export async function queueRun(run_id:string):Promise<string> {
   return 'ok';
 }
 
-function connectHasuraEndpoint():void {
-  const hasura = process.env.HASURA ?? 'http://127.0.0.1:8080/v1/graphql';
-  if (!process.env.HASURA_ADMIN_SECRET) {
-    throw new Error('Hasura admin password not set in env file');
-  }
-  client = new GraphQLClient(hasura, {
-    headers: {
-      'x-hasura-admin-secret': process.env.HASURA_ADMIN_SECRET,
-    },
-  });
-  sdk = getSdk(client);
-}
-
 export async function createSampleSimulation():Promise<string> {
   await setTimeout(7000);
   let result;
@@ -319,7 +340,10 @@ export async function createSampleSimulation():Promise<string> {
     await setTimeout(5000);
     connectHasuraEndpoint();
   }
-  if (!result) { throw new Error('🎌 Error creating sample simulation at server start up'); }
+  if (!result) {
+    throw new Error('🎌 Error creating sample simulation at server start up, '
+  + 'hasura endpoint could not be connected');
+  }
   if (result.simulations.length === 0) {
     const simId = await createSimulation('c97fc83a-b0fc-11ec-b909-0242ac120002',
       'Sample Simulation');

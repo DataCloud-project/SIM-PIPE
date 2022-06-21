@@ -65,7 +65,7 @@ services:
       POLLING_INTERVAL: ${POLLING_INTERVAL}
       REMOTE_OUTPUT_DIR: 'out/'
       REMOTE_INPUT_DIR: 'in/'
-      
+      HASURA_ADMIN_SECRET: ${HASURA_ADMIN_SECRET}      
 volumes:
   db_data1:
     null
