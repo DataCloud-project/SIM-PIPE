@@ -2835,7 +2835,7 @@ export type GetSimulationIdandStepsQueryVariables = Exact<{
 }>;
 
 
-export type GetSimulationIdandStepsQuery = { __typename?: 'query_root', runs: Array<{ __typename?: 'runs', simulation_id: string, name?: string | null | undefined, steps: Array<{ __typename?: 'steps', step_id: number, pipeline_step_number: number, image: string, name: string }> }> };
+export type GetSimulationIdandStepsQuery = { __typename?: 'query_root', runs: Array<{ __typename: 'runs', simulation_id: string, name?: string | null | undefined, steps: Array<{ __typename?: 'steps', step_id: number, pipeline_step_number: number, image: string, name: string }> }> };
 
 export type GetRunDetailsQueryVariables = Exact<{
   run_id: Scalars['uuid'];

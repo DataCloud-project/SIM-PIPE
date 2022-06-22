@@ -2,7 +2,6 @@
 /* eslint-disable @typescript-eslint/restrict-template-expressions */
 /* eslint-disable no-await-in-loop */
 /* eslint-disable no-restricted-syntax */
-/* eslint-disable space-in-parens */
 import Docker from 'dockerode';
 import * as dotenv from 'dotenv';
 import fsAsync from 'node:fs/promises';
@@ -46,7 +45,7 @@ if (remote) {
   const stats = await fsAsync.stat(socket);
 
   if (!stats.isSocket()) {
-    throw new Error('Are you sure the docker is running?');
+    throw new Error('🎌 Are you sure the docker is running?');
   }
 
   docker = new Docker({ socketPath: socket });
@@ -58,7 +57,7 @@ let counter:number;
 
 function init(step:types.Step):void {
   if (!step.stepNumber) {
-    throw new Error('Error in controller.init: step number not defined');
+    throw new Error('🎌 Error in controller.init: step number not defined');
   }
   targetDirectory = path.join('simulations', step.simId, step.runId, `${step.stepNumber}`);
   counter = 1;
@@ -146,7 +145,7 @@ export async function parseStats(stepId:number) : Promise<void> {
           time, cpu, systemCpu, memory, memory_max: memoryMax, rxValue, txValue,
         };
       } catch (error) {
-        logger.error(`Error parsing stats file: ${fullFilename}`);
+        logger.error(`🎌 Error parsing stats file: ${fullFilename}`);
         logger.error(error);
         return undefined;
       }
@@ -164,7 +163,7 @@ export async function parseStats(stepId:number) : Promise<void> {
   let previousCpu = 0;
   let previousSystemCpu = 0;
   // eslint-disable-next-line @typescript-eslint/no-shadow
-  for await ( const stats of sortedStats ) {
+  for await (const stats of sortedStats) {
     const temporary = stats.cpu;
     stats.cpu = ((stats.cpu - previousCpu) / (stats.systemCpu - previousSystemCpu));
     // eslint-disable-next-line @typescript-eslint/no-unsafe-call
@@ -231,8 +230,8 @@ async function getStatsUntilExit(container: Docker.Container, exitTimeout:number
 
   if (ids.includes(createdContainer.id)) { // collect statstics as long as the container is running
     if (process.env.STOP_SIGNAL_SENT === 'false'
-            && ( (process.env.CANCEL_RUN_LIST as string).includes(step.runId)
-                  || ((new Date() as unknown as number) - startedAt) >= exitTimeout )) {
+            && ((process.env.CANCEL_RUN_LIST as string).includes(step.runId)
+                  || ((new Date() as unknown as number) - startedAt) >= exitTimeout)) {
       try {
       // for continuous steps, send stop signal after configured number of seconds
       // eslint-disable-next-line @typescript-eslint/no-floating-promises
@@ -241,7 +240,7 @@ async function getStatsUntilExit(container: Docker.Container, exitTimeout:number
         process.env.STOP_SIGNAL_SENT = 'true';
         logger.info('Sent stop signal to running container');
       } catch {
-        logger.error('Error stopping the container');
+        logger.error('🎌 Error stopping the container');
       }
     }
     // TODO: very slow; takes around 2 seconds
@@ -272,9 +271,9 @@ function startPollingStats(startedAt:number, step:types.Step):void {
   let exitTimeout:number;
   // get CONTAINER_TIME_LIMIT (seconds) env variable
   if (!process.env.CONTAINER_TIME_LIMIT) {
-    throw new Error('Timeout interval to stop container is not defined');
+    throw new Error('🎌 Timeout interval to stop container is not defined');
   } else {
-    exitTimeout = ( +process.env.CONTAINER_TIME_LIMIT ) * 1000;
+    exitTimeout = (+process.env.CONTAINER_TIME_LIMIT) * 1000;
   }
   const pollingInterval:number = process.env.POLLING_INTERVAL ? +process.env.POLLING_INTERVAL * 1000
     : 750;
@@ -295,7 +294,7 @@ async function waitForContainer():Promise<void> {
 
 export async function start(client:GraphQLClient, step:types.Step) : Promise<string> {
   if (!step.stepNumber || !step.stepId || !step.image || !step.env) {
-    throw new Error('Error in controller.start: step_number, image, env or step_id not defined');
+    throw new Error('🎌 Error in controller.start: step_number, image, env or step_id not defined');
   }
   try {
     init(step);
@@ -313,7 +312,7 @@ export async function start(client:GraphQLClient, step:types.Step) : Promise<str
     await sdk.setStepAsFailed({ step_id: step.stepId });
     // eslint-disable-next-line @typescript-eslint/no-unsafe-call
     await sdk.insertLog({ step_id: step.stepId, text: `${error}` });
-    logger.info(`${error} in controller.start`);
+    logger.info(`🎌 ${error} in controller.start`);
     throw new Error('Error in step execution, step failed');
   }
 }

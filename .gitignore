@@ -1,10 +1,7 @@
-/node_modules
 /dist
-/src/temp.js
 /[0-9]*
-src/1/input1.txt
-src/1/input2.txt
-simulations/*
-uploaded_files/*
-hasura/metadata/remote_schemas.yaml
-log/controller.log
+.env
+controller/simulations/*
+controller/log/controller.log
+controller/uploaded_files/*
+controller/node_modules

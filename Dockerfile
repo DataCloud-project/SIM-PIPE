@@ -1,7 +1,7 @@
 FROM node:17-alpine
 
-COPY package.json tsconfig.json package-lock.json ./
+COPY controller/package.json controller/tsconfig.json controller/package-lock.json ./
 RUN npm install
-COPY src/ src/
+COPY controller/src/ src/
 
 CMD npm start
