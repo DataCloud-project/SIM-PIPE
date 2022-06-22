@@ -2,7 +2,6 @@
 /* eslint-disable @typescript-eslint/restrict-template-expressions */
 /* eslint-disable no-await-in-loop */
 /* eslint-disable no-restricted-syntax */
-/* eslint-disable space-in-parens */
 import Docker from 'dockerode';
 import * as dotenv from 'dotenv';
 import fsAsync from 'node:fs/promises';
@@ -164,7 +163,7 @@ export async function parseStats(stepId:number) : Promise<void> {
   let previousCpu = 0;
   let previousSystemCpu = 0;
   // eslint-disable-next-line @typescript-eslint/no-shadow
-  for await ( const stats of sortedStats ) {
+  for await (const stats of sortedStats) {
     const temporary = stats.cpu;
     stats.cpu = ((stats.cpu - previousCpu) / (stats.systemCpu - previousSystemCpu));
     // eslint-disable-next-line @typescript-eslint/no-unsafe-call
@@ -231,8 +230,8 @@ async function getStatsUntilExit(container: Docker.Container, exitTimeout:number
 
   if (ids.includes(createdContainer.id)) { // collect statstics as long as the container is running
     if (process.env.STOP_SIGNAL_SENT === 'false'
-            && ( (process.env.CANCEL_RUN_LIST as string).includes(step.runId)
-                  || ((new Date() as unknown as number) - startedAt) >= exitTimeout )) {
+            && ((process.env.CANCEL_RUN_LIST as string).includes(step.runId)
+                  || ((new Date() as unknown as number) - startedAt) >= exitTimeout)) {
       try {
       // for continuous steps, send stop signal after configured number of seconds
       // eslint-disable-next-line @typescript-eslint/no-floating-promises
@@ -274,7 +273,7 @@ function startPollingStats(startedAt:number, step:types.Step):void {
   if (!process.env.CONTAINER_TIME_LIMIT) {
     throw new Error('🎌 Timeout interval to stop container is not defined');
   } else {
-    exitTimeout = ( +process.env.CONTAINER_TIME_LIMIT ) * 1000;
+    exitTimeout = (+process.env.CONTAINER_TIME_LIMIT) * 1000;
   }
   const pollingInterval:number = process.env.POLLING_INTERVAL ? +process.env.POLLING_INTERVAL * 1000
     : 750;
