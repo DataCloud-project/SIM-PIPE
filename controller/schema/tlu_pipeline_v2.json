@@ -19,7 +19,7 @@
               "RABBITMQ_USERNAME=tellucareapi",
               "RABBITMQ_PASSWORD=d47AcL0|_|D1sTh3B3St",
               "FHIR_URL=https://tellucloud-fhir.sintef.cloud"],
-            "type": "continuous",
+            "type": "batch",
             "prerequisite":[
                 1
             ]
@@ -33,7 +33,7 @@
               "RABBITMQ_USERNAME=tellucareapplicationlogic",
               "RABBITMQ_PASSWORD=d47AcL0|_|D1sTh3B3St"
             ],
-            "type": "continuous",
+            "type": "batch",
             "prerequisite":[
                 2
             ]
