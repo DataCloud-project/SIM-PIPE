@@ -1,57 +1,50 @@
 {
 	"definitions": {},
 	"$schema": "http://json-schema.org/draft-07/schema#", 
-	"$id": "https://example.com/object1655910715.json", 
 	"title": "Root", 
 	"type": "object",
-	"required": [
-		"steps"
-	],
+	"required": [ "steps"],
 	"properties": {
 		"steps": {
-			"$id": "#root/steps", 
 			"title": "Steps", 
 			"type": "array",
 			"default": [],
 			"items":{
-				"$id": "#root/steps/items", 
 				"title": "Items", 
 				"type": "object",
-				"required": [
-					"name",
-					"step_number",
-					"image",
-					"env",
-					"type"
-				],
+				"required": [ "name", "step_number", "image", "env", "type"	],
 				"properties": {
 					"name": {
-						"$id": "#root/steps/items/name", 
 						"type": "string",
 						"default": ""
 					},
 					"step_number": {
-						"$id": "#root/steps/items/step_number", 
 						"type": "integer",
                         "minimum": 0
 					},
 					"image": {
-						"$id": "#root/steps/items/image", 
 						"type": "string"
 					},
 					"env": {
-						"$id": "#root/steps/items/env", 
 						"type": "array",
 						"default": [],
 						"items":{
-							"$id": "#root/steps/items/env/items", 
 							"type": "string"
 						}
 					},
 					"type": {
-						"$id": "#root/steps/items/type", 
 						"type": "string",
 						"default": ""
+					},
+					"prerequisite": {
+						"optional": true,
+						"type": "array",
+						"default": [],
+						"uniqueItems": true,
+						"items": {
+							"type": "number",
+							"minimum": 0
+						  }
 					}
 				}
 			}
