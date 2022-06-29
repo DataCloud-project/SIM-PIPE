@@ -1,51 +1,51 @@
 table:
-  name: runs
   schema: simpipe
+  name: runs
 configuration:
-  custom_column_names: {}
-  custom_name: runs
   custom_root_fields:
-    delete: delete_previous_run
     insert: insert_runs
     insert_one: insert_runs_one
-    select: runs
     select_by_pk: get_run
+    select: runs
+    delete: delete_previous_run
+  custom_name: runs
+  custom_column_names: {}
 object_relationships:
-- name: simulation
-  using:
-    foreign_key_constraint_on: simulation_id
+  - name: simulation
+    using:
+      foreign_key_constraint_on: simulation_id
 array_relationships:
-- name: steps
-  using:
-    foreign_key_constraint_on:
-      column: run_id
-      table:
-        name: steps
-        schema: simpipe
+  - name: steps
+    using:
+      foreign_key_constraint_on:
+        column: run_id
+        table:
+          schema: simpipe
+          name: steps
 insert_permissions:
-- permission:
-    backend_only: false
-    check: {}
-    columns:
-    - dsl
-    - simulation_id
-  role: anonymous
+  - role: anonymous
+    permission:
+      check: {}
+      columns:
+        - dsl
+        - simulation_id
+      backend_only: false
 select_permissions:
-- permission:
-    columns:
-    - created
-    - dsl
-    - ended
-    - name
-    - run_id
-    - simulation_id
-    - started
-    - status
-    filter: {}
-  role: anonymous
+  - role: anonymous
+    permission:
+      columns:
+        - created
+        - dsl
+        - ended
+        - name
+        - run_id
+        - simulation_id
+        - started
+        - status
+      filter: {}
 update_permissions:
-- permission:
-    check: null
-    columns: []
-    filter: {}
-  role: anonymous
+  - role: anonymous
+    permission:
+      columns: []
+      filter: {}
+      check: null

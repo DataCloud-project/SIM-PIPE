@@ -1,10 +1,12 @@
 table:
   schema: simpipe
-  name: logs
+  name: env_variable
 select_permissions:
   - role: anonymous
     permission:
       columns:
+        - id
+        - name
         - step_id
-        - text
+        - value
       filter: {}

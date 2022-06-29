@@ -1,16 +1,16 @@
 table:
-  name: resource_usage
   schema: simpipe
+  name: resource_usage
 select_permissions:
-- permission:
-    columns:
-    - id
-    - step_id
-    - cpu
-    - memory
-    - memory_max
-    - rx_value
-    - tx_value
-    - time
-    filter: {}
-  role: anonymous
+  - role: anonymous
+    permission:
+      columns:
+        - id
+        - step_id
+        - cpu
+        - memory
+        - memory_max
+        - rx_value
+        - tx_value
+        - time
+      filter: {}

@@ -5,6 +5,9 @@ schema {
 }
 "whether this query should be cached (Hasura Cloud only)"
 directive @cached("measured in seconds" ttl: Int! = 60, "refresh the cache entry" refresh: Boolean! = false) on QUERY
+type AllSimulations {
+  simulations: [Simulation]
+}
 """
 Boolean expression to compare columns of type "Int". All fields are combined with logical 'AND'.
 """
@@ -18,6 +21,20 @@ input Int_comparison_exp {
   _lte: Int
   _neq: Int
   _nin: [Int!]
+}
+type Run {
+  created: String
+  ended: String
+  name: String
+  run_id: String
+  started: String
+  status: String
+}
+type Simulation {
+  created: String
+  name: String
+  runs: [Run]
+  simulation_id: String
 }
 """
 Boolean expression to compare columns of type "String". All fields are combined with logical 'AND'.
@@ -95,7 +112,6 @@ input jsonb_comparison_exp {
 }
 "mutation root"
 type mutation_root {
-  Create_Run(dsl: String, name: String, simulation_id: String): String
   Create_Run_WithInput(dsl: String, name: String, sampleInput: [[String]], simulation_id: String): String
   Create_Simulation(model_id: String, name: String): String
   Start_Run(run_id: String): String
@@ -116,6 +132,14 @@ type mutation_root {
   delete single row from the table: "simpipe.runs"
   """
   delete_runs_by_pk(run_id: uuid!): runs
+  """
+  delete data from the table: "simpipe.env_variable"
+  """
+  delete_simpipe_env_variable("filter the rows which have to be deleted" where: simpipe_env_variable_bool_exp!): simpipe_env_variable_mutation_response
+  """
+  delete single row from the table: "simpipe.env_variable"
+  """
+  delete_simpipe_env_variable_by_pk(id: Int!): simpipe_env_variable
   """
   delete data from the table: "simpipe.logs"
   """
@@ -173,6 +197,14 @@ type mutation_root {
   """
   insert_runs_one("the row to be inserted" object: runs_insert_input!, "on conflict condition" on_conflict: runs_on_conflict): runs
   """
+  insert data into the table: "simpipe.env_variable"
+  """
+  insert_simpipe_env_variable("the rows to be inserted" objects: [simpipe_env_variable_insert_input!]!, "on conflict condition" on_conflict: simpipe_env_variable_on_conflict): simpipe_env_variable_mutation_response
+  """
+  insert a single row into the table: "simpipe.env_variable"
+  """
+  insert_simpipe_env_variable_one("the row to be inserted" object: simpipe_env_variable_insert_input!, "on conflict condition" on_conflict: simpipe_env_variable_on_conflict): simpipe_env_variable
+  """
   insert data into the table: "simpipe.logs"
   """
   insert_simpipe_logs("the rows to be inserted" objects: [simpipe_logs_insert_input!]!, "on conflict condition" on_conflict: simpipe_logs_on_conflict): simpipe_logs_mutation_response
@@ -220,6 +252,14 @@ type mutation_root {
   update single row of the table: "simpipe.runs"
   """
   update_runs_by_pk("append existing jsonb value of filtered columns with new jsonb value" _append: runs_append_input, "delete the field or element with specified path (for JSON arrays, negative integers count from the end)" _delete_at_path: runs_delete_at_path_input, "delete the array element with specified index (negative integers count from the end). throws an error if top level container is not an array" _delete_elem: runs_delete_elem_input, "delete key/value pair or string element. key/value pairs are matched based on their key value" _delete_key: runs_delete_key_input, "prepend existing jsonb value of filtered columns with new jsonb value" _prepend: runs_prepend_input, "sets the columns of the filtered rows to the given values" _set: runs_set_input, pk_columns: runs_pk_columns_input!): runs
+  """
+  update data of the table: "simpipe.env_variable"
+  """
+  update_simpipe_env_variable("increments the numeric columns with given value of the filtered values" _inc: simpipe_env_variable_inc_input, "sets the columns of the filtered rows to the given values" _set: simpipe_env_variable_set_input, "filter the rows which have to be updated" where: simpipe_env_variable_bool_exp!): simpipe_env_variable_mutation_response
+  """
+  update single row of the table: "simpipe.env_variable"
+  """
+  update_simpipe_env_variable_by_pk("increments the numeric columns with given value of the filtered values" _inc: simpipe_env_variable_inc_input, "sets the columns of the filtered rows to the given values" _set: simpipe_env_variable_set_input, pk_columns: simpipe_env_variable_pk_columns_input!): simpipe_env_variable
   """
   update data of the table: "simpipe.logs"
   """
@@ -301,7 +341,7 @@ enum order_by {
 }
 type query_root {
   All_Runs_Steps: String
-  All_Simulations: String
+  All_Simulations: AllSimulations
   Get_Simulation_Run_Results(run_id: String, simulation_id: String): String
   """
   fetch data from the table: "simpipe.runs" using primary key columns
@@ -315,6 +355,18 @@ type query_root {
   runs("distinct select on columns" distinct_on: [runs_select_column!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" order_by: [runs_order_by!], "filter the rows returned" where: runs_bool_exp): [runs!]!
   "An aggregate relationship"
   runs_aggregate("distinct select on columns" distinct_on: [runs_select_column!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" order_by: [runs_order_by!], "filter the rows returned" where: runs_bool_exp): runs_aggregate!
+  """
+  fetch data from the table: "simpipe.env_variable"
+  """
+  simpipe_env_variable("distinct select on columns" distinct_on: [simpipe_env_variable_select_column!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" order_by: [simpipe_env_variable_order_by!], "filter the rows returned" where: simpipe_env_variable_bool_exp): [simpipe_env_variable!]!
+  """
+  fetch aggregated fields from the table: "simpipe.env_variable"
+  """
+  simpipe_env_variable_aggregate("distinct select on columns" distinct_on: [simpipe_env_variable_select_column!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" order_by: [simpipe_env_variable_order_by!], "filter the rows returned" where: simpipe_env_variable_bool_exp): simpipe_env_variable_aggregate!
+  """
+  fetch data from the table: "simpipe.env_variable" using primary key columns
+  """
+  simpipe_env_variable_by_pk(id: Int!): simpipe_env_variable
   """
   fetch data from the table: "simpipe.logs"
   """
@@ -632,6 +684,290 @@ enum runs_update_column {
   started
   "column name"
   status
+}
+"""
+columns and relationships of "simpipe.env_variable"
+"""
+type simpipe_env_variable {
+  id: Int!
+  name: String!
+  step_id: Int!
+  value: String!
+}
+"""
+aggregated selection of "simpipe.env_variable"
+"""
+type simpipe_env_variable_aggregate {
+  aggregate: simpipe_env_variable_aggregate_fields
+  nodes: [simpipe_env_variable!]!
+}
+"""
+aggregate fields of "simpipe.env_variable"
+"""
+type simpipe_env_variable_aggregate_fields {
+  avg: simpipe_env_variable_avg_fields
+  count(columns: [simpipe_env_variable_select_column!], distinct: Boolean): Int!
+  max: simpipe_env_variable_max_fields
+  min: simpipe_env_variable_min_fields
+  stddev: simpipe_env_variable_stddev_fields
+  stddev_pop: simpipe_env_variable_stddev_pop_fields
+  stddev_samp: simpipe_env_variable_stddev_samp_fields
+  sum: simpipe_env_variable_sum_fields
+  var_pop: simpipe_env_variable_var_pop_fields
+  var_samp: simpipe_env_variable_var_samp_fields
+  variance: simpipe_env_variable_variance_fields
+}
+"""
+order by aggregate values of table "simpipe.env_variable"
+"""
+input simpipe_env_variable_aggregate_order_by {
+  avg: simpipe_env_variable_avg_order_by
+  count: order_by
+  max: simpipe_env_variable_max_order_by
+  min: simpipe_env_variable_min_order_by
+  stddev: simpipe_env_variable_stddev_order_by
+  stddev_pop: simpipe_env_variable_stddev_pop_order_by
+  stddev_samp: simpipe_env_variable_stddev_samp_order_by
+  sum: simpipe_env_variable_sum_order_by
+  var_pop: simpipe_env_variable_var_pop_order_by
+  var_samp: simpipe_env_variable_var_samp_order_by
+  variance: simpipe_env_variable_variance_order_by
+}
+"""
+input type for inserting array relation for remote table "simpipe.env_variable"
+"""
+input simpipe_env_variable_arr_rel_insert_input {
+  data: [simpipe_env_variable_insert_input!]!
+  "on conflict condition"
+  on_conflict: simpipe_env_variable_on_conflict
+}
+"aggregate avg on columns"
+type simpipe_env_variable_avg_fields {
+  id: Float
+  step_id: Float
+}
+"""
+order by avg() on columns of table "simpipe.env_variable"
+"""
+input simpipe_env_variable_avg_order_by {
+  id: order_by
+  step_id: order_by
+}
+"""
+Boolean expression to filter rows from the table "simpipe.env_variable". All fields are combined with a logical 'AND'.
+"""
+input simpipe_env_variable_bool_exp {
+  _and: [simpipe_env_variable_bool_exp!]
+  _not: simpipe_env_variable_bool_exp
+  _or: [simpipe_env_variable_bool_exp!]
+  id: Int_comparison_exp
+  name: String_comparison_exp
+  step_id: Int_comparison_exp
+  value: String_comparison_exp
+}
+"""
+unique or primary key constraints on table "simpipe.env_variable"
+"""
+enum simpipe_env_variable_constraint {
+  "unique or primary key constraint"
+  env_variable_pkey
+}
+"""
+input type for incrementing numeric columns in table "simpipe.env_variable"
+"""
+input simpipe_env_variable_inc_input {
+  id: Int
+  step_id: Int
+}
+"""
+input type for inserting data into table "simpipe.env_variable"
+"""
+input simpipe_env_variable_insert_input {
+  id: Int
+  name: String
+  step_id: Int
+  value: String
+}
+"aggregate max on columns"
+type simpipe_env_variable_max_fields {
+  id: Int
+  name: String
+  step_id: Int
+  value: String
+}
+"""
+order by max() on columns of table "simpipe.env_variable"
+"""
+input simpipe_env_variable_max_order_by {
+  id: order_by
+  name: order_by
+  step_id: order_by
+  value: order_by
+}
+"aggregate min on columns"
+type simpipe_env_variable_min_fields {
+  id: Int
+  name: String
+  step_id: Int
+  value: String
+}
+"""
+order by min() on columns of table "simpipe.env_variable"
+"""
+input simpipe_env_variable_min_order_by {
+  id: order_by
+  name: order_by
+  step_id: order_by
+  value: order_by
+}
+"""
+response of any mutation on the table "simpipe.env_variable"
+"""
+type simpipe_env_variable_mutation_response {
+  "number of rows affected by the mutation"
+  affected_rows: Int!
+  "data from the rows affected by the mutation"
+  returning: [simpipe_env_variable!]!
+}
+"""
+on conflict condition type for table "simpipe.env_variable"
+"""
+input simpipe_env_variable_on_conflict {
+  constraint: simpipe_env_variable_constraint!
+  update_columns: [simpipe_env_variable_update_column!]! = []
+  where: simpipe_env_variable_bool_exp
+}
+"""
+Ordering options when selecting data from "simpipe.env_variable".
+"""
+input simpipe_env_variable_order_by {
+  id: order_by
+  name: order_by
+  step_id: order_by
+  value: order_by
+}
+"primary key columns input for table: simpipe_env_variable"
+input simpipe_env_variable_pk_columns_input {
+  id: Int!
+}
+"""
+select columns of table "simpipe.env_variable"
+"""
+enum simpipe_env_variable_select_column {
+  "column name"
+  id
+  "column name"
+  name
+  "column name"
+  step_id
+  "column name"
+  value
+}
+"""
+input type for updating data in table "simpipe.env_variable"
+"""
+input simpipe_env_variable_set_input {
+  id: Int
+  name: String
+  step_id: Int
+  value: String
+}
+"aggregate stddev on columns"
+type simpipe_env_variable_stddev_fields {
+  id: Float
+  step_id: Float
+}
+"""
+order by stddev() on columns of table "simpipe.env_variable"
+"""
+input simpipe_env_variable_stddev_order_by {
+  id: order_by
+  step_id: order_by
+}
+"aggregate stddev_pop on columns"
+type simpipe_env_variable_stddev_pop_fields {
+  id: Float
+  step_id: Float
+}
+"""
+order by stddev_pop() on columns of table "simpipe.env_variable"
+"""
+input simpipe_env_variable_stddev_pop_order_by {
+  id: order_by
+  step_id: order_by
+}
+"aggregate stddev_samp on columns"
+type simpipe_env_variable_stddev_samp_fields {
+  id: Float
+  step_id: Float
+}
+"""
+order by stddev_samp() on columns of table "simpipe.env_variable"
+"""
+input simpipe_env_variable_stddev_samp_order_by {
+  id: order_by
+  step_id: order_by
+}
+"aggregate sum on columns"
+type simpipe_env_variable_sum_fields {
+  id: Int
+  step_id: Int
+}
+"""
+order by sum() on columns of table "simpipe.env_variable"
+"""
+input simpipe_env_variable_sum_order_by {
+  id: order_by
+  step_id: order_by
+}
+"""
+update columns of table "simpipe.env_variable"
+"""
+enum simpipe_env_variable_update_column {
+  "column name"
+  id
+  "column name"
+  name
+  "column name"
+  step_id
+  "column name"
+  value
+}
+"aggregate var_pop on columns"
+type simpipe_env_variable_var_pop_fields {
+  id: Float
+  step_id: Float
+}
+"""
+order by var_pop() on columns of table "simpipe.env_variable"
+"""
+input simpipe_env_variable_var_pop_order_by {
+  id: order_by
+  step_id: order_by
+}
+"aggregate var_samp on columns"
+type simpipe_env_variable_var_samp_fields {
+  id: Float
+  step_id: Float
+}
+"""
+order by var_samp() on columns of table "simpipe.env_variable"
+"""
+input simpipe_env_variable_var_samp_order_by {
+  id: order_by
+  step_id: order_by
+}
+"aggregate variance on columns"
+type simpipe_env_variable_variance_fields {
+  id: Float
+  step_id: Float
+}
+"""
+order by variance() on columns of table "simpipe.env_variable"
+"""
+input simpipe_env_variable_variance_order_by {
+  id: order_by
+  step_id: order_by
 }
 """
 columns and relationships of "simpipe.logs"
@@ -1622,6 +1958,10 @@ columns and relationships of "simpipe.steps"
 type steps {
   created: timestamptz!
   ended: timestamptz
+  "An array relationship"
+  env_variables("distinct select on columns" distinct_on: [simpipe_env_variable_select_column!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" order_by: [simpipe_env_variable_order_by!], "filter the rows returned" where: simpipe_env_variable_bool_exp): [simpipe_env_variable!]!
+  "An aggregate relationship"
+  env_variables_aggregate("distinct select on columns" distinct_on: [simpipe_env_variable_select_column!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" order_by: [simpipe_env_variable_order_by!], "filter the rows returned" where: simpipe_env_variable_bool_exp): simpipe_env_variable_aggregate!
   image: String!
   "An object relationship"
   log: simpipe_logs
@@ -1704,6 +2044,7 @@ input steps_bool_exp {
   _or: [steps_bool_exp!]
   created: timestamptz_comparison_exp
   ended: timestamptz_comparison_exp
+  env_variables: simpipe_env_variable_bool_exp
   image: String_comparison_exp
   log: simpipe_logs_bool_exp
   name: String_comparison_exp
@@ -1738,6 +2079,7 @@ input type for inserting data into table "simpipe.steps"
 input steps_insert_input {
   created: timestamptz
   ended: timestamptz
+  env_variables: simpipe_env_variable_arr_rel_insert_input
   image: String
   log: simpipe_logs_obj_rel_insert_input
   name: String
@@ -1819,6 +2161,7 @@ Ordering options when selecting data from "simpipe.steps".
 input steps_order_by {
   created: order_by
   ended: order_by
+  env_variables_aggregate: simpipe_env_variable_aggregate_order_by
   image: order_by
   log: simpipe_logs_order_by
   name: order_by
@@ -1990,6 +2333,18 @@ type subscription_root {
   runs("distinct select on columns" distinct_on: [runs_select_column!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" order_by: [runs_order_by!], "filter the rows returned" where: runs_bool_exp): [runs!]!
   "An aggregate relationship"
   runs_aggregate("distinct select on columns" distinct_on: [runs_select_column!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" order_by: [runs_order_by!], "filter the rows returned" where: runs_bool_exp): runs_aggregate!
+  """
+  fetch data from the table: "simpipe.env_variable"
+  """
+  simpipe_env_variable("distinct select on columns" distinct_on: [simpipe_env_variable_select_column!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" order_by: [simpipe_env_variable_order_by!], "filter the rows returned" where: simpipe_env_variable_bool_exp): [simpipe_env_variable!]!
+  """
+  fetch aggregated fields from the table: "simpipe.env_variable"
+  """
+  simpipe_env_variable_aggregate("distinct select on columns" distinct_on: [simpipe_env_variable_select_column!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" order_by: [simpipe_env_variable_order_by!], "filter the rows returned" where: simpipe_env_variable_bool_exp): simpipe_env_variable_aggregate!
+  """
+  fetch data from the table: "simpipe.env_variable" using primary key columns
+  """
+  simpipe_env_variable_by_pk(id: Int!): simpipe_env_variable
   """
   fetch data from the table: "simpipe.logs"
   """

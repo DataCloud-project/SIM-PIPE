@@ -1,30 +1,30 @@
 table:
-  name: simulations
   schema: simpipe
+  name: simulations
 configuration:
-  custom_column_names: {}
-  custom_name: simulations
   custom_root_fields:
-    delete: delete_simulations
-    delete_by_pk: delete_simulation
     insert: create_simulations
     insert_one: create_simulation
-    select: simulations
     select_by_pk: get_simulation
+    select: simulations
+    delete: delete_simulations
+    delete_by_pk: delete_simulation
+  custom_name: simulations
+  custom_column_names: {}
 array_relationships:
-- name: runs
-  using:
-    foreign_key_constraint_on:
-      column: simulation_id
-      table:
-        name: runs
-        schema: simpipe
+  - name: runs
+    using:
+      foreign_key_constraint_on:
+        column: simulation_id
+        table:
+          schema: simpipe
+          name: runs
 select_permissions:
-- permission:
-    columns:
-    - created
-    - model_id
-    - name
-    - simulation_id
-    filter: {}
-  role: anonymous
+  - role: anonymous
+    permission:
+      columns:
+        - created
+        - model_id
+        - name
+        - simulation_id
+      filter: {}

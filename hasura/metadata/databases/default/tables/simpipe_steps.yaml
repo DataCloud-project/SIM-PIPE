@@ -1,37 +1,44 @@
 table:
-  name: steps
   schema: simpipe
+  name: steps
 configuration:
-  custom_column_names: {}
-  custom_name: steps
   custom_root_fields: {}
+  custom_name: steps
+  custom_column_names: {}
 object_relationships:
-- name: log
-  using:
-    foreign_key_constraint_on:
-      column: step_id
-      table:
-        name: logs
-        schema: simpipe
+  - name: log
+    using:
+      foreign_key_constraint_on:
+        column: step_id
+        table:
+          schema: simpipe
+          name: logs
 array_relationships:
-- name: resource_usages
-  using:
-    foreign_key_constraint_on:
-      column: step_id
-      table:
-        name: resource_usage
-        schema: simpipe
+  - name: env_variables
+    using:
+      foreign_key_constraint_on:
+        column: step_id
+        table:
+          schema: simpipe
+          name: env_variable
+  - name: resource_usages
+    using:
+      foreign_key_constraint_on:
+        column: step_id
+        table:
+          schema: simpipe
+          name: resource_usage
 select_permissions:
-- permission:
-    columns:
-    - created
-    - ended
-    - image
-    - name
-    - pipeline_step_number
-    - run_id
-    - started
-    - status
-    - step_id
-    filter: {}
-  role: anonymous
+  - role: anonymous
+    permission:
+      columns:
+        - created
+        - ended
+        - image
+        - name
+        - pipeline_step_number
+        - run_id
+        - started
+        - status
+        - step_id
+      filter: {}
