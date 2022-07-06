@@ -26,5 +26,6 @@ select_permissions:
         - created
         - model_id
         - name
+        - pipeline_description
         - simulation_id
       filter: {}

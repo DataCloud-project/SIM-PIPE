@@ -22,6 +22,9 @@ input Int_comparison_exp {
   _neq: Int
   _nin: [Int!]
 }
+input Pipeline_Description {
+  steps: [Step]
+}
 type Run {
   created: String
   ended: String
@@ -33,8 +36,21 @@ type Run {
 type Simulation {
   created: String
   name: String
+  """
+  pipeline_description is defined as type string instead of jsonb as the latter requires defining
+  most of the elements in the SIM-PIPE json schema as a separate graphql type. 
+  """
+  pipeline_description: String
   runs: [Run]
   simulation_id: String
+}
+input Step {
+  env: [String]
+  image: String
+  name: String
+  prerequisite: [Int]
+  step_number: Int
+  type: String
 }
 """
 Boolean expression to compare columns of type "String". All fields are combined with logical 'AND'.
@@ -113,7 +129,7 @@ input jsonb_comparison_exp {
 "mutation root"
 type mutation_root {
   Create_Run_WithInput(dsl: String, name: String, sampleInput: [[String]], simulation_id: String): String
-  Create_Simulation(model_id: String, name: String): String
+  Create_Simulation(model_id: String, name: String, pipeline_description: Pipeline_Description): String
   Start_Run(run_id: String): String
   Stop_Run(run_id: String): String
   """
@@ -295,11 +311,11 @@ type mutation_root {
   """
   update data of the table: "simpipe.simulations"
   """
-  update_simulations("sets the columns of the filtered rows to the given values" _set: simulations_set_input, "filter the rows which have to be updated" where: simulations_bool_exp!): simulations_mutation_response
+  update_simulations("append existing jsonb value of filtered columns with new jsonb value" _append: simulations_append_input, "delete the field or element with specified path (for JSON arrays, negative integers count from the end)" _delete_at_path: simulations_delete_at_path_input, "delete the array element with specified index (negative integers count from the end). throws an error if top level container is not an array" _delete_elem: simulations_delete_elem_input, "delete key/value pair or string element. key/value pairs are matched based on their key value" _delete_key: simulations_delete_key_input, "prepend existing jsonb value of filtered columns with new jsonb value" _prepend: simulations_prepend_input, "sets the columns of the filtered rows to the given values" _set: simulations_set_input, "filter the rows which have to be updated" where: simulations_bool_exp!): simulations_mutation_response
   """
   update single row of the table: "simpipe.simulations"
   """
-  update_simulations_by_pk("sets the columns of the filtered rows to the given values" _set: simulations_set_input, pk_columns: simulations_pk_columns_input!): simulations
+  update_simulations_by_pk("append existing jsonb value of filtered columns with new jsonb value" _append: simulations_append_input, "delete the field or element with specified path (for JSON arrays, negative integers count from the end)" _delete_at_path: simulations_delete_at_path_input, "delete the array element with specified index (negative integers count from the end). throws an error if top level container is not an array" _delete_elem: simulations_delete_elem_input, "delete key/value pair or string element. key/value pairs are matched based on their key value" _delete_key: simulations_delete_key_input, "prepend existing jsonb value of filtered columns with new jsonb value" _prepend: simulations_prepend_input, "sets the columns of the filtered rows to the given values" _set: simulations_set_input, pk_columns: simulations_pk_columns_input!): simulations
   """
   update data of the table: "simpipe.steps"
   """
@@ -692,7 +708,7 @@ type simpipe_env_variable {
   id: Int!
   name: String!
   step_id: Int!
-  value: String!
+  value: String
 }
 """
 aggregated selection of "simpipe.env_variable"
@@ -1797,6 +1813,7 @@ type simulations {
   "UUID of the model"
   model_id: uuid!
   name: String
+  pipeline_description("JSON select path" path: String): jsonb
   "An array relationship"
   runs("distinct select on columns" distinct_on: [runs_select_column!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" order_by: [runs_order_by!], "filter the rows returned" where: runs_bool_exp): [runs!]!
   "An aggregate relationship"
@@ -1819,6 +1836,10 @@ type simulations_aggregate_fields {
   max: simulations_max_fields
   min: simulations_min_fields
 }
+"append existing jsonb value of filtered columns with new jsonb value"
+input simulations_append_input {
+  pipeline_description: jsonb
+}
 """
 Boolean expression to filter rows from the table "simpipe.simulations". All fields are combined with a logical 'AND'.
 """
@@ -1829,6 +1850,7 @@ input simulations_bool_exp {
   created: timestamptz_comparison_exp
   model_id: uuid_comparison_exp
   name: String_comparison_exp
+  pipeline_description: jsonb_comparison_exp
   runs: runs_bool_exp
   simulation_id: uuid_comparison_exp
 }
@@ -1841,6 +1863,18 @@ enum simulations_constraint {
   "unique or primary key constraint"
   simulations_pkey
 }
+"delete the field or element with specified path (for JSON arrays, negative integers count from the end)"
+input simulations_delete_at_path_input {
+  pipeline_description: [String!]
+}
+"delete the array element with specified index (negative integers count from the end). throws an error if top level container is not an array"
+input simulations_delete_elem_input {
+  pipeline_description: Int
+}
+"delete key/value pair or string element. key/value pairs are matched based on their key value"
+input simulations_delete_key_input {
+  pipeline_description: String
+}
 """
 input type for inserting data into table "simpipe.simulations"
 """
@@ -1850,6 +1884,7 @@ input simulations_insert_input {
   "UUID of the model"
   model_id: uuid
   name: String
+  pipeline_description: jsonb
   runs: runs_arr_rel_insert_input
   "UUID of the simulation"
   simulation_id: uuid
@@ -1906,6 +1941,7 @@ input simulations_order_by {
   created: order_by
   model_id: order_by
   name: order_by
+  pipeline_description: order_by
   runs_aggregate: runs_aggregate_order_by
   simulation_id: order_by
 }
@@ -1913,6 +1949,10 @@ input simulations_order_by {
 input simulations_pk_columns_input {
   "UUID of the simulation"
   simulation_id: uuid!
+}
+"prepend existing jsonb value of filtered columns with new jsonb value"
+input simulations_prepend_input {
+  pipeline_description: jsonb
 }
 """
 select columns of table "simpipe.simulations"
@@ -1925,6 +1965,8 @@ enum simulations_select_column {
   "column name"
   name
   "column name"
+  pipeline_description
+  "column name"
   simulation_id
 }
 """
@@ -1936,6 +1978,7 @@ input simulations_set_input {
   "UUID of the model"
   model_id: uuid
   name: String
+  pipeline_description: jsonb
   "UUID of the simulation"
   simulation_id: uuid
 }
@@ -1949,6 +1992,8 @@ enum simulations_update_column {
   model_id
   "column name"
   name
+  "column name"
+  pipeline_description
   "column name"
   simulation_id
 }

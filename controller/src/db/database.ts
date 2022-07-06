@@ -38,6 +38,10 @@ export type Int_Comparison_Exp = {
   _nin?: InputMaybe<Array<Scalars['Int']>>;
 };
 
+export type Pipeline_Description = {
+  steps?: InputMaybe<Array<InputMaybe<Step>>>;
+};
+
 export type Run = {
   __typename?: 'Run';
   created?: Maybe<Scalars['String']>;
@@ -52,8 +56,22 @@ export type Simulation = {
   __typename?: 'Simulation';
   created?: Maybe<Scalars['String']>;
   name?: Maybe<Scalars['String']>;
+  /**
+   * pipeline_description is defined as type string instead of jsonb as the latter requires defining
+   * most of the elements in the SIM-PIPE json schema as a separate graphql type.
+   */
+  pipeline_description?: Maybe<Scalars['String']>;
   runs?: Maybe<Array<Maybe<Run>>>;
   simulation_id?: Maybe<Scalars['String']>;
+};
+
+export type Step = {
+  env?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  image?: InputMaybe<Scalars['String']>;
+  name?: InputMaybe<Scalars['String']>;
+  prerequisite?: InputMaybe<Array<InputMaybe<Scalars['Int']>>>;
+  step_number?: InputMaybe<Scalars['Int']>;
+  type?: InputMaybe<Scalars['String']>;
 };
 
 /** Boolean expression to compare columns of type "String". All fields are combined with logical 'AND'. */
@@ -244,6 +262,7 @@ export type Mutation_RootCreate_Run_WithInputArgs = {
 export type Mutation_RootCreate_SimulationArgs = {
   model_id?: InputMaybe<Scalars['String']>;
   name?: InputMaybe<Scalars['String']>;
+  pipeline_description?: InputMaybe<Pipeline_Description>;
 };
 
 
@@ -569,6 +588,11 @@ export type Mutation_RootUpdate_Simpipe_Step_Status_By_PkArgs = {
 
 /** mutation root */
 export type Mutation_RootUpdate_SimulationsArgs = {
+  _append?: InputMaybe<Simulations_Append_Input>;
+  _delete_at_path?: InputMaybe<Simulations_Delete_At_Path_Input>;
+  _delete_elem?: InputMaybe<Simulations_Delete_Elem_Input>;
+  _delete_key?: InputMaybe<Simulations_Delete_Key_Input>;
+  _prepend?: InputMaybe<Simulations_Prepend_Input>;
   _set?: InputMaybe<Simulations_Set_Input>;
   where: Simulations_Bool_Exp;
 };
@@ -576,6 +600,11 @@ export type Mutation_RootUpdate_SimulationsArgs = {
 
 /** mutation root */
 export type Mutation_RootUpdate_Simulations_By_PkArgs = {
+  _append?: InputMaybe<Simulations_Append_Input>;
+  _delete_at_path?: InputMaybe<Simulations_Delete_At_Path_Input>;
+  _delete_elem?: InputMaybe<Simulations_Delete_Elem_Input>;
+  _delete_key?: InputMaybe<Simulations_Delete_Key_Input>;
+  _prepend?: InputMaybe<Simulations_Prepend_Input>;
   _set?: InputMaybe<Simulations_Set_Input>;
   pk_columns: Simulations_Pk_Columns_Input;
 };
@@ -1168,7 +1197,7 @@ export type Simpipe_Env_Variable = {
   id: Scalars['Int'];
   name: Scalars['String'];
   step_id: Scalars['Int'];
-  value: Scalars['String'];
+  value?: Maybe<Scalars['String']>;
 };
 
 /** aggregated selection of "simpipe.env_variable" */
@@ -2314,12 +2343,24 @@ export type Simulations = {
   /** UUID of the model */
   model_id: Scalars['uuid'];
   name?: Maybe<Scalars['String']>;
+  pipeline_description?: Maybe<Scalars['jsonb']>;
   /** An array relationship */
   runs: Array<Runs>;
   /** An aggregate relationship */
   runs_aggregate: Runs_Aggregate;
   /** UUID of the simulation */
   simulation_id: Scalars['uuid'];
+};
+
+
+/**
+ * Simulations
+ *
+ *
+ * columns and relationships of "simpipe.simulations"
+ */
+export type SimulationsPipeline_DescriptionArgs = {
+  path?: InputMaybe<Scalars['String']>;
 };
 
 
@@ -2374,6 +2415,11 @@ export type Simulations_Aggregate_FieldsCountArgs = {
   distinct?: InputMaybe<Scalars['Boolean']>;
 };
 
+/** append existing jsonb value of filtered columns with new jsonb value */
+export type Simulations_Append_Input = {
+  pipeline_description?: InputMaybe<Scalars['jsonb']>;
+};
+
 /** Boolean expression to filter rows from the table "simpipe.simulations". All fields are combined with a logical 'AND'. */
 export type Simulations_Bool_Exp = {
   _and?: InputMaybe<Array<Simulations_Bool_Exp>>;
@@ -2382,6 +2428,7 @@ export type Simulations_Bool_Exp = {
   created?: InputMaybe<Timestamptz_Comparison_Exp>;
   model_id?: InputMaybe<Uuid_Comparison_Exp>;
   name?: InputMaybe<String_Comparison_Exp>;
+  pipeline_description?: InputMaybe<Jsonb_Comparison_Exp>;
   runs?: InputMaybe<Runs_Bool_Exp>;
   simulation_id?: InputMaybe<Uuid_Comparison_Exp>;
 };
@@ -2394,6 +2441,21 @@ export enum Simulations_Constraint {
   SimulationsPkey = 'simulations_pkey'
 }
 
+/** delete the field or element with specified path (for JSON arrays, negative integers count from the end) */
+export type Simulations_Delete_At_Path_Input = {
+  pipeline_description?: InputMaybe<Array<Scalars['String']>>;
+};
+
+/** delete the array element with specified index (negative integers count from the end). throws an error if top level container is not an array */
+export type Simulations_Delete_Elem_Input = {
+  pipeline_description?: InputMaybe<Scalars['Int']>;
+};
+
+/** delete key/value pair or string element. key/value pairs are matched based on their key value */
+export type Simulations_Delete_Key_Input = {
+  pipeline_description?: InputMaybe<Scalars['String']>;
+};
+
 /** input type for inserting data into table "simpipe.simulations" */
 export type Simulations_Insert_Input = {
   /** DateTime of when the simulation was created */
@@ -2401,6 +2463,7 @@ export type Simulations_Insert_Input = {
   /** UUID of the model */
   model_id?: InputMaybe<Scalars['uuid']>;
   name?: InputMaybe<Scalars['String']>;
+  pipeline_description?: InputMaybe<Scalars['jsonb']>;
   runs?: InputMaybe<Runs_Arr_Rel_Insert_Input>;
   /** UUID of the simulation */
   simulation_id?: InputMaybe<Scalars['uuid']>;
@@ -2458,6 +2521,7 @@ export type Simulations_Order_By = {
   created?: InputMaybe<Order_By>;
   model_id?: InputMaybe<Order_By>;
   name?: InputMaybe<Order_By>;
+  pipeline_description?: InputMaybe<Order_By>;
   runs_aggregate?: InputMaybe<Runs_Aggregate_Order_By>;
   simulation_id?: InputMaybe<Order_By>;
 };
@@ -2466,6 +2530,11 @@ export type Simulations_Order_By = {
 export type Simulations_Pk_Columns_Input = {
   /** UUID of the simulation */
   simulation_id: Scalars['uuid'];
+};
+
+/** prepend existing jsonb value of filtered columns with new jsonb value */
+export type Simulations_Prepend_Input = {
+  pipeline_description?: InputMaybe<Scalars['jsonb']>;
 };
 
 /** select columns of table "simpipe.simulations" */
@@ -2477,6 +2546,8 @@ export enum Simulations_Select_Column {
   /** column name */
   Name = 'name',
   /** column name */
+  PipelineDescription = 'pipeline_description',
+  /** column name */
   SimulationId = 'simulation_id'
 }
 
@@ -2487,6 +2558,7 @@ export type Simulations_Set_Input = {
   /** UUID of the model */
   model_id?: InputMaybe<Scalars['uuid']>;
   name?: InputMaybe<Scalars['String']>;
+  pipeline_description?: InputMaybe<Scalars['jsonb']>;
   /** UUID of the simulation */
   simulation_id?: InputMaybe<Scalars['uuid']>;
 };
@@ -2499,6 +2571,8 @@ export enum Simulations_Update_Column {
   ModelId = 'model_id',
   /** column name */
   Name = 'name',
+  /** column name */
+  PipelineDescription = 'pipeline_description',
   /** column name */
   SimulationId = 'simulation_id'
 }
@@ -3190,6 +3264,13 @@ export type AllRunsAndStepsQueryVariables = Exact<{ [key: string]: never; }>;
 
 export type AllRunsAndStepsQuery = { __typename?: 'query_root', runs: Array<{ __typename?: 'runs', run_id: string, name?: string | null, created: string, started?: string | null, status: Simpipe_Run_Status_Enum, steps: Array<{ __typename?: 'steps', step_id: number, created: string, started?: string | null, ended?: string | null, status: Simpipe_Step_Status_Enum }> }> };
 
+export type GetSimulationDslQueryVariables = Exact<{
+  simulation_id: Scalars['uuid'];
+}>;
+
+
+export type GetSimulationDslQuery = { __typename?: 'query_root', simulations: Array<{ __typename?: 'simulations', pipeline_description?: unknown | null }> };
+
 export type CreateRunMutationVariables = Exact<{
   simulation_id: Scalars['uuid'];
   dsl: Scalars['jsonb'];
@@ -3275,12 +3356,13 @@ export type SetRunAsFailedMutationVariables = Exact<{
 export type SetRunAsFailedMutation = { __typename?: 'mutation_root', update_runs_by_pk?: { __typename?: 'runs', run_id: string } | null };
 
 export type CreateSimulationMutationVariables = Exact<{
-  model_id: Scalars['uuid'];
   name?: InputMaybe<Scalars['String']>;
+  model_id: Scalars['uuid'];
+  pipeline_description?: InputMaybe<Scalars['jsonb']>;
 }>;
 
 
-export type CreateSimulationMutation = { __typename?: 'mutation_root', create_simulation?: { __typename?: 'simulations', simulation_id: string, name?: string | null } | null };
+export type CreateSimulationMutation = { __typename?: 'mutation_root', create_simulation?: { __typename?: 'simulations', simulation_id: string } | null };
 
 export type GetSimulationIdandStepsQueryVariables = Exact<{
   run_id: Scalars['uuid'];
@@ -3358,6 +3440,13 @@ export const AllRunsAndStepsDocument = gql`
       ended
       status
     }
+  }
+}
+    `;
+export const GetSimulationDslDocument = gql`
+    query getSimulationDSL($simulation_id: uuid!) {
+  simulations(where: {simulation_id: {_eq: $simulation_id}}) {
+    pipeline_description
   }
 }
     `;
@@ -3453,10 +3542,11 @@ export const SetRunAsFailedDocument = gql`
 }
     `;
 export const CreateSimulationDocument = gql`
-    mutation createSimulation($model_id: uuid!, $name: String) {
-  create_simulation(object: {model_id: $model_id, name: $name}) {
+    mutation createSimulation($name: String, $model_id: uuid!, $pipeline_description: jsonb) {
+  create_simulation(
+    object: {name: $name, model_id: $model_id, pipeline_description: $pipeline_description}
+  ) {
     simulation_id
-    name
   }
 }
     `;
@@ -3552,6 +3642,9 @@ export function getSdk(client: GraphQLClient, withWrapper: SdkFunctionWrapper = 
     },
     allRunsAndSteps(variables?: AllRunsAndStepsQueryVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<AllRunsAndStepsQuery> {
       return withWrapper((wrappedRequestHeaders) => client.request<AllRunsAndStepsQuery>(AllRunsAndStepsDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'allRunsAndSteps', 'query');
+    },
+    getSimulationDSL(variables: GetSimulationDslQueryVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<GetSimulationDslQuery> {
+      return withWrapper((wrappedRequestHeaders) => client.request<GetSimulationDslQuery>(GetSimulationDslDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'getSimulationDSL', 'query');
     },
     createRun(variables: CreateRunMutationVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<CreateRunMutation> {
       return withWrapper((wrappedRequestHeaders) => client.request<CreateRunMutation>(CreateRunDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'createRun', 'mutation');

@@ -21,10 +21,27 @@ const typeDefs = gql`
     name: String
     created: String
     runs: [Run]
+    """
+    pipeline_description is defined as type string instead of jsonb as the latter requires defining
+    most of the elements in the SIM-PIPE json schema as a separate graphql type. 
+    """ 
+    pipeline_description: String 
   }
   type AllSimulations {
     simulations: [Simulation] 
   }
+  input Step {
+    name: String
+    step_number: Int
+    image: String
+    env: [String]
+    type: String
+    prerequisite: [Int]
+  }
+  input Pipeline_Description {
+    steps: [Step]
+  }
+
   type Query {
       All_Simulations: AllSimulations
       All_Runs_Steps: String
@@ -32,7 +49,7 @@ const typeDefs = gql`
   }
   type Mutation {
     # TODO: pipeline file as input
-    Create_Simulation(model_id:String, name:String): String
+    Create_Simulation(model_id:String, name:String, pipeline_description:Pipeline_Description): String
     Create_Run_WithInput(simulation_id: String, dsl:String, name:String, sampleInput:[[String]]):
     String
     Start_Run(run_id:String): String
@@ -50,10 +67,11 @@ const resolvers = {
     },
   },
   Mutation: {
-    async Create_Simulation(_p: unknown, arguments_: { model_id:string, name:string })
+    async Create_Simulation(_p: unknown, arguments_: { model_id:string, name:string,
+      pipeline_description: JSON })
       :Promise<string> {
       try {
-        const newSimId = await functions.createSimulation(arguments_.model_id, arguments_.name);
+        const newSimId = await functions.createSimulation(arguments_.model_id, arguments_.name, arguments_.pipeline_description);
         return `Simulation has been created with id ${newSimId}`;
       } catch (error) {
         const errorMessage = `\n🎌 Internal server error creating new simulation:\n
