@@ -12,6 +12,7 @@ import type {
   AllSimulationsQueryVariables, CreateRunMutation, CreateRunMutationVariables,
   CreateSimulationMutation, CreateSimulationMutationVariables, CreateStepMutation,
   CreateStepMutationVariables, GetRunDetailsQuery, GetRunDetailsQueryVariables,
+  GetSimulationDslQuery, GetSimulationDslQueryVariables,
   GetSimulationIdandStepsQuery, GetSimulationIdandStepsQueryVariables, GetSimulationRunResultsQuery,
   GetSimulationRunResultsQueryVariables, InsertLogMutation, InsertLogMutationVariables,
   InsertResourceUsageMutation, InsertResourceUsageMutationVariables, SetRunAsCancelledMutation,
@@ -47,6 +48,7 @@ let sdk: {
   insertResourceUsage(variables?: InsertResourceUsageMutationVariables): Promise<InsertResourceUsageMutation>,
   insertLog(variables?: InsertLogMutationVariables): Promise<InsertLogMutation>,
   getSimulationRunResults(variables?: GetSimulationRunResultsQueryVariables):Promise<GetSimulationRunResultsQuery>
+  getSimulationDSL(variables?: GetSimulationDslQueryVariables):Promise<GetSimulationDslQuery>
 };
 
 function connectHasuraEndpoint():void {
@@ -72,12 +74,28 @@ export async function allRunsSteps():Promise<string> {
   return JSON.stringify(await sdk.allRunsAndSteps(), undefined, 2);
 }
 
-export async function createSimulation(model_id:string, name:string):Promise<string> {
+// old create simulation fn without json string arg for pipeline description
+// export async function createSimulation(model_id:string, name:string):Promise<string> {
+//   // disabling await-thenable, await is needed for sequential execution
+//   // eslint-disable-next-line @typescript-eslint/await-thenable
+//   const result:CreateSimulationMutation = await sdk.createSimulation({
+//     model_id,
+//     name,
+//   });
+//   if (!result?.create_simulation?.simulation_id) {
+//     throw new Error('🎌 Undefined expression in createSimulation');
+//   }
+//   return result.create_simulation.simulation_id;
+// }
+
+export async function createSimulation(model_id:string, name:string, pipeline_description:JSON):
+Promise<string> {
   // disabling await-thenable, await is needed for sequential execution
   // eslint-disable-next-line @typescript-eslint/await-thenable
   const result:CreateSimulationMutation = await sdk.createSimulation({
     model_id,
     name,
+    pipeline_description,
   });
   if (!result?.create_simulation?.simulation_id) {
     throw new Error('🎌 Undefined expression in createSimulation');
@@ -162,11 +180,20 @@ export async function createStep(run_id:string, name:string, image:string,
   return `${stepId}`;
 }
 
+// function to read dsl parameter in simulation table
+async function readDSL(simulation_id:string):Promise<void> {
+  // get dsl from simulation table using simulation_id
+  const result:GetSimulationDslQuery = await sdk.getSimulationDSL({ simulation_id });
+  // console.log(result.simulations[0].pipeline_description);
+  // validate pipeline description according to schema v1
+}
+
 export async function createRun(simulation_id:string, dsl:string, name:string):Promise<string> {
   // TODO: parse dsl
   // const steps:Array<StepDSL> = parseDSL(dsl);
   // preloaded TLU pipeline
   const steps:Array<StepDSL> = parseDslTLU(dsl);
+  await readDSL(simulation_id);
   // disabling await-thenable, await is needed to wait till sdk.createRun completes execution
   // eslint-disable-next-line @typescript-eslint/await-thenable
   const result:CreateRunMutation = await sdk.createRun({
@@ -342,7 +369,7 @@ export async function createSampleSimulation():Promise<string> {
   }
   if (!result) {
     throw new Error('🎌 Error creating sample simulation at server start up, '
-  + 'hasura endpoint could not be connected');
+  + 'hasura endpoint could not be connected, check hasura endpoint settings');
   }
   if (result.simulations.length === 0) {
     const simId = await createSimulation('c97fc83a-b0fc-11ec-b909-0242ac120002',
