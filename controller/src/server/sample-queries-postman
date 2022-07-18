@@ -1,0 +1,65 @@
+query($simulation_id:String, $run_id:String) {
+    Get_Simulation_Run_Results(simulation_id: $simulation_id, 
+    run_id: $run_id) {
+        simulations
+    } 
+}
+
+{
+    "simulation_id": "2aff1c03-bd89-46ca-aee7-8c1920ee5dbc",
+    "run_id": "f4119de6-5594-4583-b5ec-f703ae19c6de"
+}
+--
+{
+    All_Simulations{
+        simulations {
+            simulation_id
+        }
+    }
+    All_Runs_Steps
+}
+--
+mutation ($model_id:String, $name:String, $pipeline_description:Pipeline_Description) {
+    Create_Simulation (model_id:$model_id,
+                        name:$name,
+                        pipeline_description:$pipeline_description)
+}
+{
+    "model_id": "2a2f1c03-bd89-46ca-aee7-8c1920ee5dbc",
+    "name": "postman",
+    "pipeline_description" : {"steps" : [{
+        "name": "step1",
+        "step_number": 1,
+        "image": "i1"
+    }] }
+}
+--
+mutation ($simulation_id:String, $dsl:String,  $name:String,  $sampleInput:[[String]]) {
+    Create_Run_WithInput (simulation_id: $simulation_id,
+                            dsl:$dsl,
+                            name:$name,
+                            sampleInput:$sampleInput
+                        ),
+                        
+}
+{
+    "simulation_id": "698b1504-2029-4912-995b-0f45de6a6b5f",
+    "dsl":"testdsl",
+    "name": "postman_run",
+
+    "sampleInput" : [["file1", "file1content"]]
+}
+--
+mutation ($run_id:String) {
+    Start_Run (run_id: $run_id ),                     
+}
+{
+    "run_id": "94da5c38-53ab-4c36-ac1c-5b6e8e3e258a"
+}
+--
+mutation ($run_id:String) {
+    Stop_Run (run_id: $run_id ),                     
+}
+{
+    "run_id": "1a3fa2f4-42ec-4539-b3c6-de29f350a7bf"
+}

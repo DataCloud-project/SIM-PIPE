@@ -2,4 +2,5 @@
   definition:
     url_from_env: REMOTE_SCHEMA_URL
     timeout_seconds: 60
+    forward_client_headers: true
   comment: ""
