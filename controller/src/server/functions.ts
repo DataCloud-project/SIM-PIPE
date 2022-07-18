@@ -184,7 +184,7 @@ export async function createStep(run_id:string, name:string, image:string,
 async function readDSL(simulation_id:string):Promise<void> {
   // get dsl from simulation table using simulation_id
   const result:GetSimulationDslQuery = await sdk.getSimulationDSL({ simulation_id });
-  // console.log(result.simulations[0].pipeline_description);
+  console.log(result.simulations[0].pipeline_description);
   // validate pipeline description according to schema v1
 }
 

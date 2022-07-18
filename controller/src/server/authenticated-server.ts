@@ -185,7 +185,8 @@ const startSecureServer = async (): Promise<void> => {
     typeDefs,
     resolvers,
     context: ({ req }): { user: { sub: string; preferred_username: string; }; } => {
-      if (!req.headers.authorization && req.hostname !== getHasuraUrl()) {
+      // if (!req.headers.authorization && req.hostname !== getHasuraUrl()) {
+      if (!req.headers.authorization) {
         throw new Error('🎌 No authorization header found');
       }
       // console.log(req);
@@ -201,15 +202,18 @@ const startSecureServer = async (): Promise<void> => {
 
   try {
     const app = express();
-    const chooseMiddleware = function (middleware) {
-      return function (request: { hostname: string; }, response: any, next: () => any) {
-        console.log(`${request.headers['user-agent'] as string}--------------------\n`);
-        console.log(`${request.hostname}--------------------\n`);
-        if (request.hostname === getHasuraUrl()) {
-          return next(); // skip authentication for requests from hasura endpoint
-        }
-        return middleware(request, response, next);
-      };
+    const chooseMiddleware = (middleware: {
+      (request: express.Request, response: express.Response, next: express.NextFunction):
+      Promise<void>; unless: typeof unless;
+    }) => function (request: express.Request, response: express.Response, next: () => any) {
+      console.log(`${request.headers['user-agent'] as string}--------------------\n`);
+      console.log(`${request.hostname}--------------------\n`);
+      if (request.hostname === getHasuraUrl()) {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+        return next(); // skip authentication for requests from hasura endpoint
+      }
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+      return middleware(request, response, next);
     };
     app.use(
       chooseMiddleware(jwtMiddleware),
