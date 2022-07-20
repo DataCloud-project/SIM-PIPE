@@ -14,8 +14,10 @@ import type {
   CreateStepMutationVariables, GetRunDetailsQuery, GetRunDetailsQueryVariables,
   GetSimulationDslQuery, GetSimulationDslQueryVariables,
   GetSimulationIdandStepsQuery, GetSimulationIdandStepsQueryVariables, GetSimulationRunResultsQuery,
-  GetSimulationRunResultsQueryVariables, InsertLogMutation, InsertLogMutationVariables,
-  InsertResourceUsageMutation, InsertResourceUsageMutationVariables, SetRunAsCancelledMutation,
+  GetSimulationRunResultsQueryVariables, GetUseridFromRunQuery, GetUseridFromRunQueryVariables,
+  GetUseridFromSimulationQuery, GetUseridFromSimulationQueryVariables,
+  InsertLogMutation, InsertLogMutationVariables, InsertResourceUsageMutation,
+  InsertResourceUsageMutationVariables, SetRunAsCancelledMutation,
   SetRunAsCancelledMutationVariables, SetRunAsEndedSuccessMutation,
   SetRunAsEndedSuccessMutationVariables, SetRunAsFailedMutation, SetRunAsFailedMutationVariables,
   SetRunAsQueuedMutation, SetRunAsQueuedMutationVariables, SetRunAsStartedMutation,
@@ -45,6 +47,8 @@ let sdk: {
   createSimulation(variables: CreateSimulationMutationVariables): Promise<CreateSimulationMutation>,
   getSimulationIdandSteps(variables: GetSimulationIdandStepsQueryVariables): Promise<GetSimulationIdandStepsQuery>,
   getRunDetails(variables: GetRunDetailsQueryVariables): Promise<GetRunDetailsQuery>,
+  getUseridFromRun(variables: GetUseridFromRunQueryVariables): Promise<GetUseridFromRunQuery>,
+  getUseridFromSimulation(variables: GetUseridFromSimulationQueryVariables): Promise<GetUseridFromSimulationQuery>,
   insertResourceUsage(variables?: InsertResourceUsageMutationVariables): Promise<InsertResourceUsageMutation>,
   insertLog(variables?: InsertLogMutationVariables): Promise<InsertLogMutation>,
   getSimulationRunResults(variables?: GetSimulationRunResultsQueryVariables):Promise<GetSimulationRunResultsQuery>
@@ -66,8 +70,8 @@ function connectHasuraEndpoint():void {
 
 const uploadDirectory = 'uploaded_files/';
 
-export async function allSimulations():Promise<AllSimulationsQuery> {
-  return await sdk.AllSimulations();
+export async function allSimulations(userid:string):Promise<AllSimulationsQuery> {
+  return await sdk.AllSimulations({ userid });
 }
 
 export async function allRunsSteps():Promise<string> {
@@ -88,7 +92,7 @@ export async function allRunsSteps():Promise<string> {
 //   return result.create_simulation.simulation_id;
 // }
 
-export async function createSimulation(model_id:string, name:string, pipeline_description:JSON):
+export async function createSimulation(model_id:string, name:string, pipeline_description:JSON, userid:string):
 Promise<string> {
   // disabling await-thenable, await is needed for sequential execution
   // eslint-disable-next-line @typescript-eslint/await-thenable
@@ -96,6 +100,7 @@ Promise<string> {
     model_id,
     name,
     pipeline_description,
+    userid,
   });
   if (!result?.create_simulation?.simulation_id) {
     throw new Error('🎌 Undefined expression in createSimulation');
@@ -180,20 +185,24 @@ export async function createStep(run_id:string, name:string, image:string,
   return `${stepId}`;
 }
 
-// function to read dsl parameter in simulation table
-async function readDSL(simulation_id:string):Promise<void> {
-  // get dsl from simulation table using simulation_id
-  const result:GetSimulationDslQuery = await sdk.getSimulationDSL({ simulation_id });
-  console.log(result.simulations[0].pipeline_description);
-  // validate pipeline description according to schema v1
-}
+/**
+ * function to read dsl parameter in simulation table
+ * WIP
+ * */
+// async function readDSL(simulation_id:string):Promise<void> {
+//   // get dsl from simulation table using simulation_id
+//   const result:GetSimulationDslQuery = await sdk.getSimulationDSL({ simulation_id });
+//   // console.log(result.simulations[0].pipeline_description);
+//   // validate pipeline description according to schema v1
+// }
 
-export async function createRun(simulation_id:string, dsl:string, name:string):Promise<string> {
+export async function createRun(simulation_id:string, dsl:string, name:string, userid:string):
+Promise<string> {
   // TODO: parse dsl
-  // const steps:Array<StepDSL> = parseDSL(dsl);
   // preloaded TLU pipeline
   const steps:Array<StepDSL> = parseDslTLU(dsl);
-  await readDSL(simulation_id);
+  // TODO: read dsl, validate and use it to create steps in the run
+  // await readDSL(simulation_id);
   // disabling await-thenable, await is needed to wait till sdk.createRun completes execution
   // eslint-disable-next-line @typescript-eslint/await-thenable
   const result:CreateRunMutation = await sdk.createRun({
@@ -201,6 +210,7 @@ export async function createRun(simulation_id:string, dsl:string, name:string):P
     // TODO: later to parse dsl -> dsl: JSON.parse(dsl),
     dsl,
     name,
+    userid,
   });
   if (!result.insert_runs_one?.run_id) {
     throw new Error('🎌 Undefined results from sdk.createRun function');
@@ -215,9 +225,31 @@ export async function createRun(simulation_id:string, dsl:string, name:string):P
   return runId;
 }
 
+/**
+ * function to check if a run belongs to the logged in user
+ */
+async function checkRunOwner(run_id:string, userid:string):Promise<void> {
+  const result:GetUseridFromRunQuery = await sdk.getUseridFromRun({ run_id });
+  if (result.runs[0].userid !== userid) {
+    throw new Error('🎌 Invalid access; run does not belong to the user');
+  }
+}
+
+/**
+ * function to check if a simulation belongs to the logged in user
+ */
+async function checkSimulationOwner(simulation_id:string, userid:string):Promise<void> {
+  const result:GetUseridFromSimulationQuery = await sdk.getUseridFromSimulation({ simulation_id });
+  if (result.simulations[0].userid !== userid) {
+    throw new Error('🎌 Invalid access; simulation does not belong to the user');
+  }
+}
+
 export async function createRunWithInput(simulation_id: string, dsl: string,
-  name: string, sampleInput: [[string, string]]): Promise<string> {
-  const runId = await createRun(simulation_id, dsl, name);
+  name: string, sampleInput: [[string, string]], userid:string): Promise<string> {
+  // only owner of the simulation can create a new run
+  await checkSimulationOwner(simulation_id, userid);
+  const runId = await createRun(simulation_id, dsl, name, userid);
   fs.mkdirSync(`${uploadDirectory}${runId}`, { recursive: true });
   // write sample input to uploaded_files/runId
   // eslint-disable-next-line no-restricted-syntax
@@ -314,7 +346,9 @@ export async function getSimulationRunResults(simulation_id:string,
   return JSON.stringify(result, undefined, 2);
 }
 
-export function stopRun(run_id:string):string {
+export async function stopRun(run_id:string, userid:string):Promise<string> {
+  // throw error if run does not belong to the user
+  await checkRunOwner(run_id, userid);
   // add the current runid to the environment var to denote stop signal has been sent
   // to runid
   // find the current running container
@@ -340,7 +374,9 @@ async function runScheduler():Promise<void> {
   }
 }
 
-export async function queueRun(run_id:string):Promise<string> {
+export async function queueRun(run_id:string, userid:string):Promise<string> {
+  // throw error if run does not belong to the user
+  await checkRunOwner(run_id, userid);
   if (process.env.IS_SIMULATION_RUNNING === 'true') {
     logger.info(`RunId ${run_id} added to task queue`);
   }
@@ -351,13 +387,17 @@ export async function queueRun(run_id:string):Promise<string> {
   return 'ok';
 }
 
+/**
+ * function to create a sample simulation for user to test
+ * wip - removed creating sample simulation; testing allsimulations with userid
+ */
 export async function createSampleSimulation():Promise<string> {
   await setTimeout(7000);
-  let result;
+  // let result;
   try {
     connectHasuraEndpoint();
     // check if there are simulations in the database
-    result = await sdk.AllSimulations();
+    // result = await sdk.AllSimulations();
   } catch (error) {
     const errorMessage = `\n 🎌 Error connecting from SIM-PIPE controller to hasura endpoint:\n
     ${(error as Error).message}
@@ -367,14 +407,19 @@ export async function createSampleSimulation():Promise<string> {
     await setTimeout(5000);
     connectHasuraEndpoint();
   }
-  if (!result) {
-    throw new Error('🎌 Error creating sample simulation at server start up, '
-  + 'hasura endpoint could not be connected, check hasura endpoint settings');
-  }
-  if (result.simulations.length === 0) {
-    const simId = await createSimulation('c97fc83a-b0fc-11ec-b909-0242ac120002',
-      'Sample Simulation');
-    return `Sample simulation with id ${simId} created on startup`;
-  }
-  return 'No sample simulation created as there are existing simulations';
+  /**
+   * disabling creating sample simulation, as simulations must belng to a user now
+   * TODO: find alternative
+   */
+  // if (!result) {
+  //   throw new Error('🎌 Error creating sample simulation at server start up, '
+  // + 'hasura endpoint could not be connected, check hasura endpoint settings');
+  // }
+  // if (result.simulations.length === 0) {
+  //   const simId = await createSimulation('c97fc83a-b0fc-11ec-b909-0242ac120002',
+  //     'Sample Simulation');
+  //   return `Sample simulation with id ${simId} created on startup`;
+  // }
+  // return 'No sample simulation created as there are existing simulations';
+  return 'to-be-replaced';
 }

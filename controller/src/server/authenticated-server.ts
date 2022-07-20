@@ -75,7 +75,9 @@ const resolvers = {
       return `hello from ${context.user.preferred_username as string}`;
     },
     All_Runs_Steps: functions.allRunsSteps,
-    All_Simulations: functions.allSimulations,
+    All_Simulations(_p: unknown, arguments_: unknown, context: { user: any }):unknown {
+      return functions.allSimulations(context.user.sub as string);
+    },
     async Get_Simulation_Run_Results(_p: unknown, arguments_: { simulation_id:string,
       run_id:string }):Promise<string> {
       return await functions.getSimulationRunResults(arguments_.simulation_id, arguments_.run_id);
@@ -83,16 +85,18 @@ const resolvers = {
   },
   Mutation: {
     async Create_Simulation(_p: unknown, arguments_: { model_id:string, name:string,
-      pipeline_description: JSON })
+      pipeline_description: JSON }, context: { user: any })
       :Promise<string> {
       try {
-        const newSimId = await functions.createSimulation(arguments_.model_id, arguments_.name, arguments_.pipeline_description);
+        const newSimId = await functions.createSimulation(
+          arguments_.model_id, arguments_.name, arguments_.pipeline_description, context.user.sub as string);
         return `Simulation has been created with id ${newSimId}`;
       } catch (error) {
-        const errorMessage = `\n🎌 Internal server error creating new simulation:\n
-      ${(error as Error).message}\n`;
+        const errorMessage = `🎌 Error creating new simulation:
+      ${(error as Error).message}`;
         logger.error(errorMessage);
-        return 'Failed! Internal server error when creating new simulation';
+        // return 'Failed! Internal server error when creating new simulation';
+        return errorMessage;
       }
     },
     async Create_Run_WithInput(_p: unknown, arguments_:
@@ -101,40 +105,47 @@ const resolvers = {
       dsl:string,
       name:string,
       sampleInput:[[string, string]],
-    }):Promise<string> {
+    }, context: { user: any }):Promise<string> {
       let newRunId;
       try {
         newRunId = await functions.createRunWithInput(
-          arguments_.simulation_id, arguments_.dsl, arguments_.name, arguments_.sampleInput);
+          arguments_.simulation_id,
+          arguments_.dsl,
+          arguments_.name,
+          arguments_.sampleInput,
+          context.user.sub as string);
         return `Run has been created with id ${newRunId}`;
       } catch (error) {
-        const errorMessage = `\n🎌 Internal server error creating new run:\n
-      ${(error as Error).message}\n`;
+        const errorMessage = `🎌 Error creating new run:
+      ${(error as Error).message}`;
         logger.error(errorMessage);
-        return 'Failed! Internal server error when creating new run';
+        // return 'Failed! Internal server error when creating new run';
+        return errorMessage;
       }
     },
-    async Start_Run(_p: unknown, arguments_:{ run_id:string }):
+    async Start_Run(_p: unknown, arguments_:{ run_id:string }, context: { user: any }):
     Promise<string> {
       try {
-        await functions.queueRun(arguments_.run_id);
+        await functions.queueRun(arguments_.run_id, context.user.sub as string);
         return 'Run has been added to queue';
       } catch (error) {
-        const errorMessage = `\n🎌 Failed! internal server error starting run:\n
-      ${(error as Error).message}\n`;
+        const errorMessage = `🎌 Failed! Error starting run:
+      ${(error as Error).message}`;
         logger.error(errorMessage);
-        return 'Failed! internal server error starting run';
+        // return 'Failed! internal server error starting run';
+        return errorMessage;
       }
     },
-    Stop_Run(_p:unknown, arguments_: { run_id:string }):string {
+    async Stop_Run(_p:unknown, arguments_: { run_id:string }, context: { user: any }):Promise<string> {
       try {
-        functions.stopRun(arguments_.run_id);
+        await functions.stopRun(arguments_.run_id, context.user.sub as string);
         return 'Successfully sent stop signal to current run';
       } catch (error) {
-        const errorMessage = `\n🎌 Internal server error stopping run:\n
-      ${(error as Error).message}\n`;
+        const errorMessage = `🎌 Error stopping run:
+      ${(error as Error).message}`;
         logger.error(errorMessage);
-        return 'Failed! internal server error stopping run';
+        // return 'Failed! internal server error stopping run';
+        return errorMessage;
       }
     },
   },
@@ -189,7 +200,6 @@ const startSecureServer = async (): Promise<void> => {
       if (!req.headers.authorization) {
         throw new Error('🎌 No authorization header found');
       }
-      // console.log(req);
       // definition of user can be extended later to include all required attributes
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       const user:{
@@ -206,8 +216,8 @@ const startSecureServer = async (): Promise<void> => {
       (request: express.Request, response: express.Response, next: express.NextFunction):
       Promise<void>; unless: typeof unless;
     }) => function (request: express.Request, response: express.Response, next: () => any) {
-      console.log(`${request.headers['user-agent'] as string}--------------------\n`);
-      console.log(`${request.hostname}--------------------\n`);
+      // console.log(`${request.headers['user-agent'] as string}--------------------\n`);
+      // console.log(`${request.hostname}--------------------\n`);
       if (request.hostname === getHasuraUrl()) {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-return
         return next(); // skip authentication for requests from hasura endpoint
