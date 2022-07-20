@@ -63,3 +63,7 @@ mutation ($run_id:String) {
 {
     "run_id": "1a3fa2f4-42ec-4539-b3c6-de29f350a7bf"
 }
+--
+with userid
+sub for testuser - 6a41f10d-9bd5-4a6b-98fb-765fd2f09465
+--
