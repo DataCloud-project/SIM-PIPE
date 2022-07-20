@@ -66,6 +66,7 @@ services:
       REMOTE_OUTPUT_DIR: 'out/'
       REMOTE_INPUT_DIR: 'in/'
       HASURA_ADMIN_SECRET: ${HASURA_ADMIN_SECRET}      
+      HASURA_URL: ${REMOTE_SCHEMA_URL}      
 volumes:
   db_data1:
     null
