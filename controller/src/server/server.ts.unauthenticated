@@ -111,9 +111,9 @@ const resolvers = {
         return 'Failed! internal server error starting run';
       }
     },
-    Stop_Run(_p:unknown, arguments_: { run_id:string }):string {
+    async Stop_Run(_p:unknown, arguments_: { run_id:string }):string {
       try {
-        functions.stopRun(arguments_.run_id);
+        await functions.stopRun(arguments_.run_id);
         return 'Successfully sent stop signal to current run';
       } catch (error) {
         const errorMessage = `\n🎌 Internal server error stopping run:\n
