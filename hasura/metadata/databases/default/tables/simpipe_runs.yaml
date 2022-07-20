@@ -42,6 +42,7 @@ select_permissions:
         - simulation_id
         - started
         - status
+        - userid
       filter: {}
 update_permissions:
   - role: anonymous

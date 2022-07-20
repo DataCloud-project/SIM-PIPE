@@ -921,6 +921,7 @@ export type Runs = {
   steps: Array<Steps>;
   /** fetch aggregated fields from the table: "simpipe.steps" */
   steps_aggregate: Steps_Aggregate;
+  userid?: Maybe<Scalars['String']>;
 };
 
 
@@ -1020,6 +1021,7 @@ export type Runs_Bool_Exp = {
   started?: InputMaybe<Timestamptz_Comparison_Exp>;
   status?: InputMaybe<Simpipe_Run_Status_Enum_Comparison_Exp>;
   steps?: InputMaybe<Steps_Bool_Exp>;
+  userid?: InputMaybe<String_Comparison_Exp>;
 };
 
 /** unique or primary key constraints on table "simpipe.runs" */
@@ -1055,6 +1057,7 @@ export type Runs_Insert_Input = {
   started?: InputMaybe<Scalars['timestamptz']>;
   status?: InputMaybe<Simpipe_Run_Status_Enum>;
   steps?: InputMaybe<Steps_Arr_Rel_Insert_Input>;
+  userid?: InputMaybe<Scalars['String']>;
 };
 
 /** aggregate max on columns */
@@ -1066,6 +1069,7 @@ export type Runs_Max_Fields = {
   run_id?: Maybe<Scalars['uuid']>;
   simulation_id?: Maybe<Scalars['uuid']>;
   started?: Maybe<Scalars['timestamptz']>;
+  userid?: Maybe<Scalars['String']>;
 };
 
 /** order by max() on columns of table "simpipe.runs" */
@@ -1076,6 +1080,7 @@ export type Runs_Max_Order_By = {
   run_id?: InputMaybe<Order_By>;
   simulation_id?: InputMaybe<Order_By>;
   started?: InputMaybe<Order_By>;
+  userid?: InputMaybe<Order_By>;
 };
 
 /** aggregate min on columns */
@@ -1087,6 +1092,7 @@ export type Runs_Min_Fields = {
   run_id?: Maybe<Scalars['uuid']>;
   simulation_id?: Maybe<Scalars['uuid']>;
   started?: Maybe<Scalars['timestamptz']>;
+  userid?: Maybe<Scalars['String']>;
 };
 
 /** order by min() on columns of table "simpipe.runs" */
@@ -1097,6 +1103,7 @@ export type Runs_Min_Order_By = {
   run_id?: InputMaybe<Order_By>;
   simulation_id?: InputMaybe<Order_By>;
   started?: InputMaybe<Order_By>;
+  userid?: InputMaybe<Order_By>;
 };
 
 /** response of any mutation on the table "simpipe.runs" */
@@ -1127,6 +1134,7 @@ export type Runs_Order_By = {
   started?: InputMaybe<Order_By>;
   status?: InputMaybe<Order_By>;
   steps_aggregate?: InputMaybe<Steps_Aggregate_Order_By>;
+  userid?: InputMaybe<Order_By>;
 };
 
 /** primary key columns input for table: runs */
@@ -1156,7 +1164,9 @@ export enum Runs_Select_Column {
   /** column name */
   Started = 'started',
   /** column name */
-  Status = 'status'
+  Status = 'status',
+  /** column name */
+  Userid = 'userid'
 }
 
 /** input type for updating data in table "simpipe.runs" */
@@ -1169,6 +1179,7 @@ export type Runs_Set_Input = {
   simulation_id?: InputMaybe<Scalars['uuid']>;
   started?: InputMaybe<Scalars['timestamptz']>;
   status?: InputMaybe<Simpipe_Run_Status_Enum>;
+  userid?: InputMaybe<Scalars['String']>;
 };
 
 /** update columns of table "simpipe.runs" */
@@ -1188,7 +1199,9 @@ export enum Runs_Update_Column {
   /** column name */
   Started = 'started',
   /** column name */
-  Status = 'status'
+  Status = 'status',
+  /** column name */
+  Userid = 'userid'
 }
 
 /** columns and relationships of "simpipe.env_variable" */
@@ -2350,6 +2363,7 @@ export type Simulations = {
   runs_aggregate: Runs_Aggregate;
   /** UUID of the simulation */
   simulation_id: Scalars['uuid'];
+  userid?: Maybe<Scalars['String']>;
 };
 
 
@@ -2431,6 +2445,7 @@ export type Simulations_Bool_Exp = {
   pipeline_description?: InputMaybe<Jsonb_Comparison_Exp>;
   runs?: InputMaybe<Runs_Bool_Exp>;
   simulation_id?: InputMaybe<Uuid_Comparison_Exp>;
+  userid?: InputMaybe<String_Comparison_Exp>;
 };
 
 /** unique or primary key constraints on table "simpipe.simulations" */
@@ -2467,6 +2482,7 @@ export type Simulations_Insert_Input = {
   runs?: InputMaybe<Runs_Arr_Rel_Insert_Input>;
   /** UUID of the simulation */
   simulation_id?: InputMaybe<Scalars['uuid']>;
+  userid?: InputMaybe<Scalars['String']>;
 };
 
 /** aggregate max on columns */
@@ -2479,6 +2495,7 @@ export type Simulations_Max_Fields = {
   name?: Maybe<Scalars['String']>;
   /** UUID of the simulation */
   simulation_id?: Maybe<Scalars['uuid']>;
+  userid?: Maybe<Scalars['String']>;
 };
 
 /** aggregate min on columns */
@@ -2491,6 +2508,7 @@ export type Simulations_Min_Fields = {
   name?: Maybe<Scalars['String']>;
   /** UUID of the simulation */
   simulation_id?: Maybe<Scalars['uuid']>;
+  userid?: Maybe<Scalars['String']>;
 };
 
 /** response of any mutation on the table "simpipe.simulations" */
@@ -2524,6 +2542,7 @@ export type Simulations_Order_By = {
   pipeline_description?: InputMaybe<Order_By>;
   runs_aggregate?: InputMaybe<Runs_Aggregate_Order_By>;
   simulation_id?: InputMaybe<Order_By>;
+  userid?: InputMaybe<Order_By>;
 };
 
 /** primary key columns input for table: simulations */
@@ -2548,7 +2567,9 @@ export enum Simulations_Select_Column {
   /** column name */
   PipelineDescription = 'pipeline_description',
   /** column name */
-  SimulationId = 'simulation_id'
+  SimulationId = 'simulation_id',
+  /** column name */
+  Userid = 'userid'
 }
 
 /** input type for updating data in table "simpipe.simulations" */
@@ -2561,6 +2582,7 @@ export type Simulations_Set_Input = {
   pipeline_description?: InputMaybe<Scalars['jsonb']>;
   /** UUID of the simulation */
   simulation_id?: InputMaybe<Scalars['uuid']>;
+  userid?: InputMaybe<Scalars['String']>;
 };
 
 /** update columns of table "simpipe.simulations" */
@@ -2574,7 +2596,9 @@ export enum Simulations_Update_Column {
   /** column name */
   PipelineDescription = 'pipeline_description',
   /** column name */
-  SimulationId = 'simulation_id'
+  SimulationId = 'simulation_id',
+  /** column name */
+  Userid = 'userid'
 }
 
 /** columns and relationships of "simpipe.steps" */
@@ -3254,15 +3278,33 @@ export type Uuid_Comparison_Exp = {
   _nin?: InputMaybe<Array<Scalars['uuid']>>;
 };
 
-export type AllSimulationsQueryVariables = Exact<{ [key: string]: never; }>;
+export type AllSimulationsQueryVariables = Exact<{
+  userid?: InputMaybe<Scalars['String']>;
+}>;
 
 
 export type AllSimulationsQuery = { __typename?: 'query_root', simulations: Array<{ __typename?: 'simulations', simulation_id: string, name?: string | null, created: string, runs: Array<{ __typename?: 'runs', run_id: string, name?: string | null, status: Simpipe_Run_Status_Enum, created: string, started?: string | null, ended?: string | null }> }> };
 
-export type AllRunsAndStepsQueryVariables = Exact<{ [key: string]: never; }>;
+export type AllRunsAndStepsQueryVariables = Exact<{
+  userid?: InputMaybe<Scalars['String']>;
+}>;
 
 
 export type AllRunsAndStepsQuery = { __typename?: 'query_root', runs: Array<{ __typename?: 'runs', run_id: string, name?: string | null, created: string, started?: string | null, status: Simpipe_Run_Status_Enum, steps: Array<{ __typename?: 'steps', step_id: number, created: string, started?: string | null, ended?: string | null, status: Simpipe_Step_Status_Enum }> }> };
+
+export type GetUseridFromRunQueryVariables = Exact<{
+  run_id: Scalars['uuid'];
+}>;
+
+
+export type GetUseridFromRunQuery = { __typename?: 'query_root', runs: Array<{ __typename?: 'runs', userid?: string | null }> };
+
+export type GetUseridFromSimulationQueryVariables = Exact<{
+  simulation_id: Scalars['uuid'];
+}>;
+
+
+export type GetUseridFromSimulationQuery = { __typename?: 'query_root', simulations: Array<{ __typename?: 'simulations', userid?: string | null }> };
 
 export type GetSimulationDslQueryVariables = Exact<{
   simulation_id: Scalars['uuid'];
@@ -3275,6 +3317,7 @@ export type CreateRunMutationVariables = Exact<{
   simulation_id: Scalars['uuid'];
   dsl: Scalars['jsonb'];
   name?: InputMaybe<Scalars['String']>;
+  userid?: InputMaybe<Scalars['String']>;
 }>;
 
 
@@ -3359,6 +3402,7 @@ export type CreateSimulationMutationVariables = Exact<{
   name?: InputMaybe<Scalars['String']>;
   model_id: Scalars['uuid'];
   pipeline_description?: InputMaybe<Scalars['jsonb']>;
+  userid?: InputMaybe<Scalars['String']>;
 }>;
 
 
@@ -3373,6 +3417,7 @@ export type GetSimulationIdandStepsQuery = { __typename?: 'query_root', runs: Ar
 
 export type GetRunDetailsQueryVariables = Exact<{
   run_id: Scalars['uuid'];
+  userid?: InputMaybe<Scalars['String']>;
 }>;
 
 
@@ -3402,6 +3447,7 @@ export type InsertLogMutation = { __typename?: 'mutation_root', insert_simpipe_l
 export type GetSimulationRunResultsQueryVariables = Exact<{
   simulation_id?: InputMaybe<Scalars['uuid']>;
   run_id?: InputMaybe<Scalars['uuid']>;
+  userid?: InputMaybe<Scalars['String']>;
 }>;
 
 
@@ -3409,8 +3455,8 @@ export type GetSimulationRunResultsQuery = { __typename?: 'query_root', simulati
 
 
 export const AllSimulationsDocument = gql`
-    query AllSimulations {
-  simulations {
+    query AllSimulations($userid: String) {
+  simulations(where: {userid: {_eq: $userid}}) {
     simulation_id
     name
     created
@@ -3426,8 +3472,8 @@ export const AllSimulationsDocument = gql`
 }
     `;
 export const AllRunsAndStepsDocument = gql`
-    query allRunsAndSteps {
-  runs {
+    query allRunsAndSteps($userid: String) {
+  runs(where: {userid: {_eq: $userid}}) {
     run_id
     name
     created
@@ -3443,6 +3489,20 @@ export const AllRunsAndStepsDocument = gql`
   }
 }
     `;
+export const GetUseridFromRunDocument = gql`
+    query getUseridFromRun($run_id: uuid!) {
+  runs(where: {run_id: {_eq: $run_id}}) {
+    userid
+  }
+}
+    `;
+export const GetUseridFromSimulationDocument = gql`
+    query getUseridFromSimulation($simulation_id: uuid!) {
+  simulations(where: {simulation_id: {_eq: $simulation_id}}) {
+    userid
+  }
+}
+    `;
 export const GetSimulationDslDocument = gql`
     query getSimulationDSL($simulation_id: uuid!) {
   simulations(where: {simulation_id: {_eq: $simulation_id}}) {
@@ -3451,8 +3511,10 @@ export const GetSimulationDslDocument = gql`
 }
     `;
 export const CreateRunDocument = gql`
-    mutation createRun($simulation_id: uuid!, $dsl: jsonb!, $name: String) {
-  insert_runs_one(object: {dsl: $dsl, simulation_id: $simulation_id, name: $name}) {
+    mutation createRun($simulation_id: uuid!, $dsl: jsonb!, $name: String, $userid: String) {
+  insert_runs_one(
+    object: {dsl: $dsl, simulation_id: $simulation_id, name: $name, userid: $userid}
+  ) {
     run_id
   }
 }
@@ -3542,9 +3604,9 @@ export const SetRunAsFailedDocument = gql`
 }
     `;
 export const CreateSimulationDocument = gql`
-    mutation createSimulation($name: String, $model_id: uuid!, $pipeline_description: jsonb) {
+    mutation createSimulation($name: String, $model_id: uuid!, $pipeline_description: jsonb, $userid: String) {
   create_simulation(
-    object: {name: $name, model_id: $model_id, pipeline_description: $pipeline_description}
+    object: {name: $name, model_id: $model_id, pipeline_description: $pipeline_description, userid: $userid}
   ) {
     simulation_id
   }
@@ -3565,8 +3627,8 @@ export const GetSimulationIdandStepsDocument = gql`
 }
     `;
 export const GetRunDetailsDocument = gql`
-    query getRunDetails($run_id: uuid!) {
-  runs(where: {run_id: {_eq: $run_id}}) {
+    query getRunDetails($run_id: uuid!, $userid: String) {
+  runs(where: {_and: [{run_id: {_eq: $run_id}}, {userid: {_eq: $userid}}]}) {
     simulation_id
     dsl
     name
@@ -3596,8 +3658,10 @@ export const InsertLogDocument = gql`
 }
     `;
 export const GetSimulationRunResultsDocument = gql`
-    query getSimulationRunResults($simulation_id: uuid = "", $run_id: uuid = "") {
-  simulations(where: {simulation_id: {_eq: $simulation_id}}) {
+    query getSimulationRunResults($simulation_id: uuid = "", $run_id: uuid = "", $userid: String) {
+  simulations(
+    where: {_and: [{simulation_id: {_eq: $simulation_id}}, {userid: {_eq: $userid}}]}
+  ) {
     runs(where: {run_id: {_eq: $run_id}}) {
       run_id
       status
@@ -3642,6 +3706,12 @@ export function getSdk(client: GraphQLClient, withWrapper: SdkFunctionWrapper = 
     },
     allRunsAndSteps(variables?: AllRunsAndStepsQueryVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<AllRunsAndStepsQuery> {
       return withWrapper((wrappedRequestHeaders) => client.request<AllRunsAndStepsQuery>(AllRunsAndStepsDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'allRunsAndSteps', 'query');
+    },
+    getUseridFromRun(variables: GetUseridFromRunQueryVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<GetUseridFromRunQuery> {
+      return withWrapper((wrappedRequestHeaders) => client.request<GetUseridFromRunQuery>(GetUseridFromRunDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'getUseridFromRun', 'query');
+    },
+    getUseridFromSimulation(variables: GetUseridFromSimulationQueryVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<GetUseridFromSimulationQuery> {
+      return withWrapper((wrappedRequestHeaders) => client.request<GetUseridFromSimulationQuery>(GetUseridFromSimulationDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'getUseridFromSimulation', 'query');
     },
     getSimulationDSL(variables: GetSimulationDslQueryVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<GetSimulationDslQuery> {
       return withWrapper((wrappedRequestHeaders) => client.request<GetSimulationDslQuery>(GetSimulationDslDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'getSimulationDSL', 'query');

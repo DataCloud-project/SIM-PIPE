@@ -1,6 +1,6 @@
 # Get all simulations
-query AllSimulations {
-  simulations {
+query AllSimulations ($userid: String) {
+  simulations (where: {userid: {_eq: $userid}}) {
     simulation_id
     name
     created
@@ -16,8 +16,8 @@ query AllSimulations {
 }
 
 
-query allRunsAndSteps {
-  runs {
+query allRunsAndSteps ($userid: String) {
+  runs (where: {userid: {_eq: $userid}}) {
     run_id
     name
     created
@@ -33,6 +33,19 @@ query allRunsAndSteps {
   }
 }
 
+query getUseridFromRun ($run_id: uuid!) {
+  runs (where: {run_id: {_eq: $run_id}}) {
+    userid
+  }
+}
+
+query getUseridFromSimulation ($simulation_id: uuid!) {
+  simulations (where: {simulation_id: {_eq: $simulation_id}}) {
+    userid
+  }
+}
+
+# todo add userid
 query getSimulationDSL ($simulation_id: uuid!) {
   simulations(where: {simulation_id: {_eq: $simulation_id}}) {
     pipeline_description 
@@ -40,8 +53,8 @@ query getSimulationDSL ($simulation_id: uuid!) {
 }
 
 # api functions ..
-mutation createRun($simulation_id: uuid!, $dsl: jsonb!, $name:String) {
-  insert_runs_one(object: {dsl: $dsl, simulation_id: $simulation_id, name: $name}) {
+mutation createRun($simulation_id: uuid!, $dsl: jsonb!, $name:String, $userid: String) {
+  insert_runs_one(object: {dsl: $dsl, simulation_id: $simulation_id, name: $name, userid: $userid}) {
     run_id
   }
 }
@@ -104,8 +117,8 @@ mutation setRunAsFailed($run_id: uuid!) {
 
 
 # modified create simulation to add json string arg for pipeline description
-mutation createSimulation ($name: String, $model_id:uuid!, $pipeline_description: jsonb) {
-  create_simulation(object: {name: $name, model_id: $model_id, pipeline_description: $pipeline_description }) {
+mutation createSimulation ($name: String, $model_id:uuid!, $pipeline_description: jsonb, $userid: String) {
+  create_simulation(object: {name: $name, model_id: $model_id, pipeline_description: $pipeline_description, userid:$userid }) {
     simulation_id
   }
 }
@@ -130,8 +143,13 @@ query getSimulationIdandSteps($run_id: uuid!) {
     }
   }
 }
-query getRunDetails($run_id: uuid!) {
-  runs(where: {run_id: {_eq: $run_id}}) {
+query getRunDetails($run_id: uuid!, $userid: String) {
+  runs(where: {
+    _and: [
+        {run_id: {_eq: $run_id}},
+        {userid: {_eq: $userid}}
+      ]
+    }) {
     simulation_id
     dsl
     name
@@ -156,8 +174,13 @@ mutation insertLog($step_id: Int, $text: String) {
   }
 }
 
-query getSimulationRunResults($simulation_id: uuid = "", $run_id: uuid = "") {
-  simulations(where: {simulation_id: {_eq: $simulation_id}}) {
+query getSimulationRunResults($simulation_id: uuid = "", $run_id: uuid = "", $userid: String) {
+  simulations(where: {
+    _and: [
+        {simulation_id: {_eq: $simulation_id}},
+        {userid: {_eq: $userid}}
+      ]
+    }) {
     runs(where: {run_id: {_eq: $run_id}}) {
       run_id
       status

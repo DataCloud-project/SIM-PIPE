@@ -478,6 +478,7 @@ type runs {
   fetch aggregated fields from the table: "simpipe.steps"
   """
   steps_aggregate("distinct select on columns" distinct_on: [steps_select_column!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" order_by: [steps_order_by!], "filter the rows returned" where: steps_bool_exp): steps_aggregate!
+  userid: String
 }
 """
 aggregated selection of "simpipe.runs"
@@ -531,6 +532,7 @@ input runs_bool_exp {
   started: timestamptz_comparison_exp
   status: simpipe_run_status_enum_comparison_exp
   steps: steps_bool_exp
+  userid: String_comparison_exp
 }
 """
 unique or primary key constraints on table "simpipe.runs"
@@ -565,6 +567,7 @@ input runs_insert_input {
   started: timestamptz
   status: simpipe_run_status_enum
   steps: steps_arr_rel_insert_input
+  userid: String
 }
 "aggregate max on columns"
 type runs_max_fields {
@@ -574,6 +577,7 @@ type runs_max_fields {
   run_id: uuid
   simulation_id: uuid
   started: timestamptz
+  userid: String
 }
 """
 order by max() on columns of table "simpipe.runs"
@@ -585,6 +589,7 @@ input runs_max_order_by {
   run_id: order_by
   simulation_id: order_by
   started: order_by
+  userid: order_by
 }
 "aggregate min on columns"
 type runs_min_fields {
@@ -594,6 +599,7 @@ type runs_min_fields {
   run_id: uuid
   simulation_id: uuid
   started: timestamptz
+  userid: String
 }
 """
 order by min() on columns of table "simpipe.runs"
@@ -605,6 +611,7 @@ input runs_min_order_by {
   run_id: order_by
   simulation_id: order_by
   started: order_by
+  userid: order_by
 }
 """
 response of any mutation on the table "simpipe.runs"
@@ -637,6 +644,7 @@ input runs_order_by {
   started: order_by
   status: order_by
   steps_aggregate: steps_aggregate_order_by
+  userid: order_by
 }
 "primary key columns input for table: runs"
 input runs_pk_columns_input {
@@ -666,6 +674,8 @@ enum runs_select_column {
   started
   "column name"
   status
+  "column name"
+  userid
 }
 """
 input type for updating data in table "simpipe.runs"
@@ -679,6 +689,7 @@ input runs_set_input {
   simulation_id: uuid
   started: timestamptz
   status: simpipe_run_status_enum
+  userid: String
 }
 """
 update columns of table "simpipe.runs"
@@ -700,6 +711,8 @@ enum runs_update_column {
   started
   "column name"
   status
+  "column name"
+  userid
 }
 """
 columns and relationships of "simpipe.env_variable"
@@ -1820,6 +1833,7 @@ type simulations {
   runs_aggregate("distinct select on columns" distinct_on: [runs_select_column!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" order_by: [runs_order_by!], "filter the rows returned" where: runs_bool_exp): runs_aggregate!
   "UUID of the simulation"
   simulation_id: uuid!
+  userid: String
 }
 """
 aggregated selection of "simpipe.simulations"
@@ -1853,6 +1867,7 @@ input simulations_bool_exp {
   pipeline_description: jsonb_comparison_exp
   runs: runs_bool_exp
   simulation_id: uuid_comparison_exp
+  userid: String_comparison_exp
 }
 """
 unique or primary key constraints on table "simpipe.simulations"
@@ -1888,6 +1903,7 @@ input simulations_insert_input {
   runs: runs_arr_rel_insert_input
   "UUID of the simulation"
   simulation_id: uuid
+  userid: String
 }
 "aggregate max on columns"
 type simulations_max_fields {
@@ -1898,6 +1914,7 @@ type simulations_max_fields {
   name: String
   "UUID of the simulation"
   simulation_id: uuid
+  userid: String
 }
 "aggregate min on columns"
 type simulations_min_fields {
@@ -1908,6 +1925,7 @@ type simulations_min_fields {
   name: String
   "UUID of the simulation"
   simulation_id: uuid
+  userid: String
 }
 """
 response of any mutation on the table "simpipe.simulations"
@@ -1944,6 +1962,7 @@ input simulations_order_by {
   pipeline_description: order_by
   runs_aggregate: runs_aggregate_order_by
   simulation_id: order_by
+  userid: order_by
 }
 "primary key columns input for table: simulations"
 input simulations_pk_columns_input {
@@ -1968,6 +1987,8 @@ enum simulations_select_column {
   pipeline_description
   "column name"
   simulation_id
+  "column name"
+  userid
 }
 """
 input type for updating data in table "simpipe.simulations"
@@ -1981,6 +2002,7 @@ input simulations_set_input {
   pipeline_description: jsonb
   "UUID of the simulation"
   simulation_id: uuid
+  userid: String
 }
 """
 update columns of table "simpipe.simulations"
@@ -1996,6 +2018,8 @@ enum simulations_update_column {
   pipeline_description
   "column name"
   simulation_id
+  "column name"
+  userid
 }
 """
 columns and relationships of "simpipe.steps"

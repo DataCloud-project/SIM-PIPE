@@ -28,4 +28,5 @@ select_permissions:
         - name
         - pipeline_description
         - simulation_id
+        - userid
       filter: {}
