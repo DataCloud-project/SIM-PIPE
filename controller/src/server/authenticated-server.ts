@@ -214,7 +214,7 @@ const startSecureServer = async (): Promise<void> => {
     const app = express();
     const chooseMiddleware = (middleware: {
       (request: express.Request, response: express.Response, next: express.NextFunction):
-      Promise<void>; unless: typeof unless;
+      Promise<void>; unless: any;
     }) => function (request: express.Request, response: express.Response, next: () => any) {
       // console.log(`${request.headers['user-agent'] as string}--------------------\n`);
       // console.log(`${request.hostname}--------------------\n`);

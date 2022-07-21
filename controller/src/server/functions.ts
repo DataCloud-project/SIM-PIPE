@@ -313,7 +313,8 @@ export async function startRun(run_id:string):Promise<string> {
       // set input path for next step as output path of the previous step returned and start step
       const nextInput = await controller.start(client, currentStep);
       currentStep.inputPath = nextInput;
-    } catch {
+    } catch (error) {
+      logger.error(`Run ${run_id} execution has failed\n${(error as Error).message}`);
       process.env.FAILED_RUN = 'true';
     }
   }
@@ -327,7 +328,6 @@ export async function startRun(run_id:string):Promise<string> {
   }
   if (process.env.FAILED_RUN === 'true') {
     // mark the run as failed
-    logger.error(`Run ${run_id} execution has failed\n`);
     await sdk.setRunAsFailed({ run_id });
     // set STOP signal to false for the next run
     process.env.FAILED_RUN = 'false';
@@ -383,7 +383,7 @@ export async function queueRun(run_id:string, userid:string):Promise<string> {
   taskQueue.enqueue(run_id);
   await sdk.setRunAsQueued({ run_id });
   // eslint-disable-next-line @typescript-eslint/no-floating-promises
-  runScheduler();
+  await runScheduler();
   return 'ok';
 }
 

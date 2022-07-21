@@ -312,7 +312,7 @@ export async function start(client:GraphQLClient, step:types.Step) : Promise<str
     await sdk.setStepAsFailed({ step_id: step.stepId });
     // eslint-disable-next-line @typescript-eslint/no-unsafe-call
     await sdk.insertLog({ step_id: step.stepId, text: `${error}` });
-    logger.info(`🎌 ${error} in controller.start`);
-    throw new Error('Error in step execution, step failed');
+    logger.error(`🎌 ${error} in controller.start`);
+    throw new Error(`Error in step execution, step failed ${(error as Error).message}`);
   }
 }

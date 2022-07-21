@@ -279,13 +279,6 @@ export type Mutation_RootStop_RunArgs = {
 
 
 /** mutation root */
-export type Mutation_RootCreate_SimulationArgs = {
-  object: Simulations_Insert_Input;
-  on_conflict?: InputMaybe<Simulations_On_Conflict>;
-};
-
-
-/** mutation root */
 export type Mutation_RootCreate_SimulationsArgs = {
   objects: Array<Simulations_Insert_Input>;
   on_conflict?: InputMaybe<Simulations_On_Conflict>;
@@ -3417,7 +3410,6 @@ export type GetSimulationIdandStepsQuery = { __typename?: 'query_root', runs: Ar
 
 export type GetRunDetailsQueryVariables = Exact<{
   run_id: Scalars['uuid'];
-  userid?: InputMaybe<Scalars['String']>;
 }>;
 
 
@@ -3627,8 +3619,8 @@ export const GetSimulationIdandStepsDocument = gql`
 }
     `;
 export const GetRunDetailsDocument = gql`
-    query getRunDetails($run_id: uuid!, $userid: String) {
-  runs(where: {_and: [{run_id: {_eq: $run_id}}, {userid: {_eq: $userid}}]}) {
+    query getRunDetails($run_id: uuid!) {
+  runs(where: {run_id: {_eq: $run_id}}) {
     simulation_id
     dsl
     name

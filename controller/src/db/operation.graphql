@@ -143,13 +143,8 @@ query getSimulationIdandSteps($run_id: uuid!) {
     }
   }
 }
-query getRunDetails($run_id: uuid!, $userid: String) {
-  runs(where: {
-    _and: [
-        {run_id: {_eq: $run_id}},
-        {userid: {_eq: $userid}}
-      ]
-    }) {
+query getRunDetails($run_id: uuid!) {
+  runs(where: {run_id: {_eq: $run_id}}) {
     simulation_id
     dsl
     name
