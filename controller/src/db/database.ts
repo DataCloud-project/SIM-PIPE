@@ -3445,6 +3445,14 @@ export type GetSimulationRunResultsQueryVariables = Exact<{
 
 export type GetSimulationRunResultsQuery = { __typename?: 'query_root', simulations: Array<{ __typename?: 'simulations', runs: Array<{ __typename?: 'runs', run_id: string, status: Simpipe_Run_Status_Enum, created: string, started?: string | null, ended?: string | null, dsl: unknown, steps: Array<{ __typename?: 'steps', step_id: number, status: Simpipe_Step_Status_Enum, created: string, started?: string | null, ended?: string | null, image: string, name: string, pipeline_step_number: number, resource_usages: Array<{ __typename?: 'simpipe_resource_usage', id: number, step_id: number, cpu: number, memory: number, memory_max: number, rx_value: number, time: string, tx_value: number }> }> }> }> };
 
+export type GetSimulationQueryVariables = Exact<{
+  simulation_id?: InputMaybe<Scalars['uuid']>;
+  userid?: InputMaybe<Scalars['String']>;
+}>;
+
+
+export type GetSimulationQuery = { __typename?: 'query_root', simulations: Array<{ __typename?: 'simulations', name?: string | null, simulation_id: string, created: string, runs: Array<{ __typename?: 'runs', run_id: string, status: Simpipe_Run_Status_Enum, created: string, started?: string | null, ended?: string | null, dsl: unknown, steps: Array<{ __typename?: 'steps', step_id: number, status: Simpipe_Step_Status_Enum, created: string, started?: string | null, ended?: string | null, image: string, name: string, pipeline_step_number: number, resource_usages: Array<{ __typename?: 'simpipe_resource_usage', id: number, step_id: number, cpu: number, memory: number, memory_max: number, rx_value: number, time: string, tx_value: number }> }> }> }> };
+
 
 export const AllSimulationsDocument = gql`
     query AllSimulations($userid: String) {
@@ -3685,6 +3693,45 @@ export const GetSimulationRunResultsDocument = gql`
   }
 }
     `;
+export const GetSimulationDocument = gql`
+    query getSimulation($simulation_id: uuid, $userid: String) {
+  simulations(
+    where: {_and: [{simulation_id: {_eq: $simulation_id}}, {userid: {_eq: $userid}}]}
+  ) {
+    name
+    simulation_id
+    created
+    runs {
+      run_id
+      status
+      created
+      started
+      ended
+      dsl
+      steps(order_by: {pipeline_step_number: asc}) {
+        step_id
+        status
+        created
+        started
+        ended
+        image
+        name
+        pipeline_step_number
+        resource_usages(order_by: {time: asc}) {
+          id
+          step_id
+          cpu
+          memory
+          memory_max
+          rx_value
+          time
+          tx_value
+        }
+      }
+    }
+  }
+}
+    `;
 
 export type SdkFunctionWrapper = <T>(action: (requestHeaders?:Record<string, string>) => Promise<T>, operationName: string, operationType?: string) => Promise<T>;
 
@@ -3758,6 +3805,9 @@ export function getSdk(client: GraphQLClient, withWrapper: SdkFunctionWrapper = 
     },
     getSimulationRunResults(variables?: GetSimulationRunResultsQueryVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<GetSimulationRunResultsQuery> {
       return withWrapper((wrappedRequestHeaders) => client.request<GetSimulationRunResultsQuery>(GetSimulationRunResultsDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'getSimulationRunResults', 'query');
+    },
+    getSimulation(variables?: GetSimulationQueryVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<GetSimulationQuery> {
+      return withWrapper((wrappedRequestHeaders) => client.request<GetSimulationQuery>(GetSimulationDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'getSimulation', 'query');
     }
   };
 }

@@ -13,7 +13,8 @@ import type {
   CreateSimulationMutation, CreateSimulationMutationVariables, CreateStepMutation,
   CreateStepMutationVariables, GetRunDetailsQuery, GetRunDetailsQueryVariables,
   GetSimulationDslQuery, GetSimulationDslQueryVariables,
-  GetSimulationIdandStepsQuery, GetSimulationIdandStepsQueryVariables, GetSimulationRunResultsQuery,
+  GetSimulationIdandStepsQuery, GetSimulationIdandStepsQueryVariables, GetSimulationQuery, GetSimulationQueryVariables,
+  GetSimulationRunResultsQuery,
   GetSimulationRunResultsQueryVariables, GetUseridFromRunQuery, GetUseridFromRunQueryVariables,
   GetUseridFromSimulationQuery, GetUseridFromSimulationQueryVariables,
   InsertLogMutation, InsertLogMutationVariables, InsertResourceUsageMutation,
@@ -45,6 +46,7 @@ let sdk: {
   setRunAsCancelled(variables: SetRunAsCancelledMutationVariables): Promise<SetRunAsCancelledMutation>,
   setRunAsFailed(variables: SetRunAsFailedMutationVariables): Promise<SetRunAsFailedMutation>,
   createSimulation(variables: CreateSimulationMutationVariables): Promise<CreateSimulationMutation>,
+  getSimulation(variables: GetSimulationQueryVariables): Promise<GetSimulationQuery>,
   getSimulationIdandSteps(variables: GetSimulationIdandStepsQueryVariables): Promise<GetSimulationIdandStepsQuery>,
   getRunDetails(variables: GetRunDetailsQueryVariables): Promise<GetRunDetailsQuery>,
   getUseridFromRun(variables: GetUseridFromRunQueryVariables): Promise<GetUseridFromRunQuery>,
@@ -385,6 +387,18 @@ export async function queueRun(run_id:string, userid:string):Promise<string> {
   // eslint-disable-next-line @typescript-eslint/no-floating-promises
   await runScheduler();
   return 'ok';
+}
+
+/**
+ * function to get all details and runs of a simulation
+ */
+export async function getSimulation(userid:string, simulation_id:string):Promise<GetSimulationQuery> {
+  // eslint-disable-next-line @typescript-eslint/await-thenable
+  const result:GetSimulationQuery = await sdk.getSimulation({ userid, simulation_id });
+  console.log(result);
+  console.log('result from get simulation');
+  // return JSON.stringify(result, undefined, 2);
+  return result;
 }
 
 /**

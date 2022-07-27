@@ -206,3 +206,44 @@ query getSimulationRunResults($simulation_id: uuid = "", $run_id: uuid = "", $us
     }
   }
 }
+
+query getSimulation($simulation_id: uuid, $userid: String) {
+  simulations(where: {
+    _and: [
+        {simulation_id: {_eq: $simulation_id}},
+        {userid: {_eq: $userid}}
+      ]
+    }) {
+    name
+    simulation_id
+    created
+    runs {
+      run_id
+      status
+      created
+      started
+      ended
+      dsl
+      steps(order_by: {pipeline_step_number: asc}) {
+        step_id
+        status
+        created
+        started
+        ended
+        image
+        name
+        pipeline_step_number
+        resource_usages(order_by: {time: asc}) {
+          id
+          step_id
+          cpu
+          memory
+          memory_max
+          rx_value
+          time
+          tx_value
+        }
+      }
+    }
+  }
+}
