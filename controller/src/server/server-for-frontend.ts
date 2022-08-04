@@ -27,14 +27,31 @@ const typeDefs = gql`
     created: String
     runs: [Run]
   }
+  input Step {
+    name: String
+    step_number: Int
+    image: String
+    env: [String]
+    type: String
+    prerequisite: [Int]
+  }
+  input Pipeline_Description {
+    steps: [Step]
+  }
   type AllSimulations {
     simulations: [Simulation] 
   }
   type Query {
       All_Simulations(userid:String): AllSimulations
-      Get_Simulation(userid:String, simulation_id:String):AllSimulations
+      Get_Simulation(userid:String, simulation_id:String):String
       All_Runs_Steps: String
       Get_Simulation_Run_Results(simulation_id: String, run_id:String): String
+  }  
+  type Mutation {
+    Create_Simulation(model_id:String, name:String, pipeline_description:String, userid:String): String
+    Create_Run_WithInput(simulation_id: String, dsl:String, name:String, sampleInput:[[String]],
+    userid:String, env_list: [[String]], timeout_value:Int):
+    String
   }
 `;
 
@@ -50,6 +67,64 @@ const resolvers = {
     async Get_Simulation_Run_Results(_p: unknown, arguments_: { simulation_id:string,
       run_id:string }):Promise<string> {
       return await functions.getSimulationRunResults(arguments_.simulation_id, arguments_.run_id);
+    },
+  },
+  Mutation: {
+    async Create_Simulation(_p: unknown, arguments_: { model_id:string, name:string,
+      pipeline_description: string, userid:string })
+      :Promise<string> {
+      try {
+        const newSimId = await functions.createSimulation(
+          arguments_.model_id, arguments_.name, arguments_.pipeline_description, arguments_.userid);
+        return JSON.stringify({
+          code: 200,
+          message: `Simulation has been created with id ${newSimId}`,
+        });
+      } catch (error) {
+        const errorMessage = `🎌 Error creating new simulation:
+      ${(error as Error).message}`;
+        logger.error(errorMessage);
+        // return 'Failed! Internal server error when creating new simulation';
+        return JSON.stringify({
+          code: 300,
+          message: errorMessage,
+        });
+      }
+    },
+    async Create_Run_WithInput(_p: unknown, arguments_:
+    {
+      simulation_id:string,
+      dsl:string,
+      name:string,
+      sampleInput:[[string, string]],
+      userid:string,
+      env_list: [[string]],
+      timeout_value: number
+    }):Promise<string> {
+      let newRunId;
+      try {
+        newRunId = await functions.createRunWithInput(
+          arguments_.simulation_id,
+          arguments_.dsl,
+          arguments_.name,
+          arguments_.sampleInput,
+          arguments_.userid,
+          arguments_.env_list,
+          arguments_.timeout_value);
+        return JSON.stringify({
+          code: 200,
+          message: `Run has been created with id ${newRunId}`,
+        });
+      } catch (error) {
+        const errorMessage = `🎌 Error creating new run:
+      ${(error as Error).message}`;
+        logger.error(errorMessage);
+        // return 'Failed! Internal server error when creating new run';
+        return JSON.stringify({
+          code: 300,
+          message: errorMessage,
+        });
+      }
     },
   },
 };
@@ -68,3 +143,17 @@ try {
 }
 
 await functions.createSampleSimulation();
+// await functions.createSimulation('2a2f1c07-bd89-46ca-aee7-8c1920ee7dbd',
+//   '10',
+
+//   [
+//     { name: '01-datagen-and-routing' },
+//     {
+//       name: '02-storage-and-analytics',
+//     },
+//     {
+//       name: '03-application-logic',
+//     },
+//   ],
+//   '6a41f10d-9bd5-4a6b-98fb-765fd2f09465',
+// );

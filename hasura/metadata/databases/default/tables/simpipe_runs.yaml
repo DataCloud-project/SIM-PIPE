@@ -26,23 +26,23 @@ insert_permissions:
   - role: anonymous
     permission:
       check: {}
-      columns:
-        - dsl
-        - simulation_id
+      columns: []
       backend_only: false
 select_permissions:
   - role: anonymous
     permission:
       columns:
-        - created
-        - dsl
-        - ended
-        - name
-        - run_id
         - simulation_id
-        - started
+        - dsl
+        - created
         - status
+        - started
+        - ended
+        - run_id
+        - name
         - userid
+        - timeout_value
+        - env_list
       filter: {}
 update_permissions:
   - role: anonymous

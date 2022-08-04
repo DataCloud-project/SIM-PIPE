@@ -22,9 +22,6 @@ input Int_comparison_exp {
   _neq: Int
   _nin: [Int!]
 }
-input Pipeline_Description {
-  steps: [Step]
-}
 type Run {
   created: String
   ended: String
@@ -36,21 +33,8 @@ type Run {
 type Simulation {
   created: String
   name: String
-  """
-  pipeline_description is defined as type string instead of jsonb as the latter requires defining
-  most of the elements in the SIM-PIPE json schema as a separate graphql type. 
-  """
-  pipeline_description: String
   runs: [Run]
   simulation_id: String
-}
-input Step {
-  env: [String]
-  image: String
-  name: String
-  prerequisite: [Int]
-  step_number: Int
-  type: String
 }
 """
 Boolean expression to compare columns of type "String". All fields are combined with logical 'AND'.
@@ -128,10 +112,8 @@ input jsonb_comparison_exp {
 }
 "mutation root"
 type mutation_root {
-  Create_Run_WithInput(dsl: String, name: String, sampleInput: [[String]], simulation_id: String): String
-  Create_Simulation(model_id: String, name: String, pipeline_description: Pipeline_Description): String
-  Start_Run(run_id: String): String
-  Stop_Run(run_id: String): String
+  Create_Run_WithInput(dsl: String, env_list: [[String]], name: String, sampleInput: [[String]], simulation_id: String, timeout_value: Int, userid: String): String
+  Create_Simulation(model_id: String, name: String, pipeline_description: String, userid: String): String
   """
   insert a single row into the table: "simpipe.simulations"
   """
@@ -263,11 +245,11 @@ type mutation_root {
   """
   update data of the table: "simpipe.runs"
   """
-  update_runs("append existing jsonb value of filtered columns with new jsonb value" _append: runs_append_input, "delete the field or element with specified path (for JSON arrays, negative integers count from the end)" _delete_at_path: runs_delete_at_path_input, "delete the array element with specified index (negative integers count from the end). throws an error if top level container is not an array" _delete_elem: runs_delete_elem_input, "delete key/value pair or string element. key/value pairs are matched based on their key value" _delete_key: runs_delete_key_input, "prepend existing jsonb value of filtered columns with new jsonb value" _prepend: runs_prepend_input, "sets the columns of the filtered rows to the given values" _set: runs_set_input, "filter the rows which have to be updated" where: runs_bool_exp!): runs_mutation_response
+  update_runs("append existing jsonb value of filtered columns with new jsonb value" _append: runs_append_input, "delete the field or element with specified path (for JSON arrays, negative integers count from the end)" _delete_at_path: runs_delete_at_path_input, "delete the array element with specified index (negative integers count from the end). throws an error if top level container is not an array" _delete_elem: runs_delete_elem_input, "delete key/value pair or string element. key/value pairs are matched based on their key value" _delete_key: runs_delete_key_input, "increments the numeric columns with given value of the filtered values" _inc: runs_inc_input, "prepend existing jsonb value of filtered columns with new jsonb value" _prepend: runs_prepend_input, "sets the columns of the filtered rows to the given values" _set: runs_set_input, "filter the rows which have to be updated" where: runs_bool_exp!): runs_mutation_response
   """
   update single row of the table: "simpipe.runs"
   """
-  update_runs_by_pk("append existing jsonb value of filtered columns with new jsonb value" _append: runs_append_input, "delete the field or element with specified path (for JSON arrays, negative integers count from the end)" _delete_at_path: runs_delete_at_path_input, "delete the array element with specified index (negative integers count from the end). throws an error if top level container is not an array" _delete_elem: runs_delete_elem_input, "delete key/value pair or string element. key/value pairs are matched based on their key value" _delete_key: runs_delete_key_input, "prepend existing jsonb value of filtered columns with new jsonb value" _prepend: runs_prepend_input, "sets the columns of the filtered rows to the given values" _set: runs_set_input, pk_columns: runs_pk_columns_input!): runs
+  update_runs_by_pk("append existing jsonb value of filtered columns with new jsonb value" _append: runs_append_input, "delete the field or element with specified path (for JSON arrays, negative integers count from the end)" _delete_at_path: runs_delete_at_path_input, "delete the array element with specified index (negative integers count from the end). throws an error if top level container is not an array" _delete_elem: runs_delete_elem_input, "delete key/value pair or string element. key/value pairs are matched based on their key value" _delete_key: runs_delete_key_input, "increments the numeric columns with given value of the filtered values" _inc: runs_inc_input, "prepend existing jsonb value of filtered columns with new jsonb value" _prepend: runs_prepend_input, "sets the columns of the filtered rows to the given values" _set: runs_set_input, pk_columns: runs_pk_columns_input!): runs
   """
   update data of the table: "simpipe.env_variable"
   """
@@ -357,7 +339,8 @@ enum order_by {
 }
 type query_root {
   All_Runs_Steps: String
-  All_Simulations: AllSimulations
+  All_Simulations(userid: String): AllSimulations
+  Get_Simulation(simulation_id: String, userid: String): String
   Get_Simulation_Run_Results(run_id: String, simulation_id: String): String
   """
   fetch data from the table: "simpipe.runs" using primary key columns
@@ -463,6 +446,7 @@ type runs {
   created: timestamptz!
   dsl("JSON select path" path: String): jsonb!
   ended: timestamptz
+  env_list("JSON select path" path: String): jsonb
   name: String
   run_id: uuid!
   "An object relationship"
@@ -478,6 +462,7 @@ type runs {
   fetch aggregated fields from the table: "simpipe.steps"
   """
   steps_aggregate("distinct select on columns" distinct_on: [steps_select_column!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" order_by: [steps_order_by!], "filter the rows returned" where: steps_bool_exp): steps_aggregate!
+  timeout_value: Int
   userid: String
 }
 """
@@ -491,21 +476,38 @@ type runs_aggregate {
 aggregate fields of "simpipe.runs"
 """
 type runs_aggregate_fields {
+  avg: runs_avg_fields
   count(columns: [runs_select_column!], distinct: Boolean): Int!
   max: runs_max_fields
   min: runs_min_fields
+  stddev: runs_stddev_fields
+  stddev_pop: runs_stddev_pop_fields
+  stddev_samp: runs_stddev_samp_fields
+  sum: runs_sum_fields
+  var_pop: runs_var_pop_fields
+  var_samp: runs_var_samp_fields
+  variance: runs_variance_fields
 }
 """
 order by aggregate values of table "simpipe.runs"
 """
 input runs_aggregate_order_by {
+  avg: runs_avg_order_by
   count: order_by
   max: runs_max_order_by
   min: runs_min_order_by
+  stddev: runs_stddev_order_by
+  stddev_pop: runs_stddev_pop_order_by
+  stddev_samp: runs_stddev_samp_order_by
+  sum: runs_sum_order_by
+  var_pop: runs_var_pop_order_by
+  var_samp: runs_var_samp_order_by
+  variance: runs_variance_order_by
 }
 "append existing jsonb value of filtered columns with new jsonb value"
 input runs_append_input {
   dsl: jsonb
+  env_list: jsonb
 }
 """
 input type for inserting array relation for remote table "simpipe.runs"
@@ -514,6 +516,16 @@ input runs_arr_rel_insert_input {
   data: [runs_insert_input!]!
   "on conflict condition"
   on_conflict: runs_on_conflict
+}
+"aggregate avg on columns"
+type runs_avg_fields {
+  timeout_value: Float
+}
+"""
+order by avg() on columns of table "simpipe.runs"
+"""
+input runs_avg_order_by {
+  timeout_value: order_by
 }
 """
 Boolean expression to filter rows from the table "simpipe.runs". All fields are combined with a logical 'AND'.
@@ -525,6 +537,7 @@ input runs_bool_exp {
   created: timestamptz_comparison_exp
   dsl: jsonb_comparison_exp
   ended: timestamptz_comparison_exp
+  env_list: jsonb_comparison_exp
   name: String_comparison_exp
   run_id: uuid_comparison_exp
   simulation: simulations_bool_exp
@@ -532,6 +545,7 @@ input runs_bool_exp {
   started: timestamptz_comparison_exp
   status: simpipe_run_status_enum_comparison_exp
   steps: steps_bool_exp
+  timeout_value: Int_comparison_exp
   userid: String_comparison_exp
 }
 """
@@ -544,14 +558,23 @@ enum runs_constraint {
 "delete the field or element with specified path (for JSON arrays, negative integers count from the end)"
 input runs_delete_at_path_input {
   dsl: [String!]
+  env_list: [String!]
 }
 "delete the array element with specified index (negative integers count from the end). throws an error if top level container is not an array"
 input runs_delete_elem_input {
   dsl: Int
+  env_list: Int
 }
 "delete key/value pair or string element. key/value pairs are matched based on their key value"
 input runs_delete_key_input {
   dsl: String
+  env_list: String
+}
+"""
+input type for incrementing numeric columns in table "simpipe.runs"
+"""
+input runs_inc_input {
+  timeout_value: Int
 }
 """
 input type for inserting data into table "simpipe.runs"
@@ -560,6 +583,7 @@ input runs_insert_input {
   created: timestamptz
   dsl: jsonb
   ended: timestamptz
+  env_list: jsonb
   name: String
   run_id: uuid
   simulation: simulations_obj_rel_insert_input
@@ -567,6 +591,7 @@ input runs_insert_input {
   started: timestamptz
   status: simpipe_run_status_enum
   steps: steps_arr_rel_insert_input
+  timeout_value: Int
   userid: String
 }
 "aggregate max on columns"
@@ -577,6 +602,7 @@ type runs_max_fields {
   run_id: uuid
   simulation_id: uuid
   started: timestamptz
+  timeout_value: Int
   userid: String
 }
 """
@@ -589,6 +615,7 @@ input runs_max_order_by {
   run_id: order_by
   simulation_id: order_by
   started: order_by
+  timeout_value: order_by
   userid: order_by
 }
 "aggregate min on columns"
@@ -599,6 +626,7 @@ type runs_min_fields {
   run_id: uuid
   simulation_id: uuid
   started: timestamptz
+  timeout_value: Int
   userid: String
 }
 """
@@ -611,6 +639,7 @@ input runs_min_order_by {
   run_id: order_by
   simulation_id: order_by
   started: order_by
+  timeout_value: order_by
   userid: order_by
 }
 """
@@ -637,6 +666,7 @@ input runs_order_by {
   created: order_by
   dsl: order_by
   ended: order_by
+  env_list: order_by
   name: order_by
   run_id: order_by
   simulation: simulations_order_by
@@ -644,6 +674,7 @@ input runs_order_by {
   started: order_by
   status: order_by
   steps_aggregate: steps_aggregate_order_by
+  timeout_value: order_by
   userid: order_by
 }
 "primary key columns input for table: runs"
@@ -653,6 +684,7 @@ input runs_pk_columns_input {
 "prepend existing jsonb value of filtered columns with new jsonb value"
 input runs_prepend_input {
   dsl: jsonb
+  env_list: jsonb
 }
 """
 select columns of table "simpipe.runs"
@@ -665,6 +697,8 @@ enum runs_select_column {
   "column name"
   ended
   "column name"
+  env_list
+  "column name"
   name
   "column name"
   run_id
@@ -675,6 +709,8 @@ enum runs_select_column {
   "column name"
   status
   "column name"
+  timeout_value
+  "column name"
   userid
 }
 """
@@ -684,12 +720,54 @@ input runs_set_input {
   created: timestamptz
   dsl: jsonb
   ended: timestamptz
+  env_list: jsonb
   name: String
   run_id: uuid
   simulation_id: uuid
   started: timestamptz
   status: simpipe_run_status_enum
+  timeout_value: Int
   userid: String
+}
+"aggregate stddev on columns"
+type runs_stddev_fields {
+  timeout_value: Float
+}
+"""
+order by stddev() on columns of table "simpipe.runs"
+"""
+input runs_stddev_order_by {
+  timeout_value: order_by
+}
+"aggregate stddev_pop on columns"
+type runs_stddev_pop_fields {
+  timeout_value: Float
+}
+"""
+order by stddev_pop() on columns of table "simpipe.runs"
+"""
+input runs_stddev_pop_order_by {
+  timeout_value: order_by
+}
+"aggregate stddev_samp on columns"
+type runs_stddev_samp_fields {
+  timeout_value: Float
+}
+"""
+order by stddev_samp() on columns of table "simpipe.runs"
+"""
+input runs_stddev_samp_order_by {
+  timeout_value: order_by
+}
+"aggregate sum on columns"
+type runs_sum_fields {
+  timeout_value: Int
+}
+"""
+order by sum() on columns of table "simpipe.runs"
+"""
+input runs_sum_order_by {
+  timeout_value: order_by
 }
 """
 update columns of table "simpipe.runs"
@@ -702,6 +780,8 @@ enum runs_update_column {
   "column name"
   ended
   "column name"
+  env_list
+  "column name"
   name
   "column name"
   run_id
@@ -712,7 +792,39 @@ enum runs_update_column {
   "column name"
   status
   "column name"
+  timeout_value
+  "column name"
   userid
+}
+"aggregate var_pop on columns"
+type runs_var_pop_fields {
+  timeout_value: Float
+}
+"""
+order by var_pop() on columns of table "simpipe.runs"
+"""
+input runs_var_pop_order_by {
+  timeout_value: order_by
+}
+"aggregate var_samp on columns"
+type runs_var_samp_fields {
+  timeout_value: Float
+}
+"""
+order by var_samp() on columns of table "simpipe.runs"
+"""
+input runs_var_samp_order_by {
+  timeout_value: order_by
+}
+"aggregate variance on columns"
+type runs_variance_fields {
+  timeout_value: Float
+}
+"""
+order by variance() on columns of table "simpipe.runs"
+"""
+input runs_variance_order_by {
+  timeout_value: order_by
 }
 """
 columns and relationships of "simpipe.env_variable"

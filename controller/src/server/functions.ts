@@ -94,7 +94,7 @@ export async function allRunsSteps():Promise<string> {
 //   return result.create_simulation.simulation_id;
 // }
 
-export async function createSimulation(model_id:string, name:string, pipeline_description:JSON, userid:string):
+export async function createSimulation(model_id:string, name:string, pipeline_description:string, userid:string):
 Promise<string> {
   // disabling await-thenable, await is needed for sequential execution
   // eslint-disable-next-line @typescript-eslint/await-thenable
@@ -107,6 +107,10 @@ Promise<string> {
   if (!result?.create_simulation?.simulation_id) {
     throw new Error('🎌 Undefined expression in createSimulation');
   }
+  // read pipeline_description and extract env variable list
+  // console.log(pipeline_description);
+  // console.log(pipeline_description.name);
+  // console.log(pipeline_description[0].name);
   return result.create_simulation.simulation_id;
 }
 
@@ -198,8 +202,8 @@ export async function createStep(run_id:string, name:string, image:string,
 //   // validate pipeline description according to schema v1
 // }
 
-export async function createRun(simulation_id:string, dsl:string, name:string, userid:string):
-Promise<string> {
+export async function createRun(simulation_id:string, dsl:string, name:string, userid:string,
+  environment_list: [[string]], timeout_value: number):Promise<string> {
   // TODO: parse dsl
   // preloaded TLU pipeline
   const steps:Array<StepDSL> = parseDslTLU(dsl);
@@ -213,6 +217,8 @@ Promise<string> {
     dsl,
     name,
     userid,
+    env_list: environment_list,
+    timeout_value,
   });
   if (!result.insert_runs_one?.run_id) {
     throw new Error('🎌 Undefined results from sdk.createRun function');
@@ -248,10 +254,11 @@ async function checkSimulationOwner(simulation_id:string, userid:string):Promise
 }
 
 export async function createRunWithInput(simulation_id: string, dsl: string,
-  name: string, sampleInput: [[string, string]], userid:string): Promise<string> {
+  name: string, sampleInput: [[string, string]], userid:string, environment_list: [[string]],
+  timeout_value: number): Promise<string> {
   // only owner of the simulation can create a new run
   await checkSimulationOwner(simulation_id, userid);
-  const runId = await createRun(simulation_id, dsl, name, userid);
+  const runId = await createRun(simulation_id, dsl, name, userid, environment_list, timeout_value);
   fs.mkdirSync(`${uploadDirectory}${runId}`, { recursive: true });
   // write sample input to uploaded_files/runId
   // eslint-disable-next-line no-restricted-syntax
@@ -392,13 +399,14 @@ export async function queueRun(run_id:string, userid:string):Promise<string> {
 /**
  * function to get all details and runs of a simulation
  */
-export async function getSimulation(userid:string, simulation_id:string):Promise<GetSimulationQuery> {
+// export async function getSimulation(userid:string, simulation_id:string):Promise<GetSimulationQuery> {
+export async function getSimulation(userid:string, simulation_id:string):Promise<string> {
   // eslint-disable-next-line @typescript-eslint/await-thenable
   const result:GetSimulationQuery = await sdk.getSimulation({ userid, simulation_id });
   console.log(result);
   console.log('result from get simulation');
-  // return JSON.stringify(result, undefined, 2);
-  return result;
+  return JSON.stringify(result, undefined, 2);
+  // return result;
 }
 
 /**

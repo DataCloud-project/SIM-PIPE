@@ -53,8 +53,8 @@ query getSimulationDSL ($simulation_id: uuid!) {
 }
 
 # api functions ..
-mutation createRun($simulation_id: uuid!, $dsl: jsonb!, $name:String, $userid: String) {
-  insert_runs_one(object: {dsl: $dsl, simulation_id: $simulation_id, name: $name, userid: $userid}) {
+mutation createRun($simulation_id: uuid!, $dsl: jsonb!, $name:String, $userid: String, $env_list: jsonb, $timeout_value:Int) {
+  insert_runs_one(object: {dsl: $dsl, simulation_id: $simulation_id, name: $name, userid: $userid, env_list:$env_list, timeout_value:$timeout_value}) {
     run_id
   }
 }
@@ -217,7 +217,9 @@ query getSimulation($simulation_id: uuid, $userid: String) {
     name
     simulation_id
     created
+    pipeline_description
     runs {
+      name
       run_id
       status
       created
@@ -242,6 +244,9 @@ query getSimulation($simulation_id: uuid, $userid: String) {
           rx_value
           time
           tx_value
+        }
+        log {
+          text
         }
       }
     }
