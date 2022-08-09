@@ -52,6 +52,8 @@ const typeDefs = gql`
     Create_Run_WithInput(simulation_id: String, dsl:String, name:String, sampleInput:[[String]],
     userid:String, env_list: [[String]], timeout_value:Int):
     String
+    Start_Run(run_id:String, userid:String): String
+    Stop_Run(run_id:String, userid:String): String
   }
 `;
 
@@ -120,6 +122,43 @@ const resolvers = {
       ${(error as Error).message}`;
         logger.error(errorMessage);
         // return 'Failed! Internal server error when creating new run';
+        return JSON.stringify({
+          code: 300,
+          message: errorMessage,
+        });
+      }
+    },
+    async Start_Run(_p: unknown, arguments_:{ run_id:string, userid:string }):
+    Promise<string> {
+      try {
+        await functions.queueRun(arguments_.run_id, arguments_.userid);
+        return JSON.stringify({
+          code: 200,
+          message: 'Run has been added to queue',
+        });
+      } catch (error) {
+        const errorMessage = `🎌 Failed! Error starting run:
+      ${(error as Error).message}`;
+        logger.error(errorMessage);
+        // return 'Failed! internal server error starting run';
+        return JSON.stringify({
+          code: 300,
+          message: errorMessage,
+        });
+      }
+    },
+    async Stop_Run(_p:unknown, arguments_: { run_id:string, userid:string }):Promise<string> {
+      try {
+        await functions.stopRun(arguments_.run_id, arguments_.userid);
+        return JSON.stringify({
+          code: 300,
+          message: 'Successfully sent stop signal to current run',
+        });
+      } catch (error) {
+        const errorMessage = `🎌 Error stopping run:
+      ${(error as Error).message}`;
+        logger.error(errorMessage);
+        // return 'Failed! internal server error stopping run';
         return JSON.stringify({
           code: 300,
           message: errorMessage,

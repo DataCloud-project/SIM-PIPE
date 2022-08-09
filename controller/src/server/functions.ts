@@ -239,7 +239,7 @@ export async function createRun(simulation_id:string, dsl:string, name:string, u
 async function checkRunOwner(run_id:string, userid:string):Promise<void> {
   const result:GetUseridFromRunQuery = await sdk.getUseridFromRun({ run_id });
   if (result.runs[0].userid !== userid) {
-    throw new Error('🎌 Invalid access; run does not belong to the user');
+    throw new Error('Invalid access; run does not belong to the user');
   }
 }
 
@@ -249,7 +249,7 @@ async function checkRunOwner(run_id:string, userid:string):Promise<void> {
 async function checkSimulationOwner(simulation_id:string, userid:string):Promise<void> {
   const result:GetUseridFromSimulationQuery = await sdk.getUseridFromSimulation({ simulation_id });
   if (result.simulations[0].userid !== userid) {
-    throw new Error('🎌 Invalid access; simulation does not belong to the user');
+    throw new Error('Invalid access; simulation does not belong to the user');
   }
 }
 
@@ -280,9 +280,11 @@ export async function startRun(run_id:string):Promise<string> {
   // eslint-disable-next-line @typescript-eslint/await-thenable
   const result:GetRunDetailsQuery = await sdk.getRunDetails({ run_id });
   if (!result.runs) {
-    throw new Error('GerRunDetailsQuery fetched no rows');
+    throw new Error('GetRunDetailsQuery fetched no rows');
   }
-  const { steps } = result.runs[0]; // get steps sorted acc to pipeline_step_number
+  // get steps, and runtime configuration entered during create run
+  // eslint-disable-next-line @typescript-eslint/naming-convention
+  const { steps, env_list, timeout_value } = result.runs[0];
   // set runId and simulationId once for all runs
   const currentStep:types.Step = {
     simId: result.runs[0].simulation_id,
@@ -293,9 +295,9 @@ export async function startRun(run_id:string):Promise<string> {
   process.env.INPUT_PATH = `${uploadDirectory}${run_id}/`;
   // get env from piepeline dsl
   // preloaded TLU pipeline
-  const stepsListDSL:Array<StepDSL> = parseDslTLU(typeof result.runs[0].dsl === 'string'
-    ? result.runs[0].dsl
-    : '');
+  // const stepsListDSL:Array<StepDSL> = parseDslTLU(typeof result.runs[0].dsl === 'string'
+  //   ? result.runs[0].dsl
+  //   : '');
   // disabling no-restricted-syntax; running each step must be done in a sequence
   /* eslint-disable-next-line no-restricted-syntax */
   for await (const step of steps) {
@@ -312,10 +314,13 @@ export async function startRun(run_id:string):Promise<string> {
     currentStep.stepNumber = step.pipeline_step_number;
     currentStep.stepId = step.step_id;
     // preloaded TLU pipeline
-    currentStep.env = stepsListDSL[step.pipeline_step_number - 1].env;
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    currentStep.env = env_list[step.pipeline_step_number - 1];
     // set the variable values in env file
     process.env.STEP_NUMBER = `${step.pipeline_step_number}`;
     process.env.IMAGE = step.image;
+    // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+    process.env.CONTAINER_TIME_LIMIT = `${timeout_value}`;
     // testing step type
     // adding try catch to handle failed steps
     try {
@@ -371,6 +376,7 @@ export async function stopRun(run_id:string, userid:string):Promise<string> {
 const taskQueue = new TaskQueue();
 
 async function runScheduler():Promise<void> {
+  console.log('running scheduler');
   if (process.env.IS_SIMULATION_RUNNING === 'false') {
     while (taskQueue.getItemsCount() > 0) {
       // set variable to denote a simulation is running currently
@@ -392,7 +398,7 @@ export async function queueRun(run_id:string, userid:string):Promise<string> {
   taskQueue.enqueue(run_id);
   await sdk.setRunAsQueued({ run_id });
   // eslint-disable-next-line @typescript-eslint/no-floating-promises
-  await runScheduler();
+  runScheduler();
   return 'ok';
 }
 
@@ -403,8 +409,6 @@ export async function queueRun(run_id:string, userid:string):Promise<string> {
 export async function getSimulation(userid:string, simulation_id:string):Promise<string> {
   // eslint-disable-next-line @typescript-eslint/await-thenable
   const result:GetSimulationQuery = await sdk.getSimulation({ userid, simulation_id });
-  console.log(result);
-  console.log('result from get simulation');
   return JSON.stringify(result, undefined, 2);
   // return result;
 }

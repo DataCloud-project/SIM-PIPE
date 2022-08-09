@@ -148,6 +148,8 @@ query getRunDetails($run_id: uuid!) {
     simulation_id
     dsl
     name
+    env_list
+    timeout_value
     steps(order_by: {pipeline_step_number: asc}) {
       step_id
       pipeline_step_number
