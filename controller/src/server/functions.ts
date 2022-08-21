@@ -4,14 +4,14 @@ import * as fs from 'node:fs';
 import { setTimeout } from 'node:timers/promises';
 
 import * as controller from '../controller.js';
-import { getSdk } from '../db/database.js';
+import { DeleteRunMutationVariables, getSdk } from '../db/database.js';
 import logger from '../logger.js';
 import TaskQueue from './taskqueue.js';
 import type {
   AllRunsAndStepsQuery, AllRunsAndStepsQueryVariables, AllSimulationsQuery,
   AllSimulationsQueryVariables, CreateRunMutation, CreateRunMutationVariables,
   CreateSimulationMutation, CreateSimulationMutationVariables, CreateStepMutation,
-  CreateStepMutationVariables, GetRunDetailsQuery, GetRunDetailsQueryVariables,
+  CreateStepMutationVariables, DeleteRunMutation, GetRunDetailsQuery, GetRunDetailsQueryVariables,
   GetSimulationDslQuery, GetSimulationDslQueryVariables,
   GetSimulationIdandStepsQuery, GetSimulationIdandStepsQueryVariables, GetSimulationQuery, GetSimulationQueryVariables,
   GetSimulationRunResultsQuery,
@@ -55,6 +55,7 @@ let sdk: {
   insertLog(variables?: InsertLogMutationVariables): Promise<InsertLogMutation>,
   getSimulationRunResults(variables?: GetSimulationRunResultsQueryVariables):Promise<GetSimulationRunResultsQuery>
   getSimulationDSL(variables?: GetSimulationDslQueryVariables):Promise<GetSimulationDslQuery>
+  deleteRun(variables?: DeleteRunMutationVariables): Promise<DeleteRunMutation>,
 };
 
 function connectHasuraEndpoint():void {
@@ -76,23 +77,9 @@ export async function allSimulations(userid:string):Promise<AllSimulationsQuery>
   return await sdk.AllSimulations({ userid });
 }
 
-export async function allRunsSteps():Promise<string> {
-  return JSON.stringify(await sdk.allRunsAndSteps(), undefined, 2);
+export async function allRunsSteps(userid:string):Promise<string> {
+  return JSON.stringify(await sdk.allRunsAndSteps({ userid }), undefined, 2);
 }
-
-// old create simulation fn without json string arg for pipeline description
-// export async function createSimulation(model_id:string, name:string):Promise<string> {
-//   // disabling await-thenable, await is needed for sequential execution
-//   // eslint-disable-next-line @typescript-eslint/await-thenable
-//   const result:CreateSimulationMutation = await sdk.createSimulation({
-//     model_id,
-//     name,
-//   });
-//   if (!result?.create_simulation?.simulation_id) {
-//     throw new Error('🎌 Undefined expression in createSimulation');
-//   }
-//   return result.create_simulation.simulation_id;
-// }
 
 export async function createSimulation(model_id:string, name:string, pipeline_description:string, userid:string):
 Promise<string> {
@@ -108,69 +95,18 @@ Promise<string> {
     throw new Error('🎌 Undefined expression in createSimulation');
   }
   // read pipeline_description and extract env variable list
-  // console.log(pipeline_description);
-  // console.log(pipeline_description.name);
-  // console.log(pipeline_description[0].name);
   return result.create_simulation.simulation_id;
 }
 
-// takes in dsl from def-pipe and return the list of steps
-// preloaded TLU pipeline images, TODO: parse original DSL
-function parseDslTLU(dsl:string):Array<StepDSL> {
-  // TODO; parse dsl argument
-  const object:Array<StepDSL> = dsl === 'tlu' || dsl === '' ? [{
-    name: '01-datagen-and-routing',
-    step_number: 1,
-    image: 'registry.sintef.cloud/tellucare-edge',
-    // image: 'i1',
-    env: ['MQTT_HOST=oslo.sct.sintef.no',
-      'MQTT_USERNAME=TGW000000000',
-      'MQTT_CLIENT_ID=TGWDATACLOUD',
-      'MQTT_PASS=d47AcL0|_|D1sTh3B3St',
-      'MQTT_PORT=1883'],
-  }, {
-    name: '02-storage-and-analytics',
-    step_number: 2,
-    image: 'registry.sintef.cloud/tellucare-api:latest',
-    // image: 'i1',
-    env: ['RABBITMQ_HOST=oslo.sct.sintef.no:5672',
-      'RABBITMQ_USERNAME=tellucareapi',
-      'RABBITMQ_PASSWORD=d47AcL0|_|D1sTh3B3St',
-      'FHIR_URL=https://tellucloud-fhir.sintef.cloud'],
-  }, {
-    name: '03-application-logic',
-    step_number: 3,
-    image: 'registry.sintef.cloud/tellucare-application-logic:latest',
-    // image: 'i1',
-    env: ['FHIR_URL=https://tellucloud-fhir.sintef.cloud/',
-      'RABBITMQ_HOST=oslo.sct.sintef.no:5672',
-      'RABBITMQ_USERNAME=tellucareapplicationlogic',
-      'RABBITMQ_PASSWORD=d47AcL0|_|D1sTh3B3St'],
-  }] : [{
-    name: 'step 1',
-    step_number: 1,
-    image: 'i1',
-    env: ['STEP_NUMBER=1'],
-  }, {
-    name: 'step 2',
-    step_number: 2,
-    image: 'i1',
-    env: ['STEP_NUMBER=2'],
-  }, {
-    name: 'step 3',
-    step_number: 3,
-    image: 'i1',
-    env: ['STEP_NUMBER=3'],
-  }];
-  return object;
-}
-
 // interface for dsl step
+// modified to add the new json schema attributes
 interface StepDSL {
   name: string
   step_number: number
   image: string
   env: string[]
+  prerequisite: number[]
+  type: string
 }
 
 export async function createStep(run_id:string, name:string, image:string,
@@ -193,24 +129,22 @@ export async function createStep(run_id:string, name:string, image:string,
 
 /**
  * function to read dsl parameter in simulation table
- * WIP
+ * 
  * */
-// async function readDSL(simulation_id:string):Promise<void> {
-//   // get dsl from simulation table using simulation_id
-//   const result:GetSimulationDslQuery = await sdk.getSimulationDSL({ simulation_id });
-//   // console.log(result.simulations[0].pipeline_description);
-//   // validate pipeline description according to schema v1
-// }
+async function parseDSL(simulation_id:string):Promise<[StepDSL]> {
+  // get dsl from simulation table using simulation_id
+  const result:GetSimulationDslQuery = await sdk.getSimulationDSL({ simulation_id });
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+  const { steps } = JSON.parse(result.simulations[0].pipeline_description as string);
+  // TODO:  validate pipeline description according to schema v1
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+  return steps;
+}
 
 export async function createRun(simulation_id:string, dsl:string, name:string, userid:string,
   environment_list: [[string]], timeout_value: number):Promise<string> {
-  // TODO: parse dsl
-  // preloaded TLU pipeline
-  const steps:Array<StepDSL> = parseDslTLU(dsl);
-  // TODO: read dsl, validate and use it to create steps in the run
-  // await readDSL(simulation_id);
-  // disabling await-thenable, await is needed to wait till sdk.createRun completes execution
-  // eslint-disable-next-line @typescript-eslint/await-thenable
+  // read dsl, validate and use it to create steps in the run
+  const steps:Array<StepDSL> = await parseDSL(simulation_id);
   const result:CreateRunMutation = await sdk.createRun({
     simulation_id,
     // TODO: later to parse dsl -> dsl: JSON.parse(dsl),
@@ -293,11 +227,6 @@ export async function startRun(run_id:string):Promise<string> {
   };
   // set input path for the first step
   process.env.INPUT_PATH = `${uploadDirectory}${run_id}/`;
-  // get env from piepeline dsl
-  // preloaded TLU pipeline
-  // const stepsListDSL:Array<StepDSL> = parseDslTLU(typeof result.runs[0].dsl === 'string'
-  //   ? result.runs[0].dsl
-  //   : '');
   // disabling no-restricted-syntax; running each step must be done in a sequence
   /* eslint-disable-next-line no-restricted-syntax */
   for await (const step of steps) {
@@ -353,10 +282,10 @@ export async function startRun(run_id:string):Promise<string> {
 }
 
 export async function getSimulationRunResults(simulation_id:string,
-  run_id:string):Promise<string> {
+  run_id:string, userid:string):Promise<string> {
   // eslint-disable-next-line @typescript-eslint/await-thenable
   const result:GetSimulationRunResultsQuery = await
-  sdk.getSimulationRunResults({ simulation_id, run_id });
+  sdk.getSimulationRunResults({ simulation_id, run_id, userid });
   return JSON.stringify(result, undefined, 2);
 }
 
@@ -372,11 +301,16 @@ export async function stopRun(run_id:string, userid:string):Promise<string> {
   // change the status of runs and steps to 'cancelled'
   return run_id;
 }
+export async function deleteRun(run_id:string, userid:string):Promise<string> {
+  // throw error if run does not belong to the user
+  await checkRunOwner(run_id, userid);
+  await sdk.deleteRun({ run_id });
+  return run_id;
+}
 
 const taskQueue = new TaskQueue();
 
 async function runScheduler():Promise<void> {
-  console.log('running scheduler');
   if (process.env.IS_SIMULATION_RUNNING === 'false') {
     while (taskQueue.getItemsCount() > 0) {
       // set variable to denote a simulation is running currently

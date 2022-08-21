@@ -68,8 +68,8 @@ const resolvers = {
     },
     All_Runs_Steps: functions.allRunsSteps,
     async Get_Simulation_Run_Results(_p: unknown, arguments_: { simulation_id:string,
-      run_id:string }):Promise<string> {
-      return await functions.getSimulationRunResults(arguments_.simulation_id, arguments_.run_id);
+      run_id:string, userid:string }):Promise<string> {
+      return await functions.getSimulationRunResults(arguments_.simulation_id, arguments_.run_id, arguments_.userid);
     },
   },
   Mutation: {

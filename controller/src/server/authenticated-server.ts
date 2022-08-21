@@ -60,11 +60,13 @@ const typeDefs = gql`
       Get_Simulation_Run_Results(simulation_id: String, run_id:String): String
   },
   type Mutation {
-    Create_Simulation(model_id:String, name:String, pipeline_description:Pipeline_Description): String
-    Create_Run_WithInput(simulation_id: String, dsl:String, name:String, sampleInput:[[String]]):
+    Create_Simulation(model_id:String, name:String, pipeline_description:String): String
+    Create_Run_WithInput(simulation_id: String, dsl:String, name:String, sampleInput:[[String]], 
+    env_list: [[String]], timeout_value:Int):
     String
     Start_Run(run_id:String): String
     Stop_Run(run_id:String): String
+    Delete_Run(run_id:String): String
   }
 `;
 
@@ -74,18 +76,20 @@ const resolvers = {
     author(_p: unknown, arguments_: unknown, context: { user: any }):unknown {
       return `hello from ${context.user.preferred_username as string}`;
     },
-    All_Runs_Steps: functions.allRunsSteps,
+    All_Runs_Steps(_p: unknown, arguments_: unknown, context: { user: any }):unknown {
+      return functions.allRunsSteps(context.user.sub as string);
+    },
     All_Simulations(_p: unknown, arguments_: unknown, context: { user: any }):unknown {
       return functions.allSimulations(context.user.sub as string);
     },
     async Get_Simulation_Run_Results(_p: unknown, arguments_: { simulation_id:string,
-      run_id:string }):Promise<string> {
-      return await functions.getSimulationRunResults(arguments_.simulation_id, arguments_.run_id);
+      run_id:string }, context: { user: any }):Promise<string> {
+      return await functions.getSimulationRunResults(arguments_.simulation_id, arguments_.run_id, context.user.sub as string);
     },
   },
   Mutation: {
     async Create_Simulation(_p: unknown, arguments_: { model_id:string, name:string,
-      pipeline_description: JSON }, context: { user: any })
+      pipeline_description: string }, context: { user: any })
       :Promise<string> {
       try {
         const newSimId = await functions.createSimulation(
@@ -105,6 +109,8 @@ const resolvers = {
       dsl:string,
       name:string,
       sampleInput:[[string, string]],
+      env_list: [[string]],
+      timeout_value: number
     }, context: { user: any }):Promise<string> {
       let newRunId;
       try {
@@ -113,7 +119,9 @@ const resolvers = {
           arguments_.dsl,
           arguments_.name,
           arguments_.sampleInput,
-          context.user.sub as string);
+          context.user.sub as string,
+          arguments_.env_list,
+          arguments_.timeout_value);
         return `Run has been created with id ${newRunId}`;
       } catch (error) {
         const errorMessage = `🎌 Error creating new run:
@@ -142,6 +150,18 @@ const resolvers = {
         return 'Successfully sent stop signal to current run';
       } catch (error) {
         const errorMessage = `🎌 Error stopping run:
+      ${(error as Error).message}`;
+        logger.error(errorMessage);
+        // return 'Failed! internal server error stopping run';
+        return errorMessage;
+      }
+    },
+    async Delete_Run(_p:unknown, arguments_: { run_id:string }, context: { user: any }):Promise<string> {
+      try {
+        await functions.deleteRun(arguments_.run_id, context.user.sub as string);
+        return 'Successfully deleted run';
+      } catch (error) {
+        const errorMessage = `🎌 Error deleting run:
       ${(error as Error).message}`;
         logger.error(errorMessage);
         // return 'Failed! internal server error stopping run';
