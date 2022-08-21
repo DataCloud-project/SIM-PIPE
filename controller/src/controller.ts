@@ -231,7 +231,7 @@ async function getStatsUntilExit(container: Docker.Container, exitTimeout:number
   if (ids.includes(createdContainer.id)) { // collect statstics as long as the container is running
     if (process.env.STOP_SIGNAL_SENT === 'false'
             && ((process.env.CANCEL_RUN_LIST as string).includes(step.runId)
-                  || ((new Date() as unknown as number) - startedAt) >= exitTimeout)) {
+                  || (exitTimeout !== 0 && ((new Date() as unknown as number) - startedAt) >= exitTimeout))) {
       try {
       // for continuous steps, send stop signal after configured number of seconds
       // eslint-disable-next-line @typescript-eslint/no-floating-promises

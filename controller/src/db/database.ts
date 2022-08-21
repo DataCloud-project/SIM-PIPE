@@ -3600,6 +3600,13 @@ export type GetSimulationQueryVariables = Exact<{
 
 export type GetSimulationQuery = { __typename?: 'query_root', simulations: Array<{ __typename?: 'simulations', name?: string | null, simulation_id: string, created: string, pipeline_description?: unknown | null, runs: Array<{ __typename?: 'runs', name?: string | null, run_id: string, status: Simpipe_Run_Status_Enum, created: string, started?: string | null, ended?: string | null, dsl: unknown, steps: Array<{ __typename?: 'steps', step_id: number, status: Simpipe_Step_Status_Enum, created: string, started?: string | null, ended?: string | null, image: string, name: string, pipeline_step_number: number, resource_usages: Array<{ __typename?: 'simpipe_resource_usage', id: number, step_id: number, cpu: number, memory: number, memory_max: number, rx_value: number, time: string, tx_value: number }>, log?: { __typename?: 'simpipe_logs', text: string } | null }> }> }> };
 
+export type DeleteRunMutationVariables = Exact<{
+  run_id: Scalars['uuid'];
+}>;
+
+
+export type DeleteRunMutation = { __typename?: 'mutation_root', delete_runs_by_pk?: { __typename?: 'runs', run_id: string } | null };
+
 
 export const AllSimulationsDocument = gql`
     query AllSimulations($userid: String) {
@@ -3886,6 +3893,13 @@ export const GetSimulationDocument = gql`
   }
 }
     `;
+export const DeleteRunDocument = gql`
+    mutation deleteRun($run_id: uuid!) {
+  delete_runs_by_pk(run_id: $run_id) {
+    run_id
+  }
+}
+    `;
 
 export type SdkFunctionWrapper = <T>(action: (requestHeaders?:Record<string, string>) => Promise<T>, operationName: string, operationType?: string) => Promise<T>;
 
@@ -3962,6 +3976,9 @@ export function getSdk(client: GraphQLClient, withWrapper: SdkFunctionWrapper = 
     },
     getSimulation(variables?: GetSimulationQueryVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<GetSimulationQuery> {
       return withWrapper((wrappedRequestHeaders) => client.request<GetSimulationQuery>(GetSimulationDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'getSimulation', 'query');
+    },
+    deleteRun(variables: DeleteRunMutationVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<DeleteRunMutation> {
+      return withWrapper((wrappedRequestHeaders) => client.request<DeleteRunMutation>(DeleteRunDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'deleteRun', 'mutation');
     }
   };
 }

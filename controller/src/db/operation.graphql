@@ -254,3 +254,10 @@ query getSimulation($simulation_id: uuid, $userid: String) {
     }
   }
 }
+
+mutation deleteRun($run_id: uuid!) {
+  # delete_runs_by_pk(object: {run_id: $run_id}) {
+  delete_runs_by_pk(run_id: $run_id) {
+    run_id
+  }
+}

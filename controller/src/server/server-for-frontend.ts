@@ -54,6 +54,7 @@ const typeDefs = gql`
     String
     Start_Run(run_id:String, userid:String): String
     Stop_Run(run_id:String, userid:String): String
+    Delete_Run(run_id:String, userid:String): String
   }
 `;
 
@@ -151,7 +152,7 @@ const resolvers = {
       try {
         await functions.stopRun(arguments_.run_id, arguments_.userid);
         return JSON.stringify({
-          code: 300,
+          code: 200,
           message: 'Successfully sent stop signal to current run',
         });
       } catch (error) {
@@ -159,6 +160,23 @@ const resolvers = {
       ${(error as Error).message}`;
         logger.error(errorMessage);
         // return 'Failed! internal server error stopping run';
+        return JSON.stringify({
+          code: 300,
+          message: errorMessage,
+        });
+      }
+    },
+    async Delete_Run(_p:unknown, arguments_: { run_id:string, userid:string }):Promise<string> {
+      try {
+        await functions.deleteRun(arguments_.run_id, arguments_.userid);
+        return JSON.stringify({
+          code: 200,
+          message: 'Successfully deleted run',
+        });
+      } catch (error) {
+        const errorMessage = `🎌 Error deleting run:
+      ${(error as Error).message}`;
+        logger.error(errorMessage);
         return JSON.stringify({
           code: 300,
           message: errorMessage,
