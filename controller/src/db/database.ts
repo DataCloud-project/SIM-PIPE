@@ -3560,7 +3560,8 @@ export type GetRunDetailsQueryVariables = Exact<{
 }>;
 
 
-export type GetRunDetailsQuery = { __typename?: 'query_root', runs: Array<{ __typename?: 'runs', simulation_id: string, dsl: unknown, name?: string | null, env_list?: unknown | null, timeout_value?: number | null, steps: Array<{ __typename?: 'steps', step_id: number, pipeline_step_number: number, image: string, name: string }> }> };
+// export type GetRunDetailsQuery = { __typename?: 'query_root', runs: Array<{ __typename?: 'runs', simulation_id: string, dsl: unknown, name?: string | null, env_list?: unknown | null, timeout_value?: number | null, steps: Array<{ __typename?: 'steps', step_id: number, pipeline_step_number: number, image: string, name: string }> }> };
+export type GetRunDetailsQuery = { __typename?: 'query_root', runs: Array<{ __typename?: 'runs', simulation_id: string, dsl: unknown, name?: string | null, env_list?: Array<Array<string>>, timeout_value?: number | null, steps: Array<{ __typename?: 'steps', step_id: number, pipeline_step_number: number, image: string, name: string }> }> };
 
 export type InsertResourceUsageMutationVariables = Exact<{
   cpu?: InputMaybe<Scalars['numeric']>;

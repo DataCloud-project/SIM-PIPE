@@ -129,7 +129,7 @@ export async function createStep(run_id:string, name:string, image:string,
 
 /**
  * function to read dsl parameter in simulation table
- * 
+ *
  * */
 async function parseDSL(simulation_id:string):Promise<[StepDSL]> {
   // get dsl from simulation table using simulation_id
@@ -242,8 +242,9 @@ export async function startRun(run_id:string):Promise<string> {
     currentStep.image = step.image;
     currentStep.stepNumber = step.pipeline_step_number;
     currentStep.stepId = step.step_id;
-    // preloaded TLU pipeline
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    if (!env_list) {
+      throw new Error('Error! List of environment variables is undefined');
+    }
     currentStep.env = env_list[step.pipeline_step_number - 1];
     // set the variable values in env file
     process.env.STEP_NUMBER = `${step.pipeline_step_number}`;

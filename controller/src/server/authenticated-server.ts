@@ -254,7 +254,7 @@ const startSecureServer = async (): Promise<void> => {
     await server.applyMiddleware({ app });
     // eslint-disable-next-line @typescript-eslint/await-thenable
     await app.listen({ port: 9000, hostname: '0.0.0.0' },
-      () => console.log(`Server running on http://localhost:9000${server.graphqlPath}`),
+      () => console.log(`🚀 Server for backends running on http://localhost:9000${server.graphqlPath}`),
     );
   } catch (error) {
     throw new Error(`🎌 Error starting the server\n${error as string}`);

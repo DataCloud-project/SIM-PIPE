@@ -190,7 +190,7 @@ const server = new ApolloServer({ typeDefs, resolvers });
 try {
   await server.listen({ port: 9000, hostname: '0.0.0.0' }).then(({ url }) => {
     // eslint-disable-next-line no-console
-    logger.info(`🚀 Server ready at ${url}`);
+    console.log(`🚀 Server for frontend ready at ${url}`);
   });
 } catch (error) {
   const errorMessage = `\n 🎌 Error starting GraphQL server:\n
@@ -200,17 +200,3 @@ try {
 }
 
 await functions.createSampleSimulation();
-// await functions.createSimulation('2a2f1c07-bd89-46ca-aee7-8c1920ee7dbd',
-//   '10',
-
-//   [
-//     { name: '01-datagen-and-routing' },
-//     {
-//       name: '02-storage-and-analytics',
-//     },
-//     {
-//       name: '03-application-logic',
-//     },
-//   ],
-//   '6a41f10d-9bd5-4a6b-98fb-765fd2f09465',
-// );
