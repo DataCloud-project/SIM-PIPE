@@ -1,7 +1,7 @@
 <script>
 	import { start_run_mutation } from '../../queries/start_run.svelte';
     import { get_simulation_query } from '../../queries/get_simulation.svelte';
-	import { clicked_run, graphQLClient, clicked_simulation, steps_list, userid } from '../../stores/stores';
+	import { clicked_run, graphQLClient, clicked_simulation, steps_list } from '../../stores/stores';
 	import Alert from './alert.svelte';
     import { getContext } from 'svelte';
 
@@ -11,7 +11,7 @@
     async function refresh_runs() {
         return new Promise(function (resolve) {
             (async function wait_for_completion(){
-                const result = await $graphQLClient.request( get_simulation_query, { simulation_id, userid:$userid } );
+                const result = await $graphQLClient.request( get_simulation_query, { simulation_id } );
                 $clicked_simulation = JSON.parse(result.Get_Simulation).simulations[0];
                 $clicked_simulation.runs.every(run => {
                     if(run.run_id === $clicked_run.run_id) {
@@ -29,7 +29,7 @@
         });
     }
     async function execute_start_run() {
-		let result = await $graphQLClient.request(start_run_mutation, { run_id:$clicked_run.run_id, userid:$userid });
+		let result = await $graphQLClient.request(start_run_mutation, { run_id:$clicked_run.run_id });
         if (JSON.parse(result.Start_Run).code == 200) {
 			open(Alert, { message: '🎐 Success! Run has been added to the queue' });
 			setTimeout(function () {

@@ -1,7 +1,7 @@
 <script>
     import { create_run_mutation } from '../../queries/create_run.svelte';
     import { get_simulation_query } from '../../queries/get_simulation.svelte';
-    import { clicked_simulation, graphQLClient, userid } from '../../stores/stores';
+    import { clicked_simulation, graphQLClient } from '../../stores/stores';
     import { getContext } from 'svelte';
     import Alert from './alert.svelte';
 
@@ -51,14 +51,14 @@
             timeout_value = 0;
         }
         // call create run with the entered details
-        let variables = { userid: $userid, simulation_id, dsl, name, sampleInput, env_list, timeout_value }; // TODO change to userid from access token
+        let variables = { simulation_id, dsl, name, sampleInput, env_list, timeout_value }; 
         let result = await $graphQLClient.request( create_run_mutation, variables );
         close();
         if(JSON.parse(result.Create_Run_WithInput).code == 200) {
             open(Alert, {message: '🎐 Success! New run created'});
             setTimeout(function(){close()}, 1000);
             // refresh run list when new run is created
-            variables = { userid: $userid, simulation_id }; // TODO change to userid from access token
+            variables = { simulation_id }; 
             result = await $graphQLClient.request( get_simulation_query, variables );
             $clicked_simulation = JSON.parse(result.Get_Simulation).simulations[0];
         }

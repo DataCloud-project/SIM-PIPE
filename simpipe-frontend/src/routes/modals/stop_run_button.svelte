@@ -1,13 +1,13 @@
 <script>
 	import { stop_run_mutation } from '../../queries/stop_run.svelte';
-	import { clicked_run, graphQLClient, userid } from '../../stores/stores';
+	import { clicked_run, graphQLClient } from '../../stores/stores';
 	import Alert from './alert.svelte';
     import { getContext } from 'svelte';
 
     const { open, close } = getContext('simple-modal');
 
     async function execute_stop_run() {
-		let result = await $graphQLClient.request(stop_run_mutation, { run_id:$clicked_run.run_id, userid:$userid });
+		let result = await $graphQLClient.request(stop_run_mutation, { run_id:$clicked_run.run_id });
         if (JSON.parse(result.Stop_Run).code == 200) {
 			open(Alert, { message: '🎐 Success! Stop signal has been sent to run' });
 			setTimeout(function () {

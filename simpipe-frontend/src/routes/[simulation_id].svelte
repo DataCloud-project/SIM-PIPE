@@ -1,14 +1,13 @@
 <script context="module">
-	import { GraphQLClient } from 'graphql-request';
 	import { get_simulation_query } from '../queries/get_simulation.svelte';
 	import { get } from 'svelte/store';
-	import { userid, graphQLClient } from '../stores/stores';
+	import { graphQLClient } from '../stores/stores';
 
 	// load details of the clicked simulation
 	export async function load({ params }) {
 		try {
 			const { simulation_id } = params;
-			const variables = { userid: get(userid), simulation_id }; // userid from access token
+			const variables = { simulation_id }; // userid from access token
 			const result = await get(graphQLClient).request(get_simulation_query, variables);
 			const simulation = JSON.parse(result.Get_Simulation).simulations[0];
 			return {

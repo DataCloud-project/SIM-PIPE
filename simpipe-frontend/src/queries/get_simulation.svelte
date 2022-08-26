@@ -3,8 +3,8 @@
     import { gql } from 'graphql-request'
 
     export const get_simulation_query = gql`
-        query getSimulation($userid: String, $simulation_id:String) {
-            Get_Simulation(userid: $userid, simulation_id:$simulation_id) 
+        query getSimulation($simulation_id:String) {
+            Get_Simulation(simulation_id:$simulation_id) 
         #    changed output type of query to string {                
         #         simulations {
         #             simulation_id

@@ -4,7 +4,7 @@ import { GraphQLClient  } from 'graphql-request'
 /**
  * userid of the currently logged in user
  */
- export let userid = writable('');
+//  export let userid = writable('');
 /**
  * indicators to show if a run or step is clicked 
  */
@@ -25,4 +25,5 @@ export let selected_resource_usage = writable([]);
 export let selected_logs = writable('');
 
 // graphql client from graphql-request
-export const graphQLClient = readable(new GraphQLClient('http://localhost:9000/graphql'));
+// export const graphQLClient = writable(new GraphQLClient('http://localhost:9000/graphql'));
+export const graphQLClient = writable('');

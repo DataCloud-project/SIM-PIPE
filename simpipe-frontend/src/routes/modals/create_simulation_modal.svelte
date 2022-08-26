@@ -2,7 +2,7 @@
 	import { create_simulation_mutation } from '../../queries/create_simulation.svelte';
 	import { all_simulations_query } from '../../queries/all_simulations.svelte';
 	import { getContext } from 'svelte';
-	import { simulations_list, graphQLClient, userid } from '../../stores/stores';
+	import { simulations_list, graphQLClient } from '../../stores/stores';
 	import Alert from './alert.svelte';
 
 	const { open, close } = getContext('simple-modal');
@@ -15,7 +15,6 @@
 		
 		// call create simulation
 		let variables = {
-			userid: $userid,
 			model_id,
 			name,
 			pipeline_description
@@ -27,8 +26,7 @@
 				close();
 			}, 1000);
 			// refresh list of simulations after new simulation is created
-			variables = { userid: $userid }; // userid from access token
-			$simulations_list = await $graphQLClient.request(all_simulations_query, variables);
+			$simulations_list = await $graphQLClient.request(all_simulations_query);
 		} else {
 			open(Alert, { message: '🎌 Failed! Error creating simulation' });
 			setTimeout(function () {
