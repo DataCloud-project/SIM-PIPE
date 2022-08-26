@@ -1,3 +1,7 @@
+/**
+ * unused server for frontend
+ * frontend and the other backends uses authenticated-server.ts
+ */
 /* eslint-disable eslint-comments/disable-enable-pair */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */

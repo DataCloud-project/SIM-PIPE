@@ -57,6 +57,7 @@ const typeDefs = gql`
       author: String # for testing context, will be removed
       All_Runs_Steps: String
       All_Simulations: AllSimulations
+      Get_Simulation(simulation_id:String):String
       Get_Simulation_Run_Results(simulation_id: String, run_id:String): String
   },
   type Mutation {
@@ -82,6 +83,9 @@ const resolvers = {
     All_Simulations(_p: unknown, arguments_: unknown, context: { user: any }):unknown {
       return functions.allSimulations(context.user.sub as string);
     },
+    Get_Simulation(_p: unknown, arguments_: { simulation_id:string }, context: { user: any }):unknown {
+      return functions.getSimulation(context.user.sub as string, arguments_.simulation_id);
+    },
     async Get_Simulation_Run_Results(_p: unknown, arguments_: { simulation_id:string,
       run_id:string }, context: { user: any }):Promise<string> {
       return await functions.getSimulationRunResults(arguments_.simulation_id, arguments_.run_id, context.user.sub as string);
@@ -94,13 +98,19 @@ const resolvers = {
       try {
         const newSimId = await functions.createSimulation(
           arguments_.model_id, arguments_.name, arguments_.pipeline_description, context.user.sub as string);
-        return `Simulation has been created with id ${newSimId}`;
+        // return `Simulation has been created with id ${newSimId}`;
+        return JSON.stringify({
+          code: 200,
+          message: `Simulation has been created with id ${newSimId}`,
+        });
       } catch (error) {
         const errorMessage = `🎌 Error creating new simulation:
       ${(error as Error).message}`;
         logger.error(errorMessage);
-        // return 'Failed! Internal server error when creating new simulation';
-        return errorMessage;
+        return JSON.stringify({
+          code: 300,
+          message: errorMessage,
+        });
       }
     },
     async Create_Run_WithInput(_p: unknown, arguments_:
@@ -122,50 +132,70 @@ const resolvers = {
           context.user.sub as string,
           arguments_.env_list,
           arguments_.timeout_value);
-        return `Run has been created with id ${newRunId}`;
+        return JSON.stringify({
+          code: 200,
+          message: `Run has been created with id ${newRunId}`,
+        });
       } catch (error) {
         const errorMessage = `🎌 Error creating new run:
       ${(error as Error).message}`;
         logger.error(errorMessage);
-        // return 'Failed! Internal server error when creating new run';
-        return errorMessage;
+        return JSON.stringify({
+          code: 300,
+          message: errorMessage,
+        });
       }
     },
     async Start_Run(_p: unknown, arguments_:{ run_id:string }, context: { user: any }):
     Promise<string> {
       try {
         await functions.queueRun(arguments_.run_id, context.user.sub as string);
-        return 'Run has been added to queue';
+        return JSON.stringify({
+          code: 200,
+          message: 'Run has been added to queue',
+        });
       } catch (error) {
         const errorMessage = `🎌 Failed! Error starting run:
       ${(error as Error).message}`;
         logger.error(errorMessage);
-        // return 'Failed! internal server error starting run';
-        return errorMessage;
+        return JSON.stringify({
+          code: 300,
+          message: errorMessage,
+        });
       }
     },
     async Stop_Run(_p:unknown, arguments_: { run_id:string }, context: { user: any }):Promise<string> {
       try {
         await functions.stopRun(arguments_.run_id, context.user.sub as string);
-        return 'Successfully sent stop signal to current run';
+        return JSON.stringify({
+          code: 200,
+          message: 'Successfully sent stop signal to current run',
+        });
       } catch (error) {
         const errorMessage = `🎌 Error stopping run:
       ${(error as Error).message}`;
         logger.error(errorMessage);
-        // return 'Failed! internal server error stopping run';
-        return errorMessage;
+        return JSON.stringify({
+          code: 300,
+          message: errorMessage,
+        });
       }
     },
     async Delete_Run(_p:unknown, arguments_: { run_id:string }, context: { user: any }):Promise<string> {
       try {
         await functions.deleteRun(arguments_.run_id, context.user.sub as string);
-        return 'Successfully deleted run';
+        return JSON.stringify({
+          code: 200,
+          message: 'Successfully deleted run',
+        });
       } catch (error) {
         const errorMessage = `🎌 Error deleting run:
       ${(error as Error).message}`;
         logger.error(errorMessage);
-        // return 'Failed! internal server error stopping run';
-        return errorMessage;
+        return JSON.stringify({
+          code: 300,
+          message: errorMessage,
+        });
       }
     },
   },
