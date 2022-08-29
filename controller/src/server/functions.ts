@@ -279,7 +279,7 @@ export async function startRun(run_id:string):Promise<string> {
     return 'failed';
   }
   // set run as completed successully in the database
-  await sdk.setRunAsEndedSuccess({ run_id });  
+  await sdk.setRunAsEndedSuccess({ run_id });
   return run_id;
 }
 
