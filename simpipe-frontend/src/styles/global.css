@@ -78,6 +78,9 @@
 
 /* default styles */
 
+.black{
+  color: black;
+}
 body{
     background: #36393e;
     margin: 10;

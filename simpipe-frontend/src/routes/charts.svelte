@@ -17,6 +17,9 @@
         title: {
           text: title_text
         },
+        tooltip: {
+          split:true
+        },
         xAxis: {
           name: 'Timestamps',
           categories: timestamps,

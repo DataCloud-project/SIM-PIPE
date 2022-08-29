@@ -2,10 +2,4 @@
     export let message;
 </script>
 
-<h2> {message} </h2>
-
-<style>
-    h2 {
-        color: black;
-    }
-</style>
+<h2 class="black"> {message} </h2>
