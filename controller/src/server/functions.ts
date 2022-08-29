@@ -185,7 +185,7 @@ async function checkSimulationOwner(simulation_id:string, userid:string):Promise
   }
 }
 
-export async function createRunWithInput(simulation_id: string, 
+export async function createRunWithInput(simulation_id: string,
   name: string, sampleInput: [[string, string]], userid:string, environment_list: [[string]],
   timeout_value: number): Promise<string> {
   // only owner of the simulation can create a new run
@@ -243,6 +243,7 @@ export async function startRun(run_id:string):Promise<string> {
     if (!env_list) {
       throw new Error('Error! List of environment variables is undefined');
     }
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     currentStep.env = env_list[step.pipeline_step_number - 1];
     // set the variable values in env file
     process.env.STEP_NUMBER = `${step.pipeline_step_number}`;
