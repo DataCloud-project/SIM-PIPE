@@ -6,6 +6,7 @@
 		selected_logs,
 		steps_list
 	} from '../stores/stores';
+	import dayjs from 'dayjs';
 
 	// export let steps
 
@@ -16,6 +17,12 @@
 			$selected_resource_usage = step.resource_usages;
 			$selected_logs = step.log?.text;
 		}
+	}
+	function display_status_msg(step) {
+		if (step.status == 'completed') {
+			return `Completed in ${Math.round(dayjs(step.ended).diff(step.started)/1000, 2)} seconds`;
+		} 
+		return step.status;
 	}
 </script>
 
@@ -36,7 +43,7 @@
 			>
 				<div class="col-1">{step.pipeline_step_number}</div>
 				<div class="col-2">{step.name}</div>
-				<div class="col-3">{step.status}</div>
+				<div class="col-3">{display_status_msg(step)}</div>
 			</li>
 		{/each}
 	</ul>

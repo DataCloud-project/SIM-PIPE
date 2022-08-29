@@ -76,7 +76,7 @@
 			memory_max.push(usage.memory_max);
 			network_rx.push(usage.rx_value);
 			network_tx.push(usage.tx_value);
-			timestamps.push((dayjs(usage.time).diff(usages[0].time))/1000); // timestamps in seconds from the first timestamp
+			timestamps.push(Math.round((dayjs(usage.time).diff(usages[0].time))/1000)); // timestamps in seconds from the first timestamp
 		});		
         
     render_graph('cpu_container', 'CPU', 'CPU usage in percentage', [
