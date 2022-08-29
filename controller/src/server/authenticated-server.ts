@@ -62,7 +62,7 @@ const typeDefs = gql`
   },
   type Mutation {
     Create_Simulation(model_id:String, name:String, pipeline_description:String): String
-    Create_Run_WithInput(simulation_id: String, dsl:String, name:String, sampleInput:[[String]], 
+    Create_Run_WithInput(simulation_id: String,name:String, sampleInput:[[String]], 
     env_list: [[String]], timeout_value:Int):
     String
     Start_Run(run_id:String): String
@@ -116,7 +116,6 @@ const resolvers = {
     async Create_Run_WithInput(_p: unknown, arguments_:
     {
       simulation_id:string,
-      dsl:string,
       name:string,
       sampleInput:[[string, string]],
       env_list: [[string]],
@@ -126,7 +125,6 @@ const resolvers = {
       try {
         newRunId = await functions.createRunWithInput(
           arguments_.simulation_id,
-          arguments_.dsl,
           arguments_.name,
           arguments_.sampleInput,
           context.user.sub as string,

@@ -9,7 +9,6 @@
 
     const simulation_id = $clicked_simulation.simulation_id;
     let name = '';
-    let dsl = "test";
     let files = [];
     let env_list_entries = [[]];
     let env_list = [[]];
@@ -51,7 +50,7 @@
             timeout_value = 0;
         }
         // call create run with the entered details
-        let variables = { simulation_id, dsl, name, sampleInput, env_list, timeout_value }; 
+        let variables = { simulation_id, name, sampleInput, env_list, timeout_value }; 
         let result = await $graphQLClient.request( create_run_mutation, variables );
         close();
         if(JSON.parse(result.Create_Run_WithInput).code == 200) {

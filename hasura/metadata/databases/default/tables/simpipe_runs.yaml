@@ -32,17 +32,16 @@ select_permissions:
   - role: anonymous
     permission:
       columns:
-        - simulation_id
-        - dsl
         - created
-        - status
-        - started
         - ended
-        - run_id
-        - name
-        - userid
-        - timeout_value
         - env_list
+        - name
+        - run_id
+        - simulation_id
+        - started
+        - status
+        - timeout_value
+        - userid
       filter: {}
 update_permissions:
   - role: anonymous

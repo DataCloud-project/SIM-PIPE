@@ -5,9 +5,6 @@ schema {
 }
 "whether this query should be cached (Hasura Cloud only)"
 directive @cached("measured in seconds" ttl: Int! = 60, "refresh the cache entry" refresh: Boolean! = false) on QUERY
-type AllSimulations {
-  simulations: [Simulation]
-}
 """
 Boolean expression to compare columns of type "Int". All fields are combined with logical 'AND'.
 """
@@ -21,20 +18,6 @@ input Int_comparison_exp {
   _lte: Int
   _neq: Int
   _nin: [Int!]
-}
-type Run {
-  created: String
-  ended: String
-  name: String
-  run_id: String
-  started: String
-  status: String
-}
-type Simulation {
-  created: String
-  name: String
-  runs: [Run]
-  simulation_id: String
 }
 """
 Boolean expression to compare columns of type "String". All fields are combined with logical 'AND'.
@@ -112,8 +95,6 @@ input jsonb_comparison_exp {
 }
 "mutation root"
 type mutation_root {
-  Create_Run_WithInput(dsl: String, env_list: [[String]], name: String, sampleInput: [[String]], simulation_id: String, timeout_value: Int, userid: String): String
-  Create_Simulation(model_id: String, name: String, pipeline_description: String, userid: String): String
   """
   insert a single row into the table: "simpipe.simulations"
   """
@@ -338,10 +319,6 @@ enum order_by {
   desc_nulls_last
 }
 type query_root {
-  All_Runs_Steps: String
-  All_Simulations(userid: String): AllSimulations
-  Get_Simulation(simulation_id: String, userid: String): String
-  Get_Simulation_Run_Results(run_id: String, simulation_id: String): String
   """
   fetch data from the table: "simpipe.runs" using primary key columns
   """
@@ -444,7 +421,6 @@ columns and relationships of "simpipe.runs"
 """
 type runs {
   created: timestamptz!
-  dsl("JSON select path" path: String): jsonb!
   ended: timestamptz
   env_list("JSON select path" path: String): jsonb
   name: String
@@ -506,7 +482,6 @@ input runs_aggregate_order_by {
 }
 "append existing jsonb value of filtered columns with new jsonb value"
 input runs_append_input {
-  dsl: jsonb
   env_list: jsonb
 }
 """
@@ -535,7 +510,6 @@ input runs_bool_exp {
   _not: runs_bool_exp
   _or: [runs_bool_exp!]
   created: timestamptz_comparison_exp
-  dsl: jsonb_comparison_exp
   ended: timestamptz_comparison_exp
   env_list: jsonb_comparison_exp
   name: String_comparison_exp
@@ -557,17 +531,14 @@ enum runs_constraint {
 }
 "delete the field or element with specified path (for JSON arrays, negative integers count from the end)"
 input runs_delete_at_path_input {
-  dsl: [String!]
   env_list: [String!]
 }
 "delete the array element with specified index (negative integers count from the end). throws an error if top level container is not an array"
 input runs_delete_elem_input {
-  dsl: Int
   env_list: Int
 }
 "delete key/value pair or string element. key/value pairs are matched based on their key value"
 input runs_delete_key_input {
-  dsl: String
   env_list: String
 }
 """
@@ -581,7 +552,6 @@ input type for inserting data into table "simpipe.runs"
 """
 input runs_insert_input {
   created: timestamptz
-  dsl: jsonb
   ended: timestamptz
   env_list: jsonb
   name: String
@@ -664,7 +634,6 @@ Ordering options when selecting data from "simpipe.runs".
 """
 input runs_order_by {
   created: order_by
-  dsl: order_by
   ended: order_by
   env_list: order_by
   name: order_by
@@ -683,7 +652,6 @@ input runs_pk_columns_input {
 }
 "prepend existing jsonb value of filtered columns with new jsonb value"
 input runs_prepend_input {
-  dsl: jsonb
   env_list: jsonb
 }
 """
@@ -692,8 +660,6 @@ select columns of table "simpipe.runs"
 enum runs_select_column {
   "column name"
   created
-  "column name"
-  dsl
   "column name"
   ended
   "column name"
@@ -718,7 +684,6 @@ input type for updating data in table "simpipe.runs"
 """
 input runs_set_input {
   created: timestamptz
-  dsl: jsonb
   ended: timestamptz
   env_list: jsonb
   name: String
@@ -775,8 +740,6 @@ update columns of table "simpipe.runs"
 enum runs_update_column {
   "column name"
   created
-  "column name"
-  dsl
   "column name"
   ended
   "column name"

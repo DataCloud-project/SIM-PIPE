@@ -53,8 +53,8 @@ query getSimulationDSL ($simulation_id: uuid!) {
 }
 
 # api functions ..
-mutation createRun($simulation_id: uuid!, $dsl: jsonb!, $name:String, $userid: String, $env_list: jsonb, $timeout_value:Int) {
-  insert_runs_one(object: {dsl: $dsl, simulation_id: $simulation_id, name: $name, userid: $userid, env_list:$env_list, timeout_value:$timeout_value}) {
+mutation createRun($simulation_id: uuid!, $name:String, $userid: String, $env_list: jsonb, $timeout_value:Int) {
+  insert_runs_one(object: {simulation_id: $simulation_id, name: $name, userid: $userid, env_list:$env_list, timeout_value:$timeout_value}) {
     run_id
   }
 }
@@ -146,7 +146,6 @@ query getSimulationIdandSteps($run_id: uuid!) {
 query getRunDetails($run_id: uuid!) {
   runs(where: {run_id: {_eq: $run_id}}) {
     simulation_id
-    dsl
     name
     env_list
     timeout_value
@@ -184,7 +183,6 @@ query getSimulationRunResults($simulation_id: uuid = "", $run_id: uuid = "", $us
       created
       started
       ended
-      dsl
       steps(order_by: {pipeline_step_number: asc}) {
         step_id
         status
@@ -227,7 +225,6 @@ query getSimulation($simulation_id: uuid, $userid: String) {
       created
       started
       ended
-      dsl
       steps(order_by: {pipeline_step_number: asc}) {
         step_id
         status

@@ -141,14 +141,12 @@ async function parseDSL(simulation_id:string):Promise<[StepDSL]> {
   return steps;
 }
 
-export async function createRun(simulation_id:string, dsl:string, name:string, userid:string,
+export async function createRun(simulation_id:string, name:string, userid:string,
   environment_list: [[string]], timeout_value: number):Promise<string> {
   // read dsl, validate and use it to create steps in the run
   const steps:Array<StepDSL> = await parseDSL(simulation_id);
   const result:CreateRunMutation = await sdk.createRun({
     simulation_id,
-    // TODO: later to parse dsl -> dsl: JSON.parse(dsl),
-    dsl,
     name,
     userid,
     env_list: environment_list,
@@ -187,12 +185,12 @@ async function checkSimulationOwner(simulation_id:string, userid:string):Promise
   }
 }
 
-export async function createRunWithInput(simulation_id: string, dsl: string,
+export async function createRunWithInput(simulation_id: string, 
   name: string, sampleInput: [[string, string]], userid:string, environment_list: [[string]],
   timeout_value: number): Promise<string> {
   // only owner of the simulation can create a new run
   await checkSimulationOwner(simulation_id, userid);
-  const runId = await createRun(simulation_id, dsl, name, userid, environment_list, timeout_value);
+  const runId = await createRun(simulation_id, name, userid, environment_list, timeout_value);
   fs.mkdirSync(`${uploadDirectory}${runId}`, { recursive: true });
   // write sample input to uploaded_files/runId
   // eslint-disable-next-line no-restricted-syntax
