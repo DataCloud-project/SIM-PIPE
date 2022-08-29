@@ -222,16 +222,6 @@ const jwtMiddleware = expressjwt({
 });
 
 /**
- * function to get hasura url passed in .env file
- */
-function getHasuraUrl():string {
-  if (!process.env.HASURA_URL) {
-    throw new Error('🎌 Remote schema url is not defined in .env file');
-  }
-  return process.env.HASURA_URL.split('/')[2].split(':')[0];
-}
-
-/**
  * function to start server with keycloak authentication
  */
 const startSecureServer = async (): Promise<void> => {
@@ -239,7 +229,6 @@ const startSecureServer = async (): Promise<void> => {
     typeDefs,
     resolvers,
     context: ({ req }): { user: { sub: string; preferred_username: string; }; } => {
-      // if (!req.headers.authorization && req.hostname !== getHasuraUrl()) {
       if (!req.headers.authorization) {
         throw new Error('🎌 No authorization header found');
       }
@@ -255,21 +244,8 @@ const startSecureServer = async (): Promise<void> => {
 
   try {
     const app = express();
-    const chooseMiddleware = (middleware: {
-      (request: express.Request, response: express.Response, next: express.NextFunction):
-      Promise<void>; unless: any;
-    }) => function (request: express.Request, response: express.Response, next: () => any) {
-      // console.log(`${request.headers['user-agent'] as string}--------------------\n`);
-      // console.log(`${request.hostname}--------------------\n`);
-      if (request.hostname === getHasuraUrl()) {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-        return next(); // skip authentication for requests from hasura endpoint
-      }
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-      return middleware(request, response, next);
-    };
     app.use(
-      chooseMiddleware(jwtMiddleware),
+      jwtMiddleware,
     );
 
     await server.start();
@@ -277,7 +253,7 @@ const startSecureServer = async (): Promise<void> => {
     await server.applyMiddleware({ app });
     // eslint-disable-next-line @typescript-eslint/await-thenable
     await app.listen({ port: 9000, hostname: '0.0.0.0' },
-      () => console.log(`🚀 Server for backends running on http://localhost:9000${server.graphqlPath}`),
+      () => console.log(`🚀 Authenticated server running on http://localhost:9000${server.graphqlPath}`),
     );
   } catch (error) {
     throw new Error(`🎌 Error starting the server\n${error as string}`);
