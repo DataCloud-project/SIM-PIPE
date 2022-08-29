@@ -54,7 +54,6 @@ const typeDefs = gql`
     steps: [Step]
   }
   type Query {
-      author: String # for testing context, will be removed
       All_Runs_Steps: String
       All_Simulations: AllSimulations
       Get_Simulation(simulation_id:String):String
@@ -73,10 +72,6 @@ const typeDefs = gql`
 
 const resolvers = {
   Query: {
-    // for testing context, will be removed
-    author(_p: unknown, arguments_: unknown, context: { user: any }):unknown {
-      return `hello from ${context.user.preferred_username as string}`;
-    },
     All_Runs_Steps(_p: unknown, arguments_: unknown, context: { user: any }):unknown {
       return functions.allRunsSteps(context.user.sub as string);
     },

@@ -3324,7 +3324,7 @@ export type AllSimulationsQueryVariables = Exact<{
 }>;
 
 
-export type AllSimulationsQuery = { __typename?: 'query_root', simulations: Array<{ __typename?: 'simulations', simulation_id: string, name?: string | null, created: string, runs: Array<{ __typename?: 'runs', run_id: string, name?: string | null, status: Simpipe_Run_Status_Enum, created: string, started?: string | null, ended?: string | null }> }> };
+export type AllSimulationsQuery = { __typename?: 'query_root', simulations: Array<{ __typename?: 'simulations', simulation_id: string, name?: string | null, created: string, pipeline_description?: unknown | null, runs: Array<{ __typename?: 'runs', run_id: string, name?: string | null, status: Simpipe_Run_Status_Enum, created: string, started?: string | null, ended?: string | null }> }> };
 
 export type AllRunsAndStepsQueryVariables = Exact<{
   userid?: InputMaybe<Scalars['String']>;
@@ -3516,6 +3516,7 @@ export const AllSimulationsDocument = gql`
     simulation_id
     name
     created
+    pipeline_description
     runs {
       run_id
       name

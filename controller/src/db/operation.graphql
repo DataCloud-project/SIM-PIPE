@@ -4,6 +4,7 @@ query AllSimulations ($userid: String) {
     simulation_id
     name
     created
+    pipeline_description
     runs {
       run_id
       name
