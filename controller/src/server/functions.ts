@@ -261,6 +261,8 @@ export async function startRun(run_id:string):Promise<string> {
       process.env.FAILED_RUN = 'true';
     }
   }
+  // remove sample input files for the run from ./uploaded folder
+  fs.rmSync(`${uploadDirectory}${run_id}`, { recursive: true, force: true });
   if ((process.env.CANCEL_RUN_LIST as string).includes(run_id)) {
     // mark the run as cancelled
     logger.info(`Run ${run_id} execution is cancelled\n`);
@@ -277,7 +279,7 @@ export async function startRun(run_id:string):Promise<string> {
     return 'failed';
   }
   // set run as completed successully in the database
-  await sdk.setRunAsEndedSuccess({ run_id });
+  await sdk.setRunAsEndedSuccess({ run_id });  
   return run_id;
 }
 
