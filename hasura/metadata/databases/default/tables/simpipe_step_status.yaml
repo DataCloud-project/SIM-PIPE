@@ -1,4 +1,4 @@
 table:
-  name: step_status
   schema: simpipe
+  name: step_status
 is_enum: true

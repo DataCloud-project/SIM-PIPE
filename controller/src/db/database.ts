@@ -105,11 +105,6 @@ export type Jsonb_Comparison_Exp = {
 /** mutation root */
 export type Mutation_Root = {
   __typename?: 'mutation_root';
-  Create_Run?: Maybe<Scalars['String']>;
-  Create_Run_WithInput?: Maybe<Scalars['String']>;
-  Create_Simulation?: Maybe<Scalars['String']>;
-  Start_Run?: Maybe<Scalars['String']>;
-  Stop_Run?: Maybe<Scalars['String']>;
   /** insert a single row into the table: "simpipe.simulations" */
   create_simulation?: Maybe<Simulations>;
   /** insert data into the table: "simpipe.simulations" */
@@ -118,6 +113,10 @@ export type Mutation_Root = {
   delete_previous_run?: Maybe<Runs_Mutation_Response>;
   /** delete single row from the table: "simpipe.runs" */
   delete_runs_by_pk?: Maybe<Runs>;
+  /** delete data from the table: "simpipe.env_variable" */
+  delete_simpipe_env_variable?: Maybe<Simpipe_Env_Variable_Mutation_Response>;
+  /** delete single row from the table: "simpipe.env_variable" */
+  delete_simpipe_env_variable_by_pk?: Maybe<Simpipe_Env_Variable>;
   /** delete data from the table: "simpipe.logs" */
   delete_simpipe_logs?: Maybe<Simpipe_Logs_Mutation_Response>;
   /** delete single row from the table: "simpipe.logs" */
@@ -146,6 +145,10 @@ export type Mutation_Root = {
   insert_runs?: Maybe<Runs_Mutation_Response>;
   /** insert a single row into the table: "simpipe.runs" */
   insert_runs_one?: Maybe<Runs>;
+  /** insert data into the table: "simpipe.env_variable" */
+  insert_simpipe_env_variable?: Maybe<Simpipe_Env_Variable_Mutation_Response>;
+  /** insert a single row into the table: "simpipe.env_variable" */
+  insert_simpipe_env_variable_one?: Maybe<Simpipe_Env_Variable>;
   /** insert data into the table: "simpipe.logs" */
   insert_simpipe_logs?: Maybe<Simpipe_Logs_Mutation_Response>;
   /** insert a single row into the table: "simpipe.logs" */
@@ -170,6 +173,10 @@ export type Mutation_Root = {
   update_runs?: Maybe<Runs_Mutation_Response>;
   /** update single row of the table: "simpipe.runs" */
   update_runs_by_pk?: Maybe<Runs>;
+  /** update data of the table: "simpipe.env_variable" */
+  update_simpipe_env_variable?: Maybe<Simpipe_Env_Variable_Mutation_Response>;
+  /** update single row of the table: "simpipe.env_variable" */
+  update_simpipe_env_variable_by_pk?: Maybe<Simpipe_Env_Variable>;
   /** update data of the table: "simpipe.logs" */
   update_simpipe_logs?: Maybe<Simpipe_Logs_Mutation_Response>;
   /** update single row of the table: "simpipe.logs" */
@@ -198,39 +205,11 @@ export type Mutation_Root = {
 
 
 /** mutation root */
-export type Mutation_RootCreate_RunArgs = {
-  dsl?: InputMaybe<Scalars['String']>;
-  name?: InputMaybe<Scalars['String']>;
-  simulation_id?: InputMaybe<Scalars['String']>;
-};
-
-
-/** mutation root */
-export type Mutation_RootCreate_Run_WithInputArgs = {
-  dsl?: InputMaybe<Scalars['String']>;
-  name?: InputMaybe<Scalars['String']>;
-  sampleInput?: InputMaybe<Array<InputMaybe<Array<InputMaybe<Scalars['String']>>>>>;
-  simulation_id?: InputMaybe<Scalars['String']>;
-};
-
-
-/** mutation root */
 export type Mutation_RootCreate_SimulationArgs = {
-  model_id?: InputMaybe<Scalars['String']>;
-  name?: InputMaybe<Scalars['String']>;
+  object: Simulations_Insert_Input;
+  on_conflict?: InputMaybe<Simulations_On_Conflict>;
 };
 
-
-/** mutation root */
-export type Mutation_RootStart_RunArgs = {
-  run_id?: InputMaybe<Scalars['String']>;
-};
-
-
-/** mutation root */
-export type Mutation_RootStop_RunArgs = {
-  run_id?: InputMaybe<Scalars['String']>;
-};
 
 /** mutation root */
 export type Mutation_RootCreate_SimulationsArgs = {
@@ -248,6 +227,18 @@ export type Mutation_RootDelete_Previous_RunArgs = {
 /** mutation root */
 export type Mutation_RootDelete_Runs_By_PkArgs = {
   run_id: Scalars['uuid'];
+};
+
+
+/** mutation root */
+export type Mutation_RootDelete_Simpipe_Env_VariableArgs = {
+  where: Simpipe_Env_Variable_Bool_Exp;
+};
+
+
+/** mutation root */
+export type Mutation_RootDelete_Simpipe_Env_Variable_By_PkArgs = {
+  id: Scalars['Int'];
 };
 
 
@@ -338,6 +329,20 @@ export type Mutation_RootInsert_Runs_OneArgs = {
 
 
 /** mutation root */
+export type Mutation_RootInsert_Simpipe_Env_VariableArgs = {
+  objects: Array<Simpipe_Env_Variable_Insert_Input>;
+  on_conflict?: InputMaybe<Simpipe_Env_Variable_On_Conflict>;
+};
+
+
+/** mutation root */
+export type Mutation_RootInsert_Simpipe_Env_Variable_OneArgs = {
+  object: Simpipe_Env_Variable_Insert_Input;
+  on_conflict?: InputMaybe<Simpipe_Env_Variable_On_Conflict>;
+};
+
+
+/** mutation root */
 export type Mutation_RootInsert_Simpipe_LogsArgs = {
   objects: Array<Simpipe_Logs_Insert_Input>;
   on_conflict?: InputMaybe<Simpipe_Logs_On_Conflict>;
@@ -413,6 +418,7 @@ export type Mutation_RootUpdate_RunsArgs = {
   _delete_at_path?: InputMaybe<Runs_Delete_At_Path_Input>;
   _delete_elem?: InputMaybe<Runs_Delete_Elem_Input>;
   _delete_key?: InputMaybe<Runs_Delete_Key_Input>;
+  _inc?: InputMaybe<Runs_Inc_Input>;
   _prepend?: InputMaybe<Runs_Prepend_Input>;
   _set?: InputMaybe<Runs_Set_Input>;
   where: Runs_Bool_Exp;
@@ -425,9 +431,26 @@ export type Mutation_RootUpdate_Runs_By_PkArgs = {
   _delete_at_path?: InputMaybe<Runs_Delete_At_Path_Input>;
   _delete_elem?: InputMaybe<Runs_Delete_Elem_Input>;
   _delete_key?: InputMaybe<Runs_Delete_Key_Input>;
+  _inc?: InputMaybe<Runs_Inc_Input>;
   _prepend?: InputMaybe<Runs_Prepend_Input>;
   _set?: InputMaybe<Runs_Set_Input>;
   pk_columns: Runs_Pk_Columns_Input;
+};
+
+
+/** mutation root */
+export type Mutation_RootUpdate_Simpipe_Env_VariableArgs = {
+  _inc?: InputMaybe<Simpipe_Env_Variable_Inc_Input>;
+  _set?: InputMaybe<Simpipe_Env_Variable_Set_Input>;
+  where: Simpipe_Env_Variable_Bool_Exp;
+};
+
+
+/** mutation root */
+export type Mutation_RootUpdate_Simpipe_Env_Variable_By_PkArgs = {
+  _inc?: InputMaybe<Simpipe_Env_Variable_Inc_Input>;
+  _set?: InputMaybe<Simpipe_Env_Variable_Set_Input>;
+  pk_columns: Simpipe_Env_Variable_Pk_Columns_Input;
 };
 
 
@@ -493,6 +516,11 @@ export type Mutation_RootUpdate_Simpipe_Step_Status_By_PkArgs = {
 
 /** mutation root */
 export type Mutation_RootUpdate_SimulationsArgs = {
+  _append?: InputMaybe<Simulations_Append_Input>;
+  _delete_at_path?: InputMaybe<Simulations_Delete_At_Path_Input>;
+  _delete_elem?: InputMaybe<Simulations_Delete_Elem_Input>;
+  _delete_key?: InputMaybe<Simulations_Delete_Key_Input>;
+  _prepend?: InputMaybe<Simulations_Prepend_Input>;
   _set?: InputMaybe<Simulations_Set_Input>;
   where: Simulations_Bool_Exp;
 };
@@ -500,6 +528,11 @@ export type Mutation_RootUpdate_SimulationsArgs = {
 
 /** mutation root */
 export type Mutation_RootUpdate_Simulations_By_PkArgs = {
+  _append?: InputMaybe<Simulations_Append_Input>;
+  _delete_at_path?: InputMaybe<Simulations_Delete_At_Path_Input>;
+  _delete_elem?: InputMaybe<Simulations_Delete_Elem_Input>;
+  _delete_key?: InputMaybe<Simulations_Delete_Key_Input>;
+  _prepend?: InputMaybe<Simulations_Prepend_Input>;
   _set?: InputMaybe<Simulations_Set_Input>;
   pk_columns: Simulations_Pk_Columns_Input;
 };
@@ -551,9 +584,6 @@ export enum Order_By {
 
 export type Query_Root = {
   __typename?: 'query_root';
-  All_Runs_Steps?: Maybe<Scalars['String']>;
-  All_Simulations?: Maybe<Scalars['String']>;
-  Get_Simulation_Run_Results?: Maybe<Scalars['String']>;
   /** fetch data from the table: "simpipe.runs" using primary key columns */
   get_run?: Maybe<Runs>;
   /** fetch data from the table: "simpipe.simulations" using primary key columns */
@@ -562,6 +592,12 @@ export type Query_Root = {
   runs: Array<Runs>;
   /** An aggregate relationship */
   runs_aggregate: Runs_Aggregate;
+  /** fetch data from the table: "simpipe.env_variable" */
+  simpipe_env_variable: Array<Simpipe_Env_Variable>;
+  /** fetch aggregated fields from the table: "simpipe.env_variable" */
+  simpipe_env_variable_aggregate: Simpipe_Env_Variable_Aggregate;
+  /** fetch data from the table: "simpipe.env_variable" using primary key columns */
+  simpipe_env_variable_by_pk?: Maybe<Simpipe_Env_Variable>;
   /** fetch data from the table: "simpipe.logs" */
   simpipe_logs: Array<Simpipe_Logs>;
   /** fetch aggregated fields from the table: "simpipe.logs" */
@@ -599,12 +635,6 @@ export type Query_Root = {
 };
 
 
-export type Query_RootGet_Simulation_Run_ResultsArgs = {
-  run_id?: InputMaybe<Scalars['String']>;
-  simulation_id?: InputMaybe<Scalars['String']>;
-};
-
-
 export type Query_RootGet_RunArgs = {
   run_id: Scalars['uuid'];
 };
@@ -630,6 +660,29 @@ export type Query_RootRuns_AggregateArgs = {
   offset?: InputMaybe<Scalars['Int']>;
   order_by?: InputMaybe<Array<Runs_Order_By>>;
   where?: InputMaybe<Runs_Bool_Exp>;
+};
+
+
+export type Query_RootSimpipe_Env_VariableArgs = {
+  distinct_on?: InputMaybe<Array<Simpipe_Env_Variable_Select_Column>>;
+  limit?: InputMaybe<Scalars['Int']>;
+  offset?: InputMaybe<Scalars['Int']>;
+  order_by?: InputMaybe<Array<Simpipe_Env_Variable_Order_By>>;
+  where?: InputMaybe<Simpipe_Env_Variable_Bool_Exp>;
+};
+
+
+export type Query_RootSimpipe_Env_Variable_AggregateArgs = {
+  distinct_on?: InputMaybe<Array<Simpipe_Env_Variable_Select_Column>>;
+  limit?: InputMaybe<Scalars['Int']>;
+  offset?: InputMaybe<Scalars['Int']>;
+  order_by?: InputMaybe<Array<Simpipe_Env_Variable_Order_By>>;
+  where?: InputMaybe<Simpipe_Env_Variable_Bool_Exp>;
+};
+
+
+export type Query_RootSimpipe_Env_Variable_By_PkArgs = {
+  id: Scalars['Int'];
 };
 
 
@@ -774,8 +827,8 @@ export type Query_RootSteps_By_PkArgs = {
 export type Runs = {
   __typename?: 'runs';
   created: Scalars['timestamptz'];
-  dsl: Scalars['jsonb'];
   ended?: Maybe<Scalars['timestamptz']>;
+  env_list?: Maybe<Scalars['jsonb']>;
   name?: Maybe<Scalars['String']>;
   run_id: Scalars['uuid'];
   /** An object relationship */
@@ -787,6 +840,8 @@ export type Runs = {
   steps: Array<Steps>;
   /** fetch aggregated fields from the table: "simpipe.steps" */
   steps_aggregate: Steps_Aggregate;
+  timeout_value?: Maybe<Scalars['Int']>;
+  userid?: Maybe<Scalars['String']>;
 };
 
 
@@ -796,7 +851,7 @@ export type Runs = {
  *
  * columns and relationships of "simpipe.runs"
  */
-export type RunsDslArgs = {
+export type RunsEnv_ListArgs = {
   path?: InputMaybe<Scalars['String']>;
 };
 
@@ -840,9 +895,17 @@ export type Runs_Aggregate = {
 /** aggregate fields of "simpipe.runs" */
 export type Runs_Aggregate_Fields = {
   __typename?: 'runs_aggregate_fields';
+  avg?: Maybe<Runs_Avg_Fields>;
   count: Scalars['Int'];
   max?: Maybe<Runs_Max_Fields>;
   min?: Maybe<Runs_Min_Fields>;
+  stddev?: Maybe<Runs_Stddev_Fields>;
+  stddev_pop?: Maybe<Runs_Stddev_Pop_Fields>;
+  stddev_samp?: Maybe<Runs_Stddev_Samp_Fields>;
+  sum?: Maybe<Runs_Sum_Fields>;
+  var_pop?: Maybe<Runs_Var_Pop_Fields>;
+  var_samp?: Maybe<Runs_Var_Samp_Fields>;
+  variance?: Maybe<Runs_Variance_Fields>;
 };
 
 
@@ -854,14 +917,22 @@ export type Runs_Aggregate_FieldsCountArgs = {
 
 /** order by aggregate values of table "simpipe.runs" */
 export type Runs_Aggregate_Order_By = {
+  avg?: InputMaybe<Runs_Avg_Order_By>;
   count?: InputMaybe<Order_By>;
   max?: InputMaybe<Runs_Max_Order_By>;
   min?: InputMaybe<Runs_Min_Order_By>;
+  stddev?: InputMaybe<Runs_Stddev_Order_By>;
+  stddev_pop?: InputMaybe<Runs_Stddev_Pop_Order_By>;
+  stddev_samp?: InputMaybe<Runs_Stddev_Samp_Order_By>;
+  sum?: InputMaybe<Runs_Sum_Order_By>;
+  var_pop?: InputMaybe<Runs_Var_Pop_Order_By>;
+  var_samp?: InputMaybe<Runs_Var_Samp_Order_By>;
+  variance?: InputMaybe<Runs_Variance_Order_By>;
 };
 
 /** append existing jsonb value of filtered columns with new jsonb value */
 export type Runs_Append_Input = {
-  dsl?: InputMaybe<Scalars['jsonb']>;
+  env_list?: InputMaybe<Scalars['jsonb']>;
 };
 
 /** input type for inserting array relation for remote table "simpipe.runs" */
@@ -871,14 +942,25 @@ export type Runs_Arr_Rel_Insert_Input = {
   on_conflict?: InputMaybe<Runs_On_Conflict>;
 };
 
+/** aggregate avg on columns */
+export type Runs_Avg_Fields = {
+  __typename?: 'runs_avg_fields';
+  timeout_value?: Maybe<Scalars['Float']>;
+};
+
+/** order by avg() on columns of table "simpipe.runs" */
+export type Runs_Avg_Order_By = {
+  timeout_value?: InputMaybe<Order_By>;
+};
+
 /** Boolean expression to filter rows from the table "simpipe.runs". All fields are combined with a logical 'AND'. */
 export type Runs_Bool_Exp = {
   _and?: InputMaybe<Array<Runs_Bool_Exp>>;
   _not?: InputMaybe<Runs_Bool_Exp>;
   _or?: InputMaybe<Array<Runs_Bool_Exp>>;
   created?: InputMaybe<Timestamptz_Comparison_Exp>;
-  dsl?: InputMaybe<Jsonb_Comparison_Exp>;
   ended?: InputMaybe<Timestamptz_Comparison_Exp>;
+  env_list?: InputMaybe<Jsonb_Comparison_Exp>;
   name?: InputMaybe<String_Comparison_Exp>;
   run_id?: InputMaybe<Uuid_Comparison_Exp>;
   simulation?: InputMaybe<Simulations_Bool_Exp>;
@@ -886,6 +968,8 @@ export type Runs_Bool_Exp = {
   started?: InputMaybe<Timestamptz_Comparison_Exp>;
   status?: InputMaybe<Simpipe_Run_Status_Enum_Comparison_Exp>;
   steps?: InputMaybe<Steps_Bool_Exp>;
+  timeout_value?: InputMaybe<Int_Comparison_Exp>;
+  userid?: InputMaybe<String_Comparison_Exp>;
 };
 
 /** unique or primary key constraints on table "simpipe.runs" */
@@ -896,24 +980,29 @@ export enum Runs_Constraint {
 
 /** delete the field or element with specified path (for JSON arrays, negative integers count from the end) */
 export type Runs_Delete_At_Path_Input = {
-  dsl?: InputMaybe<Array<Scalars['String']>>;
+  env_list?: InputMaybe<Array<Scalars['String']>>;
 };
 
 /** delete the array element with specified index (negative integers count from the end). throws an error if top level container is not an array */
 export type Runs_Delete_Elem_Input = {
-  dsl?: InputMaybe<Scalars['Int']>;
+  env_list?: InputMaybe<Scalars['Int']>;
 };
 
 /** delete key/value pair or string element. key/value pairs are matched based on their key value */
 export type Runs_Delete_Key_Input = {
-  dsl?: InputMaybe<Scalars['String']>;
+  env_list?: InputMaybe<Scalars['String']>;
+};
+
+/** input type for incrementing numeric columns in table "simpipe.runs" */
+export type Runs_Inc_Input = {
+  timeout_value?: InputMaybe<Scalars['Int']>;
 };
 
 /** input type for inserting data into table "simpipe.runs" */
 export type Runs_Insert_Input = {
   created?: InputMaybe<Scalars['timestamptz']>;
-  dsl?: InputMaybe<Scalars['jsonb']>;
   ended?: InputMaybe<Scalars['timestamptz']>;
+  env_list?: InputMaybe<Scalars['jsonb']>;
   name?: InputMaybe<Scalars['String']>;
   run_id?: InputMaybe<Scalars['uuid']>;
   simulation?: InputMaybe<Simulations_Obj_Rel_Insert_Input>;
@@ -921,6 +1010,8 @@ export type Runs_Insert_Input = {
   started?: InputMaybe<Scalars['timestamptz']>;
   status?: InputMaybe<Simpipe_Run_Status_Enum>;
   steps?: InputMaybe<Steps_Arr_Rel_Insert_Input>;
+  timeout_value?: InputMaybe<Scalars['Int']>;
+  userid?: InputMaybe<Scalars['String']>;
 };
 
 /** aggregate max on columns */
@@ -932,6 +1023,8 @@ export type Runs_Max_Fields = {
   run_id?: Maybe<Scalars['uuid']>;
   simulation_id?: Maybe<Scalars['uuid']>;
   started?: Maybe<Scalars['timestamptz']>;
+  timeout_value?: Maybe<Scalars['Int']>;
+  userid?: Maybe<Scalars['String']>;
 };
 
 /** order by max() on columns of table "simpipe.runs" */
@@ -942,6 +1035,8 @@ export type Runs_Max_Order_By = {
   run_id?: InputMaybe<Order_By>;
   simulation_id?: InputMaybe<Order_By>;
   started?: InputMaybe<Order_By>;
+  timeout_value?: InputMaybe<Order_By>;
+  userid?: InputMaybe<Order_By>;
 };
 
 /** aggregate min on columns */
@@ -953,6 +1048,8 @@ export type Runs_Min_Fields = {
   run_id?: Maybe<Scalars['uuid']>;
   simulation_id?: Maybe<Scalars['uuid']>;
   started?: Maybe<Scalars['timestamptz']>;
+  timeout_value?: Maybe<Scalars['Int']>;
+  userid?: Maybe<Scalars['String']>;
 };
 
 /** order by min() on columns of table "simpipe.runs" */
@@ -963,6 +1060,8 @@ export type Runs_Min_Order_By = {
   run_id?: InputMaybe<Order_By>;
   simulation_id?: InputMaybe<Order_By>;
   started?: InputMaybe<Order_By>;
+  timeout_value?: InputMaybe<Order_By>;
+  userid?: InputMaybe<Order_By>;
 };
 
 /** response of any mutation on the table "simpipe.runs" */
@@ -984,8 +1083,8 @@ export type Runs_On_Conflict = {
 /** Ordering options when selecting data from "simpipe.runs". */
 export type Runs_Order_By = {
   created?: InputMaybe<Order_By>;
-  dsl?: InputMaybe<Order_By>;
   ended?: InputMaybe<Order_By>;
+  env_list?: InputMaybe<Order_By>;
   name?: InputMaybe<Order_By>;
   run_id?: InputMaybe<Order_By>;
   simulation?: InputMaybe<Simulations_Order_By>;
@@ -993,6 +1092,8 @@ export type Runs_Order_By = {
   started?: InputMaybe<Order_By>;
   status?: InputMaybe<Order_By>;
   steps_aggregate?: InputMaybe<Steps_Aggregate_Order_By>;
+  timeout_value?: InputMaybe<Order_By>;
+  userid?: InputMaybe<Order_By>;
 };
 
 /** primary key columns input for table: runs */
@@ -1002,7 +1103,7 @@ export type Runs_Pk_Columns_Input = {
 
 /** prepend existing jsonb value of filtered columns with new jsonb value */
 export type Runs_Prepend_Input = {
-  dsl?: InputMaybe<Scalars['jsonb']>;
+  env_list?: InputMaybe<Scalars['jsonb']>;
 };
 
 /** select columns of table "simpipe.runs" */
@@ -1010,9 +1111,9 @@ export enum Runs_Select_Column {
   /** column name */
   Created = 'created',
   /** column name */
-  Dsl = 'dsl',
-  /** column name */
   Ended = 'ended',
+  /** column name */
+  EnvList = 'env_list',
   /** column name */
   Name = 'name',
   /** column name */
@@ -1022,19 +1123,69 @@ export enum Runs_Select_Column {
   /** column name */
   Started = 'started',
   /** column name */
-  Status = 'status'
+  Status = 'status',
+  /** column name */
+  TimeoutValue = 'timeout_value',
+  /** column name */
+  Userid = 'userid'
 }
 
 /** input type for updating data in table "simpipe.runs" */
 export type Runs_Set_Input = {
   created?: InputMaybe<Scalars['timestamptz']>;
-  dsl?: InputMaybe<Scalars['jsonb']>;
   ended?: InputMaybe<Scalars['timestamptz']>;
+  env_list?: InputMaybe<Scalars['jsonb']>;
   name?: InputMaybe<Scalars['String']>;
   run_id?: InputMaybe<Scalars['uuid']>;
   simulation_id?: InputMaybe<Scalars['uuid']>;
   started?: InputMaybe<Scalars['timestamptz']>;
   status?: InputMaybe<Simpipe_Run_Status_Enum>;
+  timeout_value?: InputMaybe<Scalars['Int']>;
+  userid?: InputMaybe<Scalars['String']>;
+};
+
+/** aggregate stddev on columns */
+export type Runs_Stddev_Fields = {
+  __typename?: 'runs_stddev_fields';
+  timeout_value?: Maybe<Scalars['Float']>;
+};
+
+/** order by stddev() on columns of table "simpipe.runs" */
+export type Runs_Stddev_Order_By = {
+  timeout_value?: InputMaybe<Order_By>;
+};
+
+/** aggregate stddev_pop on columns */
+export type Runs_Stddev_Pop_Fields = {
+  __typename?: 'runs_stddev_pop_fields';
+  timeout_value?: Maybe<Scalars['Float']>;
+};
+
+/** order by stddev_pop() on columns of table "simpipe.runs" */
+export type Runs_Stddev_Pop_Order_By = {
+  timeout_value?: InputMaybe<Order_By>;
+};
+
+/** aggregate stddev_samp on columns */
+export type Runs_Stddev_Samp_Fields = {
+  __typename?: 'runs_stddev_samp_fields';
+  timeout_value?: Maybe<Scalars['Float']>;
+};
+
+/** order by stddev_samp() on columns of table "simpipe.runs" */
+export type Runs_Stddev_Samp_Order_By = {
+  timeout_value?: InputMaybe<Order_By>;
+};
+
+/** aggregate sum on columns */
+export type Runs_Sum_Fields = {
+  __typename?: 'runs_sum_fields';
+  timeout_value?: Maybe<Scalars['Int']>;
+};
+
+/** order by sum() on columns of table "simpipe.runs" */
+export type Runs_Sum_Order_By = {
+  timeout_value?: InputMaybe<Order_By>;
 };
 
 /** update columns of table "simpipe.runs" */
@@ -1042,9 +1193,9 @@ export enum Runs_Update_Column {
   /** column name */
   Created = 'created',
   /** column name */
-  Dsl = 'dsl',
-  /** column name */
   Ended = 'ended',
+  /** column name */
+  EnvList = 'env_list',
   /** column name */
   Name = 'name',
   /** column name */
@@ -1054,8 +1205,336 @@ export enum Runs_Update_Column {
   /** column name */
   Started = 'started',
   /** column name */
-  Status = 'status'
+  Status = 'status',
+  /** column name */
+  TimeoutValue = 'timeout_value',
+  /** column name */
+  Userid = 'userid'
 }
+
+/** aggregate var_pop on columns */
+export type Runs_Var_Pop_Fields = {
+  __typename?: 'runs_var_pop_fields';
+  timeout_value?: Maybe<Scalars['Float']>;
+};
+
+/** order by var_pop() on columns of table "simpipe.runs" */
+export type Runs_Var_Pop_Order_By = {
+  timeout_value?: InputMaybe<Order_By>;
+};
+
+/** aggregate var_samp on columns */
+export type Runs_Var_Samp_Fields = {
+  __typename?: 'runs_var_samp_fields';
+  timeout_value?: Maybe<Scalars['Float']>;
+};
+
+/** order by var_samp() on columns of table "simpipe.runs" */
+export type Runs_Var_Samp_Order_By = {
+  timeout_value?: InputMaybe<Order_By>;
+};
+
+/** aggregate variance on columns */
+export type Runs_Variance_Fields = {
+  __typename?: 'runs_variance_fields';
+  timeout_value?: Maybe<Scalars['Float']>;
+};
+
+/** order by variance() on columns of table "simpipe.runs" */
+export type Runs_Variance_Order_By = {
+  timeout_value?: InputMaybe<Order_By>;
+};
+
+/** columns and relationships of "simpipe.env_variable" */
+export type Simpipe_Env_Variable = {
+  __typename?: 'simpipe_env_variable';
+  id: Scalars['Int'];
+  name: Scalars['String'];
+  step_id: Scalars['Int'];
+  value?: Maybe<Scalars['String']>;
+};
+
+/** aggregated selection of "simpipe.env_variable" */
+export type Simpipe_Env_Variable_Aggregate = {
+  __typename?: 'simpipe_env_variable_aggregate';
+  aggregate?: Maybe<Simpipe_Env_Variable_Aggregate_Fields>;
+  nodes: Array<Simpipe_Env_Variable>;
+};
+
+/** aggregate fields of "simpipe.env_variable" */
+export type Simpipe_Env_Variable_Aggregate_Fields = {
+  __typename?: 'simpipe_env_variable_aggregate_fields';
+  avg?: Maybe<Simpipe_Env_Variable_Avg_Fields>;
+  count: Scalars['Int'];
+  max?: Maybe<Simpipe_Env_Variable_Max_Fields>;
+  min?: Maybe<Simpipe_Env_Variable_Min_Fields>;
+  stddev?: Maybe<Simpipe_Env_Variable_Stddev_Fields>;
+  stddev_pop?: Maybe<Simpipe_Env_Variable_Stddev_Pop_Fields>;
+  stddev_samp?: Maybe<Simpipe_Env_Variable_Stddev_Samp_Fields>;
+  sum?: Maybe<Simpipe_Env_Variable_Sum_Fields>;
+  var_pop?: Maybe<Simpipe_Env_Variable_Var_Pop_Fields>;
+  var_samp?: Maybe<Simpipe_Env_Variable_Var_Samp_Fields>;
+  variance?: Maybe<Simpipe_Env_Variable_Variance_Fields>;
+};
+
+
+/** aggregate fields of "simpipe.env_variable" */
+export type Simpipe_Env_Variable_Aggregate_FieldsCountArgs = {
+  columns?: InputMaybe<Array<Simpipe_Env_Variable_Select_Column>>;
+  distinct?: InputMaybe<Scalars['Boolean']>;
+};
+
+/** order by aggregate values of table "simpipe.env_variable" */
+export type Simpipe_Env_Variable_Aggregate_Order_By = {
+  avg?: InputMaybe<Simpipe_Env_Variable_Avg_Order_By>;
+  count?: InputMaybe<Order_By>;
+  max?: InputMaybe<Simpipe_Env_Variable_Max_Order_By>;
+  min?: InputMaybe<Simpipe_Env_Variable_Min_Order_By>;
+  stddev?: InputMaybe<Simpipe_Env_Variable_Stddev_Order_By>;
+  stddev_pop?: InputMaybe<Simpipe_Env_Variable_Stddev_Pop_Order_By>;
+  stddev_samp?: InputMaybe<Simpipe_Env_Variable_Stddev_Samp_Order_By>;
+  sum?: InputMaybe<Simpipe_Env_Variable_Sum_Order_By>;
+  var_pop?: InputMaybe<Simpipe_Env_Variable_Var_Pop_Order_By>;
+  var_samp?: InputMaybe<Simpipe_Env_Variable_Var_Samp_Order_By>;
+  variance?: InputMaybe<Simpipe_Env_Variable_Variance_Order_By>;
+};
+
+/** input type for inserting array relation for remote table "simpipe.env_variable" */
+export type Simpipe_Env_Variable_Arr_Rel_Insert_Input = {
+  data: Array<Simpipe_Env_Variable_Insert_Input>;
+  /** on conflict condition */
+  on_conflict?: InputMaybe<Simpipe_Env_Variable_On_Conflict>;
+};
+
+/** aggregate avg on columns */
+export type Simpipe_Env_Variable_Avg_Fields = {
+  __typename?: 'simpipe_env_variable_avg_fields';
+  id?: Maybe<Scalars['Float']>;
+  step_id?: Maybe<Scalars['Float']>;
+};
+
+/** order by avg() on columns of table "simpipe.env_variable" */
+export type Simpipe_Env_Variable_Avg_Order_By = {
+  id?: InputMaybe<Order_By>;
+  step_id?: InputMaybe<Order_By>;
+};
+
+/** Boolean expression to filter rows from the table "simpipe.env_variable". All fields are combined with a logical 'AND'. */
+export type Simpipe_Env_Variable_Bool_Exp = {
+  _and?: InputMaybe<Array<Simpipe_Env_Variable_Bool_Exp>>;
+  _not?: InputMaybe<Simpipe_Env_Variable_Bool_Exp>;
+  _or?: InputMaybe<Array<Simpipe_Env_Variable_Bool_Exp>>;
+  id?: InputMaybe<Int_Comparison_Exp>;
+  name?: InputMaybe<String_Comparison_Exp>;
+  step_id?: InputMaybe<Int_Comparison_Exp>;
+  value?: InputMaybe<String_Comparison_Exp>;
+};
+
+/** unique or primary key constraints on table "simpipe.env_variable" */
+export enum Simpipe_Env_Variable_Constraint {
+  /** unique or primary key constraint */
+  EnvVariablePkey = 'env_variable_pkey'
+}
+
+/** input type for incrementing numeric columns in table "simpipe.env_variable" */
+export type Simpipe_Env_Variable_Inc_Input = {
+  id?: InputMaybe<Scalars['Int']>;
+  step_id?: InputMaybe<Scalars['Int']>;
+};
+
+/** input type for inserting data into table "simpipe.env_variable" */
+export type Simpipe_Env_Variable_Insert_Input = {
+  id?: InputMaybe<Scalars['Int']>;
+  name?: InputMaybe<Scalars['String']>;
+  step_id?: InputMaybe<Scalars['Int']>;
+  value?: InputMaybe<Scalars['String']>;
+};
+
+/** aggregate max on columns */
+export type Simpipe_Env_Variable_Max_Fields = {
+  __typename?: 'simpipe_env_variable_max_fields';
+  id?: Maybe<Scalars['Int']>;
+  name?: Maybe<Scalars['String']>;
+  step_id?: Maybe<Scalars['Int']>;
+  value?: Maybe<Scalars['String']>;
+};
+
+/** order by max() on columns of table "simpipe.env_variable" */
+export type Simpipe_Env_Variable_Max_Order_By = {
+  id?: InputMaybe<Order_By>;
+  name?: InputMaybe<Order_By>;
+  step_id?: InputMaybe<Order_By>;
+  value?: InputMaybe<Order_By>;
+};
+
+/** aggregate min on columns */
+export type Simpipe_Env_Variable_Min_Fields = {
+  __typename?: 'simpipe_env_variable_min_fields';
+  id?: Maybe<Scalars['Int']>;
+  name?: Maybe<Scalars['String']>;
+  step_id?: Maybe<Scalars['Int']>;
+  value?: Maybe<Scalars['String']>;
+};
+
+/** order by min() on columns of table "simpipe.env_variable" */
+export type Simpipe_Env_Variable_Min_Order_By = {
+  id?: InputMaybe<Order_By>;
+  name?: InputMaybe<Order_By>;
+  step_id?: InputMaybe<Order_By>;
+  value?: InputMaybe<Order_By>;
+};
+
+/** response of any mutation on the table "simpipe.env_variable" */
+export type Simpipe_Env_Variable_Mutation_Response = {
+  __typename?: 'simpipe_env_variable_mutation_response';
+  /** number of rows affected by the mutation */
+  affected_rows: Scalars['Int'];
+  /** data from the rows affected by the mutation */
+  returning: Array<Simpipe_Env_Variable>;
+};
+
+/** on conflict condition type for table "simpipe.env_variable" */
+export type Simpipe_Env_Variable_On_Conflict = {
+  constraint: Simpipe_Env_Variable_Constraint;
+  update_columns?: Array<Simpipe_Env_Variable_Update_Column>;
+  where?: InputMaybe<Simpipe_Env_Variable_Bool_Exp>;
+};
+
+/** Ordering options when selecting data from "simpipe.env_variable". */
+export type Simpipe_Env_Variable_Order_By = {
+  id?: InputMaybe<Order_By>;
+  name?: InputMaybe<Order_By>;
+  step_id?: InputMaybe<Order_By>;
+  value?: InputMaybe<Order_By>;
+};
+
+/** primary key columns input for table: simpipe_env_variable */
+export type Simpipe_Env_Variable_Pk_Columns_Input = {
+  id: Scalars['Int'];
+};
+
+/** select columns of table "simpipe.env_variable" */
+export enum Simpipe_Env_Variable_Select_Column {
+  /** column name */
+  Id = 'id',
+  /** column name */
+  Name = 'name',
+  /** column name */
+  StepId = 'step_id',
+  /** column name */
+  Value = 'value'
+}
+
+/** input type for updating data in table "simpipe.env_variable" */
+export type Simpipe_Env_Variable_Set_Input = {
+  id?: InputMaybe<Scalars['Int']>;
+  name?: InputMaybe<Scalars['String']>;
+  step_id?: InputMaybe<Scalars['Int']>;
+  value?: InputMaybe<Scalars['String']>;
+};
+
+/** aggregate stddev on columns */
+export type Simpipe_Env_Variable_Stddev_Fields = {
+  __typename?: 'simpipe_env_variable_stddev_fields';
+  id?: Maybe<Scalars['Float']>;
+  step_id?: Maybe<Scalars['Float']>;
+};
+
+/** order by stddev() on columns of table "simpipe.env_variable" */
+export type Simpipe_Env_Variable_Stddev_Order_By = {
+  id?: InputMaybe<Order_By>;
+  step_id?: InputMaybe<Order_By>;
+};
+
+/** aggregate stddev_pop on columns */
+export type Simpipe_Env_Variable_Stddev_Pop_Fields = {
+  __typename?: 'simpipe_env_variable_stddev_pop_fields';
+  id?: Maybe<Scalars['Float']>;
+  step_id?: Maybe<Scalars['Float']>;
+};
+
+/** order by stddev_pop() on columns of table "simpipe.env_variable" */
+export type Simpipe_Env_Variable_Stddev_Pop_Order_By = {
+  id?: InputMaybe<Order_By>;
+  step_id?: InputMaybe<Order_By>;
+};
+
+/** aggregate stddev_samp on columns */
+export type Simpipe_Env_Variable_Stddev_Samp_Fields = {
+  __typename?: 'simpipe_env_variable_stddev_samp_fields';
+  id?: Maybe<Scalars['Float']>;
+  step_id?: Maybe<Scalars['Float']>;
+};
+
+/** order by stddev_samp() on columns of table "simpipe.env_variable" */
+export type Simpipe_Env_Variable_Stddev_Samp_Order_By = {
+  id?: InputMaybe<Order_By>;
+  step_id?: InputMaybe<Order_By>;
+};
+
+/** aggregate sum on columns */
+export type Simpipe_Env_Variable_Sum_Fields = {
+  __typename?: 'simpipe_env_variable_sum_fields';
+  id?: Maybe<Scalars['Int']>;
+  step_id?: Maybe<Scalars['Int']>;
+};
+
+/** order by sum() on columns of table "simpipe.env_variable" */
+export type Simpipe_Env_Variable_Sum_Order_By = {
+  id?: InputMaybe<Order_By>;
+  step_id?: InputMaybe<Order_By>;
+};
+
+/** update columns of table "simpipe.env_variable" */
+export enum Simpipe_Env_Variable_Update_Column {
+  /** column name */
+  Id = 'id',
+  /** column name */
+  Name = 'name',
+  /** column name */
+  StepId = 'step_id',
+  /** column name */
+  Value = 'value'
+}
+
+/** aggregate var_pop on columns */
+export type Simpipe_Env_Variable_Var_Pop_Fields = {
+  __typename?: 'simpipe_env_variable_var_pop_fields';
+  id?: Maybe<Scalars['Float']>;
+  step_id?: Maybe<Scalars['Float']>;
+};
+
+/** order by var_pop() on columns of table "simpipe.env_variable" */
+export type Simpipe_Env_Variable_Var_Pop_Order_By = {
+  id?: InputMaybe<Order_By>;
+  step_id?: InputMaybe<Order_By>;
+};
+
+/** aggregate var_samp on columns */
+export type Simpipe_Env_Variable_Var_Samp_Fields = {
+  __typename?: 'simpipe_env_variable_var_samp_fields';
+  id?: Maybe<Scalars['Float']>;
+  step_id?: Maybe<Scalars['Float']>;
+};
+
+/** order by var_samp() on columns of table "simpipe.env_variable" */
+export type Simpipe_Env_Variable_Var_Samp_Order_By = {
+  id?: InputMaybe<Order_By>;
+  step_id?: InputMaybe<Order_By>;
+};
+
+/** aggregate variance on columns */
+export type Simpipe_Env_Variable_Variance_Fields = {
+  __typename?: 'simpipe_env_variable_variance_fields';
+  id?: Maybe<Scalars['Float']>;
+  step_id?: Maybe<Scalars['Float']>;
+};
+
+/** order by variance() on columns of table "simpipe.env_variable" */
+export type Simpipe_Env_Variable_Variance_Order_By = {
+  id?: InputMaybe<Order_By>;
+  step_id?: InputMaybe<Order_By>;
+};
 
 /** columns and relationships of "simpipe.logs" */
 export type Simpipe_Logs = {
@@ -1918,12 +2397,25 @@ export type Simulations = {
   /** UUID of the model */
   model_id: Scalars['uuid'];
   name?: Maybe<Scalars['String']>;
+  pipeline_description?: Maybe<Scalars['jsonb']>;
   /** An array relationship */
   runs: Array<Runs>;
   /** An aggregate relationship */
   runs_aggregate: Runs_Aggregate;
   /** UUID of the simulation */
   simulation_id: Scalars['uuid'];
+  userid?: Maybe<Scalars['String']>;
+};
+
+
+/**
+ * Simulations
+ *
+ *
+ * columns and relationships of "simpipe.simulations"
+ */
+export type SimulationsPipeline_DescriptionArgs = {
+  path?: InputMaybe<Scalars['String']>;
 };
 
 
@@ -1978,6 +2470,11 @@ export type Simulations_Aggregate_FieldsCountArgs = {
   distinct?: InputMaybe<Scalars['Boolean']>;
 };
 
+/** append existing jsonb value of filtered columns with new jsonb value */
+export type Simulations_Append_Input = {
+  pipeline_description?: InputMaybe<Scalars['jsonb']>;
+};
+
 /** Boolean expression to filter rows from the table "simpipe.simulations". All fields are combined with a logical 'AND'. */
 export type Simulations_Bool_Exp = {
   _and?: InputMaybe<Array<Simulations_Bool_Exp>>;
@@ -1986,8 +2483,10 @@ export type Simulations_Bool_Exp = {
   created?: InputMaybe<Timestamptz_Comparison_Exp>;
   model_id?: InputMaybe<Uuid_Comparison_Exp>;
   name?: InputMaybe<String_Comparison_Exp>;
+  pipeline_description?: InputMaybe<Jsonb_Comparison_Exp>;
   runs?: InputMaybe<Runs_Bool_Exp>;
   simulation_id?: InputMaybe<Uuid_Comparison_Exp>;
+  userid?: InputMaybe<String_Comparison_Exp>;
 };
 
 /** unique or primary key constraints on table "simpipe.simulations" */
@@ -1998,6 +2497,21 @@ export enum Simulations_Constraint {
   SimulationsPkey = 'simulations_pkey'
 }
 
+/** delete the field or element with specified path (for JSON arrays, negative integers count from the end) */
+export type Simulations_Delete_At_Path_Input = {
+  pipeline_description?: InputMaybe<Array<Scalars['String']>>;
+};
+
+/** delete the array element with specified index (negative integers count from the end). throws an error if top level container is not an array */
+export type Simulations_Delete_Elem_Input = {
+  pipeline_description?: InputMaybe<Scalars['Int']>;
+};
+
+/** delete key/value pair or string element. key/value pairs are matched based on their key value */
+export type Simulations_Delete_Key_Input = {
+  pipeline_description?: InputMaybe<Scalars['String']>;
+};
+
 /** input type for inserting data into table "simpipe.simulations" */
 export type Simulations_Insert_Input = {
   /** DateTime of when the simulation was created */
@@ -2005,9 +2519,11 @@ export type Simulations_Insert_Input = {
   /** UUID of the model */
   model_id?: InputMaybe<Scalars['uuid']>;
   name?: InputMaybe<Scalars['String']>;
+  pipeline_description?: InputMaybe<Scalars['jsonb']>;
   runs?: InputMaybe<Runs_Arr_Rel_Insert_Input>;
   /** UUID of the simulation */
   simulation_id?: InputMaybe<Scalars['uuid']>;
+  userid?: InputMaybe<Scalars['String']>;
 };
 
 /** aggregate max on columns */
@@ -2020,6 +2536,7 @@ export type Simulations_Max_Fields = {
   name?: Maybe<Scalars['String']>;
   /** UUID of the simulation */
   simulation_id?: Maybe<Scalars['uuid']>;
+  userid?: Maybe<Scalars['String']>;
 };
 
 /** aggregate min on columns */
@@ -2032,6 +2549,7 @@ export type Simulations_Min_Fields = {
   name?: Maybe<Scalars['String']>;
   /** UUID of the simulation */
   simulation_id?: Maybe<Scalars['uuid']>;
+  userid?: Maybe<Scalars['String']>;
 };
 
 /** response of any mutation on the table "simpipe.simulations" */
@@ -2062,14 +2580,21 @@ export type Simulations_Order_By = {
   created?: InputMaybe<Order_By>;
   model_id?: InputMaybe<Order_By>;
   name?: InputMaybe<Order_By>;
+  pipeline_description?: InputMaybe<Order_By>;
   runs_aggregate?: InputMaybe<Runs_Aggregate_Order_By>;
   simulation_id?: InputMaybe<Order_By>;
+  userid?: InputMaybe<Order_By>;
 };
 
 /** primary key columns input for table: simulations */
 export type Simulations_Pk_Columns_Input = {
   /** UUID of the simulation */
   simulation_id: Scalars['uuid'];
+};
+
+/** prepend existing jsonb value of filtered columns with new jsonb value */
+export type Simulations_Prepend_Input = {
+  pipeline_description?: InputMaybe<Scalars['jsonb']>;
 };
 
 /** select columns of table "simpipe.simulations" */
@@ -2081,7 +2606,11 @@ export enum Simulations_Select_Column {
   /** column name */
   Name = 'name',
   /** column name */
-  SimulationId = 'simulation_id'
+  PipelineDescription = 'pipeline_description',
+  /** column name */
+  SimulationId = 'simulation_id',
+  /** column name */
+  Userid = 'userid'
 }
 
 /** input type for updating data in table "simpipe.simulations" */
@@ -2091,8 +2620,10 @@ export type Simulations_Set_Input = {
   /** UUID of the model */
   model_id?: InputMaybe<Scalars['uuid']>;
   name?: InputMaybe<Scalars['String']>;
+  pipeline_description?: InputMaybe<Scalars['jsonb']>;
   /** UUID of the simulation */
   simulation_id?: InputMaybe<Scalars['uuid']>;
+  userid?: InputMaybe<Scalars['String']>;
 };
 
 /** update columns of table "simpipe.simulations" */
@@ -2104,7 +2635,11 @@ export enum Simulations_Update_Column {
   /** column name */
   Name = 'name',
   /** column name */
-  SimulationId = 'simulation_id'
+  PipelineDescription = 'pipeline_description',
+  /** column name */
+  SimulationId = 'simulation_id',
+  /** column name */
+  Userid = 'userid'
 }
 
 /** columns and relationships of "simpipe.steps" */
@@ -2112,6 +2647,10 @@ export type Steps = {
   __typename?: 'steps';
   created: Scalars['timestamptz'];
   ended?: Maybe<Scalars['timestamptz']>;
+  /** An array relationship */
+  env_variables: Array<Simpipe_Env_Variable>;
+  /** An aggregate relationship */
+  env_variables_aggregate: Simpipe_Env_Variable_Aggregate;
   image: Scalars['String'];
   /** An object relationship */
   log?: Maybe<Simpipe_Logs>;
@@ -2125,6 +2664,26 @@ export type Steps = {
   started?: Maybe<Scalars['timestamptz']>;
   status: Simpipe_Step_Status_Enum;
   step_id: Scalars['Int'];
+};
+
+
+/** columns and relationships of "simpipe.steps" */
+export type StepsEnv_VariablesArgs = {
+  distinct_on?: InputMaybe<Array<Simpipe_Env_Variable_Select_Column>>;
+  limit?: InputMaybe<Scalars['Int']>;
+  offset?: InputMaybe<Scalars['Int']>;
+  order_by?: InputMaybe<Array<Simpipe_Env_Variable_Order_By>>;
+  where?: InputMaybe<Simpipe_Env_Variable_Bool_Exp>;
+};
+
+
+/** columns and relationships of "simpipe.steps" */
+export type StepsEnv_Variables_AggregateArgs = {
+  distinct_on?: InputMaybe<Array<Simpipe_Env_Variable_Select_Column>>;
+  limit?: InputMaybe<Scalars['Int']>;
+  offset?: InputMaybe<Scalars['Int']>;
+  order_by?: InputMaybe<Array<Simpipe_Env_Variable_Order_By>>;
+  where?: InputMaybe<Simpipe_Env_Variable_Bool_Exp>;
 };
 
 
@@ -2219,6 +2778,7 @@ export type Steps_Bool_Exp = {
   _or?: InputMaybe<Array<Steps_Bool_Exp>>;
   created?: InputMaybe<Timestamptz_Comparison_Exp>;
   ended?: InputMaybe<Timestamptz_Comparison_Exp>;
+  env_variables?: InputMaybe<Simpipe_Env_Variable_Bool_Exp>;
   image?: InputMaybe<String_Comparison_Exp>;
   log?: InputMaybe<Simpipe_Logs_Bool_Exp>;
   name?: InputMaybe<String_Comparison_Exp>;
@@ -2250,6 +2810,7 @@ export type Steps_Inc_Input = {
 export type Steps_Insert_Input = {
   created?: InputMaybe<Scalars['timestamptz']>;
   ended?: InputMaybe<Scalars['timestamptz']>;
+  env_variables?: InputMaybe<Simpipe_Env_Variable_Arr_Rel_Insert_Input>;
   image?: InputMaybe<Scalars['String']>;
   log?: InputMaybe<Simpipe_Logs_Obj_Rel_Insert_Input>;
   name?: InputMaybe<Scalars['String']>;
@@ -2331,6 +2892,7 @@ export type Steps_On_Conflict = {
 export type Steps_Order_By = {
   created?: InputMaybe<Order_By>;
   ended?: InputMaybe<Order_By>;
+  env_variables_aggregate?: InputMaybe<Simpipe_Env_Variable_Aggregate_Order_By>;
   image?: InputMaybe<Order_By>;
   log?: InputMaybe<Simpipe_Logs_Order_By>;
   name?: InputMaybe<Order_By>;
@@ -2505,6 +3067,12 @@ export type Subscription_Root = {
   runs: Array<Runs>;
   /** An aggregate relationship */
   runs_aggregate: Runs_Aggregate;
+  /** fetch data from the table: "simpipe.env_variable" */
+  simpipe_env_variable: Array<Simpipe_Env_Variable>;
+  /** fetch aggregated fields from the table: "simpipe.env_variable" */
+  simpipe_env_variable_aggregate: Simpipe_Env_Variable_Aggregate;
+  /** fetch data from the table: "simpipe.env_variable" using primary key columns */
+  simpipe_env_variable_by_pk?: Maybe<Simpipe_Env_Variable>;
   /** fetch data from the table: "simpipe.logs" */
   simpipe_logs: Array<Simpipe_Logs>;
   /** fetch aggregated fields from the table: "simpipe.logs" */
@@ -2567,6 +3135,29 @@ export type Subscription_RootRuns_AggregateArgs = {
   offset?: InputMaybe<Scalars['Int']>;
   order_by?: InputMaybe<Array<Runs_Order_By>>;
   where?: InputMaybe<Runs_Bool_Exp>;
+};
+
+
+export type Subscription_RootSimpipe_Env_VariableArgs = {
+  distinct_on?: InputMaybe<Array<Simpipe_Env_Variable_Select_Column>>;
+  limit?: InputMaybe<Scalars['Int']>;
+  offset?: InputMaybe<Scalars['Int']>;
+  order_by?: InputMaybe<Array<Simpipe_Env_Variable_Order_By>>;
+  where?: InputMaybe<Simpipe_Env_Variable_Bool_Exp>;
+};
+
+
+export type Subscription_RootSimpipe_Env_Variable_AggregateArgs = {
+  distinct_on?: InputMaybe<Array<Simpipe_Env_Variable_Select_Column>>;
+  limit?: InputMaybe<Scalars['Int']>;
+  offset?: InputMaybe<Scalars['Int']>;
+  order_by?: InputMaybe<Array<Simpipe_Env_Variable_Order_By>>;
+  where?: InputMaybe<Simpipe_Env_Variable_Bool_Exp>;
+};
+
+
+export type Subscription_RootSimpipe_Env_Variable_By_PkArgs = {
+  id: Scalars['Int'];
 };
 
 
@@ -2728,24 +3319,51 @@ export type Uuid_Comparison_Exp = {
   _nin?: InputMaybe<Array<Scalars['uuid']>>;
 };
 
-export type AllSimulationsQueryVariables = Exact<{ [key: string]: never; }>;
-
-
-export type AllSimulationsQuery = { __typename?: 'query_root', simulations: Array<{ __typename?: 'simulations', simulation_id: string, name?: string | null | undefined, created: string, runs: Array<{ __typename?: 'runs', run_id: string, name?: string | null | undefined, status: Simpipe_Run_Status_Enum, created: string, started?: string | null | undefined, ended?: string | null | undefined }> }> };
-
-export type AllRunsAndStepsQueryVariables = Exact<{ [key: string]: never; }>;
-
-
-export type AllRunsAndStepsQuery = { __typename?: 'query_root', runs: Array<{ __typename?: 'runs', run_id: string, name?: string | null | undefined, created: string, started?: string | null | undefined, status: Simpipe_Run_Status_Enum, steps: Array<{ __typename?: 'steps', step_id: number, created: string, started?: string | null | undefined, ended?: string | null | undefined, status: Simpipe_Step_Status_Enum }> }> };
-
-export type CreateRunMutationVariables = Exact<{
-  simulation_id: Scalars['uuid'];
-  dsl: Scalars['jsonb'];
-  name?: InputMaybe<Scalars['String']>;
+export type AllSimulationsQueryVariables = Exact<{
+  userid?: InputMaybe<Scalars['String']>;
 }>;
 
 
-export type CreateRunMutation = { __typename?: 'mutation_root', insert_runs_one?: { __typename?: 'runs', run_id: string } | null | undefined };
+export type AllSimulationsQuery = { __typename?: 'query_root', simulations: Array<{ __typename?: 'simulations', simulation_id: string, name?: string | null, created: string, pipeline_description?: unknown | null, runs: Array<{ __typename?: 'runs', run_id: string, name?: string | null, status: Simpipe_Run_Status_Enum, created: string, started?: string | null, ended?: string | null }> }> };
+
+export type AllRunsAndStepsQueryVariables = Exact<{
+  userid?: InputMaybe<Scalars['String']>;
+}>;
+
+
+export type AllRunsAndStepsQuery = { __typename?: 'query_root', runs: Array<{ __typename?: 'runs', run_id: string, name?: string | null, created: string, started?: string | null, status: Simpipe_Run_Status_Enum, steps: Array<{ __typename?: 'steps', step_id: number, created: string, started?: string | null, ended?: string | null, status: Simpipe_Step_Status_Enum }> }> };
+
+export type GetUseridFromRunQueryVariables = Exact<{
+  run_id: Scalars['uuid'];
+}>;
+
+
+export type GetUseridFromRunQuery = { __typename?: 'query_root', runs: Array<{ __typename?: 'runs', userid?: string | null }> };
+
+export type GetUseridFromSimulationQueryVariables = Exact<{
+  simulation_id: Scalars['uuid'];
+}>;
+
+
+export type GetUseridFromSimulationQuery = { __typename?: 'query_root', simulations: Array<{ __typename?: 'simulations', userid?: string | null }> };
+
+export type GetSimulationDslQueryVariables = Exact<{
+  simulation_id: Scalars['uuid'];
+}>;
+
+
+export type GetSimulationDslQuery = { __typename?: 'query_root', simulations: Array<{ __typename?: 'simulations', pipeline_description?: unknown | null }> };
+
+export type CreateRunMutationVariables = Exact<{
+  simulation_id: Scalars['uuid'];
+  name?: InputMaybe<Scalars['String']>;
+  userid?: InputMaybe<Scalars['String']>;
+  env_list?: InputMaybe<Scalars['jsonb']>;
+  timeout_value?: InputMaybe<Scalars['Int']>;
+}>;
+
+
+export type CreateRunMutation = { __typename?: 'mutation_root', insert_runs_one?: { __typename?: 'runs', run_id: string } | null };
 
 export type CreateStepMutationVariables = Exact<{
   run_id: Scalars['uuid'];
@@ -2755,14 +3373,14 @@ export type CreateStepMutationVariables = Exact<{
 }>;
 
 
-export type CreateStepMutation = { __typename?: 'mutation_root', insert_steps_one?: { __typename?: 'steps', step_id: number } | null | undefined };
+export type CreateStepMutation = { __typename?: 'mutation_root', insert_steps_one?: { __typename?: 'steps', step_id: number } | null };
 
 export type SetStepAsStartedMutationVariables = Exact<{
   step_id: Scalars['Int'];
 }>;
 
 
-export type SetStepAsStartedMutation = { __typename?: 'mutation_root', update_steps_by_pk?: { __typename?: 'steps', step_id: number } | null | undefined };
+export type SetStepAsStartedMutation = { __typename?: 'mutation_root', update_steps_by_pk?: { __typename?: 'steps', step_id: number } | null };
 
 export type SetStepAsEndedSuccessMutationVariables = Exact<{
   step_id: Scalars['Int'];
@@ -2771,78 +3389,80 @@ export type SetStepAsEndedSuccessMutationVariables = Exact<{
 }>;
 
 
-export type SetStepAsEndedSuccessMutation = { __typename?: 'mutation_root', update_steps_by_pk?: { __typename?: 'steps', step_id: number } | null | undefined };
+export type SetStepAsEndedSuccessMutation = { __typename?: 'mutation_root', update_steps_by_pk?: { __typename?: 'steps', step_id: number } | null };
 
 export type SetStepAsCancelledMutationVariables = Exact<{
   step_id: Scalars['Int'];
 }>;
 
 
-export type SetStepAsCancelledMutation = { __typename?: 'mutation_root', update_steps_by_pk?: { __typename?: 'steps', step_id: number } | null | undefined };
+export type SetStepAsCancelledMutation = { __typename?: 'mutation_root', update_steps_by_pk?: { __typename?: 'steps', step_id: number } | null };
 
 export type SetStepAsFailedMutationVariables = Exact<{
   step_id: Scalars['Int'];
 }>;
 
 
-export type SetStepAsFailedMutation = { __typename?: 'mutation_root', update_steps_by_pk?: { __typename?: 'steps', step_id: number } | null | undefined };
+export type SetStepAsFailedMutation = { __typename?: 'mutation_root', update_steps_by_pk?: { __typename?: 'steps', step_id: number } | null };
 
 export type SetRunAsStartedMutationVariables = Exact<{
   run_id: Scalars['uuid'];
 }>;
 
 
-export type SetRunAsStartedMutation = { __typename?: 'mutation_root', update_runs_by_pk?: { __typename?: 'runs', run_id: string } | null | undefined };
+export type SetRunAsStartedMutation = { __typename?: 'mutation_root', update_runs_by_pk?: { __typename?: 'runs', run_id: string } | null };
 
 export type SetRunAsQueuedMutationVariables = Exact<{
   run_id: Scalars['uuid'];
 }>;
 
 
-export type SetRunAsQueuedMutation = { __typename?: 'mutation_root', update_runs_by_pk?: { __typename?: 'runs', run_id: string } | null | undefined };
+export type SetRunAsQueuedMutation = { __typename?: 'mutation_root', update_runs_by_pk?: { __typename?: 'runs', run_id: string } | null };
 
 export type SetRunAsEndedSuccessMutationVariables = Exact<{
   run_id: Scalars['uuid'];
 }>;
 
 
-export type SetRunAsEndedSuccessMutation = { __typename?: 'mutation_root', update_runs_by_pk?: { __typename?: 'runs', run_id: string } | null | undefined };
+export type SetRunAsEndedSuccessMutation = { __typename?: 'mutation_root', update_runs_by_pk?: { __typename?: 'runs', run_id: string } | null };
 
 export type SetRunAsCancelledMutationVariables = Exact<{
   run_id: Scalars['uuid'];
 }>;
 
 
-export type SetRunAsCancelledMutation = { __typename?: 'mutation_root', update_runs_by_pk?: { __typename?: 'runs', run_id: string } | null | undefined };
+export type SetRunAsCancelledMutation = { __typename?: 'mutation_root', update_runs_by_pk?: { __typename?: 'runs', run_id: string } | null };
 
 export type SetRunAsFailedMutationVariables = Exact<{
   run_id: Scalars['uuid'];
 }>;
 
 
-export type SetRunAsFailedMutation = { __typename?: 'mutation_root', update_runs_by_pk?: { __typename?: 'runs', run_id: string } | null | undefined };
+export type SetRunAsFailedMutation = { __typename?: 'mutation_root', update_runs_by_pk?: { __typename?: 'runs', run_id: string } | null };
 
 export type CreateSimulationMutationVariables = Exact<{
-  model_id: Scalars['uuid'];
   name?: InputMaybe<Scalars['String']>;
+  model_id: Scalars['uuid'];
+  pipeline_description?: InputMaybe<Scalars['jsonb']>;
+  userid?: InputMaybe<Scalars['String']>;
 }>;
 
 
-export type CreateSimulationMutation = { __typename?: 'mutation_root', create_simulation?: { __typename?: 'simulations', simulation_id: string, name?: string | null | undefined } | null | undefined };
+export type CreateSimulationMutation = { __typename?: 'mutation_root', create_simulation?: { __typename?: 'simulations', simulation_id: string } | null };
 
 export type GetSimulationIdandStepsQueryVariables = Exact<{
   run_id: Scalars['uuid'];
 }>;
 
 
-export type GetSimulationIdandStepsQuery = { __typename?: 'query_root', runs: Array<{ __typename: 'runs', simulation_id: string, name?: string | null | undefined, steps: Array<{ __typename?: 'steps', step_id: number, pipeline_step_number: number, image: string, name: string }> }> };
+export type GetSimulationIdandStepsQuery = { __typename?: 'query_root', runs: Array<{ __typename?: 'runs', simulation_id: string, name?: string | null, steps: Array<{ __typename?: 'steps', step_id: number, pipeline_step_number: number, image: string, name: string }> }> };
 
 export type GetRunDetailsQueryVariables = Exact<{
   run_id: Scalars['uuid'];
 }>;
 
 
-export type GetRunDetailsQuery = { __typename?: 'query_root', runs: Array<{ __typename?: 'runs', simulation_id: string, dsl: unknown, name?: string | null | undefined, steps: Array<{ __typename?: 'steps', step_id: number, pipeline_step_number: number, image: string, name: string }> }> };
+export type GetRunDetailsQuery = { __typename?: 'query_root', runs: Array<{ __typename?: 'runs', simulation_id: string, name?: string | null, env_list?: Array<Array<string>>, timeout_value?: number | null, steps: Array<{ __typename?: 'steps', step_id: number, pipeline_step_number: number, image: string, name: string }> }> };
 
 export type InsertResourceUsageMutationVariables = Exact<{
   cpu?: InputMaybe<Scalars['numeric']>;
@@ -2855,7 +3475,7 @@ export type InsertResourceUsageMutationVariables = Exact<{
 }>;
 
 
-export type InsertResourceUsageMutation = { __typename?: 'mutation_root', insert_simpipe_resource_usage_one?: { __typename?: 'simpipe_resource_usage', id: number } | null | undefined };
+export type InsertResourceUsageMutation = { __typename?: 'mutation_root', insert_simpipe_resource_usage_one?: { __typename?: 'simpipe_resource_usage', id: number } | null };
 
 export type InsertLogMutationVariables = Exact<{
   step_id?: InputMaybe<Scalars['Int']>;
@@ -2863,23 +3483,40 @@ export type InsertLogMutationVariables = Exact<{
 }>;
 
 
-export type InsertLogMutation = { __typename?: 'mutation_root', insert_simpipe_logs_one?: { __typename?: 'simpipe_logs', step_id: number } | null | undefined };
+export type InsertLogMutation = { __typename?: 'mutation_root', insert_simpipe_logs_one?: { __typename?: 'simpipe_logs', step_id: number } | null };
 
 export type GetSimulationRunResultsQueryVariables = Exact<{
   simulation_id?: InputMaybe<Scalars['uuid']>;
   run_id?: InputMaybe<Scalars['uuid']>;
+  userid?: InputMaybe<Scalars['String']>;
 }>;
 
 
-export type GetSimulationRunResultsQuery = { __typename?: 'query_root', simulations: Array<{ __typename?: 'simulations', runs: Array<{ __typename?: 'runs', run_id: string, status: Simpipe_Run_Status_Enum, created: string, started?: string | null | undefined, ended?: string | null | undefined, dsl: unknown, steps: Array<{ __typename?: 'steps', step_id: number, status: Simpipe_Step_Status_Enum, created: string, started?: string | null | undefined, ended?: string | null | undefined, image: string, name: string, pipeline_step_number: number, resource_usages: Array<{ __typename?: 'simpipe_resource_usage', id: number, step_id: number, cpu: number, memory: number, memory_max: number, rx_value: number, time: string, tx_value: number }> }> }> }> };
+export type GetSimulationRunResultsQuery = { __typename?: 'query_root', simulations: Array<{ __typename?: 'simulations', runs: Array<{ __typename?: 'runs', run_id: string, status: Simpipe_Run_Status_Enum, created: string, started?: string | null, ended?: string | null, steps: Array<{ __typename?: 'steps', step_id: number, status: Simpipe_Step_Status_Enum, created: string, started?: string | null, ended?: string | null, image: string, name: string, pipeline_step_number: number, resource_usages: Array<{ __typename?: 'simpipe_resource_usage', id: number, step_id: number, cpu: number, memory: number, memory_max: number, rx_value: number, time: string, tx_value: number }> }> }> }> };
+
+export type GetSimulationQueryVariables = Exact<{
+  simulation_id?: InputMaybe<Scalars['uuid']>;
+  userid?: InputMaybe<Scalars['String']>;
+}>;
+
+
+export type GetSimulationQuery = { __typename?: 'query_root', simulations: Array<{ __typename?: 'simulations', name?: string | null, simulation_id: string, created: string, pipeline_description?: unknown | null, runs: Array<{ __typename?: 'runs', name?: string | null, run_id: string, status: Simpipe_Run_Status_Enum, created: string, started?: string | null, ended?: string | null, steps: Array<{ __typename?: 'steps', step_id: number, status: Simpipe_Step_Status_Enum, created: string, started?: string | null, ended?: string | null, image: string, name: string, pipeline_step_number: number, resource_usages: Array<{ __typename?: 'simpipe_resource_usage', id: number, step_id: number, cpu: number, memory: number, memory_max: number, rx_value: number, time: string, tx_value: number }>, log?: { __typename?: 'simpipe_logs', text: string } | null }> }> }> };
+
+export type DeleteRunMutationVariables = Exact<{
+  run_id: Scalars['uuid'];
+}>;
+
+
+export type DeleteRunMutation = { __typename?: 'mutation_root', delete_runs_by_pk?: { __typename?: 'runs', run_id: string } | null };
 
 
 export const AllSimulationsDocument = gql`
-    query AllSimulations {
-  simulations {
+    query AllSimulations($userid: String) {
+  simulations(where: {userid: {_eq: $userid}}) {
     simulation_id
     name
     created
+    pipeline_description
     runs {
       run_id
       name
@@ -2892,8 +3529,8 @@ export const AllSimulationsDocument = gql`
 }
     `;
 export const AllRunsAndStepsDocument = gql`
-    query allRunsAndSteps {
-  runs {
+    query allRunsAndSteps($userid: String) {
+  runs(where: {userid: {_eq: $userid}}) {
     run_id
     name
     created
@@ -2909,9 +3546,32 @@ export const AllRunsAndStepsDocument = gql`
   }
 }
     `;
+export const GetUseridFromRunDocument = gql`
+    query getUseridFromRun($run_id: uuid!) {
+  runs(where: {run_id: {_eq: $run_id}}) {
+    userid
+  }
+}
+    `;
+export const GetUseridFromSimulationDocument = gql`
+    query getUseridFromSimulation($simulation_id: uuid!) {
+  simulations(where: {simulation_id: {_eq: $simulation_id}}) {
+    userid
+  }
+}
+    `;
+export const GetSimulationDslDocument = gql`
+    query getSimulationDSL($simulation_id: uuid!) {
+  simulations(where: {simulation_id: {_eq: $simulation_id}}) {
+    pipeline_description
+  }
+}
+    `;
 export const CreateRunDocument = gql`
-    mutation createRun($simulation_id: uuid!, $dsl: jsonb!, $name: String) {
-  insert_runs_one(object: {dsl: $dsl, simulation_id: $simulation_id, name: $name}) {
+    mutation createRun($simulation_id: uuid!, $name: String, $userid: String, $env_list: jsonb, $timeout_value: Int) {
+  insert_runs_one(
+    object: {simulation_id: $simulation_id, name: $name, userid: $userid, env_list: $env_list, timeout_value: $timeout_value}
+  ) {
     run_id
   }
 }
@@ -3001,10 +3661,11 @@ export const SetRunAsFailedDocument = gql`
 }
     `;
 export const CreateSimulationDocument = gql`
-    mutation createSimulation($model_id: uuid!, $name: String) {
-  create_simulation(object: {model_id: $model_id, name: $name}) {
+    mutation createSimulation($name: String, $model_id: uuid!, $pipeline_description: jsonb, $userid: String) {
+  create_simulation(
+    object: {name: $name, model_id: $model_id, pipeline_description: $pipeline_description, userid: $userid}
+  ) {
     simulation_id
-    name
   }
 }
     `;
@@ -3026,8 +3687,9 @@ export const GetRunDetailsDocument = gql`
     query getRunDetails($run_id: uuid!) {
   runs(where: {run_id: {_eq: $run_id}}) {
     simulation_id
-    dsl
     name
+    env_list
+    timeout_value
     steps(order_by: {pipeline_step_number: asc}) {
       step_id
       pipeline_step_number
@@ -3054,15 +3716,16 @@ export const InsertLogDocument = gql`
 }
     `;
 export const GetSimulationRunResultsDocument = gql`
-    query getSimulationRunResults($simulation_id: uuid = "", $run_id: uuid = "") {
-  simulations(where: {simulation_id: {_eq: $simulation_id}}) {
+    query getSimulationRunResults($simulation_id: uuid = "", $run_id: uuid = "", $userid: String) {
+  simulations(
+    where: {_and: [{simulation_id: {_eq: $simulation_id}}, {userid: {_eq: $userid}}]}
+  ) {
     runs(where: {run_id: {_eq: $run_id}}) {
       run_id
       status
       created
       started
       ended
-      dsl
       steps(order_by: {pipeline_step_number: asc}) {
         step_id
         status
@@ -3087,70 +3750,135 @@ export const GetSimulationRunResultsDocument = gql`
   }
 }
     `;
+export const GetSimulationDocument = gql`
+    query getSimulation($simulation_id: uuid, $userid: String) {
+  simulations(
+    where: {_and: [{simulation_id: {_eq: $simulation_id}}, {userid: {_eq: $userid}}]}
+  ) {
+    name
+    simulation_id
+    created
+    pipeline_description
+    runs {
+      name
+      run_id
+      status
+      created
+      started
+      ended
+      steps(order_by: {pipeline_step_number: asc}) {
+        step_id
+        status
+        created
+        started
+        ended
+        image
+        name
+        pipeline_step_number
+        resource_usages(order_by: {time: asc}) {
+          id
+          step_id
+          cpu
+          memory
+          memory_max
+          rx_value
+          time
+          tx_value
+        }
+        log {
+          text
+        }
+      }
+    }
+  }
+}
+    `;
+export const DeleteRunDocument = gql`
+    mutation deleteRun($run_id: uuid!) {
+  delete_runs_by_pk(run_id: $run_id) {
+    run_id
+  }
+}
+    `;
 
-export type SdkFunctionWrapper = <T>(action: (requestHeaders?:Record<string, string>) => Promise<T>, operationName: string) => Promise<T>;
+export type SdkFunctionWrapper = <T>(action: (requestHeaders?:Record<string, string>) => Promise<T>, operationName: string, operationType?: string) => Promise<T>;
 
 
-const defaultWrapper: SdkFunctionWrapper = (action, _operationName) => action();
+const defaultWrapper: SdkFunctionWrapper = (action, _operationName, _operationType) => action();
 
 export function getSdk(client: GraphQLClient, withWrapper: SdkFunctionWrapper = defaultWrapper) {
   return {
     AllSimulations(variables?: AllSimulationsQueryVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<AllSimulationsQuery> {
-      return withWrapper((wrappedRequestHeaders) => client.request<AllSimulationsQuery>(AllSimulationsDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'AllSimulations');
+      return withWrapper((wrappedRequestHeaders) => client.request<AllSimulationsQuery>(AllSimulationsDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'AllSimulations', 'query');
     },
     allRunsAndSteps(variables?: AllRunsAndStepsQueryVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<AllRunsAndStepsQuery> {
-      return withWrapper((wrappedRequestHeaders) => client.request<AllRunsAndStepsQuery>(AllRunsAndStepsDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'allRunsAndSteps');
+      return withWrapper((wrappedRequestHeaders) => client.request<AllRunsAndStepsQuery>(AllRunsAndStepsDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'allRunsAndSteps', 'query');
+    },
+    getUseridFromRun(variables: GetUseridFromRunQueryVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<GetUseridFromRunQuery> {
+      return withWrapper((wrappedRequestHeaders) => client.request<GetUseridFromRunQuery>(GetUseridFromRunDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'getUseridFromRun', 'query');
+    },
+    getUseridFromSimulation(variables: GetUseridFromSimulationQueryVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<GetUseridFromSimulationQuery> {
+      return withWrapper((wrappedRequestHeaders) => client.request<GetUseridFromSimulationQuery>(GetUseridFromSimulationDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'getUseridFromSimulation', 'query');
+    },
+    getSimulationDSL(variables: GetSimulationDslQueryVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<GetSimulationDslQuery> {
+      return withWrapper((wrappedRequestHeaders) => client.request<GetSimulationDslQuery>(GetSimulationDslDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'getSimulationDSL', 'query');
     },
     createRun(variables: CreateRunMutationVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<CreateRunMutation> {
-      return withWrapper((wrappedRequestHeaders) => client.request<CreateRunMutation>(CreateRunDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'createRun');
+      return withWrapper((wrappedRequestHeaders) => client.request<CreateRunMutation>(CreateRunDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'createRun', 'mutation');
     },
     createStep(variables: CreateStepMutationVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<CreateStepMutation> {
-      return withWrapper((wrappedRequestHeaders) => client.request<CreateStepMutation>(CreateStepDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'createStep');
+      return withWrapper((wrappedRequestHeaders) => client.request<CreateStepMutation>(CreateStepDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'createStep', 'mutation');
     },
     setStepAsStarted(variables: SetStepAsStartedMutationVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<SetStepAsStartedMutation> {
-      return withWrapper((wrappedRequestHeaders) => client.request<SetStepAsStartedMutation>(SetStepAsStartedDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'setStepAsStarted');
+      return withWrapper((wrappedRequestHeaders) => client.request<SetStepAsStartedMutation>(SetStepAsStartedDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'setStepAsStarted', 'mutation');
     },
     setStepAsEndedSuccess(variables: SetStepAsEndedSuccessMutationVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<SetStepAsEndedSuccessMutation> {
-      return withWrapper((wrappedRequestHeaders) => client.request<SetStepAsEndedSuccessMutation>(SetStepAsEndedSuccessDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'setStepAsEndedSuccess');
+      return withWrapper((wrappedRequestHeaders) => client.request<SetStepAsEndedSuccessMutation>(SetStepAsEndedSuccessDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'setStepAsEndedSuccess', 'mutation');
     },
     setStepAsCancelled(variables: SetStepAsCancelledMutationVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<SetStepAsCancelledMutation> {
-      return withWrapper((wrappedRequestHeaders) => client.request<SetStepAsCancelledMutation>(SetStepAsCancelledDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'setStepAsCancelled');
+      return withWrapper((wrappedRequestHeaders) => client.request<SetStepAsCancelledMutation>(SetStepAsCancelledDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'setStepAsCancelled', 'mutation');
     },
     setStepAsFailed(variables: SetStepAsFailedMutationVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<SetStepAsFailedMutation> {
-      return withWrapper((wrappedRequestHeaders) => client.request<SetStepAsFailedMutation>(SetStepAsFailedDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'setStepAsFailed');
+      return withWrapper((wrappedRequestHeaders) => client.request<SetStepAsFailedMutation>(SetStepAsFailedDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'setStepAsFailed', 'mutation');
     },
     setRunAsStarted(variables: SetRunAsStartedMutationVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<SetRunAsStartedMutation> {
-      return withWrapper((wrappedRequestHeaders) => client.request<SetRunAsStartedMutation>(SetRunAsStartedDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'setRunAsStarted');
+      return withWrapper((wrappedRequestHeaders) => client.request<SetRunAsStartedMutation>(SetRunAsStartedDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'setRunAsStarted', 'mutation');
     },
     setRunAsQueued(variables: SetRunAsQueuedMutationVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<SetRunAsQueuedMutation> {
-      return withWrapper((wrappedRequestHeaders) => client.request<SetRunAsQueuedMutation>(SetRunAsQueuedDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'setRunAsQueued');
+      return withWrapper((wrappedRequestHeaders) => client.request<SetRunAsQueuedMutation>(SetRunAsQueuedDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'setRunAsQueued', 'mutation');
     },
     setRunAsEndedSuccess(variables: SetRunAsEndedSuccessMutationVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<SetRunAsEndedSuccessMutation> {
-      return withWrapper((wrappedRequestHeaders) => client.request<SetRunAsEndedSuccessMutation>(SetRunAsEndedSuccessDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'setRunAsEndedSuccess');
+      return withWrapper((wrappedRequestHeaders) => client.request<SetRunAsEndedSuccessMutation>(SetRunAsEndedSuccessDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'setRunAsEndedSuccess', 'mutation');
     },
     setRunAsCancelled(variables: SetRunAsCancelledMutationVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<SetRunAsCancelledMutation> {
-      return withWrapper((wrappedRequestHeaders) => client.request<SetRunAsCancelledMutation>(SetRunAsCancelledDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'setRunAsCancelled');
+      return withWrapper((wrappedRequestHeaders) => client.request<SetRunAsCancelledMutation>(SetRunAsCancelledDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'setRunAsCancelled', 'mutation');
     },
     setRunAsFailed(variables: SetRunAsFailedMutationVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<SetRunAsFailedMutation> {
-      return withWrapper((wrappedRequestHeaders) => client.request<SetRunAsFailedMutation>(SetRunAsFailedDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'setRunAsFailed');
+      return withWrapper((wrappedRequestHeaders) => client.request<SetRunAsFailedMutation>(SetRunAsFailedDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'setRunAsFailed', 'mutation');
     },
     createSimulation(variables: CreateSimulationMutationVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<CreateSimulationMutation> {
-      return withWrapper((wrappedRequestHeaders) => client.request<CreateSimulationMutation>(CreateSimulationDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'createSimulation');
+      return withWrapper((wrappedRequestHeaders) => client.request<CreateSimulationMutation>(CreateSimulationDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'createSimulation', 'mutation');
     },
     getSimulationIdandSteps(variables: GetSimulationIdandStepsQueryVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<GetSimulationIdandStepsQuery> {
-      return withWrapper((wrappedRequestHeaders) => client.request<GetSimulationIdandStepsQuery>(GetSimulationIdandStepsDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'getSimulationIdandSteps');
+      return withWrapper((wrappedRequestHeaders) => client.request<GetSimulationIdandStepsQuery>(GetSimulationIdandStepsDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'getSimulationIdandSteps', 'query');
     },
     getRunDetails(variables: GetRunDetailsQueryVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<GetRunDetailsQuery> {
-      return withWrapper((wrappedRequestHeaders) => client.request<GetRunDetailsQuery>(GetRunDetailsDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'getRunDetails');
+      return withWrapper((wrappedRequestHeaders) => client.request<GetRunDetailsQuery>(GetRunDetailsDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'getRunDetails', 'query');
     },
     insertResourceUsage(variables?: InsertResourceUsageMutationVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<InsertResourceUsageMutation> {
-      return withWrapper((wrappedRequestHeaders) => client.request<InsertResourceUsageMutation>(InsertResourceUsageDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'insertResourceUsage');
+      return withWrapper((wrappedRequestHeaders) => client.request<InsertResourceUsageMutation>(InsertResourceUsageDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'insertResourceUsage', 'mutation');
     },
     insertLog(variables?: InsertLogMutationVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<InsertLogMutation> {
-      return withWrapper((wrappedRequestHeaders) => client.request<InsertLogMutation>(InsertLogDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'insertLog');
+      return withWrapper((wrappedRequestHeaders) => client.request<InsertLogMutation>(InsertLogDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'insertLog', 'mutation');
     },
     getSimulationRunResults(variables?: GetSimulationRunResultsQueryVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<GetSimulationRunResultsQuery> {
-      return withWrapper((wrappedRequestHeaders) => client.request<GetSimulationRunResultsQuery>(GetSimulationRunResultsDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'getSimulationRunResults');
+      return withWrapper((wrappedRequestHeaders) => client.request<GetSimulationRunResultsQuery>(GetSimulationRunResultsDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'getSimulationRunResults', 'query');
+    },
+    getSimulation(variables?: GetSimulationQueryVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<GetSimulationQuery> {
+      return withWrapper((wrappedRequestHeaders) => client.request<GetSimulationQuery>(GetSimulationDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'getSimulation', 'query');
+    },
+    deleteRun(variables: DeleteRunMutationVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<DeleteRunMutation> {
+      return withWrapper((wrappedRequestHeaders) => client.request<DeleteRunMutation>(DeleteRunDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'deleteRun', 'mutation');
     }
   };
 }

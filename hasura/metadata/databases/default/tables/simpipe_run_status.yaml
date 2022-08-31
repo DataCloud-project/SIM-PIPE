@@ -1,4 +1,4 @@
 table:
-  name: run_status
   schema: simpipe
+  name: run_status
 is_enum: true

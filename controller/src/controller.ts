@@ -231,7 +231,7 @@ async function getStatsUntilExit(container: Docker.Container, exitTimeout:number
   if (ids.includes(createdContainer.id)) { // collect statstics as long as the container is running
     if (process.env.STOP_SIGNAL_SENT === 'false'
             && ((process.env.CANCEL_RUN_LIST as string).includes(step.runId)
-                  || ((new Date() as unknown as number) - startedAt) >= exitTimeout)) {
+                  || (exitTimeout !== 0 && ((new Date() as unknown as number) - startedAt) >= exitTimeout))) {
       try {
       // for continuous steps, send stop signal after configured number of seconds
       // eslint-disable-next-line @typescript-eslint/no-floating-promises
@@ -312,7 +312,7 @@ export async function start(client:GraphQLClient, step:types.Step) : Promise<str
     await sdk.setStepAsFailed({ step_id: step.stepId });
     // eslint-disable-next-line @typescript-eslint/no-unsafe-call
     await sdk.insertLog({ step_id: step.stepId, text: `${error}` });
-    logger.info(`🎌 ${error} in controller.start`);
-    throw new Error('Error in step execution, step failed');
+    logger.error(`🎌 ${error} in controller.start`);
+    throw new Error(`Error in step execution, step failed ${(error as Error).message}`);
   }
 }

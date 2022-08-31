@@ -4,17 +4,21 @@ import * as fs from 'node:fs';
 import { setTimeout } from 'node:timers/promises';
 
 import * as controller from '../controller.js';
-import { getSdk } from '../db/database.js';
+import { DeleteRunMutationVariables, getSdk } from '../db/database.js';
 import logger from '../logger.js';
 import TaskQueue from './taskqueue.js';
 import type {
   AllRunsAndStepsQuery, AllRunsAndStepsQueryVariables, AllSimulationsQuery,
   AllSimulationsQueryVariables, CreateRunMutation, CreateRunMutationVariables,
   CreateSimulationMutation, CreateSimulationMutationVariables, CreateStepMutation,
-  CreateStepMutationVariables, GetRunDetailsQuery, GetRunDetailsQueryVariables,
-  GetSimulationIdandStepsQuery, GetSimulationIdandStepsQueryVariables, GetSimulationRunResultsQuery,
-  GetSimulationRunResultsQueryVariables, InsertLogMutation, InsertLogMutationVariables,
-  InsertResourceUsageMutation, InsertResourceUsageMutationVariables, SetRunAsCancelledMutation,
+  CreateStepMutationVariables, DeleteRunMutation, GetRunDetailsQuery, GetRunDetailsQueryVariables,
+  GetSimulationDslQuery, GetSimulationDslQueryVariables,
+  GetSimulationIdandStepsQuery, GetSimulationIdandStepsQueryVariables, GetSimulationQuery, GetSimulationQueryVariables,
+  GetSimulationRunResultsQuery,
+  GetSimulationRunResultsQueryVariables, GetUseridFromRunQuery, GetUseridFromRunQueryVariables,
+  GetUseridFromSimulationQuery, GetUseridFromSimulationQueryVariables,
+  InsertLogMutation, InsertLogMutationVariables, InsertResourceUsageMutation,
+  InsertResourceUsageMutationVariables, SetRunAsCancelledMutation,
   SetRunAsCancelledMutationVariables, SetRunAsEndedSuccessMutation,
   SetRunAsEndedSuccessMutationVariables, SetRunAsFailedMutation, SetRunAsFailedMutationVariables,
   SetRunAsQueuedMutation, SetRunAsQueuedMutationVariables, SetRunAsStartedMutation,
@@ -42,11 +46,16 @@ let sdk: {
   setRunAsCancelled(variables: SetRunAsCancelledMutationVariables): Promise<SetRunAsCancelledMutation>,
   setRunAsFailed(variables: SetRunAsFailedMutationVariables): Promise<SetRunAsFailedMutation>,
   createSimulation(variables: CreateSimulationMutationVariables): Promise<CreateSimulationMutation>,
+  getSimulation(variables: GetSimulationQueryVariables): Promise<GetSimulationQuery>,
   getSimulationIdandSteps(variables: GetSimulationIdandStepsQueryVariables): Promise<GetSimulationIdandStepsQuery>,
   getRunDetails(variables: GetRunDetailsQueryVariables): Promise<GetRunDetailsQuery>,
+  getUseridFromRun(variables: GetUseridFromRunQueryVariables): Promise<GetUseridFromRunQuery>,
+  getUseridFromSimulation(variables: GetUseridFromSimulationQueryVariables): Promise<GetUseridFromSimulationQuery>,
   insertResourceUsage(variables?: InsertResourceUsageMutationVariables): Promise<InsertResourceUsageMutation>,
   insertLog(variables?: InsertLogMutationVariables): Promise<InsertLogMutation>,
   getSimulationRunResults(variables?: GetSimulationRunResultsQueryVariables):Promise<GetSimulationRunResultsQuery>
+  getSimulationDSL(variables?: GetSimulationDslQueryVariables):Promise<GetSimulationDslQuery>
+  deleteRun(variables?: DeleteRunMutationVariables): Promise<DeleteRunMutation>,
 };
 
 function connectHasuraEndpoint():void {
@@ -64,84 +73,40 @@ function connectHasuraEndpoint():void {
 
 const uploadDirectory = 'uploaded_files/';
 
-export async function allSimulations():Promise<AllSimulationsQuery> {
-  return await sdk.AllSimulations();
+export async function allSimulations(userid:string):Promise<AllSimulationsQuery> {
+  return await sdk.AllSimulations({ userid });
 }
 
-export async function allRunsSteps():Promise<string> {
-  return JSON.stringify(await sdk.allRunsAndSteps(), undefined, 2);
+export async function allRunsSteps(userid:string):Promise<string> {
+  return JSON.stringify(await sdk.allRunsAndSteps({ userid }), undefined, 2);
 }
 
-export async function createSimulation(model_id:string, name:string):Promise<string> {
+export async function createSimulation(model_id:string, name:string, pipeline_description:string, userid:string):
+Promise<string> {
   // disabling await-thenable, await is needed for sequential execution
   // eslint-disable-next-line @typescript-eslint/await-thenable
   const result:CreateSimulationMutation = await sdk.createSimulation({
     model_id,
     name,
+    pipeline_description,
+    userid,
   });
   if (!result?.create_simulation?.simulation_id) {
     throw new Error('🎌 Undefined expression in createSimulation');
   }
+  // read pipeline_description and extract env variable list
   return result.create_simulation.simulation_id;
 }
 
-// takes in dsl from def-pipe and return the list of steps
-// preloaded TLU pipeline images, TODO: parse original DSL
-function parseDslTLU(dsl:string):Array<StepDSL> {
-  // TODO; parse dsl argument
-  const object:Array<StepDSL> = dsl === 'tlu' || dsl === '' ? [{
-    name: '01-datagen-and-routing',
-    step_number: 1,
-    image: 'registry.sintef.cloud/tellucare-edge',
-    // image: 'i1',
-    env: ['MQTT_HOST=oslo.sct.sintef.no',
-      'MQTT_USERNAME=TGW000000000',
-      'MQTT_CLIENT_ID=TGWDATACLOUD',
-      'MQTT_PASS=d47AcL0|_|D1sTh3B3St',
-      'MQTT_PORT=1883'],
-  }, {
-    name: '02-storage-and-analytics',
-    step_number: 2,
-    image: 'registry.sintef.cloud/tellucare-api:latest',
-    // image: 'i1',
-    env: ['RABBITMQ_HOST=oslo.sct.sintef.no:5672',
-      'RABBITMQ_USERNAME=tellucareapi',
-      'RABBITMQ_PASSWORD=d47AcL0|_|D1sTh3B3St',
-      'FHIR_URL=https://tellucloud-fhir.sintef.cloud'],
-  }, {
-    name: '03-application-logic',
-    step_number: 3,
-    image: 'registry.sintef.cloud/tellucare-application-logic:latest',
-    // image: 'i1',
-    env: ['FHIR_URL=https://tellucloud-fhir.sintef.cloud/',
-      'RABBITMQ_HOST=oslo.sct.sintef.no:5672',
-      'RABBITMQ_USERNAME=tellucareapplicationlogic',
-      'RABBITMQ_PASSWORD=d47AcL0|_|D1sTh3B3St'],
-  }] : [{
-    name: 'step 1',
-    step_number: 1,
-    image: 'i1',
-    env: ['STEP_NUMBER=1'],
-  }, {
-    name: 'step 2',
-    step_number: 2,
-    image: 'i1',
-    env: ['STEP_NUMBER=2'],
-  }, {
-    name: 'step 3',
-    step_number: 3,
-    image: 'i1',
-    env: ['STEP_NUMBER=3'],
-  }];
-  return object;
-}
-
 // interface for dsl step
+// modified to add the new json schema attributes
 interface StepDSL {
   name: string
   step_number: number
   image: string
   env: string[]
+  prerequisite: number[]
+  type: string
 }
 
 export async function createStep(run_id:string, name:string, image:string,
@@ -162,18 +127,30 @@ export async function createStep(run_id:string, name:string, image:string,
   return `${stepId}`;
 }
 
-export async function createRun(simulation_id:string, dsl:string, name:string):Promise<string> {
-  // TODO: parse dsl
-  // const steps:Array<StepDSL> = parseDSL(dsl);
-  // preloaded TLU pipeline
-  const steps:Array<StepDSL> = parseDslTLU(dsl);
-  // disabling await-thenable, await is needed to wait till sdk.createRun completes execution
-  // eslint-disable-next-line @typescript-eslint/await-thenable
+/**
+ * function to read dsl parameter in simulation table
+ *
+ * */
+async function parseDSL(simulation_id:string):Promise<[StepDSL]> {
+  // get dsl from simulation table using simulation_id
+  const result:GetSimulationDslQuery = await sdk.getSimulationDSL({ simulation_id });
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+  const { steps } = JSON.parse(result.simulations[0].pipeline_description as string);
+  // TODO:  validate pipeline description according to schema v1
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+  return steps;
+}
+
+export async function createRun(simulation_id:string, name:string, userid:string,
+  environment_list: [[string]], timeout_value: number):Promise<string> {
+  // read dsl, validate and use it to create steps in the run
+  const steps:Array<StepDSL> = await parseDSL(simulation_id);
   const result:CreateRunMutation = await sdk.createRun({
     simulation_id,
-    // TODO: later to parse dsl -> dsl: JSON.parse(dsl),
-    dsl,
     name,
+    userid,
+    env_list: environment_list,
+    timeout_value,
   });
   if (!result.insert_runs_one?.run_id) {
     throw new Error('🎌 Undefined results from sdk.createRun function');
@@ -188,9 +165,32 @@ export async function createRun(simulation_id:string, dsl:string, name:string):P
   return runId;
 }
 
-export async function createRunWithInput(simulation_id: string, dsl: string,
-  name: string, sampleInput: [[string, string]]): Promise<string> {
-  const runId = await createRun(simulation_id, dsl, name);
+/**
+ * function to check if a run belongs to the logged in user
+ */
+async function checkRunOwner(run_id:string, userid:string):Promise<void> {
+  const result:GetUseridFromRunQuery = await sdk.getUseridFromRun({ run_id });
+  if (result.runs[0].userid !== userid) {
+    throw new Error('Invalid access; run does not belong to the user');
+  }
+}
+
+/**
+ * function to check if a simulation belongs to the logged in user
+ */
+async function checkSimulationOwner(simulation_id:string, userid:string):Promise<void> {
+  const result:GetUseridFromSimulationQuery = await sdk.getUseridFromSimulation({ simulation_id });
+  if (result.simulations[0].userid !== userid) {
+    throw new Error('Invalid access; simulation does not belong to the user');
+  }
+}
+
+export async function createRunWithInput(simulation_id: string,
+  name: string, sampleInput: [[string, string]], userid:string, environment_list: [[string]],
+  timeout_value: number): Promise<string> {
+  // only owner of the simulation can create a new run
+  await checkSimulationOwner(simulation_id, userid);
+  const runId = await createRun(simulation_id, name, userid, environment_list, timeout_value);
   fs.mkdirSync(`${uploadDirectory}${runId}`, { recursive: true });
   // write sample input to uploaded_files/runId
   // eslint-disable-next-line no-restricted-syntax
@@ -212,9 +212,11 @@ export async function startRun(run_id:string):Promise<string> {
   // eslint-disable-next-line @typescript-eslint/await-thenable
   const result:GetRunDetailsQuery = await sdk.getRunDetails({ run_id });
   if (!result.runs) {
-    throw new Error('GerRunDetailsQuery fetched no rows');
+    throw new Error('GetRunDetailsQuery fetched no rows');
   }
-  const { steps } = result.runs[0]; // get steps sorted acc to pipeline_step_number
+  // get steps, and runtime configuration entered during create run
+  // eslint-disable-next-line @typescript-eslint/naming-convention
+  const { steps, env_list, timeout_value } = result.runs[0];
   // set runId and simulationId once for all runs
   const currentStep:types.Step = {
     simId: result.runs[0].simulation_id,
@@ -223,11 +225,6 @@ export async function startRun(run_id:string):Promise<string> {
   };
   // set input path for the first step
   process.env.INPUT_PATH = `${uploadDirectory}${run_id}/`;
-  // get env from piepeline dsl
-  // preloaded TLU pipeline
-  const stepsListDSL:Array<StepDSL> = parseDslTLU(typeof result.runs[0].dsl === 'string'
-    ? result.runs[0].dsl
-    : '');
   // disabling no-restricted-syntax; running each step must be done in a sequence
   /* eslint-disable-next-line no-restricted-syntax */
   for await (const step of steps) {
@@ -243,21 +240,29 @@ export async function startRun(run_id:string):Promise<string> {
     currentStep.image = step.image;
     currentStep.stepNumber = step.pipeline_step_number;
     currentStep.stepId = step.step_id;
-    // preloaded TLU pipeline
-    currentStep.env = stepsListDSL[step.pipeline_step_number - 1].env;
+    if (!env_list) {
+      throw new Error('Error! List of environment variables is undefined');
+    }
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    currentStep.env = env_list[step.pipeline_step_number - 1];
     // set the variable values in env file
     process.env.STEP_NUMBER = `${step.pipeline_step_number}`;
     process.env.IMAGE = step.image;
+    // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+    process.env.CONTAINER_TIME_LIMIT = `${timeout_value}`;
     // testing step type
     // adding try catch to handle failed steps
     try {
       // set input path for next step as output path of the previous step returned and start step
       const nextInput = await controller.start(client, currentStep);
       currentStep.inputPath = nextInput;
-    } catch {
+    } catch (error) {
+      logger.error(`Run ${run_id} execution has failed\n${(error as Error).message}`);
       process.env.FAILED_RUN = 'true';
     }
   }
+  // remove sample input files for the run from ./uploaded folder
+  fs.rmSync(`${uploadDirectory}${run_id}`, { recursive: true, force: true });
   if ((process.env.CANCEL_RUN_LIST as string).includes(run_id)) {
     // mark the run as cancelled
     logger.info(`Run ${run_id} execution is cancelled\n`);
@@ -268,7 +273,6 @@ export async function startRun(run_id:string):Promise<string> {
   }
   if (process.env.FAILED_RUN === 'true') {
     // mark the run as failed
-    logger.error(`Run ${run_id} execution has failed\n`);
     await sdk.setRunAsFailed({ run_id });
     // set STOP signal to false for the next run
     process.env.FAILED_RUN = 'false';
@@ -280,14 +284,16 @@ export async function startRun(run_id:string):Promise<string> {
 }
 
 export async function getSimulationRunResults(simulation_id:string,
-  run_id:string):Promise<string> {
+  run_id:string, userid:string):Promise<string> {
   // eslint-disable-next-line @typescript-eslint/await-thenable
   const result:GetSimulationRunResultsQuery = await
-  sdk.getSimulationRunResults({ simulation_id, run_id });
+  sdk.getSimulationRunResults({ simulation_id, run_id, userid });
   return JSON.stringify(result, undefined, 2);
 }
 
-export function stopRun(run_id:string):string {
+export async function stopRun(run_id:string, userid:string):Promise<string> {
+  // throw error if run does not belong to the user
+  await checkRunOwner(run_id, userid);
   // add the current runid to the environment var to denote stop signal has been sent
   // to runid
   // find the current running container
@@ -295,6 +301,12 @@ export function stopRun(run_id:string):string {
   // stop and kill current container
   // stop the start run function to stop all the next steps
   // change the status of runs and steps to 'cancelled'
+  return run_id;
+}
+export async function deleteRun(run_id:string, userid:string):Promise<string> {
+  // throw error if run does not belong to the user
+  await checkRunOwner(run_id, userid);
+  await sdk.deleteRun({ run_id });
   return run_id;
 }
 
@@ -313,7 +325,9 @@ async function runScheduler():Promise<void> {
   }
 }
 
-export async function queueRun(run_id:string):Promise<string> {
+export async function queueRun(run_id:string, userid:string):Promise<string> {
+  // throw error if run does not belong to the user
+  await checkRunOwner(run_id, userid);
   if (process.env.IS_SIMULATION_RUNNING === 'true') {
     logger.info(`RunId ${run_id} added to task queue`);
   }
@@ -324,13 +338,28 @@ export async function queueRun(run_id:string):Promise<string> {
   return 'ok';
 }
 
+/**
+ * function to get all details and runs of a simulation
+ */
+// export async function getSimulation(userid:string, simulation_id:string):Promise<GetSimulationQuery> {
+export async function getSimulation(userid:string, simulation_id:string):Promise<string> {
+  // eslint-disable-next-line @typescript-eslint/await-thenable
+  const result:GetSimulationQuery = await sdk.getSimulation({ userid, simulation_id });
+  return JSON.stringify(result, undefined, 2);
+  // return result;
+}
+
+/**
+ * function to create a sample simulation for user to test
+ * wip - removed creating sample simulation; testing allsimulations with userid
+ */
 export async function createSampleSimulation():Promise<string> {
   await setTimeout(7000);
-  let result;
+  // let result;
   try {
     connectHasuraEndpoint();
     // check if there are simulations in the database
-    result = await sdk.AllSimulations();
+    // result = await sdk.AllSimulations();
   } catch (error) {
     const errorMessage = `\n 🎌 Error connecting from SIM-PIPE controller to hasura endpoint:\n
     ${(error as Error).message}
@@ -340,14 +369,19 @@ export async function createSampleSimulation():Promise<string> {
     await setTimeout(5000);
     connectHasuraEndpoint();
   }
-  if (!result) {
-    throw new Error('🎌 Error creating sample simulation at server start up, '
-  + 'hasura endpoint could not be connected');
-  }
-  if (result.simulations.length === 0) {
-    const simId = await createSimulation('c97fc83a-b0fc-11ec-b909-0242ac120002',
-      'Sample Simulation');
-    return `Sample simulation with id ${simId} created on startup`;
-  }
-  return 'No sample simulation created as there are existing simulations';
+  /**
+   * disabling creating sample simulation, as simulations must belng to a user now
+   * TODO: find alternative
+   */
+  // if (!result) {
+  //   throw new Error('🎌 Error creating sample simulation at server start up, '
+  // + 'hasura endpoint could not be connected, check hasura endpoint settings');
+  // }
+  // if (result.simulations.length === 0) {
+  //   const simId = await createSimulation('c97fc83a-b0fc-11ec-b909-0242ac120002',
+  //     'Sample Simulation');
+  //   return `Sample simulation with id ${simId} created on startup`;
+  // }
+  // return 'No sample simulation created as there are existing simulations';
+  return 'to-be-replaced';
 }

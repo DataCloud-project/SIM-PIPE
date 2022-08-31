@@ -1,0 +1,32 @@
+{
+    "steps":[
+        {
+            "name": "step 01",
+            "step_number": 1,
+            "image": "i1",
+            "env": ["v1=val1"],
+            "type": "batch"
+        },
+        {
+            "name": "step 02",
+            "step_number": 2,
+            "image": "i1",
+            "env": ["v2=val2"],
+            "type": "batch",
+            "prerequisite":[
+                1
+            ]
+        },
+        {
+            "name": "step 03",
+            "step_number": 3,
+            "image": "i1",
+            "env": ["v3=val3"],
+            "type": "batch",
+            "prerequisite":[
+                2
+            ]
+        }
+    ]
+ }
+ 

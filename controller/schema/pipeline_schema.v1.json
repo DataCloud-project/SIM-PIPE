@@ -1,0 +1,54 @@
+{
+	"definitions": {},
+	"$schema": "http://json-schema.org/draft-07/schema#", 
+	"title": "Root", 
+	"type": "object",
+	"required": [ "steps"],
+	"properties": {
+		"steps": {
+			"title": "Steps", 
+			"type": "array",
+			"default": [],
+			"items":{
+				"title": "Items", 
+				"type": "object",
+				"required": [ "name", "step_number", "image", "env", "type"	],
+				"properties": {
+					"name": {
+						"type": "string",
+						"default": ""
+					},
+					"step_number": {
+						"type": "integer",
+                        "minimum": 0
+					},
+					"image": {
+						"type": "string"
+					},
+					"env": {
+						"type": "array",
+						"default": [],
+						"items":{
+							"type": "string"
+						}
+					},
+					"type": {
+						"type": "string",
+						"default": ""
+					},
+					"prerequisite": {
+						"optional": true,
+						"type": "array",
+						"default": [],
+						"uniqueItems": true,
+						"items": {
+							"type": "number",
+							"minimum": 0
+						  }
+					}
+				}
+			}
+
+		}
+	}
+}
