@@ -1,134 +1,236 @@
-<!-- using highcharts -->
+<!-- using highstock -->
 <script>
 	import { afterUpdate } from 'svelte';
-	import Highcharts from 'highcharts';
+	// import Highcharts from 'highcharts';
+	import Highcharts from 'highstock-release';
 
 	import { selected_resource_usage } from '../stores/stores';
 	// import {dayjs} from 'svelte-time';
-  import dayjs from 'dayjs';
+	import dayjs from 'dayjs';
 
-  let timestamps = [];
-  function render_graph (container, title_text, y_title_text, series) {
-    afterUpdate(() => {
-      Highcharts.chart(container, {
-        chart: {
-          type: 'line'
-        },
-        title: {
-          text: title_text
-        },
-        tooltip: {
-          split:true
-        },
-        xAxis: {
-          name: 'Timestamps',
-          categories: timestamps,
-          labels: {
-            style: {
-              color: 'black',
-              fontSize: 18
-            }
-          },
-          title: {
-            style: {
-              color: 'black',
-              fontSize: 18
-            }
-          }
-          // plotLines: [{
-          //   color: 'red', // Color value
-          //   dashStyle: 'longdashdot', // Style of the plot line. Default to solid
-          //   value: Math.max(...series_data), // Value of where the line will appear
-          //   width: 2 // Width of the line    
-          // }]
-        },
-        yAxis: {
-          labels: {
-            style: {
-              color: 'black',
-              fontSize: 18
-            }
-          },
-          title: {
-            text: y_title_text,
-            style: {
-              color: 'black',
-              fontSize: 18
-            }
-          }
-        },
-        series: series
-		  });
-    });
-  }
+	let timestamps = [];
+	function render_highchart(container, title_text, y_title_text, series) {
+		afterUpdate(() => {
+			Highcharts.chart(container, {
+				chart: {
+					type: 'line',
+					zoomtype: 'x'
+				},
+				title: {
+					text: title_text
+				},
+				tooltip: {
+					split: true
+				},
+				xAxis: {
+					name: 'Timestamps',
+					categories: timestamps,
+					labels: {
+						style: {
+							color: 'black',
+							fontSize: 18
+						}
+					},
+					title: {
+						style: {
+							color: 'black',
+							fontSize: 18
+						}
+					}				
+				},
+				yAxis: {
+					labels: {
+						style: {
+							color: 'black',
+							fontSize: 18
+						}
+					},
+					title: {
+						text: y_title_text,
+						style: {
+							color: 'black',
+							fontSize: 18
+						}
+					}
+				},
+				series: series
+			});
+		});
+	}
 
-	function get_data() {  
-    let usages = $selected_resource_usage;
+	function render_highstock(container, title_text, y_title_text, series) {
+		afterUpdate(() => {
+			Highcharts.stockChart(container, {
+				rangeSelector: {
+					enabled: false
+				},
+				navigator: {
+					xAxis: {
+						dateTimeLabelFormats: '%L'
+					}
+				},
+				title: {
+					text: title_text
+				},
+				xAxis: {
+					name: 'Timestamps',
+					dateTimeLabelFormats: '%L',
+					labels: {
+						style: {
+							color: 'black',
+							fontSize: 16
+						}
+					},
+					title: {
+						style: {
+							color: 'black',
+							fontSize: 16
+						}
+					}
+				},
+				yAxis: {
+					labels: {
+						style: {
+							color: 'black',
+							fontSize: 16
+						}
+					},
+					title: {
+						text: y_title_text,
+						style: {
+							color: 'black',
+							fontSize: 16
+						}
+					}
+				},
+				series: series
+			});
+		});
+	}
+
+	function get_data_highchart() {
+		let usages = $selected_resource_usage;
 		let cpu = [];
 		let memory = [];
 		let memory_max = [];
 		let network_rx = [];
 		let network_tx = [];
-    timestamps = [];
+		timestamps = [];
 		usages.forEach((usage) => {
 			cpu.push(usage.cpu * 100);
 			memory.push(usage.memory);
 			memory_max.push(usage.memory_max);
 			network_rx.push(usage.rx_value);
 			network_tx.push(usage.tx_value);
-			timestamps.push(Math.round((dayjs(usage.time).diff(usages[0].time))/1000)); // timestamps in seconds from the first timestamp
-		});		
-        
-    render_graph('cpu_container', 'CPU', 'CPU usage in percentage', [
-          {		
-            name: 'CPU usage',
-            data: cpu,
-            color: 'orange'
-          }
-        ] );
-    render_graph('memory_container', '', 'Memory usage', [
-      {		
-        name: 'Memory used',
-        data: memory,
-        color: 'orange'
-      },
-      {		
-        name: 'Memory max',
-        data: memory_max,
-        color: 'green'
-      },
-
-    ]);
-    render_graph('network_container', '', 'Network usage', [
-      {		
-        name: 'Received bytes',
-        data: network_rx,
-        color: 'green'
-      },
-      {		
-        name: 'Transferred bytes',
-        data: network_tx,
-        color: 'orange'
-      },
-
-    ]);      
+			// timestamps.push(Math.round((dayjs(usage.time).diff(usages[0].time))/1000)); // timestamps in seconds from the first timestamp
+			timestamps.push(dayjs(usage.time).valueOf()); // timestamps in seconds from the first timestamp
+			// timestamps.push(dayjs(usage.time)); // timestamps in seconds from the first timestamp
+		});
+		console.log(timestamps);
+		render_highchart('cpu_container', 'CPU', 'CPU usage in percentage', [
+			{
+				name: 'CPU usage',
+				data: cpu,
+				color: 'orange'
+			}
+		]);
+		render_highchart('memory_container', '', 'Memory usage', [
+			{
+				name: 'Memory used',
+				data: memory,
+				color: 'orange'
+			},
+			{
+				name: 'Memory max',
+				data: memory_max,
+				color: 'green'
+			}
+		]);
+		render_highchart('network_container', '', 'Network usage', [
+			{
+				name: 'Received bytes',
+				data: network_rx,
+				color: 'green'
+			},
+			{
+				name: 'Transferred bytes',
+				data: network_tx,
+				color: 'orange'
+			}
+		]);
+	}
+	function get_data_highstock() {
+		let usages = $selected_resource_usage;
+		let cpu = [];
+		let memory = [];
+		let memory_max = [];
+		let network_rx = [];
+		let network_tx = [];
+		usages.forEach((usage) => {
+			let time = dayjs(usage.time).diff(usages[0].time) / 1000;
+			// let time = dayjs(usage.time).valueOf();
+			cpu.push([time, usage.cpu * 100]);
+			memory.push([time, usage.memory]);
+			memory_max.push([time, usage.memory_max]);
+			network_rx.push([time, usage.rx_value]);
+			network_tx.push([time, usage.tx_value]);
+		});
+		let tooltip = {
+			xDateFormat: '%L'
+		};
+		render_highstock('cpu_container', 'CPU', 'CPU usage in percentage', [
+			{
+				name: 'CPU usage',
+				data: cpu,
+				tooltip: {
+					xDateFormat: '%L',
+					valueDecimals: 2
+				}
+			}
+		]);
+		render_highstock('memory_container', '', 'Memory usage', [
+			{
+				name: 'Memory used',
+				data: memory,
+				tooltip: tooltip,
+				// color: 'orange'
+			},
+			{
+				name: 'Memory max',
+				data: memory_max,
+				tooltip: tooltip,
+				color: 'orange'
+			}
+		]);
+		render_highstock('network_container', '', 'Network usage', [
+			{
+				name: 'Received bytes',
+				data: network_rx,
+				// color: 'orange',
+				tooltip: tooltip
+			},
+			{
+				name: 'Transferred bytes',
+				data: network_tx,
+				tooltip: tooltip,
+				color: 'orange'
+			}
+		]);
 	}
 
-  $: $selected_resource_usage, get_data();
+	$: $selected_resource_usage, get_data_highstock();
 </script>
 
-
-
 <div class="graphs">
-  <div id="cpu_container" style=" height:500px;" />
+	<div id="cpu_container" style="width:800px; height:600px;" />
 </div>
 
 <div class="graphs">
-  <div id="memory_container" style=" height:500px;" />
+	<div id="memory_container" style="width:800px; height:600px;" />
 </div>
 
 <div class="graphs">
-  <div id="network_container" style=" height:500px;" />
+	<div id="network_container" style="width:800px; height:600px;" />
 </div>
 
 <!-- <div class="graphs">
@@ -152,6 +254,7 @@
 <style>
 	.graphs {
 		float: left;
-		width: 33%;
+		/* width: 33%; */
+		/* width: 30%; */
 	}
 </style>
