@@ -283,7 +283,7 @@ http://localhost:9000/graphql
                 <div class="operation-response doc-copy-section">
                   <h5>Response</h5>
                   <p> Returns a
-                    <a href="#definition-String"><code>String</code></a>
+                    <a href="#definition-jsonb"><code>JSON object</code></a>
                   </p>
                 </div>
               </div>
@@ -448,7 +448,7 @@ http://localhost:9000/graphql
                 <div class="operation-response doc-copy-section">
                   <h5>Response</h5>
                   <p> Returns a
-                    <a href="#definition-String"><code>String</code></a>
+                    <a href="#definition-jsonb"><code>JSON object</code></a>
                   </p>
                 </div>
                 <div class="operation-arguments doc-copy-section">
@@ -468,7 +468,7 @@ http://localhost:9000/graphql
                             <a href="#definition-String"><code>String</code></a>
                           </span>
                         </td>
-                        <td> </td>
+                        <td> UUID of the simulation </td>
                       </tr>
                     </tbody>
                   </table>
@@ -601,7 +601,7 @@ http://localhost:9000/graphql
                 <div class="operation-response doc-copy-section">
                   <h5>Response</h5>
                   <p> Returns a
-                    <a href="#definition-String"><code>String</code></a>
+                    <a href="#definition-jsonb"><code>JSON object</code></a>
                   </p>
                 </div>
                 <div class="operation-arguments doc-copy-section">
@@ -621,7 +621,7 @@ http://localhost:9000/graphql
                             <a href="#definition-String"><code>String</code></a>
                           </span>
                         </td>
-                        <td> </td>
+                        <td> UUID of the run</td>
                       </tr>
                       <tr>
                         <td>
@@ -630,7 +630,7 @@ http://localhost:9000/graphql
                             <a href="#definition-String"><code>String</code></a>
                           </span>
                         </td>
-                        <td> </td>
+                        <td> UUID of the simulation </td>
                       </tr>
                     </tbody>
                   </table>
@@ -768,7 +768,7 @@ http://localhost:9000/graphql
               <div class="doc-copy">
                 <div class="operation-response doc-copy-section">
                   <h5>Response</h5>
-                  <p> Returns a
+                  <p> Returns 
                     <a href="#definition-runs"><code>runs</code></a>
                   </p>
                 </div>
@@ -789,7 +789,7 @@ http://localhost:9000/graphql
                             <a href="#definition-uuid"><code>uuid!</code></a>
                           </span>
                         </td>
-                        <td> </td>
+                        <td> UUID of the run </td>
                       </tr>
                     </tbody>
                   </table>
@@ -903,7 +903,7 @@ http://localhost:9000/graphql
               </div>
             </div>
           </section>
-          <section id="query-get_simulation" class="operation operation-query" data-traverse-target="query-get_simulation">
+          <!-- <section id="query-get_simulation" class="operation operation-query" data-traverse-target="query-get_simulation">
             <div class="operation-group-name">
               <a href="#group-Operations-Queries">Queries</a>
             </div>
@@ -1206,7 +1206,7 @@ http://localhost:9000/graphql
                 </div>
               </div>
             </div>
-          </section>
+          </section> -->
           <h1 id="group-Operations-Mutations" class="group-heading" data-traverse-target="group-Operations-Mutations">Mutations</h1>
           <section id="mutation-Create_Run_WithInput" class="operation operation-mutation" data-traverse-target="mutation-Create_Run_WithInput">
             <h2 class="operation-heading "> <code>Create_Run_WithInput</code> </h2>
@@ -1223,7 +1223,7 @@ http://localhost:9000/graphql
                 <div class="operation-response doc-copy-section">
                   <h5>Response</h5>
                   <p> Returns a
-                    <a href="#definition-String"><code>String</code></a>
+                    <a href="#definition-jsonb"><code>JSON object</code></a>
                   </p>
                 </div>
                 <div class="operation-arguments doc-copy-section">
@@ -1243,7 +1243,7 @@ http://localhost:9000/graphql
                             <a href="#definition-String"><code>[String]</code></a>
                           </span>
                         </td>
-                        <td> </td>
+                        <td> List of list of strings with values of environment variables for each step in the run </td>
                       </tr>
                       <tr>
                         <td>
@@ -1252,7 +1252,7 @@ http://localhost:9000/graphql
                             <a href="#definition-String"><code>String</code></a>
                           </span>
                         </td>
-                        <td> </td>
+                        <td> Name of the new run </td>
                       </tr>
                       <tr>
                         <td>
@@ -1261,7 +1261,7 @@ http://localhost:9000/graphql
                             <a href="#definition-String"><code>[String]</code></a>
                           </span>
                         </td>
-                        <td> </td>
+                        <td> List of string tuples with filename and file content of the sample input to the run </td>
                       </tr>
                       <tr>
                         <td>
@@ -1270,7 +1270,7 @@ http://localhost:9000/graphql
                             <a href="#definition-String"><code>String</code></a>
                           </span>
                         </td>
-                        <td> </td>
+                        <td> UUID of the simulation</td>
                       </tr>
                       <tr>
                         <td>
@@ -1279,7 +1279,7 @@ http://localhost:9000/graphql
                             <a href="#definition-Int"><code>Int</code></a>
                           </span>
                         </td>
-                        <td> </td>
+                        <td> Number of seconds after which STOP signal must be sent to the container executing each step </td>
                       </tr>
                     </tbody>
                   </table>
@@ -1381,7 +1381,7 @@ http://localhost:9000/graphql
                             <a href="#definition-String"><code>String</code></a>
                           </span>
                         </td>
-                        <td> </td>
+                        <td> Name of the new simulation </td>
                       </tr>
                       <tr>
                         <td>
@@ -1390,7 +1390,7 @@ http://localhost:9000/graphql
                             <a href="#definition-String"><code>String</code></a>
                           </span>
                         </td>
-                        <td> </td>
+                        <td> JSON file description of the data pipeline for which the simulation is created </td>
                       </tr>
                     </tbody>
                   </table>
@@ -1469,7 +1469,7 @@ http://localhost:9000/graphql
                             <a href="#definition-String"><code>String</code></a>
                           </span>
                         </td>
-                        <td> </td>
+                        <td> UUID of the run</td>
                       </tr>
                     </tbody>
                   </table>
@@ -1536,7 +1536,7 @@ http://localhost:9000/graphql
                             <a href="#definition-String"><code>String</code></a>
                           </span>
                         </td>
-                        <td> </td>
+                        <td> UUID of the run </td>
                       </tr>
                     </tbody>
                   </table>
@@ -1603,7 +1603,7 @@ http://localhost:9000/graphql
                             <a href="#definition-String"><code>String</code></a>
                           </span>
                         </td>
-                        <td> </td>
+                        <td> UUID of the run </td>
                       </tr>
                     </tbody>
                   </table>
@@ -1946,256 +1946,8 @@ http://localhost:9000/graphql
                 </div>
               </div>
             </div>
-          </section>
-          <section id="definition-String_comparison_exp" class="definition definition-input-object" data-traverse-target="definition-String_comparison_exp">
-            <div class="definition-group-name">
-              <a href="#group-Types">Types</a>
-            </div>
-            <h2 class="definition-heading">String_comparison_exp</h2>
-            <div class="doc-row">
-              <div class="doc-copy">
-                <div class="definition-description doc-copy-section">
-                  <h5>Description</h5>
-                  <p>Boolean expression to compare columns of type &quot;String&quot;. All fields are combined with logical &#39;AND&#39;.</p>
-                </div>
-                <div class="definition-properties doc-copy-section">
-                  <h5>Fields</h5>
-                  <table>
-                    <thead>
-                      <tr>
-                        <th>Input Field</th>
-                        <th>Description</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr>
-                        <td>
-                          <span class="property-name"><code>_eq</code></span> -
-                          <span class="property-type">
-                            <a href="#definition-String"><code>String</code></a>
-                          </span>
-                        </td>
-                        <td> </td>
-                      </tr>
-                      <tr>
-                        <td>
-                          <span class="property-name"><code>_gt</code></span> -
-                          <span class="property-type">
-                            <a href="#definition-String"><code>String</code></a>
-                          </span>
-                        </td>
-                        <td> </td>
-                      </tr>
-                      <tr>
-                        <td>
-                          <span class="property-name"><code>_gte</code></span> -
-                          <span class="property-type">
-                            <a href="#definition-String"><code>String</code></a>
-                          </span>
-                        </td>
-                        <td> </td>
-                      </tr>
-                      <tr>
-                        <td>
-                          <span class="property-name"><code>_ilike</code></span> -
-                          <span class="property-type">
-                            <a href="#definition-String"><code>String</code></a>
-                          </span>
-                        </td>
-                        <td>
-                          <p>does the column match the given case-insensitive pattern</p>
-                        </td>
-                      </tr>
-                      <tr>
-                        <td>
-                          <span class="property-name"><code>_in</code></span> -
-                          <span class="property-type">
-                            <a href="#definition-String"><code>[String!]</code></a>
-                          </span>
-                        </td>
-                        <td> </td>
-                      </tr>
-                      <tr>
-                        <td>
-                          <span class="property-name"><code>_iregex</code></span> -
-                          <span class="property-type">
-                            <a href="#definition-String"><code>String</code></a>
-                          </span>
-                        </td>
-                        <td>
-                          <p>does the column match the given POSIX regular expression, case insensitive</p>
-                        </td>
-                      </tr>
-                      <tr>
-                        <td>
-                          <span class="property-name"><code>_is_null</code></span> -
-                          <span class="property-type">
-                            <a href="#definition-Boolean"><code>Boolean</code></a>
-                          </span>
-                        </td>
-                        <td> </td>
-                      </tr>
-                      <tr>
-                        <td>
-                          <span class="property-name"><code>_like</code></span> -
-                          <span class="property-type">
-                            <a href="#definition-String"><code>String</code></a>
-                          </span>
-                        </td>
-                        <td>
-                          <p>does the column match the given pattern</p>
-                        </td>
-                      </tr>
-                      <tr>
-                        <td>
-                          <span class="property-name"><code>_lt</code></span> -
-                          <span class="property-type">
-                            <a href="#definition-String"><code>String</code></a>
-                          </span>
-                        </td>
-                        <td> </td>
-                      </tr>
-                      <tr>
-                        <td>
-                          <span class="property-name"><code>_lte</code></span> -
-                          <span class="property-type">
-                            <a href="#definition-String"><code>String</code></a>
-                          </span>
-                        </td>
-                        <td> </td>
-                      </tr>
-                      <tr>
-                        <td>
-                          <span class="property-name"><code>_neq</code></span> -
-                          <span class="property-type">
-                            <a href="#definition-String"><code>String</code></a>
-                          </span>
-                        </td>
-                        <td> </td>
-                      </tr>
-                      <tr>
-                        <td>
-                          <span class="property-name"><code>_nilike</code></span> -
-                          <span class="property-type">
-                            <a href="#definition-String"><code>String</code></a>
-                          </span>
-                        </td>
-                        <td>
-                          <p>does the column NOT match the given case-insensitive pattern</p>
-                        </td>
-                      </tr>
-                      <tr>
-                        <td>
-                          <span class="property-name"><code>_nin</code></span> -
-                          <span class="property-type">
-                            <a href="#definition-String"><code>[String!]</code></a>
-                          </span>
-                        </td>
-                        <td> </td>
-                      </tr>
-                      <tr>
-                        <td>
-                          <span class="property-name"><code>_niregex</code></span> -
-                          <span class="property-type">
-                            <a href="#definition-String"><code>String</code></a>
-                          </span>
-                        </td>
-                        <td>
-                          <p>does the column NOT match the given POSIX regular expression, case insensitive</p>
-                        </td>
-                      </tr>
-                      <tr>
-                        <td>
-                          <span class="property-name"><code>_nlike</code></span> -
-                          <span class="property-type">
-                            <a href="#definition-String"><code>String</code></a>
-                          </span>
-                        </td>
-                        <td>
-                          <p>does the column NOT match the given pattern</p>
-                        </td>
-                      </tr>
-                      <tr>
-                        <td>
-                          <span class="property-name"><code>_nregex</code></span> -
-                          <span class="property-type">
-                            <a href="#definition-String"><code>String</code></a>
-                          </span>
-                        </td>
-                        <td>
-                          <p>does the column NOT match the given POSIX regular expression, case sensitive</p>
-                        </td>
-                      </tr>
-                      <tr>
-                        <td>
-                          <span class="property-name"><code>_nsimilar</code></span> -
-                          <span class="property-type">
-                            <a href="#definition-String"><code>String</code></a>
-                          </span>
-                        </td>
-                        <td>
-                          <p>does the column NOT match the given SQL regular expression</p>
-                        </td>
-                      </tr>
-                      <tr>
-                        <td>
-                          <span class="property-name"><code>_regex</code></span> -
-                          <span class="property-type">
-                            <a href="#definition-String"><code>String</code></a>
-                          </span>
-                        </td>
-                        <td>
-                          <p>does the column match the given POSIX regular expression, case sensitive</p>
-                        </td>
-                      </tr>
-                      <tr>
-                        <td>
-                          <span class="property-name"><code>_similar</code></span> -
-                          <span class="property-type">
-                            <a href="#definition-String"><code>String</code></a>
-                          </span>
-                        </td>
-                        <td>
-                          <p>does the column match the given SQL regular expression</p>
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-              <div class="doc-examples">
-                <div class="example-section example-section-is-code">
-                  <h5>Example</h5>
-                  <html>
-                  <head></head>
-                  <body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
-  <span class="hljs-attr">"_eq"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"_gt"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"_gte"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"_ilike"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"_in"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-string">"abc123"</span><span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"_iregex"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"_is_null"</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">true</span></span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"_like"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"_lt"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"_lte"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"_neq"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"_nilike"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"_nin"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-string">"abc123"</span><span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"_niregex"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"_nlike"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"_nregex"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"_nsimilar"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"_regex"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"_similar"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span>
-<span class="hljs-punctuation">}</span>
-</code></pre> </body>
-                  </html>
-                </div>
-              </div>
-            </div>
-          </section>
-          <section id="definition-bigint" class="definition definition-scalar" data-traverse-target="definition-bigint">
+          </section>          
+          <!-- <section id="definition-bigint" class="definition definition-scalar" data-traverse-target="definition-bigint">
             <div class="definition-group-name">
               <a href="#group-Types">Types</a>
             </div>
@@ -2213,8 +1965,8 @@ http://localhost:9000/graphql
                 </div>
               </div>
             </div>
-          </section>
-          <section id="definition-bigint_comparison_exp" class="definition definition-input-object" data-traverse-target="definition-bigint_comparison_exp">
+          </section> -->
+          <!-- <section id="definition-bigint_comparison_exp" class="definition definition-input-object" data-traverse-target="definition-bigint_comparison_exp">
             <div class="definition-group-name">
               <a href="#group-Types">Types</a>
             </div>
@@ -2341,7 +2093,7 @@ http://localhost:9000/graphql
                 </div>
               </div>
             </div>
-          </section>
+          </section> -->
           <section id="definition-jsonb" class="definition definition-scalar" data-traverse-target="definition-jsonb">
             <div class="definition-group-name">
               <a href="#group-Types">Types</a>
@@ -2361,7 +2113,7 @@ http://localhost:9000/graphql
               </div>
             </div>
           </section>
-          <section id="definition-jsonb_comparison_exp" class="definition definition-input-object" data-traverse-target="definition-jsonb_comparison_exp">
+          <!-- <section id="definition-jsonb_comparison_exp" class="definition definition-input-object" data-traverse-target="definition-jsonb_comparison_exp">
             <div class="definition-group-name">
               <a href="#group-Types">Types</a>
             </div>
@@ -3781,8 +3533,8 @@ http://localhost:9000/graphql
                 </div>
               </div>
             </div>
-          </section>
-          <section id="definition-runs_constraint" class="definition definition-enum" data-traverse-target="definition-runs_constraint">
+          </section> -->
+          <!-- <section id="definition-runs_constraint" class="definition definition-enum" data-traverse-target="definition-runs_constraint">
             <div class="definition-group-name">
               <a href="#group-Types">Types</a>
             </div>
@@ -3824,8 +3576,8 @@ http://localhost:9000/graphql
                 </div>
               </div>
             </div>
-          </section>
-          <section id="definition-runs_insert_input" class="definition definition-input-object" data-traverse-target="definition-runs_insert_input">
+          </section> -->
+          <!-- <section id="definition-runs_insert_input" class="definition definition-input-object" data-traverse-target="definition-runs_insert_input">
             <div class="definition-group-name">
               <a href="#group-Types">Types</a>
             </div>
@@ -4823,8 +4575,8 @@ http://localhost:9000/graphql
                 </div>
               </div>
             </div>
-          </section>
-          <section id="definition-runs_stddev_order_by" class="definition definition-input-object" data-traverse-target="definition-runs_stddev_order_by">
+          </section> -->
+          <!-- <section id="definition-runs_stddev_order_by" class="definition definition-input-object" data-traverse-target="definition-runs_stddev_order_by">
             <div class="definition-group-name">
               <a href="#group-Types">Types</a>
             </div>
@@ -5596,7 +5348,7 @@ http://localhost:9000/graphql
                 </div>
               </div>
             </div>
-          </section>
+          </section> -->
           <section id="definition-simpipe_env_variable_aggregate" class="definition definition-object" data-traverse-target="definition-simpipe_env_variable_aggregate">
             <div class="definition-group-name">
               <a href="#group-Types">Types</a>
