@@ -77,16 +77,16 @@ export async function allSimulations(userid:string):Promise<AllSimulationsQuery>
   return await sdk.AllSimulations({ userid });
 }
 
-export async function allRunsSteps(userid:string):Promise<string> {
-  return JSON.stringify(await sdk.allRunsAndSteps({ userid }), undefined, 2);
+export async function allRunsSteps(userid:string):Promise<AllRunsAndStepsQuery> {
+  // return JSON.stringify(await sdk.allRunsAndSteps({ userid }));
+  return await sdk.allRunsAndSteps({ userid });
 }
 
-export async function createSimulation(model_id:string, name:string, pipeline_description:string, userid:string):
+export async function createSimulation(name:string, pipeline_description:string, userid:string):
 Promise<string> {
   // disabling await-thenable, await is needed for sequential execution
   // eslint-disable-next-line @typescript-eslint/await-thenable
   const result:CreateSimulationMutation = await sdk.createSimulation({
-    model_id,
     name,
     pipeline_description,
     userid,
@@ -284,11 +284,12 @@ export async function startRun(run_id:string):Promise<string> {
 }
 
 export async function getSimulationRunResults(simulation_id:string,
-  run_id:string, userid:string):Promise<string> {
+  run_id:string, userid:string):Promise<GetSimulationRunResultsQuery> {
   // eslint-disable-next-line @typescript-eslint/await-thenable
   const result:GetSimulationRunResultsQuery = await
   sdk.getSimulationRunResults({ simulation_id, run_id, userid });
-  return JSON.stringify(result, undefined, 2);
+  // return JSON.stringify(result);
+  return result;
 }
 
 export async function stopRun(run_id:string, userid:string):Promise<string> {
@@ -341,12 +342,12 @@ export async function queueRun(run_id:string, userid:string):Promise<string> {
 /**
  * function to get all details and runs of a simulation
  */
-// export async function getSimulation(userid:string, simulation_id:string):Promise<GetSimulationQuery> {
-export async function getSimulation(userid:string, simulation_id:string):Promise<string> {
+export async function getSimulation(userid:string, simulation_id:string):Promise<GetSimulationQuery> {
+// export async function getSimulation(userid:string, simulation_id:string):Promise<string> {
   // eslint-disable-next-line @typescript-eslint/await-thenable
   const result:GetSimulationQuery = await sdk.getSimulation({ userid, simulation_id });
-  return JSON.stringify(result, undefined, 2);
-  // return result;
+  // return JSON.stringify(result);
+  return result;
 }
 
 /**
@@ -363,7 +364,7 @@ export async function createSampleSimulation():Promise<string> {
   } catch (error) {
     const errorMessage = `\n 🎌 Error connecting from SIM-PIPE controller to hasura endpoint:\n
     ${(error as Error).message}
-    Check REMOTE_SCHEMA_URL in env file, hasura endpoint and admin secret\n`;
+    Check HASURA_URL in env file, hasura endpoint and admin secret\n`;
     logger.error(errorMessage);
     logger.info('Retrying connecting from controller to hasura endpoint after 5 seconds');
     await setTimeout(5000);

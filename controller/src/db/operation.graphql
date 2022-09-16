@@ -118,18 +118,11 @@ mutation setRunAsFailed($run_id: uuid!) {
 
 
 # modified create simulation to add json string arg for pipeline description
-mutation createSimulation ($name: String, $model_id:uuid!, $pipeline_description: jsonb, $userid: String) {
-  create_simulation(object: {name: $name, model_id: $model_id, pipeline_description: $pipeline_description, userid:$userid }) {
+mutation createSimulation ($name: String, $pipeline_description: jsonb, $userid: String) {
+  create_simulation(object: {name: $name, pipeline_description: $pipeline_description, userid:$userid }) {
     simulation_id
   }
 }
-
-# mutation createSimulation ($model_id: uuid!, $name: String){
-#   create_simulation(object: {model_id: $model_id, name: $name}) {
-#     simulation_id
-#     name
-#   }
-# }
 
 # not used
 query getSimulationIdandSteps($run_id: uuid!) {

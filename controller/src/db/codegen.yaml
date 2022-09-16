@@ -20,4 +20,4 @@ generates:
         timestamp: string
         timestamptz: string
         uuid: string
-        _text: [string]
+        JSON: jsonb

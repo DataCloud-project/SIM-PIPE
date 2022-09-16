@@ -87,12 +87,12 @@
               <li>
                 <a href="#definition-AllSimulations">AllSimulations</a>
               </li>
-              <li>
+              <!-- <li>
                 <a href="#definition-Boolean">Boolean</a>
               </li>
               <li>
                 <a href="#definition-Float">Float</a>
-              </li>
+              </li> -->
               <li>
                 <a href="#definition-Int">Int</a>
               </li>
@@ -107,17 +107,17 @@
                 <a href="#definition-String">String</a>
               </li>
               
-              <li>
+              <!-- <li>
                 <a href="#definition-bigint">bigint</a>
-              </li>
+              </li> -->
               
               <li>
                 <a href="#definition-jsonb">jsonb</a>
               </li>
               
-              <li>
+              <!-- <li>
                 <a href="#definition-numeric">numeric</a>
-              </li>
+              </li> -->
               
               
               <li>
@@ -128,7 +128,7 @@
               
               
               
-              <li>
+              <!-- <li>
                 <a href="#definition-simpipe_logs">simpipe_logs</a>
               </li>
               <li></li>
@@ -140,7 +140,7 @@
               
               <li>
                 <a href="#definition-simpipe_step_status">simpipe_step_status</a>
-              </li>
+              </li> -->
               <li>
                 <a href="#definition-simulations">simulations</a>
               </li>
@@ -148,9 +148,9 @@
                 <a href="#definition-steps">steps</a>
               </li>
               
-              <li>
+              <!-- <li>
                 <a href="#definition-timestamptz">timestamptz</a>
-              </li>
+              </li> -->
              
               <li>
                 <a href="#definition-uuid">uuid</a>
@@ -249,14 +249,14 @@
           <div id="introduction" data-traverse-target="introduction">
             <div id="welcome" class="doc-row">
               <div class="doc-copy">
-                <p>This provides documentation for the SIM-PIPE API which is implemented using GraphQL.</p>
+                <p>This provides documentation for the SIM-PIPE API which is implemented using GraphQL. The API is authenticated and user authentication is managed using keycloak. The URL for token retrieval is <a href=https://datacloud-auth.euprojects.net/auth/realms/user-authentication/protocol/openid-connect/token>https://datacloud-auth.euprojects.net/auth/realms/user-authentication/protocol/openid-connect/token</a>. </p>
               </div>
               <div class="doc-examples">
                 <div class="example-section welcome-contact-section">
                   <h5>Contact</h5>
-                  <p class="contact-name">Antoine Pultier, Aleena Thomas</p>
+                  <p class="contact-name">Antoine Pultier, Aleena Thomas, Nikolay Nikolov</p>
                   <p class="contact-email">
-                    <a href="mailto:Antoine.Pultier@sintef.no, Aleena.Thomas@sintef.no">Antoine.Pultier@sintef.no, Aleena.Thomas@sintef.no</a>
+                    <a href="mailto:Antoine.Pultier@sintef.no">Antoine.Pultier@sintef.no, Aleena.Thomas@sintef.no, Nikolay.Nikolov@sintef.no</a>
                   </p>
                 </div>
                 <div class="example-section welcome-license-section">
@@ -271,7 +271,7 @@
 http://localhost:9000/graphql
 </code></pre> </div>
                 <div class="example-section welcome-api-endpoints-section example-section-is-code">
-                  <h5>Headers</h5> <pre><code>Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJkTGlFODFtazRXUWxJOVZxMVRndGhfWE1Zd3g5SG12cW9VVVloend6MmZZIn0.eyJleHAiOjE2NjMxNDAxODUsImlhdCI6MTY2MzEzNzE4NSwianRpIjoiNzY5ZmEyMTAtZjg1ZS00OWNjLTk4ZjQtMWYzM2E4NWRmMzJhIiwiaXNzIjoiaHR0cHM6Ly9kYXRhY2xvdWQtYXV0aC5ldXByb2plY3RzLm5ldC9hdXRoL3JlYWxtcy91c2VyLWF1dGhlbnRpY2F0aW9uIiwic3ViIjoiNmE0MWYxMGQtOWJkNS00YTZiLTk4ZmItNzY1ZmQyZjA5NDY1IiwidHlwIjoiQmVhcmVyIiwiYXpwIjoic2ltLXBpcGUiLCJzZXNzaW9uX3N0YXRlIjoiZWU1Yjg4ZDktNDFkMi00ODNlLWI4MTktYWU1NDUxNDIxYzVlIiwiYWNyIjoiMSIsInJlYWxtX2FjY2VzcyI6eyJyb2xlcyI6WyJkZWZhdWx0LXJvbGVzLXBsYXRmb3JtIl19LCJzY29wZSI6ImF2YXRhciB1c2VyZnVsbG5hbWUgdXNlcmlkIGVtYWlsIHByb2ZpbGUgb3VpZCIsImVtYWlsX3ZlcmlmaWVkIjpmYWxzZSwicHJlZmVycmVkX3VzZXJuYW1lIjoidGVzdHVzZXIifQ.fxPnINZb7V64w9XKOt9avHNnIS-1i66gul7e3iU_2-E1IXzQIktGNFEik0RHJ9iMcnQ8L50OGtLxGF3Am0vf-ktyZKeOWBAjwpV9fQAAutlR_JwNm9S7Kgb_p8u4hAyVFPfnaTsxalgvm2TdaKgi2ET1XMeflpCOZQ25196VGG6L4LOgaq0AOy7LArARX25FqtZaAaInhKdo6FOCrE_22-sBZRLriWJ0433-BDev_vz4XWKYnPCEtqqheDOKk9F1W88n7m4a4MLIQbT1f5LpHcZiEnQLXx_8NqwGZAFDtujK_3XdQ4K9GG8vhGKSIlLGXE885l2la8UeydSv3gty-w</code></pre> </div>
+                  <h5>Headers</h5> <pre><code>Authorization: Bearer ACCESS_TOKEN </code></pre> </div>
               </div>
             </div>
           </div>
@@ -5349,7 +5349,7 @@ http://localhost:9000/graphql
               </div>
             </div>
           </section> -->
-          <section id="definition-simpipe_env_variable_aggregate" class="definition definition-object" data-traverse-target="definition-simpipe_env_variable_aggregate">
+          <!-- <section id="definition-simpipe_env_variable_aggregate" class="definition definition-object" data-traverse-target="definition-simpipe_env_variable_aggregate">
             <div class="definition-group-name">
               <a href="#group-Types">Types</a>
             </div>
@@ -10517,8 +10517,8 @@ http://localhost:9000/graphql
                 </div>
               </div>
             </div>
-          </section>
-          <section id="definition-simpipe_resource_usage_stddev_fields" class="definition definition-object" data-traverse-target="definition-simpipe_resource_usage_stddev_fields">
+          </section> -->
+          <!-- <section id="definition-simpipe_resource_usage_stddev_fields" class="definition definition-object" data-traverse-target="definition-simpipe_resource_usage_stddev_fields">
             <div class="definition-group-name">
               <a href="#group-Types">Types</a>
             </div>
@@ -13334,7 +13334,7 @@ http://localhost:9000/graphql
                 </div>
               </div>
             </div>
-          </section>
+          </section> -->
           <section id="definition-simulations" class="definition definition-object" data-traverse-target="definition-simulations">
             <div class="definition-group-name">
               <a href="#group-Types">Types</a>
@@ -13580,7 +13580,7 @@ http://localhost:9000/graphql
               </div>
             </div>
           </section>
-          <section id="definition-simulations_aggregate" class="definition definition-object" data-traverse-target="definition-simulations_aggregate">
+          <!-- <section id="definition-simulations_aggregate" class="definition definition-object" data-traverse-target="definition-simulations_aggregate">
             <div class="definition-group-name">
               <a href="#group-Types">Types</a>
             </div>
@@ -17583,8 +17583,8 @@ http://localhost:9000/graphql
                 </div>
               </div>
             </div>
-          </section>
-          <section id="definition-timestamptz" class="definition definition-scalar" data-traverse-target="definition-timestamptz">
+          </section>-->
+          <section id="definition-timestamptz" class="definition definition-scalar" data-traverse-target="definition-timestamptz"> 
             <div class="definition-group-name">
               <a href="#group-Types">Types</a>
             </div>
@@ -17603,7 +17603,7 @@ http://localhost:9000/graphql
               </div>
             </div>
           </section>
-          <section id="definition-timestamptz_comparison_exp" class="definition definition-input-object" data-traverse-target="definition-timestamptz_comparison_exp">
+          <!-- <section id="definition-timestamptz_comparison_exp" class="definition definition-input-object" data-traverse-target="definition-timestamptz_comparison_exp">
             <div class="definition-group-name">
               <a href="#group-Types">Types</a>
             </div>
@@ -17730,27 +17730,32 @@ http://localhost:9000/graphql
                 </div>
               </div>
             </div>
-          </section>
+          </section> -->
           <section id="definition-uuid" class="definition definition-scalar" data-traverse-target="definition-uuid">
             <div class="definition-group-name">
               <a href="#group-Types">Types</a>
             </div>
-            <h2 class="definition-heading">uuid</h2>
+            <h2 class="definition-heading">UUID</h2>
             <div class="doc-row">
-              <div class="doc-copy"> </div>
+              <div class="doc-copy">
+                <div class="definition-description doc-copy-section">
+                  <h5>Description</h5>
+                  <p><code>UUID</code> stands for Universally Unique IDentifier. It's a 128-bit value used for a unique identification. UUID version 4 must be used.</p>
+                </div>
+              </div>
               <div class="doc-examples">
                 <div class="example-section example-section-is-code">
                   <h5>Example</h5>
                   <html>
                   <head></head>
-                  <body><pre><code class="hljs language-gql"><span class="hljs-symbol">uuid</span>
+                  <body><pre><code class="hljs language-gql"><span class="hljs-symbol">4303feb2-74b1-4174-84e0-108904df1c82</span>
 </code></pre> </body>
                   </html>
                 </div>
               </div>
             </div>
           </section>
-          <section id="definition-uuid_comparison_exp" class="definition definition-input-object" data-traverse-target="definition-uuid_comparison_exp">
+          <!-- <section id="definition-uuid_comparison_exp" class="definition definition-input-object" data-traverse-target="definition-uuid_comparison_exp">
             <div class="definition-group-name">
               <a href="#group-Types">Types</a>
             </div>
@@ -21397,7 +21402,7 @@ http://localhost:9000/graphql
                 </div>
               </div>
             </div>
-          </section>
+          </section> -->
           <div class="doc-row no-margin">
             <div class="doc-copy doc-separator">
               <a class="powered-by" href="https://github.com/anvilco/spectaql">Documentation by

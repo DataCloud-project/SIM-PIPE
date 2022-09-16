@@ -9,6 +9,7 @@ import { expressjwt } from 'express-jwt';
 import got from 'got';
 import jwt_decode from 'jwt-decode';
 import pMemoize from 'p-memoize';
+import type { GetSimulationQuery, GetSimulationRunResultsQuery } from 'db/database.js';
 
 import logger from '../logger.js';
 import * as functions from './functions.js';
@@ -20,47 +21,15 @@ process.env.CANCEL_RUN_LIST = '';
  * graphql query and resolvers
  */
 const typeDefs = gql`
-  type Run {
-    run_id: String
-    name: String
-    status: String
-    created: String
-    started: String
-    ended: String 
-  }
-  type Simulation {
-    simulation_id: String
-    name: String
-    created: String
-    runs: [Run]
-    """
-    pipeline_description is defined as type string instead of jsonb as the latter requires defining
-    most of the elements in the SIM-PIPE json schema as a separate graphql type. 
-    """ 
-    pipeline_description: String 
-  }
-  type AllSimulations {
-    simulations: [Simulation] 
-  }
-  input Step {
-    name: String
-    step_number: Int
-    image: String
-    env: [String]
-    type: String
-    prerequisite: [Int]
-  }
-  input Pipeline_Description {
-    steps: [Step]
-  }
+  scalar JSON
   type Query {
-      All_Runs_Steps: String
-      All_Simulations: AllSimulations
-      Get_Simulation(simulation_id:String):String
-      Get_Simulation_Run_Results(simulation_id: String, run_id:String): String
+      All_Simulations: JSON # AllSimulations
+      Get_Simulation(simulation_id:String):JSON #String
+      Get_Simulation_Run_Results(simulation_id: String, run_id:String): JSON # String
+      All_Runs_Steps: JSON #String
   },
   type Mutation {
-    Create_Simulation(model_id:String, name:String, pipeline_description:String): String
+    Create_Simulation(name:String, pipeline_description:String): String
     Create_Run_WithInput(simulation_id: String,name:String, sampleInput:[[String]], 
     env_list: [[String]], timeout_value:Int):
     String
@@ -72,28 +41,27 @@ const typeDefs = gql`
 
 const resolvers = {
   Query: {
-    All_Runs_Steps(_p: unknown, arguments_: unknown, context: { user: any }):unknown {
-      return functions.allRunsSteps(context.user.sub as string);
-    },
     All_Simulations(_p: unknown, arguments_: unknown, context: { user: any }):unknown {
       return functions.allSimulations(context.user.sub as string);
     },
-    Get_Simulation(_p: unknown, arguments_: { simulation_id:string }, context: { user: any }):unknown {
-      return functions.getSimulation(context.user.sub as string, arguments_.simulation_id);
+    async Get_Simulation(_p: unknown, arguments_: { simulation_id:string }, context: { user: any }):Promise<GetSimulationQuery> {
+      return await functions.getSimulation(context.user.sub as string, arguments_.simulation_id);
     },
     async Get_Simulation_Run_Results(_p: unknown, arguments_: { simulation_id:string,
-      run_id:string }, context: { user: any }):Promise<string> {
+      run_id:string }, context: { user: any }):Promise<GetSimulationRunResultsQuery> {
       return await functions.getSimulationRunResults(arguments_.simulation_id, arguments_.run_id, context.user.sub as string);
+    },
+    All_Runs_Steps(_p: unknown, arguments_: unknown, context: { user: any }):unknown {
+      return functions.allRunsSteps(context.user.sub as string);
     },
   },
   Mutation: {
-    async Create_Simulation(_p: unknown, arguments_: { model_id:string, name:string,
+    async Create_Simulation(_p: unknown, arguments_: { name:string,
       pipeline_description: string }, context: { user: any })
       :Promise<string> {
       try {
         const newSimId = await functions.createSimulation(
-          arguments_.model_id, arguments_.name, arguments_.pipeline_description, context.user.sub as string);
-        // return `Simulation has been created with id ${newSimId}`;
+          arguments_.name, arguments_.pipeline_description, context.user.sub as string);
         return JSON.stringify({
           code: 200,
           message: `Simulation has been created with id ${newSimId}`,
@@ -244,10 +212,11 @@ const startSecureServer = async (): Promise<void> => {
 
   try {
     const app = express();
+    // error handling
+
     app.use(
       jwtMiddleware,
     );
-
     await server.start();
     // eslint-disable-next-line @typescript-eslint/await-thenable
     await server.applyMiddleware({ app });

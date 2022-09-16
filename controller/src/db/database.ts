@@ -13,6 +13,7 @@ export type Scalars = {
   Boolean: boolean;
   Int: number;
   Float: number;
+  JSON: jsonb;
   bigint: number;
   jsonb: unknown;
   numeric: number;
@@ -105,6 +106,11 @@ export type Jsonb_Comparison_Exp = {
 /** mutation root */
 export type Mutation_Root = {
   __typename?: 'mutation_root';
+  Create_Run_WithInput?: Maybe<Scalars['String']>;
+  Create_Simulation?: Maybe<Scalars['String']>;
+  Delete_Run?: Maybe<Scalars['String']>;
+  Start_Run?: Maybe<Scalars['String']>;
+  Stop_Run?: Maybe<Scalars['String']>;
   /** insert a single row into the table: "simpipe.simulations" */
   create_simulation?: Maybe<Simulations>;
   /** insert data into the table: "simpipe.simulations" */
@@ -205,10 +211,39 @@ export type Mutation_Root = {
 
 
 /** mutation root */
-export type Mutation_RootCreate_SimulationArgs = {
-  object: Simulations_Insert_Input;
-  on_conflict?: InputMaybe<Simulations_On_Conflict>;
+export type Mutation_RootCreate_Run_WithInputArgs = {
+  env_list?: InputMaybe<Array<InputMaybe<Array<InputMaybe<Scalars['String']>>>>>;
+  name?: InputMaybe<Scalars['String']>;
+  sampleInput?: InputMaybe<Array<InputMaybe<Array<InputMaybe<Scalars['String']>>>>>;
+  simulation_id?: InputMaybe<Scalars['String']>;
+  timeout_value?: InputMaybe<Scalars['Int']>;
 };
+
+
+/** mutation root */
+export type Mutation_RootCreate_SimulationArgs = {
+  name?: InputMaybe<Scalars['String']>;
+  pipeline_description?: InputMaybe<Scalars['String']>;
+};
+
+
+/** mutation root */
+export type Mutation_RootDelete_RunArgs = {
+  run_id?: InputMaybe<Scalars['String']>;
+};
+
+
+/** mutation root */
+export type Mutation_RootStart_RunArgs = {
+  run_id?: InputMaybe<Scalars['String']>;
+};
+
+
+/** mutation root */
+export type Mutation_RootStop_RunArgs = {
+  run_id?: InputMaybe<Scalars['String']>;
+};
+
 
 
 /** mutation root */
@@ -584,6 +619,10 @@ export enum Order_By {
 
 export type Query_Root = {
   __typename?: 'query_root';
+  All_Runs_Steps?: Maybe<Scalars['JSON']>;
+  All_Simulations?: Maybe<Scalars['JSON']>;
+  Get_Simulation?: Maybe<Scalars['JSON']>;
+  Get_Simulation_Run_Results?: Maybe<Scalars['JSON']>;
   /** fetch data from the table: "simpipe.runs" using primary key columns */
   get_run?: Maybe<Runs>;
   /** fetch data from the table: "simpipe.simulations" using primary key columns */
@@ -632,6 +671,17 @@ export type Query_Root = {
   steps_aggregate: Steps_Aggregate;
   /** fetch data from the table: "simpipe.steps" using primary key columns */
   steps_by_pk?: Maybe<Steps>;
+};
+
+
+export type Query_RootGet_SimulationArgs = {
+  simulation_id?: InputMaybe<Scalars['String']>;
+};
+
+
+export type Query_RootGet_Simulation_Run_ResultsArgs = {
+  run_id?: InputMaybe<Scalars['String']>;
+  simulation_id?: InputMaybe<Scalars['String']>;
 };
 
 
@@ -2394,8 +2444,6 @@ export type Simulations = {
   __typename?: 'simulations';
   /** DateTime of when the simulation was created */
   created: Scalars['timestamptz'];
-  /** UUID of the model */
-  model_id: Scalars['uuid'];
   name?: Maybe<Scalars['String']>;
   pipeline_description?: Maybe<Scalars['jsonb']>;
   /** An array relationship */
@@ -2481,7 +2529,6 @@ export type Simulations_Bool_Exp = {
   _not?: InputMaybe<Simulations_Bool_Exp>;
   _or?: InputMaybe<Array<Simulations_Bool_Exp>>;
   created?: InputMaybe<Timestamptz_Comparison_Exp>;
-  model_id?: InputMaybe<Uuid_Comparison_Exp>;
   name?: InputMaybe<String_Comparison_Exp>;
   pipeline_description?: InputMaybe<Jsonb_Comparison_Exp>;
   runs?: InputMaybe<Runs_Bool_Exp>;
@@ -2491,8 +2538,6 @@ export type Simulations_Bool_Exp = {
 
 /** unique or primary key constraints on table "simpipe.simulations" */
 export enum Simulations_Constraint {
-  /** unique or primary key constraint */
-  SimulationsModelIdKey = 'simulations_modelId_key',
   /** unique or primary key constraint */
   SimulationsPkey = 'simulations_pkey'
 }
@@ -2516,8 +2561,6 @@ export type Simulations_Delete_Key_Input = {
 export type Simulations_Insert_Input = {
   /** DateTime of when the simulation was created */
   created?: InputMaybe<Scalars['timestamptz']>;
-  /** UUID of the model */
-  model_id?: InputMaybe<Scalars['uuid']>;
   name?: InputMaybe<Scalars['String']>;
   pipeline_description?: InputMaybe<Scalars['jsonb']>;
   runs?: InputMaybe<Runs_Arr_Rel_Insert_Input>;
@@ -2531,8 +2574,6 @@ export type Simulations_Max_Fields = {
   __typename?: 'simulations_max_fields';
   /** DateTime of when the simulation was created */
   created?: Maybe<Scalars['timestamptz']>;
-  /** UUID of the model */
-  model_id?: Maybe<Scalars['uuid']>;
   name?: Maybe<Scalars['String']>;
   /** UUID of the simulation */
   simulation_id?: Maybe<Scalars['uuid']>;
@@ -2544,8 +2585,6 @@ export type Simulations_Min_Fields = {
   __typename?: 'simulations_min_fields';
   /** DateTime of when the simulation was created */
   created?: Maybe<Scalars['timestamptz']>;
-  /** UUID of the model */
-  model_id?: Maybe<Scalars['uuid']>;
   name?: Maybe<Scalars['String']>;
   /** UUID of the simulation */
   simulation_id?: Maybe<Scalars['uuid']>;
@@ -2578,7 +2617,6 @@ export type Simulations_On_Conflict = {
 /** Ordering options when selecting data from "simpipe.simulations". */
 export type Simulations_Order_By = {
   created?: InputMaybe<Order_By>;
-  model_id?: InputMaybe<Order_By>;
   name?: InputMaybe<Order_By>;
   pipeline_description?: InputMaybe<Order_By>;
   runs_aggregate?: InputMaybe<Runs_Aggregate_Order_By>;
@@ -2602,8 +2640,6 @@ export enum Simulations_Select_Column {
   /** column name */
   Created = 'created',
   /** column name */
-  ModelId = 'model_id',
-  /** column name */
   Name = 'name',
   /** column name */
   PipelineDescription = 'pipeline_description',
@@ -2617,8 +2653,6 @@ export enum Simulations_Select_Column {
 export type Simulations_Set_Input = {
   /** DateTime of when the simulation was created */
   created?: InputMaybe<Scalars['timestamptz']>;
-  /** UUID of the model */
-  model_id?: InputMaybe<Scalars['uuid']>;
   name?: InputMaybe<Scalars['String']>;
   pipeline_description?: InputMaybe<Scalars['jsonb']>;
   /** UUID of the simulation */
@@ -2630,8 +2664,6 @@ export type Simulations_Set_Input = {
 export enum Simulations_Update_Column {
   /** column name */
   Created = 'created',
-  /** column name */
-  ModelId = 'model_id',
   /** column name */
   Name = 'name',
   /** column name */
@@ -3442,7 +3474,6 @@ export type SetRunAsFailedMutation = { __typename?: 'mutation_root', update_runs
 
 export type CreateSimulationMutationVariables = Exact<{
   name?: InputMaybe<Scalars['String']>;
-  model_id: Scalars['uuid'];
   pipeline_description?: InputMaybe<Scalars['jsonb']>;
   userid?: InputMaybe<Scalars['String']>;
 }>;
@@ -3462,7 +3493,7 @@ export type GetRunDetailsQueryVariables = Exact<{
 }>;
 
 
-export type GetRunDetailsQuery = { __typename?: 'query_root', runs: Array<{ __typename?: 'runs', simulation_id: string, name?: string | null, env_list?: Array<Array<string>>, timeout_value?: number | null, steps: Array<{ __typename?: 'steps', step_id: number, pipeline_step_number: number, image: string, name: string }> }> };
+export type GetRunDetailsQuery = { __typename?: 'query_root', runs: Array<{ __typename?: 'runs', simulation_id: string, name?: string | null, env_list?: unknown | null, timeout_value?: number | null, steps: Array<{ __typename?: 'steps', step_id: number, pipeline_step_number: number, image: string, name: string }> }> };
 
 export type InsertResourceUsageMutationVariables = Exact<{
   cpu?: InputMaybe<Scalars['numeric']>;
@@ -3661,9 +3692,9 @@ export const SetRunAsFailedDocument = gql`
 }
     `;
 export const CreateSimulationDocument = gql`
-    mutation createSimulation($name: String, $model_id: uuid!, $pipeline_description: jsonb, $userid: String) {
+    mutation createSimulation($name: String, $pipeline_description: jsonb, $userid: String) {
   create_simulation(
-    object: {name: $name, model_id: $model_id, pipeline_description: $pipeline_description, userid: $userid}
+    object: {name: $name, pipeline_description: $pipeline_description, userid: $userid}
   ) {
     simulation_id
   }
@@ -3856,7 +3887,7 @@ export function getSdk(client: GraphQLClient, withWrapper: SdkFunctionWrapper = 
     setRunAsFailed(variables: SetRunAsFailedMutationVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<SetRunAsFailedMutation> {
       return withWrapper((wrappedRequestHeaders) => client.request<SetRunAsFailedMutation>(SetRunAsFailedDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'setRunAsFailed', 'mutation');
     },
-    createSimulation(variables: CreateSimulationMutationVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<CreateSimulationMutation> {
+    createSimulation(variables?: CreateSimulationMutationVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<CreateSimulationMutation> {
       return withWrapper((wrappedRequestHeaders) => client.request<CreateSimulationMutation>(CreateSimulationDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'createSimulation', 'mutation');
     },
     getSimulationIdandSteps(variables: GetSimulationIdandStepsQueryVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<GetSimulationIdandStepsQuery> {

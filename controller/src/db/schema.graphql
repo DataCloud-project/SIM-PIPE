@@ -19,6 +19,7 @@ input Int_comparison_exp {
   _neq: Int
   _nin: [Int!]
 }
+scalar JSON
 """
 Boolean expression to compare columns of type "String". All fields are combined with logical 'AND'.
 """
@@ -95,6 +96,11 @@ input jsonb_comparison_exp {
 }
 "mutation root"
 type mutation_root {
+  Create_Run_WithInput(env_list: [[String]], name: String, sampleInput: [[String]], simulation_id: String, timeout_value: Int): String
+  Create_Simulation(name: String, pipeline_description: String): String
+  Delete_Run(run_id: String): String
+  Start_Run(run_id: String): String
+  Stop_Run(run_id: String): String
   """
   insert a single row into the table: "simpipe.simulations"
   """
@@ -319,6 +325,10 @@ enum order_by {
   desc_nulls_last
 }
 type query_root {
+  All_Runs_Steps: JSON
+  All_Simulations: JSON
+  Get_Simulation(simulation_id: String): JSON
+  Get_Simulation_Run_Results(run_id: String, simulation_id: String): JSON
   """
   fetch data from the table: "simpipe.runs" using primary key columns
   """
@@ -1898,8 +1908,6 @@ columns and relationships of "simpipe.simulations"
 type simulations {
   "DateTime of when the simulation was created"
   created: timestamptz!
-  "UUID of the model"
-  model_id: uuid!
   name: String
   pipeline_description("JSON select path" path: String): jsonb
   "An array relationship"
@@ -1937,7 +1945,6 @@ input simulations_bool_exp {
   _not: simulations_bool_exp
   _or: [simulations_bool_exp!]
   created: timestamptz_comparison_exp
-  model_id: uuid_comparison_exp
   name: String_comparison_exp
   pipeline_description: jsonb_comparison_exp
   runs: runs_bool_exp
@@ -1948,8 +1955,6 @@ input simulations_bool_exp {
 unique or primary key constraints on table "simpipe.simulations"
 """
 enum simulations_constraint {
-  "unique or primary key constraint"
-  simulations_modelId_key
   "unique or primary key constraint"
   simulations_pkey
 }
@@ -1971,8 +1976,6 @@ input type for inserting data into table "simpipe.simulations"
 input simulations_insert_input {
   "DateTime of when the simulation was created"
   created: timestamptz
-  "UUID of the model"
-  model_id: uuid
   name: String
   pipeline_description: jsonb
   runs: runs_arr_rel_insert_input
@@ -1984,8 +1987,6 @@ input simulations_insert_input {
 type simulations_max_fields {
   "DateTime of when the simulation was created"
   created: timestamptz
-  "UUID of the model"
-  model_id: uuid
   name: String
   "UUID of the simulation"
   simulation_id: uuid
@@ -1995,8 +1996,6 @@ type simulations_max_fields {
 type simulations_min_fields {
   "DateTime of when the simulation was created"
   created: timestamptz
-  "UUID of the model"
-  model_id: uuid
   name: String
   "UUID of the simulation"
   simulation_id: uuid
@@ -2032,7 +2031,6 @@ Ordering options when selecting data from "simpipe.simulations".
 """
 input simulations_order_by {
   created: order_by
-  model_id: order_by
   name: order_by
   pipeline_description: order_by
   runs_aggregate: runs_aggregate_order_by
@@ -2055,8 +2053,6 @@ enum simulations_select_column {
   "column name"
   created
   "column name"
-  model_id
-  "column name"
   name
   "column name"
   pipeline_description
@@ -2071,8 +2067,6 @@ input type for updating data in table "simpipe.simulations"
 input simulations_set_input {
   "DateTime of when the simulation was created"
   created: timestamptz
-  "UUID of the model"
-  model_id: uuid
   name: String
   pipeline_description: jsonb
   "UUID of the simulation"
@@ -2085,8 +2079,6 @@ update columns of table "simpipe.simulations"
 enum simulations_update_column {
   "column name"
   created
-  "column name"
-  model_id
   "column name"
   name
   "column name"
