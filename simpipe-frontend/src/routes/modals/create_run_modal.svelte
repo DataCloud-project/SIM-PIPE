@@ -59,7 +59,7 @@
             // refresh run list when new run is created
             variables = { simulation_id }; 
             result = await $graphQLClient.request( get_simulation_query, variables );
-            $clicked_simulation = JSON.parse(result.Get_Simulation).simulations[0];
+                $clicked_simulation = result.Get_Simulation.simulations[0];
         }
         else {
             open(Alert, {message: '🎌 Failed! Error creating run'});

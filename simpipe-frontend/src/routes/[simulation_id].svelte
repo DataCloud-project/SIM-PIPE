@@ -9,7 +9,7 @@
 			const { simulation_id } = params;
 			const variables = { simulation_id }; // userid from access token
 			const result = await get(graphQLClient).request(get_simulation_query, variables);
-			const simulation = JSON.parse(result.Get_Simulation).simulations[0];
+			const simulation = result.Get_Simulation.simulations[0];
 			return {
 				props: {
 					simulation

@@ -6,14 +6,16 @@
 	import CreateSimulationButton from './modals/create_simulation_button.svelte';
 	import { simulations_list } from '../stores/stores';
 	import { init_keycloak } from './keycloak.svelte';
-
+	
 	let simulations;	
 	let loading = async () => {
 		try {
 			await init_keycloak();
 			simulations = await get(graphQLClient).request(all_simulations_query);
-			// $: $simulations_list = await get(graphQLClient).request(all_simulations_query);
-		} catch {}
+		} catch {
+			console.log('🎌 Error! could load simulations');
+			simulations = 'error';
+		}
 	};
 	loading();
 	$: $simulations_list = simulations;
@@ -25,7 +27,9 @@
 		<li class="table-header">Simulations</li>
 		<br />
 		{#if !simulations}
-			<p>Loading simulations...</p>
+			<p style="font-size:20px;">Loading simulations...</p>
+		{:else if simulations === 'error'}
+			<p style="font-size:20px;">🎌 Error! could load simulations</p>
 		{:else}
 			{#each $simulations_list.All_Simulations.simulations as simulation}
 				<li class="pointer row">

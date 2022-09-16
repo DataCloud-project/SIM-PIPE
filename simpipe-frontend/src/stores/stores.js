@@ -2,9 +2,9 @@ import { writable, readable } from 'svelte/store';
 import { GraphQLClient  } from 'graphql-request'
 
 /**
- * userid of the currently logged in user
+ * username of the currently logged in user
  */
-//  export let userid = writable('');
+export let username = writable('');
 /**
  * indicators to show if a run or step is clicked 
  */
