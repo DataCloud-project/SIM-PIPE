@@ -46,7 +46,7 @@
                   <li>
                     <a href="#query-Get_Simulation_Run_Results">Get_Simulation_Run_Results</a>
                   </li>
-                  <li>
+                  <!-- <li>
                     <a href="#query-get_run">get_run</a>
                   </li>
                   <li>
@@ -54,7 +54,7 @@
                   </li>
                   <li>
                     <a href="#query-simulations">simulations</a>
-                  </li>
+                  </li> -->
                 </ul>
               </li>
               <li class="nav-group-section">
@@ -84,35 +84,35 @@
           <div class="nav-group">
             <h4 class="nav-group-title">Types</h4>
             <ul class="nav-group-items">
-              <li>
+              <!-- <li>
                 <a href="#definition-AllSimulations">AllSimulations</a>
-              </li>
+              </li> -->
               <!-- <li>
                 <a href="#definition-Boolean">Boolean</a>
               </li>
               <li>
                 <a href="#definition-Float">Float</a>
               </li> -->
-              <li>
+              <!-- <li>
                 <a href="#definition-Int">Int</a>
               </li>
               
-              <li>
+               <li>
                 <a href="#definition-Run">Run</a>
               </li>
               <li>
                 <a href="#definition-Simulation">Simulation</a>
-              </li>
-              <li>
+              </li> -->
+              <!-- <li>
                 <a href="#definition-String">String</a>
-              </li>
+              </li> -->
               
               <!-- <li>
                 <a href="#definition-bigint">bigint</a>
               </li> -->
               
               <li>
-                <a href="#definition-jsonb">jsonb</a>
+                <a href="#definition-jsonb">JSON object</a>
               </li>
               
               <!-- <li>
@@ -120,9 +120,9 @@
               </li> -->
               
               
-              <li>
+              <!-- <li>
                 <a href="#definition-runs">runs</a>
-              </li>
+              </li> -->
               
               
               
@@ -141,19 +141,19 @@
               <li>
                 <a href="#definition-simpipe_step_status">simpipe_step_status</a>
               </li> -->
-              <li>
+              <!-- <li>
                 <a href="#definition-simulations">simulations</a>
               </li>
               <li>
                 <a href="#definition-steps">steps</a>
-              </li>
+              </li> -->
               
               <!-- <li>
                 <a href="#definition-timestamptz">timestamptz</a>
               </li> -->
              
               <li>
-                <a href="#definition-uuid">uuid</a>
+                <a href="#definition-uuid">UUID</a>
               </li>
               
             </ul>
@@ -249,7 +249,16 @@
           <div id="introduction" data-traverse-target="introduction">
             <div id="welcome" class="doc-row">
               <div class="doc-copy">
-                <p>This provides documentation for the SIM-PIPE API which is implemented using GraphQL. The API is authenticated and user authentication is managed using keycloak. The URL for token retrieval is <a href=https://datacloud-auth.euprojects.net/auth/realms/user-authentication/protocol/openid-connect/token>https://datacloud-auth.euprojects.net/auth/realms/user-authentication/protocol/openid-connect/token</a>. </p>
+                <p>This provides documentation for the SIM-PIPE API which is implemented using GraphQL. The API is authenticated and user authentication is managed using keycloak. The URL for token retrieval is <a href=https://datacloud-auth.euprojects.net/auth/realms/user-authentication/protocol/openid-connect/token>https://datacloud-auth.euprojects.net/auth/realms/user-authentication/protocol/openid-connect/token</a>.
+                </p> More documentation on how to query a GraphQL API can be found <a href="https://graphql.org/learn/queries/">here</a>.  </p>
+
+                <p> Some tutorials for GraphQL beginners are also listed below.</p>
+                <ul>
+                  <li> <a href="https://stepzen.com/docs/using-graphql/graphql-query-basics">GraphQL Query Basics</a></li>
+                  <li> <a href="https://hasura.io/learn/graphql/intro-graphql/graphql-queries/">GraphQL Queries - Fetching data</a></li>
+
+                  
+                </ul>
               </div>
               <div class="doc-examples">
                 <div class="example-section welcome-contact-section">
@@ -334,36 +343,6 @@ http://localhost:9000/graphql
                             "status": "completed"
                         }
                     ]
-                },
-                {
-                    "run_id": "8a6cfe6f-6862-4148-a890-d7befc307812",
-                    "name": "run 3",
-                    "created": "2022-09-02T10:35:37.779273+00:00",
-                    "started": "2022-09-13T13:06:46.465217+00:00",
-                    "status": "failed",
-                    "steps": [
-                        {
-                            "step_id": 1171,
-                            "created": "2022-09-02T10:35:37.798415+00:00",
-                            "started": null,
-                            "ended": null,
-                            "status": "failed"
-                        },
-                        {
-                            "step_id": 1172,
-                            "created": "2022-09-02T10:35:37.81222+00:00",
-                            "started": null,
-                            "ended": null,
-                            "status": "cancelled"
-                        },
-                        {
-                            "step_id": 1173,
-                            "created": "2022-09-02T10:35:37.821831+00:00",
-                            "started": null,
-                            "ended": null,
-                            "status": "cancelled"
-                        }
-                    ]
                 }
               ]
             }"</span><span class="hljs-punctuation">}</span><span class="hljs-punctuation">}</span>
@@ -382,8 +361,8 @@ http://localhost:9000/graphql
               <div class="doc-copy">
                 <div class="operation-response doc-copy-section">
                   <h5>Response</h5>
-                  <p> Returns an
-                    <a href="#definition-AllSimulations"><code>AllSimulations</code></a>
+                  <p> Returns a
+                    <a href="#definition-jsonb"><code>JSON object</code></a>
                   </p>
                 </div>
               </div>
@@ -490,7 +469,7 @@ http://localhost:9000/graphql
                   <h5>Variables</h5>
                   <html>
                   <head></head>
-                  <body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"simulation_id"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">}</span>
+                  <body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"simulation_id"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"5ca5ee36-b992-43e1-97f3-35b94de7a8fc"</span><span class="hljs-punctuation">}</span>
 </code></pre> </body>
                   </html>
                 </div>
@@ -533,50 +512,12 @@ http://localhost:9000/graphql
                                                     "rx_value": 1764,
                                                     "time": "2022-08-15T14:23:20.005296+00:00",
                                                     "tx_value": 0
-                                                },
-                                                {
-                                                    "id": 1566,
-                                                    "step_id": 1075,
-                                                    "cpu": 0,
-                                                    "memory": 724992,
-                                                    "memory_max": 3833856,
-                                                    "rx_value": 2301,
-                                                    "time": "2022-08-15T14:23:22.035166+00:00",
-                                                    "tx_value": 0
                                                 }
                                             ],
                                             "log": {
                                                 "text": "These are the inputs\r\nThese are the env variables\r\nHOSTNAME=b4a0d3ea453b\r\nv1=3737\r\nPWD=/\r\nHOME=/root\r\nTERM=xterm\r\nSHLVL=1\r\nPATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin\r\n_=/usr/bin/env\r\n343888425\r\nSleeping for 3 seconds\r\nThese are the ouputs\r\noutput3.txt  output343888425.txt\r\n"
                                             }
-                                        },
-                                        {
-                                            "step_id": 1076,
-                                            "status": "completed",
-                                            "created": "2022-08-24T10:29:47.791766+00:00",
-                                            "started": "2022-08-15T14:23:38.681101+00:00",
-                                            "ended": "2022-08-15T14:23:54.816474+00:00",
-                                            "image": "i1",
-                                            "name": "step 02",
-                                            "pipeline_step_number": 2,
-                                            "resource_usages": [],
-                                            "log": {
-                                                "text": "These are the inputs\r\noutput3.txt  output343888425.txt\r\nThese are the env variables\r\nHOSTNAME=2d475a34ec1d\r\nv2=val2\r\nPWD=/\r\nHOME=/root\r\nTERM=xterm\r\nSHLVL=1\r\nPATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin\r\n_=/usr/bin/env\r\n74279766\r\nSleeping for 6 seconds\r\nThese are the ouputs\r\noutput6.txt  output74279766.txt\r\n"
-                                            }
-                                        },
-                                        {
-                                            "step_id": 1077,
-                                            "status": "completed",
-                                            "created": "2022-08-24T10:29:47.806465+00:00",
-                                            "started": "2022-08-15T14:24:02.401323+00:00",
-                                            "ended": "2022-08-15T14:24:19.59025+00:00",
-                                            "image": "i1",
-                                            "name": "step 03",
-                                            "pipeline_step_number": 3,
-                                            "resource_usages": [],
-                                            "log": {
-                                                "text": "These are the inputs\r\noutput6.txt  output74279766.txt\r\nThese are the env variables\r\nHOSTNAME=91b40b482895\r\nv3=val3\r\nPWD=/\r\nHOME=/root\r\nTERM=xterm\r\nSHLVL=1\r\nPATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin\r\n_=/usr/bin/env\r\n135046395\r\nSleeping for 7 seconds\r\nThese are the ouputs\r\noutput135046395.txt  output7.txt\r\n"
-                                            }
-                                        }
+                                        } 
                                     ]
                                 }
                             ]
@@ -659,8 +600,8 @@ http://localhost:9000/graphql
                   <html>
                   <head></head>
                   <body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
-  <span class="hljs-attr">"run_id"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"simulation_id"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span>
+  <span class="hljs-attr">"run_id"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"4303feb2-74b1-4174-84e0-108904df1c82"</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"simulation_id"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"4303feb2-74b1-4174-84e0-108904df1c82"</span>
 <span class="hljs-punctuation">}</span>
 </code></pre> </body>
                   </html>
@@ -751,7 +692,7 @@ http://localhost:9000/graphql
               </div>
             </div>
           </section>
-          <section id="query-get_run" class="operation operation-query" data-traverse-target="query-get_run">
+          <!-- <section id="query-get_run" class="operation operation-query" data-traverse-target="query-get_run">
             <div class="operation-group-name">
               <a href="#group-Operations-Queries">Queries</a>
             </div>
@@ -902,7 +843,7 @@ http://localhost:9000/graphql
                 </div>
               </div>
             </div>
-          </section>
+          </section> -->
           <!-- <section id="query-get_simulation" class="operation operation-query" data-traverse-target="query-get_simulation">
             <div class="operation-group-name">
               <a href="#group-Operations-Queries">Queries</a>
@@ -1214,7 +1155,7 @@ http://localhost:9000/graphql
               <div class="doc-copy">
                 <div class="operation-description doc-copy-section">
                   <h5>Description</h5>
-                  <p>insert data into the table: &quot;simpipe.runs&quot;</p>
+                  <p>Create a new run for the given simulation</p>
                 </div>
               </div>
             </div>
@@ -1317,7 +1258,7 @@ http://localhost:9000/graphql
   <span class="hljs-attr">"env_list"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"sampleInput"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-string">"abc123"</span><span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"simulation_id"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"simulation_id"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"3703feb2-74b1-4174-84e0-108904df1c82"</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"timeout_value"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span>
 <span class="hljs-punctuation">}</span>
 </code></pre> </body>
@@ -1327,7 +1268,7 @@ http://localhost:9000/graphql
                   <h5>Response</h5>
                   <html>
                   <head></head>
-                  <body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"data"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span><span class="hljs-attr">"Create_Run_WithInput"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">}</span><span class="hljs-punctuation">}</span>
+                  <body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"data"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span><span class="hljs-attr">"Create_Run_WithInput"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">'{"code":200,"message":"Run has been created with id 4303feb2-74b1-4174-84e0-108904df1c82"}'</span><span class="hljs-punctuation">}</span><span class="hljs-punctuation">}</span>
 </code></pre> </body>
                   </html>
                 </div>
@@ -1343,7 +1284,7 @@ http://localhost:9000/graphql
               <div class="doc-copy">
                 <div class="operation-description doc-copy-section">
                   <h5>Description</h5>
-                  <p>insert a single row into the table: &quot;simpipe.simulations&quot;</p>
+                  <p>Create a new simulation</p>
                 </div>
               </div>
             </div>
@@ -1365,15 +1306,6 @@ http://localhost:9000/graphql
                       </tr>
                     </thead>
                     <tbody>
-                      <tr>
-                        <td>
-                          <span class="property-name"><code>model_id</code></span> -
-                          <span class="property-type">
-                            <a href="#definition-String"><code>String</code></a>
-                          </span>
-                        </td>
-                        <td> </td>
-                      </tr>
                       <tr>
                         <td>
                           <span class="property-name"><code>name</code></span> -
@@ -1403,7 +1335,6 @@ http://localhost:9000/graphql
                   <html>
                   <head></head>
                   <body><pre><code class="hljs language-gql"><span class="hljs-symbol"><span class="hljs-keyword">mutation</span> Create_Simulation<span class="hljs-tag">(
-  <span class="hljs-code">$model_id</span>:<span class="hljs-type"> String,</span>
   <span class="hljs-code">$name</span>:<span class="hljs-type"> String,</span>
   <span class="hljs-code">$pipeline_description</span>:<span class="hljs-type"> String
 </span>)</span> <span class="hljs-tag">{
@@ -1421,9 +1352,39 @@ http://localhost:9000/graphql
                   <html>
                   <head></head>
                   <body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
-  <span class="hljs-attr">"model_id"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"pipeline_description"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span>
+  <span class="hljs-attr">"pipeline_description"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"{
+    "steps":[
+        {
+            "name": "step 01",
+            "step_number": 1,
+            "image": "i1",
+            "env": ["v1=val1"],
+            "type": "batch"
+        },
+        {
+            "name": "step 02",
+            "step_number": 2,
+            "image": "i1",
+            "env": ["v2=val2"],
+            "type": "batch",
+            "prerequisite":[
+                1
+            ]
+        },
+        {
+            "name": "step 03",
+            "step_number": 3,
+            "image": "i1",
+            "env": ["v3=val3"],
+            "type": "batch",
+            "prerequisite":[
+                2
+            ]
+        }
+    ]
+ }
+ "</span>
 <span class="hljs-punctuation">}</span>
 </code></pre> </body>
                   </html>
@@ -1432,7 +1393,7 @@ http://localhost:9000/graphql
                   <h5>Response</h5>
                   <html>
                   <head></head>
-                  <body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"data"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span><span class="hljs-attr">"Create_Simulation"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">}</span><span class="hljs-punctuation">}</span>
+                  <body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"data"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span><span class="hljs-attr">"Create_Simulation"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">'{"code":200,"message":"Simulation has been created with id 3f0de2ea-9b96-471c-9df2-d523647cb07a"}'</span><span class="hljs-punctuation">}</span><span class="hljs-punctuation">}</span>
 </code></pre> </body>
                   </html>
                 </div>
@@ -1491,7 +1452,7 @@ http://localhost:9000/graphql
                   <h5>Variables</h5>
                   <html>
                   <head></head>
-                  <body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"run_id"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">}</span>
+                  <body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"run_id"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"4303feb2-74b1-4174-84e0-108904df1c82"</span><span class="hljs-punctuation">}</span>
 </code></pre> </body>
                   </html>
                 </div>
@@ -1499,7 +1460,7 @@ http://localhost:9000/graphql
                   <h5>Response</h5>
                   <html>
                   <head></head>
-                  <body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"data"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span><span class="hljs-attr">"Delete_Run"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">}</span><span class="hljs-punctuation">}</span>
+                  <body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"data"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span><span class="hljs-attr">"Delete_Run"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">'{"code":200,"message":"Successfully deleted run"}'</span><span class="hljs-punctuation">}</span><span class="hljs-punctuation">}</span>
 </code></pre> </body>
                   </html>
                 </div>
@@ -1558,7 +1519,7 @@ http://localhost:9000/graphql
                   <h5>Variables</h5>
                   <html>
                   <head></head>
-                  <body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"run_id"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">}</span>
+                  <body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"run_id"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"4303feb2-74b1-4174-84e0-108904df1c82"</span><span class="hljs-punctuation">}</span>
 </code></pre> </body>
                   </html>
                 </div>
@@ -1566,7 +1527,7 @@ http://localhost:9000/graphql
                   <h5>Response</h5>
                   <html>
                   <head></head>
-                  <body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"data"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span><span class="hljs-attr">"Start_Run"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">}</span><span class="hljs-punctuation">}</span>
+                  <body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"data"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span><span class="hljs-attr">"Start_Run"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">'{"code":200,"message":"Run has been added to queue"}'</span><span class="hljs-punctuation">}</span><span class="hljs-punctuation">}</span>
 </code></pre> </body>
                   </html>
                 </div>
@@ -1625,7 +1586,7 @@ http://localhost:9000/graphql
                   <h5>Variables</h5>
                   <html>
                   <head></head>
-                  <body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"run_id"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">}</span>
+                  <body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"run_id"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"4303feb2-74b1-4174-84e0-108904df1c82"</span><span class="hljs-punctuation">}</span>
 </code></pre> </body>
                   </html>
                 </div>
@@ -1633,14 +1594,14 @@ http://localhost:9000/graphql
                   <h5>Response</h5>
                   <html>
                   <head></head>
-                  <body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"data"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span><span class="hljs-attr">"Stop_Run"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">}</span><span class="hljs-punctuation">}</span>
+                  <body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"data"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span><span class="hljs-attr">"Stop_Run"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">'{"code":200,"message":"Successfully sent stop signal to current run"}'</span><span class="hljs-punctuation">}</span><span class="hljs-punctuation">}</span>
 </code></pre> </body>
                   </html>
                 </div>
               </div>
             </div>
           </section>
-          <h1 id="group-Types" class="group-heading" data-traverse-target="group-Types">Types</h1>
+          <!-- <h1 id="group-Types" class="group-heading" data-traverse-target="group-Types">Types</h1>
           <section id="definition-AllSimulations" class="definition definition-object" data-traverse-target="definition-AllSimulations">
             <h2 class="definition-heading">AllSimulations</h2>
             <div class="doc-row">
@@ -1679,8 +1640,8 @@ http://localhost:9000/graphql
                 </div>
               </div>
             </div>
-          </section>
-          <section id="definition-Boolean" class="definition definition-scalar" data-traverse-target="definition-Boolean">
+          </section> -->
+          <!-- <section id="definition-Boolean" class="definition definition-scalar" data-traverse-target="definition-Boolean">
             <div class="definition-group-name">
               <a href="#group-Types">Types</a>
             </div>
@@ -1946,7 +1907,7 @@ http://localhost:9000/graphql
                 </div>
               </div>
             </div>
-          </section>          
+          </section>           -->
           <!-- <section id="definition-bigint" class="definition definition-scalar" data-traverse-target="definition-bigint">
             <div class="definition-group-name">
               <a href="#group-Types">Types</a>
@@ -2098,15 +2059,31 @@ http://localhost:9000/graphql
             <div class="definition-group-name">
               <a href="#group-Types">Types</a>
             </div>
-            <h2 class="definition-heading">jsonb</h2>
+            <h2 class="definition-heading">JSON</h2>
             <div class="doc-row">
-              <div class="doc-copy"> </div>
+              <div class="doc-copy"> 
+                <div class="definition-description doc-copy-section">
+                  <h5>Description</h5>
+                  <p>JSON object literals are surrounded by curly braces {}.
+                    JSON object literals contains key/value pairs separated by a comma.
+                    Keys must be strings, and values must be a valid JSON data type:
+                    <ul>
+                      <li>string</li>
+                      <li>number</li>
+                      <li>object</li>
+                      <li>array</li>
+                      <li>boolean</li>
+                      <li>null</li>
+                    </ul>
+                  </p>
+                </div>
+              </div>
               <div class="doc-examples">
                 <div class="example-section example-section-is-code">
                   <h5>Example</h5>
                   <html>
                   <head></head>
-                  <body><pre><code class="hljs language-gql"><span class="hljs-symbol">jsonb</span>
+                  <body><pre><code class="hljs language-gql"><span class="hljs-symbol">{"name":"John", "age":30, "car":null}                  </span>
 </code></pre> </body>
                   </html>
                 </div>
@@ -13335,7 +13312,7 @@ http://localhost:9000/graphql
               </div>
             </div>
           </section> -->
-          <section id="definition-simulations" class="definition definition-object" data-traverse-target="definition-simulations">
+          <!-- <section id="definition-simulations" class="definition definition-object" data-traverse-target="definition-simulations">
             <div class="definition-group-name">
               <a href="#group-Types">Types</a>
             </div>
@@ -13579,7 +13556,7 @@ http://localhost:9000/graphql
                 </div>
               </div>
             </div>
-          </section>
+          </section> -->
           <!-- <section id="definition-simulations_aggregate" class="definition definition-object" data-traverse-target="definition-simulations_aggregate">
             <div class="definition-group-name">
               <a href="#group-Types">Types</a>
@@ -17584,7 +17561,7 @@ http://localhost:9000/graphql
               </div>
             </div>
           </section>-->
-          <section id="definition-timestamptz" class="definition definition-scalar" data-traverse-target="definition-timestamptz"> 
+          <!-- <section id="definition-timestamptz" class="definition definition-scalar" data-traverse-target="definition-timestamptz"> 
             <div class="definition-group-name">
               <a href="#group-Types">Types</a>
             </div>
@@ -17602,7 +17579,7 @@ http://localhost:9000/graphql
                 </div>
               </div>
             </div>
-          </section>
+          </section> -->
           <!-- <section id="definition-timestamptz_comparison_exp" class="definition definition-input-object" data-traverse-target="definition-timestamptz_comparison_exp">
             <div class="definition-group-name">
               <a href="#group-Types">Types</a>
