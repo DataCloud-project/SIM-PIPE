@@ -12,7 +12,7 @@
         return new Promise(function (resolve) {
             (async function wait_for_completion(){
                 const result = await $graphQLClient.request( get_simulation_query, { simulation_id } );
-                $clicked_simulation = JSON.parse(result.Get_Simulation).simulations[0];
+                $clicked_simulation = result.Get_Simulation.simulations[0];
                 $clicked_simulation.runs.every(run => {
                     if(run.run_id === $clicked_run.run_id) {
                         $clicked_run = run;
