@@ -222,15 +222,15 @@
 </script>
 
 <div class="graphs">
-	<div id="cpu_container" style="width:800px; height:600px;" />
+	<div id="cpu_container" style="width:880px; height:600px;" />
 </div>
 
 <div class="graphs">
-	<div id="memory_container" style="width:800px; height:600px;" />
+	<div id="memory_container" style="width:880px; height:600px;" />
 </div>
 
 <div class="graphs">
-	<div id="network_container" style="width:800px; height:600px;" />
+	<div id="network_container" style="width:880px; height:600px;" />
 </div>
 
 <!-- <div class="graphs">

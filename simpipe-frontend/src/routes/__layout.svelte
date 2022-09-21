@@ -4,7 +4,12 @@
 </script>
 
 <header>
-	<h1>SIM-PIPE UI</h1>
+	<h1 style="text-align:center;">SIM-PIPE UI
+		<span style="float:right; font-size:20px; background-color:darkseagreen;">{$username} logged in</span>
+	</h1>
+	<div style="text-align:right; ">Log out*</div>
+	
+	
 	<!-- <h5>
 		{#if $username != ''}
 			{$username} logged in 
@@ -21,8 +26,9 @@
 
 <style>
 	header {
-		justify-content: center;
-		display: flex;
+		/* justify-content: center; */
+		/* display: flex; */
+		padding: 5px;
 		background-color: rgb(249, 163, 97);
 	}
 	h1 {

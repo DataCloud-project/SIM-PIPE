@@ -37,7 +37,7 @@
 		{#each $steps_list as step, index (step)}
 			<li
 				class="pointer"
-				class:active={step === $clicked_step}
+				class:active={step.step_id === $clicked_step.step_id}
 				{index}
 				on:click={() => stepOnClick(step)}
 			>

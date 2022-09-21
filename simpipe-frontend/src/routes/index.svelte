@@ -62,6 +62,6 @@
 
 	a {
 		color: black;
-		font-size: 16px;
+		font-size: 22px;
 	}
 </style>

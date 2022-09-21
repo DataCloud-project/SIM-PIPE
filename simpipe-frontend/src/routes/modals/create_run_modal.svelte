@@ -19,7 +19,7 @@
         pipeline_steps = JSON.parse($clicked_simulation.pipeline_description).steps;
     }
 
-    let timeout_value;
+    let timeout_values = [];
     let show_env_list = [];
     let arrow = {false: '↓', true: '↑'};
     pipeline_steps.forEach((step, index) => {
@@ -34,10 +34,13 @@
     }
     async function execute_create_run() {
         for (const [index, env_entry] of env_list_entries.entries()) {
+            // formatting env list entries in the correct format
             env_list[index] = [];
             for (const key in env_entry) {
                 env_list[index].push([key, env_entry[key]].join('='))
             };
+            // checking timeout_values and resetting to 0 for undefined
+            timeout_values[index] = parseInt(timeout_values[index]);
         }
         // get sample input files for the run
         let sampleInput = [];
@@ -47,14 +50,8 @@
             let text = await file.text();
             sampleInput[index].push(text);            
         }    
-        if(!timeout_value) {
-            timeout_value = 0;
-        }
-        else {
-            timeout_value = parseInt(timeout_value);
-        }
         // call create run with the entered details
-        let variables = { simulation_id, name, sampleInput, env_list, timeout_value }; 
+        let variables = { simulation_id, name, sampleInput, env_list, timeout_values }; 
         let result;
         try {
             result = await $graphQLClient.request( create_run_mutation, variables );
@@ -103,10 +100,10 @@
                 {/each}
                 {/if}
                 <br>
+                {#if pipeline_steps[pipeline_steps.length-1].type == "continuous"}
+                    <p  class="left-margin"> Timeout for container <input bind:value={timeout_values[index]} placeholder="Enter timeout in seconds"></p>
+                {/if}
                 {/each}
-            {#if pipeline_steps[pipeline_steps.length-1].type == "continuous"}
-                <p  class="left-margin"> Timeout for container <input bind:value={timeout_value} placeholder="Enter timeout in seconds"></p>
-            {/if}
     </div>
 
     <br>
