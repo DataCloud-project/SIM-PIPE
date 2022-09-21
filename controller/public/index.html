@@ -35,13 +35,13 @@
                 </h5>
                 <ul class="nav-group-section-items">
                   <li>
-                    <a href="#query-All_Runs_Steps">All_Runs_Steps</a>
+                    <a href="#query-All_Simulations">Fetch all simulations</a>
                   </li>
                   <li>
-                    <a href="#query-All_Simulations">All_Simulations</a>
+                    <a href="#query-Get_Simulation">Fetch a simulation</a>
                   </li>
                   <li>
-                    <a href="#query-Get_Simulation">Get_Simulation</a>
+                    <a href="#query-All_Runs_Steps">Fetch all runs</a>
                   </li>
                   <!-- <li>
                     <a href="#query-Get_Simulation_Run_Results">Get_Simulation_Run_Results</a>
@@ -63,19 +63,19 @@
                 </h5>
                 <ul class="nav-group-section-items">
                   <li>
-                    <a href="#mutation-Create_Run_WithInput">Create_Run_WithInput</a>
+                    <a href="#mutation-Create_Run_WithInput">Create a new run</a>
                   </li>
                   <li>
-                    <a href="#mutation-Create_Simulation">Create_Simulation</a>
+                    <a href="#mutation-Create_Simulation">Create a new simulation</a>
                   </li>
                   <li>
-                    <a href="#mutation-Delete_Run">Delete_Run</a>
+                    <a href="#mutation-Delete_Run">Delete a run</a>
                   </li>
                   <li>
-                    <a href="#mutation-Start_Run">Start_Run</a>
+                    <a href="#mutation-Start_Run">Start a run</a>
                   </li>
                   <li>
-                    <a href="#mutation-Stop_Run">Stop_Run</a>
+                    <a href="#mutation-Stop_Run">Stop an active run</a>
                   </li>
                 </ul>
               </li>
@@ -90,7 +90,11 @@
               
              <li>
                 <a href="#definition-uuid">UUID</a>
-              </li>
+             </li>
+
+             <li>
+              <a href="#definition-pipeline_description">Pipeline Description</a>
+           </li>
               
             </ul>
           </div>
@@ -144,87 +148,11 @@ http://localhost:9000/graphql
             </div>
           </div>
           <h1 id="group-Operations-Queries" class="group-heading" data-traverse-target="group-Operations-Queries">Queries</h1>
-          <section id="query-All_Runs_Steps" class="operation operation-query" data-traverse-target="query-All_Runs_Steps">
-            <h2 class="operation-heading "> <code>All_Runs_Steps</code> </h2>
-            <div class="doc-row">
-              <div class="doc-copy">
-                <div class="operation-description doc-copy-section">
-                  <h5>Description</h5>
-                  <p>Get details of all runs belonging to the user.</p>
-                </div>
-              </div>
-            </div>
-            <div class="doc-row">
-              <div class="doc-copy">
-                <div class="operation-response doc-copy-section">
-                  <h5>Response</h5>
-                  <p> Returns a
-                    <a href="#definition-jsonb"><code>JSON object</code></a>
-                    containing all runs belonging to the user, details of all steps in the runs, and all resource usage details (for completed runs) for each step.
-                  </p>
-                </div>
-              </div>
-              <div class="doc-examples">
-                <h4 class="example-heading">Example</h4>
-                <div class="example-section example-section-is-code operation-query-example">
-                  <h5>Query</h5>
-                  <html>
-                  <head></head>
-                  <body><pre><code class="hljs language-gql"><span class="hljs-symbol"><span class="hljs-keyword">query</span> All_Runs_Steps <span class="hljs-tag">{
-  <span class="hljs-symbol">All_Runs_Steps</span>
-}</span></span>
-</code></pre> </body>
-                  </html>
-                </div>
-                <div class="example-section example-section-is-code operation-response-example">
-                  <h5>Response</h5>
-                  <html>
-                  <head></head>
-                  <body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"data"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span><span class="hljs-attr">"All_Runs_Steps"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"{       
-            "runs": [
-                {
-                    "run_id": "4303feb2-74b1-4174-84e0-108904df1c82",
-                    "name": "run37",
-                    "created": "2022-08-24T10:29:47.743358+00:00",
-                    "started": "2022-08-24T10:29:55.902093+00:00",
-                    "status": "completed",
-                    "steps": [
-                        {
-                            "step_id": 1075,
-                            "created": "2022-08-24T10:29:47.774653+00:00",
-                            "started": "2022-08-15T14:23:17.905705+00:00",
-                            "ended": "2022-08-15T14:23:31.1328+00:00",
-                            "status": "completed"
-                        },
-                        {
-                            "step_id": 1076,
-                            "created": "2022-08-24T10:29:47.791766+00:00",
-                            "started": "2022-08-15T14:23:38.681101+00:00",
-                            "ended": "2022-08-15T14:23:54.816474+00:00",
-                            "status": "completed"
-                        },
-                        {
-                            "step_id": 1077,
-                            "created": "2022-08-24T10:29:47.806465+00:00",
-                            "started": "2022-08-15T14:24:02.401323+00:00",
-                            "ended": "2022-08-15T14:24:19.59025+00:00",
-                            "status": "completed"
-                        }
-                    ]
-                }
-              ]
-            }"</span><span class="hljs-punctuation">}</span><span class="hljs-punctuation">}</span>
-</code></pre> </body>
-                  </html>
-                </div>
-              </div>
-            </div>
-          </section>
           <section id="query-All_Simulations" class="operation operation-query" data-traverse-target="query-All_Simulations">
             <div class="operation-group-name">
               <a href="#group-Operations-Queries">Queries</a>
             </div>
-            <h2 class="operation-heading "> <code>All_Simulations</code> </h2>
+            <h2 class="operation-heading "> <code>Fetch all simulations</code> </h2>
             <div class="doc-row">
               <div class="doc-copy">
                 <div class="operation-description doc-copy-section">
@@ -298,7 +226,7 @@ http://localhost:9000/graphql
             <div class="operation-group-name">
               <a href="#group-Operations-Queries">Queries</a>
             </div>
-            <h2 class="operation-heading "> <code>Get_Simulation</code> </h2>
+            <h2 class="operation-heading "> <code>Fetch a simulation</code> </h2>
             <div class="doc-row">
               <div class="doc-copy">
                 <div class="operation-description doc-copy-section">
@@ -418,9 +346,87 @@ http://localhost:9000/graphql
               </div>
             </div>
           </section>
+          <section id="query-All_Runs_Steps" class="operation operation-query" data-traverse-target="query-All_Runs_Steps">
+            <h2 class="operation-heading "> <code>Fetch all runs</code> </h2>
+            <div class="doc-row">
+              <div class="doc-copy">
+                <div class="operation-description doc-copy-section">
+                  <h5>Description</h5>
+                  <p>Get details of all runs belonging to the user.</p>
+                </div>
+              </div>
+            </div>
+            <div class="doc-row">
+              <div class="doc-copy">
+                <div class="operation-response doc-copy-section">
+                  <h5>Response</h5>
+                  <p> Returns a
+                    <a href="#definition-jsonb"><code>JSON object</code></a>
+                    containing all runs belonging to the user, details of all steps in the runs, and all resource usage details (for completed runs) for each step.
+                  </p>
+                </div>
+              </div>
+              <div class="doc-examples">
+                <h4 class="example-heading">Example</h4>
+                <div class="example-section example-section-is-code operation-query-example">
+                  <h5>Query</h5>
+                  <html>
+                  <head></head>
+                  <body><pre><code class="hljs language-gql"><span class="hljs-symbol"><span class="hljs-keyword">query</span> All_Runs_Steps <span class="hljs-tag">{
+  <span class="hljs-symbol">All_Runs_Steps</span>
+}</span></span>
+</code></pre> </body>
+                  </html>
+                </div>
+                <div class="example-section example-section-is-code operation-response-example">
+                  <h5>Response</h5>
+                  <html>
+                  <head></head>
+                  <body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"data"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span><span class="hljs-attr">"All_Runs_Steps"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"{       
+            "runs": [
+                {
+                    "run_id": "4303feb2-74b1-4174-84e0-108904df1c82",
+                    "name": "run37",
+                    "created": "2022-08-24T10:29:47.743358+00:00",
+                    "started": "2022-08-24T10:29:55.902093+00:00",
+                    "status": "completed",
+                    "steps": [
+                        {
+                            "step_id": 1075,
+                            "created": "2022-08-24T10:29:47.774653+00:00",
+                            "started": "2022-08-15T14:23:17.905705+00:00",
+                            "ended": "2022-08-15T14:23:31.1328+00:00",
+                            "status": "completed"
+                        },
+                        {
+                            "step_id": 1076,
+                            "created": "2022-08-24T10:29:47.791766+00:00",
+                            "started": "2022-08-15T14:23:38.681101+00:00",
+                            "ended": "2022-08-15T14:23:54.816474+00:00",
+                            "status": "completed"
+                        },
+                        {
+                            "step_id": 1077,
+                            "created": "2022-08-24T10:29:47.806465+00:00",
+                            "started": "2022-08-15T14:24:02.401323+00:00",
+                            "ended": "2022-08-15T14:24:19.59025+00:00",
+                            "status": "completed"
+                        }
+                    ]
+                }
+              ]
+            }"</span><span class="hljs-punctuation">}</span><span class="hljs-punctuation">}</span>
+</code></pre> </body>
+                  </html>
+                </div>
+              </div>
+            </div>
+          </section>
+          
+          
           <h1 id="group-Operations-Mutations" class="group-heading" data-traverse-target="group-Operations-Mutations">Mutations</h1>
           <section id="mutation-Create_Run_WithInput" class="operation operation-mutation" data-traverse-target="mutation-Create_Run_WithInput">
-            <h2 class="operation-heading "> <code>Create_Run_WithInput</code> </h2>
+            <h2 class="operation-heading "> <code>Create a new run</code> </h2>
             <div class="doc-row">
               <div class="doc-copy">
                 <div class="operation-description doc-copy-section">
@@ -549,7 +555,7 @@ http://localhost:9000/graphql
             <div class="operation-group-name">
               <a href="#group-Operations-Mutations">Mutations</a>
             </div>
-            <h2 class="operation-heading "> <code>Create_Simulation</code> </h2>
+            <h2 class="operation-heading "> <code>Create a new simulation</code> </h2>
             <div class="doc-row">
               <div class="doc-copy">
                 <div class="operation-description doc-copy-section">
@@ -674,7 +680,7 @@ http://localhost:9000/graphql
             <div class="operation-group-name">
               <a href="#group-Operations-Mutations">Mutations</a>
             </div>
-            <h2 class="operation-heading "> <code>Delete_Run</code> </h2>
+            <h2 class="operation-heading "> <code>Delete a run</code> </h2>
             <div class="doc-row">
               <div class="doc-copy">
                 <div class="operation-response doc-copy-section">
@@ -741,7 +747,7 @@ http://localhost:9000/graphql
             <div class="operation-group-name">
               <a href="#group-Operations-Mutations">Mutations</a>
             </div>
-            <h2 class="operation-heading "> <code>Start_Run</code> </h2>
+            <h2 class="operation-heading "> <code>Start a run</code> </h2>
             <div class="doc-row">
               <div class="doc-copy">
                 <div class="operation-response doc-copy-section">
@@ -808,7 +814,7 @@ http://localhost:9000/graphql
             <div class="operation-group-name">
               <a href="#group-Operations-Mutations">Mutations</a>
             </div>
-            <h2 class="operation-heading "> <code>Stop_Run</code> </h2>
+            <h2 class="operation-heading "> <code>Stop an active Run</code> </h2>
             <div class="doc-row">
               <div class="doc-copy">
                 <div class="operation-response doc-copy-section">
@@ -924,6 +930,65 @@ http://localhost:9000/graphql
                   <html>
                   <head></head>
                   <body><pre><code class="hljs language-gql"><span class="hljs-symbol">4303feb2-74b1-4174-84e0-108904df1c82</span>
+</code></pre> </body>
+                  </html>
+                </div>
+              </div>
+            </div>
+          </section>
+          <section id="definition-pipeline_description" class="definition definition-scalar" data-traverse-target="definition-uuid">
+            <div class="definition-group-name">
+              <a href="#group-Types">Types</a>
+            </div>
+            <h2 class="definition-heading">Pipeline Description</h2>
+            <div class="doc-row">
+              <div class="doc-copy">
+                <div class="definition-description doc-copy-section">
+                  <h5>Description</h5>
+                  <p>SIM-PIPE currently accepts description of pipelines in the JSON format described
+                     <a href="https://github.com/DataCloud-project/SIM-PIPE/blob/main/controller/schema/pipeline_schema.v1.json">here</a> in the official SIM-PIPE GitHub page.</p>
+                  <p>An example of a JSON file adhering to the accepted format is provided
+                     <a href="https://github.com/DataCloud-project/SIM-PIPE/blob/main/controller/schema/tlu_v1.json">here</a>.</p>
+                </div>
+              </div>
+              <div class="doc-examples">
+                <div class="example-section example-section-is-code">
+                  <h5>Example</h5>
+                  <html>
+                  <head></head>
+                  <body><pre><code class="hljs language-gql"><span class="hljs-symbol">
+{
+  "steps":[
+      {
+          "name": "step 01",
+          "step_number": 1,
+          "image": "i1",
+          "env": ["v1=val1"],
+          "type": "batch"
+      },
+      {
+          "name": "step 02",
+          "step_number": 2,
+          "image": "i1",
+          "env": ["v2=val2"],
+          "type": "batch",
+          "prerequisite":[
+              1
+          ]
+      },
+      {
+          "name": "step 03",
+          "step_number": 3,
+          "image": "i1",
+          "env": ["v3=val3"],
+          "type": "batch",
+          "prerequisite":[
+              2
+          ]
+      }
+  ]
+}
+                 </span>
 </code></pre> </body>
                   </html>
                 </div>
