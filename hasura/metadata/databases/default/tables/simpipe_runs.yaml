@@ -40,7 +40,7 @@ select_permissions:
         - simulation_id
         - started
         - status
-        - timeout_value
+        - timeout_values
         - userid
       filter: {}
 update_permissions:

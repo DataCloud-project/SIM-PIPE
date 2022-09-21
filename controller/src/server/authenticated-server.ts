@@ -31,7 +31,7 @@ const typeDefs = gql`
   type Mutation {
     Create_Simulation(name:String, pipeline_description:String): String
     Create_Run_WithInput(simulation_id: String,name:String, sampleInput:[[String]], 
-    env_list: [[String]], timeout_value:Int):
+    env_list: [[String]], timeout_values:[Int]):
     String
     Start_Run(run_id:String): String
     Stop_Run(run_id:String): String
@@ -82,7 +82,7 @@ const resolvers = {
       name:string,
       sampleInput:[[string, string]],
       env_list: [[string]],
-      timeout_value: number
+      timeout_values: [number]
     }, context: { user: any }):Promise<string> {
       let newRunId;
       try {
@@ -92,7 +92,7 @@ const resolvers = {
           arguments_.sampleInput,
           context.user.sub as string,
           arguments_.env_list,
-          arguments_.timeout_value);
+          arguments_.timeout_values);
         return JSON.stringify({
           code: 200,
           message: `Run has been created with id ${newRunId}`,

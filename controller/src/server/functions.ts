@@ -142,7 +142,7 @@ async function parseDSL(simulation_id:string):Promise<[StepDSL]> {
 }
 
 export async function createRun(simulation_id:string, name:string, userid:string,
-  environment_list: [[string]], timeout_value: number):Promise<string> {
+  environment_list: [[string]], timeout_values: [number]):Promise<string> {
   // read dsl, validate and use it to create steps in the run
   const steps:Array<StepDSL> = await parseDSL(simulation_id);
   const result:CreateRunMutation = await sdk.createRun({
@@ -150,7 +150,7 @@ export async function createRun(simulation_id:string, name:string, userid:string
     name,
     userid,
     env_list: environment_list,
-    timeout_value,
+    timeout_values,
   });
   if (!result.insert_runs_one?.run_id) {
     throw new Error('🎌 Undefined results from sdk.createRun function');
@@ -187,10 +187,10 @@ async function checkSimulationOwner(simulation_id:string, userid:string):Promise
 
 export async function createRunWithInput(simulation_id: string,
   name: string, sampleInput: [[string, string]], userid:string, environment_list: [[string]],
-  timeout_value: number): Promise<string> {
+  timeout_values: [number]): Promise<string> {
   // only owner of the simulation can create a new run
   await checkSimulationOwner(simulation_id, userid);
-  const runId = await createRun(simulation_id, name, userid, environment_list, timeout_value);
+  const runId = await createRun(simulation_id, name, userid, environment_list, timeout_values);
   fs.mkdirSync(`${uploadDirectory}${runId}`, { recursive: true });
   // write sample input to uploaded_files/runId
   // eslint-disable-next-line no-restricted-syntax
@@ -216,7 +216,7 @@ export async function startRun(run_id:string):Promise<string> {
   }
   // get steps, and runtime configuration entered during create run
   // eslint-disable-next-line @typescript-eslint/naming-convention
-  const { steps, env_list, timeout_value } = result.runs[0];
+  const { steps, env_list, timeout_values } = result.runs[0];
   // set runId and simulationId once for all runs
   const currentStep:types.Step = {
     simId: result.runs[0].simulation_id,
@@ -240,8 +240,8 @@ export async function startRun(run_id:string):Promise<string> {
     currentStep.image = step.image;
     currentStep.stepNumber = step.pipeline_step_number;
     currentStep.stepId = step.step_id;
-    if (!env_list) {
-      throw new Error('Error! List of environment variables is undefined');
+    if (!env_list || !timeout_values) {
+      throw new Error('Error! List of environment variables/ timeout values for container undefined');
     }
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     currentStep.env = env_list[step.pipeline_step_number - 1];
@@ -249,7 +249,7 @@ export async function startRun(run_id:string):Promise<string> {
     process.env.STEP_NUMBER = `${step.pipeline_step_number}`;
     process.env.IMAGE = step.image;
     // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-    process.env.CONTAINER_TIME_LIMIT = `${timeout_value}`;
+    process.env.CONTAINER_TIME_LIMIT = `${timeout_values[step.pipeline_step_number - 1]}`;
     // testing step type
     // adding try catch to handle failed steps
     try {
