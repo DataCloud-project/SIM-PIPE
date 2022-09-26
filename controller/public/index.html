@@ -147,7 +147,7 @@ http://localhost:9000/graphql
               </div>
             </div>
           </div>
-          <h1 id="group-Operations-Queries" class="group-heading" data-traverse-target="group-Operations-Queries">Queries</h1>
+          <!-- <h1 id="group-Operations-Queries" class="group-heading" data-traverse-target="group-Operations-Queries">Queries</h1> -->
           <section id="query-All_Simulations" class="operation operation-query" data-traverse-target="query-All_Simulations">
             <div class="operation-group-name">
               <a href="#group-Operations-Queries">Queries</a>
@@ -440,7 +440,7 @@ http://localhost:9000/graphql
                 <div class="operation-response doc-copy-section">
                   <h5>Response</h5>
                   <p> Returns a
-                    <a href="#definition-jsonb"><code>JSON object</code></a>
+                    <a href="#definition-jsonb"><code>JSON object</code></a>with the tags code (number) and a message (string).
                   </p>
                 </div>
                 <div class="operation-arguments doc-copy-section">
@@ -531,9 +531,9 @@ http://localhost:9000/graphql
                   <html>
                   <head></head>
                   <body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
-  <span class="hljs-attr">"env_list"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"env_list"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[[</span><span class="hljs-string">"step1_env1=102, step1_env2=test"</span><span class="hljs-punctuation">]]</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"sampleInput"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-string">"abc123"</span><span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"sampleInput"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[[</span><span class="hljs-string">"file1, content of file 1</content>"</span><span class="hljs-punctuation">]]</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"simulation_id"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"3703feb2-74b1-4174-84e0-108904df1c82"</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"timeout_value"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span>
 <span class="hljs-punctuation">}</span>
@@ -569,7 +569,7 @@ http://localhost:9000/graphql
                 <div class="operation-response doc-copy-section">
                   <h5>Response</h5>
                   <p> Returns a
-                    <a href="#definition-String"><code>String</code></a>
+                    <a href="#definition-String"><code>JSON string</code></a> with the tags code (number) and a message (string).
                   </p>
                 </div>
                 <div class="operation-arguments doc-copy-section">
@@ -686,7 +686,7 @@ http://localhost:9000/graphql
                 <div class="operation-response doc-copy-section">
                   <h5>Response</h5>
                   <p> Returns a
-                    <a href="#definition-String"><code>String</code></a>
+                    <a href="#definition-String">JSON string</a> with the tags code (number) and a message (string).
                   </p>
                 </div>
                 <div class="operation-arguments doc-copy-section">
@@ -753,7 +753,7 @@ http://localhost:9000/graphql
                 <div class="operation-response doc-copy-section">
                   <h5>Response</h5>
                   <p> Returns a
-                    <a href="#definition-String"><code>String</code></a>
+                    <a href="#definition-String">JSON string</a> with the tags code (number) and a message (string).
                   </p>
                 </div>
                 <div class="operation-arguments doc-copy-section">
@@ -820,7 +820,7 @@ http://localhost:9000/graphql
                 <div class="operation-response doc-copy-section">
                   <h5>Response</h5>
                   <p> Returns a
-                    <a href="#definition-String"><code>String</code></a>
+                    <a href="#definition-String">JSON string</a> with the tags code (number) and a message (string).
                   </p>
                 </div>
                 <div class="operation-arguments doc-copy-section">

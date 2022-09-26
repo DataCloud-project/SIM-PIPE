@@ -85,13 +85,16 @@ pico .env
 
 The [docker-compose.yaml](https://github.com/DataCloud-project/SIM-PIPE/blob/main/docker-compose.yaml) refers to environment settings that must be updated, such as the IP address of the host running the SIM-PIPE tool and the IP address of the host running the SIM-PIPE Sandbox. These settings are set in the [.env](https://github.com/DataCloud-project/SIM-PIPE/blob/main/.env) file.
 
-* `REMOTE_SCHEMA_URL`: URL to the host running the SIM-PIPE tool. Default value is `http://192.168.1.6:9000`.
+<!-- * `REMOTE_SCHEMA_URL`: URL to the host running the SIM-PIPE tool. Default value is `http://192.168.1.6:9000`. -->
+* `HASURA_URL`: URL to the host running hasura service. Default value is `http://192.168.1.6:9000`.
 * `SANDBOX_IP`: IP address of the sandbox VM. Default value is `'192.168.56.1'`.
-* `CONTAINER_TIME_LIMIT`: Number of seconds to wait before sending STOP signal to running container. Default value is `20` seconds.
+<!-- * `CONTAINER_TIME_LIMIT`: Number of seconds to wait before sending STOP signal to running container. Default value is `20` seconds. -->
 * `CONTAINER_STOP_TIMEOUT`: Number of seconds to wait after sending STOP signal to running container. Default value is `5` seconds.
 * `POLLING_INTERVAL`: Polling interval (in seconds) for collecting resource usage statistics. Default value is `1` second.
+* `HASURA_ADMIN_SECRET`: Admin password for hasura service. Default value is `hasuraadminsecret` second.
+* `POSTGRES_PASSWORD`: Password for TimescaleDB database service. Default value is `postgrespassword` second.
 
-Use your favorite editor and change the IP address in the `REMOTE_SCHEMA_URL` and the `SANDBOX_IP` settings accordingly, e.g.:
+Use your favorite editor and change the IP address in the `HASURA_URL` and the `SANDBOX_IP` settings accordingly, e.g.:
 
 ```
 pico .env
@@ -118,7 +121,7 @@ Clone SIM-PIPE repository into a folder using the command:
 git clone https://github.com/DataCloud-project/SIM-PIPE.git
 ```
 
-After entering into the cloned folder, run the following commands to install Node.js, [Dockerode](https://github.com/apocas/dockerode), and [ssh2-ftp-client](https://github.com/theophilusx/ssh2-sftp-client). Also install [winston logger](https://github.com/winstonjs/winston) for logging.
+After entering into the cloned folder, run the following command to install Node.js, [Dockerode](https://github.com/apocas/dockerode), and [ssh2-ftp-client](https://github.com/theophilusx/ssh2-sftp-client), [winston logger](https://github.com/winstonjs/winston) for logging, and all the necessary packages needed to setup SIM-PIPE controller.
 
 ```
 npm install
@@ -132,7 +135,7 @@ The same as step 3. above when running on Ubuntu.
 
 The same as step 4. above when running on Ubuntu.
 
-### Configuring the AppSmith user interface
+<!-- ### Configuring the AppSmith user interface
 
 After running Docker Compose, the SIM-PIPE tool can be accessed in a Web browser on port 8085, e.g., http://localhost:8085, if it was deployed on the localhost.
 
@@ -164,4 +167,14 @@ Import the [appsmith-frontend.json](https://github.com/DataCloud-project/SIM-PIP
 
 Finally, launch the SIM-PIPE Frontend app.
 
-![alt text](https://raw.githubusercontent.com/DataCloud-project/SIM-PIPE/main/docs/sim-pipe_frontend_simulations.png)
+![alt text](https://raw.githubusercontent.com/DataCloud-project/SIM-PIPE/main/docs/sim-pipe_frontend_simulations.png) -->
+
+### Setting up SIM-PIPE Svelte user interface
+
+<!-- will move this into a docker container -->
+Go into ```simpipe-frontend ```folder and run the following command.
+```
+npm run dev --open
+```
+In the output, the message ```VITE v3.0.4  ready in *** ms``` will be displayed followed by a URL.
+The SIM-PIPE user interface can be accessed by entring the URL in a browser.
