@@ -60,7 +60,7 @@ As the request comes in from the UI with a pipeline description, the controller 
 To install SIM-PIPE follow these steps:
 
 1. The SIM-PIPE Sandbox environment must be set up first. Follow the installation instructions in the [sandbox](https://github.com/DataCloud-project/SIM-PIPE-Simulation-Controller/tree/main/sandbox) folder.
-2. After the sandbox is set up, proceed to install the other components of the SIM-PIPE tool (i.e., User Interface and Simulation Controller) by following the installations instructions in the [controller](https://github.com/DataCloud-project/SIM-PIPE-Simulation-Controller/tree/main/sandbox) folder.
+2. After the sandbox is set up, proceed to install the other components of the SIM-PIPE tool (i.e., User Interface and Simulation Controller) by following the installations instructions in the [controller](https://github.com/DataCloud-project/SIM-PIPE/tree/main/controller) folder.
 
 ## Running your first data pipeline simulation
 
