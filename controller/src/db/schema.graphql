@@ -1598,8 +1598,8 @@ enum simpipe_run_status_enum {
   cancelled
   completed
   failed
-  queued
   waiting
+  queued
 }
 """
 Boolean expression to compare columns of type "simpipe_run_status_enum". All fields are combined with logical 'AND'.
@@ -1715,6 +1715,7 @@ enum simpipe_step_status_enum {
   completed
   failed
   waiting
+  queued
 }
 """
 Boolean expression to compare columns of type "simpipe_step_status_enum". All fields are combined with logical 'AND'.

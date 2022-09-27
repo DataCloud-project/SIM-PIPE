@@ -2213,6 +2213,7 @@ export enum Simpipe_Step_Status_Enum {
   Cancelled = 'cancelled',
   Completed = 'completed',
   Failed = 'failed',
+  Queued = 'queued',
   Waiting = 'waiting'
 }
 
