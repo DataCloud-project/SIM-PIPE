@@ -35,7 +35,6 @@
 	function display_run_msg(run) {
 		if (run.status == 'completed') {
 			return `Completed ${dayjs(run.ended).from(run.started)}`;
-			// return `Completed ${dayjs_def(run.ended).from(run.started)}`;
 		} else if (run.status == 'active') {
 			return `Running since ${dayjs(run.started).fromNow()}`;
 		} else if (run.status == 'failed') {

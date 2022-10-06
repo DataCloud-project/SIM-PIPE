@@ -19,9 +19,10 @@
 				title: {
 					text: title_text
 				},
-				tooltip: {
-					split: true
-				},
+				// tooltip: {
+				// 	// split: true
+				// },
+				
 				xAxis: {
 					name: 'Timestamps',
 					categories: timestamps,
@@ -78,13 +79,13 @@
 					labels: {
 						style: {
 							color: 'black',
-							fontSize: 16
+							fontSize: 21
 						}
 					},
 					title: {
 						style: {
 							color: 'black',
-							fontSize: 16
+							fontSize: 21
 						}
 					}
 				},
@@ -92,14 +93,14 @@
 					labels: {
 						style: {
 							color: 'black',
-							fontSize: 16
+							fontSize: 21
 						}
 					},
 					title: {
 						text: y_title_text,
 						style: {
 							color: 'black',
-							fontSize: 16
+							fontSize: 21
 						}
 					}
 				},
@@ -222,15 +223,15 @@
 </script>
 
 <div class="graphs">
-	<div id="cpu_container" style="width:880px; height:600px;" />
+	<div class="graphstyle" id="cpu_container"  />
 </div>
 
 <div class="graphs">
-	<div id="memory_container" style="width:880px; height:600px;" />
+	<div class="graphstyle" id="memory_container" />
 </div>
 
 <div class="graphs">
-	<div id="network_container" style="width:880px; height:600px;" />
+	<div class="graphstyle" id="network_container" />
 </div>
 
 <!-- <div class="graphs">
@@ -254,7 +255,8 @@
 <style>
 	.graphs {
 		float: left;
-		/* width: 33%; */
-		/* width: 30%; */
+	}
+	.graphstyle {
+		width:925px; height:600px; border-radius:0px; border:2px solid #093a7af5;
 	}
 </style>
