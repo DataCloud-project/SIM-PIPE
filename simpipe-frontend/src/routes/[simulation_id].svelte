@@ -6,8 +6,9 @@
 	// load details of the clicked simulation
 	export async function load({ params }) {
 		try {
-			const { simulation_id } = params;
-			if(!simulation_id) {
+			let { simulation_id } = params;
+			// during refresh if simulation id is undefined
+			if(simulation_id == 'undefined') {			
 				simulation_id = get(clicked_simulation).simulation_id;
 			}
 			const variables = { simulation_id }; // userid from access token
@@ -49,12 +50,12 @@
 	$show_steps_list = false;
 </script>
 
+<Modal><Back /></Modal>
 <div class="simulation_header">	
 	<h3> Simulation: {$clicked_simulation.name}  Created {time} 
     </h3>   
 </div>
 
-<Modal><Back /></Modal>
 
 <div class="all_content_box">
 	<div class="list_border">
