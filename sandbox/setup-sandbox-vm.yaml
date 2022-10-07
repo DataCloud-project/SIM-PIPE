@@ -5,49 +5,199 @@
   hosts: sandbox-vm
   tasks:
     - name: Run software updates first
-      apt:
+      ansible.builtin.apt:
         # Upgrade the system
-        update_cache: yes
+        update_cache: true
         upgrade: full
         # Keep it tidy
-        autoclean: yes
-        autoremove: yes
-    - name: Install packages we like
-      apt:
+        autoclean: true
+        autoremove: true
+    - name: Download and add gVisor's PGP APT key
+      ansible.builtin.apt_key:
+        url: https://gvisor.dev/archive.key
+    - name: Add gVisor's APT repository
+      ansible.builtin.apt_repository:
+        repo: deb [arch=amd64] https://storage.googleapis.com/gvisor/releases release main
+        state: present
+        filename: teleport
+        update_cache: true
+    - name: Install Debian packages
+      ansible.builtin.apt:
         pkg:
           - htop
           - screen
+          - runsc
           - docker.io
           - docker-compose
+    - name: Create /root/.docker directory
+      ansible.builtin.file:
+        path: /root/.docker
+        state: directory
+        mode: 0700
+    - name: Generate CA private key
+      ansible.builtin.openssl_privatekey:
+        path: /root/.docker/ca-key.pem
+        mode: 0400
+        type: RSA
+        size: 4096
+      register: ca_key
+
+    - name: Create certificate signing request (CSR) for self-signed certificate
+      community.crypto.openssl_csr_pipe:
+        privatekey_path: /root/.docker/ca-key.pem
+        common_name: "DataCloudSandboxCA"
+        organization_name: SINTEF
+        use_common_name_for_san: false
+        basic_constraints:
+          - 'CA:TRUE'
+        basic_constraints_critical: true
+        key_usage:
+          - keyCertSign
+        key_usage_critical: true
+      when: ca_key.changed
+      register: cacsr
+
+    - name: Generate self-signed certificate from CSR for CA
+      community.crypto.x509_certificate:
+        path: /root/.docker/ca.pem
+        mode: 0444
+        csr_content: "{{ cacsr.csr }}"
+        privatekey_path: /root/.docker/ca-key.pem
+        provider: selfsigned
+        selfsigned_digest: sha256
+        selfsigned_not_after: "+3650d" # ~10 years
+      when: cacsr.changed
+
+    - name: Generate server private key
+      ansible.builtin.openssl_privatekey:
+        path: /root/.docker/server-key.pem
+        mode: 0400
+        type: RSA
+        size: 4096
+      register: server_key
+
+    - name: Create certificate signing request (CSR) for server certificate
+      community.crypto.openssl_csr_pipe:
+        privatekey_path: /root/.docker/server-key.pem
+        common_name: "DataCloud Sandbox"
+        organization_name: SINTEF
+        extended_key_usage:
+          - serverAuth
+        subject_alt_name:
+          - DNS:sandbox-vm
+          - DNS:datacloud-simulator
+          - DNS:datacloud-simulator-vm
+          - DNS:localhost
+          - IP:127.0.0.1
+      when: server_key.changed
+      register: servercsr
+
+    - name: Generate server certificate from CSR signed by CA
+      community.crypto.x509_certificate:
+        path: /root/.docker/server-cert.pem
+        mode: 0444
+        csr_content: "{{ servercsr.csr }}"
+        privatekey_path: /root/.docker/server-key.pem
+        provider: ownca
+        ownca_path: /root/.docker/ca.pem
+        ownca_privatekey_path: /root/.docker/ca-key.pem
+        ownca_not_after: "+3650d" # ~10 years
+      when: servercsr.changed
+
+    - name: Create Docker configuration with runsc
+      ansible.builtin.command: runsc install
+      register: runsc_install
+      changed_when:
+        - "'Overwriting runtime runsc' not in runsc_install.stderr"
+
     - name: Expose Docker daemon to tcp://0.0.0.0
-      lineinfile:
+      ansible.builtin.lineinfile:
         path: /lib/systemd/system/docker.service
         regexp: '^ExecStart='
-        line: ExecStart=/usr/bin/dockerd -H fd:// -H tcp://0.0.0.0:2375 --containerd=/run/containerd/containerd.sock
-    - name: SystemD reload
-      systemd:
-        daemon_reload: true
-    - name: Restart Docker daemon 
-      service:
+        line: >
+          ExecStart=/usr/bin/dockerd
+          -H fd://
+          -H tcp://0.0.0.0:2376
+          --tlsverify
+          --tlscacert=/root/.docker/ca.pem
+          --tlscert=/root/.docker/server-cert.pem
+          --tlskey=/root/.docker/server-key.pem
+          --containerd=/run/containerd/containerd.sock
+          --default-runtime=runsc
+      register: docker_service_config
+
+    - name: Reload and restart Docker service
+      ansible.builtin.systemd:
         name: docker
         state: restarted
+        daemon_reload: true
+        enabled: true
+      when: docker_service_config.changed
+
+    - name: Create client private key
+      ansible.builtin.openssl_privatekey:
+        path: /home/ubuntu/client-key.pem
+        mode: 0400
+        type: RSA
+        size: 4096
+      register: client_key
+
+    - name: Create CSR for client
+      community.crypto.openssl_csr_pipe:
+        privatekey_path: /home/ubuntu/client-key.pem
+        common_name: "client"
+        extended_key_usage:
+          - clientAuth
+      when: client_key.changed
+      register: clientcsr
+
+    - name: Generate client certificate from CSR signed by CA
+      community.crypto.x509_certificate:
+        path: /home/ubuntu/client-cert.pem
+        mode: 0444
+        csr_content: "{{ clientcsr.csr }}"
+        privatekey_path: /home/ubuntu/client-key.pem
+        provider: ownca
+        ownca_path: /root/.docker/ca.pem
+        ownca_privatekey_path: /root/.docker/ca-key.pem
+        ownca_not_after: "+3650d" # ~10 years
+      when: clientcsr.changed
+
+    - name: Retrieve CA certificate files locally
+      ansible.builtin.fetch:
+        src: "{{ item }}"
+        dest: ./certs/
+        flat: true
+        mode: 0444
+      with_items:
+        - /root/.docker/ca.pem
+        - /home/ubuntu/client-cert.pem
+        - /home/ubuntu/client-key.pem
+
     - name: Make the SIM-PIPE/sandbox directory
-      file:
+      ansible.builtin.file:
         path: /home/ubuntu/SIM-PIPE/sandbox
         state: directory
+        mode: '0750'
+
     - name: Copy the Docker Compose file
-      copy:
+      ansible.builtin.copy:
         src: ./docker-compose.yaml
         dest: /home/ubuntu/SIM-PIPE/sandbox/docker-compose.yaml
+        mode: '0640'
+
     - name: Copy the users.conf file
-      copy:
+      ansible.builtin.copy:
         src: ./users.conf
         dest: /home/ubuntu/SIM-PIPE/sandbox/users.conf
+        mode: '0640'
+
     - name: Start the Docker compose
       community.docker.docker_compose:
         project_src: /home/ubuntu/SIM-PIPE/sandbox
         state: present
       register: output_compose
+
     - name: Print the output of the compose
-      debug:
+      ansible.builtin.debug:
         var: output_compose
