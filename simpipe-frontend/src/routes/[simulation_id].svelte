@@ -1,12 +1,16 @@
 <script context="module">
 	import { get_simulation_query } from '../queries/get_simulation.svelte';
 	import { get } from 'svelte/store';
-	import { graphQLClient } from '../stores/stores';
+	import { graphQLClient, clicked_simulation } from '../stores/stores';
 
 	// load details of the clicked simulation
 	export async function load({ params }) {
 		try {
-			const { simulation_id } = params;
+			let { simulation_id } = params;
+			// during refresh if simulation id is undefined
+			if(simulation_id == 'undefined') {			
+				simulation_id = get(clicked_simulation).simulation_id;
+			}
 			const variables = { simulation_id }; // userid from access token
 			const result = await get(graphQLClient).request(get_simulation_query, variables);
 			const simulation = result.Get_Simulation.simulations[0];
@@ -30,10 +34,12 @@
 	import Logs from './logs.svelte';
 	import relativeTime from 'dayjs/plugin/relativeTime';
 	import dayjs from 'dayjs';
+	import Modal from 'svelte-simple-modal';
+	import Back from './modals/back.svelte';
 
 	dayjs.extend(relativeTime);
 
-	import { show_usages, show_steps_list, clicked_simulation, clicked_run } from '../stores/stores';
+	import { show_usages, show_steps_list, clicked_run } from '../stores/stores';
 	import Charts from './charts.svelte';
 
 	export let simulation;
@@ -44,10 +50,12 @@
 	$show_steps_list = false;
 </script>
 
+<Modal><Back /></Modal>
 <div class="simulation_header">	
 	<h3> Simulation: {$clicked_simulation.name}  Created {time} 
     </h3>   
 </div>
+
 
 <div class="all_content_box">
 	<div class="list_border">
