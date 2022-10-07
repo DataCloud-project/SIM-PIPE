@@ -244,12 +244,12 @@ export async function startRun(run_id:string):Promise<string> {
       throw new Error('Error! List of environment variables/ timeout values for container undefined');
     }
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    currentStep.env = env_list[step.pipeline_step_number - 1];
+    currentStep.env = (env_list as [[string]])[step.pipeline_step_number - 1];
     // set the variable values in env file
     process.env.STEP_NUMBER = `${step.pipeline_step_number}`;
     process.env.IMAGE = step.image;
     // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-    process.env.CONTAINER_TIME_LIMIT = `${timeout_values[step.pipeline_step_number - 1]}`;
+    process.env.CONTAINER_TIME_LIMIT = `${(timeout_values as [number])[step.pipeline_step_number - 1]}`;
     // testing step type
     // adding try catch to handle failed steps
     try {
