@@ -12,11 +12,21 @@
         # Keep it tidy
         autoclean: true
         autoremove: true
-    - name: Install packages we like
+    - name: Download and add gVisor's PGP APT key
+      ansible.builtin.apt_key:
+        url: https://gvisor.dev/archive.key
+    - name: Add gVisor's APT repository
+      ansible.builtin.apt_repository:
+        repo: deb [arch=amd64] https://storage.googleapis.com/gvisor/releases release main
+        state: present
+        filename: teleport
+        update_cache: true
+    - name: Install Debian packages
       ansible.builtin.apt:
         pkg:
           - htop
           - screen
+          - runsc
           - docker.io
           - docker-compose
     - name: Create /root/.docker directory
@@ -30,6 +40,7 @@
         mode: 0400
         type: RSA
         size: 4096
+      register: ca_key
 
     - name: Create certificate signing request (CSR) for self-signed certificate
       community.crypto.openssl_csr_pipe:
@@ -43,6 +54,7 @@
         key_usage:
           - keyCertSign
         key_usage_critical: true
+      when: ca_key.changed
       register: cacsr
 
     - name: Generate self-signed certificate from CSR for CA
@@ -54,6 +66,7 @@
         provider: selfsigned
         selfsigned_digest: sha256
         selfsigned_not_after: "+3650d" # ~10 years
+      when: cacsr.changed
 
     - name: Generate server private key
       ansible.builtin.openssl_privatekey:
@@ -61,6 +74,7 @@
         mode: 0400
         type: RSA
         size: 4096
+      register: server_key
 
     - name: Create certificate signing request (CSR) for server certificate
       community.crypto.openssl_csr_pipe:
@@ -75,6 +89,7 @@
           - DNS:datacloud-simulator-vm
           - DNS:localhost
           - IP:127.0.0.1
+      when: server_key.changed
       register: servercsr
 
     - name: Generate server certificate from CSR signed by CA
@@ -87,6 +102,13 @@
         ownca_path: /root/.docker/ca.pem
         ownca_privatekey_path: /root/.docker/ca-key.pem
         ownca_not_after: "+3650d" # ~10 years
+      when: servercsr.changed
+
+    - name: Create Docker configuration with runsc
+      ansible.builtin.command: runsc install
+      register: runsc_install
+      changed_when:
+        - "'Overwriting runtime runsc' not in runsc_install.stderr"
 
     - name: Expose Docker daemon to tcp://0.0.0.0
       ansible.builtin.lineinfile:
@@ -101,14 +123,16 @@
           --tlscert=/root/.docker/server-cert.pem
           --tlskey=/root/.docker/server-key.pem
           --containerd=/run/containerd/containerd.sock
+          --default-runtime=runsc
+      register: docker_service_config
 
-    - name: SystemD reload
+    - name: Reload and restart Docker service
       ansible.builtin.systemd:
-        daemon_reload: true
-    - name: Restart Docker daemon
-      ansible.builtin.service:
         name: docker
         state: restarted
+        daemon_reload: true
+        enabled: true
+      when: docker_service_config.changed
 
     - name: Create client private key
       ansible.builtin.openssl_privatekey:
@@ -116,6 +140,7 @@
         mode: 0400
         type: RSA
         size: 4096
+      register: client_key
 
     - name: Create CSR for client
       community.crypto.openssl_csr_pipe:
@@ -123,6 +148,7 @@
         common_name: "client"
         extended_key_usage:
           - clientAuth
+      when: client_key.changed
       register: clientcsr
 
     - name: Generate client certificate from CSR signed by CA
@@ -135,6 +161,7 @@
         ownca_path: /root/.docker/ca.pem
         ownca_privatekey_path: /root/.docker/ca-key.pem
         ownca_not_after: "+3650d" # ~10 years
+      when: clientcsr.changed
 
     - name: Retrieve CA certificate files locally
       ansible.builtin.fetch:
