@@ -47,5 +47,5 @@
 </script>
 
 {#if $clicked_run.status == 'waiting'}
-    <button class="action_button start_run" on:click="{execute_start_run}"> Start run</button>
+    <button class="action_button start_run" on:click="{execute_start_run}"> ▶	</button>
 {/if}

@@ -14,5 +14,5 @@
 
 <div style="padding:5px;">
     <button class="action_button start_run" style="background-image:url({'../../images/backbutton.png'}) ;">  <a href="/">Back</a> </button>
-    <button class="action_button start_run" on:click="{execute_refresh}">  <a href={`/${clicked_simulation.simulation_id}`}>Refresh</a> </button>
+    <button class="action_button start_run" on:click="{execute_refresh}">  <a href={`/${clicked_simulation.simulation_id}`}>⟳</a> </button>
 </div>

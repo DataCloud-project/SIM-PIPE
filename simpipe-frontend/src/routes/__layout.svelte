@@ -5,11 +5,9 @@
 
 <header>
 	<h1 style="text-align:center;">SIM-PIPE UI
-		<span style="float:right; font-size:20px; background-color:darkseagreen;">{$username} logged in</span>
+		<span style="float:right; font-size:20px; "><span>❂</span> {$username}</span>
 	</h1>
-	<div style="text-align:right; ">Log out*</div>
-	
-	
+	<!-- <div style="text-align:right; ">Log out*</div> -->
 	<!-- <h5>
 		{#if $username != ''}
 			{$username} logged in 
@@ -28,7 +26,7 @@
 	header {
 		/* justify-content: center; */
 		/* display: flex; */
-		padding: 5px;
+		padding: 0.2px;
 		background-color: rgb(249, 163, 97);
 	}
 	h1 {
@@ -36,7 +34,7 @@
 		font-size: 40px;
 	}
 	main {
-		margin: 20px auto;
+		margin: 10px auto;
 	}
 	footer {
 		text-align: center;

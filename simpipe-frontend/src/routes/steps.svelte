@@ -29,7 +29,7 @@
 <div class="table_container">
 	<h2 class="table_heading_h2">Steps</h2>
 	<ul class="responsive-table">
-		<li class="table-header">
+		<li class="table-header-steps">
 			<div class="col-1">STEP_NUMBER</div>
 			<div class="col-2">NAME</div>
 			<div class="col-3">STATUS</div>

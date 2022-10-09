@@ -24,7 +24,7 @@
 <div class="table_container">
 	<br /><br />
 	<ul class="max_width">
-		<li class="table-header">Simulations</li>
+		<li class="table-header-simulations">Simulations</li>
 		<br />
 		{#if !simulations}
 			<p style="font-size:20px;">Loading simulations...</p>

@@ -19,18 +19,27 @@
     background-color: rgb(58, 99, 161);
     font-size: 22px;
     cursor: pointer;
-    padding: 20px;
+    padding: 10px;
+}
+.list_button {
+  font-family: 'Sans sariff', monospace;
+  color: #f6f3f9;
+  font-weight: bold;
+  background-color: rgb(58, 99, 161);
+  font-size: 22px;
+  cursor: pointer;
+  /* padding: 5px; */
 }
 .start_run {
   background-color: rgb(55, 113, 82);
   color: white;
 }
 .stop_run {
-  background-color: rgb(246, 166, 74);
+  background-color: rgb(145, 51, 51);
   color: black;
 }
 .delete_run {
-  background-color: rgb(156, 87, 88);
+  background-color: rgb(143, 135, 135);
   color: white;
 }
 .modal_box {
@@ -43,9 +52,10 @@
 .table_heading_h2 {
   font-size: 30px;
   margin: 20px 0;
-  text-align: center;
+  padding-left: 40px;
+  /* text-align: center; */
 }
-.table-header {
+.table-header-runs {
   background-color: #5f7071;
   font-size: 30px;
   text-transform: uppercase;
@@ -58,6 +68,38 @@
   display: flex;
   justify-content: space-between;
   margin-bottom: 25px;
+  margin-top: 0px;
+  text-align: center;
+}
+.table-header-simulations {
+  background-color: #5f7071;
+  font-size: 30px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  padding: 20px 195px;
+  /* color: black; */
+  font-weight: bold;
+  border-radius: 3px;
+  padding: 10px 15px;
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 25px;
+  text-align: center;
+}
+.table-header-steps {
+  background-color: #5f7071;
+  font-size: 30px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  padding: 20px 195px;
+  /* color: black; */
+  font-weight: bold;
+  border-radius: 3px;
+  padding: 10px 15px;
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 25px;
+  margin-top: 50px;
   text-align: center;
 }
 .table_container {

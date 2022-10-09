@@ -52,7 +52,7 @@
 
 <Modal><Back /></Modal>
 <div class="simulation_header">	
-	<h3> Simulation: {$clicked_simulation.name}  Created {time} 
+	<h3>  Simulation: <span style="color:darkseagreen">{$clicked_simulation.name}</span>  created {time} 
     </h3>   
 </div>
 
@@ -86,12 +86,14 @@
 		display: flex;
 	}
 	.simulation_header {
-		margin-top: 20px;
-		padding: 10px;
-		border: 10px solid rgba(255, 255, 255, 0.2);
+		margin-top: 1px;
+		padding: 1px;
+		padding-left: 10px;
+		width: 32%;
+		border: 8px solid rgba(255, 255, 255, 0.2);
 	}
 	.list_border {
-		margin-top: 40px;
+		margin-top: 30px;
 		padding: 10px;
 		border: 3px dashed rgba(255, 255, 255, 0.2);
 		flex: 0.32;
