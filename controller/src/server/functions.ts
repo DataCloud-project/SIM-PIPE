@@ -77,16 +77,16 @@ export async function allSimulations(userid:string):Promise<AllSimulationsQuery>
   return await sdk.AllSimulations({ userid });
 }
 
-export async function allRunsSteps(userid:string):Promise<string> {
-  return JSON.stringify(await sdk.allRunsAndSteps({ userid }), undefined, 2);
+export async function allRunsSteps(userid:string):Promise<AllRunsAndStepsQuery> {
+  // return JSON.stringify(await sdk.allRunsAndSteps({ userid }));
+  return await sdk.allRunsAndSteps({ userid });
 }
 
-export async function createSimulation(model_id:string, name:string, pipeline_description:string, userid:string):
+export async function createSimulation(name:string, pipeline_description:string, userid:string):
 Promise<string> {
   // disabling await-thenable, await is needed for sequential execution
   // eslint-disable-next-line @typescript-eslint/await-thenable
   const result:CreateSimulationMutation = await sdk.createSimulation({
-    model_id,
     name,
     pipeline_description,
     userid,
@@ -142,7 +142,7 @@ async function parseDSL(simulation_id:string):Promise<[StepDSL]> {
 }
 
 export async function createRun(simulation_id:string, name:string, userid:string,
-  environment_list: [[string]], timeout_value: number):Promise<string> {
+  environment_list: [[string]], timeout_values: [number]):Promise<string> {
   // read dsl, validate and use it to create steps in the run
   const steps:Array<StepDSL> = await parseDSL(simulation_id);
   const result:CreateRunMutation = await sdk.createRun({
@@ -150,7 +150,7 @@ export async function createRun(simulation_id:string, name:string, userid:string
     name,
     userid,
     env_list: environment_list,
-    timeout_value,
+    timeout_values,
   });
   if (!result.insert_runs_one?.run_id) {
     throw new Error('🎌 Undefined results from sdk.createRun function');
@@ -187,10 +187,10 @@ async function checkSimulationOwner(simulation_id:string, userid:string):Promise
 
 export async function createRunWithInput(simulation_id: string,
   name: string, sampleInput: [[string, string]], userid:string, environment_list: [[string]],
-  timeout_value: number): Promise<string> {
+  timeout_values: [number]): Promise<string> {
   // only owner of the simulation can create a new run
   await checkSimulationOwner(simulation_id, userid);
-  const runId = await createRun(simulation_id, name, userid, environment_list, timeout_value);
+  const runId = await createRun(simulation_id, name, userid, environment_list, timeout_values);
   fs.mkdirSync(`${uploadDirectory}${runId}`, { recursive: true });
   // write sample input to uploaded_files/runId
   // eslint-disable-next-line no-restricted-syntax
@@ -216,7 +216,7 @@ export async function startRun(run_id:string):Promise<string> {
   }
   // get steps, and runtime configuration entered during create run
   // eslint-disable-next-line @typescript-eslint/naming-convention
-  const { steps, env_list, timeout_value } = result.runs[0];
+  const { steps, env_list, timeout_values } = result.runs[0];
   // set runId and simulationId once for all runs
   const currentStep:types.Step = {
     simId: result.runs[0].simulation_id,
@@ -240,16 +240,16 @@ export async function startRun(run_id:string):Promise<string> {
     currentStep.image = step.image;
     currentStep.stepNumber = step.pipeline_step_number;
     currentStep.stepId = step.step_id;
-    if (!env_list) {
-      throw new Error('Error! List of environment variables is undefined');
+    if (!env_list || !timeout_values) {
+      throw new Error('Error! List of environment variables/ timeout values for container undefined');
     }
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    currentStep.env = env_list[step.pipeline_step_number - 1];
+    currentStep.env = (env_list as [[string]])[step.pipeline_step_number - 1];
     // set the variable values in env file
     process.env.STEP_NUMBER = `${step.pipeline_step_number}`;
     process.env.IMAGE = step.image;
     // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-    process.env.CONTAINER_TIME_LIMIT = `${timeout_value}`;
+    process.env.CONTAINER_TIME_LIMIT = `${(timeout_values as [number])[step.pipeline_step_number - 1]}`;
     // testing step type
     // adding try catch to handle failed steps
     try {
@@ -284,11 +284,12 @@ export async function startRun(run_id:string):Promise<string> {
 }
 
 export async function getSimulationRunResults(simulation_id:string,
-  run_id:string, userid:string):Promise<string> {
+  run_id:string, userid:string):Promise<GetSimulationRunResultsQuery> {
   // eslint-disable-next-line @typescript-eslint/await-thenable
   const result:GetSimulationRunResultsQuery = await
   sdk.getSimulationRunResults({ simulation_id, run_id, userid });
-  return JSON.stringify(result, undefined, 2);
+  // return JSON.stringify(result);
+  return result;
 }
 
 export async function stopRun(run_id:string, userid:string):Promise<string> {
@@ -341,12 +342,12 @@ export async function queueRun(run_id:string, userid:string):Promise<string> {
 /**
  * function to get all details and runs of a simulation
  */
-// export async function getSimulation(userid:string, simulation_id:string):Promise<GetSimulationQuery> {
-export async function getSimulation(userid:string, simulation_id:string):Promise<string> {
+export async function getSimulation(userid:string, simulation_id:string):Promise<GetSimulationQuery> {
+// export async function getSimulation(userid:string, simulation_id:string):Promise<string> {
   // eslint-disable-next-line @typescript-eslint/await-thenable
   const result:GetSimulationQuery = await sdk.getSimulation({ userid, simulation_id });
-  return JSON.stringify(result, undefined, 2);
-  // return result;
+  // return JSON.stringify(result);
+  return result;
 }
 
 /**
@@ -363,7 +364,7 @@ export async function createSampleSimulation():Promise<string> {
   } catch (error) {
     const errorMessage = `\n 🎌 Error connecting from SIM-PIPE controller to hasura endpoint:\n
     ${(error as Error).message}
-    Check REMOTE_SCHEMA_URL in env file, hasura endpoint and admin secret\n`;
+    Check HASURA_URL in env file, hasura endpoint and admin secret\n`;
     logger.error(errorMessage);
     logger.info('Retrying connecting from controller to hasura endpoint after 5 seconds');
     await setTimeout(5000);

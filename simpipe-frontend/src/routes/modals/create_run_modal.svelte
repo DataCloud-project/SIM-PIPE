@@ -4,6 +4,7 @@
     import { clicked_simulation, graphQLClient } from '../../stores/stores';
     import { getContext } from 'svelte';
     import Alert from './alert.svelte';
+    import { init_keycloak } from '../keycloak.svelte';
 
     const { close, open } = getContext('simple-modal');
 
@@ -18,7 +19,7 @@
         pipeline_steps = JSON.parse($clicked_simulation.pipeline_description).steps;
     }
 
-    let timeout_value;
+    let timeout_values = [];
     let show_env_list = [];
     let arrow = {false: '↓', true: '↑'};
     pipeline_steps.forEach((step, index) => {
@@ -33,10 +34,13 @@
     }
     async function execute_create_run() {
         for (const [index, env_entry] of env_list_entries.entries()) {
+            // formatting env list entries in the correct format
             env_list[index] = [];
             for (const key in env_entry) {
                 env_list[index].push([key, env_entry[key]].join('='))
             };
+            // checking timeout_values and resetting to 0 for undefined
+            timeout_values[index] = parseInt(timeout_values[index]);
         }
         // get sample input files for the run
         let sampleInput = [];
@@ -46,25 +50,31 @@
             let text = await file.text();
             sampleInput[index].push(text);            
         }    
-        if(!timeout_value) {
-            timeout_value = 0;
-        }
         // call create run with the entered details
-        let variables = { simulation_id, name, sampleInput, env_list, timeout_value }; 
-        let result = await $graphQLClient.request( create_run_mutation, variables );
-        close();
-        if(JSON.parse(result.Create_Run_WithInput).code == 200) {
-            open(Alert, {message: '🎐 Success! New run created'});
-            setTimeout(function(){close()}, 1000);
-            // refresh run list when new run is created
-            variables = { simulation_id }; 
-            result = await $graphQLClient.request( get_simulation_query, variables );
-            $clicked_simulation = JSON.parse(result.Get_Simulation).simulations[0];
+        let variables = { simulation_id, name, sampleInput, env_list, timeout_values }; 
+        let result;
+        try {
+            result = await $graphQLClient.request( create_run_mutation, variables );
+            if(JSON.parse(result.Create_Run_WithInput).code == 200) {
+                open(Alert, {message: '🎐 Success! New run created'});
+                setTimeout(function(){close()}, 1000);
+                // refresh run list when new run is created
+                variables = { simulation_id }; 
+                result = await $graphQLClient.request( get_simulation_query, variables );
+                $clicked_simulation = result.Get_Simulation.simulations[0];
+            }
+            else {
+                open(Alert, {message: '🎌 Failed! Error creating run'});
+                setTimeout(function(){close()}, 1000);
+            }        
+        } catch (error) {
+            console.log('caught error in execute_create_run');
+            console.log(error);
+            // setTimeout(function(){console.log('sleeping');}, 5000);
+            // init_keycloak();
+            // return;
         }
-        else {
-            open(Alert, {message: '🎌 Failed! Error creating run'});
-            setTimeout(function(){close()}, 1000);
-        }        
+        close();
     }
 </script>
 
@@ -88,12 +98,12 @@
                     <p class="left-margin">{env.split('=')[0]}: <input bind:value={env_list_entries[index][env.split('=')[0]]}></p>
                     <!-- {env.split('=')[1] = env_value} -->
                 {/each}
-                {#if step.type == "continuous"}
-                    <p  class="left-margin"> Timeout for container <input bind:value={timeout_value} placeholder="Enter timeout in seconds"></p>
                 {/if}
-            {/if}
-            <br>
-        {/each}
+                <br>
+                {#if pipeline_steps[pipeline_steps.length-1].type == "continuous"}
+                    <p  class="left-margin"> Timeout for container <input bind:value={timeout_values[index]} placeholder="Enter timeout in seconds"></p>
+                {/if}
+                {/each}
     </div>
 
     <br>

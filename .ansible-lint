@@ -1,0 +1,2 @@
+skip_list:
+  - '503' # https://github.com/ansible/ansible-lint/issues/419

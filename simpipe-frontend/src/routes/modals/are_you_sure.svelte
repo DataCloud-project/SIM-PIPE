@@ -14,7 +14,7 @@
 			// refresh run list after run is deleted
             let variables = { simulation_id: $clicked_simulation.simulation_id }; 
             result = await $graphQLClient.request( get_simulation_query, variables );
-            $clicked_simulation = JSON.parse(result.Get_Simulation).simulations[0];
+            $clicked_simulation = result.Get_Simulation.simulations[0];
 			$show_steps_list = false; // reset displayed steps
 			$show_usages = false; // reset displayed logs and reports
 		} else {

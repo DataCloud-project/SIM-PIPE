@@ -1,65 +1,35 @@
-<script context="module">
-	import { GraphQLClient } from 'graphql-request';
+<script>
 	import { all_simulations_query } from '../queries/all_simulations.svelte';
-	import Keycloak from 'keycloak-js';
 	import { graphQLClient } from '../stores/stores';
 	import { get } from 'svelte/store';
-
-	export const load = async () => {
-		// Keycloak init
-		try {
-			let keycloak = new Keycloak({
-				url: 'https://datacloud-auth.euprojects.net/auth', // todo - add env var
-				realm: 'user-authentication',
-				clientId: 'sim-pipe-web', // todo - add env var
-				'enable-cors': 'true'
-			});
-			await keycloak.init({ onLoad: 'login-required', flow: 'implicit' }); //  Implicit flow. 
-			console.log('User authenticated');
-			const requestHeaders = {
-				authorization: 'Bearer '  + keycloak.token,
-				mode: 'cors',
-			}
-			// todo - add confi
-			graphQLClient.set(new GraphQLClient('http://localhost:9000/graphql', {
-				headers: requestHeaders
-			}));
-			const simulations = await get(graphQLClient).request(all_simulations_query);
-			return {
-				props: {
-					simulations
-				}
-			};
-		} catch (error) {
-			console.log(error);
-			console.log('failed to initialize');
-		}
-		// try {
-		// } catch (error) {
-		// 	return {
-		// 		error: new Error(error.message),
-		// 		status: error.status
-		// 	};
-		// }
-	};
-</script>
-
-<script>
 	import Modal from 'svelte-simple-modal';
 	import CreateSimulationButton from './modals/create_simulation_button.svelte';
 	import { simulations_list } from '../stores/stores';
-
-	export let simulations;
+	import { init_keycloak } from './keycloak.svelte';
+	
+	let simulations;	
+	let loading = async () => {
+		try {
+			await init_keycloak();
+			simulations = await get(graphQLClient).request(all_simulations_query);
+		} catch {
+			console.log('🎌 Error! could not load simulations');
+			simulations = 'error';
+		}
+	};
+	loading();
 	$: $simulations_list = simulations;
 </script>
 
 <div class="table_container">
 	<br /><br />
 	<ul class="max_width">
-		<li class="table-header">Simulations</li>
+		<li class="table-header-simulations">Simulations</li>
 		<br />
-		{#if !simulations} 
-			<p>Loading simulations... </p>
+		{#if !simulations}
+			<p style="font-size:20px;">Loading simulations...</p>
+		{:else if simulations === 'error'}
+			<p style="font-size:20px;">🎌 Error! could load simulations</p>
 		{:else}
 			{#each $simulations_list.All_Simulations.simulations as simulation}
 				<li class="pointer row">
@@ -92,6 +62,6 @@
 
 	a {
 		color: black;
-		font-size: 16px;
+		font-size: 22px;
 	}
 </style>

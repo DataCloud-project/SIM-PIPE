@@ -9,5 +9,5 @@
 	}
 </script>
 
-<button class="action_button delete_run" on:click="{open_are_you_sure}">Delete run</button>
+<button class="action_button delete_run" on:click="{open_are_you_sure}"><span>X</span></button>
 

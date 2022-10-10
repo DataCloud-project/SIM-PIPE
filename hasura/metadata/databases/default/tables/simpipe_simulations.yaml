@@ -24,7 +24,6 @@ select_permissions:
     permission:
       columns:
         - created
-        - model_id
         - name
         - pipeline_description
         - simulation_id

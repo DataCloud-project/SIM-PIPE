@@ -6,7 +6,6 @@
 	import Alert from './alert.svelte';
 
 	const { open, close } = getContext('simple-modal');
-	let model_id = '6a41f10d-9bd5-4a6b-98fb-765fd2f09265';
 	let name = '';
 	let files;
 
@@ -15,7 +14,6 @@
 		
 		// call create simulation
 		let variables = {
-			model_id,
 			name,
 			pipeline_description
 		}; 
@@ -42,7 +40,7 @@
 	<div class="modal_box">
 		<p><strong>Name: </strong><input bind:value={name} placeholder="Enter name" /></p>
 
-		<p><strong>Model id:</strong> <input bind:value={model_id} /></p>
+		<!-- <p><strong>Model id:</strong> <input bind:value={model_id} /></p> -->
 		<p><strong>Upload pipeline description </strong> </p>
         <input type="file" bind:files />
 		<br /><br />

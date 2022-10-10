@@ -32,17 +32,17 @@ services:
       HASURA_GRAPHQL_UNAUTHORIZED_ROLE: anonymous
       HASURA_GRAPHQL_ENABLE_TELEMETRY: "false"
       HASURA_GRAPHQL_LOG_LEVEL: debug
-      REMOTE_SCHEMA_URL: ${REMOTE_SCHEMA_URL}
-  appsmith:
-    image: index.docker.io/appsmith/appsmith-ce
-    container_name: appsmith
-    ports:
-      - "8085:80"
-    depends_on:
-      - "hasura"
-    restart: unless-stopped
-    volumes:
-      - appsmith:/appsmith-stacks
+      # REMOTE_SCHEMA_URL: ${REMOTE_SCHEMA_URL}
+  # appsmith:
+  #   image: index.docker.io/appsmith/appsmith-ce
+  #   container_name: appsmith
+  #   ports:
+  #     - "8085:80"
+  #   depends_on:
+  #     - "hasura"
+  #   restart: unless-stopped
+  #   volumes:
+  #     - appsmith:/appsmith-stacks
 
   controller:
     # image: simpipe-backend-v10
@@ -66,7 +66,7 @@ services:
       REMOTE_OUTPUT_DIR: 'out/'
       REMOTE_INPUT_DIR: 'in/'
       HASURA_ADMIN_SECRET: ${HASURA_ADMIN_SECRET}      
-      HASURA_URL: ${REMOTE_SCHEMA_URL}      
+      HASURA_URL: ${HASURA_URL}      
 volumes:
   db_data1:
     null

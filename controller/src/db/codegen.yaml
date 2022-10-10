@@ -15,9 +15,9 @@ generates:
         bigint: number
         jsonb: unknown
         numeric: number
-        run_status: "'waiting'|'active'|'completed'|'failed'|'cancelled'"
+        run_status: "'waiting'|'active'|'completed'|'failed'|'cancelled'|'queued'"
         step_status: "'waiting'|'active'|'completed'|'failed'|'cancelled'"
         timestamp: string
         timestamptz: string
         uuid: string
-        _text: [string]
+        JSON: jsonb

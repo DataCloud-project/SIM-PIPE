@@ -418,7 +418,6 @@ export type Mutation_RootUpdate_RunsArgs = {
   _delete_at_path?: InputMaybe<Runs_Delete_At_Path_Input>;
   _delete_elem?: InputMaybe<Runs_Delete_Elem_Input>;
   _delete_key?: InputMaybe<Runs_Delete_Key_Input>;
-  _inc?: InputMaybe<Runs_Inc_Input>;
   _prepend?: InputMaybe<Runs_Prepend_Input>;
   _set?: InputMaybe<Runs_Set_Input>;
   where: Runs_Bool_Exp;
@@ -431,7 +430,6 @@ export type Mutation_RootUpdate_Runs_By_PkArgs = {
   _delete_at_path?: InputMaybe<Runs_Delete_At_Path_Input>;
   _delete_elem?: InputMaybe<Runs_Delete_Elem_Input>;
   _delete_key?: InputMaybe<Runs_Delete_Key_Input>;
-  _inc?: InputMaybe<Runs_Inc_Input>;
   _prepend?: InputMaybe<Runs_Prepend_Input>;
   _set?: InputMaybe<Runs_Set_Input>;
   pk_columns: Runs_Pk_Columns_Input;
@@ -840,7 +838,7 @@ export type Runs = {
   steps: Array<Steps>;
   /** fetch aggregated fields from the table: "simpipe.steps" */
   steps_aggregate: Steps_Aggregate;
-  timeout_value?: Maybe<Scalars['Int']>;
+  timeout_values?: Maybe<Scalars['jsonb']>;
   userid?: Maybe<Scalars['String']>;
 };
 
@@ -885,6 +883,17 @@ export type RunsSteps_AggregateArgs = {
   where?: InputMaybe<Steps_Bool_Exp>;
 };
 
+
+/**
+ * Simulation run
+ *
+ *
+ * columns and relationships of "simpipe.runs"
+ */
+export type RunsTimeout_ValuesArgs = {
+  path?: InputMaybe<Scalars['String']>;
+};
+
 /** aggregated selection of "simpipe.runs" */
 export type Runs_Aggregate = {
   __typename?: 'runs_aggregate';
@@ -895,17 +904,9 @@ export type Runs_Aggregate = {
 /** aggregate fields of "simpipe.runs" */
 export type Runs_Aggregate_Fields = {
   __typename?: 'runs_aggregate_fields';
-  avg?: Maybe<Runs_Avg_Fields>;
   count: Scalars['Int'];
   max?: Maybe<Runs_Max_Fields>;
   min?: Maybe<Runs_Min_Fields>;
-  stddev?: Maybe<Runs_Stddev_Fields>;
-  stddev_pop?: Maybe<Runs_Stddev_Pop_Fields>;
-  stddev_samp?: Maybe<Runs_Stddev_Samp_Fields>;
-  sum?: Maybe<Runs_Sum_Fields>;
-  var_pop?: Maybe<Runs_Var_Pop_Fields>;
-  var_samp?: Maybe<Runs_Var_Samp_Fields>;
-  variance?: Maybe<Runs_Variance_Fields>;
 };
 
 
@@ -917,22 +918,15 @@ export type Runs_Aggregate_FieldsCountArgs = {
 
 /** order by aggregate values of table "simpipe.runs" */
 export type Runs_Aggregate_Order_By = {
-  avg?: InputMaybe<Runs_Avg_Order_By>;
   count?: InputMaybe<Order_By>;
   max?: InputMaybe<Runs_Max_Order_By>;
   min?: InputMaybe<Runs_Min_Order_By>;
-  stddev?: InputMaybe<Runs_Stddev_Order_By>;
-  stddev_pop?: InputMaybe<Runs_Stddev_Pop_Order_By>;
-  stddev_samp?: InputMaybe<Runs_Stddev_Samp_Order_By>;
-  sum?: InputMaybe<Runs_Sum_Order_By>;
-  var_pop?: InputMaybe<Runs_Var_Pop_Order_By>;
-  var_samp?: InputMaybe<Runs_Var_Samp_Order_By>;
-  variance?: InputMaybe<Runs_Variance_Order_By>;
 };
 
 /** append existing jsonb value of filtered columns with new jsonb value */
 export type Runs_Append_Input = {
   env_list?: InputMaybe<Scalars['jsonb']>;
+  timeout_values?: InputMaybe<Scalars['jsonb']>;
 };
 
 /** input type for inserting array relation for remote table "simpipe.runs" */
@@ -940,17 +934,6 @@ export type Runs_Arr_Rel_Insert_Input = {
   data: Array<Runs_Insert_Input>;
   /** on conflict condition */
   on_conflict?: InputMaybe<Runs_On_Conflict>;
-};
-
-/** aggregate avg on columns */
-export type Runs_Avg_Fields = {
-  __typename?: 'runs_avg_fields';
-  timeout_value?: Maybe<Scalars['Float']>;
-};
-
-/** order by avg() on columns of table "simpipe.runs" */
-export type Runs_Avg_Order_By = {
-  timeout_value?: InputMaybe<Order_By>;
 };
 
 /** Boolean expression to filter rows from the table "simpipe.runs". All fields are combined with a logical 'AND'. */
@@ -968,7 +951,7 @@ export type Runs_Bool_Exp = {
   started?: InputMaybe<Timestamptz_Comparison_Exp>;
   status?: InputMaybe<Simpipe_Run_Status_Enum_Comparison_Exp>;
   steps?: InputMaybe<Steps_Bool_Exp>;
-  timeout_value?: InputMaybe<Int_Comparison_Exp>;
+  timeout_values?: InputMaybe<Jsonb_Comparison_Exp>;
   userid?: InputMaybe<String_Comparison_Exp>;
 };
 
@@ -981,21 +964,19 @@ export enum Runs_Constraint {
 /** delete the field or element with specified path (for JSON arrays, negative integers count from the end) */
 export type Runs_Delete_At_Path_Input = {
   env_list?: InputMaybe<Array<Scalars['String']>>;
+  timeout_values?: InputMaybe<Array<Scalars['String']>>;
 };
 
 /** delete the array element with specified index (negative integers count from the end). throws an error if top level container is not an array */
 export type Runs_Delete_Elem_Input = {
   env_list?: InputMaybe<Scalars['Int']>;
+  timeout_values?: InputMaybe<Scalars['Int']>;
 };
 
 /** delete key/value pair or string element. key/value pairs are matched based on their key value */
 export type Runs_Delete_Key_Input = {
   env_list?: InputMaybe<Scalars['String']>;
-};
-
-/** input type for incrementing numeric columns in table "simpipe.runs" */
-export type Runs_Inc_Input = {
-  timeout_value?: InputMaybe<Scalars['Int']>;
+  timeout_values?: InputMaybe<Scalars['String']>;
 };
 
 /** input type for inserting data into table "simpipe.runs" */
@@ -1010,7 +991,7 @@ export type Runs_Insert_Input = {
   started?: InputMaybe<Scalars['timestamptz']>;
   status?: InputMaybe<Simpipe_Run_Status_Enum>;
   steps?: InputMaybe<Steps_Arr_Rel_Insert_Input>;
-  timeout_value?: InputMaybe<Scalars['Int']>;
+  timeout_values?: InputMaybe<Scalars['jsonb']>;
   userid?: InputMaybe<Scalars['String']>;
 };
 
@@ -1023,7 +1004,6 @@ export type Runs_Max_Fields = {
   run_id?: Maybe<Scalars['uuid']>;
   simulation_id?: Maybe<Scalars['uuid']>;
   started?: Maybe<Scalars['timestamptz']>;
-  timeout_value?: Maybe<Scalars['Int']>;
   userid?: Maybe<Scalars['String']>;
 };
 
@@ -1035,7 +1015,6 @@ export type Runs_Max_Order_By = {
   run_id?: InputMaybe<Order_By>;
   simulation_id?: InputMaybe<Order_By>;
   started?: InputMaybe<Order_By>;
-  timeout_value?: InputMaybe<Order_By>;
   userid?: InputMaybe<Order_By>;
 };
 
@@ -1048,7 +1027,6 @@ export type Runs_Min_Fields = {
   run_id?: Maybe<Scalars['uuid']>;
   simulation_id?: Maybe<Scalars['uuid']>;
   started?: Maybe<Scalars['timestamptz']>;
-  timeout_value?: Maybe<Scalars['Int']>;
   userid?: Maybe<Scalars['String']>;
 };
 
@@ -1060,7 +1038,6 @@ export type Runs_Min_Order_By = {
   run_id?: InputMaybe<Order_By>;
   simulation_id?: InputMaybe<Order_By>;
   started?: InputMaybe<Order_By>;
-  timeout_value?: InputMaybe<Order_By>;
   userid?: InputMaybe<Order_By>;
 };
 
@@ -1092,7 +1069,7 @@ export type Runs_Order_By = {
   started?: InputMaybe<Order_By>;
   status?: InputMaybe<Order_By>;
   steps_aggregate?: InputMaybe<Steps_Aggregate_Order_By>;
-  timeout_value?: InputMaybe<Order_By>;
+  timeout_values?: InputMaybe<Order_By>;
   userid?: InputMaybe<Order_By>;
 };
 
@@ -1104,6 +1081,7 @@ export type Runs_Pk_Columns_Input = {
 /** prepend existing jsonb value of filtered columns with new jsonb value */
 export type Runs_Prepend_Input = {
   env_list?: InputMaybe<Scalars['jsonb']>;
+  timeout_values?: InputMaybe<Scalars['jsonb']>;
 };
 
 /** select columns of table "simpipe.runs" */
@@ -1125,7 +1103,7 @@ export enum Runs_Select_Column {
   /** column name */
   Status = 'status',
   /** column name */
-  TimeoutValue = 'timeout_value',
+  TimeoutValues = 'timeout_values',
   /** column name */
   Userid = 'userid'
 }
@@ -1140,52 +1118,8 @@ export type Runs_Set_Input = {
   simulation_id?: InputMaybe<Scalars['uuid']>;
   started?: InputMaybe<Scalars['timestamptz']>;
   status?: InputMaybe<Simpipe_Run_Status_Enum>;
-  timeout_value?: InputMaybe<Scalars['Int']>;
+  timeout_values?: InputMaybe<Scalars['jsonb']>;
   userid?: InputMaybe<Scalars['String']>;
-};
-
-/** aggregate stddev on columns */
-export type Runs_Stddev_Fields = {
-  __typename?: 'runs_stddev_fields';
-  timeout_value?: Maybe<Scalars['Float']>;
-};
-
-/** order by stddev() on columns of table "simpipe.runs" */
-export type Runs_Stddev_Order_By = {
-  timeout_value?: InputMaybe<Order_By>;
-};
-
-/** aggregate stddev_pop on columns */
-export type Runs_Stddev_Pop_Fields = {
-  __typename?: 'runs_stddev_pop_fields';
-  timeout_value?: Maybe<Scalars['Float']>;
-};
-
-/** order by stddev_pop() on columns of table "simpipe.runs" */
-export type Runs_Stddev_Pop_Order_By = {
-  timeout_value?: InputMaybe<Order_By>;
-};
-
-/** aggregate stddev_samp on columns */
-export type Runs_Stddev_Samp_Fields = {
-  __typename?: 'runs_stddev_samp_fields';
-  timeout_value?: Maybe<Scalars['Float']>;
-};
-
-/** order by stddev_samp() on columns of table "simpipe.runs" */
-export type Runs_Stddev_Samp_Order_By = {
-  timeout_value?: InputMaybe<Order_By>;
-};
-
-/** aggregate sum on columns */
-export type Runs_Sum_Fields = {
-  __typename?: 'runs_sum_fields';
-  timeout_value?: Maybe<Scalars['Int']>;
-};
-
-/** order by sum() on columns of table "simpipe.runs" */
-export type Runs_Sum_Order_By = {
-  timeout_value?: InputMaybe<Order_By>;
 };
 
 /** update columns of table "simpipe.runs" */
@@ -1207,43 +1141,10 @@ export enum Runs_Update_Column {
   /** column name */
   Status = 'status',
   /** column name */
-  TimeoutValue = 'timeout_value',
+  TimeoutValues = 'timeout_values',
   /** column name */
   Userid = 'userid'
 }
-
-/** aggregate var_pop on columns */
-export type Runs_Var_Pop_Fields = {
-  __typename?: 'runs_var_pop_fields';
-  timeout_value?: Maybe<Scalars['Float']>;
-};
-
-/** order by var_pop() on columns of table "simpipe.runs" */
-export type Runs_Var_Pop_Order_By = {
-  timeout_value?: InputMaybe<Order_By>;
-};
-
-/** aggregate var_samp on columns */
-export type Runs_Var_Samp_Fields = {
-  __typename?: 'runs_var_samp_fields';
-  timeout_value?: Maybe<Scalars['Float']>;
-};
-
-/** order by var_samp() on columns of table "simpipe.runs" */
-export type Runs_Var_Samp_Order_By = {
-  timeout_value?: InputMaybe<Order_By>;
-};
-
-/** aggregate variance on columns */
-export type Runs_Variance_Fields = {
-  __typename?: 'runs_variance_fields';
-  timeout_value?: Maybe<Scalars['Float']>;
-};
-
-/** order by variance() on columns of table "simpipe.runs" */
-export type Runs_Variance_Order_By = {
-  timeout_value?: InputMaybe<Order_By>;
-};
 
 /** columns and relationships of "simpipe.env_variable" */
 export type Simpipe_Env_Variable = {
@@ -2312,6 +2213,7 @@ export enum Simpipe_Step_Status_Enum {
   Cancelled = 'cancelled',
   Completed = 'completed',
   Failed = 'failed',
+  Queued = 'queued',
   Waiting = 'waiting'
 }
 
@@ -2394,8 +2296,6 @@ export type Simulations = {
   __typename?: 'simulations';
   /** DateTime of when the simulation was created */
   created: Scalars['timestamptz'];
-  /** UUID of the model */
-  model_id: Scalars['uuid'];
   name?: Maybe<Scalars['String']>;
   pipeline_description?: Maybe<Scalars['jsonb']>;
   /** An array relationship */
@@ -2481,7 +2381,6 @@ export type Simulations_Bool_Exp = {
   _not?: InputMaybe<Simulations_Bool_Exp>;
   _or?: InputMaybe<Array<Simulations_Bool_Exp>>;
   created?: InputMaybe<Timestamptz_Comparison_Exp>;
-  model_id?: InputMaybe<Uuid_Comparison_Exp>;
   name?: InputMaybe<String_Comparison_Exp>;
   pipeline_description?: InputMaybe<Jsonb_Comparison_Exp>;
   runs?: InputMaybe<Runs_Bool_Exp>;
@@ -2491,8 +2390,6 @@ export type Simulations_Bool_Exp = {
 
 /** unique or primary key constraints on table "simpipe.simulations" */
 export enum Simulations_Constraint {
-  /** unique or primary key constraint */
-  SimulationsModelIdKey = 'simulations_modelId_key',
   /** unique or primary key constraint */
   SimulationsPkey = 'simulations_pkey'
 }
@@ -2516,8 +2413,6 @@ export type Simulations_Delete_Key_Input = {
 export type Simulations_Insert_Input = {
   /** DateTime of when the simulation was created */
   created?: InputMaybe<Scalars['timestamptz']>;
-  /** UUID of the model */
-  model_id?: InputMaybe<Scalars['uuid']>;
   name?: InputMaybe<Scalars['String']>;
   pipeline_description?: InputMaybe<Scalars['jsonb']>;
   runs?: InputMaybe<Runs_Arr_Rel_Insert_Input>;
@@ -2531,8 +2426,6 @@ export type Simulations_Max_Fields = {
   __typename?: 'simulations_max_fields';
   /** DateTime of when the simulation was created */
   created?: Maybe<Scalars['timestamptz']>;
-  /** UUID of the model */
-  model_id?: Maybe<Scalars['uuid']>;
   name?: Maybe<Scalars['String']>;
   /** UUID of the simulation */
   simulation_id?: Maybe<Scalars['uuid']>;
@@ -2544,8 +2437,6 @@ export type Simulations_Min_Fields = {
   __typename?: 'simulations_min_fields';
   /** DateTime of when the simulation was created */
   created?: Maybe<Scalars['timestamptz']>;
-  /** UUID of the model */
-  model_id?: Maybe<Scalars['uuid']>;
   name?: Maybe<Scalars['String']>;
   /** UUID of the simulation */
   simulation_id?: Maybe<Scalars['uuid']>;
@@ -2578,7 +2469,6 @@ export type Simulations_On_Conflict = {
 /** Ordering options when selecting data from "simpipe.simulations". */
 export type Simulations_Order_By = {
   created?: InputMaybe<Order_By>;
-  model_id?: InputMaybe<Order_By>;
   name?: InputMaybe<Order_By>;
   pipeline_description?: InputMaybe<Order_By>;
   runs_aggregate?: InputMaybe<Runs_Aggregate_Order_By>;
@@ -2602,8 +2492,6 @@ export enum Simulations_Select_Column {
   /** column name */
   Created = 'created',
   /** column name */
-  ModelId = 'model_id',
-  /** column name */
   Name = 'name',
   /** column name */
   PipelineDescription = 'pipeline_description',
@@ -2617,8 +2505,6 @@ export enum Simulations_Select_Column {
 export type Simulations_Set_Input = {
   /** DateTime of when the simulation was created */
   created?: InputMaybe<Scalars['timestamptz']>;
-  /** UUID of the model */
-  model_id?: InputMaybe<Scalars['uuid']>;
   name?: InputMaybe<Scalars['String']>;
   pipeline_description?: InputMaybe<Scalars['jsonb']>;
   /** UUID of the simulation */
@@ -2630,8 +2516,6 @@ export type Simulations_Set_Input = {
 export enum Simulations_Update_Column {
   /** column name */
   Created = 'created',
-  /** column name */
-  ModelId = 'model_id',
   /** column name */
   Name = 'name',
   /** column name */
@@ -3359,7 +3243,7 @@ export type CreateRunMutationVariables = Exact<{
   name?: InputMaybe<Scalars['String']>;
   userid?: InputMaybe<Scalars['String']>;
   env_list?: InputMaybe<Scalars['jsonb']>;
-  timeout_value?: InputMaybe<Scalars['Int']>;
+  timeout_values?: InputMaybe<Scalars['jsonb']>;
 }>;
 
 
@@ -3442,7 +3326,6 @@ export type SetRunAsFailedMutation = { __typename?: 'mutation_root', update_runs
 
 export type CreateSimulationMutationVariables = Exact<{
   name?: InputMaybe<Scalars['String']>;
-  model_id: Scalars['uuid'];
   pipeline_description?: InputMaybe<Scalars['jsonb']>;
   userid?: InputMaybe<Scalars['String']>;
 }>;
@@ -3462,7 +3345,7 @@ export type GetRunDetailsQueryVariables = Exact<{
 }>;
 
 
-export type GetRunDetailsQuery = { __typename?: 'query_root', runs: Array<{ __typename?: 'runs', simulation_id: string, name?: string | null, env_list?: Array<Array<string>>, timeout_value?: number | null, steps: Array<{ __typename?: 'steps', step_id: number, pipeline_step_number: number, image: string, name: string }> }> };
+export type GetRunDetailsQuery = { __typename?: 'query_root', runs: Array<{ __typename?: 'runs', simulation_id: string, name?: string | null, env_list?: unknown | null, timeout_values?: unknown | null, steps: Array<{ __typename?: 'steps', step_id: number, pipeline_step_number: number, image: string, name: string }> }> };
 
 export type InsertResourceUsageMutationVariables = Exact<{
   cpu?: InputMaybe<Scalars['numeric']>;
@@ -3568,9 +3451,9 @@ export const GetSimulationDslDocument = gql`
 }
     `;
 export const CreateRunDocument = gql`
-    mutation createRun($simulation_id: uuid!, $name: String, $userid: String, $env_list: jsonb, $timeout_value: Int) {
+    mutation createRun($simulation_id: uuid!, $name: String, $userid: String, $env_list: jsonb, $timeout_values: jsonb) {
   insert_runs_one(
-    object: {simulation_id: $simulation_id, name: $name, userid: $userid, env_list: $env_list, timeout_value: $timeout_value}
+    object: {simulation_id: $simulation_id, name: $name, userid: $userid, env_list: $env_list, timeout_values: $timeout_values}
   ) {
     run_id
   }
@@ -3661,9 +3544,9 @@ export const SetRunAsFailedDocument = gql`
 }
     `;
 export const CreateSimulationDocument = gql`
-    mutation createSimulation($name: String, $model_id: uuid!, $pipeline_description: jsonb, $userid: String) {
+    mutation createSimulation($name: String, $pipeline_description: jsonb, $userid: String) {
   create_simulation(
-    object: {name: $name, model_id: $model_id, pipeline_description: $pipeline_description, userid: $userid}
+    object: {name: $name, pipeline_description: $pipeline_description, userid: $userid}
   ) {
     simulation_id
   }
@@ -3689,7 +3572,7 @@ export const GetRunDetailsDocument = gql`
     simulation_id
     name
     env_list
-    timeout_value
+    timeout_values
     steps(order_by: {pipeline_step_number: asc}) {
       step_id
       pipeline_step_number
@@ -3856,7 +3739,7 @@ export function getSdk(client: GraphQLClient, withWrapper: SdkFunctionWrapper = 
     setRunAsFailed(variables: SetRunAsFailedMutationVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<SetRunAsFailedMutation> {
       return withWrapper((wrappedRequestHeaders) => client.request<SetRunAsFailedMutation>(SetRunAsFailedDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'setRunAsFailed', 'mutation');
     },
-    createSimulation(variables: CreateSimulationMutationVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<CreateSimulationMutation> {
+    createSimulation(variables?: CreateSimulationMutationVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<CreateSimulationMutation> {
       return withWrapper((wrappedRequestHeaders) => client.request<CreateSimulationMutation>(CreateSimulationDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'createSimulation', 'mutation');
     },
     getSimulationIdandSteps(variables: GetSimulationIdandStepsQueryVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<GetSimulationIdandStepsQuery> {
