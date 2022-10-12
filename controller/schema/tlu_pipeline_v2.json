@@ -6,9 +6,9 @@
                 "step_number": 1,
                 "image": "registry.sintef.cloud/tellucare-edge",
                 "env": ["MQTT_HOST=oslo.sct.sintef.no",
-                "MQTT_USERNAME=TGW000000000",
+                "MQTT_USERNAME=username",
                 "MQTT_CLIENT_ID=TGWDATACLOUD",
-                "MQTT_PASS=d47AcL0|_|D1sTh3B3St",
+                "MQTT_PASS=password",
                 "MQTT_PORT=1883"],
                 "type": "continuous"
             },
@@ -17,8 +17,8 @@
                 "step_number": 2,
                 "image": "registry.sintef.cloud/tellucare-api:latest",
                 "env": ["RABBITMQ_HOST=oslo.sct.sintef.no:5672",
-                "RABBITMQ_USERNAME=tellucareapi",
-                "RABBITMQ_PASSWORD=d47AcL0|_|D1sTh3B3St",
+                "RABBITMQ_USERNAME=username",
+                "RABBITMQ_PASSWORD=password",
                 "FHIR_URL=https://tellucloud-fhir.sintef.cloud"],
                 "type": "continuous"
             },
@@ -28,8 +28,8 @@
                 "image": "registry.sintef.cloud/tellucare-application-logic:latest",
                 "env": ["FHIR_URL=https://tellucloud-fhir.sintef.cloud/",
                 "RABBITMQ_HOST=oslo.sct.sintef.no:5672",
-                "RABBITMQ_USERNAME=tellucareapplicationlogic",
-                "RABBITMQ_PASSWORD=d47AcL0|_|D1sTh3B3St"
+                "RABBITMQ_USERNAME=username",
+                "RABBITMQ_PASSWORD=password"
                 ],
                 "type": "continuous"
             }
