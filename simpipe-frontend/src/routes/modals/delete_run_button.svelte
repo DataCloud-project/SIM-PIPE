@@ -9,5 +9,5 @@
 	}
 </script>
 
-<button class="action_button delete_run" on:click="{open_are_you_sure}"><span>X</span></button>
+<button title="Delete run" class="action_button delete_run" on:click="{open_are_you_sure}"><span>🗑️</span></button>
 

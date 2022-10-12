@@ -46,10 +46,14 @@
 		}
 	}
 </script>
-
+{#if (paginated_runs.length == 0)}
+	<br/>
+	<h3 ><span style="font-size: 30px;">🐧</span> No runs for this simulation, start testing by creating a new run!</h3>
+	<Modal><CreateRunButton /></Modal>
+{:else}
 <div class="table_container">
 	<h2 class="table_heading_h2">Runs
-		&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+		&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 
 		<Modal><CreateRunButton /></Modal>
 		<Modal><StartRunButton /></Modal>
@@ -71,7 +75,7 @@
 		<li class="table-header-runs">
 			<div class="col-1">NAME</div>
 			<div class="col-2">STATUS</div>
-			<div class="col-3">RUN_ID</div>
+			<div class="col-3">REMARK</div>
 		</li>
 		{#each paginated_runs as run, index (run)}
 			<li
@@ -81,12 +85,6 @@
 				on:click={() => runOnClick(run)}
 			>
 				<div class="col-1">
-				<!-- {#if run === $clicked_run && run.status != 'active' && run.status != 'queued'}
-					<Modal><DeleteRunButton /></Modal>
-				{/if}
-				{#if run === $clicked_run}
-					<Modal><StopRunButton /></Modal>
-				{/if} -->
 				{run.name}</div>
 				<div class="col-2">{run.status}</div>
 				<div class="col-3">{display_run_msg(run)}</div>
@@ -103,6 +101,8 @@
 		on:setPage={(e) => (current_page = e.detail.page)}
 	/>
 </div>
+{/if}
+
 
 <style>
 	.col-1 {

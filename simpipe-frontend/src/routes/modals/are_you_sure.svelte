@@ -24,7 +24,7 @@
     }
 </script>
 
-<h1 class="black"> Are you sure ? </h1>
+<h3 class="black"> Are you sure ? </h3>
 
 <button class="action_button" on:click="{execute_delete_run}">Yes</button>
 <button class="action_button" on:click="{() => {close();}}">No</button>

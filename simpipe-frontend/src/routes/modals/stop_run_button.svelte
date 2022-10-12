@@ -23,5 +23,5 @@
 </script>
 
 {#if $clicked_run.status == 'active' || $clicked_run.status == 'queued'}
-    <button class="action_button stop_run" on:click="{execute_stop_run}">∎</button> 
+    <button title="Stop run" class="action_button stop_run" on:click="{execute_stop_run}">STOP</button> 
 {/if}

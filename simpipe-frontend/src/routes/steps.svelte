@@ -12,10 +12,12 @@
 
 	function stepOnClick(step) {
 		$clicked_step = step;
-		if (clicked_step.status != 'waiting') {
+		if ($clicked_step.status != 'waiting' && $clicked_step.status != 'cancelled') {
 			$show_usages = true;
 			$selected_resource_usage = step.resource_usages;
 			$selected_logs = step.log?.text;
+		} else {
+			$show_usages = false;
 		}
 	}
 	function display_status_msg(step) {

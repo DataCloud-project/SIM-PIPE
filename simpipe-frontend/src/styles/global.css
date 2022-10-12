@@ -33,14 +33,28 @@
 .start_run {
   background-color: rgb(55, 113, 82);
   color: white;
+  width: 50px;
+  height: 50px;
+}
+.back_button {
+  background-color: rgb(55, 113, 82);
+  color: white;
 }
 .stop_run {
-  background-color: rgb(145, 51, 51);
-  color: black;
+  background-color: rgb(184, 49, 49);
+  /* color: black; */
+  color: white;
+  /* font-size: 18px; */
+  font-weight: 550;
 }
 .delete_run {
-  background-color: rgb(143, 135, 135);
-  color: white;
+  background-color: rgb(15, 15, 15);
+  /* color: white; */
+  color: black;
+  font-size: 18px;
+  width: 50px;
+  height: 50px;
+
 }
 .modal_box {
   border: 2px solid rgba(8, 8, 8, 0.96);

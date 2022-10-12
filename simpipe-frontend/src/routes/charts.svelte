@@ -255,8 +255,9 @@
 <style>
 	.graphs {
 		float: left;
+		padding: 1px;
 	}
 	.graphstyle {
-		width:925px; height:600px; border-radius:0px; border:2px solid #093a7af5;
+		width:720px; height:600px; border-radius:0px; border:1px solid #093a7af5;
 	}
 </style>

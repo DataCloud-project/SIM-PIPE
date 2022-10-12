@@ -75,7 +75,7 @@
 	{/if}
 </div>
 
-{#if $show_usages && ($clicked_run.status==='completed' || $clicked_run.status==='active')}
+{#if $show_usages && ($clicked_run.status!='queued' || $clicked_run.status!='waiting')}
 	<div class="graph_slot">
 		<Charts />
 	</div>
