@@ -7,8 +7,10 @@
 		steps_list
 	} from '../stores/stores';
 	import dayjs from 'dayjs';
+	import Scroll from "./scroll.svelte";
 
-	// export let steps
+	let data = [];
+	$clicked_step = '';
 
 	function stepOnClick(step) {
 		$clicked_step = step;
@@ -26,30 +28,36 @@
 		} 
 		return step.status;
 	}
+	$: data = $steps_list;
+
 </script>
 
-<div class="table_container">
-	<h2 class="table_heading_h2">Steps</h2>
-	<ul class="responsive-table">
-		<li class="table-header-steps">
+<br/>
+<main class="scrollable_main">
+	<h2 class="table_heading_h2">Steps
+		
+	</h2>
+	<ul class="scrollable_ul">
+		<li class="table-header-runs">
 			<div class="col-1">STEP_NUMBER</div>
 			<div class="col-2">NAME</div>
 			<div class="col-3">STATUS</div>
 		</li>
-		{#each $steps_list as step, index (step)}
-			<li
-				class="pointer"
-				class:active={step.step_id === $clicked_step.step_id}
-				{index}
-				on:click={() => stepOnClick(step)}
-			>
-				<div class="col-1">{step.pipeline_step_number}</div>
-				<div class="col-2">{step.name}</div>
-				<div class="col-3">{display_status_msg(step)}</div>
-			</li>
-		{/each}
+	  {#each data as step, index (step)}
+		<li class="pointer"
+		class:active={step.step_id === $clicked_step.step_id}
+		class:scrollable_li={step.step_id != $clicked_step.step_id}
+		{index}
+		on:click={() => stepOnClick(step)}>
+			<div class="col-1">{step.pipeline_step_number}</div>
+			<div class="col-2">{step.name}</div>
+			<div class="col-3">{display_status_msg(step)}</div>
+		</li>
+	  {/each}
+	  <Scroll
+		threshold={100} />
 	</ul>
-</div>
+  </main>
 
 <style>
 	.col-1 {
