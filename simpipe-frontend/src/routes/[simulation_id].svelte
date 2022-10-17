@@ -41,6 +41,7 @@
 
 	import { show_usages, show_steps_list, clicked_run } from '../stores/stores';
 	import Charts from './charts.svelte';
+  	import DeleteSimulationButton from './modals/delete_simulation_button.svelte';
 
 	export let simulation;
 	$clicked_simulation = simulation;
@@ -52,7 +53,7 @@
 
 <Modal><Back /></Modal>
 <div class="simulation_header">	
-	<h3>  Simulation: <span style="color:darkseagreen">{$clicked_simulation.name}</span>  created {time} 
+	<h3>  Simulation: <span style="color:darkseagreen">{$clicked_simulation.name}</span>  created {time} <Modal><DeleteSimulationButton /></Modal>
     </h3>   
 </div>
 

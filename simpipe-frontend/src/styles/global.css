@@ -21,15 +21,6 @@
     cursor: pointer;
     padding: 10px;
 }
-.list_button {
-  font-family: 'Sans sariff', monospace;
-  color: #f6f3f9;
-  font-weight: bold;
-  background-color: rgb(58, 99, 161);
-  font-size: 22px;
-  cursor: pointer;
-  /* padding: 5px; */
-}
 .start_run {
   background-color: rgb(55, 113, 82);
   color: white;
@@ -42,19 +33,15 @@
 }
 .stop_run {
   background-color: rgb(184, 49, 49);
-  /* color: black; */
   color: white;
-  /* font-size: 18px; */
   font-weight: 550;
 }
 .delete_run {
   background-color: rgb(15, 15, 15);
-  /* color: white; */
   color: black;
   font-size: 18px;
   width: 50px;
   height: 50px;
-
 }
 .modal_box {
   border: 2px solid rgba(8, 8, 8, 0.96);
@@ -66,8 +53,6 @@
 .table_heading_h2 {
   font-size: 30px;
   margin: 20px 0;
-  /* padding-left: -10px; */
-  /* text-align: center; */
 }
 .table-header-runs {
   background-color: #5f7071;
@@ -86,8 +71,6 @@
   font-size: 30px;
   text-transform: uppercase;
   letter-spacing: 0.03em;
-  padding: 20px 195px;
-  /* color: black; */
   font-weight: bold;
   border-radius: 3px;
   padding: 10px 15px;
