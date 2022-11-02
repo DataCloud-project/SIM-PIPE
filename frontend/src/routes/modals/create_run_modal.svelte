@@ -79,10 +79,11 @@
 </script>
 
 <div class="create_run_class">
-    <h1>Enter details of run</h1>
+    <h1 style="font-size:30px;">Enter details of run</h1>
     <div class="modal_box"> 
-        <p><strong>Name of run: </strong><input bind:value={name} placeholder="Enter name"></p>        
-        <p><strong>Upload sample input files for the run</strong></p>
+        <p style="font-size:18px;"><strong>Name of run: </strong><input bind:value={name} placeholder="Enter name"></p>        
+        
+        <p style="font-size:18px;"><strong>Upload sample input files for the run</strong></p>
         
         <input multiple type="file" bind:files >
         <br>
@@ -90,20 +91,22 @@
             <p><strong>{file.name}</strong>({file.size} bytes)</p>
         {/each}
         <br>
+        <p style="font-size:18px;"><strong>Run configuration</strong></p>
         
         {#each pipeline_steps as step, index}
-            <p>Confirm <strong>{step.name}</strong> configuration <button class="toggle" on:click="{() => toggle_env_list(index)}">{arrow[show_env_list[index]]}</button> </p>
+            <p style="margin-left:30px;">Enter <strong><span style="color:black;">{step.name}</span></strong> configuration <button class="toggle pointer" on:click="{() => toggle_env_list(index)}">{arrow[show_env_list[index]]}</button> </p>
             {#if show_env_list[index]}
                 {#each step.env as env}
                     <p class="left-margin">{env.split('=')[0]}: <input bind:value={env_list_entries[index][env.split('=')[0]]}></p>
                     <!-- {env.split('=')[1] = env_value} -->
                 {/each}
-                {/if}
                 <br>
                 {#if pipeline_steps[pipeline_steps.length-1].type == "continuous"}
-                    <p  class="left-margin"> Timeout for container <input bind:value={timeout_values[index]} placeholder="Enter timeout in seconds"></p>
+                    <p  class="left-margin"> Timeout values for the step <input bind:value={timeout_values[index]} placeholder="Enter timeout in seconds"></p>
                 {/if}
-                {/each}
+            {/if}
+                <br>
+            {/each}
     </div>
 
     <br>
@@ -115,9 +118,11 @@
 
 </div>
 
-<style>    
+<style>
+       
     .toggle {
         background-color: rgb(218, 245, 254);
+        font-size: 20px;
     }
     .create_run_class{
         background-color: white;

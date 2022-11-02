@@ -3392,6 +3392,13 @@ export type DeleteRunMutationVariables = Exact<{
 
 export type DeleteRunMutation = { __typename?: 'mutation_root', delete_runs_by_pk?: { __typename?: 'runs', run_id: string } | null };
 
+export type DeleteSimulationMutationVariables = Exact<{
+  simulation_id: Scalars['uuid'];
+}>;
+
+
+export type DeleteSimulationMutation = { __typename?: 'mutation_root', delete_simulation?: { __typename?: 'simulations', simulation_id: string } | null };
+
 
 export const AllSimulationsDocument = gql`
     query AllSimulations($userid: String) {
@@ -3683,6 +3690,13 @@ export const DeleteRunDocument = gql`
   }
 }
     `;
+export const DeleteSimulationDocument = gql`
+    mutation deleteSimulation($simulation_id: uuid!) {
+  delete_simulation(simulation_id: $simulation_id) {
+    simulation_id
+  }
+}
+    `;
 
 export type SdkFunctionWrapper = <T>(action: (requestHeaders?:Record<string, string>) => Promise<T>, operationName: string, operationType?: string) => Promise<T>;
 
@@ -3762,6 +3776,9 @@ export function getSdk(client: GraphQLClient, withWrapper: SdkFunctionWrapper = 
     },
     deleteRun(variables: DeleteRunMutationVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<DeleteRunMutation> {
       return withWrapper((wrappedRequestHeaders) => client.request<DeleteRunMutation>(DeleteRunDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'deleteRun', 'mutation');
+    },
+    deleteSimulation(variables: DeleteSimulationMutationVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<DeleteSimulationMutation> {
+      return withWrapper((wrappedRequestHeaders) => client.request<DeleteSimulationMutation>(DeleteSimulationDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'deleteSimulation', 'mutation');
     }
   };
 }

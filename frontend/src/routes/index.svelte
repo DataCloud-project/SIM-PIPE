@@ -29,7 +29,7 @@
 		{#if !simulations}
 			<p style="font-size:20px;">Loading simulations...</p>
 		{:else if simulations === 'error'}
-			<p style="font-size:20px;">🎌 Error! could load simulations</p>
+			<p style="font-size:20px;">🎌 Error! could not load simulations</p>
 		{:else}
 			{#each $simulations_list.All_Simulations.simulations as simulation}
 				<li class="pointer row">

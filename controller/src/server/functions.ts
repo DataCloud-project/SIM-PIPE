@@ -4,14 +4,15 @@ import * as fs from 'node:fs';
 import { setTimeout } from 'node:timers/promises';
 
 import * as controller from '../controller.js';
-import { DeleteRunMutationVariables, getSdk } from '../db/database.js';
+import { getSdk } from '../db/database.js';
 import logger from '../logger.js';
 import TaskQueue from './taskqueue.js';
 import type {
   AllRunsAndStepsQuery, AllRunsAndStepsQueryVariables, AllSimulationsQuery,
   AllSimulationsQueryVariables, CreateRunMutation, CreateRunMutationVariables,
   CreateSimulationMutation, CreateSimulationMutationVariables, CreateStepMutation,
-  CreateStepMutationVariables, DeleteRunMutation, GetRunDetailsQuery, GetRunDetailsQueryVariables,
+  CreateStepMutationVariables, DeleteRunMutation, DeleteRunMutationVariables, DeleteSimulationMutation, DeleteSimulationMutationVariables,
+  GetRunDetailsQuery, GetRunDetailsQueryVariables,
   GetSimulationDslQuery, GetSimulationDslQueryVariables,
   GetSimulationIdandStepsQuery, GetSimulationIdandStepsQueryVariables, GetSimulationQuery, GetSimulationQueryVariables,
   GetSimulationRunResultsQuery,
@@ -56,6 +57,7 @@ let sdk: {
   getSimulationRunResults(variables?: GetSimulationRunResultsQueryVariables):Promise<GetSimulationRunResultsQuery>
   getSimulationDSL(variables?: GetSimulationDslQueryVariables):Promise<GetSimulationDslQuery>
   deleteRun(variables?: DeleteRunMutationVariables): Promise<DeleteRunMutation>,
+  deleteSimulation(variables?: DeleteSimulationMutationVariables): Promise<DeleteSimulationMutation>,
 };
 
 function connectHasuraEndpoint():void {
@@ -309,6 +311,12 @@ export async function deleteRun(run_id:string, userid:string):Promise<string> {
   await checkRunOwner(run_id, userid);
   await sdk.deleteRun({ run_id });
   return run_id;
+}
+export async function deleteSimulation(simulation_id:string, userid:string):Promise<string> {
+  // throw error if simulation does not belong to the user
+  await checkSimulationOwner(simulation_id, userid);
+  await sdk.deleteSimulation({ simulation_id });
+  return simulation_id;
 }
 
 const taskQueue = new TaskQueue();

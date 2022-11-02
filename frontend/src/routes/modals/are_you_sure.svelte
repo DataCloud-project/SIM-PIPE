@@ -1,11 +1,15 @@
 <script>
 	import { delete_run_mutation } from '../../queries/delete_run.svelte';
+	import { delete_simulation_mutation } from '../../queries/delete_simulation.svelte';
     import { get_simulation_query } from '../../queries/get_simulation.svelte';
 	import { clicked_run, graphQLClient, clicked_simulation, show_steps_list, show_usages } from '../../stores/stores';
 	import Alert from './alert.svelte';
 	import { getContext } from 'svelte';
     const { open, close } = getContext('simple-modal');
+	import { goto } from '$app/navigation'
 
+	
+	export let flag;
 	async function execute_delete_run() {
 		let result = await $graphQLClient.request(delete_run_mutation, { run_id:$clicked_run.run_id });
         if (JSON.parse(result.Delete_Run).code == 200) {
@@ -22,11 +26,30 @@
 			await setTimeout(function(){close()}, 1000);
 		}
     }
+	async function execute_delete_simulation() {
+		let result = await $graphQLClient.request(delete_simulation_mutation, { simulation_id:$clicked_simulation.simulation_id });
+        if (JSON.parse(result.Delete_Simulation).code == 200) {
+			open(Alert, { message: '🎐 Success! Simulation has been deleted' });
+			await setTimeout(function(){close()}, 1000);
+			// go to all simulations page
+			goto('/');
+		} else {
+			open(Alert, { message: JSON.parse(result.Delete_Simulation).message });
+			await setTimeout(function(){close()}, 1000);
+		}
+    }
+
+	async function handleClick() {
+		if(flag === "run") {
+			await execute_delete_run();
+		} else 
+			await execute_delete_simulation();
+	}
 </script>
 
-<h1 class="black"> Are you sure ? </h1>
+<h3 class="black"> Are you sure ? </h3>
 
-<button class="action_button" on:click="{execute_delete_run}">Yes</button>
+<button class="action_button" on:click="{handleClick}">Yes</button>
 <button class="action_button" on:click="{() => {close();}}">No</button>
 
 <style>

@@ -27,7 +27,6 @@
 		"highcharts-more": "^0.1.7",
 		"highstock-release": "^6.0.4",
 		"keycloak-js": "^19.0.1",
-		"svelte-paginate": "^0.0.1",
 		"svelte-simple-modal": "^1.4.1"
 	}
 }

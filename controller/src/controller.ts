@@ -10,6 +10,7 @@ import { setTimeout } from 'node:timers/promises';
 import { clearIntervalAsync } from 'set-interval-async';
 import { setIntervalAsync } from 'set-interval-async/dynamic';
 import type { GraphQLClient } from 'graphql-request';
+import type { Stream } from 'node:stream';
 import type { SetIntervalAsyncTimer } from 'set-interval-async';
 
 import { getSdk } from './db/database.js';
@@ -99,8 +100,27 @@ function init(step:types.Step):void {
 }
 let timer: SetIntervalAsyncTimer;
 
+async function pullImagePromise(image: string):Promise<void> {
+  return new Promise<void>((resolve, reject) => {
+    // eslint-disable-next-line @typescript-eslint/no-floating-promises
+    docker.pull(image, async (error: any, stream: Stream) => {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars, unicorn/consistent-function-scoping
+      function onFinished(error_: any, output: any):void {
+        resolve();
+      }
+      try {
+        docker.modem.followProgress(stream, onFinished);
+      } catch (dockerModemError) {
+        if ((dockerModemError as Error).name === 'TypeError') resolve();
+        else reject(dockerModemError);
+      }
+    });
+  });
+}
+
 // eslint-disable-next-line unicorn/prevent-abbreviations
 async function startContainer(image:string, stepId:number, env: string[]) : Promise<number> {
+  await pullImagePromise(image); // pull docker image before creating container
   createdContainer = (await docker.createContainer({
     Image: image,
     Tty: true,

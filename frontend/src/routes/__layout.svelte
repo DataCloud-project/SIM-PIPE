@@ -5,7 +5,7 @@
 
 <header>
 	<h1 style="text-align:center;">SIM-PIPE UI
-		<span style="float:right; font-size:20px; "><span>❂</span> {$username}</span>
+		<span style="float:right; font-size:20px; padding:15px; ">👩‍🎓 {$username}</span>
 	</h1>
 	<!-- <div style="text-align:right; ">Log out*</div> -->
 	<!-- <h5>
