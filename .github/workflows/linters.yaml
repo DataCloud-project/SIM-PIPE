@@ -8,6 +8,7 @@ on:
 
 jobs:
   check-controller:
+    name: Check controller
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -29,6 +30,7 @@ jobs:
     # - run: npm test
 
   check-frontend:
+    name: Check frontend
     runs-on: ubuntu-latest
     defaults:
       run:

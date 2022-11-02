@@ -14,6 +14,7 @@ env:
 
 jobs:
   build-and-push-controller-image:
+    name: Build and push controller image
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -43,6 +44,7 @@ jobs:
           tags: ${{ steps.meta-main.outputs.tags }}
           labels: ${{ steps.meta-main.outputs.labels }}
   build-and-push-frontend-image:
+    name: Build and push frontend image
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -73,6 +75,7 @@ jobs:
           labels: ${{ steps.meta-main.outputs.labels }}
 
   build-and-push-hasura-image:
+    name: Build and push hasura image
     runs-on: ubuntu-latest
     permissions:
       contents: read
