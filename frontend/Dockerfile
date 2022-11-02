@@ -1,13 +1,9 @@
-FROM node:16 AS build
-
+FROM node:18-alpine AS builder
 WORKDIR /app
-
-COPY package.json ./
-COPY package-lock.json ./
-RUN npm install -g npm
-RUN npm install
+COPY package.json package-lock.json ./
+RUN npm ci
 COPY . ./
 RUN npm run build
 
-FROM nginx:1.19-alpine
-COPY --from=build /app/public /usr/share/nginx/html
+FROM nginx:1.23-alpine
+COPY --from=builder --chown=nginx:nginx /app/public /usr/share/nginx/html
