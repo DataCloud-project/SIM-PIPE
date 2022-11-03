@@ -30,12 +30,13 @@ const typeDefs = gql`
   },
   type Mutation {
     Create_Simulation(name:String, pipeline_description:String): String
-    Create_Run_WithInput(simulation_id: String,name:String, sampleInput:[[String]], 
+    Create_Run_WithInput(simulation_id: String,name:String, sampleInput:[[String]],
     env_list: [[String]], timeout_values:[Int]):
     String
     Start_Run(run_id:String): String
     Stop_Run(run_id:String): String
     Delete_Run(run_id:String): String
+    Delete_Simulation(simulation_id:String): String
   }
 `;
 
@@ -159,6 +160,23 @@ const resolvers = {
         });
       }
     },
+    async Delete_Simulation(_p:unknown, arguments_: { simulation_id:string }, context: { user: any }):Promise<string> {
+      try {
+        await functions.deleteSimulation(arguments_.simulation_id, context.user.sub as string);
+        return JSON.stringify({
+          code: 200,
+          message: 'Successfully deleted simulation',
+        });
+      } catch (error) {
+        const errorMessage = `🎌 Error deleting simulation:
+      ${(error as Error).message}`;
+        logger.error(errorMessage);
+        return JSON.stringify({
+          code: 300,
+          message: errorMessage,
+        });
+      }
+    },
   },
 };
 
@@ -214,9 +232,18 @@ const startSecureServer = async (): Promise<void> => {
     const app = express();
     // error handling
 
+    app.use((request, response, next) => {
+      if (request.path === '/health') {
+        response.sendStatus(204);
+        return;
+      }
+      next();
+    });
+
     app.use(
       jwtMiddleware,
     );
+
     await server.start();
     // eslint-disable-next-line @typescript-eslint/await-thenable
     await server.applyMiddleware({ app });

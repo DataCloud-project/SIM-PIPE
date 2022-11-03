@@ -10,6 +10,7 @@ import { setTimeout } from 'node:timers/promises';
 import { clearIntervalAsync } from 'set-interval-async';
 import { setIntervalAsync } from 'set-interval-async/dynamic';
 import type { GraphQLClient } from 'graphql-request';
+import type { Stream } from 'node:stream';
 import type { SetIntervalAsyncTimer } from 'set-interval-async';
 
 import { getSdk } from './db/database.js';
@@ -33,11 +34,32 @@ let sdk: {
 };
 
 if (remote) {
+  const host = process.env.SANDBOX_IP ?? process.env.DOCKER_HOST ?? 'localhost';
+
+  const caCertPath = process.env.SANDBOX_CA_CERT ?? process.env.DOCKER_TLS_CA_CERT ?? '';
+  const caCert = caCertPath ? await fsAsync.readFile(caCertPath) : undefined;
+
+  const tlsCertPath = process.env.SANDBOX_TLS_CERT ?? process.env.DOCKER_TLS_CERT ?? '';
+  const tlsCert = tlsCertPath ? await fsAsync.readFile(tlsCertPath) : undefined;
+
+  const tlsKeyPath = process.env.SANDBOX_TLS_KEY ?? process.env.DOCKER_TLS_KEY ?? '';
+  const tlsKey = tlsKeyPath ? await fsAsync.readFile(tlsKeyPath) : undefined;
+
+  const protocol = (process.env.SANDBOX_TLS_VERIFY ?? process.env.DOCKER_TLS_VERIFY)
+    ? 'https' : 'http';
+
+  const port = process.env.SANDBOX_PORT ?? process.env.DOCKER_PORT ?? (
+    protocol === 'https' ? 2376 : 2375
+  );
+
   // remote connection to docker daemon
   docker = new Docker({
-    // host: '127.0.0.1',
-    host: process.env.SANDBOX_IP, // ip address of windows host
-    port: 2375,
+    host,
+    port,
+    protocol,
+    ca: caCert,
+    cert: tlsCert,
+    key: tlsKey,
   });
 } else {
   // local connection to docker dameon
@@ -50,6 +72,24 @@ if (remote) {
 
   docker = new Docker({ socketPath: socket });
 }
+
+// Ping docker deamon to check if it is running
+async function pingDocker():Promise<void> {
+  try {
+    const pingResult = await Promise.race<string | unknown>([
+      setTimeout(5000, 'timeout'),
+      docker.ping(),
+    ]);
+    if (pingResult === 'timeout') {
+      throw new Error('ping timeout');
+    }
+    logger.info('🐳 Docker daemon is running');
+  } catch (error) {
+    logger.error('🐳 Docker daemon is not running');
+    throw new Error(`🎌 Error pinging docker daemon\n${error as string}`);
+  }
+}
+await pingDocker();
 
 let targetDirectory:string;
 let createdContainer: Docker.Container;
@@ -66,8 +106,27 @@ function init(step:types.Step):void {
 }
 let timer: SetIntervalAsyncTimer;
 
+async function pullImagePromise(image: string):Promise<void> {
+  return new Promise<void>((resolve, reject) => {
+    // eslint-disable-next-line @typescript-eslint/no-floating-promises
+    docker.pull(image, async (error: any, stream: Stream) => {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars, unicorn/consistent-function-scoping
+      function onFinished(error_: any, output: any):void {
+        resolve();
+      }
+      try {
+        docker.modem.followProgress(stream, onFinished);
+      } catch (dockerModemError) {
+        if ((dockerModemError as Error).name === 'TypeError') resolve();
+        else reject(dockerModemError);
+      }
+    });
+  });
+}
+
 // eslint-disable-next-line unicorn/prevent-abbreviations
 async function startContainer(image:string, stepId:number, env: string[]) : Promise<number> {
+  await pullImagePromise(image); // pull docker image before creating container
   createdContainer = (await docker.createContainer({
     Image: image,
     Tty: true,
