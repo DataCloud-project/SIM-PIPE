@@ -18,9 +18,18 @@
 				mode: 'cors'
 			};
 			username.set(keycloak.idTokenParsed.preferred_username);
+
+			let graphqlUrl;
+			if (/^localhost(:\d+)?$/.test(window.location.host)) {
+				graphqlUrl = 'http://localhost:9000/graphql';
+			} else {
+				const isHTTPS = window.location.protocol === 'https:';
+				graphqlUrl = `${window.location.protocol}://${window.location.host}/graphql`;
+			}
+
 			// todo - add confi
 			graphQLClient.set(
-				new GraphQLClient('http://localhost:9000/graphql', {
+				new GraphQLClient(graphqlUrl, {
 					headers: requestHeaders
 				})
 			);
