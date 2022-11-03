@@ -23,8 +23,7 @@
 			if (/^localhost(:\d+)?$/.test(window.location.host)) {
 				graphqlUrl = 'http://localhost:9000/graphql';
 			} else {
-				const isHTTPS = window.location.protocol === 'https:';
-				graphqlUrl = `${window.location.protocol}://${window.location.host}/graphql`;
+				graphqlUrl = '/graphql';
 			}
 
 			// todo - add confi
