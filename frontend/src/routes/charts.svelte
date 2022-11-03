@@ -22,7 +22,7 @@
 				// tooltip: {
 				// 	// split: true
 				// },
-				
+
 				xAxis: {
 					name: 'Timestamps',
 					categories: timestamps,
@@ -37,7 +37,7 @@
 							color: 'black',
 							fontSize: 18
 						}
-					}				
+					}
 				},
 				yAxis: {
 					labels: {
@@ -193,7 +193,7 @@
 			{
 				name: 'Memory used',
 				data: memory,
-				tooltip: tooltip,
+				tooltip: tooltip
 				// color: 'orange'
 			},
 			{
@@ -223,7 +223,7 @@
 </script>
 
 <div class="graphs">
-	<div class="graphstyle" id="cpu_container"  />
+	<div class="graphstyle" id="cpu_container" />
 </div>
 
 <div class="graphs">
@@ -258,6 +258,9 @@
 		padding: 1px;
 	}
 	.graphstyle {
-		width:720px; height:600px; border-radius:0px; border:1px solid #093a7af5;
+		width: 720px;
+		height: 600px;
+		border-radius: 0px;
+		border: 1px solid #093a7af5;
 	}
 </style>

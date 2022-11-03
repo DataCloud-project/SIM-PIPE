@@ -1,12 +1,12 @@
 import { writable, readable } from 'svelte/store';
-import { GraphQLClient  } from 'graphql-request'
+import { GraphQLClient } from 'graphql-request';
 
 /**
  * username of the currently logged in user
  */
 export let username = writable('');
 /**
- * indicators to show if a run or step is clicked 
+ * indicators to show if a run or step is clicked
  */
 export let show_steps_list = writable(false);
 export let show_usages = writable(false);
@@ -21,7 +21,7 @@ export let clicked_step = writable('');
  */
 export let simulations_list = writable([]);
 export let steps_list = writable([]);
-export let selected_resource_usage = writable([]);  
+export let selected_resource_usage = writable([]);
 export let selected_logs = writable('');
 
 // graphql client from graphql-request

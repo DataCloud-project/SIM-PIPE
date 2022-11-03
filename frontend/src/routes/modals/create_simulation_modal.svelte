@@ -11,12 +11,12 @@
 
 	async function execute_create_simulation() {
 		let pipeline_description = await files[0].text();
-		
+
 		// call create simulation
 		let variables = {
 			name,
 			pipeline_description
-		}; 
+		};
 		let result = await $graphQLClient.request(create_simulation_mutation, variables);
 		if (JSON.parse(result.Create_Simulation).code == 200) {
 			open(Alert, { message: '🎐 Success! New simulation created' });
@@ -41,8 +41,8 @@
 		<p><strong>Name: </strong><input bind:value={name} placeholder="Enter name" /></p>
 
 		<!-- <p><strong>Model id:</strong> <input bind:value={model_id} /></p> -->
-		<p><strong>Upload pipeline description </strong> </p>
-        <input type="file" bind:files />
+		<p><strong>Upload pipeline description </strong></p>
+		<input type="file" bind:files />
 		<br /><br />
 	</div>
 

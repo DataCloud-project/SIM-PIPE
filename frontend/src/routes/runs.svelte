@@ -1,5 +1,5 @@
 <script>
-	import Scroll from "./scroll.svelte"; 
+	import Scroll from './scroll.svelte';
 	import {
 		show_usages,
 		steps_list,
@@ -30,7 +30,7 @@
 		} else if (run.status == 'waiting') {
 			return `Waiting since ${dayjs(run.created).fromNow()}`;
 		}
-	} 
+	}
 
 	function runOnClick(run) {
 		if ($clicked_run != run) $clicked_step = ''; // reset selected step when a different run is clicked
@@ -43,47 +43,50 @@
 		$steps_list = run.steps;
 	}
 	$: data = $clicked_simulation.runs;
-  
 </script>
 
-{#if (data.length == 0)}
-	<br/>
-	<h3 ><span style="font-size: 30px;">🐧</span> No runs for this simulation, start testing by creating a new run!</h3>
+{#if data.length == 0}
+	<br />
+	<h3>
+		<span style="font-size: 30px;">🐧</span> No runs for this simulation, start testing by creating a
+		new run!
+	</h3>
 	<Modal><CreateRunButton /></Modal>
 {:else}
-<main class="scrollable_main">
-	<h2 class="table_heading_h2">Runs
-		&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+	<main class="scrollable_main">
+		<h2 class="table_heading_h2">
+			Runs &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 
-		<Modal><CreateRunButton /></Modal>
-		<Modal><StartRunButton /></Modal>
-		<Modal><StopRunButton /></Modal>
-		{#if $clicked_run != '' && $clicked_run.status != 'active' && $clicked_run.status != 'queued'}
-			<Modal><DeleteRunButton /></Modal>
-		{/if}
-	</h2>
-	<ul class="scrollable_ul">
-		<li class="table-header-runs">
-			<div class="col-1">NAME</div>
-			<div class="col-2">STATUS</div>
-			<div class="col-3">REMARK</div>
-		</li>
-	  {#each data as item, index (item)}
-		<li class="pointer"
-			class:active={item === $clicked_run}
-			class:scrollable_li={item != $clicked_run}
-			{index}
-			on:click={() => runOnClick(item)}>
-			<div class="col-1">{item.name}</div>
-			<div class="col-2">{item.status}</div>
-			<div class="col-3">{display_run_msg(item)}</div>
-		</li>
-	  {/each}
-	  <Scroll
-		threshold={100} />
-	</ul>
-  </main>
-  {/if}
+			<Modal><CreateRunButton /></Modal>
+			<Modal><StartRunButton /></Modal>
+			<Modal><StopRunButton /></Modal>
+			{#if $clicked_run != '' && $clicked_run.status != 'active' && $clicked_run.status != 'queued'}
+				<Modal><DeleteRunButton /></Modal>
+			{/if}
+		</h2>
+		<ul class="scrollable_ul">
+			<li class="table-header-runs">
+				<div class="col-1">NAME</div>
+				<div class="col-2">STATUS</div>
+				<div class="col-3">REMARK</div>
+			</li>
+			{#each data as item, index (item)}
+				<li
+					class="pointer"
+					class:active={item === $clicked_run}
+					class:scrollable_li={item != $clicked_run}
+					{index}
+					on:click={() => runOnClick(item)}
+				>
+					<div class="col-1">{item.name}</div>
+					<div class="col-2">{item.status}</div>
+					<div class="col-3">{display_run_msg(item)}</div>
+				</li>
+			{/each}
+			<Scroll threshold={100} />
+		</ul>
+	</main>
+{/if}
 
 <style>
 	.col-1 {
@@ -95,5 +98,4 @@
 	.col-3 {
 		flex-basis: 50%;
 	}
-
 </style>

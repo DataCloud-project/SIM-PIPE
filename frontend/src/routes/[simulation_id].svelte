@@ -8,7 +8,7 @@
 		try {
 			let { simulation_id } = params;
 			// during refresh if simulation id is undefined
-			if(simulation_id == 'undefined') {			
+			if (simulation_id == 'undefined') {
 				simulation_id = get(clicked_simulation).simulation_id;
 			}
 			const variables = { simulation_id }; // userid from access token
@@ -41,7 +41,7 @@
 
 	import { show_usages, show_steps_list, clicked_run } from '../stores/stores';
 	import Charts from './charts.svelte';
-  	import DeleteSimulationButton from './modals/delete_simulation_button.svelte';
+	import DeleteSimulationButton from './modals/delete_simulation_button.svelte';
 
 	export let simulation;
 	$clicked_simulation = simulation;
@@ -52,11 +52,12 @@
 </script>
 
 <Modal><Back /></Modal>
-<div class="simulation_header">	
-	<h3>  Simulation: <span style="color:darkseagreen">{$clicked_simulation.name}</span>  created {time} <Modal><DeleteSimulationButton /></Modal>
-    </h3>   
+<div class="simulation_header">
+	<h3>
+		Simulation: <span style="color:darkseagreen">{$clicked_simulation.name}</span> created {time}
+		<Modal><DeleteSimulationButton /></Modal>
+	</h3>
 </div>
-
 
 <div class="all_content_box">
 	<div class="list_border">
@@ -76,7 +77,7 @@
 	{/if}
 </div>
 
-{#if $show_usages && ($clicked_run.status!='queued' || $clicked_run.status!='waiting')}
+{#if $show_usages && ($clicked_run.status != 'queued' || $clicked_run.status != 'waiting')}
 	<div class="graph_slot">
 		<Charts />
 	</div>
