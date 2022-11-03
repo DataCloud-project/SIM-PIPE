@@ -235,6 +235,7 @@ const startSecureServer = async (): Promise<void> => {
     app.use((request, response, next) => {
       if (request.path === '/health') {
         response.sendStatus(201);
+        return;
       }
       next();
     });
