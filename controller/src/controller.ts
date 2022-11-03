@@ -76,7 +76,13 @@ if (remote) {
 // Ping docker deamon to check if it is running
 async function pingDocker():Promise<void> {
   try {
-    await docker.ping();
+    const pingResult = await Promise.race<string | unknown>([
+      setTimeout(5000, 'timeout'),
+      docker.ping(),
+    ]);
+    if (pingResult === 'timeout') {
+      throw new Error('ping timeout');
+    }
     logger.info('🐳 Docker daemon is running');
   } catch (error) {
     logger.error('🐳 Docker daemon is not running');
