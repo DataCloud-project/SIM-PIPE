@@ -11,10 +11,10 @@ dotenv.config({ path: '../.env' });
 const sftp = new Client();
 
 const options = {
-  host: process.env.SANDBOX_IP, // ip address of windows host
-  port: 2222,
-  username: 'user1',
-  password: 'user1',
+  host: process.env.SFTP_HOST ?? process.env.SANDBOX_IP ?? 'localhost',
+  port: process.env.SFTP_PORT ? Number.parseInt(process.env.SFTP_PORT, 10) : 2222,
+  username: process.env.SFTP_USERNAME ?? 'user1',
+  password: process.env.SFTP_PASSWORD ?? 'user1',
 };
 
 export async function putFileToSandbox(
