@@ -196,6 +196,7 @@
       community.docker.docker_compose:
         project_src: /home/ubuntu/SIM-PIPE/sandbox
         state: present
+        #remove_orphans: true
       register: output_compose
 
     - name: Print the output of the compose
