@@ -12,4 +12,4 @@ COPY package.json package-lock.json ./
 RUN npm ci --omit=dev
 COPY --from=builder /app/dist/ ./
 EXPOSE 9000
-CMD ["--experimental-specifier-resolution=node", "--inspect-brk=0.0.0.0", "index.js"]
+CMD ["--experimental-specifier-resolution=node", "index.js"]
