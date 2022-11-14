@@ -74,7 +74,7 @@ if (remote) {
 }
 
 const SFTP_VOLUME_LOCATION = process.env.SFTP_VOLUME_NAME
-  ?? '/var/lib/docker/volumes/sftp_volume/_data/user1';
+  ?? '/var/lib/docker/volumes/sftp_volume_data/_data/user1';
 
 // Ping docker deamon to check if it is running
 async function pingDocker():Promise<void> {
