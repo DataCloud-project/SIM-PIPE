@@ -37,7 +37,7 @@ jobs:
           images: ${{ env.REGISTRY }}/${{ env.CONTROLLER_IMAGE_NAME }}
 
       - name: Build and push Docker controller image
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v3
         with:
           context: ./controller/
           push: true
@@ -67,7 +67,7 @@ jobs:
           images: ${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE_NAME }}
 
       - name: Build and push Docker frontend image
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v3
         with:
           context: ./frontend/
           push: true
@@ -98,7 +98,7 @@ jobs:
           images: ${{ env.REGISTRY }}/${{ env.HASURA_IMAGE_NAME }}
 
       - name: Build and push Docker hasura image
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v3
         with:
           context: ./hasura/
           push: true
