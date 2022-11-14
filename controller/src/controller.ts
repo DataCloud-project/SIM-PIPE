@@ -73,11 +73,8 @@ if (remote) {
   docker = new Docker({ socketPath: socket });
 }
 
-const SFTP_VOLUME_NAME = process.env.SFTP_VOLUME_NAME ?? 'sandbox_sftp_data';
-// Check that the SFTP_VOLUME_NAME is a safe directory name
-if (!/^[\w-]+$/.test(SFTP_VOLUME_NAME)) {
-  throw new Error('🎌 SFTP_VOLUME_NAME is not a safe directory name');
-}
+const SFTP_VOLUME_LOCATION = process.env.SFTP_VOLUME_NAME
+  ?? '/var/lib/docker/volumes/sftp_volume/_data/user1';
 
 // Ping docker deamon to check if it is running
 async function pingDocker():Promise<void> {
@@ -143,9 +140,9 @@ async function startContainer(image:string, stepId:number, env: string[]) : Prom
     // TODO make a pull request there to add the Binds type
     // https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/dockerode
     Binds: [
-      `/var/lib/docker/volumes/${SFTP_VOLUME_NAME}/_data/in:/app/in`,
-      `/var/lib/docker/volumes/${SFTP_VOLUME_NAME}/_data/out:/app/out`,
-      `/var/lib/docker/volumes/${SFTP_VOLUME_NAME}/_data/work:/app/work`,
+      `${SFTP_VOLUME_LOCATION}/in:/app/in`,
+      `${SFTP_VOLUME_LOCATION}/out:/app/out`,
+      `${SFTP_VOLUME_LOCATION}/work:/app/work`,
     ],
     StopTimeout: process.env.CONTAINER_STOP_TIMEOUT ? +process.env.CONTAINER_STOP_TIMEOUT : 5,
     Env: env || [],
