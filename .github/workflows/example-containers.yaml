@@ -39,7 +39,7 @@ jobs:
         id: meta-pre-process
         uses: docker/metadata-action@v4
         with:
-          images: ${{ env.REGISTRY }}/${{ env.CONTROLLER_IMAGE_NAME }}
+          images: ${{ env.REGISTRY }}/${{ env.PRE_PROCESS_IMAGE_NAME }}
           tags: |
             type=raw,value=latest
 
@@ -55,7 +55,7 @@ jobs:
         id: meta-process
         uses: docker/metadata-action@v4
         with:
-          images: ${{ env.REGISTRY }}/${{ env.CONTROLLER_IMAGE_NAME }}
+          images: ${{ env.REGISTRY }}/${{ env.PROCESS_IMAGE_NAME }}
           tags: |
             type=raw,value=latest
 
@@ -71,7 +71,7 @@ jobs:
         id: meta-analyse
         uses: docker/metadata-action@v4
         with:
-          images: ${{ env.REGISTRY }}/${{ env.CONTROLLER_IMAGE_NAME }}
+          images: ${{ env.REGISTRY }}/${{ env.ANALYSE_IMAGE_NAME }}
           tags: |
             type=raw,value=latest
 
@@ -87,7 +87,7 @@ jobs:
         id: meta-fail
         uses: docker/metadata-action@v4
         with:
-          images: ${{ env.REGISTRY }}/${{ env.CONTROLLER_IMAGE_NAME }}
+          images: ${{ env.REGISTRY }}/${{ env.FAIL_IMAGE_NAME }}
           tags: |
             type=raw,value=latest
 
