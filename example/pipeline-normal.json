@@ -1,0 +1,37 @@
+{
+    "steps": [
+        {
+            "name": "pre process",
+            "step_number": 1,
+            "image": "ghcr.io/datacloud-project/example-pre-process:latest",
+            "env": [
+                "MEMORY_BOOST=150"
+            ],
+            "type": "batch"
+        },
+        {
+            "name": "process",
+            "step_number": 2,
+            "image": "ghcr.io/datacloud-project/example-process:latest",
+            "env": [
+                "MEMORY_BOOST=5000"
+            ],
+            "type": "batch",
+            "prerequisite": [
+                1
+            ]
+        },
+        {
+            "name": "analyse",
+            "step_number": 3,
+            "image": "ghcr.io/datacloud-project/example-analyse:latest",
+            "env": [
+                "MEMORY_BOOST=300"
+            ],
+            "type": "batch",
+            "prerequisite": [
+                2
+            ]
+        }
+    ]
+}

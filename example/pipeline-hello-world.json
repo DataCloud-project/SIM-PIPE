@@ -1,0 +1,11 @@
+{
+  "steps": [
+    {
+      "name": "hello world",
+      "step_number": 1,
+      "image": "hello-world",
+      "env": [],
+      "type": "batch"
+    }
+  ]
+}
