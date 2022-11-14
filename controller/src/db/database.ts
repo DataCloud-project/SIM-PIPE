@@ -3590,7 +3590,7 @@ export const GetRunDetailsDocument = gql`
 }
     `;
 export const InsertResourceUsageDocument = gql`
-    mutation insertResourceUsage($cpu: numeric = "", $memory: numeric = "", $memory_max: numeric = "", $rx_value: numeric = "", $tx_value: numeric = "", $step_id: Int = 10, $time: timestamptz = "") {
+    mutation insertResourceUsage($cpu: numeric = 0.0, $memory: numeric = 0.0, $memory_max: numeric = 0.0, $rx_value: numeric = 0.0, $tx_value: numeric = 0.0, $step_id: Int = 10, $time: timestamptz = 0.0) {
   insert_simpipe_resource_usage_one(
     object: {cpu: $cpu, memory: $memory, memory_max: $memory_max, rx_value: $rx_value, tx_value: $tx_value, step_id: $step_id, time: $time}
   ) {
