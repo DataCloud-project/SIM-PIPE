@@ -1,0 +1,100 @@
+name: Create and publish example software containers
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'example/**'
+  pull_request:
+    paths:
+      - 'example/**'
+
+env:
+  REGISTRY: ghcr.io
+  PRE_PROCESS_IMAGE_NAME: datacloud-project/example-pre-process
+  PROCESS_IMAGE_NAME: datacloud-project/example-process
+  ANALYSE_IMAGE_NAME: datacloud-project/example-analyse
+  FAIL_IMAGE_NAME: datacloud-project/example-fail
+
+jobs:
+  build-and-push-example-containers:
+    name: Build and push example containers
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata (tags, labels) for pre process image
+        id: meta-pre-process
+        uses: docker/metadata-action@v4
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.PRE_PROCESS_IMAGE_NAME }}
+          tags: |
+            type=raw,value=latest
+
+      - name: Build and push Docker pre process image
+        uses: docker/build-push-action@v3
+        with:
+          context: ./example/pre-process/
+          push: true
+          tags: ${{ steps.meta-pre-process.outputs.tags }}
+          labels: ${{ steps.meta-pre-process.outputs.labels }}
+
+      - name: Extract metadata (tags, labels) for process image
+        id: meta-process
+        uses: docker/metadata-action@v4
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.PROCESS_IMAGE_NAME }}
+          tags: |
+            type=raw,value=latest
+
+      - name: Build and push Docker process image
+        uses: docker/build-push-action@v3
+        with:
+          context: ./example/process/
+          push: true
+          tags: ${{ steps.meta-process.outputs.tags }}
+          labels: ${{ steps.meta-process.outputs.labels }}
+
+      - name: Extract metadata (tags, labels) for analyse image
+        id: meta-analyse
+        uses: docker/metadata-action@v4
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.ANALYSE_IMAGE_NAME }}
+          tags: |
+            type=raw,value=latest
+
+      - name: Build and push Docker analyse image
+        uses: docker/build-push-action@v3
+        with:
+          context: ./example/analyse/
+          push: true
+          tags: ${{ steps.meta-analyse.outputs.tags }}
+          labels: ${{ steps.meta-analyse.outputs.labels }}
+
+      - name: Extract metadata (tags, labels) for fail image
+        id: meta-fail
+        uses: docker/metadata-action@v4
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.FAIL_IMAGE_NAME }}
+          tags: |
+            type=raw,value=latest
+
+      - name: Build and push Docker fail image
+        uses: docker/build-push-action@v3
+        with:
+          context: ./example/fail/
+          push: true
+          tags: ${{ steps.meta-fail.outputs.tags }}
+          labels: ${{ steps.meta-fail.outputs.labels }}
