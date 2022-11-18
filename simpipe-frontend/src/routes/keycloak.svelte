@@ -20,7 +20,8 @@
 			username.set(keycloak.idTokenParsed.preferred_username);
 			// todo - add confi
 			graphQLClient.set(
-				new GraphQLClient('http://localhost:9000/graphql', {
+				new GraphQLClient('http://192.168.0.249:9000/graphql', {
+				// new GraphQLClient(url, {
 					headers: requestHeaders
 				})
 			);

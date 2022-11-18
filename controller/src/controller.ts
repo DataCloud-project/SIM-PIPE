@@ -212,14 +212,6 @@ function stopPollingStats() : void {
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 async function postExitProcessing(container: Docker.Container, stepId:number, stepNumber:number) {
-  const result = await createdContainer.inspect();
-  // update the step status as ended succesfully
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-  await sdk.setStepAsEndedSuccess({
-    step_id: stepId,
-    started: result.State.StartedAt,
-    ended: result.State.FinishedAt,
-  });
   await setTimeout(1000); // Wait 1s before parsing the stats
   await parseStats(stepId);
   // collect logs of the stoppped container
@@ -233,7 +225,18 @@ async function postExitProcessing(container: Docker.Container, stepId:number, st
   await sftp.getFromSandbox(remoteOutDirectory,
     `${targetDirectory}/outputs`);
   logger.info('Collected simulation files from Sandbox');
-
+  const result = await createdContainer.inspect();
+  const exitCode = result.State.ExitCode;
+  logger.info(`Exit code ${exitCode}`);
+  if (exitCode === 0) {
+    // update the step status as ended succesfully
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+    await sdk.setStepAsEndedSuccess({
+      step_id: stepId,
+      started: result.State.StartedAt,
+      ended: result.State.FinishedAt,
+    });
+  }
   // clear all files created during simulation
   await sftp.clearSandbox();
   logger.info(`Stored simulation details to ${targetDirectory}`);
@@ -325,6 +328,10 @@ export async function start(client:GraphQLClient, step:types.Step) : Promise<str
     const startedAt = await startContainer(step.image, step.stepId, step.env);
     startPollingStats(startedAt, step);
     await waitForContainer();
+    const result = await createdContainer.inspect();
+    if (result.State.ExitCode !== 0) {
+      throw new Error('Exit code indicates step failed');
+    }
     return `${targetDirectory}/outputs/`;
   } catch (error) {
     // set step as failed on exception

@@ -6,8 +6,7 @@
 	import Alert from './alert.svelte';
 	import { getContext } from 'svelte';
     const { open, close } = getContext('simple-modal');
-	import { goto } from '$app/navigation'
-
+	import { goto } from '$app/navigation';
 	
 	export let flag;
 	async function execute_delete_run() {

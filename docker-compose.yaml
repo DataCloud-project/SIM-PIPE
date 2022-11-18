@@ -33,17 +33,6 @@ services:
       HASURA_GRAPHQL_ENABLE_TELEMETRY: "false"
       HASURA_GRAPHQL_LOG_LEVEL: debug
       # REMOTE_SCHEMA_URL: ${REMOTE_SCHEMA_URL}
-  # appsmith:
-  #   image: index.docker.io/appsmith/appsmith-ce
-  #   container_name: appsmith
-  #   ports:
-  #     - "8085:80"
-  #   depends_on:
-  #     - "hasura"
-  #   restart: unless-stopped
-  #   volumes:
-  #     - appsmith:/appsmith-stacks
-
   controller:
     # image: simpipe-backend-v10
     image: simpipe-backend
@@ -66,7 +55,19 @@ services:
       REMOTE_OUTPUT_DIR: 'out/'
       REMOTE_INPUT_DIR: 'in/'
       HASURA_ADMIN_SECRET: ${HASURA_ADMIN_SECRET}      
-      HASURA_URL: ${HASURA_URL}      
+      HASURA_URL: ${HASURA_URL}
+
+  svelte:
+    # image: svelte-frontend #building the image from context
+    build:
+      context: ./simpipe-frontend
+      dockerfile: Dockerfile
+      args:
+        SIM_PIPE_CONTROLLER_URL: http://192.168.0.249:9000/graphql
+    ports:
+      - "9090:3000"
+    depends_on:
+      - "controller"     
 volumes:
   db_data1:
     null

@@ -15,7 +15,7 @@ SIM-PIPE generates and simulates a deployment configuration for the final deploy
 
 The architecture of the SIM-PIPE consists of three main components:
 
-1. [SIM-PIPE User Interface](https://github.com/DataCloud-project/SIM-PIPE/tree/main/frontend) that provides a user interface for starting, stopping and retrieiving information to a simulation run. SIM-PIPE tool performs simulations and analytics related to a specific simulation job or run and exposes REST APIs for the front-end and other services:
+1. [SIM-PIPE User Interface](https://github.com/DataCloud-project/SIM-PIPE/tree/main/simpipe-frontend) that provides a user interface for starting, stopping and retrieiving information to a simulation run. SIM-PIPE tool performs simulations and analytics related to a specific simulation job or run and exposes REST APIs for the front-end and other services:
 
 2. [SIM-PIPE Simulation Controller](https://github.com/DataCloud-project/SIM-PIPE/tree/main/controller) that performs simulations and analytics related to a specific simulation job or run and exposes REST APIs for the front-end and other services. It provides the following functionality:
 

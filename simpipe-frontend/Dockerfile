@@ -7,7 +7,8 @@ COPY package-lock.json ./
 RUN npm install -g npm
 RUN npm install
 COPY . ./
+ARG SIM_PIPE_CONTROLLER_URL
+ENV SIM_PIPE_CONTROLLER_URL $SIM_PIPE_CONTROLLER_URL
 RUN npm run build
 
-FROM nginx:1.19-alpine
-COPY --from=build /app/public /usr/share/nginx/html
+CMD  ["node", "/app/public/build/index.js"]

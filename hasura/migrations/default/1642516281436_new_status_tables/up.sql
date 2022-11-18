@@ -32,6 +32,7 @@ INSERT INTO simpipe.run_status (value) VALUES
   ('active'),
   ('completed'),
   ('failed'),
+  ('queued'),
   ('cancelled');
 
 CREATE TABLE simpipe.step_status (

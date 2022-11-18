@@ -4,7 +4,7 @@
     import { clicked_simulation, graphQLClient } from '../../stores/stores';
     import { getContext } from 'svelte';
     import Alert from './alert.svelte';
-    import { init_keycloak } from '../keycloak.svelte';
+    // import { init_keycloak } from '../keycloak.server.svelte';
 
     const { close, open } = getContext('simple-modal');
 
@@ -70,7 +70,6 @@
         } catch (error) {
             console.log('caught error in execute_create_run');
             console.log(error);
-            // setTimeout(function(){console.log('sleeping');}, 5000);
             // init_keycloak();
             // return;
         }
