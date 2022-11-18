@@ -34,11 +34,32 @@ let sdk: {
 };
 
 if (remote) {
+  const host = process.env.SANDBOX_IP ?? process.env.DOCKER_HOST ?? 'localhost';
+
+  const caCertPath = process.env.SANDBOX_CA_CERT ?? process.env.DOCKER_TLS_CA_CERT ?? '';
+  const caCert = caCertPath ? await fsAsync.readFile(caCertPath) : undefined;
+
+  const tlsCertPath = process.env.SANDBOX_TLS_CERT ?? process.env.DOCKER_TLS_CERT ?? '';
+  const tlsCert = tlsCertPath ? await fsAsync.readFile(tlsCertPath) : undefined;
+
+  const tlsKeyPath = process.env.SANDBOX_TLS_KEY ?? process.env.DOCKER_TLS_KEY ?? '';
+  const tlsKey = tlsKeyPath ? await fsAsync.readFile(tlsKeyPath) : undefined;
+
+  const protocol = (process.env.SANDBOX_TLS_VERIFY ?? process.env.DOCKER_TLS_VERIFY)
+    ? 'https' : 'http';
+
+  const port = process.env.SANDBOX_PORT ?? process.env.DOCKER_PORT ?? (
+    protocol === 'https' ? 2376 : 2375
+  );
+
   // remote connection to docker daemon
   docker = new Docker({
-    // host: '127.0.0.1',
-    host: process.env.SANDBOX_IP, // ip address of windows host
-    port: 2375,
+    host,
+    port,
+    protocol,
+    ca: caCert,
+    cert: tlsCert,
+    key: tlsKey,
   });
 } else {
   // local connection to docker dameon
@@ -51,6 +72,27 @@ if (remote) {
 
   docker = new Docker({ socketPath: socket });
 }
+
+const SFTP_VOLUME_LOCATION = process.env.SFTP_VOLUME_NAME
+  ?? '/var/lib/docker/volumes/sandbox_sftp_data/_data/user1';
+
+// Ping docker deamon to check if it is running
+async function pingDocker():Promise<void> {
+  try {
+    const pingResult = await Promise.race<string | unknown>([
+      setTimeout(5000, 'timeout'),
+      docker.ping(),
+    ]);
+    if (pingResult === 'timeout') {
+      throw new Error('ping timeout');
+    }
+    logger.info('🐳 Docker daemon is running');
+  } catch (error) {
+    logger.error('🐳 Docker daemon is not running');
+    throw new Error(`🎌 Error pinging docker daemon\n${error as string}`);
+  }
+}
+await pingDocker();
 
 let targetDirectory:string;
 let createdContainer: Docker.Container;
@@ -98,9 +140,9 @@ async function startContainer(image:string, stepId:number, env: string[]) : Prom
     // TODO make a pull request there to add the Binds type
     // https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/dockerode
     Binds: [
-      '/var/lib/docker/volumes/volume_vm/_data/in:/app/in',
-      '/var/lib/docker/volumes/volume_vm/_data/out:/app/out',
-      '/var/lib/docker/volumes/volume_vm/_data/work:/app/work',
+      `${SFTP_VOLUME_LOCATION}/in:/app/in`,
+      `${SFTP_VOLUME_LOCATION}/out:/app/out`,
+      `${SFTP_VOLUME_LOCATION}/work:/app/work`,
     ],
     StopTimeout: process.env.CONTAINER_STOP_TIMEOUT ? +process.env.CONTAINER_STOP_TIMEOUT : 5,
     Env: env || [],

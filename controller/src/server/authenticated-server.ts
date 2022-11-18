@@ -30,7 +30,7 @@ const typeDefs = gql`
   },
   type Mutation {
     Create_Simulation(name:String, pipeline_description:String): String
-    Create_Run_WithInput(simulation_id: String,name:String, sampleInput:[[String]], 
+    Create_Run_WithInput(simulation_id: String,name:String, sampleInput:[[String]],
     env_list: [[String]], timeout_values:[Int]):
     String
     Start_Run(run_id:String): String
@@ -232,9 +232,18 @@ const startSecureServer = async (): Promise<void> => {
     const app = express();
     // error handling
 
+    app.use((request, response, next) => {
+      if (request.path === '/health') {
+        response.sendStatus(204);
+        return;
+      }
+      next();
+    });
+
     app.use(
       jwtMiddleware,
     );
+
     await server.start();
     // eslint-disable-next-line @typescript-eslint/await-thenable
     await server.applyMiddleware({ app });

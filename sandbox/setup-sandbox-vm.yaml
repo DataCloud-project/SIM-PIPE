@@ -28,7 +28,6 @@
           - screen
           - runsc
           - docker.io
-          - docker-compose
     - name: Create /root/.docker directory
       ansible.builtin.file:
         path: /root/.docker
@@ -192,12 +191,26 @@
         dest: /home/ubuntu/SIM-PIPE/sandbox/users.conf
         mode: '0640'
 
-    - name: Start the Docker compose
-      community.docker.docker_compose:
-        project_src: /home/ubuntu/SIM-PIPE/sandbox
-        state: present
-      register: output_compose
+    - name: Create folders for SIM-PIPE
+      ansible.builtin.file:
+        path: /data/user1/{{ item }}
+        state: directory
+        mode: '0777'
+      with_items:
+        - in
+        - work
+        - out
 
-    - name: Print the output of the compose
-      ansible.builtin.debug:
-        var: output_compose
+    - name: Start the SFTP server container
+      community.docker.docker_container:
+        name: sftp
+        image: atmoz/sftp
+        state: started
+        restart_policy: always
+        # Do not use GVisor because it's too slow
+        runtime: runc
+        ports:
+          - "2222:22"
+        volumes:
+          - /data/user1:/home/user1
+          - /home/ubuntu/SIM-PIPE/sandbox/users.conf:/etc/sftp/users.conf:ro
