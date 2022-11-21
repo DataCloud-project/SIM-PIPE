@@ -1,0 +1,1 @@
+export let SIM_PIPE_CONTROLLER_URL = 'http://10.218.149.212:9000/graphql';

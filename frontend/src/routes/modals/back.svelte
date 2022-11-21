@@ -1,6 +1,6 @@
 <script>
 	import { getContext } from 'svelte';
-	import { clicked_simulation, graphQLClient } from '../../stores/stores';
+	import { clicked_simulation, graphQLClient, clicked_run, steps_list } from '../../stores/stores';
 	import { get_simulation_query } from '../../queries/get_simulation.svelte';
 	import Alert from './alert.svelte';
 	const { open, close } = getContext('simple-modal');
@@ -13,6 +13,9 @@
 		const simulation_id = $clicked_simulation.simulation_id;
 		const result = await $graphQLClient.request(get_simulation_query, { simulation_id });
 		$clicked_simulation = result.Get_Simulation.simulations[0];
+		if($clicked_run !== '') {
+			$steps_list = $clicked_run.steps;			
+		}
 	}
 </script>
 
