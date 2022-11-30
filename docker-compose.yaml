@@ -34,7 +34,6 @@ services:
       HASURA_GRAPHQL_LOG_LEVEL: debug
       # REMOTE_SCHEMA_URL: ${REMOTE_SCHEMA_URL}
   controller:
-    # image: simpipe-backend-v10
     image: simpipe-backend
     ports:
       - "9000:9000"
@@ -58,16 +57,16 @@ services:
       HASURA_URL: ${HASURA_URL}
 
   svelte:
-    # image: svelte-frontend #building the image from context
-    build:
-      context: ./simpipe-frontend
-      dockerfile: Dockerfile
-      args:
-        SIM_PIPE_CONTROLLER_URL: http://192.168.0.249:9000/graphql
+    image: svelte-frontend #building the image from context
+    # build:
+    #   context: ./frontend
+    #   dockerfile: Dockerfile
+    #   args:
+    #     SIM_PIPE_CONTROLLER_URL: http://192.168.0.249:9000/graphql
     ports:
       - "9090:3000"
     depends_on:
-      - "controller"     
+      - "controller"   
 volumes:
   db_data1:
     null

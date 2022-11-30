@@ -1,7 +1,8 @@
 <script context="module">
 	import { GraphQLClient } from 'graphql-request';
 	import Keycloak from 'keycloak-js';
-	import { graphQLClient, username } from '../stores/stores';
+	import { graphQLClient, username } from '../../stores/stores';
+	import * as config from '../../config/config';
 
 	export async function init_keycloak() {
 		try {
@@ -25,13 +26,14 @@
 			} else {
 				graphqlUrl = '/graphql';
 			}
-
+			// TODO
+			graphqlUrl = config.SIM_PIPE_CONTROLLER_URL;	
 			// todo - add confi
 			graphQLClient.set(
 				new GraphQLClient(graphqlUrl, {
 					headers: requestHeaders
 				})
-			);
+			);			
 		} catch {}
 	}
 </script>

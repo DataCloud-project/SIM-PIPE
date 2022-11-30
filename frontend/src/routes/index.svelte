@@ -5,7 +5,7 @@
 	import Modal from 'svelte-simple-modal';
 	import CreateSimulationButton from './modals/create_simulation_button.svelte';
 	import { simulations_list } from '../stores/stores';
-	import { init_keycloak } from './keycloak.svelte';
+	import { init_keycloak } from './utils/keycloak.svelte';
 
 	let simulations;
 	let loading = async () => {

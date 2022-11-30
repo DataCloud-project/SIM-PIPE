@@ -6,7 +6,7 @@
 		clicked_step,
 		show_steps_list,
 		clicked_run,
-		clicked_simulation
+		clicked_simulation,
 	} from '../stores/stores';
 	import dayjs from 'dayjs';
 	import Modal from 'svelte-simple-modal';
@@ -14,10 +14,13 @@
 	import StartRunButton from './modals/start_run_button.svelte';
 	import StopRunButton from './modals/stop_run_button.svelte';
 	import DeleteRunButton from './modals/delete_run_button.svelte';
+	import { refresh_active_runs } from './utils/refresh_runs.svelte';
 
 	let data = [];
 	$clicked_run = '';
-
+	
+	const simulation_id = $clicked_simulation.simulation_id;
+	
 	function display_run_msg(run) {
 		if (run.status == 'completed') {
 			return `Completed ${dayjs(run.ended).from(run.started)}`;
@@ -42,6 +45,7 @@
 		}
 		$steps_list = run.steps;
 	}
+	refresh_active_runs();
 	$: data = $clicked_simulation.runs;
 </script>
 

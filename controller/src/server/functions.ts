@@ -392,5 +392,5 @@ export async function createSampleSimulation():Promise<string> {
   //   return `Sample simulation with id ${simId} created on startup`;
   // }
   // return 'No sample simulation created as there are existing simulations';
-  return 'to-be-replaced';
+  return 'No sample simulation created for the user';
 }

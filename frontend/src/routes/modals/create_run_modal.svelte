@@ -110,17 +110,20 @@
 					<p class="left-margin">
 						{env.split('=')[0]}: <input bind:value={env_list_entries[index][env.split('=')[0]]} />
 					</p>
-					<!-- {env.split('=')[1] = env_value} -->
 				{/each}
-				<br />
-				{#if pipeline_steps[pipeline_steps.length - 1].type == 'continuous'}
-					<p class="left-margin">
-						Timeout values for the step <input
-							bind:value={timeout_values[index]}
-							placeholder="Enter timeout in seconds"
-						/>
-					</p>
-				{/if}
+				<!-- <br /> -->
+				<!-- timeout values for both types of steps   -->
+				<p class="left-margin">
+					{#if pipeline_steps[pipeline_steps.length - 1].type == 'continuous'}
+						Process timeout value for the step
+					{:else}
+						Process timeout value for the step (optional)
+					{/if}
+					<input
+						bind:value={timeout_values[index]}
+						placeholder="Enter timeout in seconds"
+					/>
+				</p>
 			{/if}
 			<br />
 		{/each}
