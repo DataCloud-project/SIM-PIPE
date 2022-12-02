@@ -4,7 +4,6 @@
 	import { clicked_simulation, graphQLClient } from '../../stores/stores';
 	import { getContext } from 'svelte';
 	import Alert from './alert.svelte';
-	import { init_keycloak } from '../keycloak.svelte';
 
 	const { close, open } = getContext('simple-modal');
 
@@ -56,7 +55,7 @@
 		try {
 			result = await $graphQLClient.request(create_run_mutation, variables);
 			if (JSON.parse(result.Create_Run_WithInput).code == 200) {
-				open(Alert, { message: '🎐 Success! New run created' });
+				open(Alert, { message: `🎐 Success! ${name} is created` });
 				setTimeout(function () {
 					close();
 				}, 1000);
@@ -70,14 +69,9 @@
 					close();
 				}, 1000);
 			}
-		} catch (error) {
+		} catch {
 			console.log('caught error in execute_create_run');
-			console.log(error);
-			// setTimeout(function(){console.log('sleeping');}, 5000);
-			// init_keycloak();
-			// return;
 		}
-		close();
 	}
 </script>
 

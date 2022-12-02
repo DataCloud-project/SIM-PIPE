@@ -1,11 +1,12 @@
 <script>
 	import { all_simulations_query } from '../queries/all_simulations.svelte';
 	import { graphQLClient } from '../stores/stores';
-	import { get } from 'svelte/store';
 	import Modal from 'svelte-simple-modal';
 	import CreateSimulationButton from './modals/create_simulation_button.svelte';
 	import { simulations_list } from '../stores/stores';
 	import { init_keycloak } from './utils/keycloak.svelte';
+	import { get } from 'svelte/store';
+
 
 	let simulations;
 	let loading = async () => {
@@ -13,7 +14,7 @@
 			await init_keycloak();
 			simulations = await get(graphQLClient).request(all_simulations_query);
 		} catch {
-			console.log('🎌 Error! could not load simulations');
+			console.log('🎌 Error! could not load simulations, retrying');
 			simulations = 'error';
 		}
 	};
@@ -49,7 +50,6 @@
 
 <style>
 	.create_sim_box {
-		/* float: left; */
 		margin-left: 40px;
 	}
 	.max_width {

@@ -57,7 +57,7 @@ services:
       HASURA_URL: ${HASURA_URL}
 
   svelte:
-    image: svelte-frontend #building the image from context
+    image: simpipe-frontend 
     # build:
     #   context: ./frontend
     #   dockerfile: Dockerfile

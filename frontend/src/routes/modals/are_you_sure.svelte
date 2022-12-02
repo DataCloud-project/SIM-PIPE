@@ -18,7 +18,7 @@
 	async function execute_delete_run() {
 		let result = await $graphQLClient.request(delete_run_mutation, { run_id: $clicked_run.run_id });
 		if (JSON.parse(result.Delete_Run).code == 200) {
-			open(Alert, { message: '🎐 Success! Run has been deleted' });
+			open(Alert, { message: `🎐 Success! ${$clicked_run.name} has been deleted` });
 			await setTimeout(function () {
 				close();
 			}, 1000);
@@ -40,12 +40,12 @@
 			simulation_id: $clicked_simulation.simulation_id
 		});
 		if (JSON.parse(result.Delete_Simulation).code == 200) {
-			open(Alert, { message: '🎐 Success! Simulation has been deleted' });
+			open(Alert, { message: `🎐 Success! ${$clicked_simulation.name} has been deleted` });
 			await setTimeout(function () {
 				close();
+				goto('/');
 			}, 1000);
 			// go to all simulations page
-			goto('/');
 		} else {
 			open(Alert, { message: JSON.parse(result.Delete_Simulation).message });
 			await setTimeout(function () {

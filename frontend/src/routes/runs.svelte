@@ -19,8 +19,6 @@
 	let data = [];
 	$clicked_run = '';
 	
-	const simulation_id = $clicked_simulation.simulation_id;
-	
 	function display_run_msg(run) {
 		if (run.status == 'completed') {
 			return `Completed ${dayjs(run.ended).from(run.started)}`;
