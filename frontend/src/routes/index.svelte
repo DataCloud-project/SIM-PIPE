@@ -7,7 +7,6 @@
 	import { init_keycloak } from './utils/keycloak.svelte';
 	import { get } from 'svelte/store';
 
-
 	let simulations;
 	let loading = async () => {
 		try {

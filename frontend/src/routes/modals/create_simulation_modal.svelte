@@ -19,14 +19,14 @@
 		};
 		let result = await $graphQLClient.request(create_simulation_mutation, variables);
 		if (JSON.parse(result.Create_Simulation).code == 200) {
-			open(Alert, { message:  `🎐 Success! ${name} is created` });			
+			open(Alert, { message: `🎐 Success! ${name} is created` });
 			// refresh list of simulations after new simulation is created
 			$simulations_list = await $graphQLClient.request(all_simulations_query);
 		} else {
-			open(Alert, { message: '🎌 Failed! Error creating simulation' });			
+			open(Alert, { message: '🎌 Failed! Error creating simulation' });
 		}
 		await setTimeout(async function () {
-				close();
+			close();
 		}, 1000);
 	}
 </script>

@@ -1,10 +1,9 @@
 <script context="module">
-    import { steps_list, clicked_run, clicked_simulation, graphQLClient	} from '../../stores/stores';
+	import { steps_list, clicked_run, clicked_simulation, graphQLClient } from '../../stores/stores';
 	import { get_simulation_query } from '../../queries/get_simulation.svelte';
 	import { get } from 'svelte/store';
 
-	
-    export async function refresh_active_runs() {
+	export async function refresh_active_runs() {
 		const simulation_id = get(clicked_simulation).simulation_id;
 		return new Promise(function (resolve) {
 			(async function wait_for_completion() {
@@ -27,7 +26,7 @@
 					}
 					return true;
 				});
-				
+
 				if (no_active_runs_indicator) return resolve();
 				setTimeout(wait_for_completion, 5000);
 			})();

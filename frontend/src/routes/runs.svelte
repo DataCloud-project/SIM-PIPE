@@ -6,7 +6,7 @@
 		clicked_step,
 		show_steps_list,
 		clicked_run,
-		clicked_simulation,
+		clicked_simulation
 	} from '../stores/stores';
 	import dayjs from 'dayjs';
 	import Modal from 'svelte-simple-modal';
@@ -18,7 +18,7 @@
 
 	let data = [];
 	$clicked_run = '';
-	
+
 	function display_run_msg(run) {
 		if (run.status == 'completed') {
 			return `Completed ${dayjs(run.ended).from(run.started)}`;

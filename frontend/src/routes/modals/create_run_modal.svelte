@@ -113,10 +113,7 @@
 					{:else}
 						Process timeout value for the step (optional)
 					{/if}
-					<input
-						bind:value={timeout_values[index]}
-						placeholder="Enter timeout in seconds"
-					/>
+					<input bind:value={timeout_values[index]} placeholder="Enter timeout in seconds" />
 				</p>
 			{/if}
 			<br />
