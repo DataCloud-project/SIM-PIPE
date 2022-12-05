@@ -45,6 +45,7 @@ log_info()
 
 handle_error()
 {
+    echo "We have an error!!!"
     log_error "$@"
     exit 1
 }
@@ -53,14 +54,11 @@ handle_error()
 # Simple function to fetch a file from a given directory 
 fetch_file()
 {
-
     directory=${1}
     file_spec=${2}
-
     nfiles="$(find "${directory}" -name "${file_spec}" | wc -l)"
 
-    echo $nfiles
-
+    
     if [ "${nfiles}" -gt "0" ]; then
         # Extract File Name in random pos
         file_num=`shuf -i1-${nfiles} -n1`
@@ -68,7 +66,7 @@ fetch_file()
         file=${path##*/}
     fi
 
-    echo $file
+    echo "$file"
 }
 
 
