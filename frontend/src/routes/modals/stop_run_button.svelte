@@ -10,12 +10,12 @@
 		let result = await $graphQLClient.request(stop_run_mutation, { run_id: $clicked_run.run_id });
 		if (JSON.parse(result.Stop_Run).code == 200) {
 			open(Alert, { message: `🎐 Success! Stop signal has been sent to ${$clicked_run.name}` });
-			await setTimeout(function () {
+			setTimeout(function () {
 				close();
 			}, 1500);
 		} else {
 			open(Alert, { message: JSON.parse(result.Stop_Run).message });
-			await setTimeout(function () {
+			setTimeout(function () {
 				close();
 			}, 1500);
 		}

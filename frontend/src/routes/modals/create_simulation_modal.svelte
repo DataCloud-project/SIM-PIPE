@@ -25,7 +25,7 @@
 		} else {
 			open(Alert, { message: '🎌 Failed! Error creating simulation' });
 		}
-		await setTimeout(async function () {
+		setTimeout(async function () {
 			close();
 		}, 1000);
 	}

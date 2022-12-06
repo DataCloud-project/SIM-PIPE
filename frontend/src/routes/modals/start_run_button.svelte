@@ -15,7 +15,7 @@
 				close();
 			}, 1500);
 			// refresh the runs until there are no active runs
-			await setTimeout(refresh_active_runs, 4000);
+			setTimeout(refresh_active_runs, 4000);
 		} else {
 			open(Alert, { message: JSON.parse(result.Start_Run).message });
 			setTimeout(function () {
