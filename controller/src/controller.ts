@@ -260,8 +260,6 @@ async function postExitProcessing(container: Docker.Container, stepId:number, st
   const logStream = `${await container.logs({
     follow: false, stdout: true, stderr: true,
   })}`;
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-  await sdk.insertLog({ step_id: stepId, text: logStream });
   // get output from sandbox
   const remoteOutDirectory = process.env.REMOTE_OUTPUT_DIR ?? 'out/';
   await sftp.getFromSandbox(remoteOutDirectory,
@@ -271,6 +269,8 @@ async function postExitProcessing(container: Docker.Container, stepId:number, st
   const exitCode = result.State.ExitCode;
   logger.info(`Exit code ${exitCode}`);
   if (exitCode === 0) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+    await sdk.insertLog({ step_id: stepId, text: logStream });
     // update the step status as ended succesfully
     // eslint-disable-next-line @typescript-eslint/no-unsafe-call
     await sdk.setStepAsEndedSuccess({
@@ -314,7 +314,7 @@ async function getStatsUntilExit(container: Docker.Container, exitTimeout:number
       `stats.${counter}.json`);
     counter += 1;
     await fsAsync.writeFile(fileName, JSON.stringify(stream, undefined, ' '));
-  } else { // container is exited
+  } else { // container is exited or timedout
     stopPollingStats();
     // if run is cancelled
     if ((process.env.CANCEL_RUN_LIST as string).includes(step.runId)) {
@@ -372,6 +372,10 @@ export async function start(client:GraphQLClient, step:types.Step) : Promise<str
     await waitForContainer();
     const result = await createdContainer.inspect();
     if (result.State.ExitCode !== 0) {
+      if (process.env.STOP_SIGNAL_SENT) {
+        logger.error('Process was timed out before completion');
+        throw new Error('Process was timed out before completion');
+      }
       throw new Error('Exit code indicates step failed');
     }
     return `${targetDirectory}/outputs/`;

@@ -4,7 +4,6 @@
 	import { clicked_simulation, graphQLClient } from '../../stores/stores';
 	import { getContext } from 'svelte';
 	import Alert from './alert.svelte';
-	import { init_keycloak } from '../keycloak.svelte';
 
 	const { close, open } = getContext('simple-modal');
 
@@ -56,7 +55,7 @@
 		try {
 			result = await $graphQLClient.request(create_run_mutation, variables);
 			if (JSON.parse(result.Create_Run_WithInput).code == 200) {
-				open(Alert, { message: '🎐 Success! New run created' });
+				open(Alert, { message: `🎐 Success! ${name} is created` });
 				setTimeout(function () {
 					close();
 				}, 1000);
@@ -70,14 +69,9 @@
 					close();
 				}, 1000);
 			}
-		} catch (error) {
+		} catch {
 			console.log('caught error in execute_create_run');
-			console.log(error);
-			// setTimeout(function(){console.log('sleeping');}, 5000);
-			// init_keycloak();
-			// return;
 		}
-		close();
 	}
 </script>
 
@@ -110,17 +104,17 @@
 					<p class="left-margin">
 						{env.split('=')[0]}: <input bind:value={env_list_entries[index][env.split('=')[0]]} />
 					</p>
-					<!-- {env.split('=')[1] = env_value} -->
 				{/each}
-				<br />
-				{#if pipeline_steps[pipeline_steps.length - 1].type == 'continuous'}
-					<p class="left-margin">
-						Timeout values for the step <input
-							bind:value={timeout_values[index]}
-							placeholder="Enter timeout in seconds"
-						/>
-					</p>
-				{/if}
+				<!-- <br /> -->
+				<!-- timeout values for both types of steps   -->
+				<p class="left-margin">
+					{#if pipeline_steps[pipeline_steps.length - 1].type == 'continuous'}
+						Process timeout value for the step
+					{:else}
+						Process timeout value for the step (optional)
+					{/if}
+					<input bind:value={timeout_values[index]} placeholder="Enter timeout in seconds" />
+				</p>
 			{/if}
 			<br />
 		{/each}

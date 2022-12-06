@@ -1,5 +1,4 @@
-import { writable, readable } from 'svelte/store';
-import { GraphQLClient } from 'graphql-request';
+import { writable } from 'svelte/store';
 
 /**
  * username of the currently logged in user
@@ -25,5 +24,4 @@ export let selected_resource_usage = writable([]);
 export let selected_logs = writable('');
 
 // graphql client from graphql-request
-// export const graphQLClient = writable(new GraphQLClient('http://localhost:9000/graphql'));
 export const graphQLClient = writable('');

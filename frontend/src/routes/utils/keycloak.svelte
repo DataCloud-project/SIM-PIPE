@@ -1,7 +1,8 @@
 <script context="module">
 	import { GraphQLClient } from 'graphql-request';
 	import Keycloak from 'keycloak-js';
-	import { graphQLClient, username } from '../stores/stores';
+	import { graphQLClient, username } from '../../stores/stores';
+	import * as config from '../../config/config';
 
 	export async function init_keycloak() {
 		try {
@@ -12,7 +13,7 @@
 				'enable-cors': 'true'
 			});
 			await keycloak.init({ onLoad: 'login-required', flow: 'implicit' }); //  Implicit flow.
-			console.log('User authenticated');
+			console.log('User is authenticated');
 			const requestHeaders = {
 				authorization: 'Bearer ' + keycloak.token,
 				mode: 'cors'
@@ -20,18 +21,23 @@
 			username.set(keycloak.idTokenParsed.preferred_username);
 
 			let graphqlUrl;
-			if (/^localhost(:\d+)?$/.test(window.location.host)) {
-				graphqlUrl = 'http://localhost:9000/graphql';
+			if (config.SIM_PIPE_CONTROLLER_URL === '') {
+				if (/^localhost(:\d+)?$/.test(window.location.host)) {
+					graphqlUrl = 'http://localhost:9000/graphql';
+				} else {
+					graphqlUrl = '/graphql';
+				}
 			} else {
-				graphqlUrl = '/graphql';
+				// TODO move to env
+				graphqlUrl = config.SIM_PIPE_CONTROLLER_URL;
+				graphQLClient.set(
+					new GraphQLClient(graphqlUrl, {
+						headers: requestHeaders
+					})
+				);
 			}
-
-			// todo - add confi
-			graphQLClient.set(
-				new GraphQLClient(graphqlUrl, {
-					headers: requestHeaders
-				})
-			);
-		} catch {}
+		} catch {
+			// error handled in index file
+		}
 	}
 </script>

@@ -14,6 +14,7 @@
 	import StartRunButton from './modals/start_run_button.svelte';
 	import StopRunButton from './modals/stop_run_button.svelte';
 	import DeleteRunButton from './modals/delete_run_button.svelte';
+	import { refresh_active_runs } from './utils/refresh_runs.svelte';
 
 	let data = [];
 	$clicked_run = '';
@@ -42,6 +43,7 @@
 		}
 		$steps_list = run.steps;
 	}
+	refresh_active_runs();
 	$: data = $clicked_simulation.runs;
 </script>
 
