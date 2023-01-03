@@ -1,4 +1,4 @@
-FROM hasura/graphql-engine:v2.16.1-ce.cli-migrations-v3.debian
+FROM hasura/graphql-engine:v2.16.1-ce.cli-migrations-v3
 ENV HASURA_GRAPHQL_ENABLE_CONSOLE=false
 ENV HASURA_GRAPHQL_MIGRATIONS_DIR=/hasura-migrations
 ENV HASURA_GRAPHQL_METADATA_DIR=/hasura-metadata
