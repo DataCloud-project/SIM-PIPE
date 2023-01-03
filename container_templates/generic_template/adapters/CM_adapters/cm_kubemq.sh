@@ -1,12 +1,43 @@
 #!/bin/bash
 
+function init_cm_adapter() {
+    # Check if initialization is marked done
+    if [[ -z "$init_cm_done" ]]; then
+        # Get the base code directory
+		code_directory=${BDPF_CODE_DIRECTORY}
 
-echo '***'
+		# Import logging functions
+		. ${code_directory}/util/logging.sh
+
+		log_info "Initializing KubeMQ communication medium adapter ..."
+        
+        # The step requires the use of the kubemq cli tools;
+        # the kubemq cli tools requies configured .config.yaml to be in the the working directory  
+        # the default KubeMQ server address is localhost, we need to that address with the right value from environment variable named KUBEMQ_HOST 
+
+        # Replace localhost text by KubeMQ server address and created a new config
+        if [ -n "${KUBEMQ_HOST}" ]; then
+            sed "s/localhost/$KUBEMQ_HOST/g" <${code_directory}/configs/config_kubetools.yaml >/.config.yaml
+        fi
+        kubemq_host=$KUBEMQ_HOST
+
+        # Initialization marked done
+        init_cm_done=1
+    fi
+}
+
+function get_previous_step_communicator_address() {
+
+    # This is the first step - result is empty
+    echo ""
+}
+
+# echo '***'
 
 
-code_directory=${1}
+# code_directory=${1}
 
-echo "KUBEMQ_HOST: $KUBEMQ_HOST"
+# echo "KUBEMQ_HOST: $KUBEMQ_HOST"
 
 # the kubemq cli tools requies configured .config.yaml to be in the WORKDIR  
 # the default KubeMQ server address is localhost, we need to that address with the right value from $KUBEMQ_HOST 

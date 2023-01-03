@@ -2,8 +2,7 @@
 # 
 
 
-log()
-{
+function log_mq() {
     log_level=${1}
     msg=${2}
     input_file=${3}
@@ -17,7 +16,7 @@ log()
         mq_log="Log"
     fi
 
-
+    
     # format message in json format    
     timestamp=$(date --utc +%FT%T.%3NZ)
     json_template='{"time":"%s","level":"%s","message":"%s","input_file":"%s","file":"%s","line":"%s","machine":"%s","step":"%s"}'
@@ -28,32 +27,26 @@ log()
 }
 
 
-log_error()
-{
-    log "Error" "$@"
+log_error() {
+    log_mq "Error" "$@"
 }
 
-log_warning()
-{
-    log "Warning" "$@"
+log_warning() {
+    log_mq "Warning" "$@"
 }
 
-log_info()
-{
-    log "Info" "$@"
+log_info() {
+    log_mq "Info" "$@"
 }
 
-handle_error()
-{
-    echo "We have an error!!!"
+handle_error() {
     log_error "$@"
     exit 1
 }
 
 
 # Simple function to fetch a file from a given directory 
-fetch_file()
-{
+fetch_file() {
     directory=${1}
     file_spec=${2}
     nfiles="$(find "${directory}" -name "${file_spec}" | wc -l)"

@@ -1,0 +1,8 @@
+#!/bin/bash
+export BDPF_STEP_NAME="test"
+export BDPF_DATA_TRANSMISSION_MEDIUM="file_system"
+export BDPF_COMMUNICATION_MEDIUM="kubemq"
+export BDPF_CODE_DIRECTORY=$PWD
+export BDPF_LOG_DIR="$PWD/logs"
+export BDPF_KUBEMQ_HOST="192.168.1.1"
+export BDPF_KUBEMQ_PORT="12345"
