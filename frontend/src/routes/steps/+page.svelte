@@ -5,9 +5,9 @@
 		clicked_step,
 		selected_logs,
 		steps_list
-	} from '../stores/stores';
+	} from '../../stores/stores';
 	import dayjs from 'dayjs';
-	import Scroll from './scroll.svelte';
+	import Scroll from '../scroll.svelte';
 
 	let data = [];
 	$clicked_step = '';

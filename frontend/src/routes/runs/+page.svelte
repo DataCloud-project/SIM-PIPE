@@ -1,5 +1,5 @@
 <script>
-	import Scroll from './scroll.svelte';
+	import Scroll from '../scroll.svelte';
 	import {
 		show_usages,
 		steps_list,
@@ -7,14 +7,14 @@
 		show_steps_list,
 		clicked_run,
 		clicked_simulation
-	} from '../stores/stores';
+	} from '../../stores/stores';
 	import dayjs from 'dayjs';
 	import Modal from 'svelte-simple-modal';
-	import CreateRunButton from './modals/create_run_button.svelte';
-	import StartRunButton from './modals/start_run_button.svelte';
-	import StopRunButton from './modals/stop_run_button.svelte';
-	import DeleteRunButton from './modals/delete_run_button.svelte';
-	import { refresh_active_runs } from './utils/refresh_runs.svelte';
+	import CreateRunButton from '../modals/create_run_button.svelte';
+	import StartRunButton from '../modals/start_run_button.svelte';
+	import StopRunButton from '../modals/stop_run_button.svelte';
+	import DeleteRunButton from '../modals/delete_run_button.svelte';
+	import { refresh_active_runs } from '../utils/refresh_runs.svelte';
 
 	let data = [];
 	$clicked_run = '';

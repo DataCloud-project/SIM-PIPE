@@ -1,15 +1,17 @@
 <script>
-	import { delete_run_mutation } from '../../queries/delete_run.svelte';
-	import { delete_simulation_mutation } from '../../queries/delete_simulation.svelte';
-	import { get_simulation_query } from '../../queries/get_simulation.svelte';
+	throw new Error("@migration task: Add data prop (https://github.com/sveltejs/kit/discussions/5774#discussioncomment-3292707)");
+
+	import { delete_run_mutation } from '../../../queries/delete_run.svelte';
+	import { delete_simulation_mutation } from '../../../queries/delete_simulation.svelte';
+	import { get_simulation_query } from '../../../queries/get_simulation.svelte';
 	import {
 		clicked_run,
 		graphQLClient,
 		clicked_simulation,
 		show_steps_list,
 		show_usages
-	} from '../../stores/stores';
-	import Alert from './alert.svelte';
+	} from '../../../stores/stores';
+	import Alert from '../alert.svelte';
 	import { getContext } from 'svelte';
 	const { open, close } = getContext('simple-modal');
 	import { goto } from '$app/navigation';

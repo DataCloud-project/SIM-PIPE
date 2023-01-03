@@ -1,9 +1,9 @@
 <script>
-	import { create_run_mutation } from '../../queries/create_run.svelte';
-	import { get_simulation_query } from '../../queries/get_simulation.svelte';
-	import { clicked_simulation, graphQLClient } from '../../stores/stores';
+	import { create_run_mutation } from '../../../queries/create_run.svelte';
+	import { get_simulation_query } from '../../../queries/get_simulation.svelte';
+	import { clicked_simulation, graphQLClient } from '../../../stores/stores';
 	import { getContext } from 'svelte';
-	import Alert from './alert.svelte';
+	import Alert from '../alert.svelte';
 
 	const { close, open } = getContext('simple-modal');
 

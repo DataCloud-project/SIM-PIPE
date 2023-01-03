@@ -1,9 +1,9 @@
 <script>
-	import { start_run_mutation } from '../../queries/start_run.svelte';
-	import { clicked_run, graphQLClient } from '../../stores/stores';
-	import Alert from './alert.svelte';
+	import { start_run_mutation } from '../../../queries/start_run.svelte';
+	import { clicked_run, graphQLClient } from '../../../stores/stores';
+	import Alert from '../alert.svelte';
 	import { getContext } from 'svelte';
-	import { refresh_active_runs } from '../utils/refresh_runs.svelte';
+	import { refresh_active_runs } from '../../utils/refresh_runs.svelte';
 
 	const { open, close } = getContext('simple-modal');
 

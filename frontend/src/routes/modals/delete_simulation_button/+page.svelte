@@ -1,6 +1,6 @@
 <script>
 	import { getContext } from 'svelte';
-	import AreYouSure from './are_you_sure.svelte';
+	import AreYouSure from '../are_you_sure.svelte';
 
 	const { open } = getContext('simple-modal');
 

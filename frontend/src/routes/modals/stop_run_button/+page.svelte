@@ -1,7 +1,7 @@
 <script>
-	import { stop_run_mutation } from '../../queries/stop_run.svelte';
-	import { clicked_run, graphQLClient } from '../../stores/stores';
-	import Alert from './alert.svelte';
+	import { stop_run_mutation } from '../../../queries/stop_run.svelte';
+	import { clicked_run, graphQLClient } from '../../../stores/stores';
+	import Alert from '../alert.svelte';
 	import { getContext } from 'svelte';
 
 	const { open, close } = getContext('simple-modal');

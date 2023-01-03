@@ -1,5 +1,5 @@
 <script>
-	import { selected_logs } from '../stores/stores';
+	import { selected_logs } from '../../stores/stores';
 </script>
 
 <div class="logtext">

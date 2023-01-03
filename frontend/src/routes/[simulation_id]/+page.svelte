@@ -1,47 +1,51 @@
 <script context="module">
-	import { get_simulation_query } from '../queries/get_simulation.svelte';
-	import { get } from 'svelte/store';
-	import { graphQLClient, clicked_simulation } from '../stores/stores';
+	throw new Error("@migration task: Check code was safely removed (https://github.com/sveltejs/kit/discussions/5774#discussioncomment-3292722)");
 
-	// load details of the clicked simulation
-	export async function load({ params }) {
-		try {
-			let { simulation_id } = params;
-			// during refresh if simulation id is undefined
-			if (simulation_id == 'undefined') {
-				simulation_id = get(clicked_simulation).simulation_id;
-			}
-			const variables = { simulation_id }; // userid from access token
-			const result = await get(graphQLClient).request(get_simulation_query, variables);
-			const simulation = result.Get_Simulation.simulations[0];
-			return {
-				props: {
-					simulation
-				}
-			};
-		} catch (error) {
-			return {
-				error: new Error(error.message),
-				status: error.status
-			};
-		}
-	}
+	// import { get_simulation_query } from '../../queries/get_simulation.svelte';
+	// import { get } from 'svelte/store';
+	// import { graphQLClient, clicked_simulation } from '../../stores/stores';
+
+	// // load details of the clicked simulation
+	// export async function load({ params }) {
+	// 	try {
+	// 		let { simulation_id } = params;
+	// 		// during refresh if simulation id is undefined
+	// 		if (simulation_id == 'undefined') {
+	// 			simulation_id = get(clicked_simulation).simulation_id;
+	// 		}
+	// 		const variables = { simulation_id }; // userid from access token
+	// 		const result = await get(graphQLClient).request(get_simulation_query, variables);
+	// 		const simulation = result.Get_Simulation.simulations[0];
+	// 		return {
+	// 			props: {
+	// 				simulation
+	// 			}
+	// 		};
+	// 	} catch (error) {
+	// 		return {
+	// 			error: new Error(error.message),
+	// 			status: error.status
+	// 		};
+	// 	}
+	// }
 </script>
 
 <script>
-	import Runs from './runs.svelte';
-	import Steps from './steps.svelte';
-	import Logs from './logs.svelte';
+	throw new Error("@migration task: Add data prop (https://github.com/sveltejs/kit/discussions/5774#discussioncomment-3292707)");
+
+	import Runs from '../runs.svelte';
+	import Steps from '../steps.svelte';
+	import Logs from '../logs.svelte';
 	import relativeTime from 'dayjs/plugin/relativeTime';
 	import dayjs from 'dayjs';
 	import Modal from 'svelte-simple-modal';
-	import Back from './modals/back.svelte';
+	import Back from '../modals/back.svelte';
 
 	dayjs.extend(relativeTime);
 
-	import { show_usages, show_steps_list, clicked_run } from '../stores/stores';
-	import Charts from './charts.svelte';
-	import DeleteSimulationButton from './modals/delete_simulation_button.svelte';
+	import { show_usages, show_steps_list, clicked_run } from '../../stores/stores';
+	import Charts from '../charts.svelte';
+	import DeleteSimulationButton from '../modals/delete_simulation_button.svelte';
 
 	export let simulation;
 	$clicked_simulation = simulation;

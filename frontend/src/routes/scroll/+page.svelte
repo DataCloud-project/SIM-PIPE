@@ -1,5 +1,7 @@
 <!-- example scroll.svelte from https://svelte.dev/repl/4863a658f3584b81bbe3d9f54eb67899?version=3.32.3 -->
 <script>
+	throw new Error("@migration task: Add data prop (https://github.com/sveltejs/kit/discussions/5774#discussioncomment-3292707)");
+
 	import { onMount, onDestroy, createEventDispatcher } from 'svelte';
 
 	export let threshold = 0;

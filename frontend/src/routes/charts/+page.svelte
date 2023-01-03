@@ -4,7 +4,7 @@
 	// import Highcharts from 'highcharts';
 	import Highcharts from 'highstock-release';
 
-	import { selected_resource_usage } from '../stores/stores';
+	import { selected_resource_usage } from '../../stores/stores';
 	// import {dayjs} from 'svelte-time';
 	import dayjs from 'dayjs';
 

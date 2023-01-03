@@ -1,8 +1,8 @@
 <script>
 	import { getContext } from 'svelte';
-	import { clicked_simulation, graphQLClient, clicked_run, steps_list } from '../../stores/stores';
-	import { get_simulation_query } from '../../queries/get_simulation.svelte';
-	import Alert from './alert.svelte';
+	import { clicked_simulation, graphQLClient, clicked_run, steps_list } from '../../../stores/stores';
+	import { get_simulation_query } from '../../../queries/get_simulation.svelte';
+	import Alert from '../alert.svelte';
 	import { goto } from '$app/navigation';
 
 	const { open, close } = getContext('simple-modal');

@@ -1,6 +1,6 @@
 <script>
 	import { getContext } from 'svelte';
-	import CreateRunModal from './create_run_modal.svelte';
+	import CreateRunModal from '../create_run_modal.svelte';
 	const { open } = getContext('simple-modal');
 	function open_create_run_modal() {
 		open(CreateRunModal);
