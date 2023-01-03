@@ -5,3 +5,5 @@ controller/simulations/*
 controller/log/controller.log
 controller/uploaded_files/*
 controller/node_modules
+example/sftp/in/*
+example/sftp/out/*
