@@ -11,3 +11,8 @@ node_modules
 pnpm-lock.yaml
 package-lock.json
 yarn.lock
+
+playwright.config.js
+vite.config.js
+svelte.config.js
+.eslintrc.cjs

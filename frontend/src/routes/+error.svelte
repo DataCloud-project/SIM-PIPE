@@ -1,17 +1,8 @@
-<script context="module">
-	throw new Error("@migration task: Replace error load function (https://github.com/sveltejs/kit/discussions/5774#discussioncomment-3293209)");
+<script lang="ts">
+  // eslint-disable-next-line import/extensions
+  import { page } from '$app/stores';
 
-	// export function load({ error, status }) {
-	// 	return {
-	// 		props: {
-	// 			title: `${status}: ${error.message}`
-	// 		}
-	// 	};
-	// }
-</script>
-
-<script>
-	export let title;
+  const title = $page.status ?? 'Error';
 </script>
 
 <h1>Oops..</h1>
