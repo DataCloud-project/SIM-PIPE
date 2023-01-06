@@ -7,10 +7,11 @@ import type { Simulation } from 'src/types';
 import { browser } from '$app/environment';
 
 // load details of the clicked simulation
-export async function load(
-  { params }: {
-    params: { simulation_id?: string }
-  }): Promise<{ simulation: Simulation } | undefined> {
+export async function load({
+  params,
+}: {
+  params: { simulation_id?: string };
+}): Promise<{ simulation: Simulation } | undefined> {
   if (!browser) {
     return undefined;
   }
