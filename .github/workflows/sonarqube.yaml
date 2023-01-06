@@ -41,7 +41,7 @@ jobs:
         with:
           node-version: 18
       - run: npm ci
-      - run: npm run build
+      - run: npm run sync
       - uses: sonarsource/sonarqube-scan-action@master
         env:
           SONAR_TOKEN: ${{ secrets.FRONTEND_SONAR_TOKEN }}
