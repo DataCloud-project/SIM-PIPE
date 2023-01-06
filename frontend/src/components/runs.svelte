@@ -59,7 +59,9 @@
     if (event.key === 'Enter') runOnClick(run);
   }
 
-  refreshActiveRuns();
+  if ($clickedSimulation) {
+    refreshActiveRuns();
+  }
   $: data = $clickedSimulation?.runs ?? [];
 </script>
 

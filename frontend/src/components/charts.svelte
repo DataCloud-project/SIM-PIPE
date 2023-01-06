@@ -18,6 +18,9 @@
   ): void {
     afterUpdate(() => {
       HighStocks.stockChart(container, {
+        accessibility: {
+          enabled: false,
+        },
         rangeSelector: {
           enabled: false,
         },
@@ -75,11 +78,11 @@
     for (const usage of usages) {
       const time = dayjs(usage.time).diff(usages[0].time) / 1000;
       // let time = dayjs(usage.time).valueOf();
-      cpu.push({ y: time, x: usage.cpu * 100 });
-      memory.push({ y: time, x: usage.memory });
-      memoryMax.push({ y: time, x: usage.memory_max });
-      networkRx.push({ y: time, x: usage.rx_value });
-      networkTx.push({ y: time, x: usage.tx_value });
+      cpu.push({ x: time, y: usage.cpu * 100 });
+      memory.push({ x: time, y: usage.memory });
+      memoryMax.push({ x: time, y: usage.memory_max });
+      networkRx.push({ x: time, y: usage.rx_value });
+      networkTx.push({ x: time, y: usage.tx_value });
     }
     const tooltip = {
       xDateFormat: '%L',
