@@ -9,11 +9,12 @@
   import Runs from '../../components/runs.svelte';
   import Steps from '../../components/steps.svelte';
   import { clickedRun, clickedSimulation, showStepsList, showUsages } from '../../stores/stores.js';
-  import type { Simulation } from 'src/types';
+  import type { PageData } from './$types';
 
   dayjs.extend(relativeTime);
 
-  export let simulation: Simulation | undefined;
+  export let data: PageData;
+  const { simulation } = data;
 
   $clickedSimulation = simulation;
   const time = $clickedSimulation ? dayjs($clickedSimulation.created).fromNow() : '';

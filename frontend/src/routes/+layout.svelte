@@ -4,6 +4,10 @@
   import { username } from '../stores/stores.js';
 </script>
 
+<svelte:head>
+  <title>SIM-PIPE UI</title>
+</svelte:head>
+
 <header>
   <h1 style="text-align:center;">
     SIM-PIPE UI

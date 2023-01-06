@@ -1,10 +1,13 @@
 import { GraphQLClient } from 'graphql-request';
 import Keycloak from 'keycloak-js';
-
 import * as config from '../config/config.js';
 import { graphQLClient, username } from '../stores/stores.js';
+// eslint-disable-next-line import/extensions
+import { browser } from '$app/environment';
 
-export default async function initKeycloak(): Promise<void> {
+let initKeycloakPromise: Promise<void> | undefined;
+
+async function internalInitKeycloak(): Promise<void> {
   const keycloak = new Keycloak({
     url: 'https://datacloud-auth.euprojects.net/auth', // todo - add env var
     realm: 'user-authentication',
@@ -41,4 +44,14 @@ export default async function initKeycloak(): Promise<void> {
       headers: requestHeaders,
     }),
   );
+}
+
+export default async function initKeycloak(): Promise<void> {
+  if (!browser) {
+    return;
+  }
+  if (!initKeycloakPromise) {
+    initKeycloakPromise = internalInitKeycloak();
+  }
+  await initKeycloakPromise;
 }
