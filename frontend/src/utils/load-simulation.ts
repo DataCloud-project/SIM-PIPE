@@ -1,6 +1,6 @@
 import { get } from 'svelte/store';
-import getSimulationQuery from '../../queries/get-simulation.js';
-import { clickedSimulation, graphQLClient } from '../../stores/stores.js';
+import getSimulationQuery from '../queries/get-simulation.js';
+import { clickedSimulation, graphQLClient } from '../stores/stores.js';
 import type { Simulation } from 'src/types';
 
 // load details of the clicked simulation
