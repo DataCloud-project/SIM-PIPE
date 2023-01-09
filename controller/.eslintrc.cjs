@@ -49,6 +49,10 @@ module.exports = {
       code: 100,
       tabWidth: 2,
       ignorePattern: "\/\/ eslint-disable-next-line",
+      ignoreStrings: true,
+      ignoreUrls: true,
+      ignoreTemplateLiterals: true,
+      ignoreRegExpLiterals: true,
     }],
     'indent': 'off',
     'function-paren-newline': 'off',
@@ -59,6 +63,24 @@ module.exports = {
     'node/no-unsupported-features/es-syntax': [ // to allow import and export declarations in *.ts file
       'error',
       { ignores: ['modules'] },
+    ],
+    'no-restricted-syntax': [
+      'error',
+      {
+        selector: 'ForInStatement',
+        message:
+          'for..in loops iterate over the entire prototype chain, which is virtually never what you want. Use Object.{keys,values,entries}, and iterate over the resulting array.',
+      },
+      {
+        selector: 'LabeledStatement',
+        message:
+          'Labels are a form of GOTO; using them makes code confusing and hard to maintain and understand.',
+      },
+      {
+        selector: 'WithStatement',
+        message:
+          '`with` is disallowed in strict mode because it makes code impossible to predict and optimize.',
+      },
     ],
   },
   settings: {

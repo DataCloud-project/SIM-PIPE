@@ -1,7 +1,3 @@
-/* eslint-disable eslint-comments/disable-enable-pair */
-/* eslint-disable @typescript-eslint/restrict-template-expressions */
-/* eslint-disable no-await-in-loop */
-/* eslint-disable no-restricted-syntax */
 import Docker from 'dockerode';
 import * as dotenv from 'dotenv';
 import fsAsync from 'node:fs/promises';
@@ -23,15 +19,10 @@ dotenv.config();
 // TODO: remove global variables
 
 // remote is true by default
-const remote:boolean = !process.argv[2] ? true : process.argv[2] === 'remote';
+const remote: boolean = process.argv[2] ? process.argv[2] === 'remote' : true;
 
 let docker: Docker;
-let sdk: {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  setStepAsStarted: any; insertResourceUsage: any; setStepAsEndedSuccess: any; insertLog: any;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  setStepAsCancelled: any; setStepAsFailed:any;
-};
+let sdk: ReturnType<typeof getSdk>;
 
 if (remote) {
   const host = process.env.SANDBOX_IP ?? process.env.DOCKER_HOST ?? 'localhost';
@@ -77,7 +68,7 @@ const SFTP_VOLUME_LOCATION = process.env.SFTP_VOLUME_NAME
   ?? '/var/lib/docker/volumes/sandbox_sftp_data/_data/user1';
 
 // Ping docker deamon to check if it is running
-async function pingDocker():Promise<void> {
+async function pingDocker(): Promise<void> {
   try {
     const pingResult = await Promise.race<string | unknown>([
       setTimeout(5000, 'timeout'),
@@ -94,11 +85,11 @@ async function pingDocker():Promise<void> {
 }
 await pingDocker();
 
-let targetDirectory:string;
+let targetDirectory: string;
 let createdContainer: Docker.Container;
-let counter:number;
+let counter: number;
 
-function init(step:types.Step):void {
+function init(step: types.Step): void {
   if (!step.stepNumber) {
     throw new Error('🎌 Error in controller.init: step number not defined');
   }
@@ -107,28 +98,33 @@ function init(step:types.Step):void {
   process.env.PROCESS_COMPLETED = 'false';
   process.env.STOP_SIGNAL_SENT = 'false';
 }
-let timer: SetIntervalAsyncTimer;
+let timer: SetIntervalAsyncTimer<void[]>;
 
-async function pullImagePromise(image: string):Promise<void> {
+async function pullImagePromise(image: string): Promise<void> {
   return new Promise<void>((resolve, reject) => {
-    // eslint-disable-next-line @typescript-eslint/no-floating-promises
-    docker.pull(image, async (error: any, stream: Stream) => {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars, unicorn/consistent-function-scoping
-      function onFinished(error_: any, output: any):void {
-        resolve();
+    const onFinished = (): void => {
+      resolve();
+    };
+    docker.pull(image, async (error: unknown, stream: Stream) => {
+      if (error) {
+        reject(error);
+      } else {
+        try {
+          docker.modem.followProgress(stream, onFinished);
+        } catch (dockerModemError) {
+          if ((dockerModemError as Error).name === 'TypeError') resolve();
+          else reject(dockerModemError);
+        }
       }
-      try {
-        docker.modem.followProgress(stream, onFinished);
-      } catch (dockerModemError) {
-        if ((dockerModemError as Error).name === 'TypeError') resolve();
-        else reject(dockerModemError);
-      }
+    }).catch((error) => {
+      reject(error);
     });
   });
 }
 
-// eslint-disable-next-line unicorn/prevent-abbreviations
-async function startContainer(image:string, stepId:number, env: string[]) : Promise<number> {
+async function startContainer(
+  image: string, stepId: number, environment: string[],
+): Promise<number> {
   await pullImagePromise(image); // pull docker image before creating container
   createdContainer = (await docker.createContainer({
     Image: image,
@@ -145,18 +141,17 @@ async function startContainer(image:string, stepId:number, env: string[]) : Prom
       `${SFTP_VOLUME_LOCATION}/work:/app/work`,
     ],
     StopTimeout: process.env.CONTAINER_STOP_TIMEOUT ? +process.env.CONTAINER_STOP_TIMEOUT : 5,
-    Env: env || [],
+    Env: environment || [],
   })) as unknown as Docker.Container;
   await createdContainer.start({});
   const startedAt = new Date() as unknown as number;
   // change the step status in the database to active
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-call
   await sdk.setStepAsStarted({ step_id: stepId });
   logger.info(`Container started with ID: ${createdContainer.id}`);
   return startedAt;
 }
 
-export async function parseStats(stepId:number) : Promise<void> {
+export async function parseStats(stepId: number): Promise<void> {
   const directoryName = targetDirectory;
   const fileList = await fsAsync.readdir(directoryName);
 
@@ -166,7 +161,7 @@ export async function parseStats(stepId:number) : Promise<void> {
     .filter((fileName) => /^stats\.\d+\.json$/.test(fileName))
     .map(async (fileName) => {
       const fullFilename = path.join(directoryName, fileName);
-      const data = await fsAsync.readFile(fullFilename, { encoding: 'utf-8' });
+      const data = await fsAsync.readFile(fullFilename, { encoding: 'utf8' });
 
       let sample: types.StatSample;
       try {
@@ -216,7 +211,7 @@ export async function parseStats(stepId:number) : Promise<void> {
       return sample;
     }));
 
-  const definedStats = stats.filter((stat) : stat is types.StatSample => stat !== undefined);
+  const definedStats = stats.filter((stat): stat is types.StatSample => stat !== undefined);
 
   // We need to sort the stats by timestamp because we read them in parallel
   const sortedStats = definedStats.sort((a, b) => a.time.localeCompare(b.time));
@@ -224,42 +219,45 @@ export async function parseStats(stepId:number) : Promise<void> {
   // test: adding cpu percentage
   let previousCpu = 0;
   let previousSystemCpu = 0;
-  // eslint-disable-next-line @typescript-eslint/no-shadow
-  for await (const stats of sortedStats) {
-    const temporary = stats.cpu;
-    stats.cpu = ((stats.cpu - previousCpu) / (stats.systemCpu - previousSystemCpu));
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+  for await (const currentStats of sortedStats) {
+    const temporary = currentStats.cpu;
+    currentStats.cpu = Math.round(
+      ((currentStats.cpu - previousCpu) / (currentStats.systemCpu - previousSystemCpu)) * 1000,
+    ) / 1000;
     await sdk.insertResourceUsage({
-      cpu: stats.cpu,
-      memory: stats.memory,
-      memory_max: stats.memory_max,
-      rx_value: stats.rxValue,
-      tx_value: stats.txValue,
+      cpu: currentStats.cpu,
+      memory: currentStats.memory,
+      memory_max: currentStats.memory_max,
+      rx_value: currentStats.rxValue,
+      tx_value: currentStats.txValue,
       step_id: stepId,
-      time: stats.time,
+      time: currentStats.time,
     });
     previousCpu = temporary;
-    previousSystemCpu = stats.systemCpu;
+    previousSystemCpu = currentStats.systemCpu;
   }
 
   const json = JSON.stringify(sortedStats, undefined, ' ');
   await fsAsync.appendFile(path.join(directoryName, 'statistics.json'), json);
 }
 
-function stopPollingStats() : void {
+function stopPollingStats(): void {
   clearIntervalAsync(timer).catch((error) => {
     logger.error(error);
   });
 }
 
-// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-async function postExitProcessing(container: Docker.Container, stepId:number, stepNumber:number) {
+async function postExitProcessing(
+  container: Docker.Container, stepId: number, stepNumber: number,
+): Promise<void> {
   await setTimeout(1000); // Wait 1s before parsing the stats
   await parseStats(stepId);
   // collect logs of the stoppped container
-  const logStream = `${await container.logs({
+  const logStream = await container.logs({
     follow: false, stdout: true, stderr: true,
-  })}`;
+  });
+  // Convert the log Buffer to a string
+  const logText = logStream.toString('utf8');
   // get output from sandbox
   const remoteOutDirectory = process.env.REMOTE_OUTPUT_DIR ?? 'out/';
   await sftp.getFromSandbox(remoteOutDirectory,
@@ -269,10 +267,8 @@ async function postExitProcessing(container: Docker.Container, stepId:number, st
   const exitCode = result.State.ExitCode;
   logger.info(`Exit code ${exitCode}`);
   if (exitCode === 0) {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-    await sdk.insertLog({ step_id: stepId, text: logStream });
+    await sdk.insertLog({ step_id: stepId, text: logText });
     // update the step status as ended succesfully
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
     await sdk.setStepAsEndedSuccess({
       step_id: stepId,
       started: result.State.StartedAt,
@@ -287,20 +283,20 @@ async function postExitProcessing(container: Docker.Container, stepId:number, st
   logger.info(`Step ${stepNumber} finished execution\n`);
 }
 
-async function getStatsUntilExit(container: Docker.Container, exitTimeout:number, startedAt:number,
-  step:types.Step):Promise<void> {
+async function getStatsUntilExit(
+  container: Docker.Container, exitTimeout: number, startedAt: number, step: types.Step,
+): Promise<void> {
   // if container stops, then stop the timer
   const containers = await docker.listContainers();
   const ids = containers.map((containerInList) => containerInList.Id);
 
   if (ids.includes(createdContainer.id)) { // collect statstics as long as the container is running
     if (process.env.STOP_SIGNAL_SENT === 'false'
-            && ((process.env.CANCEL_RUN_LIST as string).includes(step.runId)
-                  || (exitTimeout !== 0 && ((new Date() as unknown as number) - startedAt) >= exitTimeout))) {
+      && ((process.env.CANCEL_RUN_LIST as string).includes(step.runId)
+        || (exitTimeout !== 0 && ((new Date() as unknown as number) - startedAt) >= exitTimeout))) {
       try {
-      // for continuous steps, send stop signal after configured number of seconds
-      // eslint-disable-next-line @typescript-eslint/no-floating-promises
-        createdContainer.stop();
+        // for continuous steps, send stop signal after configured number of seconds
+        await createdContainer.stop();
         // set STOP_SIGNAL_SENT to true to avoid sending multiple stop signals
         process.env.STOP_SIGNAL_SENT = 'true';
         logger.info('Sent stop signal to running container');
@@ -317,8 +313,7 @@ async function getStatsUntilExit(container: Docker.Container, exitTimeout:number
   } else { // container is exited or timedout
     stopPollingStats();
     // if run is cancelled
-    if ((process.env.CANCEL_RUN_LIST as string).includes(step.runId)) {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+    if (step.stepId !== undefined && (process.env.CANCEL_RUN_LIST as string).includes(step.runId)) {
       await sdk.setStepAsCancelled({ step_id: step.stepId });
       logger.info('Step execution is cancelled');
       // clear all files created during simulation
@@ -332,15 +327,15 @@ async function getStatsUntilExit(container: Docker.Container, exitTimeout:number
   }
 }
 
-function startPollingStats(startedAt:number, step:types.Step):void {
-  let exitTimeout:number;
+function startPollingStats(startedAt: number, step: types.Step): void {
+  let exitTimeout: number;
   // get CONTAINER_TIME_LIMIT (seconds) env variable
-  if (!process.env.CONTAINER_TIME_LIMIT) {
-    throw new Error('🎌 Timeout interval to stop container is not defined');
-  } else {
+  if (process.env.CONTAINER_TIME_LIMIT) {
     exitTimeout = (+process.env.CONTAINER_TIME_LIMIT) * 1000;
+  } else {
+    throw new Error('🎌 Timeout interval to stop container is not defined');
   }
-  const pollingInterval:number = process.env.POLLING_INTERVAL ? +process.env.POLLING_INTERVAL * 1000
+  const pollingInterval = process.env.POLLING_INTERVAL ? +process.env.POLLING_INTERVAL * 1000
     : 750;
   timer = setIntervalAsync(async () => {
     try {
@@ -351,13 +346,14 @@ function startPollingStats(startedAt:number, step:types.Step):void {
   }, pollingInterval);
 }
 
-async function waitForContainer():Promise<void> {
+async function waitForContainer(): Promise<void> {
   while (process.env.PROCESS_COMPLETED === 'false') {
+    // eslint-disable-next-line no-await-in-loop
     await setTimeout(500);
   }
 }
 
-export async function start(client:GraphQLClient, step:types.Step) : Promise<string> {
+export async function start(client: GraphQLClient, step: types.Step): Promise<string> {
   if (!step.stepNumber || !step.stepId || !step.image || !step.env) {
     throw new Error('🎌 Error in controller.start: step_number, image, env or step_id not defined');
   }
@@ -380,12 +376,11 @@ export async function start(client:GraphQLClient, step:types.Step) : Promise<str
     }
     return `${targetDirectory}/outputs/`;
   } catch (error) {
+    const message: string = error instanceof Error ? error.message : 'Error that is not an Error instance';
     // set step as failed on exception
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
     await sdk.setStepAsFailed({ step_id: step.stepId });
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-    await sdk.insertLog({ step_id: step.stepId, text: `${error}` });
-    logger.error(`🎌 ${error} in controller.start`);
-    throw new Error(`Error in step execution, step failed ${(error as Error).message}`);
+    await sdk.insertLog({ step_id: step.stepId, text: `${message}` });
+    logger.error(`🎌 ${message} in controller.start`);
+    throw new Error(`Error in step execution, step failed ${message}`);
   }
 }

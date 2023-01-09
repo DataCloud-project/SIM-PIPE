@@ -1,6 +1,3 @@
-/* eslint-disable eslint-comments/disable-enable-pair */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import { gql } from 'apollo-server';
 import { ApolloServer } from 'apollo-server-express';
 import ExpiryMap from 'expiry-map';
@@ -40,29 +37,46 @@ const typeDefs = gql`
   }
 `;
 
+interface Context {
+  user: {
+    sub: string
+    preferred_username: string
+  }
+}
+
 const resolvers = {
   Query: {
-    All_Simulations(_p: unknown, arguments_: unknown, context: { user: any }):unknown {
-      return functions.allSimulations(context.user.sub as string);
+    All_Simulations(_p: unknown, arguments_: unknown, context: Context): unknown {
+      return functions.allSimulations(context.user.sub);
     },
-    async Get_Simulation(_p: unknown, arguments_: { simulation_id:string }, context: { user: any }):Promise<GetSimulationQuery> {
-      return await functions.getSimulation(context.user.sub as string, arguments_.simulation_id);
+    async Get_Simulation(
+      _p: unknown, arguments_: { simulation_id: string }, context: Context,
+    ): Promise<GetSimulationQuery> {
+      return await functions.getSimulation(context.user.sub, arguments_.simulation_id);
     },
-    async Get_Simulation_Run_Results(_p: unknown, arguments_: { simulation_id:string,
-      run_id:string }, context: { user: any }):Promise<GetSimulationRunResultsQuery> {
-      return await functions.getSimulationRunResults(arguments_.simulation_id, arguments_.run_id, context.user.sub as string);
+    async Get_Simulation_Run_Results(_p: unknown, arguments_: {
+      simulation_id: string,
+      run_id: string
+    }, context: Context): Promise<GetSimulationRunResultsQuery> {
+      return await functions.getSimulationRunResults(
+        arguments_.simulation_id,
+        arguments_.run_id,
+        context.user.sub,
+      );
     },
-    All_Runs_Steps(_p: unknown, arguments_: unknown, context: { user: any }):unknown {
-      return functions.allRunsSteps(context.user.sub as string);
+    All_Runs_Steps(_p: unknown, arguments_: unknown, context: Context): unknown {
+      return functions.allRunsSteps(context.user.sub);
     },
   },
   Mutation: {
-    async Create_Simulation(_p: unknown, arguments_: { name:string,
-      pipeline_description: string }, context: { user: any })
-      :Promise<string> {
+    async Create_Simulation(_p: unknown, arguments_: {
+      name: string,
+      pipeline_description: string
+    }, context: Context)
+      : Promise<string> {
       try {
         const newSimId = await functions.createSimulation(
-          arguments_.name, arguments_.pipeline_description, context.user.sub as string);
+          arguments_.name, arguments_.pipeline_description, context.user.sub);
         return JSON.stringify({
           code: 200,
           message: `Simulation has been created with id ${newSimId}`,
@@ -77,21 +91,23 @@ const resolvers = {
         });
       }
     },
-    async Create_Run_WithInput(_p: unknown, arguments_:
-    {
-      simulation_id:string,
-      name:string,
-      sampleInput:[[string, string]],
-      env_list: [[string]],
-      timeout_values: [number]
-    }, context: { user: any }):Promise<string> {
+    async Create_Run_WithInput(
+      _p: unknown, arguments_: {
+        simulation_id: string,
+        name: string,
+        sampleInput: [[string, string]],
+        env_list: [[string]],
+        timeout_values: [number]
+      },
+      context: Context,
+    ): Promise<string> {
       let newRunId;
       try {
         newRunId = await functions.createRunWithInput(
           arguments_.simulation_id,
           arguments_.name,
           arguments_.sampleInput,
-          context.user.sub as string,
+          context.user.sub,
           arguments_.env_list,
           arguments_.timeout_values);
         return JSON.stringify({
@@ -108,10 +124,11 @@ const resolvers = {
         });
       }
     },
-    async Start_Run(_p: unknown, arguments_:{ run_id:string }, context: { user: any }):
-    Promise<string> {
+    async Start_Run(
+      _p: unknown, arguments_: { run_id: string }, context: Context,
+    ): Promise<string> {
       try {
-        await functions.queueRun(arguments_.run_id, context.user.sub as string);
+        await functions.queueRun(arguments_.run_id, context.user.sub);
         return JSON.stringify({
           code: 200,
           message: 'Run has been added to queue',
@@ -126,9 +143,9 @@ const resolvers = {
         });
       }
     },
-    async Stop_Run(_p:unknown, arguments_: { run_id:string }, context: { user: any }):Promise<string> {
+    async Stop_Run(_p: unknown, arguments_: { run_id: string }, context: Context): Promise<string> {
       try {
-        await functions.stopRun(arguments_.run_id, context.user.sub as string);
+        await functions.stopRun(arguments_.run_id, context.user.sub);
         return JSON.stringify({
           code: 200,
           message: 'Successfully sent stop signal to current run',
@@ -143,9 +160,11 @@ const resolvers = {
         });
       }
     },
-    async Delete_Run(_p:unknown, arguments_: { run_id:string }, context: { user: any }):Promise<string> {
+    async Delete_Run(
+      _p: unknown, arguments_: { run_id: string }, context: Context,
+    ): Promise<string> {
       try {
-        await functions.deleteRun(arguments_.run_id, context.user.sub as string);
+        await functions.deleteRun(arguments_.run_id, context.user.sub);
         return JSON.stringify({
           code: 200,
           message: 'Successfully deleted run',
@@ -160,9 +179,11 @@ const resolvers = {
         });
       }
     },
-    async Delete_Simulation(_p:unknown, arguments_: { simulation_id:string }, context: { user: any }):Promise<string> {
+    async Delete_Simulation(
+      _p: unknown, arguments_: { simulation_id: string }, context: Context,
+    ): Promise<string> {
       try {
-        await functions.deleteSimulation(arguments_.simulation_id, context.user.sub as string);
+        await functions.deleteSimulation(arguments_.simulation_id, context.user.sub);
         return JSON.stringify({
           code: 200,
           message: 'Successfully deleted simulation',
@@ -186,7 +207,7 @@ const resolvers = {
 const KEYCLOAK_REALM_ENDPOINT = process.env.KEYCLOAK_REALM_ENDPOINT
   ?? 'https://datacloud-auth.euprojects.net/auth/realms/user-authentication';
 
-async function getKeycloakPublicKey() : Promise<string> {
+async function getKeycloakPublicKey(): Promise<string> {
   const response = await got(KEYCLOAK_REALM_ENDPOINT).json<{ public_key: string }>();
   const { public_key: publicKey } = response;
   if (!publicKey) {
@@ -195,8 +216,8 @@ async function getKeycloakPublicKey() : Promise<string> {
   return `-----BEGIN PUBLIC KEY-----\r\n${publicKey}\r\n-----END PUBLIC KEY-----`;
 }
 
-const authenticationExpiryTimeout:number = Number.parseInt(process.env.Authentication_Expiry_Timeout
-  || '', 10);
+const authenticationExpiryTimeout: number = Number.parseInt(
+  process.env.Authentication_Expiry_Timeout || '', 10);
 const keycloakPublicKeyCache = new ExpiryMap(authenticationExpiryTimeout);
 const getKeycloakPublicKeyWithCache = pMemoize(
   getKeycloakPublicKey, { cache: keycloakPublicKeyCache },
@@ -219,8 +240,7 @@ const startSecureServer = async (): Promise<void> => {
         throw new Error('🎌 No authorization header found');
       }
       // definition of user can be extended later to include all required attributes
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      const user:{
+      const user: {
         sub: string,
         preferred_username: string
       } = jwt_decode(req.headers.authorization);
@@ -241,14 +261,14 @@ const startSecureServer = async (): Promise<void> => {
     });
 
     app.use(
-      jwtMiddleware,
+      // jwt-express middleware returns a promise that is ignored by express < 5
+      jwtMiddleware as express.RequestHandler,
     );
 
     await server.start();
-    // eslint-disable-next-line @typescript-eslint/await-thenable
-    await server.applyMiddleware({ app });
-    // eslint-disable-next-line @typescript-eslint/await-thenable
-    await app.listen({ port: 9000, hostname: '0.0.0.0' },
+    server.applyMiddleware({ app });
+    app.listen({ port: 9000, hostname: '0.0.0.0' },
+      // eslint-disable-next-line no-console
       () => console.log(`🚀 Authenticated server running on http://localhost:9000${server.graphqlPath}`),
     );
   } catch (error) {

@@ -18,8 +18,11 @@
         "--loader",
         "ts-node/esm/transpile-only",
       ],
-      "args": ["src/controller.ts", "remote"],
-      "cwd": "${workspaceRoot}",
+      "args": [
+        "src/index.ts",
+        "remote"
+      ],
+      "cwd": "${workspaceRoot}/controller",
       "internalConsoleOptions": "openOnSessionStart",
       "outputCapture": "std",
       "envFile": "${workspaceFolder}/.env"
