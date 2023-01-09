@@ -19,7 +19,7 @@ const options = {
 
 export async function putFileToSandbox(
   localFile: string, remoteFile: string, storageFile: string,
-) : Promise<void> {
+): Promise<void> {
   // create the output folders for the run details
   const simId = process.env.SIM_ID;
   const runId = process.env.RUN_ID;
@@ -41,16 +41,14 @@ export async function putFileToSandbox(
     await sftp.connect(options);
     await sftp.put(localFile, remoteFile);
     logger.info('Sent similation inputs to Sandbox');
-  } catch {
-    throw new Error('Error in putFileToSandbox');
   } finally {
     await sftp.end();
   }
 }
 
 export async function putFolderToSandbox(
-  localFolder: string, remoteFolder: string, targetDirectory:string,
-) : Promise<void> {
+  localFolder: string, remoteFolder: string, targetDirectory: string,
+): Promise<void> {
   // Create folder to store the simulation details
   const targetInputDirectory = `${targetDirectory}/inputs/`;
   const targetOutputDirectory = `${targetDirectory}/outputs/`;
@@ -69,28 +67,22 @@ export async function putFolderToSandbox(
     await sftp.connect(options);
     await sftp.uploadDir(localFolder, remoteFolder);
     logger.info('Sent similation inputs to Sandbox');
-  } catch (error) {
-    // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-    throw new Error(`${error} in putFolderToSandbox`);
   } finally {
     await sftp.end();
   }
 }
 
 export async function getFromSandbox(
-  remoteOutputDirectory: string, storeOutputDirectory: string) : Promise<void> {
+  remoteOutputDirectory: string, storeOutputDirectory: string): Promise<void> {
   try {
     await sftp.connect(options);
     await sftp.downloadDir(remoteOutputDirectory, storeOutputDirectory);
-  } catch (error) {
-    // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-    throw new Error(`${error} in getFromSandbox`);
   } finally {
     await sftp.end();
   }
 }
 
-export async function clearSandbox() : Promise<void> {
+export async function clearSandbox(): Promise<void> {
   try {
     await sftp.connect(options);
     const directoryList = ['./in/', './out/', './work/'];
@@ -105,9 +97,6 @@ export async function clearSandbox() : Promise<void> {
       await sftp.delete(file);
       // logger.info(`Deleted ${file} from Sandbox`);
     }));
-  } catch (error) {
-    // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-    throw new Error(`${error} in clearSandbox`);
   } finally {
     await sftp.end();
     logger.info('Cleared Sandbox for next simulation');
