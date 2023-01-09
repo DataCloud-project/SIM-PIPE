@@ -13,6 +13,10 @@ jobs:
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0
+      - name: Use Node.js 18
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
       - uses: sonarsource/sonarqube-scan-action@master
         env:
           SONAR_TOKEN: ${{ secrets.CONTROLLER_SONAR_TOKEN }}
@@ -28,10 +32,19 @@ jobs:
   sonarqube-frontend:
     name: SonarQube frontend
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: "./frontend"
     steps:
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0
+      - name: Use Node.js 18
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+      - run: npm ci
+      - run: npm run sync
       - uses: sonarsource/sonarqube-scan-action@master
         env:
           SONAR_TOKEN: ${{ secrets.FRONTEND_SONAR_TOKEN }}
