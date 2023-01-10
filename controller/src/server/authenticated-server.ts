@@ -277,6 +277,3 @@ const startSecureServer = async (): Promise<void> => {
 };
 
 await startSecureServer();
-
-// create a sample simulation at startup
-logger.info(await functions.createSampleSimulation());
