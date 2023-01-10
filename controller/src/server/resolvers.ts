@@ -1,41 +1,10 @@
-import { gql } from 'apollo-server';
-import { ApolloServer } from 'apollo-server-express';
-import ExpiryMap from 'expiry-map';
-import express from 'express';
-import { expressjwt } from 'express-jwt';
-import got from 'got';
-import jwt_decode from 'jwt-decode';
-import pMemoize from 'p-memoize';
-
 import logger from '../logger.js';
 import * as functions from './functions.js';
-
-process.env.IS_SIMULATION_RUNNING = 'false';
-process.env.CANCEL_RUN_LIST = '';
-
-/**
- * graphql query and resolvers
- */
-const typeDefs = gql`
-  scalar JSON
-  # The queries are only available through Hasura
-  type Query {},
-  type Mutation {
-    Create_Simulation(name:String, pipeline_description:String): String
-    Create_Run_WithInput(simulation_id: String,name:String, sampleInput:[[String]],
-    env_list: [[String]], timeout_values:[Int]):
-    String
-    Start_Run(run_id:String): String
-    Stop_Run(run_id:String): String
-    Delete_Run(run_id:String): String
-    Delete_Simulation(simulation_id:String): String
-  }
-`;
 
 interface Context {
   user: {
     sub: string
-    preferred_username: string
+    username: string
   }
 }
 
@@ -174,79 +143,4 @@ const resolvers = {
   },
 };
 
-/**
- * middleware definitions
- */
-const KEYCLOAK_REALM_ENDPOINT = process.env.KEYCLOAK_REALM_ENDPOINT
-  ?? 'https://datacloud-auth.euprojects.net/auth/realms/user-authentication';
-
-async function getKeycloakPublicKey(): Promise<string> {
-  const response = await got(KEYCLOAK_REALM_ENDPOINT).json<{ public_key: string }>();
-  const { public_key: publicKey } = response;
-  if (!publicKey) {
-    throw new Error('No public key found');
-  }
-  return `-----BEGIN PUBLIC KEY-----\r\n${publicKey}\r\n-----END PUBLIC KEY-----`;
-}
-
-const authenticationExpiryTimeout: number = Number.parseInt(
-  process.env.Authentication_Expiry_Timeout || '', 10);
-const keycloakPublicKeyCache = new ExpiryMap(authenticationExpiryTimeout);
-const getKeycloakPublicKeyWithCache = pMemoize(
-  getKeycloakPublicKey, { cache: keycloakPublicKeyCache },
-);
-
-const jwtMiddleware = expressjwt({
-  secret: getKeycloakPublicKeyWithCache,
-  algorithms: ['RS256'],
-});
-
-/**
- * function to start server with keycloak authentication
- */
-const startSecureServer = async (): Promise<void> => {
-  const server = new ApolloServer({
-    typeDefs,
-    resolvers,
-    context: ({ req }): { user: { sub: string; preferred_username: string; }; } => {
-      if (!req.headers.authorization) {
-        throw new Error('🎌 No authorization header found');
-      }
-      // definition of user can be extended later to include all required attributes
-      const user: {
-        sub: string,
-        preferred_username: string
-      } = jwt_decode(req.headers.authorization);
-      return { user };
-    },
-  });
-
-  try {
-    const app = express();
-    // error handling
-
-    app.use((request, response, next) => {
-      if (request.path === '/health') {
-        response.sendStatus(204);
-      } else {
-        next();
-      }
-    });
-
-    app.use(
-      // jwt-express middleware returns a promise that is ignored by express < 5
-      jwtMiddleware as express.RequestHandler,
-    );
-
-    await server.start();
-    server.applyMiddleware({ app });
-    app.listen({ port: 9000, hostname: '0.0.0.0' },
-      // eslint-disable-next-line no-console
-      () => console.log(`🚀 Authenticated server running on http://localhost:9000${server.graphqlPath}`),
-    );
-  } catch (error) {
-    throw new Error(`🎌 Error starting the server\n${error as string}`);
-  }
-};
-
-await startSecureServer();
+export default resolvers;
