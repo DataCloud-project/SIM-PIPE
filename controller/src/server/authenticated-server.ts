@@ -6,7 +6,6 @@ import { expressjwt } from 'express-jwt';
 import got from 'got';
 import jwt_decode from 'jwt-decode';
 import pMemoize from 'p-memoize';
-import type { GetSimulationQuery, GetSimulationRunResultsQuery } from 'db/database.js';
 
 import logger from '../logger.js';
 import * as functions from './functions.js';
@@ -19,12 +18,8 @@ process.env.CANCEL_RUN_LIST = '';
  */
 const typeDefs = gql`
   scalar JSON
-  type Query {
-      All_Simulations: JSON # AllSimulations
-      Get_Simulation(simulation_id:String):JSON #String
-      Get_Simulation_Run_Results(simulation_id: String, run_id:String): JSON # String
-      All_Runs_Steps: JSON #String
-  },
+  # The queries are only available through Hasura
+  type Query {},
   type Mutation {
     Create_Simulation(name:String, pipeline_description:String): String
     Create_Run_WithInput(simulation_id: String,name:String, sampleInput:[[String]],
@@ -45,29 +40,7 @@ interface Context {
 }
 
 const resolvers = {
-  Query: {
-    All_Simulations(_p: unknown, arguments_: unknown, context: Context): unknown {
-      return functions.allSimulations(context.user.sub);
-    },
-    async Get_Simulation(
-      _p: unknown, arguments_: { simulation_id: string }, context: Context,
-    ): Promise<GetSimulationQuery> {
-      return await functions.getSimulation(context.user.sub, arguments_.simulation_id);
-    },
-    async Get_Simulation_Run_Results(_p: unknown, arguments_: {
-      simulation_id: string,
-      run_id: string
-    }, context: Context): Promise<GetSimulationRunResultsQuery> {
-      return await functions.getSimulationRunResults(
-        arguments_.simulation_id,
-        arguments_.run_id,
-        context.user.sub,
-      );
-    },
-    All_Runs_Steps(_p: unknown, arguments_: unknown, context: Context): unknown {
-      return functions.allRunsSteps(context.user.sub);
-    },
-  },
+  Query: {},
   Mutation: {
     async Create_Simulation(_p: unknown, arguments_: {
       name: string,
@@ -255,9 +228,9 @@ const startSecureServer = async (): Promise<void> => {
     app.use((request, response, next) => {
       if (request.path === '/health') {
         response.sendStatus(204);
-        return;
+      } else {
+        next();
       }
-      next();
     });
 
     app.use(

@@ -1,7 +1,6 @@
 import * as dotenv from 'dotenv';
 import { GraphQLClient } from 'graphql-request';
 import * as fs from 'node:fs';
-import { setTimeout } from 'node:timers/promises';
 
 import * as controller from '../controller.js';
 import { getSdk } from '../db/database.js';
@@ -9,15 +8,11 @@ import logger from '../logger.js';
 import DSL from './dsl.js';
 import TaskQueue from './taskqueue.js';
 import type {
-  AllRunsAndStepsQuery,
-  AllSimulationsQuery,
   CreateRunMutation,
   CreateSimulationMutation,
   CreateStepMutation,
   GetRunDetailsQuery,
   GetSimulationDslQuery,
-  GetSimulationQuery,
-  GetSimulationRunResultsQuery,
   GetUseridFromRunQuery,
   GetUseridFromSimulationQuery,
 } from '../db/database.js';
@@ -29,7 +24,7 @@ dotenv.config();
 let client: GraphQLClient;
 let sdk: ReturnType<typeof getSdk>;
 
-function connectHasuraEndpoint(): void {
+(function connectHasuraEndpoint(): void {
   const hasura = process.env.HASURA ?? 'http://127.0.0.1:8080/v1/graphql';
   if (!process.env.HASURA_ADMIN_SECRET) {
     throw new Error('Hasura admin password not set in env file');
@@ -40,18 +35,9 @@ function connectHasuraEndpoint(): void {
     },
   });
   sdk = getSdk(client);
-}
+}());
 
 const uploadDirectory = 'uploaded_files/';
-
-export async function allSimulations(userid: string): Promise<AllSimulationsQuery> {
-  return await sdk.AllSimulations({ userid });
-}
-
-export async function allRunsSteps(userid: string): Promise<AllRunsAndStepsQuery> {
-  // return JSON.stringify(await sdk.allRunsAndSteps({ userid }));
-  return await sdk.allRunsAndSteps({ userid });
-}
 
 export async function createSimulation(
   name: string, pipeline_description: string, userid: string,
@@ -233,17 +219,6 @@ export async function startRun(run_id: string): Promise<string> {
   return run_id;
 }
 
-export async function getSimulationRunResults(simulation_id: string,
-  run_id: string, userid: string): Promise<GetSimulationRunResultsQuery> {
-  const result: GetSimulationRunResultsQuery = await sdk.getSimulationRunResults({
-    simulation_id,
-    run_id,
-    userid,
-  });
-  // return JSON.stringify(result);
-  return result;
-}
-
 export async function stopRun(run_id: string, userid: string): Promise<string> {
   // throw error if run does not belong to the user
   await checkRunOwner(run_id, userid);
@@ -296,16 +271,4 @@ export async function queueRun(run_id: string, userid: string): Promise<string> 
     logger.error(`Error in run scheduler\n${(error as Error).message}`);
   });
   return 'ok';
-}
-
-/**
- * function to get all details and runs of a simulation
- */
-export async function getSimulation(
-  userid: string, simulation_id: string,
-): Promise<GetSimulationQuery> {
-  // export async function getSimulation(userid:string, simulation_id:string):Promise<string> {
-  const result: GetSimulationQuery = await sdk.getSimulation({ userid, simulation_id });
-  // return JSON.stringify(result);
-  return result;
 }

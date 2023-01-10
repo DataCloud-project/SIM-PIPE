@@ -3203,20 +3203,6 @@ export type Uuid_Comparison_Exp = {
   _nin?: InputMaybe<Array<Scalars['uuid']>>;
 };
 
-export type AllSimulationsQueryVariables = Exact<{
-  userid?: InputMaybe<Scalars['String']>;
-}>;
-
-
-export type AllSimulationsQuery = { __typename?: 'query_root', simulations: Array<{ __typename?: 'simulations', simulation_id: string, name?: string | null, created: string, pipeline_description?: unknown | null, runs: Array<{ __typename?: 'runs', run_id: string, name?: string | null, status: Simpipe_Run_Status_Enum, created: string, started?: string | null, ended?: string | null }> }> };
-
-export type AllRunsAndStepsQueryVariables = Exact<{
-  userid?: InputMaybe<Scalars['String']>;
-}>;
-
-
-export type AllRunsAndStepsQuery = { __typename?: 'query_root', runs: Array<{ __typename?: 'runs', run_id: string, name?: string | null, created: string, started?: string | null, status: Simpipe_Run_Status_Enum, steps: Array<{ __typename?: 'steps', step_id: number, created: string, started?: string | null, ended?: string | null, status: Simpipe_Step_Status_Enum }> }> };
-
 export type GetUseridFromRunQueryVariables = Exact<{
   run_id: Scalars['uuid'];
 }>;
@@ -3368,23 +3354,6 @@ export type InsertLogMutationVariables = Exact<{
 
 export type InsertLogMutation = { __typename?: 'mutation_root', insert_simpipe_logs_one?: { __typename?: 'simpipe_logs', step_id: number } | null };
 
-export type GetSimulationRunResultsQueryVariables = Exact<{
-  simulation_id?: InputMaybe<Scalars['uuid']>;
-  run_id?: InputMaybe<Scalars['uuid']>;
-  userid?: InputMaybe<Scalars['String']>;
-}>;
-
-
-export type GetSimulationRunResultsQuery = { __typename?: 'query_root', simulations: Array<{ __typename?: 'simulations', runs: Array<{ __typename?: 'runs', run_id: string, status: Simpipe_Run_Status_Enum, created: string, started?: string | null, ended?: string | null, steps: Array<{ __typename?: 'steps', step_id: number, status: Simpipe_Step_Status_Enum, created: string, started?: string | null, ended?: string | null, image: string, name: string, pipeline_step_number: number, resource_usages: Array<{ __typename?: 'simpipe_resource_usage', id: number, step_id: number, cpu: number, memory: number, memory_max: number, rx_value: number, time: string, tx_value: number }> }> }> }> };
-
-export type GetSimulationQueryVariables = Exact<{
-  simulation_id?: InputMaybe<Scalars['uuid']>;
-  userid?: InputMaybe<Scalars['String']>;
-}>;
-
-
-export type GetSimulationQuery = { __typename?: 'query_root', simulations: Array<{ __typename?: 'simulations', name?: string | null, simulation_id: string, created: string, pipeline_description?: unknown | null, runs: Array<{ __typename?: 'runs', name?: string | null, run_id: string, status: Simpipe_Run_Status_Enum, created: string, started?: string | null, ended?: string | null, steps: Array<{ __typename?: 'steps', step_id: number, status: Simpipe_Step_Status_Enum, created: string, started?: string | null, ended?: string | null, image: string, name: string, pipeline_step_number: number, resource_usages: Array<{ __typename?: 'simpipe_resource_usage', id: number, step_id: number, cpu: number, memory: number, memory_max: number, rx_value: number, time: string, tx_value: number }>, log?: { __typename?: 'simpipe_logs', text: string } | null }> }> }> };
-
 export type DeleteRunMutationVariables = Exact<{
   run_id: Scalars['uuid'];
 }>;
@@ -3400,42 +3369,6 @@ export type DeleteSimulationMutationVariables = Exact<{
 export type DeleteSimulationMutation = { __typename?: 'mutation_root', delete_simulation?: { __typename?: 'simulations', simulation_id: string } | null };
 
 
-export const AllSimulationsDocument = gql`
-    query AllSimulations($userid: String) {
-  simulations(where: {userid: {_eq: $userid}}) {
-    simulation_id
-    name
-    created
-    pipeline_description
-    runs {
-      run_id
-      name
-      status
-      created
-      started
-      ended
-    }
-  }
-}
-    `;
-export const AllRunsAndStepsDocument = gql`
-    query allRunsAndSteps($userid: String) {
-  runs(where: {userid: {_eq: $userid}}) {
-    run_id
-    name
-    created
-    started
-    status
-    steps {
-      step_id
-      created
-      started
-      ended
-      status
-    }
-  }
-}
-    `;
 export const GetUseridFromRunDocument = gql`
     query getUseridFromRun($run_id: uuid!) {
   runs(where: {run_id: {_eq: $run_id}}) {
@@ -3605,84 +3538,6 @@ export const InsertLogDocument = gql`
   }
 }
     `;
-export const GetSimulationRunResultsDocument = gql`
-    query getSimulationRunResults($simulation_id: uuid = "", $run_id: uuid = "", $userid: String) {
-  simulations(
-    where: {_and: [{simulation_id: {_eq: $simulation_id}}, {userid: {_eq: $userid}}]}
-  ) {
-    runs(where: {run_id: {_eq: $run_id}}) {
-      run_id
-      status
-      created
-      started
-      ended
-      steps(order_by: {pipeline_step_number: asc}) {
-        step_id
-        status
-        created
-        started
-        ended
-        image
-        name
-        pipeline_step_number
-        resource_usages(order_by: {time: asc}) {
-          id
-          step_id
-          cpu
-          memory
-          memory_max
-          rx_value
-          time
-          tx_value
-        }
-      }
-    }
-  }
-}
-    `;
-export const GetSimulationDocument = gql`
-    query getSimulation($simulation_id: uuid, $userid: String) {
-  simulations(
-    where: {_and: [{simulation_id: {_eq: $simulation_id}}, {userid: {_eq: $userid}}]}
-  ) {
-    name
-    simulation_id
-    created
-    pipeline_description
-    runs {
-      name
-      run_id
-      status
-      created
-      started
-      ended
-      steps(order_by: {pipeline_step_number: asc}) {
-        step_id
-        status
-        created
-        started
-        ended
-        image
-        name
-        pipeline_step_number
-        resource_usages(order_by: {time: asc}) {
-          id
-          step_id
-          cpu
-          memory
-          memory_max
-          rx_value
-          time
-          tx_value
-        }
-        log {
-          text
-        }
-      }
-    }
-  }
-}
-    `;
 export const DeleteRunDocument = gql`
     mutation deleteRun($run_id: uuid!) {
   delete_runs_by_pk(run_id: $run_id) {
@@ -3705,12 +3560,6 @@ const defaultWrapper: SdkFunctionWrapper = (action, _operationName, _operationTy
 
 export function getSdk(client: GraphQLClient, withWrapper: SdkFunctionWrapper = defaultWrapper) {
   return {
-    AllSimulations(variables?: AllSimulationsQueryVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<AllSimulationsQuery> {
-      return withWrapper((wrappedRequestHeaders) => client.request<AllSimulationsQuery>(AllSimulationsDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'AllSimulations', 'query');
-    },
-    allRunsAndSteps(variables?: AllRunsAndStepsQueryVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<AllRunsAndStepsQuery> {
-      return withWrapper((wrappedRequestHeaders) => client.request<AllRunsAndStepsQuery>(AllRunsAndStepsDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'allRunsAndSteps', 'query');
-    },
     getUseridFromRun(variables: GetUseridFromRunQueryVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<GetUseridFromRunQuery> {
       return withWrapper((wrappedRequestHeaders) => client.request<GetUseridFromRunQuery>(GetUseridFromRunDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'getUseridFromRun', 'query');
     },
@@ -3767,12 +3616,6 @@ export function getSdk(client: GraphQLClient, withWrapper: SdkFunctionWrapper = 
     },
     insertLog(variables?: InsertLogMutationVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<InsertLogMutation> {
       return withWrapper((wrappedRequestHeaders) => client.request<InsertLogMutation>(InsertLogDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'insertLog', 'mutation');
-    },
-    getSimulationRunResults(variables?: GetSimulationRunResultsQueryVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<GetSimulationRunResultsQuery> {
-      return withWrapper((wrappedRequestHeaders) => client.request<GetSimulationRunResultsQuery>(GetSimulationRunResultsDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'getSimulationRunResults', 'query');
-    },
-    getSimulation(variables?: GetSimulationQueryVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<GetSimulationQuery> {
-      return withWrapper((wrappedRequestHeaders) => client.request<GetSimulationQuery>(GetSimulationDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'getSimulation', 'query');
     },
     deleteRun(variables: DeleteRunMutationVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<DeleteRunMutation> {
       return withWrapper((wrappedRequestHeaders) => client.request<DeleteRunMutation>(DeleteRunDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'deleteRun', 'mutation');

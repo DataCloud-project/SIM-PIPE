@@ -1,6 +1,7 @@
 /dist
 /[0-9]*
 .env
+log/controller.log
 controller/simulations/*
 controller/log/controller.log
 controller/uploaded_files/*
