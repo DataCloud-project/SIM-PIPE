@@ -1,52 +1,35 @@
-import { ApolloServer } from 'apollo-server-express';
 import express from 'express';
 import morgan from 'morgan';
 
-import typeDefs from './graphql-definitions.js';
-import jwtMiddleware from './jwt-middleware.js';
-import resolvers from './resolvers.js';
+import createApolloGraphqlServer from './apollo-graphql.js';
+import { hybridAuthJwtMiddleware } from './auth-jwt-middleware.js';
 import createRouter from './routes.js';
-
-process.env.IS_SIMULATION_RUNNING = 'false';
-process.env.CANCEL_RUN_LIST = '';
 
 /**
  * function to start server with keycloak authentication
  */
 export default async function startSecureServer(): Promise<void> {
-  const server = new ApolloServer({
-    typeDefs,
-    resolvers,
-    context: ({ req }): { user: { sub: string; username: string; }; } => {
-      // definition of user can be extended later to include all required attributes
-      const { auth } = req as unknown as {
-        auth: { sub: string, preferred_username: string, iat: number, exp: number }
-      };
-      if (!auth) {
-        throw new Error('🎌 No auth found');
-      }
-      const { sub, preferred_username: username } = auth;
-      const user = { sub, username };
-      return { user };
-    },
-  });
+  const app = express();
 
-  try {
-    const app = express();
+  const graphqlServer = createApolloGraphqlServer();
 
-    // Setup logging middleware with morgan
-    app.use(morgan('combined'));
+  // Setup logging middleware with morgan
+  app.use(morgan('combined'));
 
-    app.use(createRouter());
+  // Parse JSON body (temporary)
+  app.use(express.json());
 
-    app.use(jwtMiddleware);
-    await server.start();
-    server.applyMiddleware({ app, path: '/graphql' });
-    app.listen({ port: 9000, hostname: '0.0.0.0' },
-      // eslint-disable-next-line no-console
-      () => console.log(`🚀 Authenticated server running on http://localhost:9000${server.graphqlPath}`),
-    );
-  } catch (error) {
-    throw new Error(`🎌 Error starting the server\n${error as string}`);
-  }
+  // Load the router
+  app.use(createRouter());
+
+  // Start the Apollo GraphQL server and apply it to the Express app
+  await graphqlServer.start();
+  app.use(hybridAuthJwtMiddleware);
+  graphqlServer.applyMiddleware({ app, path: '/graphql' });
+
+  // Start the Express server
+  app.listen({ port: 9000, hostname: '0.0.0.0' },
+    // eslint-disable-next-line no-console
+    () => console.log('🚀 Server running on http://localhost:9000'),
+  );
 }

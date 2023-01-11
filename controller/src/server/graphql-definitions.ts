@@ -6,7 +6,7 @@ import { gql } from 'apollo-server';
 export default gql`
   scalar JSON
   # The queries are only available through Hasura
-  type Query { _ : Boolean }
+  type Query { Username: String }
   type Mutation {
     Create_Simulation(name:String, pipeline_description:String): String
     Create_Run_WithInput(simulation_id: String,name:String, sampleInput:[[String]],

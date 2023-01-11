@@ -72,26 +72,40 @@ async function jwtVerifyHasuraToken(jwt: string): Promise<Auth> {
   };
 }
 
-async function jwtMiddleware(
+function extractAlgFromToken(jwt: string): string {
+  // Parse the header of the JWT Token, without a .split because we are not animals
+  const base64Header = jwt.slice(0, jwt.indexOf('.'));
+  const header: unknown = JSON.parse(Buffer.from(base64Header, 'base64').toString('utf8'));
+  if (!header || typeof header !== 'object' || !('alg' in header) || typeof header.alg !== 'string') {
+    throw new Error('Invalid token');
+  }
+  const { alg } = header;
+
+  return alg;
+}
+
+async function hybridAuthJwtMiddlewareAsync(
   request: Request, response: Response, next: NextFunction,
 ): Promise<void> {
   // Load the Authorisation header
   // and that the header is a Bearer token
   const authHeader = request.headers.authorization;
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    response.sendStatus(401);
-    return;
-  }
-  const jwt = authHeader.slice(7);
 
-  // Parse the header of the JWT Token, without a .split because we are not animals
-  const base64Header = jwt.slice(0, jwt.indexOf('.'));
-  const header: unknown = JSON.parse(Buffer.from(base64Header, 'base64').toString('utf8'));
-  if (!header || typeof header !== 'object' || !('alg' in header) || typeof header.alg !== 'string') {
+  // We allow anonymous access to the API
+  if (!authHeader) {
+    next();
+    return;
+  }
+
+  // If it's not a bearer token
+  if (!authHeader.startsWith('Bearer ')) {
     response.sendStatus(401);
     return;
   }
-  const { alg } = header;
+
+  // Load the JWT token
+  const jwt = authHeader.slice(7);
+  const alg = extractAlgFromToken(jwt);
   let auth: Auth;
   try {
     // If we get a EdDSA token, we assume it's not a keycloak token but a hasura token
@@ -109,4 +123,31 @@ async function jwtMiddleware(
   next();
 }
 
-export default expressAsyncHandler(jwtMiddleware);
+async function keycloakAuthJwtMiddlewareAsync(
+  request: Request, response: Response, next: NextFunction,
+): Promise<void> {
+  // Load the Authorisation header
+  // and that the header is a Bearer token
+  const authHeader = request.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    response.sendStatus(401);
+    return;
+  }
+
+  const jwt = authHeader.slice(7);
+  let auth: Auth;
+  try {
+    auth = await jwtVerifyKeycloakToken(jwt);
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error(error);
+    response.sendStatus(401);
+    return;
+  }
+
+  (request as unknown as { auth: Auth }).auth = auth;
+  next();
+}
+
+export const hybridAuthJwtMiddleware = expressAsyncHandler(hybridAuthJwtMiddlewareAsync);
+export const keycloakAuthJwtMiddleware = expressAsyncHandler(keycloakAuthJwtMiddlewareAsync);

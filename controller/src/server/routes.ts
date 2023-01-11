@@ -1,9 +1,9 @@
 import { Router } from 'express';
 import asyncHandler from 'express-async-handler';
 
+import { keycloakAuthJwtMiddleware } from './auth-jwt-middleware.js';
 import { generateJWTForHasura, getVaultKeyPair } from './hasura-jwt.js';
-import jwtMiddleware from './jwt-middleware.js';
-import type { Auth } from './jwt-middleware.js';
+import type { Auth } from './auth-jwt-middleware.js';
 
 export default function createRouter(): Router {
   const router = Router();
@@ -14,7 +14,7 @@ export default function createRouter(): Router {
   });
 
   // Endpoint to obtain a JWT token to use with Hasura
-  router.post('/hasura/jwt', jwtMiddleware, asyncHandler(async (request, response) => {
+  router.post('/hasura/jwt', keycloakAuthJwtMiddleware, asyncHandler(async (request, response) => {
     const { auth } = request as unknown as { auth: Auth };
     const jwt = await generateJWTForHasura(auth);
     response.set('Content-Type', 'text/plain');
