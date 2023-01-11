@@ -1,7 +1,9 @@
 import { ApolloServer } from 'apollo-server-express';
 import express from 'express';
+import morgan from 'morgan';
 
 import typeDefs from './graphql-definitions.js';
+import jwtMiddleware from './jwt-middleware.js';
 import resolvers from './resolvers.js';
 import createRouter from './routes.js';
 
@@ -16,13 +18,13 @@ export default async function startSecureServer(): Promise<void> {
     typeDefs,
     resolvers,
     context: ({ req }): { user: { sub: string; username: string; }; } => {
-      if (!req.headers.authorization) {
-        throw new Error('🎌 No authorization header found');
-      }
       // definition of user can be extended later to include all required attributes
       const { auth } = req as unknown as {
         auth: { sub: string, preferred_username: string, iat: number, exp: number }
       };
+      if (!auth) {
+        throw new Error('🎌 No auth found');
+      }
       const { sub, preferred_username: username } = auth;
       const user = { sub, username };
       return { user };
@@ -32,14 +34,16 @@ export default async function startSecureServer(): Promise<void> {
   try {
     const app = express();
 
-    /* app.use(
-      jwtMiddleware as express.RequestHandler,
-    ); */
+    // Setup logging middleware with morgan
+    app.use(morgan('combined'));
 
     app.use(createRouter());
 
+    app.use(
+      jwtMiddleware as express.RequestHandler,
+    );
     await server.start();
-    server.applyMiddleware({ app });
+    server.applyMiddleware({ app, path: '/graphql' });
     app.listen({ port: 9000, hostname: '0.0.0.0' },
       // eslint-disable-next-line no-console
       () => console.log(`🚀 Authenticated server running on http://localhost:9000${server.graphqlPath}`),

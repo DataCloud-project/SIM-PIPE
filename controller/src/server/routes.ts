@@ -1,7 +1,8 @@
 import { Router } from 'express';
+import asyncHandler from 'express-async-handler';
 import type { RequestHandler } from 'express';
 
-import { generateJWTForHasura } from './hasura-jwt.js';
+import { generateJWTForHasura, getVaultKeyPair } from './hasura-jwt.js';
 import jwtMiddleware from './jwt-middleware.js';
 
 export default function createRouter(): Router {
@@ -14,7 +15,7 @@ export default function createRouter(): Router {
 
   // Endpoint to obtain a JWT token to use with Hasura
   // The cast is because the jwt-express middleware returns a promise that is ignored by express < 5
-  router.post('/hasura/jwt', jwtMiddleware as RequestHandler, (request, response) => {
+  router.post('/hasura/jwt', jwtMiddleware as RequestHandler, asyncHandler(async (request, response) => {
     const { auth } = request as unknown as {
       auth: { sub: string, preferred_username: string, iat: number, exp: number }
     };
@@ -22,29 +23,24 @@ export default function createRouter(): Router {
       sub, preferred_username: name, iat, exp,
     } = auth;
 
-    generateJWTForHasura({
+    const jwt = await generateJWTForHasura({
       sub, name, iat, exp,
-    }).then((jwt) => {
-      response.json(jwt);
-    }).catch((error) => {
-      response.status(500).json({ error });
     });
-  });
+    response.set('Content-Type', 'text/plain');
+    response.send(jwt);
+  }));
 
-  router.get('/hasura/jwk', (request, response) => {
-    response.json({
-      keys: [
-        {
-          kty: 'RSA',
-          alg: 'RS256',
-          use: 'sig',
-          kid: 'keycloak',
-          n: 'x',
-          e: 'x',
-        },
-      ],
+  router.get('/hasura/jwk', asyncHandler(async (request, response) => {
+    const keypair = await getVaultKeyPair();
+    const key = keypair.publicKey.export({
+      format: 'jwk',
     });
-  });
+    // Set the max-age header to 1 minute
+    response.set('Cache-Control', 'max-age=60');
+    response.json({
+      keys: [key],
+    });
+  }));
 
   return router;
 }
