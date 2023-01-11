@@ -2,9 +2,9 @@ import { SignJWT } from 'jose';
 import crypto from 'node:crypto';
 import type { JsonWebKeyInput, KeyObject } from 'node:crypto';
 
-export type KeyPair = { publicKey: KeyObject; privateKey: KeyObject };
+type KeyPair = { publicKey: KeyObject; privateKey: KeyObject };
 
-export async function generateEd25519KeyPair(
+async function generateEd25519KeyPair(
 ): Promise<KeyPair> {
   return await new Promise((resolve, reject) => {
     crypto.generateKeyPair('ed25519', undefined, (error, publicKey, privateKey) => {
@@ -17,13 +17,7 @@ export async function generateEd25519KeyPair(
   });
 }
 
-export function exportKeyObjectToJWK(publicKey: KeyObject): string {
-  return JSON.stringify(publicKey.export({
-    format: 'jwk',
-  }));
-}
-
-export function loadJWKToKeyPair(jwk: string): KeyPair {
+function loadJWKToKeyPair(jwk: string): KeyPair {
   const privateKey = crypto.createPrivateKey({
     key: JSON.parse(jwk) as JsonWebKey,
     format: 'jwk',
@@ -32,7 +26,7 @@ export function loadJWKToKeyPair(jwk: string): KeyPair {
   return { publicKey, privateKey };
 }
 
-export async function initialiseKeyPair(
+async function initialiseKeyPair(
 ): Promise<KeyPair> {
   // In case we want a hardcoded key, we can use the environment variable
   // Please note that the keys will not be automatically rotated

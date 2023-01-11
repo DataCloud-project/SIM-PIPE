@@ -17,35 +17,6 @@ const options = {
   password: process.env.SFTP_PASSWORD ?? 'user1',
 };
 
-export async function putFileToSandbox(
-  localFile: string, remoteFile: string, storageFile: string,
-): Promise<void> {
-  // create the output folders for the run details
-  const simId = process.env.SIM_ID;
-  const runId = process.env.RUN_ID;
-  const stepNumber = process.env.STEP_NUMBER;
-
-  if (!simId || !runId || !stepNumber) {
-    throw new Error('Missing environment variables in sftp_utils: SIM_ID, RUN_ID, STEP_NUMBER');
-  }
-
-  // Create folder to store the simulation details
-  const targetDirectory = `simulations/${simId}/${runId}/${stepNumber}`;
-  fs.mkdirSync(targetDirectory, { recursive: true });
-
-  // store input file to the target directory
-  await asyncFs.copyFile(localFile, storageFile);
-
-  // send input file to the sandbox
-  try {
-    await sftp.connect(options);
-    await sftp.put(localFile, remoteFile);
-    logger.info('Sent similation inputs to Sandbox');
-  } finally {
-    await sftp.end();
-  }
-}
-
 export async function putFolderToSandbox(
   localFolder: string, remoteFolder: string, targetDirectory: string,
 ): Promise<void> {

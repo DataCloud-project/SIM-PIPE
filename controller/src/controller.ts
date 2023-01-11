@@ -151,7 +151,7 @@ async function startContainer(
   return startedAt;
 }
 
-export async function parseStats(stepId: number): Promise<void> {
+async function parseStats(stepId: number): Promise<void> {
   const directoryName = targetDirectory;
   const fileList = await fsAsync.readdir(directoryName);
 
@@ -353,7 +353,7 @@ async function waitForContainer(): Promise<void> {
   }
 }
 
-export async function start(client: GraphQLClient, step: types.Step): Promise<string> {
+export default async function start(client: GraphQLClient, step: types.Step): Promise<string> {
   if (!step.stepNumber || !step.stepId || !step.image || !step.env) {
     throw new Error('🎌 Error in controller.start: step_number, image, env or step_id not defined');
   }

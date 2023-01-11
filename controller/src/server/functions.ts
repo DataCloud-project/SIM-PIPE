@@ -2,15 +2,13 @@ import * as dotenv from 'dotenv';
 import { GraphQLClient } from 'graphql-request';
 import * as fs from 'node:fs';
 
-import * as controller from '../controller.js';
+import startController from '../controller.js';
 import { getSdk } from '../db/database.js';
 import logger from '../logger.js';
 import DSL from './dsl.js';
 import TaskQueue from './taskqueue.js';
 import type {
-  CreateRunMutation,
-  CreateSimulationMutation,
-  CreateStepMutation,
+  CreateRunMutation, CreateStepMutation,
   GetRunDetailsQuery,
   GetSimulationDslQuery,
   GetUseridFromRunQuery,
@@ -39,23 +37,7 @@ let sdk: ReturnType<typeof getSdk>;
 
 const uploadDirectory = 'uploaded_files/';
 
-export async function createSimulation(
-  name: string, pipeline_description: string, userid: string,
-): Promise<string> {
-  // disabling await-thenable, await is needed for sequential execution
-  const result: CreateSimulationMutation = await sdk.createSimulation({
-    name,
-    pipeline_description,
-    userid,
-  });
-  if (!result?.create_simulation?.simulation_id) {
-    throw new Error('🎌 Undefined expression in createSimulation');
-  }
-  // read pipeline_description and extract env variable list
-  return result.create_simulation.simulation_id;
-}
-
-export async function createStep(run_id: string, name: string, image: string,
+async function createStep(run_id: string, name: string, image: string,
   pipeline_step_number: number): Promise<string> {
   // disabling await-thenable, await is needed to wait till sdk.createStep completes execution
   const result: CreateStepMutation = await sdk.createStep({
@@ -85,7 +67,7 @@ async function parseDSL(simulation_id: string): Promise<StepDSL[]> {
   return steps;
 }
 
-export async function createRun(simulation_id: string, name: string, userid: string,
+async function createRun(simulation_id: string, name: string, userid: string,
   environment_list: [[string]], timeout_values: [number]): Promise<string> {
   // read dsl, validate and use it to create steps in the run
   const steps: Array<StepDSL> = await parseDSL(simulation_id);
@@ -134,12 +116,17 @@ export async function createRunWithInput(simulation_id: string,
   // only owner of the simulation can create a new run
   await checkSimulationOwner(simulation_id, userid);
   const runId = await createRun(simulation_id, name, userid, environment_list, timeout_values);
+  // Sanitize the run id to make it a safe directory name
+  if (!/^[\w-]+$/.test(runId)) {
+    throw new Error('Invalid run id');
+  }
   fs.mkdirSync(`${uploadDirectory}${runId}`, { recursive: true });
   // write sample input to uploaded_files/runId
   for (const [inputName, inputContent] of sampleInput) {
     if (!inputContent) {
       throw new Error('Content of input file undefined in functions.createRunWithInput');
     }
+    // TODO: huge security risk right there
     fs.writeFile(`${uploadDirectory}${runId}/${inputName}`, inputContent, (error) => {
       if (error) { throw new Error('Error in createRunWithInput'); }
     });
@@ -147,7 +134,7 @@ export async function createRunWithInput(simulation_id: string,
   return runId;
 }
 
-export async function startRun(run_id: string): Promise<string> {
+async function startRun(run_id: string): Promise<string> {
   // set run as started in the database
   await sdk.setRunAsStarted({ run_id });
   // get simulationId and step details of runId
@@ -189,7 +176,7 @@ export async function startRun(run_id: string): Promise<string> {
       // adding try catch to handle failed steps
       try {
         // set input path for next step as output path of the previous step returned and start step
-        const nextInput = await controller.start(client, currentStep);
+        const nextInput = await startController(client, currentStep);
         currentStep.inputPath = nextInput;
       } catch (error) {
         logger.error(`Run ${run_id} execution has failed\n${(error as Error).message}`);
