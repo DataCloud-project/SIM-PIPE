@@ -46,10 +46,10 @@ export async function initialiseKeyPair(
 let vault: KeyPair | undefined;
 let vaultAge: Date | undefined;
 
-export async function getVaultKeyPair(): Promise<KeyPair> {
+export async function getVaultKeyPair(automaticRotation = false): Promise<KeyPair> {
   const now = new Date();
   if (vault // if the vault is less than 1 hour old, return it
-    && vaultAge && now.getTime() - vaultAge.getTime() < 3_600_000) {
+    && (!automaticRotation || (vaultAge && now.getTime() - vaultAge.getTime() < 3_600_000))) {
     return vault;
   }
   const keypair = await initialiseKeyPair();
@@ -62,7 +62,7 @@ export async function generateJWTForHasura({
   sub, name, iat, exp,
 }: { sub: string; name: string; iat: number; exp: number; })
   : Promise<string> {
-  const { privateKey } = await getVaultKeyPair();
+  const { privateKey } = await getVaultKeyPair(true);
   const hasuraJWT = {
     sub,
     name,

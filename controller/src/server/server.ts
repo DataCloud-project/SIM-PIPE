@@ -39,9 +39,7 @@ export default async function startSecureServer(): Promise<void> {
 
     app.use(createRouter());
 
-    app.use(
-      jwtMiddleware as express.RequestHandler,
-    );
+    app.use(jwtMiddleware);
     await server.start();
     server.applyMiddleware({ app, path: '/graphql' });
     app.listen({ port: 9000, hostname: '0.0.0.0' },

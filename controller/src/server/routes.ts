@@ -1,9 +1,9 @@
 import { Router } from 'express';
 import asyncHandler from 'express-async-handler';
-import type { RequestHandler } from 'express';
 
 import { generateJWTForHasura, getVaultKeyPair } from './hasura-jwt.js';
 import jwtMiddleware from './jwt-middleware.js';
+import type { Auth } from './jwt-middleware.js';
 
 export default function createRouter(): Router {
   const router = Router();
@@ -14,22 +14,14 @@ export default function createRouter(): Router {
   });
 
   // Endpoint to obtain a JWT token to use with Hasura
-  // The cast is because the jwt-express middleware returns a promise that is ignored by express < 5
-  router.post('/hasura/jwt', jwtMiddleware as RequestHandler, asyncHandler(async (request, response) => {
-    const { auth } = request as unknown as {
-      auth: { sub: string, preferred_username: string, iat: number, exp: number }
-    };
-    const {
-      sub, preferred_username: name, iat, exp,
-    } = auth;
-
-    const jwt = await generateJWTForHasura({
-      sub, name, iat, exp,
-    });
+  router.post('/hasura/jwt', jwtMiddleware, asyncHandler(async (request, response) => {
+    const { auth } = request as unknown as { auth: Auth };
+    const jwt = await generateJWTForHasura(auth);
     response.set('Content-Type', 'text/plain');
     response.send(jwt);
   }));
 
+  // Return the current public key used to sign the JWT tokens
   router.get('/hasura/jwk', asyncHandler(async (request, response) => {
     const keypair = await getVaultKeyPair();
     const key = keypair.publicKey.export({
