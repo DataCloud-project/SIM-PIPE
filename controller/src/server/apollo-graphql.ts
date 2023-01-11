@@ -1,14 +1,25 @@
+import { makeExecutableSchema } from '@graphql-tools/schema';
 import { ApolloServer } from 'apollo-server-express';
 
+import { authDirectiveTransformer, authDirectiveTypeDefs } from './auth-directive.js';
 import typeDefs from './graphql-definitions.js';
 import resolvers from './resolvers.js';
 import type { Auth } from './auth-jwt-middleware.js';
 import type { Context } from './resolvers.js';
 
 export default function createApolloGraphqlServer(): ApolloServer {
-  return new ApolloServer({
-    typeDefs,
+  let schema = makeExecutableSchema<unknown>({
+    typeDefs: [
+      authDirectiveTypeDefs,
+      typeDefs,
+    ],
     resolvers,
+  });
+
+  schema = authDirectiveTransformer(schema);
+
+  return new ApolloServer({
+    schema,
     context: async ({ req }): Promise<Context> => {
       // Load the authentication header if it's present and set the context accordingly
       const { auth } = req as unknown as { auth?: Auth };

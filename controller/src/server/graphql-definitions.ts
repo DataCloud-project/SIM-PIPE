@@ -1,13 +1,15 @@
-import { gql } from 'apollo-server';
+import { gql } from 'graphql-tag';
 
 /**
  * graphql query and resolvers
  */
 export default gql`
-  scalar JSON
   # The queries are only available through Hasura
-  type Query { Username: String }
-  type Mutation {
+  type Query {
+    Username: String @auth
+    Ping: String
+  }
+  type Mutation @auth {
     Create_Simulation(name:String, pipeline_description:String): String
     Create_Run_WithInput(simulation_id: String,name:String, sampleInput:[[String]],
     env_list: [[String]], timeout_values:[Int]):
