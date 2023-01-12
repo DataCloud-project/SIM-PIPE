@@ -5,13 +5,12 @@
 	import CreateSimulationButton from './modals/create_simulation_button.svelte';
 	import { simulations_list } from '../stores/stores';
 	import { init_keycloak } from './utils/keycloak.svelte';
-	import { get } from 'svelte/store';
 
 	let simulations;
 	let loading = async () => {
 		try {
 			await init_keycloak();
-			simulations = await get(graphQLClient).request(all_simulations_query);
+			simulations = await $graphQLClient.request(all_simulations_query);
 		} catch {
 			console.log('🎌 Error! could not load simulations, retrying');
 			simulations = 'error';

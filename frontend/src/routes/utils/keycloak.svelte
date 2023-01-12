@@ -19,7 +19,6 @@
 				mode: 'cors'
 			};
 			username.set(keycloak.idTokenParsed.preferred_username);
-
 			let graphqlUrl;
 			if (config.SIM_PIPE_CONTROLLER_URL === '') {
 				if (/^localhost(:\d+)?$/.test(window.location.host)) {
@@ -30,14 +29,14 @@
 			} else {
 				// TODO move to env
 				graphqlUrl = config.SIM_PIPE_CONTROLLER_URL;
-				graphQLClient.set(
-					new GraphQLClient(graphqlUrl, {
-						headers: requestHeaders
-					})
-				);
 			}
+			graphQLClient.set(
+				new GraphQLClient(graphqlUrl, {
+					headers: requestHeaders
+				})
+			);
 		} catch {
-			// error handled in index file
+			console.log('Error in keycloak authentication or setting up connection to the controller API');
 		}
 	}
 </script>

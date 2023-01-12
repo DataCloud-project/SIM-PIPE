@@ -1,3 +1,5 @@
+// eslint-disable-next-line eslint-comments/disable-enable-pair
+/* eslint-disable @typescript-eslint/naming-convention */
 import * as dotenv from 'dotenv';
 import { GraphQLClient } from 'graphql-request';
 import * as fs from 'node:fs';
@@ -193,8 +195,8 @@ export async function createRunWithInput(simulation_id: string,
   // only owner of the simulation can create a new run
   await checkSimulationOwner(simulation_id, userid);
   const runId = await createRun(simulation_id, name, userid, environment_list, timeout_values);
-  fs.mkdirSync(`${uploadDirectory}${runId}`, { recursive: true });
   // write sample input to uploaded_files/runId
+  fs.mkdirSync(`${uploadDirectory}${runId}`, { recursive: true });
   // eslint-disable-next-line no-restricted-syntax
   for (const [inputName, inputContent] of sampleInput) {
     if (!inputContent) {
@@ -213,23 +215,25 @@ export async function startRun(run_id:string):Promise<string> {
   // get simulationId and step details of runId
   // eslint-disable-next-line @typescript-eslint/await-thenable
   const result:GetRunDetailsQuery = await sdk.getRunDetails({ run_id });
+  const { simulation_id } = result.runs[0];
   if (!result.runs) {
     throw new Error('GetRunDetailsQuery fetched no rows');
   }
   // get steps, and runtime configuration entered during create run
-  // eslint-disable-next-line @typescript-eslint/naming-convention
   const { steps, env_list, timeout_values } = result.runs[0];
   // set runId and simulationId once for all runs
   const currentStep:types.Step = {
-    simId: result.runs[0].simulation_id,
+    simId: simulation_id,
     runId: run_id,
-    inputPath: `${uploadDirectory}${run_id}/`,
+    inputPath: [`${uploadDirectory}${run_id}/`],
   };
+  // get the definition of step from the simulation dsl column
+  const stepDefs:Array<StepDSL> = await parseDSL(simulation_id);
   // set input path for the first step
   process.env.INPUT_PATH = `${uploadDirectory}${run_id}/`;
   // disabling no-restricted-syntax; running each step must be done in a sequence
   /* eslint-disable-next-line no-restricted-syntax */
-  for await (const step of steps) {
+  for await (const [index, step] of steps.entries()) {
     // check if there is a stop signal set to true or failed run signal set
     if ((process.env.CANCEL_RUN_LIST as string).includes(run_id)
     || process.env.FAILED_RUN === 'true') {
@@ -238,13 +242,20 @@ export async function startRun(run_id:string):Promise<string> {
       // eslint-disable-next-line no-continue
       continue;
     }
-    // testing step type
     currentStep.image = step.image;
     currentStep.stepNumber = step.pipeline_step_number;
     currentStep.stepId = step.step_id;
     if (!env_list || !timeout_values) {
       throw new Error('Error! List of environment variables/ timeout values for container undefined');
     }
+    // get prerequisite step numbers of the current step
+    if (stepDefs[index].prerequisite?.length > 0) {
+      // eslint-disable-next-line no-restricted-syntax
+      for (const prereq_step of stepDefs[index].prerequisite) {
+        currentStep.inputPath.push(`/app/simulations/${simulation_id}/${run_id}/${prereq_step}/outputs/`);
+      }
+    }
+
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     currentStep.env = (env_list as [[string]])[step.pipeline_step_number - 1];
     // set the variable values in env file
@@ -252,16 +263,16 @@ export async function startRun(run_id:string):Promise<string> {
     process.env.IMAGE = step.image;
     // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
     process.env.CONTAINER_TIME_LIMIT = `${(timeout_values as [number])[step.pipeline_step_number - 1]}`;
-    // testing step type
     // adding try catch to handle failed steps
     try {
-      // set input path for next step as output path of the previous step returned and start step
-      const nextInput = await controller.start(client, currentStep);
-      currentStep.inputPath = nextInput;
+      await controller.start(client, currentStep);
+      // removed nextInput to handle complex pipelines
     } catch (error) {
       logger.error(`Run ${run_id} execution has failed\n${(error as Error).message}`);
       process.env.FAILED_RUN = 'true';
     }
+    // reset input path to the next pipeline step
+    currentStep.inputPath = [];
   }
   // remove sample input files for the run from ./uploaded folder
   fs.rmSync(`${uploadDirectory}${run_id}`, { recursive: true, force: true });

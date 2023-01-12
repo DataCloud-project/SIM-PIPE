@@ -41,8 +41,8 @@ services:
       - "22:22"
     restart: on-failure:2
     volumes:
-      - ./controller/simulations:/simulations
-      - ./controller/uploaded_files:/uploaded_files
+      - ./controller/simulations:/app/simulations
+      - ./controller/uploaded_files:/app/uploaded_files
       - ./controller/log:/log
     environment:
       HASURA: http://hasura:8080/v1/graphql
