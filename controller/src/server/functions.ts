@@ -80,12 +80,26 @@ const uploadDirectory = 'uploaded_files/';
 export async function allSimulations(userid:string):Promise<AllSimulationsQuery> {
   return await sdk.AllSimulations({ userid });
 }
+/**
+ * function to return simulation, run and step details from the database
+ */
+export async function getSimulationRunResults(simulation_id:string,
+  run_id:string, userid:string):Promise<GetSimulationRunResultsQuery> {
+  // eslint-disable-next-line @typescript-eslint/await-thenable
+  const result:GetSimulationRunResultsQuery = await
+  sdk.getSimulationRunResults({ simulation_id, run_id, userid });
+  // return JSON.stringify(result);
+  return result;
+}
 
 export async function allRunsSteps(userid:string):Promise<AllRunsAndStepsQuery> {
   // return JSON.stringify(await sdk.allRunsAndSteps({ userid }));
   return await sdk.allRunsAndSteps({ userid });
 }
 
+/**
+ * mutations
+ */
 export async function createSimulation(name:string, pipeline_description:string, userid:string):
 Promise<string> {
   // disabling await-thenable, await is needed for sequential execution
@@ -113,6 +127,10 @@ interface StepDSL {
   type: string
 }
 
+/**
+ * function to create a component step in the database
+ *
+ * */
 export async function createStep(run_id:string, name:string, image:string,
   pipeline_step_number:number):Promise<string> {
   // disabling await-thenable, await is needed to wait till sdk.createStep completes execution
@@ -145,6 +163,9 @@ async function parseDSL(simulation_id:string):Promise<[StepDSL]> {
   return steps;
 }
 
+/**
+ * function to create a run and each component step in the database
+ */
 export async function createRun(simulation_id:string, name:string, userid:string,
   environment_list: [[string]], timeout_values: [number]):Promise<string> {
   // read dsl, validate and use it to create steps in the run
@@ -189,6 +210,9 @@ async function checkSimulationOwner(simulation_id:string, userid:string):Promise
   }
 }
 
+/**
+ * function to validate creation of a new run and storage of sample input provided
+ */
 export async function createRunWithInput(simulation_id: string,
   name: string, sampleInput: [[string, string]], userid:string, environment_list: [[string]],
   timeout_values: [number]): Promise<string> {
@@ -209,6 +233,9 @@ export async function createRunWithInput(simulation_id: string,
   return runId;
 }
 
+/**
+ * function to start a run and execute each step in the SIM-PIPE sandbox
+ */
 export async function startRun(run_id:string):Promise<string> {
   // set run as started in the database
   await sdk.setRunAsStarted({ run_id });
@@ -296,33 +323,31 @@ export async function startRun(run_id:string):Promise<string> {
   return run_id;
 }
 
-export async function getSimulationRunResults(simulation_id:string,
-  run_id:string, userid:string):Promise<GetSimulationRunResultsQuery> {
-  // eslint-disable-next-line @typescript-eslint/await-thenable
-  const result:GetSimulationRunResultsQuery = await
-  sdk.getSimulationRunResults({ simulation_id, run_id, userid });
-  // return JSON.stringify(result);
-  return result;
-}
 
+/**
+ * function to stop an active run and cancel all its remaining steps
+ */
 export async function stopRun(run_id:string, userid:string):Promise<string> {
   // throw error if run does not belong to the user
   await checkRunOwner(run_id, userid);
-  // add the current runid to the environment var to denote stop signal has been sent
-  // to runid
-  // find the current running container
+  // add the current runid to the environment var to denote stop signal has been sent to runid
   process.env.CANCEL_RUN_LIST = `${process.env.CANCEL_RUN_LIST as string},${run_id}`;
-  // stop and kill current container
-  // stop the start run function to stop all the next steps
-  // change the status of runs and steps to 'cancelled'
   return run_id;
 }
+
+/**
+ * function to delete a run from the database
+ */
 export async function deleteRun(run_id:string, userid:string):Promise<string> {
   // throw error if run does not belong to the user
   await checkRunOwner(run_id, userid);
   await sdk.deleteRun({ run_id });
   return run_id;
 }
+
+/**
+ * function to delete a simulation from the database
+ */
 export async function deleteSimulation(simulation_id:string, userid:string):Promise<string> {
   // throw error if simulation does not belong to the user
   await checkSimulationOwner(simulation_id, userid);
@@ -332,6 +357,9 @@ export async function deleteSimulation(simulation_id:string, userid:string):Prom
 
 const taskQueue = new TaskQueue();
 
+/**
+ * the scheduler to start runs waiting in the task queue in FIFO manner
+ */
 async function runScheduler():Promise<void> {
   if (process.env.IS_SIMULATION_RUNNING === 'false') {
     while (taskQueue.getItemsCount() > 0) {
@@ -345,6 +373,9 @@ async function runScheduler():Promise<void> {
   }
 }
 
+/**
+ * function to queue a run that is to be started
+ */
 export async function queueRun(run_id:string, userid:string):Promise<string> {
   // throw error if run does not belong to the user
   await checkRunOwner(run_id, userid);
@@ -362,7 +393,6 @@ export async function queueRun(run_id:string, userid:string):Promise<string> {
  * function to get all details and runs of a simulation
  */
 export async function getSimulation(userid:string, simulation_id:string):Promise<GetSimulationQuery> {
-// export async function getSimulation(userid:string, simulation_id:string):Promise<string> {
   // eslint-disable-next-line @typescript-eslint/await-thenable
   const result:GetSimulationQuery = await sdk.getSimulation({ userid, simulation_id });
   // return JSON.stringify(result);
@@ -375,7 +405,6 @@ export async function getSimulation(userid:string, simulation_id:string):Promise
  */
 export async function createSampleSimulation():Promise<string> {
   await setTimeout(7000);
-  // let result;
   try {
     connectHasuraEndpoint();
     // check if there are simulations in the database
@@ -389,19 +418,5 @@ export async function createSampleSimulation():Promise<string> {
     await setTimeout(5000);
     connectHasuraEndpoint();
   }
-  /**
-   * disabling creating sample simulation, as simulations must belng to a user now
-   * TODO: find alternative
-   */
-  // if (!result) {
-  //   throw new Error('🎌 Error creating sample simulation at server start up, '
-  // + 'hasura endpoint could not be connected, check hasura endpoint settings');
-  // }
-  // if (result.simulations.length === 0) {
-  //   const simId = await createSimulation('c97fc83a-b0fc-11ec-b909-0242ac120002',
-  //     'Sample Simulation');
-  //   return `Sample simulation with id ${simId} created on startup`;
-  // }
-  // return 'No sample simulation created as there are existing simulations';
   return 'No sample simulation created for the user';
 }
