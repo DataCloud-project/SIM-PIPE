@@ -8,6 +8,7 @@ export default gql`
 
   type Query {
     Username: String @auth
+    ComputeUploadPresignedUrl: String @auth
     Ping: String
   }
 

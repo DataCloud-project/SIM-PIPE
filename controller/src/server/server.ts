@@ -1,4 +1,5 @@
 import express from 'express';
+import helmet from 'helmet';
 import morgan from 'morgan';
 
 import createApolloGraphqlServer from './apollo-graphql.js';
@@ -16,8 +17,8 @@ export default async function startSecureServer(): Promise<void> {
   // Setup logging middleware with morgan
   app.use(morgan('combined'));
 
-  // Parse JSON body (temporary)
-  app.use(express.json());
+  // Setup security middleware with helmet
+  app.use(helmet());
 
   // Load the router
   app.use(createRouter());

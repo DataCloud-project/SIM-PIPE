@@ -1,5 +1,8 @@
+import { randomUUID } from 'node:crypto';
+
 import logger from '../logger.js';
 import * as functions from './functions.js';
+import { computePresignedPutUrl } from './minio.js';
 
 interface ContextUser {
   sub: string
@@ -28,6 +31,19 @@ const resolvers = {
     },
     Ping(): string {
       return 'pong';
+    },
+    async ComputeUploadPresignedUrl(
+      _p: never, _a: never, context: AuthenticatedContext,
+    ): Promise<string> {
+      const { sub } = context.user;
+      // Make sure the user is a filesystem safe string
+      if (!/^[\w-]+$/i.test(sub)) {
+        throw new Error('User identifier (sub) is unsupported for files');
+      }
+      const uuid = randomUUID();
+      const objectName = `${sub}/${uuid}`;
+      const url = await computePresignedPutUrl(objectName);
+      return url;
     },
   },
   Mutation: {
