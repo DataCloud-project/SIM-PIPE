@@ -33,6 +33,12 @@
 		return step.status;
 	}
 	$: data = $steps_list;
+
+	function enableScroll(){
+		var element = document.body;
+		element.style.overflow="scroll";
+		element.style.position = '';
+	}
 </script>
 
 <br />
@@ -50,7 +56,7 @@
 				class:active={step.step_id === $clicked_step.step_id}
 				class:scrollable_li={step.step_id != $clicked_step.step_id}
 				{index}
-				on:click={() => stepOnClick(step)}
+				on:click={() => {stepOnClick(step);enableScroll()}}
 			>
 				<div class="col-1">{step.pipeline_step_number}</div>
 				<div class="col-2">{step.name}</div>
