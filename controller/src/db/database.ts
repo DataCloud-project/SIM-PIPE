@@ -3580,7 +3580,7 @@ export const GetRunDetailsDocument = gql`
     name
     env_list
     timeout_values
-    steps(order_by: {pipeline_step_number: asc}) {
+    steps {
       step_id
       pipeline_step_number
       image

@@ -143,7 +143,8 @@ query getRunDetails($run_id: uuid!) {
     name
     env_list
     timeout_values
-    steps(order_by: {pipeline_step_number: asc}) {
+    steps {
+    # steps(order_by: {pipeline_step_number: asc}) {
       step_id
       pipeline_step_number
       image

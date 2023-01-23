@@ -1,4 +1,6 @@
 // eslint-disable-next-line eslint-comments/disable-enable-pair
+/* eslint-disable no-restricted-syntax */
+// eslint-disable-next-line eslint-comments/disable-enable-pair
 /* eslint-disable @typescript-eslint/naming-convention */
 import * as dotenv from 'dotenv';
 import { GraphQLClient } from 'graphql-request';
@@ -125,6 +127,8 @@ interface StepDSL {
   env: string[]
   prerequisite: number[]
   type: string
+  stepId?: number
+  timeout?:number
 }
 
 /**
@@ -183,7 +187,6 @@ export async function createRun(simulation_id:string, name:string, userid:string
   // create all steps in the database
   const { run_id: runId } = result.insert_runs_one;
   logger.info(`Run created with id ${runId}`);
-  // eslint-disable-next-line no-restricted-syntax
   for await (const step of steps) {
     await createStep(runId, step.name, step.image, step.step_number);
   }
@@ -221,7 +224,6 @@ export async function createRunWithInput(simulation_id: string,
   const runId = await createRun(simulation_id, name, userid, environment_list, timeout_values);
   // write sample input to uploaded_files/runId
   fs.mkdirSync(`${uploadDirectory}${runId}`, { recursive: true });
-  // eslint-disable-next-line no-restricted-syntax
   for (const [inputName, inputContent] of sampleInput) {
     if (!inputContent) {
       throw new Error('Content of input file undefined in functions.createRunWithInput');
@@ -237,6 +239,11 @@ export async function createRunWithInput(simulation_id: string,
  * function to start a run and execute each step in the SIM-PIPE sandbox
  */
 export async function startRun(run_id:string):Promise<string> {
+  // define lists of completed, cancelled, and failed steps
+  const completed: number[] = [];
+  const cancelled: number[] = [];
+  const failed: number[] = [];
+  let step_ready = true;
   // set run as started in the database
   await sdk.setRunAsStarted({ run_id });
   // get simulationId and step details of runId
@@ -256,47 +263,72 @@ export async function startRun(run_id:string):Promise<string> {
   };
   // get the definition of step from the simulation dsl column
   const stepDefs:Array<StepDSL> = await parseDSL(simulation_id);
+  for await (const [index, step] of steps.entries()) {
+    stepDefs[index].stepId = step.step_id;
+    stepDefs[index].timeout = (timeout_values as number[])[index];
+  }
   // set input path for the first step
   process.env.INPUT_PATH = `${uploadDirectory}${run_id}/`;
   // disabling no-restricted-syntax; running each step must be done in a sequence
-  /* eslint-disable-next-line no-restricted-syntax */
-  for await (const [index, step] of steps.entries()) {
+  for await (const step of stepDefs) {
+    step_ready = true;
     // check if there is a stop signal set to true or failed run signal set
-    if ((process.env.CANCEL_RUN_LIST as string).includes(run_id)
-    || process.env.FAILED_RUN === 'true') {
-      // mark all the remaining steps as cancelled
-      await sdk.setStepAsCancelled({ step_id: step.step_id });
+    // changed to cancel remaining steps only if the entire run is cancelled
+    if (!step.stepId) throw new Error('stepId not defined');
+    if ((process.env.CANCEL_RUN_LIST as string).includes(run_id)) {
+      // eslint-disable-next-line no-await-in-loop
+      await sdk.setStepAsCancelled({ step_id: step.stepId });
+      // eslint-disable-next-line no-await-in-loop
+      await sdk.insertLog({ step_id: step.stepId, text: 'Run has been cancelled' });
+      cancelled.push(step.step_number);
       // eslint-disable-next-line no-continue
       continue;
     }
-    currentStep.image = step.image;
-    currentStep.stepNumber = step.pipeline_step_number;
-    currentStep.stepId = step.step_id;
     if (!env_list || !timeout_values) {
       throw new Error('Error! List of environment variables/ timeout values for container undefined');
     }
-    // get prerequisite step numbers of the current step
-    if (stepDefs[index].prerequisite?.length > 0) {
-      // eslint-disable-next-line no-restricted-syntax
-      for (const prereq_step of stepDefs[index].prerequisite) {
-        currentStep.inputPath.push(`/app/simulations/${simulation_id}/${run_id}/${prereq_step}/outputs/`);
+    // get prerequisite step numbers of the current step and verify if it can be executed at this point
+    if (step.prerequisite?.length > 0) {
+      for (const prereq_step of step.prerequisite) {
+        // if the prereq_step is completed, add input file and continue
+        if (completed.includes(prereq_step)) {
+          currentStep.inputPath.push(`/app/simulations/${simulation_id}/${run_id}/${prereq_step}/outputs/`);
+        } else if (failed.includes(prereq_step) || cancelled.includes(prereq_step)) { // if the prereq_step is failed/cancelled, reset input file and add it to cancelled because it cannot be executed
+          // eslint-disable-next-line no-await-in-loop
+          await sdk.setStepAsCancelled({ step_id: step.stepId });
+          // eslint-disable-next-line no-await-in-loop
+          await sdk.insertLog({ step_id: step.stepId, text: 'Step cannot be executed as a dependent step has failed/cancelled' });
+          cancelled.push(step.step_number);
+          step_ready = false;
+          break;
+        } else { // if the prereq_step is waiting, reset input file and add it to end of queue
+          stepDefs.push(step);
+          step_ready = false;
+          break;
+        }
       }
     }
-
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    currentStep.env = (env_list as [[string]])[step.pipeline_step_number - 1];
-    // set the variable values in env file
-    process.env.STEP_NUMBER = `${step.pipeline_step_number}`;
-    process.env.IMAGE = step.image;
-    // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-    process.env.CONTAINER_TIME_LIMIT = `${(timeout_values as [number])[step.pipeline_step_number - 1]}`;
-    // adding try catch to handle failed steps
-    try {
-      await controller.start(client, currentStep);
-      // removed nextInput to handle complex pipelines
-    } catch (error) {
-      logger.error(`Run ${run_id} execution has failed\n${(error as Error).message}`);
-      process.env.FAILED_RUN = 'true';
+    if (step_ready) {
+      currentStep.image = step.image;
+      currentStep.stepNumber = step.step_number;
+      currentStep.stepId = step.stepId;
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      currentStep.env = step.env;
+      // set the variable values in env file
+      process.env.STEP_NUMBER = `${step.step_number}`;
+      process.env.IMAGE = step.image;
+      // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+      process.env.CONTAINER_TIME_LIMIT = `${step.timeout}`;
+      // adding try catch to handle failed steps
+      try {
+        // eslint-disable-next-line no-await-in-loop
+        await controller.start(client, currentStep);
+        completed.push(step.step_number); // add successful step to the completed list
+      } catch (error) {
+        logger.error(`Run ${run_id} execution has failed\n${(error as Error).message}`);
+        process.env.FAILED_RUN = 'true';
+        failed.push(step.step_number); // add failed step to the list
+      }
     }
     // reset input path to the next pipeline step
     currentStep.inputPath = [];
@@ -322,7 +354,6 @@ export async function startRun(run_id:string):Promise<string> {
   await sdk.setRunAsEndedSuccess({ run_id });
   return run_id;
 }
-
 
 /**
  * function to stop an active run and cancel all its remaining steps
@@ -407,8 +438,6 @@ export async function createSampleSimulation():Promise<string> {
   await setTimeout(7000);
   try {
     connectHasuraEndpoint();
-    // check if there are simulations in the database
-    // result = await sdk.AllSimulations();
   } catch (error) {
     const errorMessage = `\n 🎌 Error connecting from SIM-PIPE controller to hasura endpoint:\n
     ${(error as Error).message}
