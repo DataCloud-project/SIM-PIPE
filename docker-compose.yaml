@@ -1,27 +1,30 @@
-version: '3.6'
+version: "3.8"
 
 services:
   timescaledb:
-    image: timescale/timescaledb:2.5.1-pg14
+    image: timescale/timescaledb-ha:pg14.6-ts2.9.1-latest
     restart: unless-stopped
     volumes:
-      - db_data1:/var/lib/postgresql/data
+      - db_data:/var/lib/postgresql/data
     environment:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       TIMESCALEDB_TELEMETRY: "off"
       TS_TUNE_MEMORY: "512MB"
-
+      TSTUNE_PROFILE: promscale
+    ports:
+      - "5432:5432"
   hasura:
-    image: hasura/graphql-engine:v2.1.1.cli-migrations-v3
+    image: hasura/graphql-engine:v2.16.1-ce.cli-migrations-v3
     ports:
       - "8080:8080"
     depends_on:
       - "timescaledb"
-      - "controller"
     restart: unless-stopped
     volumes:
       - ./hasura/migrations:/hasura-migrations:ro
       - ./hasura/metadata:/hasura-metadata:ro
+    extra_hosts:
+      - "controller:10.218.148.241"
     environment:
       HASURA_GRAPHQL_METADATA_DATABASE_URL: postgres://postgres:${POSTGRES_PASSWORD}@timescaledb:5432/postgres
       PG_DATABASE_URL: postgres://postgres:${POSTGRES_PASSWORD}@timescaledb:5432/postgres
@@ -32,43 +35,159 @@ services:
       HASURA_GRAPHQL_UNAUTHORIZED_ROLE: anonymous
       HASURA_GRAPHQL_ENABLE_TELEMETRY: "false"
       HASURA_GRAPHQL_LOG_LEVEL: debug
-      # REMOTE_SCHEMA_URL: ${REMOTE_SCHEMA_URL}
-  controller:
-    image: simpipe-backend
+      CONTROLLER_URL: http://controller:9000/graphql
+      HASURA_GRAPHQL_ENABLE_REMOTE_SCHEMA_PERMISSIONS: "true"
+      HASURA_GRAPHQL_JWT_SECRET: |
+        {
+          "type": "Ed25519",
+          "jwk_url": "http://controller:9000/hasura/jwk"
+        }
+  sandbox:
+    build: ./sandbox/simple-sandbox
+    hostname: sandbox
+    privileged: true
+    restart: unless-stopped
     ports:
-      - "9000:9000"
-      - "2375:2375"
-      - "22:22"
-    restart: on-failure:2
+      - "2376:2376"
+      - "8086:8080"
     volumes:
-      - ./controller/simulations:/simulations
-      - ./controller/uploaded_files:/uploaded_files
-      - ./controller/log:/log
+      - sandbox-docker-certs-ca:/certs/ca
+      - sandbox-docker-certs-server:/certs/server
+      - sandbox-docker-certs-client:/certs/client
+      - sandbox-docker-data:/var/lib/docker
+      - /etc/machine-id:/etc/machine-id:ro
+      - /dev/disk/:/dev/disk:ro
+    devices:
+      - /dev/kmsg
     environment:
-      HASURA: http://hasura:8080/v1/graphql
-      SANDBOX_IP: ${SANDBOX_IP} 
-      # REMOTE_DOCKER: true
-      CONTAINER_TIME_LIMIT: ${CONTAINER_TIME_LIMIT}
-      CONTAINER_STOP_TIMEOUT : ${CONTAINER_STOP_TIMEOUT}
-      POLLING_INTERVAL: ${POLLING_INTERVAL}
-      REMOTE_OUTPUT_DIR: 'out/'
-      REMOTE_INPUT_DIR: 'in/'
-      HASURA_ADMIN_SECRET: ${HASURA_ADMIN_SECRET}      
-      HASURA_URL: ${HASURA_URL}
+      DOCKER_TLS_CERTDIR: /certs
 
-  svelte:
-    image: simpipe-frontend 
-    # build:
-    #   context: ./frontend
-    #   dockerfile: Dockerfile
-    #   args:
-    #     SIM_PIPE_CONTROLLER_URL: http://192.168.0.249:9000/graphql
+      # controller:
+      #   image: simpipe-backend
+      #   ports:
+      #     - "9000:9000"
+      #     - "2375:2375"
+      #     - "22:22"
+      #   restart: on-failure:2
+      #   volumes:
+      #     - ./controller/simulations:/simulations
+      #     - ./controller/uploaded_files:/uploaded_files
+      #     - ./controller/log:/log
+      #   environment:
+      #     HASURA: http://hasura:8080/v1/graphql
+      #     SANDBOX_IP: ${SANDBOX_IP}
+      #     # REMOTE_DOCKER: true
+      #     CONTAINER_TIME_LIMIT: ${CONTAINER_TIME_LIMIT}
+      #     CONTAINER_STOP_TIMEOUT: ${CONTAINER_STOP_TIMEOUT}
+      #     POLLING_INTERVAL: ${POLLING_INTERVAL}
+      #     REMOTE_OUTPUT_DIR: 'out/'
+      #     REMOTE_INPUT_DIR: 'in/'
+      #     HASURA_ADMIN_SECRET: ${HASURA_ADMIN_SECRET}
+      #     HASURA_URL: ${HASURA_URL}
+
+      # svelte:
+      #   image: simpipe-frontend
+      #   # build:
+      #   #   context: ./frontend
+      #   #   dockerfile: Dockerfile
+      #   #   args:
+      #   #     SIM_PIPE_CONTROLLER_URL: http://192.168.0.249:9000/graphql
+      #   ports:
+      #     - "9090:3000"
+      #   depends_on:
+      #     - "controller"
+  minio:
+    image: quay.io/minio/minio:RELEASE.2023-01-06T18-11-18Z
+    restart: unless-stopped
+    volumes:
+      - minio_data:/data
+      - minio_config:/root/.minio
+    environment:
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
+    entrypoint: sh
+    command: -c "mkdir -p /data/simpipe && minio server /data --console-address \":9001\""
     ports:
-      - "9090:3000"
+      - "9002:9000"
+      - "9001:9001"
+  prometheus:
+    image: prom/prometheus:v2.41.0
+    restart: unless-stopped
+    volumes:
+      - ${PWD}/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+  promscale:
+    image: timescale/promscale:0.17.0
+    restart: unless-stopped
     depends_on:
-      - "controller"   
+      - "timescaledb"
+    ports:
+      - "9201:9201"
+      - "9202:9202"
+    volumes:
+      - ${PWD}/prometheus/promscale-prometheus.yml:/prometheus.yml
+      - ${PWD}/prometheus/rules.yml:/rules.yml
+      - ${PWD}/prometheus/alerts.yml:/alerts.yml
+    environment:
+      PROMSCALE_DB_URI: postgres://postgres:${POSTGRES_PASSWORD}@timescaledb:5432/postgres?sslmode=allow
+      PROMSCALE_METRICS_RULES_CONFIG_FILE: /prometheus.yml
+    logging:
+      options:
+        max-size: "10k"
+  # cadvisor:
+  #   image: gcr.io/cadvisor/cadvisor:v0.47.0
+  #   volumes:
+  #     - /:/rootfs:ro
+  #     - /var/run:/var/run:ro
+  #     - /sys:/sys:ro
+  #     - /var/lib/docker/:/var/lib/docker:ro
+  #     - /dev/disk/:/dev/disk:ro
+  #     - /etc/machine-id:/etc/machine-id:ro
+  #     #- sandbox-docker-certs-client:/sandbox_docker_certs:ro
+  #     #- sandbox-docker-data:/rootfs/var/lib/docker
+  #   ports:
+  #     - "8086:8080"
+  #   privileged: true
+  #   platform: linux/arm64
+  #   devices:
+  #     - /dev/kmsg
+  #   #--whitelisted_container_labels=canard
+  #   # --docker_only=true
+  #   # add a network dns entry for the docker_sandbox container
+  #   # command: >
+  #   #   --docker="tcp://docker_sandbox:2376"
+  #   #   --docker-tls=true
+  #   #   --docker-tls-cert=/sandbox_docker_certs/cert.pem
+  #   #   --docker-tls-key=/sandbox_docker_certs/key.pem
+  #   #   --docker-tls-ca=/sandbox_docker_certs/ca.pem
+  #   #   --housekeeping_interval=1s
+  #   # --docker="tcp://10.218.148.241:2376" --docker-tls --docker-tls-cert=$(pwd)/client-cert.pem --docker-tls-key=$(pwd)/client-key.pem --docker-tls-ca=$(pwd)/ca.pem
+  grafana:
+    image: grafana/grafana:9.3.4
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      #- grafana-storage:/var/lib/grafana
+      - ${PWD}/grafana/dashboards-provisioning.yaml:/etc/grafana/provisioning/dashboards/main.yaml
+      - ${PWD}/grafana/dashboards:/var/lib/grafana/dashboards
+      - ${PWD}/grafana/prometheus-datasource.yaml:/etc/grafana/provisioning/datasources/prometheus.yaml
+    environment:
+      #GF_USERS_ALLOW_SIGN_UP: "false"
+      #GF_USERS_ALLOW_ORG_CREATE: "false"
+      #GF_AUTH_BASIC_ENABLED: "false"
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: "Admin"
+      GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: /var/lib/grafana/dashboards/main.json
+      #GF_AUTH_ANONYMOUS_ORG_NAME: "SIM-PIPE"
+      #GF_AUTH_ANONYMOUS_ORG_ID: "1"
 volumes:
-  db_data1:
-    null
-  appsmith:
-    null
+  db_data: null
+  minio_data: null
+  minio_config: null
+  sandbox-docker-certs-ca: null
+  sandbox-docker-certs-server: null
+  sandbox-docker-certs-client: null
+  sandbox-docker-data: null
+  grafana-storage: null
