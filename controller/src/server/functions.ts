@@ -102,21 +102,6 @@ export async function allRunsSteps(userid:string):Promise<AllRunsAndStepsQuery> 
 /**
  * mutations
  */
-export async function createSimulation(name:string, pipeline_description:string, userid:string):
-Promise<string> {
-  // disabling await-thenable, await is needed for sequential execution
-  // eslint-disable-next-line @typescript-eslint/await-thenable
-  const result:CreateSimulationMutation = await sdk.createSimulation({
-    name,
-    pipeline_description,
-    userid,
-  });
-  if (!result?.create_simulation?.simulation_id) {
-    throw new Error('🎌 Undefined expression in createSimulation');
-  }
-  // read pipeline_description and extract env variable list
-  return result.create_simulation.simulation_id;
-}
 
 // interface for dsl step
 // modified to add the new json schema attributes
@@ -155,7 +140,7 @@ export async function createStep(run_id:string, name:string, image:string,
 
 /**
  * function to read dsl parameter in simulation table
- *
+*
  * */
 async function parseDSL(simulation_id:string):Promise<[StepDSL]> {
   // get dsl from simulation table using simulation_id
@@ -165,6 +150,67 @@ async function parseDSL(simulation_id:string):Promise<[StepDSL]> {
   // TODO:  validate pipeline description according to schema v1
   // eslint-disable-next-line @typescript-eslint/no-unsafe-return
   return steps;
+}
+// variable to represent prerequistes for each step number; used in detecting cycles
+let prerequisites:number[][] = [];
+
+/**
+ * WIP recursive function to check for cycles in the pipeline
+ * reference algorithm: https://www.geeksforgeeks.org/detect-cycle-in-a-graph/
+ * */
+async function isCyclicRecursive(step_number: number, visited: any[], recursiveStack: any[]):Promise<boolean> {
+  if (recursiveStack[step_number]) return true;
+  if (visited[step_number]) return false;
+
+  // eslint-disable-next-line no-param-reassign
+  recursiveStack[step_number] = true;
+  // eslint-disable-next-line no-param-reassign
+  visited[step_number] = true;
+  for await (const prereq_step of prerequisites[step_number]) {
+    const result = await isCyclicRecursive(prereq_step, visited, recursiveStack);
+    if (result) return true;
+  }
+  // eslint-disable-next-line no-param-reassign
+  recursiveStack[step_number] = false;
+  return false;
+}
+
+/**
+ * WIP function to check for cycles in the pipeline
+ * reference algorithm: https://www.geeksforgeeks.org/detect-cycle-in-a-graph/
+ * */
+async function isCyclic(pipeline_description:string):Promise<boolean> {
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+  const steps = JSON.parse(pipeline_description).steps as Array<StepDSL>;
+  const visited = Array.from({ length: steps.length + 1 }).fill(false);
+  const recursiveStack = Array.from({ length: steps.length + 1 }).fill(false);
+  prerequisites = [];
+  for await (const step of steps) {
+    prerequisites[step.step_number] = step.prerequisite || [];
+  }
+  for await (const step of steps) {
+    const result = await isCyclicRecursive(step.step_number, visited, recursiveStack);
+    if (result) return true;
+  }
+  return false;
+}
+
+export async function createSimulation(name:string, pipeline_description:string, userid:string):
+Promise<string> {
+  const value = await isCyclic(pipeline_description);
+  if (value) throw new Error('Given simulation has cyclic dependency');
+  // disabling await-thenable, await is needed for sequential execution
+  // eslint-disable-next-line @typescript-eslint/await-thenable
+  const result:CreateSimulationMutation = await sdk.createSimulation({
+    name,
+    pipeline_description,
+    userid,
+  });
+  if (!result?.create_simulation?.simulation_id) {
+    throw new Error('🎌 Undefined expression in createSimulation');
+  }
+  // read pipeline_description and extract env variable list
+  return result.create_simulation.simulation_id;
 }
 
 /**

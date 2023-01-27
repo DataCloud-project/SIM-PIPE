@@ -68,8 +68,7 @@ const resolvers = {
           message: `Simulation has been created with id ${newSimId}`,
         });
       } catch (error) {
-        const errorMessage = `🎌 Error creating new simulation:
-      ${(error as Error).message}`;
+        const errorMessage = `🎌 Error : ${(error as Error).message}`;
         logger.error(errorMessage);
         return JSON.stringify({
           code: 300,

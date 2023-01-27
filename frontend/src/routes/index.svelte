@@ -12,7 +12,6 @@
 			await init_keycloak();
 			simulations = await $graphQLClient.request(all_simulations_query);
 		} catch {
-			console.log('🎌 Error! could not load simulations, retrying');
 			simulations = 'error';
 		}
 	};
