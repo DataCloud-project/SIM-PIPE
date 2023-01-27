@@ -153,6 +153,7 @@ async function parseDSL(simulation_id:string):Promise<[StepDSL]> {
 }
 // variable to represent prerequistes for each step number; used in detecting cycles
 let prerequisites:number[][] = [];
+const cyclic_step_numbers:number[] = [];
 
 /**
  * WIP recursive function to check for cycles in the pipeline
@@ -168,7 +169,10 @@ async function isCyclicRecursive(step_number: number, visited: any[], recursiveS
   visited[step_number] = true;
   for await (const prereq_step of prerequisites[step_number]) {
     const result = await isCyclicRecursive(prereq_step, visited, recursiveStack);
-    if (result) return true;
+    if (result) {
+      cyclic_step_numbers.push(prereq_step);
+      return true;
+    }
   }
   // eslint-disable-next-line no-param-reassign
   recursiveStack[step_number] = false;
@@ -198,7 +202,7 @@ async function isCyclic(pipeline_description:string):Promise<boolean> {
 export async function createSimulation(name:string, pipeline_description:string, userid:string):
 Promise<string> {
   const value = await isCyclic(pipeline_description);
-  if (value) throw new Error('Given simulation has cyclic dependency');
+  if (value) throw new Error(`Given simulation has cyclic dependency in step numbers: ${cyclic_step_numbers as unknown as string}`);
   // disabling await-thenable, await is needed for sequential execution
   // eslint-disable-next-line @typescript-eslint/await-thenable
   const result:CreateSimulationMutation = await sdk.createSimulation({
