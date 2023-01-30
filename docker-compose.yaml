@@ -2,7 +2,7 @@ version: "3.8"
 
 services:
   timescaledb:
-    image: timescale/timescaledb-ha:pg14.6-ts2.9.1-latest
+    image: timescale/timescaledb-ha:pg14.6-ts2.9.2-latest
     restart: unless-stopped
     volumes:
       - db_data:/var/lib/postgresql/data
@@ -14,7 +14,7 @@ services:
     ports:
       - "5432:5432"
   hasura:
-    image: hasura/graphql-engine:v2.16.1-ce.cli-migrations-v3
+    image: hasura/graphql-engine:v2.17.1-ce.cli-migrations-v3
     ports:
       - "8080:8080"
     depends_on:
@@ -97,7 +97,7 @@ services:
       #   depends_on:
       #     - "controller"
   minio:
-    image: quay.io/minio/minio:RELEASE.2023-01-06T18-11-18Z
+    image: quay.io/minio/minio:RELEASE.2023-01-25T00-19-54Z
     restart: unless-stopped
     volumes:
       - minio_data:/data
