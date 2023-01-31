@@ -1,4 +1,5 @@
-import { Router } from 'express';
+import { jwtDevMode, user } from 'config.js';
+import { json, Router } from 'express';
 import asyncHandler from 'express-async-handler';
 
 import { keycloakAuthJwtMiddleware } from './auth-jwt-middleware.js';
@@ -33,6 +34,44 @@ export default function createRouter(): Router {
       keys: [key],
     });
   }));
+
+  // Generate a local development JWT token that is not authenticated
+  // This feature MUST NOT be enabled in production
+  if (jwtDevMode) {
+    router.post('/hasura/jwt-dev', json(), asyncHandler(async (request, response) => {
+      const body = request.body as {
+        sub?: unknown
+        name?: unknown
+        exp?: unknown
+      };
+      if (body.sub !== undefined && typeof body.sub !== 'string') {
+        response.status(400).send('Invalid sub');
+        return;
+      }
+      if (body.name !== undefined && typeof body.name !== 'string') {
+        response.status(400).send('Invalid name');
+        return;
+      }
+      if (body.exp !== undefined && typeof body.exp !== 'number') {
+        response.status(400).send('Invalid exp');
+        return;
+      }
+      // load system username
+      const sub = body.sub ?? user;
+      const name = body.name ?? sub;
+      const iat = Math.floor(Date.now() / 1000);
+      // In 8 hours (what should be a working day)
+      const exp = body.exp ?? iat + 60 * 60 * 8;
+      const jwt = await generateJWTForHasura({
+        sub,
+        name,
+        iat,
+        exp,
+      });
+      response.set('Content-Type', 'text/plain');
+      response.send(jwt);
+    }));
+  }
 
   return router;
 }

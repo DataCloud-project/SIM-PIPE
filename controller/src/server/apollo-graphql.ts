@@ -1,13 +1,17 @@
+import { loadFiles } from '@graphql-tools/load-files';
 import { makeExecutableSchema } from '@graphql-tools/schema';
 import { ApolloServer } from 'apollo-server-express';
+import { fileURLToPath } from 'node:url';
 
 import { authDirectiveTransformer, authDirectiveTypeDefs } from './auth-directive.js';
-import typeDefs from './graphql-definitions.js';
 import resolvers from './resolvers.js';
 import type { Auth } from './auth-jwt-middleware.js';
 import type { Context } from './resolvers.js';
 
-export default function createApolloGraphqlServer(): ApolloServer {
+export default async function createApolloGraphqlServer(): Promise<ApolloServer> {
+  const typeDefsPaths = fileURLToPath(new URL('server-schema.graphql', import.meta.url));
+  const typeDefs = await loadFiles(typeDefsPaths);
+
   let schema = makeExecutableSchema<unknown>({
     typeDefs: [
       authDirectiveTypeDefs,

@@ -1,0 +1,35 @@
+scalar uuid
+
+type Query {
+  username: String! @auth
+  computeUploadPresignedUrl: String! @auth
+  ping: String!
+}
+
+type Run {
+  runId: uuid!
+}
+
+input StepEnvironmentVariable {
+  stepName: String!
+  name: String!
+  value: String!
+}
+
+input StepTimeout {
+  stepName: String!
+  timeout: Int!
+}
+
+input CreateRunInput {
+  simulationId: uuid!
+  name: String!
+  environmentVariables: [StepEnvironmentVariable!]
+  timeouts: [StepTimeout!]
+}
+
+type Mutation @auth {
+  createRun(run: CreateRunInput!): Run!
+  startRun(runId:uuid!): Run
+  cancelRun(runId:uuid!): Run
+}

@@ -1,1 +1,2 @@
 src/db/database.ts
+src/server/schema.ts

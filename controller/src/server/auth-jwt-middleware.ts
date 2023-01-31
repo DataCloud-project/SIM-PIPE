@@ -1,3 +1,4 @@
+import { authenticationExpiryTimeout, keycloakRealmEndpoint } from 'config.js';
 import ExpiryMap from 'expiry-map';
 import expressAsyncHandler from 'express-async-handler';
 import got from 'got';
@@ -12,23 +13,17 @@ import { getVaultKeyPair } from './hasura-jwt.js';
 /**
  * middleware definitions
  */
-const KEYCLOAK_REALM_ENDPOINT = process.env.KEYCLOAK_REALM_ENDPOINT
-  ?? 'https://datacloud-auth.euprojects.net/auth/realms/user-authentication';
 
 async function getKeycloakPublicKey(): Promise<KeyObject> {
-  const response = await got(KEYCLOAK_REALM_ENDPOINT).json<{ public_key: string }>();
+  const response = await got(keycloakRealmEndpoint).json<{ public_key: string }>();
   const { public_key: publicKey } = response;
   if (!publicKey) {
     throw new Error('No public key found');
   }
   const pem = `-----BEGIN PUBLIC KEY-----\r\n${publicKey}\r\n-----END PUBLIC KEY-----`;
-  // const publicKey = await jose.importSPKI(pem, 'RS256');
-
   return crypto.createPublicKey({ key: pem, format: 'pem', type: 'pkcs1' });
 }
 
-const authenticationExpiryTimeout: number = Number.parseInt(
-  process.env.Authentication_Expiry_Timeout || '', 10);
 const keycloakPublicKeyCache = new ExpiryMap(authenticationExpiryTimeout);
 const getKeycloakPublicKeyWithCache = pMemoize(
   getKeycloakPublicKey, { cache: keycloakPublicKeyCache },

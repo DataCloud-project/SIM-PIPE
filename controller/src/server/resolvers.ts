@@ -1,8 +1,12 @@
 import { randomUUID } from 'node:crypto';
 
-import logger from '../logger.js';
 import * as functions from './functions.js';
 import { computePresignedPutUrl } from './minio.js';
+import type {
+  MutationCancelRunArgs as MutationCancelRunArguments,
+  MutationCreateRunArgs as MutationCreateRunArguments,
+  MutationResolvers, MutationStartRunArgs as MutationStartRunArguments, QueryResolvers, Run,
+} from './schema.js';
 
 interface ContextUser {
   sub: string
@@ -24,16 +28,19 @@ interface AuthenticatedContext extends Context {
   }
 } */
 
+type EmptyArguments = Record<string, never>;
+type EmptyParent = Record<string, never>;
+
 const resolvers = {
   Query: {
-    Username(_p: never, _a: never, context: AuthenticatedContext): string {
+    username(_p: EmptyParent, _a: EmptyArguments, context: AuthenticatedContext): string {
       return context.user.username;
     },
-    Ping(): string {
+    ping(): string {
       return 'pong';
     },
-    async ComputeUploadPresignedUrl(
-      _p: never, _a: never, context: AuthenticatedContext,
+    async computeUploadPresignedUrl(
+      _p: EmptyParent, _a: EmptyArguments, context: AuthenticatedContext,
     ): Promise<string> {
       const { sub } = context.user;
       // Make sure the user is a filesystem safe string
@@ -45,69 +52,43 @@ const resolvers = {
       const url = await computePresignedPutUrl(objectName);
       return url;
     },
-  },
+  } as QueryResolvers<AuthenticatedContext, EmptyParent>,
   Mutation: {
-    async Create_Run_WithInput(
-      _p: never, arguments_: {
-        simulation_id: string,
-        name: string,
-        sampleInput: [[string, string]],
-        env_list: [[string]],
-        timeout_values: [number]
-      },
+    async createRun(
+      _p: EmptyParent,
+      arguments_: MutationCreateRunArguments,
       context: AuthenticatedContext,
-    ): Promise<string> {
-      const newRunId = await functions.createRunWithInput(
-        arguments_.simulation_id,
-        arguments_.name,
-        arguments_.sampleInput,
-        context.user.sub,
-        arguments_.env_list,
-        arguments_.timeout_values);
-      return JSON.stringify({
-        code: 200,
-        message: `Run has been created with id ${newRunId}`,
-      });
+    ): Promise<Run> {
+      const { simulationId, name } = arguments_.run;
+      const { sub: userId } = context.user;
+      await functions.checkSimulationOwner(simulationId, userId);
+      const runId = await functions.createRun(simulationId, name);
+      // TODO do something about timeouts and envs
+      return { runId };
     },
-    async Start_Run(
-      _p: never, arguments_: { run_id: string }, context: AuthenticatedContext,
-    ): Promise<string> {
-      try {
-        await functions.queueRun(arguments_.run_id, context.user.sub);
-        return JSON.stringify({
-          code: 200,
-          message: 'Run has been added to queue',
-        });
-      } catch (error) {
-        const errorMessage = `🎌 Failed! Error starting run:
-      ${(error as Error).message}`;
-        logger.error(errorMessage);
-        return JSON.stringify({
-          code: 300,
-          message: errorMessage,
-        });
-      }
+    async startRun(
+      _p: EmptyParent,
+      arguments_: MutationStartRunArguments,
+      context: AuthenticatedContext,
+    ): Promise<Run> {
+      const { runId } = arguments_;
+      const { sub: userId } = context.user;
+      await functions.checkRunOwner(runId, userId);
+      await functions.queueRun(runId, userId);
+      return { runId };
     },
-    async Stop_Run(
-      _p: never, arguments_: { run_id: string }, context: AuthenticatedContext,
-    ): Promise<string> {
-      try {
-        await functions.stopRun(arguments_.run_id, context.user.sub);
-        return JSON.stringify({
-          code: 200,
-          message: 'Successfully sent stop signal to current run',
-        });
-      } catch (error) {
-        const errorMessage = `🎌 Error stopping run:
-      ${(error as Error).message}`;
-        logger.error(errorMessage);
-        return JSON.stringify({
-          code: 300,
-          message: errorMessage,
-        });
-      }
+    async cancelRun(
+      _p: EmptyParent,
+      arguments_: MutationCancelRunArguments,
+      context: AuthenticatedContext,
+    ): Promise<Run> {
+      const { runId } = arguments_;
+      const { sub: userId } = context.user;
+      await functions.checkRunOwner(runId, userId);
+      await functions.stopRun(runId, userId);
+      return { runId };
     },
-  },
+  } as MutationResolvers<AuthenticatedContext, EmptyParent>,
 };
 
 export default resolvers;

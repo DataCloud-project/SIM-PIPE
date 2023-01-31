@@ -1,3 +1,4 @@
+import { hasuraControllerJwtPrivateKey } from 'config.js';
 import { SignJWT } from 'jose';
 import crypto from 'node:crypto';
 import type { JsonWebKeyInput, KeyObject } from 'node:crypto';
@@ -28,12 +29,11 @@ function loadJWKToKeyPair(jwk: string): KeyPair {
 
 async function initialiseKeyPair(
 ): Promise<KeyPair> {
-  // In case we want a hardcoded key, we can use the environment variable
-  // Please note that the keys will not be automatically rotated
-  const keyFromEnvironment = process.env.CONTROLLER_HASURA_JWT_PRIVATE_KEY;
-  if (keyFromEnvironment) {
-    return loadJWKToKeyPair(keyFromEnvironment);
+  // If a key is provided in the environment
+  if (hasuraControllerJwtPrivateKey) {
+    return loadJWKToKeyPair(hasuraControllerJwtPrivateKey);
   }
+
   return await generateEd25519KeyPair();
 }
 
