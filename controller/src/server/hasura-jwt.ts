@@ -1,7 +1,8 @@
-import { hasuraControllerJwtPrivateKey } from 'config.js';
 import { SignJWT } from 'jose';
 import crypto from 'node:crypto';
 import type { JsonWebKeyInput, KeyObject } from 'node:crypto';
+
+import { hasuraControllerJwtPrivateKey } from '../config.js';
 
 type KeyPair = { publicKey: KeyObject; privateKey: KeyObject };
 

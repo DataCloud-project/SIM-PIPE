@@ -1,7 +1,7 @@
-import { jwtDevMode, user } from 'config.js';
 import { json, Router } from 'express';
 import asyncHandler from 'express-async-handler';
 
+import { jwtDevMode as jwtDevelopmentMode, user } from '../config.js';
 import { keycloakAuthJwtMiddleware } from './auth-jwt-middleware.js';
 import { generateJWTForHasura, getVaultKeyPair } from './hasura-jwt.js';
 import type { Auth } from './auth-jwt-middleware.js';
@@ -37,7 +37,7 @@ export default function createRouter(): Router {
 
   // Generate a local development JWT token that is not authenticated
   // This feature MUST NOT be enabled in production
-  if (jwtDevMode) {
+  if (jwtDevelopmentMode) {
     router.post('/hasura/jwt-dev', json(), asyncHandler(async (request, response) => {
       const body = request.body as {
         sub?: unknown

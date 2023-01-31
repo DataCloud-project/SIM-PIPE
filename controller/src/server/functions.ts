@@ -1,7 +1,7 @@
-import { hasuraAdminSecret, hasuraEndpoint } from 'config.js';
 import * as dotenv from 'dotenv';
 import { GraphQLClient } from 'graphql-request';
 
+import { hasuraAdminSecret, hasuraEndpoint } from '../config.js';
 import startController from '../controller.js';
 import { getSdk } from '../db/database.js';
 import logger from '../logger.js';

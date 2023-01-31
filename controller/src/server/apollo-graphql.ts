@@ -9,7 +9,7 @@ import type { Auth } from './auth-jwt-middleware.js';
 import type { Context } from './resolvers.js';
 
 export default async function createApolloGraphqlServer(): Promise<ApolloServer> {
-  const typeDefsPaths = fileURLToPath(new URL('server-schema.graphql', import.meta.url));
+  const typeDefsPaths = fileURLToPath(new URL('schema.graphql', import.meta.url));
   const typeDefs = await loadFiles(typeDefsPaths);
 
   let schema = makeExecutableSchema<unknown>({

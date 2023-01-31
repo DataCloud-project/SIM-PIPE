@@ -1,4 +1,3 @@
-import { authenticationExpiryTimeout, keycloakRealmEndpoint } from 'config.js';
 import ExpiryMap from 'expiry-map';
 import expressAsyncHandler from 'express-async-handler';
 import got from 'got';
@@ -8,6 +7,7 @@ import pMemoize from 'p-memoize';
 import type { NextFunction, Request, Response } from 'express';
 import type { KeyObject } from 'node:crypto';
 
+import { authenticationExpiryTimeout, keycloakRealmEndpoint } from '../config.js';
 import { getVaultKeyPair } from './hasura-jwt.js';
 
 /**

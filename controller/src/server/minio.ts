@@ -1,7 +1,8 @@
+import minio from 'minio';
+
 import {
   minioAccesskey, minioBucketName, minioEndpoint, minioPort, minioSecretkey, minioUseSSL,
-} from 'config.js';
-import minio from 'minio';
+} from '../config.js';
 
 if (!minioAccesskey) {
   throw new Error('MINIO_ACCESS_KEY is not set');
