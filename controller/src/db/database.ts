@@ -13,25 +13,26 @@ export type Scalars = {
   Boolean: boolean;
   Int: number;
   Float: number;
-  bigint: number;
   float8: number;
   jsonb: unknown;
-  numeric: number;
+  timestamp: string;
   timestamptz: string;
   uuid: string;
 };
 
-/** Boolean expression to compare columns of type "bigint". All fields are combined with logical 'AND'. */
-export type BigintComparisonExp = {
-  _eq?: InputMaybe<Scalars['bigint']>;
-  _gt?: InputMaybe<Scalars['bigint']>;
-  _gte?: InputMaybe<Scalars['bigint']>;
-  _in?: InputMaybe<Array<Scalars['bigint']>>;
-  _isNull?: InputMaybe<Scalars['Boolean']>;
-  _lt?: InputMaybe<Scalars['bigint']>;
-  _lte?: InputMaybe<Scalars['bigint']>;
-  _neq?: InputMaybe<Scalars['bigint']>;
-  _nin?: InputMaybe<Array<Scalars['bigint']>>;
+export type CreateRunInput = {
+  /**  An optional list of environment variables to set for the steps of the run container  */
+  environmentVariables?: InputMaybe<Array<StepEnvironmentVariable>>;
+  /**  The name of the run  */
+  name: Scalars['String'];
+  /**
+   *  The simulation to which this run belongs.
+   *
+   * The user must own the simulation.
+   */
+  simulationId: Scalars['uuid'];
+  /**  An optional list of timeouts to set for the steps of the run container  */
+  timeouts?: InputMaybe<Array<StepTimeout>>;
 };
 
 /** ordering argument of a cursor */
@@ -96,19 +97,6 @@ export type JsonbComparisonExp = {
   _nin?: InputMaybe<Array<Scalars['jsonb']>>;
 };
 
-/** Boolean expression to compare columns of type "numeric". All fields are combined with logical 'AND'. */
-export type NumericComparisonExp = {
-  _eq?: InputMaybe<Scalars['numeric']>;
-  _gt?: InputMaybe<Scalars['numeric']>;
-  _gte?: InputMaybe<Scalars['numeric']>;
-  _in?: InputMaybe<Array<Scalars['numeric']>>;
-  _isNull?: InputMaybe<Scalars['Boolean']>;
-  _lt?: InputMaybe<Scalars['numeric']>;
-  _lte?: InputMaybe<Scalars['numeric']>;
-  _neq?: InputMaybe<Scalars['numeric']>;
-  _nin?: InputMaybe<Array<Scalars['numeric']>>;
-};
-
 /** column ordering options */
 export enum OrderBy {
   /** in ascending order, nulls last */
@@ -128,177 +116,21 @@ export enum OrderBy {
 export type Run = {
   __typename?: 'Run';
   Run?: Maybe<Runs>;
-  run_id?: Maybe<Scalars['uuid']>;
-};
-
-/** columns and relationships of "simpipe.cpu" */
-export type SimpipeCpu = {
-  __typename?: 'SimpipeCpu';
-  seriesId?: Maybe<Scalars['bigint']>;
-  time?: Maybe<Scalars['timestamptz']>;
-  userid?: Maybe<Scalars['String']>;
-  value?: Maybe<Scalars['float8']>;
-};
-
-/** aggregated selection of "simpipe.cpu" */
-export type SimpipeCpuAggregate = {
-  __typename?: 'SimpipeCpuAggregate';
-  aggregate?: Maybe<SimpipeCpuAggregateFields>;
-  nodes: Array<SimpipeCpu>;
-};
-
-/** aggregate fields of "simpipe.cpu" */
-export type SimpipeCpuAggregateFields = {
-  __typename?: 'SimpipeCpuAggregateFields';
-  avg?: Maybe<SimpipeCpuAvgFields>;
-  count: Scalars['Int'];
-  max?: Maybe<SimpipeCpuMaxFields>;
-  min?: Maybe<SimpipeCpuMinFields>;
-  stddev?: Maybe<SimpipeCpuStddevFields>;
-  stddevPop?: Maybe<SimpipeCpuStddev_PopFields>;
-  stddevSamp?: Maybe<SimpipeCpuStddev_SampFields>;
-  sum?: Maybe<SimpipeCpuSumFields>;
-  varPop?: Maybe<SimpipeCpuVar_PopFields>;
-  varSamp?: Maybe<SimpipeCpuVar_SampFields>;
-  variance?: Maybe<SimpipeCpuVarianceFields>;
-};
-
-
-/** aggregate fields of "simpipe.cpu" */
-export type SimpipeCpuAggregateFieldsCountArgs = {
-  columns?: InputMaybe<Array<SimpipeCpuSelectColumn>>;
-  distinct?: InputMaybe<Scalars['Boolean']>;
-};
-
-/** aggregate avg on columns */
-export type SimpipeCpuAvgFields = {
-  __typename?: 'SimpipeCpuAvgFields';
-  seriesId?: Maybe<Scalars['Float']>;
-  value?: Maybe<Scalars['Float']>;
-};
-
-/** Boolean expression to filter rows from the table "simpipe.cpu". All fields are combined with a logical 'AND'. */
-export type SimpipeCpuBoolExp = {
-  _and?: InputMaybe<Array<SimpipeCpuBoolExp>>;
-  _not?: InputMaybe<SimpipeCpuBoolExp>;
-  _or?: InputMaybe<Array<SimpipeCpuBoolExp>>;
-  seriesId?: InputMaybe<BigintComparisonExp>;
-  time?: InputMaybe<TimestamptzComparisonExp>;
-  userid?: InputMaybe<StringComparisonExp>;
-  value?: InputMaybe<Float8ComparisonExp>;
-};
-
-/** aggregate max on columns */
-export type SimpipeCpuMaxFields = {
-  __typename?: 'SimpipeCpuMaxFields';
-  seriesId?: Maybe<Scalars['bigint']>;
-  time?: Maybe<Scalars['timestamptz']>;
-  userid?: Maybe<Scalars['String']>;
-  value?: Maybe<Scalars['float8']>;
-};
-
-/** aggregate min on columns */
-export type SimpipeCpuMinFields = {
-  __typename?: 'SimpipeCpuMinFields';
-  seriesId?: Maybe<Scalars['bigint']>;
-  time?: Maybe<Scalars['timestamptz']>;
-  userid?: Maybe<Scalars['String']>;
-  value?: Maybe<Scalars['float8']>;
-};
-
-/** Ordering options when selecting data from "simpipe.cpu". */
-export type SimpipeCpuOrderBy = {
-  seriesId?: InputMaybe<OrderBy>;
-  time?: InputMaybe<OrderBy>;
-  userid?: InputMaybe<OrderBy>;
-  value?: InputMaybe<OrderBy>;
-};
-
-/** select columns of table "simpipe.cpu" */
-export enum SimpipeCpuSelectColumn {
-  /** column name */
-  SeriesId = 'seriesId',
-  /** column name */
-  Time = 'time',
-  /** column name */
-  Userid = 'userid',
-  /** column name */
-  Value = 'value'
-}
-
-/** aggregate stddev on columns */
-export type SimpipeCpuStddevFields = {
-  __typename?: 'SimpipeCpuStddevFields';
-  seriesId?: Maybe<Scalars['Float']>;
-  value?: Maybe<Scalars['Float']>;
-};
-
-/** aggregate stddev_pop on columns */
-export type SimpipeCpuStddev_PopFields = {
-  __typename?: 'SimpipeCpuStddev_popFields';
-  seriesId?: Maybe<Scalars['Float']>;
-  value?: Maybe<Scalars['Float']>;
-};
-
-/** aggregate stddev_samp on columns */
-export type SimpipeCpuStddev_SampFields = {
-  __typename?: 'SimpipeCpuStddev_sampFields';
-  seriesId?: Maybe<Scalars['Float']>;
-  value?: Maybe<Scalars['Float']>;
-};
-
-/** Streaming cursor of the table "simpipe_cpu" */
-export type SimpipeCpuStreamCursorInput = {
-  /** Stream column input with initial value */
-  initialValue: SimpipeCpuStreamCursorValueInput;
-  /** cursor ordering */
-  ordering?: InputMaybe<CursorOrdering>;
-};
-
-/** Initial value of the column from where the streaming should start */
-export type SimpipeCpuStreamCursorValueInput = {
-  seriesId?: InputMaybe<Scalars['bigint']>;
-  time?: InputMaybe<Scalars['timestamptz']>;
-  userid?: InputMaybe<Scalars['String']>;
-  value?: InputMaybe<Scalars['float8']>;
-};
-
-/** aggregate sum on columns */
-export type SimpipeCpuSumFields = {
-  __typename?: 'SimpipeCpuSumFields';
-  seriesId?: Maybe<Scalars['bigint']>;
-  value?: Maybe<Scalars['float8']>;
-};
-
-/** aggregate var_pop on columns */
-export type SimpipeCpuVar_PopFields = {
-  __typename?: 'SimpipeCpuVar_popFields';
-  seriesId?: Maybe<Scalars['Float']>;
-  value?: Maybe<Scalars['Float']>;
-};
-
-/** aggregate var_samp on columns */
-export type SimpipeCpuVar_SampFields = {
-  __typename?: 'SimpipeCpuVar_sampFields';
-  seriesId?: Maybe<Scalars['Float']>;
-  value?: Maybe<Scalars['Float']>;
-};
-
-/** aggregate variance on columns */
-export type SimpipeCpuVarianceFields = {
-  __typename?: 'SimpipeCpuVarianceFields';
-  seriesId?: Maybe<Scalars['Float']>;
-  value?: Maybe<Scalars['Float']>;
+  runId: Scalars['uuid'];
 };
 
 /** Environment variables in runs */
 export type SimpipeEnvs = {
   __typename?: 'SimpipeEnvs';
-  envId: Scalars['Int'];
+  /** UUID of the env, random by default */
+  envId: Scalars['uuid'];
+  /** Name of the env, it is unique per step */
   name: Scalars['String'];
   /** An object relationship */
   step: Steps;
-  stepId: Scalars['String'];
+  /** UUID of the step, must exist in the steps table */
+  stepId: Scalars['uuid'];
+  /** Value of the env */
   value: Scalars['String'];
 };
 
@@ -312,17 +144,9 @@ export type SimpipeEnvsAggregate = {
 /** aggregate fields of "simpipe.envs" */
 export type SimpipeEnvsAggregateFields = {
   __typename?: 'SimpipeEnvsAggregateFields';
-  avg?: Maybe<SimpipeEnvsAvgFields>;
   count: Scalars['Int'];
   max?: Maybe<SimpipeEnvsMaxFields>;
   min?: Maybe<SimpipeEnvsMinFields>;
-  stddev?: Maybe<SimpipeEnvsStddevFields>;
-  stddevPop?: Maybe<SimpipeEnvsStddev_PopFields>;
-  stddevSamp?: Maybe<SimpipeEnvsStddev_SampFields>;
-  sum?: Maybe<SimpipeEnvsSumFields>;
-  varPop?: Maybe<SimpipeEnvsVar_PopFields>;
-  varSamp?: Maybe<SimpipeEnvsVar_SampFields>;
-  variance?: Maybe<SimpipeEnvsVarianceFields>;
 };
 
 
@@ -334,17 +158,9 @@ export type SimpipeEnvsAggregateFieldsCountArgs = {
 
 /** order by aggregate values of table "simpipe.envs" */
 export type SimpipeEnvsAggregateOrderBy = {
-  avg?: InputMaybe<Simpipe_Envs_Avg_Order_By>;
   count?: InputMaybe<OrderBy>;
   max?: InputMaybe<Simpipe_Envs_Max_Order_By>;
   min?: InputMaybe<Simpipe_Envs_Min_Order_By>;
-  stddev?: InputMaybe<Simpipe_Envs_Stddev_Order_By>;
-  stddev_pop?: InputMaybe<Simpipe_Envs_Stddev_Pop_Order_By>;
-  stddev_samp?: InputMaybe<Simpipe_Envs_Stddev_Samp_Order_By>;
-  sum?: InputMaybe<Simpipe_Envs_Sum_Order_By>;
-  var_pop?: InputMaybe<Simpipe_Envs_Var_Pop_Order_By>;
-  var_samp?: InputMaybe<Simpipe_Envs_Var_Samp_Order_By>;
-  variance?: InputMaybe<Simpipe_Envs_Variance_Order_By>;
 };
 
 /** input type for inserting array relation for remote table "simpipe.envs" */
@@ -354,22 +170,15 @@ export type SimpipeEnvsArrRelInsertInput = {
   onConflict?: InputMaybe<SimpipeEnvsOnConflict>;
 };
 
-/** aggregate avg on columns */
-export type SimpipeEnvsAvgFields = {
-  __typename?: 'SimpipeEnvsAvgFields';
-  envId?: Maybe<Scalars['Float']>;
-  stepId?: Maybe<Scalars['Float']>;
-};
-
 /** Boolean expression to filter rows from the table "simpipe.envs". All fields are combined with a logical 'AND'. */
 export type SimpipeEnvsBoolExp = {
   _and?: InputMaybe<Array<SimpipeEnvsBoolExp>>;
   _not?: InputMaybe<SimpipeEnvsBoolExp>;
   _or?: InputMaybe<Array<SimpipeEnvsBoolExp>>;
-  envId?: InputMaybe<IntComparisonExp>;
+  envId?: InputMaybe<UuidComparisonExp>;
   name?: InputMaybe<StringComparisonExp>;
   step?: InputMaybe<StepsBoolExp>;
-  stepId?: InputMaybe<StringComparisonExp>;
+  stepId?: InputMaybe<UuidComparisonExp>;
   value?: InputMaybe<StringComparisonExp>;
 };
 
@@ -381,36 +190,42 @@ export enum SimpipeEnvsConstraint {
   EnvsStepIdNameKey = 'envs_step_id_name_key'
 }
 
-/** input type for incrementing numeric columns in table "simpipe.envs" */
-export type SimpipeEnvsIncInput = {
-  envId?: InputMaybe<Scalars['Int']>;
-  stepId?: InputMaybe<Scalars['uuid']>;
-};
-
 /** input type for inserting data into table "simpipe.envs" */
 export type SimpipeEnvsInsertInput = {
-  envId?: InputMaybe<Scalars['Int']>;
+  /** UUID of the env, random by default */
+  envId?: InputMaybe<Scalars['uuid']>;
+  /** Name of the env, it is unique per step */
   name?: InputMaybe<Scalars['String']>;
   step?: InputMaybe<StepsObjRelInsertInput>;
+  /** UUID of the step, must exist in the steps table */
   stepId?: InputMaybe<Scalars['uuid']>;
+  /** Value of the env */
   value?: InputMaybe<Scalars['String']>;
 };
 
 /** aggregate max on columns */
 export type SimpipeEnvsMaxFields = {
   __typename?: 'SimpipeEnvsMaxFields';
-  envId?: Maybe<Scalars['Int']>;
+  /** UUID of the env, random by default */
+  envId?: Maybe<Scalars['uuid']>;
+  /** Name of the env, it is unique per step */
   name?: Maybe<Scalars['String']>;
+  /** UUID of the step, must exist in the steps table */
   stepId?: Maybe<Scalars['uuid']>;
+  /** Value of the env */
   value?: Maybe<Scalars['String']>;
 };
 
 /** aggregate min on columns */
 export type SimpipeEnvsMinFields = {
   __typename?: 'SimpipeEnvsMinFields';
-  envId?: Maybe<Scalars['Int']>;
+  /** UUID of the env, random by default */
+  envId?: Maybe<Scalars['uuid']>;
+  /** Name of the env, it is unique per step */
   name?: Maybe<Scalars['String']>;
+  /** UUID of the step, must exist in the steps table */
   stepId?: Maybe<Scalars['uuid']>;
+  /** Value of the env */
   value?: Maybe<Scalars['String']>;
 };
 
@@ -441,7 +256,8 @@ export type SimpipeEnvsOrderBy = {
 
 /** primary key columns input for table: simpipe.envs */
 export type SimpipeEnvsPkColumnsInput = {
-  envId: Scalars['Int'];
+  /** UUID of the env, random by default */
+  envId: Scalars['uuid'];
 };
 
 /** select columns of table "simpipe.envs" */
@@ -458,31 +274,14 @@ export enum SimpipeEnvsSelectColumn {
 
 /** input type for updating data in table "simpipe.envs" */
 export type SimpipeEnvsSetInput = {
-  envId?: InputMaybe<Scalars['Int']>;
+  /** UUID of the env, random by default */
+  envId?: InputMaybe<Scalars['uuid']>;
+  /** Name of the env, it is unique per step */
   name?: InputMaybe<Scalars['String']>;
+  /** UUID of the step, must exist in the steps table */
   stepId?: InputMaybe<Scalars['uuid']>;
+  /** Value of the env */
   value?: InputMaybe<Scalars['String']>;
-};
-
-/** aggregate stddev on columns */
-export type SimpipeEnvsStddevFields = {
-  __typename?: 'SimpipeEnvsStddevFields';
-  envId?: Maybe<Scalars['Float']>;
-  stepId?: Maybe<Scalars['Float']>;
-};
-
-/** aggregate stddev_pop on columns */
-export type SimpipeEnvsStddev_PopFields = {
-  __typename?: 'SimpipeEnvsStddev_popFields';
-  envId?: Maybe<Scalars['Float']>;
-  stepId?: Maybe<Scalars['Float']>;
-};
-
-/** aggregate stddev_samp on columns */
-export type SimpipeEnvsStddev_SampFields = {
-  __typename?: 'SimpipeEnvsStddev_sampFields';
-  envId?: Maybe<Scalars['Float']>;
-  stepId?: Maybe<Scalars['Float']>;
 };
 
 /** Streaming cursor of the table "simpipe_envs" */
@@ -495,17 +294,14 @@ export type SimpipeEnvsStreamCursorInput = {
 
 /** Initial value of the column from where the streaming should start */
 export type SimpipeEnvsStreamCursorValueInput = {
-  envId?: InputMaybe<Scalars['Int']>;
+  /** UUID of the env, random by default */
+  envId?: InputMaybe<Scalars['uuid']>;
+  /** Name of the env, it is unique per step */
   name?: InputMaybe<Scalars['String']>;
+  /** UUID of the step, must exist in the steps table */
   stepId?: InputMaybe<Scalars['uuid']>;
+  /** Value of the env */
   value?: InputMaybe<Scalars['String']>;
-};
-
-/** aggregate sum on columns */
-export type SimpipeEnvsSumFields = {
-  __typename?: 'SimpipeEnvsSumFields';
-  envId?: Maybe<Scalars['Int']>;
-  stepId?: Maybe<Scalars['uuid']>;
 };
 
 /** update columns of table "simpipe.envs" */
@@ -521,41 +317,20 @@ export enum SimpipeEnvsUpdateColumn {
 }
 
 export type SimpipeEnvsUpdates = {
-  /** increments the numeric columns with given value of the filtered values */
-  _inc?: InputMaybe<SimpipeEnvsIncInput>;
   /** sets the columns of the filtered rows to the given values */
   _set?: InputMaybe<SimpipeEnvsSetInput>;
   /** filter the rows which have to be updated */
   where: SimpipeEnvsBoolExp;
 };
 
-/** aggregate var_pop on columns */
-export type SimpipeEnvsVar_PopFields = {
-  __typename?: 'SimpipeEnvsVar_popFields';
-  envId?: Maybe<Scalars['Float']>;
-  stepId?: Maybe<Scalars['Float']>;
-};
-
-/** aggregate var_samp on columns */
-export type SimpipeEnvsVar_SampFields = {
-  __typename?: 'SimpipeEnvsVar_sampFields';
-  envId?: Maybe<Scalars['Float']>;
-  stepId?: Maybe<Scalars['Float']>;
-};
-
-/** aggregate variance on columns */
-export type SimpipeEnvsVarianceFields = {
-  __typename?: 'SimpipeEnvsVarianceFields';
-  envId?: Maybe<Scalars['Float']>;
-  stepId?: Maybe<Scalars['Float']>;
-};
-
-/** columns and relationships of "simpipe.logs" */
+/** Logs of the runs */
 export type SimpipeLogs = {
   __typename?: 'SimpipeLogs';
   /** An object relationship */
   step: Steps;
+  /** UUID of the step, must exist in the steps table */
   stepId: Scalars['uuid'];
+  /** Text of the log */
   text: Scalars['String'];
 };
 
@@ -569,17 +344,9 @@ export type SimpipeLogsAggregate = {
 /** aggregate fields of "simpipe.logs" */
 export type SimpipeLogsAggregateFields = {
   __typename?: 'SimpipeLogsAggregateFields';
-  avg?: Maybe<SimpipeLogsAvgFields>;
   count: Scalars['Int'];
   max?: Maybe<SimpipeLogsMaxFields>;
   min?: Maybe<SimpipeLogsMinFields>;
-  stddev?: Maybe<SimpipeLogsStddevFields>;
-  stddevPop?: Maybe<SimpipeLogsStddev_PopFields>;
-  stddevSamp?: Maybe<SimpipeLogsStddev_SampFields>;
-  sum?: Maybe<SimpipeLogsSumFields>;
-  varPop?: Maybe<SimpipeLogsVar_PopFields>;
-  varSamp?: Maybe<SimpipeLogsVar_SampFields>;
-  variance?: Maybe<SimpipeLogsVarianceFields>;
 };
 
 
@@ -589,19 +356,13 @@ export type SimpipeLogsAggregateFieldsCountArgs = {
   distinct?: InputMaybe<Scalars['Boolean']>;
 };
 
-/** aggregate avg on columns */
-export type SimpipeLogsAvgFields = {
-  __typename?: 'SimpipeLogsAvgFields';
-  stepId?: Maybe<Scalars['Float']>;
-};
-
 /** Boolean expression to filter rows from the table "simpipe.logs". All fields are combined with a logical 'AND'. */
 export type SimpipeLogsBoolExp = {
   _and?: InputMaybe<Array<SimpipeLogsBoolExp>>;
   _not?: InputMaybe<SimpipeLogsBoolExp>;
   _or?: InputMaybe<Array<SimpipeLogsBoolExp>>;
   step?: InputMaybe<StepsBoolExp>;
-  stepId?: InputMaybe<StringComparisonExp>;
+  stepId?: InputMaybe<UuidComparisonExp>;
   text?: InputMaybe<StringComparisonExp>;
 };
 
@@ -611,29 +372,30 @@ export enum SimpipeLogsConstraint {
   LogsPkey = 'logs_pkey'
 }
 
-/** input type for incrementing numeric columns in table "simpipe.logs" */
-export type SimpipeLogsIncInput = {
-  stepId?: InputMaybe<Scalars['uuid']>;
-};
-
 /** input type for inserting data into table "simpipe.logs" */
 export type SimpipeLogsInsertInput = {
   step?: InputMaybe<StepsObjRelInsertInput>;
+  /** UUID of the step, must exist in the steps table */
   stepId?: InputMaybe<Scalars['uuid']>;
+  /** Text of the log */
   text?: InputMaybe<Scalars['String']>;
 };
 
 /** aggregate max on columns */
 export type SimpipeLogsMaxFields = {
   __typename?: 'SimpipeLogsMaxFields';
+  /** UUID of the step, must exist in the steps table */
   stepId?: Maybe<Scalars['uuid']>;
+  /** Text of the log */
   text?: Maybe<Scalars['String']>;
 };
 
 /** aggregate min on columns */
 export type SimpipeLogsMinFields = {
   __typename?: 'SimpipeLogsMinFields';
+  /** UUID of the step, must exist in the steps table */
   stepId?: Maybe<Scalars['uuid']>;
+  /** Text of the log */
   text?: Maybe<Scalars['String']>;
 };
 
@@ -669,6 +431,7 @@ export type SimpipeLogsOrderBy = {
 
 /** primary key columns input for table: simpipe.logs */
 export type SimpipeLogsPkColumnsInput = {
+  /** UUID of the step, must exist in the steps table */
   stepId: Scalars['uuid'];
 };
 
@@ -682,26 +445,10 @@ export enum SimpipeLogsSelectColumn {
 
 /** input type for updating data in table "simpipe.logs" */
 export type SimpipeLogsSetInput = {
+  /** UUID of the step, must exist in the steps table */
   stepId?: InputMaybe<Scalars['uuid']>;
+  /** Text of the log */
   text?: InputMaybe<Scalars['String']>;
-};
-
-/** aggregate stddev on columns */
-export type SimpipeLogsStddevFields = {
-  __typename?: 'SimpipeLogsStddevFields';
-  stepId?: Maybe<Scalars['Float']>;
-};
-
-/** aggregate stddev_pop on columns */
-export type SimpipeLogsStddev_PopFields = {
-  __typename?: 'SimpipeLogsStddev_popFields';
-  stepId?: Maybe<Scalars['Float']>;
-};
-
-/** aggregate stddev_samp on columns */
-export type SimpipeLogsStddev_SampFields = {
-  __typename?: 'SimpipeLogsStddev_sampFields';
-  stepId?: Maybe<Scalars['Float']>;
 };
 
 /** Streaming cursor of the table "simpipe_logs" */
@@ -714,14 +461,10 @@ export type SimpipeLogsStreamCursorInput = {
 
 /** Initial value of the column from where the streaming should start */
 export type SimpipeLogsStreamCursorValueInput = {
+  /** UUID of the step, must exist in the steps table */
   stepId?: InputMaybe<Scalars['uuid']>;
+  /** Text of the log */
   text?: InputMaybe<Scalars['String']>;
-};
-
-/** aggregate sum on columns */
-export type SimpipeLogsSumFields = {
-  __typename?: 'SimpipeLogsSumFields';
-  stepId?: Maybe<Scalars['uuid']>;
 };
 
 /** update columns of table "simpipe.logs" */
@@ -733,383 +476,13 @@ export enum SimpipeLogsUpdateColumn {
 }
 
 export type SimpipeLogsUpdates = {
-  /** increments the numeric columns with given value of the filtered values */
-  _inc?: InputMaybe<SimpipeLogsIncInput>;
   /** sets the columns of the filtered rows to the given values */
   _set?: InputMaybe<SimpipeLogsSetInput>;
   /** filter the rows which have to be updated */
   where: SimpipeLogsBoolExp;
 };
 
-/** aggregate var_pop on columns */
-export type SimpipeLogsVar_PopFields = {
-  __typename?: 'SimpipeLogsVar_popFields';
-  stepId?: Maybe<Scalars['Float']>;
-};
-
-/** aggregate var_samp on columns */
-export type SimpipeLogsVar_SampFields = {
-  __typename?: 'SimpipeLogsVar_sampFields';
-  stepId?: Maybe<Scalars['Float']>;
-};
-
-/** aggregate variance on columns */
-export type SimpipeLogsVarianceFields = {
-  __typename?: 'SimpipeLogsVarianceFields';
-  stepId?: Maybe<Scalars['Float']>;
-};
-
-/** columns and relationships of "simpipe.resource_usage" */
-export type SimpipeResourceUsage = {
-  __typename?: 'SimpipeResourceUsage';
-  cpu: Scalars['numeric'];
-  id: Scalars['bigint'];
-  memory: Scalars['numeric'];
-  memoryMax: Scalars['numeric'];
-  rxValue: Scalars['numeric'];
-  /** An object relationship */
-  step: Steps;
-  stepId: Scalars['uuid'];
-  time: Scalars['timestamptz'];
-  txValue: Scalars['numeric'];
-};
-
-/** aggregated selection of "simpipe.resource_usage" */
-export type SimpipeResourceUsageAggregate = {
-  __typename?: 'SimpipeResourceUsageAggregate';
-  aggregate?: Maybe<SimpipeResourceUsageAggregateFields>;
-  nodes: Array<SimpipeResourceUsage>;
-};
-
-/** aggregate fields of "simpipe.resource_usage" */
-export type SimpipeResourceUsageAggregateFields = {
-  __typename?: 'SimpipeResourceUsageAggregateFields';
-  avg?: Maybe<SimpipeResourceUsageAvgFields>;
-  count: Scalars['Int'];
-  max?: Maybe<SimpipeResourceUsageMaxFields>;
-  min?: Maybe<SimpipeResourceUsageMinFields>;
-  stddev?: Maybe<SimpipeResourceUsageStddevFields>;
-  stddevPop?: Maybe<SimpipeResourceUsageStddev_PopFields>;
-  stddevSamp?: Maybe<SimpipeResourceUsageStddev_SampFields>;
-  sum?: Maybe<SimpipeResourceUsageSumFields>;
-  varPop?: Maybe<SimpipeResourceUsageVar_PopFields>;
-  varSamp?: Maybe<SimpipeResourceUsageVar_SampFields>;
-  variance?: Maybe<SimpipeResourceUsageVarianceFields>;
-};
-
-
-/** aggregate fields of "simpipe.resource_usage" */
-export type SimpipeResourceUsageAggregateFieldsCountArgs = {
-  columns?: InputMaybe<Array<SimpipeResourceUsageSelectColumn>>;
-  distinct?: InputMaybe<Scalars['Boolean']>;
-};
-
-/** order by aggregate values of table "simpipe.resource_usage" */
-export type SimpipeResourceUsageAggregateOrderBy = {
-  avg?: InputMaybe<Simpipe_Resource_Usage_Avg_Order_By>;
-  count?: InputMaybe<OrderBy>;
-  max?: InputMaybe<Simpipe_Resource_Usage_Max_Order_By>;
-  min?: InputMaybe<Simpipe_Resource_Usage_Min_Order_By>;
-  stddev?: InputMaybe<Simpipe_Resource_Usage_Stddev_Order_By>;
-  stddev_pop?: InputMaybe<Simpipe_Resource_Usage_Stddev_Pop_Order_By>;
-  stddev_samp?: InputMaybe<Simpipe_Resource_Usage_Stddev_Samp_Order_By>;
-  sum?: InputMaybe<Simpipe_Resource_Usage_Sum_Order_By>;
-  var_pop?: InputMaybe<Simpipe_Resource_Usage_Var_Pop_Order_By>;
-  var_samp?: InputMaybe<Simpipe_Resource_Usage_Var_Samp_Order_By>;
-  variance?: InputMaybe<Simpipe_Resource_Usage_Variance_Order_By>;
-};
-
-/** input type for inserting array relation for remote table "simpipe.resource_usage" */
-export type SimpipeResourceUsageArrRelInsertInput = {
-  data: Array<SimpipeResourceUsageInsertInput>;
-  /** upsert condition */
-  onConflict?: InputMaybe<SimpipeResourceUsageOnConflict>;
-};
-
-/** aggregate avg on columns */
-export type SimpipeResourceUsageAvgFields = {
-  __typename?: 'SimpipeResourceUsageAvgFields';
-  cpu?: Maybe<Scalars['Float']>;
-  id?: Maybe<Scalars['Float']>;
-  memory?: Maybe<Scalars['Float']>;
-  memoryMax?: Maybe<Scalars['Float']>;
-  rxValue?: Maybe<Scalars['Float']>;
-  stepId?: Maybe<Scalars['Float']>;
-  txValue?: Maybe<Scalars['Float']>;
-};
-
-/** Boolean expression to filter rows from the table "simpipe.resource_usage". All fields are combined with a logical 'AND'. */
-export type SimpipeResourceUsageBoolExp = {
-  _and?: InputMaybe<Array<SimpipeResourceUsageBoolExp>>;
-  _not?: InputMaybe<SimpipeResourceUsageBoolExp>;
-  _or?: InputMaybe<Array<SimpipeResourceUsageBoolExp>>;
-  cpu?: InputMaybe<NumericComparisonExp>;
-  id?: InputMaybe<BigintComparisonExp>;
-  memory?: InputMaybe<NumericComparisonExp>;
-  memoryMax?: InputMaybe<NumericComparisonExp>;
-  rxValue?: InputMaybe<NumericComparisonExp>;
-  step?: InputMaybe<StepsBoolExp>;
-  stepId?: InputMaybe<StringComparisonExp>;
-  time?: InputMaybe<TimestamptzComparisonExp>;
-  txValue?: InputMaybe<NumericComparisonExp>;
-};
-
-/** unique or primary key constraints on table "simpipe.resource_usage" */
-export enum SimpipeResourceUsageConstraint {
-  /** unique or primary key constraint on columns "id" */
-  ResourceUsagePkey = 'resource_usage_pkey'
-}
-
-/** input type for incrementing numeric columns in table "simpipe.resource_usage" */
-export type SimpipeResourceUsageIncInput = {
-  cpu?: InputMaybe<Scalars['numeric']>;
-  id?: InputMaybe<Scalars['bigint']>;
-  memory?: InputMaybe<Scalars['numeric']>;
-  memoryMax?: InputMaybe<Scalars['numeric']>;
-  rxValue?: InputMaybe<Scalars['numeric']>;
-  stepId?: InputMaybe<Scalars['uuid']>;
-  txValue?: InputMaybe<Scalars['numeric']>;
-};
-
-/** input type for inserting data into table "simpipe.resource_usage" */
-export type SimpipeResourceUsageInsertInput = {
-  cpu?: InputMaybe<Scalars['numeric']>;
-  id?: InputMaybe<Scalars['bigint']>;
-  memory?: InputMaybe<Scalars['numeric']>;
-  memoryMax?: InputMaybe<Scalars['numeric']>;
-  rxValue?: InputMaybe<Scalars['numeric']>;
-  step?: InputMaybe<StepsObjRelInsertInput>;
-  stepId?: InputMaybe<Scalars['uuid']>;
-  time?: InputMaybe<Scalars['timestamptz']>;
-  txValue?: InputMaybe<Scalars['numeric']>;
-};
-
-/** aggregate max on columns */
-export type SimpipeResourceUsageMaxFields = {
-  __typename?: 'SimpipeResourceUsageMaxFields';
-  cpu?: Maybe<Scalars['numeric']>;
-  id?: Maybe<Scalars['bigint']>;
-  memory?: Maybe<Scalars['numeric']>;
-  memoryMax?: Maybe<Scalars['numeric']>;
-  rxValue?: Maybe<Scalars['numeric']>;
-  stepId?: Maybe<Scalars['uuid']>;
-  time?: Maybe<Scalars['timestamptz']>;
-  txValue?: Maybe<Scalars['numeric']>;
-};
-
-/** aggregate min on columns */
-export type SimpipeResourceUsageMinFields = {
-  __typename?: 'SimpipeResourceUsageMinFields';
-  cpu?: Maybe<Scalars['numeric']>;
-  id?: Maybe<Scalars['bigint']>;
-  memory?: Maybe<Scalars['numeric']>;
-  memoryMax?: Maybe<Scalars['numeric']>;
-  rxValue?: Maybe<Scalars['numeric']>;
-  stepId?: Maybe<Scalars['uuid']>;
-  time?: Maybe<Scalars['timestamptz']>;
-  txValue?: Maybe<Scalars['numeric']>;
-};
-
-/** response of any mutation on the table "simpipe.resource_usage" */
-export type SimpipeResourceUsageMutationResponse = {
-  __typename?: 'SimpipeResourceUsageMutationResponse';
-  /** number of rows affected by the mutation */
-  affected_rows: Scalars['Int'];
-  /** data from the rows affected by the mutation */
-  returning: Array<SimpipeResourceUsage>;
-};
-
-/** on_conflict condition type for table "simpipe.resource_usage" */
-export type SimpipeResourceUsageOnConflict = {
-  constraint: SimpipeResourceUsageConstraint;
-  update_columns?: Array<SimpipeResourceUsageUpdateColumn>;
-  where?: InputMaybe<SimpipeResourceUsageBoolExp>;
-};
-
-/** Ordering options when selecting data from "simpipe.resource_usage". */
-export type SimpipeResourceUsageOrderBy = {
-  cpu?: InputMaybe<OrderBy>;
-  id?: InputMaybe<OrderBy>;
-  memory?: InputMaybe<OrderBy>;
-  memoryMax?: InputMaybe<OrderBy>;
-  rxValue?: InputMaybe<OrderBy>;
-  step?: InputMaybe<StepsOrderBy>;
-  stepId?: InputMaybe<OrderBy>;
-  time?: InputMaybe<OrderBy>;
-  txValue?: InputMaybe<OrderBy>;
-};
-
-/** primary key columns input for table: simpipe.resource_usage */
-export type SimpipeResourceUsagePkColumnsInput = {
-  id: Scalars['bigint'];
-};
-
-/** select columns of table "simpipe.resource_usage" */
-export enum SimpipeResourceUsageSelectColumn {
-  /** column name */
-  Cpu = 'cpu',
-  /** column name */
-  Id = 'id',
-  /** column name */
-  Memory = 'memory',
-  /** column name */
-  MemoryMax = 'memoryMax',
-  /** column name */
-  RxValue = 'rxValue',
-  /** column name */
-  StepId = 'stepId',
-  /** column name */
-  Time = 'time',
-  /** column name */
-  TxValue = 'txValue'
-}
-
-/** input type for updating data in table "simpipe.resource_usage" */
-export type SimpipeResourceUsageSetInput = {
-  cpu?: InputMaybe<Scalars['numeric']>;
-  id?: InputMaybe<Scalars['bigint']>;
-  memory?: InputMaybe<Scalars['numeric']>;
-  memoryMax?: InputMaybe<Scalars['numeric']>;
-  rxValue?: InputMaybe<Scalars['numeric']>;
-  stepId?: InputMaybe<Scalars['uuid']>;
-  time?: InputMaybe<Scalars['timestamptz']>;
-  txValue?: InputMaybe<Scalars['numeric']>;
-};
-
-/** aggregate stddev on columns */
-export type SimpipeResourceUsageStddevFields = {
-  __typename?: 'SimpipeResourceUsageStddevFields';
-  cpu?: Maybe<Scalars['Float']>;
-  id?: Maybe<Scalars['Float']>;
-  memory?: Maybe<Scalars['Float']>;
-  memoryMax?: Maybe<Scalars['Float']>;
-  rxValue?: Maybe<Scalars['Float']>;
-  stepId?: Maybe<Scalars['Float']>;
-  txValue?: Maybe<Scalars['Float']>;
-};
-
-/** aggregate stddev_pop on columns */
-export type SimpipeResourceUsageStddev_PopFields = {
-  __typename?: 'SimpipeResourceUsageStddev_popFields';
-  cpu?: Maybe<Scalars['Float']>;
-  id?: Maybe<Scalars['Float']>;
-  memory?: Maybe<Scalars['Float']>;
-  memoryMax?: Maybe<Scalars['Float']>;
-  rxValue?: Maybe<Scalars['Float']>;
-  stepId?: Maybe<Scalars['Float']>;
-  txValue?: Maybe<Scalars['Float']>;
-};
-
-/** aggregate stddev_samp on columns */
-export type SimpipeResourceUsageStddev_SampFields = {
-  __typename?: 'SimpipeResourceUsageStddev_sampFields';
-  cpu?: Maybe<Scalars['Float']>;
-  id?: Maybe<Scalars['Float']>;
-  memory?: Maybe<Scalars['Float']>;
-  memoryMax?: Maybe<Scalars['Float']>;
-  rxValue?: Maybe<Scalars['Float']>;
-  stepId?: Maybe<Scalars['Float']>;
-  txValue?: Maybe<Scalars['Float']>;
-};
-
-/** Streaming cursor of the table "simpipe_resource_usage" */
-export type SimpipeResourceUsageStreamCursorInput = {
-  /** Stream column input with initial value */
-  initialValue: SimpipeResourceUsageStreamCursorValueInput;
-  /** cursor ordering */
-  ordering?: InputMaybe<CursorOrdering>;
-};
-
-/** Initial value of the column from where the streaming should start */
-export type SimpipeResourceUsageStreamCursorValueInput = {
-  cpu?: InputMaybe<Scalars['numeric']>;
-  id?: InputMaybe<Scalars['bigint']>;
-  memory?: InputMaybe<Scalars['numeric']>;
-  memoryMax?: InputMaybe<Scalars['numeric']>;
-  rxValue?: InputMaybe<Scalars['numeric']>;
-  stepId?: InputMaybe<Scalars['uuid']>;
-  time?: InputMaybe<Scalars['timestamptz']>;
-  txValue?: InputMaybe<Scalars['numeric']>;
-};
-
-/** aggregate sum on columns */
-export type SimpipeResourceUsageSumFields = {
-  __typename?: 'SimpipeResourceUsageSumFields';
-  cpu?: Maybe<Scalars['numeric']>;
-  id?: Maybe<Scalars['bigint']>;
-  memory?: Maybe<Scalars['numeric']>;
-  memoryMax?: Maybe<Scalars['numeric']>;
-  rxValue?: Maybe<Scalars['numeric']>;
-  stepId?: Maybe<Scalars['uuid']>;
-  txValue?: Maybe<Scalars['numeric']>;
-};
-
-/** update columns of table "simpipe.resource_usage" */
-export enum SimpipeResourceUsageUpdateColumn {
-  /** column name */
-  Cpu = 'cpu',
-  /** column name */
-  Id = 'id',
-  /** column name */
-  Memory = 'memory',
-  /** column name */
-  MemoryMax = 'memoryMax',
-  /** column name */
-  RxValue = 'rxValue',
-  /** column name */
-  StepId = 'stepId',
-  /** column name */
-  Time = 'time',
-  /** column name */
-  TxValue = 'txValue'
-}
-
-export type SimpipeResourceUsageUpdates = {
-  /** increments the numeric columns with given value of the filtered values */
-  _inc?: InputMaybe<SimpipeResourceUsageIncInput>;
-  /** sets the columns of the filtered rows to the given values */
-  _set?: InputMaybe<SimpipeResourceUsageSetInput>;
-  /** filter the rows which have to be updated */
-  where: SimpipeResourceUsageBoolExp;
-};
-
-/** aggregate var_pop on columns */
-export type SimpipeResourceUsageVar_PopFields = {
-  __typename?: 'SimpipeResourceUsageVar_popFields';
-  cpu?: Maybe<Scalars['Float']>;
-  id?: Maybe<Scalars['Float']>;
-  memory?: Maybe<Scalars['Float']>;
-  memoryMax?: Maybe<Scalars['Float']>;
-  rxValue?: Maybe<Scalars['Float']>;
-  stepId?: Maybe<Scalars['Float']>;
-  txValue?: Maybe<Scalars['Float']>;
-};
-
-/** aggregate var_samp on columns */
-export type SimpipeResourceUsageVar_SampFields = {
-  __typename?: 'SimpipeResourceUsageVar_sampFields';
-  cpu?: Maybe<Scalars['Float']>;
-  id?: Maybe<Scalars['Float']>;
-  memory?: Maybe<Scalars['Float']>;
-  memoryMax?: Maybe<Scalars['Float']>;
-  rxValue?: Maybe<Scalars['Float']>;
-  stepId?: Maybe<Scalars['Float']>;
-  txValue?: Maybe<Scalars['Float']>;
-};
-
-/** aggregate variance on columns */
-export type SimpipeResourceUsageVarianceFields = {
-  __typename?: 'SimpipeResourceUsageVarianceFields';
-  cpu?: Maybe<Scalars['Float']>;
-  id?: Maybe<Scalars['Float']>;
-  memory?: Maybe<Scalars['Float']>;
-  memoryMax?: Maybe<Scalars['Float']>;
-  rxValue?: Maybe<Scalars['Float']>;
-  stepId?: Maybe<Scalars['Float']>;
-  txValue?: Maybe<Scalars['Float']>;
-};
-
-/** columns and relationships of "simpipe.run_status" */
+/** Status of a run */
 export type SimpipeRunStatus = {
   __typename?: 'SimpipeRunStatus';
   value: Scalars['String'];
@@ -1249,7 +622,7 @@ export type SimpipeRunStatusUpdates = {
   where: SimpipeRunStatusBoolExp;
 };
 
-/** columns and relationships of "simpipe.step_status" */
+/** Status of a step */
 export type SimpipeStepStatus = {
   __typename?: 'SimpipeStepStatus';
   value: Scalars['String'];
@@ -1296,7 +669,7 @@ export enum SimpipeStepStatusEnum {
   Cancelled = 'CANCELLED',
   Completed = 'COMPLETED',
   Failed = 'FAILED',
-  Waiting = 'WAITING'
+  Queued = 'QUEUED'
 }
 
 /** Boolean expression to compare columns of type "SimpipeStepStatusEnum". All fields are combined with logical 'AND'. */
@@ -1388,6 +761,22 @@ export type SimpipeStepStatusUpdates = {
   where: SimpipeStepStatusBoolExp;
 };
 
+export type StepEnvironmentVariable = {
+  /**  The name of the environment variable  */
+  name: Scalars['String'];
+  /**  The name of the step to set the environment variable for  */
+  stepName: Scalars['String'];
+  /**  The value of the environment variable  */
+  value: Scalars['String'];
+};
+
+export type StepTimeout = {
+  /**  The name of the step to set the timeout for  */
+  stepName: Scalars['String'];
+  /**  The timeout in seconds, must be greater than 0 and less than 86400 (24 hours)  */
+  timeout: Scalars['Int'];
+};
+
 /** Boolean expression to compare columns of type "String". All fields are combined with logical 'AND'. */
 export type StringComparisonExp = {
   _eq?: InputMaybe<Scalars['String']>;
@@ -1421,6 +810,19 @@ export type StringComparisonExp = {
   _similar?: InputMaybe<Scalars['String']>;
 };
 
+/** Boolean expression to compare columns of type "timestamp". All fields are combined with logical 'AND'. */
+export type TimestampComparisonExp = {
+  _eq?: InputMaybe<Scalars['timestamp']>;
+  _gt?: InputMaybe<Scalars['timestamp']>;
+  _gte?: InputMaybe<Scalars['timestamp']>;
+  _in?: InputMaybe<Array<Scalars['timestamp']>>;
+  _isNull?: InputMaybe<Scalars['Boolean']>;
+  _lt?: InputMaybe<Scalars['timestamp']>;
+  _lte?: InputMaybe<Scalars['timestamp']>;
+  _neq?: InputMaybe<Scalars['timestamp']>;
+  _nin?: InputMaybe<Array<Scalars['timestamp']>>;
+};
+
 /** Boolean expression to compare columns of type "timestamptz". All fields are combined with logical 'AND'. */
 export type TimestamptzComparisonExp = {
   _eq?: InputMaybe<Scalars['timestamptz']>;
@@ -1447,12 +849,2043 @@ export type UuidComparisonExp = {
   _nin?: InputMaybe<Array<Scalars['uuid']>>;
 };
 
+/** columns and relationships of "simpipe.cpu" */
+export type Cpu = {
+  __typename?: 'cpu';
+  /** An object relationship */
+  run?: Maybe<Runs>;
+  runId?: Maybe<Scalars['String']>;
+  /** An object relationship */
+  simulation?: Maybe<Simulations>;
+  simulationId?: Maybe<Scalars['String']>;
+  /** An object relationship */
+  step?: Maybe<Steps>;
+  stepId?: Maybe<Scalars['String']>;
+  time?: Maybe<Scalars['timestamptz']>;
+  userId?: Maybe<Scalars['String']>;
+  value?: Maybe<Scalars['float8']>;
+};
+
+/** aggregated selection of "simpipe.cpu" */
+export type CpuAggregate = {
+  __typename?: 'cpuAggregate';
+  aggregate?: Maybe<CpuAggregateFields>;
+  nodes: Array<Cpu>;
+};
+
+/** aggregate fields of "simpipe.cpu" */
+export type CpuAggregateFields = {
+  __typename?: 'cpuAggregateFields';
+  avg?: Maybe<CpuAvgFields>;
+  count: Scalars['Int'];
+  max?: Maybe<CpuMaxFields>;
+  min?: Maybe<CpuMinFields>;
+  stddev?: Maybe<CpuStddevFields>;
+  stddevPop?: Maybe<CpuStddev_PopFields>;
+  stddevSamp?: Maybe<CpuStddev_SampFields>;
+  sum?: Maybe<CpuSumFields>;
+  varPop?: Maybe<CpuVar_PopFields>;
+  varSamp?: Maybe<CpuVar_SampFields>;
+  variance?: Maybe<CpuVarianceFields>;
+};
+
+
+/** aggregate fields of "simpipe.cpu" */
+export type CpuAggregateFieldsCountArgs = {
+  columns?: InputMaybe<Array<CpuSelectColumn>>;
+  distinct?: InputMaybe<Scalars['Boolean']>;
+};
+
+/** order by aggregate values of table "simpipe.cpu" */
+export type CpuAggregateOrderBy = {
+  avg?: InputMaybe<Cpu_Avg_Order_By>;
+  count?: InputMaybe<OrderBy>;
+  max?: InputMaybe<Cpu_Max_Order_By>;
+  min?: InputMaybe<Cpu_Min_Order_By>;
+  stddev?: InputMaybe<Cpu_Stddev_Order_By>;
+  stddev_pop?: InputMaybe<Cpu_Stddev_Pop_Order_By>;
+  stddev_samp?: InputMaybe<Cpu_Stddev_Samp_Order_By>;
+  sum?: InputMaybe<Cpu_Sum_Order_By>;
+  var_pop?: InputMaybe<Cpu_Var_Pop_Order_By>;
+  var_samp?: InputMaybe<Cpu_Var_Samp_Order_By>;
+  variance?: InputMaybe<Cpu_Variance_Order_By>;
+};
+
+/** input type for inserting array relation for remote table "simpipe.cpu" */
+export type CpuArrRelInsertInput = {
+  data: Array<CpuInsertInput>;
+};
+
+/** aggregate avg on columns */
+export type CpuAvgFields = {
+  __typename?: 'cpuAvgFields';
+  value?: Maybe<Scalars['Float']>;
+};
+
+/** Boolean expression to filter rows from the table "simpipe.cpu". All fields are combined with a logical 'AND'. */
+export type CpuBoolExp = {
+  _and?: InputMaybe<Array<CpuBoolExp>>;
+  _not?: InputMaybe<CpuBoolExp>;
+  _or?: InputMaybe<Array<CpuBoolExp>>;
+  run?: InputMaybe<RunsBoolExp>;
+  runId?: InputMaybe<StringComparisonExp>;
+  simulation?: InputMaybe<SimulationsBoolExp>;
+  simulationId?: InputMaybe<StringComparisonExp>;
+  step?: InputMaybe<StepsBoolExp>;
+  stepId?: InputMaybe<StringComparisonExp>;
+  time?: InputMaybe<TimestamptzComparisonExp>;
+  userId?: InputMaybe<StringComparisonExp>;
+  value?: InputMaybe<Float8ComparisonExp>;
+};
+
+/** input type for inserting data into table "simpipe.cpu" */
+export type CpuInsertInput = {
+  run?: InputMaybe<RunsObjRelInsertInput>;
+  runId?: InputMaybe<Scalars['String']>;
+  simulation?: InputMaybe<SimulationsObjRelInsertInput>;
+  simulationId?: InputMaybe<Scalars['String']>;
+  step?: InputMaybe<StepsObjRelInsertInput>;
+  stepId?: InputMaybe<Scalars['String']>;
+  time?: InputMaybe<Scalars['timestamptz']>;
+  userId?: InputMaybe<Scalars['String']>;
+  value?: InputMaybe<Scalars['float8']>;
+};
+
+/** aggregate max on columns */
+export type CpuMaxFields = {
+  __typename?: 'cpuMaxFields';
+  runId?: Maybe<Scalars['String']>;
+  simulationId?: Maybe<Scalars['String']>;
+  stepId?: Maybe<Scalars['String']>;
+  time?: Maybe<Scalars['timestamptz']>;
+  userId?: Maybe<Scalars['String']>;
+  value?: Maybe<Scalars['float8']>;
+};
+
+/** aggregate min on columns */
+export type CpuMinFields = {
+  __typename?: 'cpuMinFields';
+  runId?: Maybe<Scalars['String']>;
+  simulationId?: Maybe<Scalars['String']>;
+  stepId?: Maybe<Scalars['String']>;
+  time?: Maybe<Scalars['timestamptz']>;
+  userId?: Maybe<Scalars['String']>;
+  value?: Maybe<Scalars['float8']>;
+};
+
+/** Ordering options when selecting data from "simpipe.cpu". */
+export type CpuOrderBy = {
+  run?: InputMaybe<RunsOrderBy>;
+  runId?: InputMaybe<OrderBy>;
+  simulation?: InputMaybe<SimulationsOrderBy>;
+  simulationId?: InputMaybe<OrderBy>;
+  step?: InputMaybe<StepsOrderBy>;
+  stepId?: InputMaybe<OrderBy>;
+  time?: InputMaybe<OrderBy>;
+  userId?: InputMaybe<OrderBy>;
+  value?: InputMaybe<OrderBy>;
+};
+
+/** select columns of table "simpipe.cpu" */
+export enum CpuSelectColumn {
+  /** column name */
+  RunId = 'runId',
+  /** column name */
+  SimulationId = 'simulationId',
+  /** column name */
+  StepId = 'stepId',
+  /** column name */
+  Time = 'time',
+  /** column name */
+  UserId = 'userId',
+  /** column name */
+  Value = 'value'
+}
+
+/** aggregate stddev on columns */
+export type CpuStddevFields = {
+  __typename?: 'cpuStddevFields';
+  value?: Maybe<Scalars['Float']>;
+};
+
+/** aggregate stddev_pop on columns */
+export type CpuStddev_PopFields = {
+  __typename?: 'cpuStddev_popFields';
+  value?: Maybe<Scalars['Float']>;
+};
+
+/** aggregate stddev_samp on columns */
+export type CpuStddev_SampFields = {
+  __typename?: 'cpuStddev_sampFields';
+  value?: Maybe<Scalars['Float']>;
+};
+
+/** Streaming cursor of the table "cpu" */
+export type CpuStreamCursorInput = {
+  /** Stream column input with initial value */
+  initialValue: CpuStreamCursorValueInput;
+  /** cursor ordering */
+  ordering?: InputMaybe<CursorOrdering>;
+};
+
+/** Initial value of the column from where the streaming should start */
+export type CpuStreamCursorValueInput = {
+  runId?: InputMaybe<Scalars['String']>;
+  simulationId?: InputMaybe<Scalars['String']>;
+  stepId?: InputMaybe<Scalars['String']>;
+  time?: InputMaybe<Scalars['timestamptz']>;
+  userId?: InputMaybe<Scalars['String']>;
+  value?: InputMaybe<Scalars['float8']>;
+};
+
+/** aggregate sum on columns */
+export type CpuSumFields = {
+  __typename?: 'cpuSumFields';
+  value?: Maybe<Scalars['float8']>;
+};
+
+/** aggregate var_pop on columns */
+export type CpuVar_PopFields = {
+  __typename?: 'cpuVar_popFields';
+  value?: Maybe<Scalars['Float']>;
+};
+
+/** aggregate var_samp on columns */
+export type CpuVar_SampFields = {
+  __typename?: 'cpuVar_sampFields';
+  value?: Maybe<Scalars['Float']>;
+};
+
+/** aggregate variance on columns */
+export type CpuVarianceFields = {
+  __typename?: 'cpuVarianceFields';
+  value?: Maybe<Scalars['Float']>;
+};
+
+export type Cpu_Aggregate_Bool_Exp = {
+  avg?: InputMaybe<Cpu_Aggregate_Bool_Exp_Avg>;
+  corr?: InputMaybe<Cpu_Aggregate_Bool_Exp_Corr>;
+  count?: InputMaybe<Cpu_Aggregate_Bool_Exp_Count>;
+  covar_samp?: InputMaybe<Cpu_Aggregate_Bool_Exp_Covar_Samp>;
+  max?: InputMaybe<Cpu_Aggregate_Bool_Exp_Max>;
+  min?: InputMaybe<Cpu_Aggregate_Bool_Exp_Min>;
+  stddev_samp?: InputMaybe<Cpu_Aggregate_Bool_Exp_Stddev_Samp>;
+  sum?: InputMaybe<Cpu_Aggregate_Bool_Exp_Sum>;
+  var_samp?: InputMaybe<Cpu_Aggregate_Bool_Exp_Var_Samp>;
+};
+
+export type Cpu_Aggregate_Bool_Exp_Avg = {
+  arguments: Cpu_Select_Column_Cpu_Aggregate_Bool_Exp_Avg_Arguments_Columns;
+  distinct?: InputMaybe<Scalars['Boolean']>;
+  filter?: InputMaybe<CpuBoolExp>;
+  predicate: Float8ComparisonExp;
+};
+
+export type Cpu_Aggregate_Bool_Exp_Corr = {
+  arguments: Cpu_Aggregate_Bool_Exp_Corr_Arguments;
+  distinct?: InputMaybe<Scalars['Boolean']>;
+  filter?: InputMaybe<CpuBoolExp>;
+  predicate: Float8ComparisonExp;
+};
+
+export type Cpu_Aggregate_Bool_Exp_Corr_Arguments = {
+  X: Cpu_Select_Column_Cpu_Aggregate_Bool_Exp_Corr_Arguments_Columns;
+  Y: Cpu_Select_Column_Cpu_Aggregate_Bool_Exp_Corr_Arguments_Columns;
+};
+
+export type Cpu_Aggregate_Bool_Exp_Count = {
+  arguments?: InputMaybe<Array<CpuSelectColumn>>;
+  distinct?: InputMaybe<Scalars['Boolean']>;
+  filter?: InputMaybe<CpuBoolExp>;
+  predicate: IntComparisonExp;
+};
+
+export type Cpu_Aggregate_Bool_Exp_Covar_Samp = {
+  arguments: Cpu_Aggregate_Bool_Exp_Covar_Samp_Arguments;
+  distinct?: InputMaybe<Scalars['Boolean']>;
+  filter?: InputMaybe<CpuBoolExp>;
+  predicate: Float8ComparisonExp;
+};
+
+export type Cpu_Aggregate_Bool_Exp_Covar_Samp_Arguments = {
+  X: Cpu_Select_Column_Cpu_Aggregate_Bool_Exp_Covar_Samp_Arguments_Columns;
+  Y: Cpu_Select_Column_Cpu_Aggregate_Bool_Exp_Covar_Samp_Arguments_Columns;
+};
+
+export type Cpu_Aggregate_Bool_Exp_Max = {
+  arguments: Cpu_Select_Column_Cpu_Aggregate_Bool_Exp_Max_Arguments_Columns;
+  distinct?: InputMaybe<Scalars['Boolean']>;
+  filter?: InputMaybe<CpuBoolExp>;
+  predicate: Float8ComparisonExp;
+};
+
+export type Cpu_Aggregate_Bool_Exp_Min = {
+  arguments: Cpu_Select_Column_Cpu_Aggregate_Bool_Exp_Min_Arguments_Columns;
+  distinct?: InputMaybe<Scalars['Boolean']>;
+  filter?: InputMaybe<CpuBoolExp>;
+  predicate: Float8ComparisonExp;
+};
+
+export type Cpu_Aggregate_Bool_Exp_Stddev_Samp = {
+  arguments: Cpu_Select_Column_Cpu_Aggregate_Bool_Exp_Stddev_Samp_Arguments_Columns;
+  distinct?: InputMaybe<Scalars['Boolean']>;
+  filter?: InputMaybe<CpuBoolExp>;
+  predicate: Float8ComparisonExp;
+};
+
+export type Cpu_Aggregate_Bool_Exp_Sum = {
+  arguments: Cpu_Select_Column_Cpu_Aggregate_Bool_Exp_Sum_Arguments_Columns;
+  distinct?: InputMaybe<Scalars['Boolean']>;
+  filter?: InputMaybe<CpuBoolExp>;
+  predicate: Float8ComparisonExp;
+};
+
+export type Cpu_Aggregate_Bool_Exp_Var_Samp = {
+  arguments: Cpu_Select_Column_Cpu_Aggregate_Bool_Exp_Var_Samp_Arguments_Columns;
+  distinct?: InputMaybe<Scalars['Boolean']>;
+  filter?: InputMaybe<CpuBoolExp>;
+  predicate: Float8ComparisonExp;
+};
+
+/** order by avg() on columns of table "simpipe.cpu" */
+export type Cpu_Avg_Order_By = {
+  value?: InputMaybe<OrderBy>;
+};
+
+/** order by max() on columns of table "simpipe.cpu" */
+export type Cpu_Max_Order_By = {
+  runId?: InputMaybe<OrderBy>;
+  simulationId?: InputMaybe<OrderBy>;
+  stepId?: InputMaybe<OrderBy>;
+  time?: InputMaybe<OrderBy>;
+  userId?: InputMaybe<OrderBy>;
+  value?: InputMaybe<OrderBy>;
+};
+
+/** order by min() on columns of table "simpipe.cpu" */
+export type Cpu_Min_Order_By = {
+  runId?: InputMaybe<OrderBy>;
+  simulationId?: InputMaybe<OrderBy>;
+  stepId?: InputMaybe<OrderBy>;
+  time?: InputMaybe<OrderBy>;
+  userId?: InputMaybe<OrderBy>;
+  value?: InputMaybe<OrderBy>;
+};
+
+/** select "cpu_aggregate_bool_exp_avg_arguments_columns" columns of table "simpipe.cpu" */
+export enum Cpu_Select_Column_Cpu_Aggregate_Bool_Exp_Avg_Arguments_Columns {
+  /** column name */
+  Value = 'value'
+}
+
+/** select "cpu_aggregate_bool_exp_corr_arguments_columns" columns of table "simpipe.cpu" */
+export enum Cpu_Select_Column_Cpu_Aggregate_Bool_Exp_Corr_Arguments_Columns {
+  /** column name */
+  Value = 'value'
+}
+
+/** select "cpu_aggregate_bool_exp_covar_samp_arguments_columns" columns of table "simpipe.cpu" */
+export enum Cpu_Select_Column_Cpu_Aggregate_Bool_Exp_Covar_Samp_Arguments_Columns {
+  /** column name */
+  Value = 'value'
+}
+
+/** select "cpu_aggregate_bool_exp_max_arguments_columns" columns of table "simpipe.cpu" */
+export enum Cpu_Select_Column_Cpu_Aggregate_Bool_Exp_Max_Arguments_Columns {
+  /** column name */
+  Value = 'value'
+}
+
+/** select "cpu_aggregate_bool_exp_min_arguments_columns" columns of table "simpipe.cpu" */
+export enum Cpu_Select_Column_Cpu_Aggregate_Bool_Exp_Min_Arguments_Columns {
+  /** column name */
+  Value = 'value'
+}
+
+/** select "cpu_aggregate_bool_exp_stddev_samp_arguments_columns" columns of table "simpipe.cpu" */
+export enum Cpu_Select_Column_Cpu_Aggregate_Bool_Exp_Stddev_Samp_Arguments_Columns {
+  /** column name */
+  Value = 'value'
+}
+
+/** select "cpu_aggregate_bool_exp_sum_arguments_columns" columns of table "simpipe.cpu" */
+export enum Cpu_Select_Column_Cpu_Aggregate_Bool_Exp_Sum_Arguments_Columns {
+  /** column name */
+  Value = 'value'
+}
+
+/** select "cpu_aggregate_bool_exp_var_samp_arguments_columns" columns of table "simpipe.cpu" */
+export enum Cpu_Select_Column_Cpu_Aggregate_Bool_Exp_Var_Samp_Arguments_Columns {
+  /** column name */
+  Value = 'value'
+}
+
+/** order by stddev() on columns of table "simpipe.cpu" */
+export type Cpu_Stddev_Order_By = {
+  value?: InputMaybe<OrderBy>;
+};
+
+/** order by stddev_pop() on columns of table "simpipe.cpu" */
+export type Cpu_Stddev_Pop_Order_By = {
+  value?: InputMaybe<OrderBy>;
+};
+
+/** order by stddev_samp() on columns of table "simpipe.cpu" */
+export type Cpu_Stddev_Samp_Order_By = {
+  value?: InputMaybe<OrderBy>;
+};
+
+/** order by sum() on columns of table "simpipe.cpu" */
+export type Cpu_Sum_Order_By = {
+  value?: InputMaybe<OrderBy>;
+};
+
+/** order by var_pop() on columns of table "simpipe.cpu" */
+export type Cpu_Var_Pop_Order_By = {
+  value?: InputMaybe<OrderBy>;
+};
+
+/** order by var_samp() on columns of table "simpipe.cpu" */
+export type Cpu_Var_Samp_Order_By = {
+  value?: InputMaybe<OrderBy>;
+};
+
+/** order by variance() on columns of table "simpipe.cpu" */
+export type Cpu_Variance_Order_By = {
+  value?: InputMaybe<OrderBy>;
+};
+
+/** columns and relationships of "simpipe.fs_reads_merged" */
+export type FsReadsMerged = {
+  __typename?: 'fsReadsMerged';
+  /** An object relationship */
+  run?: Maybe<Runs>;
+  runId?: Maybe<Scalars['String']>;
+  /** An object relationship */
+  simulation?: Maybe<Simulations>;
+  simulationId?: Maybe<Scalars['String']>;
+  /** An object relationship */
+  step?: Maybe<Steps>;
+  stepId?: Maybe<Scalars['String']>;
+  time?: Maybe<Scalars['timestamptz']>;
+  userId?: Maybe<Scalars['String']>;
+  value?: Maybe<Scalars['float8']>;
+};
+
+/** aggregated selection of "simpipe.fs_reads_merged" */
+export type FsReadsMergedAggregate = {
+  __typename?: 'fsReadsMergedAggregate';
+  aggregate?: Maybe<FsReadsMergedAggregateFields>;
+  nodes: Array<FsReadsMerged>;
+};
+
+/** aggregate fields of "simpipe.fs_reads_merged" */
+export type FsReadsMergedAggregateFields = {
+  __typename?: 'fsReadsMergedAggregateFields';
+  avg?: Maybe<FsReadsMergedAvgFields>;
+  count: Scalars['Int'];
+  max?: Maybe<FsReadsMergedMaxFields>;
+  min?: Maybe<FsReadsMergedMinFields>;
+  stddev?: Maybe<FsReadsMergedStddevFields>;
+  stddevPop?: Maybe<FsReadsMergedStddev_PopFields>;
+  stddevSamp?: Maybe<FsReadsMergedStddev_SampFields>;
+  sum?: Maybe<FsReadsMergedSumFields>;
+  varPop?: Maybe<FsReadsMergedVar_PopFields>;
+  varSamp?: Maybe<FsReadsMergedVar_SampFields>;
+  variance?: Maybe<FsReadsMergedVarianceFields>;
+};
+
+
+/** aggregate fields of "simpipe.fs_reads_merged" */
+export type FsReadsMergedAggregateFieldsCountArgs = {
+  columns?: InputMaybe<Array<FsReadsMergedSelectColumn>>;
+  distinct?: InputMaybe<Scalars['Boolean']>;
+};
+
+/** order by aggregate values of table "simpipe.fs_reads_merged" */
+export type FsReadsMergedAggregateOrderBy = {
+  avg?: InputMaybe<FsReadsMerged_Avg_Order_By>;
+  count?: InputMaybe<OrderBy>;
+  max?: InputMaybe<FsReadsMerged_Max_Order_By>;
+  min?: InputMaybe<FsReadsMerged_Min_Order_By>;
+  stddev?: InputMaybe<FsReadsMerged_Stddev_Order_By>;
+  stddev_pop?: InputMaybe<FsReadsMerged_Stddev_Pop_Order_By>;
+  stddev_samp?: InputMaybe<FsReadsMerged_Stddev_Samp_Order_By>;
+  sum?: InputMaybe<FsReadsMerged_Sum_Order_By>;
+  var_pop?: InputMaybe<FsReadsMerged_Var_Pop_Order_By>;
+  var_samp?: InputMaybe<FsReadsMerged_Var_Samp_Order_By>;
+  variance?: InputMaybe<FsReadsMerged_Variance_Order_By>;
+};
+
+/** input type for inserting array relation for remote table "simpipe.fs_reads_merged" */
+export type FsReadsMergedArrRelInsertInput = {
+  data: Array<FsReadsMergedInsertInput>;
+};
+
+/** aggregate avg on columns */
+export type FsReadsMergedAvgFields = {
+  __typename?: 'fsReadsMergedAvgFields';
+  value?: Maybe<Scalars['Float']>;
+};
+
+/** Boolean expression to filter rows from the table "simpipe.fs_reads_merged". All fields are combined with a logical 'AND'. */
+export type FsReadsMergedBoolExp = {
+  _and?: InputMaybe<Array<FsReadsMergedBoolExp>>;
+  _not?: InputMaybe<FsReadsMergedBoolExp>;
+  _or?: InputMaybe<Array<FsReadsMergedBoolExp>>;
+  run?: InputMaybe<RunsBoolExp>;
+  runId?: InputMaybe<StringComparisonExp>;
+  simulation?: InputMaybe<SimulationsBoolExp>;
+  simulationId?: InputMaybe<StringComparisonExp>;
+  step?: InputMaybe<StepsBoolExp>;
+  stepId?: InputMaybe<StringComparisonExp>;
+  time?: InputMaybe<TimestamptzComparisonExp>;
+  userId?: InputMaybe<StringComparisonExp>;
+  value?: InputMaybe<Float8ComparisonExp>;
+};
+
+/** input type for inserting data into table "simpipe.fs_reads_merged" */
+export type FsReadsMergedInsertInput = {
+  run?: InputMaybe<RunsObjRelInsertInput>;
+  runId?: InputMaybe<Scalars['String']>;
+  simulation?: InputMaybe<SimulationsObjRelInsertInput>;
+  simulationId?: InputMaybe<Scalars['String']>;
+  step?: InputMaybe<StepsObjRelInsertInput>;
+  stepId?: InputMaybe<Scalars['String']>;
+  time?: InputMaybe<Scalars['timestamptz']>;
+  userId?: InputMaybe<Scalars['String']>;
+  value?: InputMaybe<Scalars['float8']>;
+};
+
+/** aggregate max on columns */
+export type FsReadsMergedMaxFields = {
+  __typename?: 'fsReadsMergedMaxFields';
+  runId?: Maybe<Scalars['String']>;
+  simulationId?: Maybe<Scalars['String']>;
+  stepId?: Maybe<Scalars['String']>;
+  time?: Maybe<Scalars['timestamptz']>;
+  userId?: Maybe<Scalars['String']>;
+  value?: Maybe<Scalars['float8']>;
+};
+
+/** aggregate min on columns */
+export type FsReadsMergedMinFields = {
+  __typename?: 'fsReadsMergedMinFields';
+  runId?: Maybe<Scalars['String']>;
+  simulationId?: Maybe<Scalars['String']>;
+  stepId?: Maybe<Scalars['String']>;
+  time?: Maybe<Scalars['timestamptz']>;
+  userId?: Maybe<Scalars['String']>;
+  value?: Maybe<Scalars['float8']>;
+};
+
+/** Ordering options when selecting data from "simpipe.fs_reads_merged". */
+export type FsReadsMergedOrderBy = {
+  run?: InputMaybe<RunsOrderBy>;
+  runId?: InputMaybe<OrderBy>;
+  simulation?: InputMaybe<SimulationsOrderBy>;
+  simulationId?: InputMaybe<OrderBy>;
+  step?: InputMaybe<StepsOrderBy>;
+  stepId?: InputMaybe<OrderBy>;
+  time?: InputMaybe<OrderBy>;
+  userId?: InputMaybe<OrderBy>;
+  value?: InputMaybe<OrderBy>;
+};
+
+/** select columns of table "simpipe.fs_reads_merged" */
+export enum FsReadsMergedSelectColumn {
+  /** column name */
+  RunId = 'runId',
+  /** column name */
+  SimulationId = 'simulationId',
+  /** column name */
+  StepId = 'stepId',
+  /** column name */
+  Time = 'time',
+  /** column name */
+  UserId = 'userId',
+  /** column name */
+  Value = 'value'
+}
+
+/** aggregate stddev on columns */
+export type FsReadsMergedStddevFields = {
+  __typename?: 'fsReadsMergedStddevFields';
+  value?: Maybe<Scalars['Float']>;
+};
+
+/** aggregate stddev_pop on columns */
+export type FsReadsMergedStddev_PopFields = {
+  __typename?: 'fsReadsMergedStddev_popFields';
+  value?: Maybe<Scalars['Float']>;
+};
+
+/** aggregate stddev_samp on columns */
+export type FsReadsMergedStddev_SampFields = {
+  __typename?: 'fsReadsMergedStddev_sampFields';
+  value?: Maybe<Scalars['Float']>;
+};
+
+/** Streaming cursor of the table "fsReadsMerged" */
+export type FsReadsMergedStreamCursorInput = {
+  /** Stream column input with initial value */
+  initialValue: FsReadsMergedStreamCursorValueInput;
+  /** cursor ordering */
+  ordering?: InputMaybe<CursorOrdering>;
+};
+
+/** Initial value of the column from where the streaming should start */
+export type FsReadsMergedStreamCursorValueInput = {
+  runId?: InputMaybe<Scalars['String']>;
+  simulationId?: InputMaybe<Scalars['String']>;
+  stepId?: InputMaybe<Scalars['String']>;
+  time?: InputMaybe<Scalars['timestamptz']>;
+  userId?: InputMaybe<Scalars['String']>;
+  value?: InputMaybe<Scalars['float8']>;
+};
+
+/** aggregate sum on columns */
+export type FsReadsMergedSumFields = {
+  __typename?: 'fsReadsMergedSumFields';
+  value?: Maybe<Scalars['float8']>;
+};
+
+/** aggregate var_pop on columns */
+export type FsReadsMergedVar_PopFields = {
+  __typename?: 'fsReadsMergedVar_popFields';
+  value?: Maybe<Scalars['Float']>;
+};
+
+/** aggregate var_samp on columns */
+export type FsReadsMergedVar_SampFields = {
+  __typename?: 'fsReadsMergedVar_sampFields';
+  value?: Maybe<Scalars['Float']>;
+};
+
+/** aggregate variance on columns */
+export type FsReadsMergedVarianceFields = {
+  __typename?: 'fsReadsMergedVarianceFields';
+  value?: Maybe<Scalars['Float']>;
+};
+
+export type FsReadsMerged_Aggregate_Bool_Exp = {
+  avg?: InputMaybe<FsReadsMerged_Aggregate_Bool_Exp_Avg>;
+  corr?: InputMaybe<FsReadsMerged_Aggregate_Bool_Exp_Corr>;
+  count?: InputMaybe<FsReadsMerged_Aggregate_Bool_Exp_Count>;
+  covar_samp?: InputMaybe<FsReadsMerged_Aggregate_Bool_Exp_Covar_Samp>;
+  max?: InputMaybe<FsReadsMerged_Aggregate_Bool_Exp_Max>;
+  min?: InputMaybe<FsReadsMerged_Aggregate_Bool_Exp_Min>;
+  stddev_samp?: InputMaybe<FsReadsMerged_Aggregate_Bool_Exp_Stddev_Samp>;
+  sum?: InputMaybe<FsReadsMerged_Aggregate_Bool_Exp_Sum>;
+  var_samp?: InputMaybe<FsReadsMerged_Aggregate_Bool_Exp_Var_Samp>;
+};
+
+export type FsReadsMerged_Aggregate_Bool_Exp_Avg = {
+  arguments: FsReadsMerged_Select_Column_FsReadsMerged_Aggregate_Bool_Exp_Avg_Arguments_Columns;
+  distinct?: InputMaybe<Scalars['Boolean']>;
+  filter?: InputMaybe<FsReadsMergedBoolExp>;
+  predicate: Float8ComparisonExp;
+};
+
+export type FsReadsMerged_Aggregate_Bool_Exp_Corr = {
+  arguments: FsReadsMerged_Aggregate_Bool_Exp_Corr_Arguments;
+  distinct?: InputMaybe<Scalars['Boolean']>;
+  filter?: InputMaybe<FsReadsMergedBoolExp>;
+  predicate: Float8ComparisonExp;
+};
+
+export type FsReadsMerged_Aggregate_Bool_Exp_Corr_Arguments = {
+  X: FsReadsMerged_Select_Column_FsReadsMerged_Aggregate_Bool_Exp_Corr_Arguments_Columns;
+  Y: FsReadsMerged_Select_Column_FsReadsMerged_Aggregate_Bool_Exp_Corr_Arguments_Columns;
+};
+
+export type FsReadsMerged_Aggregate_Bool_Exp_Count = {
+  arguments?: InputMaybe<Array<FsReadsMergedSelectColumn>>;
+  distinct?: InputMaybe<Scalars['Boolean']>;
+  filter?: InputMaybe<FsReadsMergedBoolExp>;
+  predicate: IntComparisonExp;
+};
+
+export type FsReadsMerged_Aggregate_Bool_Exp_Covar_Samp = {
+  arguments: FsReadsMerged_Aggregate_Bool_Exp_Covar_Samp_Arguments;
+  distinct?: InputMaybe<Scalars['Boolean']>;
+  filter?: InputMaybe<FsReadsMergedBoolExp>;
+  predicate: Float8ComparisonExp;
+};
+
+export type FsReadsMerged_Aggregate_Bool_Exp_Covar_Samp_Arguments = {
+  X: FsReadsMerged_Select_Column_FsReadsMerged_Aggregate_Bool_Exp_Covar_Samp_Arguments_Columns;
+  Y: FsReadsMerged_Select_Column_FsReadsMerged_Aggregate_Bool_Exp_Covar_Samp_Arguments_Columns;
+};
+
+export type FsReadsMerged_Aggregate_Bool_Exp_Max = {
+  arguments: FsReadsMerged_Select_Column_FsReadsMerged_Aggregate_Bool_Exp_Max_Arguments_Columns;
+  distinct?: InputMaybe<Scalars['Boolean']>;
+  filter?: InputMaybe<FsReadsMergedBoolExp>;
+  predicate: Float8ComparisonExp;
+};
+
+export type FsReadsMerged_Aggregate_Bool_Exp_Min = {
+  arguments: FsReadsMerged_Select_Column_FsReadsMerged_Aggregate_Bool_Exp_Min_Arguments_Columns;
+  distinct?: InputMaybe<Scalars['Boolean']>;
+  filter?: InputMaybe<FsReadsMergedBoolExp>;
+  predicate: Float8ComparisonExp;
+};
+
+export type FsReadsMerged_Aggregate_Bool_Exp_Stddev_Samp = {
+  arguments: FsReadsMerged_Select_Column_FsReadsMerged_Aggregate_Bool_Exp_Stddev_Samp_Arguments_Columns;
+  distinct?: InputMaybe<Scalars['Boolean']>;
+  filter?: InputMaybe<FsReadsMergedBoolExp>;
+  predicate: Float8ComparisonExp;
+};
+
+export type FsReadsMerged_Aggregate_Bool_Exp_Sum = {
+  arguments: FsReadsMerged_Select_Column_FsReadsMerged_Aggregate_Bool_Exp_Sum_Arguments_Columns;
+  distinct?: InputMaybe<Scalars['Boolean']>;
+  filter?: InputMaybe<FsReadsMergedBoolExp>;
+  predicate: Float8ComparisonExp;
+};
+
+export type FsReadsMerged_Aggregate_Bool_Exp_Var_Samp = {
+  arguments: FsReadsMerged_Select_Column_FsReadsMerged_Aggregate_Bool_Exp_Var_Samp_Arguments_Columns;
+  distinct?: InputMaybe<Scalars['Boolean']>;
+  filter?: InputMaybe<FsReadsMergedBoolExp>;
+  predicate: Float8ComparisonExp;
+};
+
+/** order by avg() on columns of table "simpipe.fs_reads_merged" */
+export type FsReadsMerged_Avg_Order_By = {
+  value?: InputMaybe<OrderBy>;
+};
+
+/** order by max() on columns of table "simpipe.fs_reads_merged" */
+export type FsReadsMerged_Max_Order_By = {
+  runId?: InputMaybe<OrderBy>;
+  simulationId?: InputMaybe<OrderBy>;
+  stepId?: InputMaybe<OrderBy>;
+  time?: InputMaybe<OrderBy>;
+  userId?: InputMaybe<OrderBy>;
+  value?: InputMaybe<OrderBy>;
+};
+
+/** order by min() on columns of table "simpipe.fs_reads_merged" */
+export type FsReadsMerged_Min_Order_By = {
+  runId?: InputMaybe<OrderBy>;
+  simulationId?: InputMaybe<OrderBy>;
+  stepId?: InputMaybe<OrderBy>;
+  time?: InputMaybe<OrderBy>;
+  userId?: InputMaybe<OrderBy>;
+  value?: InputMaybe<OrderBy>;
+};
+
+/** select "fsReadsMerged_aggregate_bool_exp_avg_arguments_columns" columns of table "simpipe.fs_reads_merged" */
+export enum FsReadsMerged_Select_Column_FsReadsMerged_Aggregate_Bool_Exp_Avg_Arguments_Columns {
+  /** column name */
+  Value = 'value'
+}
+
+/** select "fsReadsMerged_aggregate_bool_exp_corr_arguments_columns" columns of table "simpipe.fs_reads_merged" */
+export enum FsReadsMerged_Select_Column_FsReadsMerged_Aggregate_Bool_Exp_Corr_Arguments_Columns {
+  /** column name */
+  Value = 'value'
+}
+
+/** select "fsReadsMerged_aggregate_bool_exp_covar_samp_arguments_columns" columns of table "simpipe.fs_reads_merged" */
+export enum FsReadsMerged_Select_Column_FsReadsMerged_Aggregate_Bool_Exp_Covar_Samp_Arguments_Columns {
+  /** column name */
+  Value = 'value'
+}
+
+/** select "fsReadsMerged_aggregate_bool_exp_max_arguments_columns" columns of table "simpipe.fs_reads_merged" */
+export enum FsReadsMerged_Select_Column_FsReadsMerged_Aggregate_Bool_Exp_Max_Arguments_Columns {
+  /** column name */
+  Value = 'value'
+}
+
+/** select "fsReadsMerged_aggregate_bool_exp_min_arguments_columns" columns of table "simpipe.fs_reads_merged" */
+export enum FsReadsMerged_Select_Column_FsReadsMerged_Aggregate_Bool_Exp_Min_Arguments_Columns {
+  /** column name */
+  Value = 'value'
+}
+
+/** select "fsReadsMerged_aggregate_bool_exp_stddev_samp_arguments_columns" columns of table "simpipe.fs_reads_merged" */
+export enum FsReadsMerged_Select_Column_FsReadsMerged_Aggregate_Bool_Exp_Stddev_Samp_Arguments_Columns {
+  /** column name */
+  Value = 'value'
+}
+
+/** select "fsReadsMerged_aggregate_bool_exp_sum_arguments_columns" columns of table "simpipe.fs_reads_merged" */
+export enum FsReadsMerged_Select_Column_FsReadsMerged_Aggregate_Bool_Exp_Sum_Arguments_Columns {
+  /** column name */
+  Value = 'value'
+}
+
+/** select "fsReadsMerged_aggregate_bool_exp_var_samp_arguments_columns" columns of table "simpipe.fs_reads_merged" */
+export enum FsReadsMerged_Select_Column_FsReadsMerged_Aggregate_Bool_Exp_Var_Samp_Arguments_Columns {
+  /** column name */
+  Value = 'value'
+}
+
+/** order by stddev() on columns of table "simpipe.fs_reads_merged" */
+export type FsReadsMerged_Stddev_Order_By = {
+  value?: InputMaybe<OrderBy>;
+};
+
+/** order by stddev_pop() on columns of table "simpipe.fs_reads_merged" */
+export type FsReadsMerged_Stddev_Pop_Order_By = {
+  value?: InputMaybe<OrderBy>;
+};
+
+/** order by stddev_samp() on columns of table "simpipe.fs_reads_merged" */
+export type FsReadsMerged_Stddev_Samp_Order_By = {
+  value?: InputMaybe<OrderBy>;
+};
+
+/** order by sum() on columns of table "simpipe.fs_reads_merged" */
+export type FsReadsMerged_Sum_Order_By = {
+  value?: InputMaybe<OrderBy>;
+};
+
+/** order by var_pop() on columns of table "simpipe.fs_reads_merged" */
+export type FsReadsMerged_Var_Pop_Order_By = {
+  value?: InputMaybe<OrderBy>;
+};
+
+/** order by var_samp() on columns of table "simpipe.fs_reads_merged" */
+export type FsReadsMerged_Var_Samp_Order_By = {
+  value?: InputMaybe<OrderBy>;
+};
+
+/** order by variance() on columns of table "simpipe.fs_reads_merged" */
+export type FsReadsMerged_Variance_Order_By = {
+  value?: InputMaybe<OrderBy>;
+};
+
+/** columns and relationships of "simpipe.fs_writes_merged" */
+export type FsWritesMerged = {
+  __typename?: 'fsWritesMerged';
+  /** An object relationship */
+  run?: Maybe<Runs>;
+  runId?: Maybe<Scalars['String']>;
+  /** An object relationship */
+  simulation?: Maybe<Simulations>;
+  simulationId?: Maybe<Scalars['String']>;
+  /** An object relationship */
+  step?: Maybe<Steps>;
+  stepId?: Maybe<Scalars['String']>;
+  time?: Maybe<Scalars['timestamptz']>;
+  userId?: Maybe<Scalars['String']>;
+  value?: Maybe<Scalars['float8']>;
+};
+
+/** aggregated selection of "simpipe.fs_writes_merged" */
+export type FsWritesMergedAggregate = {
+  __typename?: 'fsWritesMergedAggregate';
+  aggregate?: Maybe<FsWritesMergedAggregateFields>;
+  nodes: Array<FsWritesMerged>;
+};
+
+/** aggregate fields of "simpipe.fs_writes_merged" */
+export type FsWritesMergedAggregateFields = {
+  __typename?: 'fsWritesMergedAggregateFields';
+  avg?: Maybe<FsWritesMergedAvgFields>;
+  count: Scalars['Int'];
+  max?: Maybe<FsWritesMergedMaxFields>;
+  min?: Maybe<FsWritesMergedMinFields>;
+  stddev?: Maybe<FsWritesMergedStddevFields>;
+  stddevPop?: Maybe<FsWritesMergedStddev_PopFields>;
+  stddevSamp?: Maybe<FsWritesMergedStddev_SampFields>;
+  sum?: Maybe<FsWritesMergedSumFields>;
+  varPop?: Maybe<FsWritesMergedVar_PopFields>;
+  varSamp?: Maybe<FsWritesMergedVar_SampFields>;
+  variance?: Maybe<FsWritesMergedVarianceFields>;
+};
+
+
+/** aggregate fields of "simpipe.fs_writes_merged" */
+export type FsWritesMergedAggregateFieldsCountArgs = {
+  columns?: InputMaybe<Array<FsWritesMergedSelectColumn>>;
+  distinct?: InputMaybe<Scalars['Boolean']>;
+};
+
+/** order by aggregate values of table "simpipe.fs_writes_merged" */
+export type FsWritesMergedAggregateOrderBy = {
+  avg?: InputMaybe<FsWritesMerged_Avg_Order_By>;
+  count?: InputMaybe<OrderBy>;
+  max?: InputMaybe<FsWritesMerged_Max_Order_By>;
+  min?: InputMaybe<FsWritesMerged_Min_Order_By>;
+  stddev?: InputMaybe<FsWritesMerged_Stddev_Order_By>;
+  stddev_pop?: InputMaybe<FsWritesMerged_Stddev_Pop_Order_By>;
+  stddev_samp?: InputMaybe<FsWritesMerged_Stddev_Samp_Order_By>;
+  sum?: InputMaybe<FsWritesMerged_Sum_Order_By>;
+  var_pop?: InputMaybe<FsWritesMerged_Var_Pop_Order_By>;
+  var_samp?: InputMaybe<FsWritesMerged_Var_Samp_Order_By>;
+  variance?: InputMaybe<FsWritesMerged_Variance_Order_By>;
+};
+
+/** input type for inserting array relation for remote table "simpipe.fs_writes_merged" */
+export type FsWritesMergedArrRelInsertInput = {
+  data: Array<FsWritesMergedInsertInput>;
+};
+
+/** aggregate avg on columns */
+export type FsWritesMergedAvgFields = {
+  __typename?: 'fsWritesMergedAvgFields';
+  value?: Maybe<Scalars['Float']>;
+};
+
+/** Boolean expression to filter rows from the table "simpipe.fs_writes_merged". All fields are combined with a logical 'AND'. */
+export type FsWritesMergedBoolExp = {
+  _and?: InputMaybe<Array<FsWritesMergedBoolExp>>;
+  _not?: InputMaybe<FsWritesMergedBoolExp>;
+  _or?: InputMaybe<Array<FsWritesMergedBoolExp>>;
+  run?: InputMaybe<RunsBoolExp>;
+  runId?: InputMaybe<StringComparisonExp>;
+  simulation?: InputMaybe<SimulationsBoolExp>;
+  simulationId?: InputMaybe<StringComparisonExp>;
+  step?: InputMaybe<StepsBoolExp>;
+  stepId?: InputMaybe<StringComparisonExp>;
+  time?: InputMaybe<TimestamptzComparisonExp>;
+  userId?: InputMaybe<StringComparisonExp>;
+  value?: InputMaybe<Float8ComparisonExp>;
+};
+
+/** input type for inserting data into table "simpipe.fs_writes_merged" */
+export type FsWritesMergedInsertInput = {
+  run?: InputMaybe<RunsObjRelInsertInput>;
+  runId?: InputMaybe<Scalars['String']>;
+  simulation?: InputMaybe<SimulationsObjRelInsertInput>;
+  simulationId?: InputMaybe<Scalars['String']>;
+  step?: InputMaybe<StepsObjRelInsertInput>;
+  stepId?: InputMaybe<Scalars['String']>;
+  time?: InputMaybe<Scalars['timestamptz']>;
+  userId?: InputMaybe<Scalars['String']>;
+  value?: InputMaybe<Scalars['float8']>;
+};
+
+/** aggregate max on columns */
+export type FsWritesMergedMaxFields = {
+  __typename?: 'fsWritesMergedMaxFields';
+  runId?: Maybe<Scalars['String']>;
+  simulationId?: Maybe<Scalars['String']>;
+  stepId?: Maybe<Scalars['String']>;
+  time?: Maybe<Scalars['timestamptz']>;
+  userId?: Maybe<Scalars['String']>;
+  value?: Maybe<Scalars['float8']>;
+};
+
+/** aggregate min on columns */
+export type FsWritesMergedMinFields = {
+  __typename?: 'fsWritesMergedMinFields';
+  runId?: Maybe<Scalars['String']>;
+  simulationId?: Maybe<Scalars['String']>;
+  stepId?: Maybe<Scalars['String']>;
+  time?: Maybe<Scalars['timestamptz']>;
+  userId?: Maybe<Scalars['String']>;
+  value?: Maybe<Scalars['float8']>;
+};
+
+/** Ordering options when selecting data from "simpipe.fs_writes_merged". */
+export type FsWritesMergedOrderBy = {
+  run?: InputMaybe<RunsOrderBy>;
+  runId?: InputMaybe<OrderBy>;
+  simulation?: InputMaybe<SimulationsOrderBy>;
+  simulationId?: InputMaybe<OrderBy>;
+  step?: InputMaybe<StepsOrderBy>;
+  stepId?: InputMaybe<OrderBy>;
+  time?: InputMaybe<OrderBy>;
+  userId?: InputMaybe<OrderBy>;
+  value?: InputMaybe<OrderBy>;
+};
+
+/** select columns of table "simpipe.fs_writes_merged" */
+export enum FsWritesMergedSelectColumn {
+  /** column name */
+  RunId = 'runId',
+  /** column name */
+  SimulationId = 'simulationId',
+  /** column name */
+  StepId = 'stepId',
+  /** column name */
+  Time = 'time',
+  /** column name */
+  UserId = 'userId',
+  /** column name */
+  Value = 'value'
+}
+
+/** aggregate stddev on columns */
+export type FsWritesMergedStddevFields = {
+  __typename?: 'fsWritesMergedStddevFields';
+  value?: Maybe<Scalars['Float']>;
+};
+
+/** aggregate stddev_pop on columns */
+export type FsWritesMergedStddev_PopFields = {
+  __typename?: 'fsWritesMergedStddev_popFields';
+  value?: Maybe<Scalars['Float']>;
+};
+
+/** aggregate stddev_samp on columns */
+export type FsWritesMergedStddev_SampFields = {
+  __typename?: 'fsWritesMergedStddev_sampFields';
+  value?: Maybe<Scalars['Float']>;
+};
+
+/** Streaming cursor of the table "fsWritesMerged" */
+export type FsWritesMergedStreamCursorInput = {
+  /** Stream column input with initial value */
+  initialValue: FsWritesMergedStreamCursorValueInput;
+  /** cursor ordering */
+  ordering?: InputMaybe<CursorOrdering>;
+};
+
+/** Initial value of the column from where the streaming should start */
+export type FsWritesMergedStreamCursorValueInput = {
+  runId?: InputMaybe<Scalars['String']>;
+  simulationId?: InputMaybe<Scalars['String']>;
+  stepId?: InputMaybe<Scalars['String']>;
+  time?: InputMaybe<Scalars['timestamptz']>;
+  userId?: InputMaybe<Scalars['String']>;
+  value?: InputMaybe<Scalars['float8']>;
+};
+
+/** aggregate sum on columns */
+export type FsWritesMergedSumFields = {
+  __typename?: 'fsWritesMergedSumFields';
+  value?: Maybe<Scalars['float8']>;
+};
+
+/** aggregate var_pop on columns */
+export type FsWritesMergedVar_PopFields = {
+  __typename?: 'fsWritesMergedVar_popFields';
+  value?: Maybe<Scalars['Float']>;
+};
+
+/** aggregate var_samp on columns */
+export type FsWritesMergedVar_SampFields = {
+  __typename?: 'fsWritesMergedVar_sampFields';
+  value?: Maybe<Scalars['Float']>;
+};
+
+/** aggregate variance on columns */
+export type FsWritesMergedVarianceFields = {
+  __typename?: 'fsWritesMergedVarianceFields';
+  value?: Maybe<Scalars['Float']>;
+};
+
+export type FsWritesMerged_Aggregate_Bool_Exp = {
+  avg?: InputMaybe<FsWritesMerged_Aggregate_Bool_Exp_Avg>;
+  corr?: InputMaybe<FsWritesMerged_Aggregate_Bool_Exp_Corr>;
+  count?: InputMaybe<FsWritesMerged_Aggregate_Bool_Exp_Count>;
+  covar_samp?: InputMaybe<FsWritesMerged_Aggregate_Bool_Exp_Covar_Samp>;
+  max?: InputMaybe<FsWritesMerged_Aggregate_Bool_Exp_Max>;
+  min?: InputMaybe<FsWritesMerged_Aggregate_Bool_Exp_Min>;
+  stddev_samp?: InputMaybe<FsWritesMerged_Aggregate_Bool_Exp_Stddev_Samp>;
+  sum?: InputMaybe<FsWritesMerged_Aggregate_Bool_Exp_Sum>;
+  var_samp?: InputMaybe<FsWritesMerged_Aggregate_Bool_Exp_Var_Samp>;
+};
+
+export type FsWritesMerged_Aggregate_Bool_Exp_Avg = {
+  arguments: FsWritesMerged_Select_Column_FsWritesMerged_Aggregate_Bool_Exp_Avg_Arguments_Columns;
+  distinct?: InputMaybe<Scalars['Boolean']>;
+  filter?: InputMaybe<FsWritesMergedBoolExp>;
+  predicate: Float8ComparisonExp;
+};
+
+export type FsWritesMerged_Aggregate_Bool_Exp_Corr = {
+  arguments: FsWritesMerged_Aggregate_Bool_Exp_Corr_Arguments;
+  distinct?: InputMaybe<Scalars['Boolean']>;
+  filter?: InputMaybe<FsWritesMergedBoolExp>;
+  predicate: Float8ComparisonExp;
+};
+
+export type FsWritesMerged_Aggregate_Bool_Exp_Corr_Arguments = {
+  X: FsWritesMerged_Select_Column_FsWritesMerged_Aggregate_Bool_Exp_Corr_Arguments_Columns;
+  Y: FsWritesMerged_Select_Column_FsWritesMerged_Aggregate_Bool_Exp_Corr_Arguments_Columns;
+};
+
+export type FsWritesMerged_Aggregate_Bool_Exp_Count = {
+  arguments?: InputMaybe<Array<FsWritesMergedSelectColumn>>;
+  distinct?: InputMaybe<Scalars['Boolean']>;
+  filter?: InputMaybe<FsWritesMergedBoolExp>;
+  predicate: IntComparisonExp;
+};
+
+export type FsWritesMerged_Aggregate_Bool_Exp_Covar_Samp = {
+  arguments: FsWritesMerged_Aggregate_Bool_Exp_Covar_Samp_Arguments;
+  distinct?: InputMaybe<Scalars['Boolean']>;
+  filter?: InputMaybe<FsWritesMergedBoolExp>;
+  predicate: Float8ComparisonExp;
+};
+
+export type FsWritesMerged_Aggregate_Bool_Exp_Covar_Samp_Arguments = {
+  X: FsWritesMerged_Select_Column_FsWritesMerged_Aggregate_Bool_Exp_Covar_Samp_Arguments_Columns;
+  Y: FsWritesMerged_Select_Column_FsWritesMerged_Aggregate_Bool_Exp_Covar_Samp_Arguments_Columns;
+};
+
+export type FsWritesMerged_Aggregate_Bool_Exp_Max = {
+  arguments: FsWritesMerged_Select_Column_FsWritesMerged_Aggregate_Bool_Exp_Max_Arguments_Columns;
+  distinct?: InputMaybe<Scalars['Boolean']>;
+  filter?: InputMaybe<FsWritesMergedBoolExp>;
+  predicate: Float8ComparisonExp;
+};
+
+export type FsWritesMerged_Aggregate_Bool_Exp_Min = {
+  arguments: FsWritesMerged_Select_Column_FsWritesMerged_Aggregate_Bool_Exp_Min_Arguments_Columns;
+  distinct?: InputMaybe<Scalars['Boolean']>;
+  filter?: InputMaybe<FsWritesMergedBoolExp>;
+  predicate: Float8ComparisonExp;
+};
+
+export type FsWritesMerged_Aggregate_Bool_Exp_Stddev_Samp = {
+  arguments: FsWritesMerged_Select_Column_FsWritesMerged_Aggregate_Bool_Exp_Stddev_Samp_Arguments_Columns;
+  distinct?: InputMaybe<Scalars['Boolean']>;
+  filter?: InputMaybe<FsWritesMergedBoolExp>;
+  predicate: Float8ComparisonExp;
+};
+
+export type FsWritesMerged_Aggregate_Bool_Exp_Sum = {
+  arguments: FsWritesMerged_Select_Column_FsWritesMerged_Aggregate_Bool_Exp_Sum_Arguments_Columns;
+  distinct?: InputMaybe<Scalars['Boolean']>;
+  filter?: InputMaybe<FsWritesMergedBoolExp>;
+  predicate: Float8ComparisonExp;
+};
+
+export type FsWritesMerged_Aggregate_Bool_Exp_Var_Samp = {
+  arguments: FsWritesMerged_Select_Column_FsWritesMerged_Aggregate_Bool_Exp_Var_Samp_Arguments_Columns;
+  distinct?: InputMaybe<Scalars['Boolean']>;
+  filter?: InputMaybe<FsWritesMergedBoolExp>;
+  predicate: Float8ComparisonExp;
+};
+
+/** order by avg() on columns of table "simpipe.fs_writes_merged" */
+export type FsWritesMerged_Avg_Order_By = {
+  value?: InputMaybe<OrderBy>;
+};
+
+/** order by max() on columns of table "simpipe.fs_writes_merged" */
+export type FsWritesMerged_Max_Order_By = {
+  runId?: InputMaybe<OrderBy>;
+  simulationId?: InputMaybe<OrderBy>;
+  stepId?: InputMaybe<OrderBy>;
+  time?: InputMaybe<OrderBy>;
+  userId?: InputMaybe<OrderBy>;
+  value?: InputMaybe<OrderBy>;
+};
+
+/** order by min() on columns of table "simpipe.fs_writes_merged" */
+export type FsWritesMerged_Min_Order_By = {
+  runId?: InputMaybe<OrderBy>;
+  simulationId?: InputMaybe<OrderBy>;
+  stepId?: InputMaybe<OrderBy>;
+  time?: InputMaybe<OrderBy>;
+  userId?: InputMaybe<OrderBy>;
+  value?: InputMaybe<OrderBy>;
+};
+
+/** select "fsWritesMerged_aggregate_bool_exp_avg_arguments_columns" columns of table "simpipe.fs_writes_merged" */
+export enum FsWritesMerged_Select_Column_FsWritesMerged_Aggregate_Bool_Exp_Avg_Arguments_Columns {
+  /** column name */
+  Value = 'value'
+}
+
+/** select "fsWritesMerged_aggregate_bool_exp_corr_arguments_columns" columns of table "simpipe.fs_writes_merged" */
+export enum FsWritesMerged_Select_Column_FsWritesMerged_Aggregate_Bool_Exp_Corr_Arguments_Columns {
+  /** column name */
+  Value = 'value'
+}
+
+/** select "fsWritesMerged_aggregate_bool_exp_covar_samp_arguments_columns" columns of table "simpipe.fs_writes_merged" */
+export enum FsWritesMerged_Select_Column_FsWritesMerged_Aggregate_Bool_Exp_Covar_Samp_Arguments_Columns {
+  /** column name */
+  Value = 'value'
+}
+
+/** select "fsWritesMerged_aggregate_bool_exp_max_arguments_columns" columns of table "simpipe.fs_writes_merged" */
+export enum FsWritesMerged_Select_Column_FsWritesMerged_Aggregate_Bool_Exp_Max_Arguments_Columns {
+  /** column name */
+  Value = 'value'
+}
+
+/** select "fsWritesMerged_aggregate_bool_exp_min_arguments_columns" columns of table "simpipe.fs_writes_merged" */
+export enum FsWritesMerged_Select_Column_FsWritesMerged_Aggregate_Bool_Exp_Min_Arguments_Columns {
+  /** column name */
+  Value = 'value'
+}
+
+/** select "fsWritesMerged_aggregate_bool_exp_stddev_samp_arguments_columns" columns of table "simpipe.fs_writes_merged" */
+export enum FsWritesMerged_Select_Column_FsWritesMerged_Aggregate_Bool_Exp_Stddev_Samp_Arguments_Columns {
+  /** column name */
+  Value = 'value'
+}
+
+/** select "fsWritesMerged_aggregate_bool_exp_sum_arguments_columns" columns of table "simpipe.fs_writes_merged" */
+export enum FsWritesMerged_Select_Column_FsWritesMerged_Aggregate_Bool_Exp_Sum_Arguments_Columns {
+  /** column name */
+  Value = 'value'
+}
+
+/** select "fsWritesMerged_aggregate_bool_exp_var_samp_arguments_columns" columns of table "simpipe.fs_writes_merged" */
+export enum FsWritesMerged_Select_Column_FsWritesMerged_Aggregate_Bool_Exp_Var_Samp_Arguments_Columns {
+  /** column name */
+  Value = 'value'
+}
+
+/** order by stddev() on columns of table "simpipe.fs_writes_merged" */
+export type FsWritesMerged_Stddev_Order_By = {
+  value?: InputMaybe<OrderBy>;
+};
+
+/** order by stddev_pop() on columns of table "simpipe.fs_writes_merged" */
+export type FsWritesMerged_Stddev_Pop_Order_By = {
+  value?: InputMaybe<OrderBy>;
+};
+
+/** order by stddev_samp() on columns of table "simpipe.fs_writes_merged" */
+export type FsWritesMerged_Stddev_Samp_Order_By = {
+  value?: InputMaybe<OrderBy>;
+};
+
+/** order by sum() on columns of table "simpipe.fs_writes_merged" */
+export type FsWritesMerged_Sum_Order_By = {
+  value?: InputMaybe<OrderBy>;
+};
+
+/** order by var_pop() on columns of table "simpipe.fs_writes_merged" */
+export type FsWritesMerged_Var_Pop_Order_By = {
+  value?: InputMaybe<OrderBy>;
+};
+
+/** order by var_samp() on columns of table "simpipe.fs_writes_merged" */
+export type FsWritesMerged_Var_Samp_Order_By = {
+  value?: InputMaybe<OrderBy>;
+};
+
+/** order by variance() on columns of table "simpipe.fs_writes_merged" */
+export type FsWritesMerged_Variance_Order_By = {
+  value?: InputMaybe<OrderBy>;
+};
+
+/** columns and relationships of "simpipe.memory_max_usage_bytes" */
+export type MemoryMaxUsageBytes = {
+  __typename?: 'memoryMaxUsageBytes';
+  /** An object relationship */
+  run?: Maybe<Runs>;
+  runId?: Maybe<Scalars['String']>;
+  /** An object relationship */
+  simulation?: Maybe<Simulations>;
+  simulationId?: Maybe<Scalars['String']>;
+  /** An object relationship */
+  step?: Maybe<Steps>;
+  stepId?: Maybe<Scalars['String']>;
+  time?: Maybe<Scalars['timestamptz']>;
+  userId?: Maybe<Scalars['String']>;
+  value?: Maybe<Scalars['float8']>;
+};
+
+/** aggregated selection of "simpipe.memory_max_usage_bytes" */
+export type MemoryMaxUsageBytesAggregate = {
+  __typename?: 'memoryMaxUsageBytesAggregate';
+  aggregate?: Maybe<MemoryMaxUsageBytesAggregateFields>;
+  nodes: Array<MemoryMaxUsageBytes>;
+};
+
+/** aggregate fields of "simpipe.memory_max_usage_bytes" */
+export type MemoryMaxUsageBytesAggregateFields = {
+  __typename?: 'memoryMaxUsageBytesAggregateFields';
+  avg?: Maybe<MemoryMaxUsageBytesAvgFields>;
+  count: Scalars['Int'];
+  max?: Maybe<MemoryMaxUsageBytesMaxFields>;
+  min?: Maybe<MemoryMaxUsageBytesMinFields>;
+  stddev?: Maybe<MemoryMaxUsageBytesStddevFields>;
+  stddevPop?: Maybe<MemoryMaxUsageBytesStddev_PopFields>;
+  stddevSamp?: Maybe<MemoryMaxUsageBytesStddev_SampFields>;
+  sum?: Maybe<MemoryMaxUsageBytesSumFields>;
+  varPop?: Maybe<MemoryMaxUsageBytesVar_PopFields>;
+  varSamp?: Maybe<MemoryMaxUsageBytesVar_SampFields>;
+  variance?: Maybe<MemoryMaxUsageBytesVarianceFields>;
+};
+
+
+/** aggregate fields of "simpipe.memory_max_usage_bytes" */
+export type MemoryMaxUsageBytesAggregateFieldsCountArgs = {
+  columns?: InputMaybe<Array<MemoryMaxUsageBytesSelectColumn>>;
+  distinct?: InputMaybe<Scalars['Boolean']>;
+};
+
+/** order by aggregate values of table "simpipe.memory_max_usage_bytes" */
+export type MemoryMaxUsageBytesAggregateOrderBy = {
+  avg?: InputMaybe<MemoryMaxUsageBytes_Avg_Order_By>;
+  count?: InputMaybe<OrderBy>;
+  max?: InputMaybe<MemoryMaxUsageBytes_Max_Order_By>;
+  min?: InputMaybe<MemoryMaxUsageBytes_Min_Order_By>;
+  stddev?: InputMaybe<MemoryMaxUsageBytes_Stddev_Order_By>;
+  stddev_pop?: InputMaybe<MemoryMaxUsageBytes_Stddev_Pop_Order_By>;
+  stddev_samp?: InputMaybe<MemoryMaxUsageBytes_Stddev_Samp_Order_By>;
+  sum?: InputMaybe<MemoryMaxUsageBytes_Sum_Order_By>;
+  var_pop?: InputMaybe<MemoryMaxUsageBytes_Var_Pop_Order_By>;
+  var_samp?: InputMaybe<MemoryMaxUsageBytes_Var_Samp_Order_By>;
+  variance?: InputMaybe<MemoryMaxUsageBytes_Variance_Order_By>;
+};
+
+/** input type for inserting array relation for remote table "simpipe.memory_max_usage_bytes" */
+export type MemoryMaxUsageBytesArrRelInsertInput = {
+  data: Array<MemoryMaxUsageBytesInsertInput>;
+};
+
+/** aggregate avg on columns */
+export type MemoryMaxUsageBytesAvgFields = {
+  __typename?: 'memoryMaxUsageBytesAvgFields';
+  value?: Maybe<Scalars['Float']>;
+};
+
+/** Boolean expression to filter rows from the table "simpipe.memory_max_usage_bytes". All fields are combined with a logical 'AND'. */
+export type MemoryMaxUsageBytesBoolExp = {
+  _and?: InputMaybe<Array<MemoryMaxUsageBytesBoolExp>>;
+  _not?: InputMaybe<MemoryMaxUsageBytesBoolExp>;
+  _or?: InputMaybe<Array<MemoryMaxUsageBytesBoolExp>>;
+  run?: InputMaybe<RunsBoolExp>;
+  runId?: InputMaybe<StringComparisonExp>;
+  simulation?: InputMaybe<SimulationsBoolExp>;
+  simulationId?: InputMaybe<StringComparisonExp>;
+  step?: InputMaybe<StepsBoolExp>;
+  stepId?: InputMaybe<StringComparisonExp>;
+  time?: InputMaybe<TimestamptzComparisonExp>;
+  userId?: InputMaybe<StringComparisonExp>;
+  value?: InputMaybe<Float8ComparisonExp>;
+};
+
+/** input type for inserting data into table "simpipe.memory_max_usage_bytes" */
+export type MemoryMaxUsageBytesInsertInput = {
+  run?: InputMaybe<RunsObjRelInsertInput>;
+  runId?: InputMaybe<Scalars['String']>;
+  simulation?: InputMaybe<SimulationsObjRelInsertInput>;
+  simulationId?: InputMaybe<Scalars['String']>;
+  step?: InputMaybe<StepsObjRelInsertInput>;
+  stepId?: InputMaybe<Scalars['String']>;
+  time?: InputMaybe<Scalars['timestamptz']>;
+  userId?: InputMaybe<Scalars['String']>;
+  value?: InputMaybe<Scalars['float8']>;
+};
+
+/** aggregate max on columns */
+export type MemoryMaxUsageBytesMaxFields = {
+  __typename?: 'memoryMaxUsageBytesMaxFields';
+  runId?: Maybe<Scalars['String']>;
+  simulationId?: Maybe<Scalars['String']>;
+  stepId?: Maybe<Scalars['String']>;
+  time?: Maybe<Scalars['timestamptz']>;
+  userId?: Maybe<Scalars['String']>;
+  value?: Maybe<Scalars['float8']>;
+};
+
+/** aggregate min on columns */
+export type MemoryMaxUsageBytesMinFields = {
+  __typename?: 'memoryMaxUsageBytesMinFields';
+  runId?: Maybe<Scalars['String']>;
+  simulationId?: Maybe<Scalars['String']>;
+  stepId?: Maybe<Scalars['String']>;
+  time?: Maybe<Scalars['timestamptz']>;
+  userId?: Maybe<Scalars['String']>;
+  value?: Maybe<Scalars['float8']>;
+};
+
+/** Ordering options when selecting data from "simpipe.memory_max_usage_bytes". */
+export type MemoryMaxUsageBytesOrderBy = {
+  run?: InputMaybe<RunsOrderBy>;
+  runId?: InputMaybe<OrderBy>;
+  simulation?: InputMaybe<SimulationsOrderBy>;
+  simulationId?: InputMaybe<OrderBy>;
+  step?: InputMaybe<StepsOrderBy>;
+  stepId?: InputMaybe<OrderBy>;
+  time?: InputMaybe<OrderBy>;
+  userId?: InputMaybe<OrderBy>;
+  value?: InputMaybe<OrderBy>;
+};
+
+/** select columns of table "simpipe.memory_max_usage_bytes" */
+export enum MemoryMaxUsageBytesSelectColumn {
+  /** column name */
+  RunId = 'runId',
+  /** column name */
+  SimulationId = 'simulationId',
+  /** column name */
+  StepId = 'stepId',
+  /** column name */
+  Time = 'time',
+  /** column name */
+  UserId = 'userId',
+  /** column name */
+  Value = 'value'
+}
+
+/** aggregate stddev on columns */
+export type MemoryMaxUsageBytesStddevFields = {
+  __typename?: 'memoryMaxUsageBytesStddevFields';
+  value?: Maybe<Scalars['Float']>;
+};
+
+/** aggregate stddev_pop on columns */
+export type MemoryMaxUsageBytesStddev_PopFields = {
+  __typename?: 'memoryMaxUsageBytesStddev_popFields';
+  value?: Maybe<Scalars['Float']>;
+};
+
+/** aggregate stddev_samp on columns */
+export type MemoryMaxUsageBytesStddev_SampFields = {
+  __typename?: 'memoryMaxUsageBytesStddev_sampFields';
+  value?: Maybe<Scalars['Float']>;
+};
+
+/** Streaming cursor of the table "memoryMaxUsageBytes" */
+export type MemoryMaxUsageBytesStreamCursorInput = {
+  /** Stream column input with initial value */
+  initialValue: MemoryMaxUsageBytesStreamCursorValueInput;
+  /** cursor ordering */
+  ordering?: InputMaybe<CursorOrdering>;
+};
+
+/** Initial value of the column from where the streaming should start */
+export type MemoryMaxUsageBytesStreamCursorValueInput = {
+  runId?: InputMaybe<Scalars['String']>;
+  simulationId?: InputMaybe<Scalars['String']>;
+  stepId?: InputMaybe<Scalars['String']>;
+  time?: InputMaybe<Scalars['timestamptz']>;
+  userId?: InputMaybe<Scalars['String']>;
+  value?: InputMaybe<Scalars['float8']>;
+};
+
+/** aggregate sum on columns */
+export type MemoryMaxUsageBytesSumFields = {
+  __typename?: 'memoryMaxUsageBytesSumFields';
+  value?: Maybe<Scalars['float8']>;
+};
+
+/** aggregate var_pop on columns */
+export type MemoryMaxUsageBytesVar_PopFields = {
+  __typename?: 'memoryMaxUsageBytesVar_popFields';
+  value?: Maybe<Scalars['Float']>;
+};
+
+/** aggregate var_samp on columns */
+export type MemoryMaxUsageBytesVar_SampFields = {
+  __typename?: 'memoryMaxUsageBytesVar_sampFields';
+  value?: Maybe<Scalars['Float']>;
+};
+
+/** aggregate variance on columns */
+export type MemoryMaxUsageBytesVarianceFields = {
+  __typename?: 'memoryMaxUsageBytesVarianceFields';
+  value?: Maybe<Scalars['Float']>;
+};
+
+export type MemoryMaxUsageBytes_Aggregate_Bool_Exp = {
+  avg?: InputMaybe<MemoryMaxUsageBytes_Aggregate_Bool_Exp_Avg>;
+  corr?: InputMaybe<MemoryMaxUsageBytes_Aggregate_Bool_Exp_Corr>;
+  count?: InputMaybe<MemoryMaxUsageBytes_Aggregate_Bool_Exp_Count>;
+  covar_samp?: InputMaybe<MemoryMaxUsageBytes_Aggregate_Bool_Exp_Covar_Samp>;
+  max?: InputMaybe<MemoryMaxUsageBytes_Aggregate_Bool_Exp_Max>;
+  min?: InputMaybe<MemoryMaxUsageBytes_Aggregate_Bool_Exp_Min>;
+  stddev_samp?: InputMaybe<MemoryMaxUsageBytes_Aggregate_Bool_Exp_Stddev_Samp>;
+  sum?: InputMaybe<MemoryMaxUsageBytes_Aggregate_Bool_Exp_Sum>;
+  var_samp?: InputMaybe<MemoryMaxUsageBytes_Aggregate_Bool_Exp_Var_Samp>;
+};
+
+export type MemoryMaxUsageBytes_Aggregate_Bool_Exp_Avg = {
+  arguments: MemoryMaxUsageBytes_Select_Column_MemoryMaxUsageBytes_Aggregate_Bool_Exp_Avg_Arguments_Columns;
+  distinct?: InputMaybe<Scalars['Boolean']>;
+  filter?: InputMaybe<MemoryMaxUsageBytesBoolExp>;
+  predicate: Float8ComparisonExp;
+};
+
+export type MemoryMaxUsageBytes_Aggregate_Bool_Exp_Corr = {
+  arguments: MemoryMaxUsageBytes_Aggregate_Bool_Exp_Corr_Arguments;
+  distinct?: InputMaybe<Scalars['Boolean']>;
+  filter?: InputMaybe<MemoryMaxUsageBytesBoolExp>;
+  predicate: Float8ComparisonExp;
+};
+
+export type MemoryMaxUsageBytes_Aggregate_Bool_Exp_Corr_Arguments = {
+  X: MemoryMaxUsageBytes_Select_Column_MemoryMaxUsageBytes_Aggregate_Bool_Exp_Corr_Arguments_Columns;
+  Y: MemoryMaxUsageBytes_Select_Column_MemoryMaxUsageBytes_Aggregate_Bool_Exp_Corr_Arguments_Columns;
+};
+
+export type MemoryMaxUsageBytes_Aggregate_Bool_Exp_Count = {
+  arguments?: InputMaybe<Array<MemoryMaxUsageBytesSelectColumn>>;
+  distinct?: InputMaybe<Scalars['Boolean']>;
+  filter?: InputMaybe<MemoryMaxUsageBytesBoolExp>;
+  predicate: IntComparisonExp;
+};
+
+export type MemoryMaxUsageBytes_Aggregate_Bool_Exp_Covar_Samp = {
+  arguments: MemoryMaxUsageBytes_Aggregate_Bool_Exp_Covar_Samp_Arguments;
+  distinct?: InputMaybe<Scalars['Boolean']>;
+  filter?: InputMaybe<MemoryMaxUsageBytesBoolExp>;
+  predicate: Float8ComparisonExp;
+};
+
+export type MemoryMaxUsageBytes_Aggregate_Bool_Exp_Covar_Samp_Arguments = {
+  X: MemoryMaxUsageBytes_Select_Column_MemoryMaxUsageBytes_Aggregate_Bool_Exp_Covar_Samp_Arguments_Columns;
+  Y: MemoryMaxUsageBytes_Select_Column_MemoryMaxUsageBytes_Aggregate_Bool_Exp_Covar_Samp_Arguments_Columns;
+};
+
+export type MemoryMaxUsageBytes_Aggregate_Bool_Exp_Max = {
+  arguments: MemoryMaxUsageBytes_Select_Column_MemoryMaxUsageBytes_Aggregate_Bool_Exp_Max_Arguments_Columns;
+  distinct?: InputMaybe<Scalars['Boolean']>;
+  filter?: InputMaybe<MemoryMaxUsageBytesBoolExp>;
+  predicate: Float8ComparisonExp;
+};
+
+export type MemoryMaxUsageBytes_Aggregate_Bool_Exp_Min = {
+  arguments: MemoryMaxUsageBytes_Select_Column_MemoryMaxUsageBytes_Aggregate_Bool_Exp_Min_Arguments_Columns;
+  distinct?: InputMaybe<Scalars['Boolean']>;
+  filter?: InputMaybe<MemoryMaxUsageBytesBoolExp>;
+  predicate: Float8ComparisonExp;
+};
+
+export type MemoryMaxUsageBytes_Aggregate_Bool_Exp_Stddev_Samp = {
+  arguments: MemoryMaxUsageBytes_Select_Column_MemoryMaxUsageBytes_Aggregate_Bool_Exp_Stddev_Samp_Arguments_Columns;
+  distinct?: InputMaybe<Scalars['Boolean']>;
+  filter?: InputMaybe<MemoryMaxUsageBytesBoolExp>;
+  predicate: Float8ComparisonExp;
+};
+
+export type MemoryMaxUsageBytes_Aggregate_Bool_Exp_Sum = {
+  arguments: MemoryMaxUsageBytes_Select_Column_MemoryMaxUsageBytes_Aggregate_Bool_Exp_Sum_Arguments_Columns;
+  distinct?: InputMaybe<Scalars['Boolean']>;
+  filter?: InputMaybe<MemoryMaxUsageBytesBoolExp>;
+  predicate: Float8ComparisonExp;
+};
+
+export type MemoryMaxUsageBytes_Aggregate_Bool_Exp_Var_Samp = {
+  arguments: MemoryMaxUsageBytes_Select_Column_MemoryMaxUsageBytes_Aggregate_Bool_Exp_Var_Samp_Arguments_Columns;
+  distinct?: InputMaybe<Scalars['Boolean']>;
+  filter?: InputMaybe<MemoryMaxUsageBytesBoolExp>;
+  predicate: Float8ComparisonExp;
+};
+
+/** order by avg() on columns of table "simpipe.memory_max_usage_bytes" */
+export type MemoryMaxUsageBytes_Avg_Order_By = {
+  value?: InputMaybe<OrderBy>;
+};
+
+/** order by max() on columns of table "simpipe.memory_max_usage_bytes" */
+export type MemoryMaxUsageBytes_Max_Order_By = {
+  runId?: InputMaybe<OrderBy>;
+  simulationId?: InputMaybe<OrderBy>;
+  stepId?: InputMaybe<OrderBy>;
+  time?: InputMaybe<OrderBy>;
+  userId?: InputMaybe<OrderBy>;
+  value?: InputMaybe<OrderBy>;
+};
+
+/** order by min() on columns of table "simpipe.memory_max_usage_bytes" */
+export type MemoryMaxUsageBytes_Min_Order_By = {
+  runId?: InputMaybe<OrderBy>;
+  simulationId?: InputMaybe<OrderBy>;
+  stepId?: InputMaybe<OrderBy>;
+  time?: InputMaybe<OrderBy>;
+  userId?: InputMaybe<OrderBy>;
+  value?: InputMaybe<OrderBy>;
+};
+
+/** select "memoryMaxUsageBytes_aggregate_bool_exp_avg_arguments_columns" columns of table "simpipe.memory_max_usage_bytes" */
+export enum MemoryMaxUsageBytes_Select_Column_MemoryMaxUsageBytes_Aggregate_Bool_Exp_Avg_Arguments_Columns {
+  /** column name */
+  Value = 'value'
+}
+
+/** select "memoryMaxUsageBytes_aggregate_bool_exp_corr_arguments_columns" columns of table "simpipe.memory_max_usage_bytes" */
+export enum MemoryMaxUsageBytes_Select_Column_MemoryMaxUsageBytes_Aggregate_Bool_Exp_Corr_Arguments_Columns {
+  /** column name */
+  Value = 'value'
+}
+
+/** select "memoryMaxUsageBytes_aggregate_bool_exp_covar_samp_arguments_columns" columns of table "simpipe.memory_max_usage_bytes" */
+export enum MemoryMaxUsageBytes_Select_Column_MemoryMaxUsageBytes_Aggregate_Bool_Exp_Covar_Samp_Arguments_Columns {
+  /** column name */
+  Value = 'value'
+}
+
+/** select "memoryMaxUsageBytes_aggregate_bool_exp_max_arguments_columns" columns of table "simpipe.memory_max_usage_bytes" */
+export enum MemoryMaxUsageBytes_Select_Column_MemoryMaxUsageBytes_Aggregate_Bool_Exp_Max_Arguments_Columns {
+  /** column name */
+  Value = 'value'
+}
+
+/** select "memoryMaxUsageBytes_aggregate_bool_exp_min_arguments_columns" columns of table "simpipe.memory_max_usage_bytes" */
+export enum MemoryMaxUsageBytes_Select_Column_MemoryMaxUsageBytes_Aggregate_Bool_Exp_Min_Arguments_Columns {
+  /** column name */
+  Value = 'value'
+}
+
+/** select "memoryMaxUsageBytes_aggregate_bool_exp_stddev_samp_arguments_columns" columns of table "simpipe.memory_max_usage_bytes" */
+export enum MemoryMaxUsageBytes_Select_Column_MemoryMaxUsageBytes_Aggregate_Bool_Exp_Stddev_Samp_Arguments_Columns {
+  /** column name */
+  Value = 'value'
+}
+
+/** select "memoryMaxUsageBytes_aggregate_bool_exp_sum_arguments_columns" columns of table "simpipe.memory_max_usage_bytes" */
+export enum MemoryMaxUsageBytes_Select_Column_MemoryMaxUsageBytes_Aggregate_Bool_Exp_Sum_Arguments_Columns {
+  /** column name */
+  Value = 'value'
+}
+
+/** select "memoryMaxUsageBytes_aggregate_bool_exp_var_samp_arguments_columns" columns of table "simpipe.memory_max_usage_bytes" */
+export enum MemoryMaxUsageBytes_Select_Column_MemoryMaxUsageBytes_Aggregate_Bool_Exp_Var_Samp_Arguments_Columns {
+  /** column name */
+  Value = 'value'
+}
+
+/** order by stddev() on columns of table "simpipe.memory_max_usage_bytes" */
+export type MemoryMaxUsageBytes_Stddev_Order_By = {
+  value?: InputMaybe<OrderBy>;
+};
+
+/** order by stddev_pop() on columns of table "simpipe.memory_max_usage_bytes" */
+export type MemoryMaxUsageBytes_Stddev_Pop_Order_By = {
+  value?: InputMaybe<OrderBy>;
+};
+
+/** order by stddev_samp() on columns of table "simpipe.memory_max_usage_bytes" */
+export type MemoryMaxUsageBytes_Stddev_Samp_Order_By = {
+  value?: InputMaybe<OrderBy>;
+};
+
+/** order by sum() on columns of table "simpipe.memory_max_usage_bytes" */
+export type MemoryMaxUsageBytes_Sum_Order_By = {
+  value?: InputMaybe<OrderBy>;
+};
+
+/** order by var_pop() on columns of table "simpipe.memory_max_usage_bytes" */
+export type MemoryMaxUsageBytes_Var_Pop_Order_By = {
+  value?: InputMaybe<OrderBy>;
+};
+
+/** order by var_samp() on columns of table "simpipe.memory_max_usage_bytes" */
+export type MemoryMaxUsageBytes_Var_Samp_Order_By = {
+  value?: InputMaybe<OrderBy>;
+};
+
+/** order by variance() on columns of table "simpipe.memory_max_usage_bytes" */
+export type MemoryMaxUsageBytes_Variance_Order_By = {
+  value?: InputMaybe<OrderBy>;
+};
+
+/** columns and relationships of "simpipe.memory_usage_bytes" */
+export type MemoryUsageBytes = {
+  __typename?: 'memoryUsageBytes';
+  /** An object relationship */
+  run?: Maybe<Runs>;
+  runId?: Maybe<Scalars['String']>;
+  /** An object relationship */
+  simulation?: Maybe<Simulations>;
+  simulationId?: Maybe<Scalars['String']>;
+  /** An object relationship */
+  step?: Maybe<Steps>;
+  stepId?: Maybe<Scalars['String']>;
+  time?: Maybe<Scalars['timestamptz']>;
+  userId?: Maybe<Scalars['String']>;
+  value?: Maybe<Scalars['float8']>;
+};
+
+/** aggregated selection of "simpipe.memory_usage_bytes" */
+export type MemoryUsageBytesAggregate = {
+  __typename?: 'memoryUsageBytesAggregate';
+  aggregate?: Maybe<MemoryUsageBytesAggregateFields>;
+  nodes: Array<MemoryUsageBytes>;
+};
+
+/** aggregate fields of "simpipe.memory_usage_bytes" */
+export type MemoryUsageBytesAggregateFields = {
+  __typename?: 'memoryUsageBytesAggregateFields';
+  avg?: Maybe<MemoryUsageBytesAvgFields>;
+  count: Scalars['Int'];
+  max?: Maybe<MemoryUsageBytesMaxFields>;
+  min?: Maybe<MemoryUsageBytesMinFields>;
+  stddev?: Maybe<MemoryUsageBytesStddevFields>;
+  stddevPop?: Maybe<MemoryUsageBytesStddev_PopFields>;
+  stddevSamp?: Maybe<MemoryUsageBytesStddev_SampFields>;
+  sum?: Maybe<MemoryUsageBytesSumFields>;
+  varPop?: Maybe<MemoryUsageBytesVar_PopFields>;
+  varSamp?: Maybe<MemoryUsageBytesVar_SampFields>;
+  variance?: Maybe<MemoryUsageBytesVarianceFields>;
+};
+
+
+/** aggregate fields of "simpipe.memory_usage_bytes" */
+export type MemoryUsageBytesAggregateFieldsCountArgs = {
+  columns?: InputMaybe<Array<MemoryUsageBytesSelectColumn>>;
+  distinct?: InputMaybe<Scalars['Boolean']>;
+};
+
+/** order by aggregate values of table "simpipe.memory_usage_bytes" */
+export type MemoryUsageBytesAggregateOrderBy = {
+  avg?: InputMaybe<MemoryUsageBytes_Avg_Order_By>;
+  count?: InputMaybe<OrderBy>;
+  max?: InputMaybe<MemoryUsageBytes_Max_Order_By>;
+  min?: InputMaybe<MemoryUsageBytes_Min_Order_By>;
+  stddev?: InputMaybe<MemoryUsageBytes_Stddev_Order_By>;
+  stddev_pop?: InputMaybe<MemoryUsageBytes_Stddev_Pop_Order_By>;
+  stddev_samp?: InputMaybe<MemoryUsageBytes_Stddev_Samp_Order_By>;
+  sum?: InputMaybe<MemoryUsageBytes_Sum_Order_By>;
+  var_pop?: InputMaybe<MemoryUsageBytes_Var_Pop_Order_By>;
+  var_samp?: InputMaybe<MemoryUsageBytes_Var_Samp_Order_By>;
+  variance?: InputMaybe<MemoryUsageBytes_Variance_Order_By>;
+};
+
+/** input type for inserting array relation for remote table "simpipe.memory_usage_bytes" */
+export type MemoryUsageBytesArrRelInsertInput = {
+  data: Array<MemoryUsageBytesInsertInput>;
+};
+
+/** aggregate avg on columns */
+export type MemoryUsageBytesAvgFields = {
+  __typename?: 'memoryUsageBytesAvgFields';
+  value?: Maybe<Scalars['Float']>;
+};
+
+/** Boolean expression to filter rows from the table "simpipe.memory_usage_bytes". All fields are combined with a logical 'AND'. */
+export type MemoryUsageBytesBoolExp = {
+  _and?: InputMaybe<Array<MemoryUsageBytesBoolExp>>;
+  _not?: InputMaybe<MemoryUsageBytesBoolExp>;
+  _or?: InputMaybe<Array<MemoryUsageBytesBoolExp>>;
+  run?: InputMaybe<RunsBoolExp>;
+  runId?: InputMaybe<StringComparisonExp>;
+  simulation?: InputMaybe<SimulationsBoolExp>;
+  simulationId?: InputMaybe<StringComparisonExp>;
+  step?: InputMaybe<StepsBoolExp>;
+  stepId?: InputMaybe<StringComparisonExp>;
+  time?: InputMaybe<TimestamptzComparisonExp>;
+  userId?: InputMaybe<StringComparisonExp>;
+  value?: InputMaybe<Float8ComparisonExp>;
+};
+
+/** input type for inserting data into table "simpipe.memory_usage_bytes" */
+export type MemoryUsageBytesInsertInput = {
+  run?: InputMaybe<RunsObjRelInsertInput>;
+  runId?: InputMaybe<Scalars['String']>;
+  simulation?: InputMaybe<SimulationsObjRelInsertInput>;
+  simulationId?: InputMaybe<Scalars['String']>;
+  step?: InputMaybe<StepsObjRelInsertInput>;
+  stepId?: InputMaybe<Scalars['String']>;
+  time?: InputMaybe<Scalars['timestamptz']>;
+  userId?: InputMaybe<Scalars['String']>;
+  value?: InputMaybe<Scalars['float8']>;
+};
+
+/** aggregate max on columns */
+export type MemoryUsageBytesMaxFields = {
+  __typename?: 'memoryUsageBytesMaxFields';
+  runId?: Maybe<Scalars['String']>;
+  simulationId?: Maybe<Scalars['String']>;
+  stepId?: Maybe<Scalars['String']>;
+  time?: Maybe<Scalars['timestamptz']>;
+  userId?: Maybe<Scalars['String']>;
+  value?: Maybe<Scalars['float8']>;
+};
+
+/** aggregate min on columns */
+export type MemoryUsageBytesMinFields = {
+  __typename?: 'memoryUsageBytesMinFields';
+  runId?: Maybe<Scalars['String']>;
+  simulationId?: Maybe<Scalars['String']>;
+  stepId?: Maybe<Scalars['String']>;
+  time?: Maybe<Scalars['timestamptz']>;
+  userId?: Maybe<Scalars['String']>;
+  value?: Maybe<Scalars['float8']>;
+};
+
+/** Ordering options when selecting data from "simpipe.memory_usage_bytes". */
+export type MemoryUsageBytesOrderBy = {
+  run?: InputMaybe<RunsOrderBy>;
+  runId?: InputMaybe<OrderBy>;
+  simulation?: InputMaybe<SimulationsOrderBy>;
+  simulationId?: InputMaybe<OrderBy>;
+  step?: InputMaybe<StepsOrderBy>;
+  stepId?: InputMaybe<OrderBy>;
+  time?: InputMaybe<OrderBy>;
+  userId?: InputMaybe<OrderBy>;
+  value?: InputMaybe<OrderBy>;
+};
+
+/** select columns of table "simpipe.memory_usage_bytes" */
+export enum MemoryUsageBytesSelectColumn {
+  /** column name */
+  RunId = 'runId',
+  /** column name */
+  SimulationId = 'simulationId',
+  /** column name */
+  StepId = 'stepId',
+  /** column name */
+  Time = 'time',
+  /** column name */
+  UserId = 'userId',
+  /** column name */
+  Value = 'value'
+}
+
+/** aggregate stddev on columns */
+export type MemoryUsageBytesStddevFields = {
+  __typename?: 'memoryUsageBytesStddevFields';
+  value?: Maybe<Scalars['Float']>;
+};
+
+/** aggregate stddev_pop on columns */
+export type MemoryUsageBytesStddev_PopFields = {
+  __typename?: 'memoryUsageBytesStddev_popFields';
+  value?: Maybe<Scalars['Float']>;
+};
+
+/** aggregate stddev_samp on columns */
+export type MemoryUsageBytesStddev_SampFields = {
+  __typename?: 'memoryUsageBytesStddev_sampFields';
+  value?: Maybe<Scalars['Float']>;
+};
+
+/** Streaming cursor of the table "memoryUsageBytes" */
+export type MemoryUsageBytesStreamCursorInput = {
+  /** Stream column input with initial value */
+  initialValue: MemoryUsageBytesStreamCursorValueInput;
+  /** cursor ordering */
+  ordering?: InputMaybe<CursorOrdering>;
+};
+
+/** Initial value of the column from where the streaming should start */
+export type MemoryUsageBytesStreamCursorValueInput = {
+  runId?: InputMaybe<Scalars['String']>;
+  simulationId?: InputMaybe<Scalars['String']>;
+  stepId?: InputMaybe<Scalars['String']>;
+  time?: InputMaybe<Scalars['timestamptz']>;
+  userId?: InputMaybe<Scalars['String']>;
+  value?: InputMaybe<Scalars['float8']>;
+};
+
+/** aggregate sum on columns */
+export type MemoryUsageBytesSumFields = {
+  __typename?: 'memoryUsageBytesSumFields';
+  value?: Maybe<Scalars['float8']>;
+};
+
+/** aggregate var_pop on columns */
+export type MemoryUsageBytesVar_PopFields = {
+  __typename?: 'memoryUsageBytesVar_popFields';
+  value?: Maybe<Scalars['Float']>;
+};
+
+/** aggregate var_samp on columns */
+export type MemoryUsageBytesVar_SampFields = {
+  __typename?: 'memoryUsageBytesVar_sampFields';
+  value?: Maybe<Scalars['Float']>;
+};
+
+/** aggregate variance on columns */
+export type MemoryUsageBytesVarianceFields = {
+  __typename?: 'memoryUsageBytesVarianceFields';
+  value?: Maybe<Scalars['Float']>;
+};
+
+export type MemoryUsageBytes_Aggregate_Bool_Exp = {
+  avg?: InputMaybe<MemoryUsageBytes_Aggregate_Bool_Exp_Avg>;
+  corr?: InputMaybe<MemoryUsageBytes_Aggregate_Bool_Exp_Corr>;
+  count?: InputMaybe<MemoryUsageBytes_Aggregate_Bool_Exp_Count>;
+  covar_samp?: InputMaybe<MemoryUsageBytes_Aggregate_Bool_Exp_Covar_Samp>;
+  max?: InputMaybe<MemoryUsageBytes_Aggregate_Bool_Exp_Max>;
+  min?: InputMaybe<MemoryUsageBytes_Aggregate_Bool_Exp_Min>;
+  stddev_samp?: InputMaybe<MemoryUsageBytes_Aggregate_Bool_Exp_Stddev_Samp>;
+  sum?: InputMaybe<MemoryUsageBytes_Aggregate_Bool_Exp_Sum>;
+  var_samp?: InputMaybe<MemoryUsageBytes_Aggregate_Bool_Exp_Var_Samp>;
+};
+
+export type MemoryUsageBytes_Aggregate_Bool_Exp_Avg = {
+  arguments: MemoryUsageBytes_Select_Column_MemoryUsageBytes_Aggregate_Bool_Exp_Avg_Arguments_Columns;
+  distinct?: InputMaybe<Scalars['Boolean']>;
+  filter?: InputMaybe<MemoryUsageBytesBoolExp>;
+  predicate: Float8ComparisonExp;
+};
+
+export type MemoryUsageBytes_Aggregate_Bool_Exp_Corr = {
+  arguments: MemoryUsageBytes_Aggregate_Bool_Exp_Corr_Arguments;
+  distinct?: InputMaybe<Scalars['Boolean']>;
+  filter?: InputMaybe<MemoryUsageBytesBoolExp>;
+  predicate: Float8ComparisonExp;
+};
+
+export type MemoryUsageBytes_Aggregate_Bool_Exp_Corr_Arguments = {
+  X: MemoryUsageBytes_Select_Column_MemoryUsageBytes_Aggregate_Bool_Exp_Corr_Arguments_Columns;
+  Y: MemoryUsageBytes_Select_Column_MemoryUsageBytes_Aggregate_Bool_Exp_Corr_Arguments_Columns;
+};
+
+export type MemoryUsageBytes_Aggregate_Bool_Exp_Count = {
+  arguments?: InputMaybe<Array<MemoryUsageBytesSelectColumn>>;
+  distinct?: InputMaybe<Scalars['Boolean']>;
+  filter?: InputMaybe<MemoryUsageBytesBoolExp>;
+  predicate: IntComparisonExp;
+};
+
+export type MemoryUsageBytes_Aggregate_Bool_Exp_Covar_Samp = {
+  arguments: MemoryUsageBytes_Aggregate_Bool_Exp_Covar_Samp_Arguments;
+  distinct?: InputMaybe<Scalars['Boolean']>;
+  filter?: InputMaybe<MemoryUsageBytesBoolExp>;
+  predicate: Float8ComparisonExp;
+};
+
+export type MemoryUsageBytes_Aggregate_Bool_Exp_Covar_Samp_Arguments = {
+  X: MemoryUsageBytes_Select_Column_MemoryUsageBytes_Aggregate_Bool_Exp_Covar_Samp_Arguments_Columns;
+  Y: MemoryUsageBytes_Select_Column_MemoryUsageBytes_Aggregate_Bool_Exp_Covar_Samp_Arguments_Columns;
+};
+
+export type MemoryUsageBytes_Aggregate_Bool_Exp_Max = {
+  arguments: MemoryUsageBytes_Select_Column_MemoryUsageBytes_Aggregate_Bool_Exp_Max_Arguments_Columns;
+  distinct?: InputMaybe<Scalars['Boolean']>;
+  filter?: InputMaybe<MemoryUsageBytesBoolExp>;
+  predicate: Float8ComparisonExp;
+};
+
+export type MemoryUsageBytes_Aggregate_Bool_Exp_Min = {
+  arguments: MemoryUsageBytes_Select_Column_MemoryUsageBytes_Aggregate_Bool_Exp_Min_Arguments_Columns;
+  distinct?: InputMaybe<Scalars['Boolean']>;
+  filter?: InputMaybe<MemoryUsageBytesBoolExp>;
+  predicate: Float8ComparisonExp;
+};
+
+export type MemoryUsageBytes_Aggregate_Bool_Exp_Stddev_Samp = {
+  arguments: MemoryUsageBytes_Select_Column_MemoryUsageBytes_Aggregate_Bool_Exp_Stddev_Samp_Arguments_Columns;
+  distinct?: InputMaybe<Scalars['Boolean']>;
+  filter?: InputMaybe<MemoryUsageBytesBoolExp>;
+  predicate: Float8ComparisonExp;
+};
+
+export type MemoryUsageBytes_Aggregate_Bool_Exp_Sum = {
+  arguments: MemoryUsageBytes_Select_Column_MemoryUsageBytes_Aggregate_Bool_Exp_Sum_Arguments_Columns;
+  distinct?: InputMaybe<Scalars['Boolean']>;
+  filter?: InputMaybe<MemoryUsageBytesBoolExp>;
+  predicate: Float8ComparisonExp;
+};
+
+export type MemoryUsageBytes_Aggregate_Bool_Exp_Var_Samp = {
+  arguments: MemoryUsageBytes_Select_Column_MemoryUsageBytes_Aggregate_Bool_Exp_Var_Samp_Arguments_Columns;
+  distinct?: InputMaybe<Scalars['Boolean']>;
+  filter?: InputMaybe<MemoryUsageBytesBoolExp>;
+  predicate: Float8ComparisonExp;
+};
+
+/** order by avg() on columns of table "simpipe.memory_usage_bytes" */
+export type MemoryUsageBytes_Avg_Order_By = {
+  value?: InputMaybe<OrderBy>;
+};
+
+/** order by max() on columns of table "simpipe.memory_usage_bytes" */
+export type MemoryUsageBytes_Max_Order_By = {
+  runId?: InputMaybe<OrderBy>;
+  simulationId?: InputMaybe<OrderBy>;
+  stepId?: InputMaybe<OrderBy>;
+  time?: InputMaybe<OrderBy>;
+  userId?: InputMaybe<OrderBy>;
+  value?: InputMaybe<OrderBy>;
+};
+
+/** order by min() on columns of table "simpipe.memory_usage_bytes" */
+export type MemoryUsageBytes_Min_Order_By = {
+  runId?: InputMaybe<OrderBy>;
+  simulationId?: InputMaybe<OrderBy>;
+  stepId?: InputMaybe<OrderBy>;
+  time?: InputMaybe<OrderBy>;
+  userId?: InputMaybe<OrderBy>;
+  value?: InputMaybe<OrderBy>;
+};
+
+/** select "memoryUsageBytes_aggregate_bool_exp_avg_arguments_columns" columns of table "simpipe.memory_usage_bytes" */
+export enum MemoryUsageBytes_Select_Column_MemoryUsageBytes_Aggregate_Bool_Exp_Avg_Arguments_Columns {
+  /** column name */
+  Value = 'value'
+}
+
+/** select "memoryUsageBytes_aggregate_bool_exp_corr_arguments_columns" columns of table "simpipe.memory_usage_bytes" */
+export enum MemoryUsageBytes_Select_Column_MemoryUsageBytes_Aggregate_Bool_Exp_Corr_Arguments_Columns {
+  /** column name */
+  Value = 'value'
+}
+
+/** select "memoryUsageBytes_aggregate_bool_exp_covar_samp_arguments_columns" columns of table "simpipe.memory_usage_bytes" */
+export enum MemoryUsageBytes_Select_Column_MemoryUsageBytes_Aggregate_Bool_Exp_Covar_Samp_Arguments_Columns {
+  /** column name */
+  Value = 'value'
+}
+
+/** select "memoryUsageBytes_aggregate_bool_exp_max_arguments_columns" columns of table "simpipe.memory_usage_bytes" */
+export enum MemoryUsageBytes_Select_Column_MemoryUsageBytes_Aggregate_Bool_Exp_Max_Arguments_Columns {
+  /** column name */
+  Value = 'value'
+}
+
+/** select "memoryUsageBytes_aggregate_bool_exp_min_arguments_columns" columns of table "simpipe.memory_usage_bytes" */
+export enum MemoryUsageBytes_Select_Column_MemoryUsageBytes_Aggregate_Bool_Exp_Min_Arguments_Columns {
+  /** column name */
+  Value = 'value'
+}
+
+/** select "memoryUsageBytes_aggregate_bool_exp_stddev_samp_arguments_columns" columns of table "simpipe.memory_usage_bytes" */
+export enum MemoryUsageBytes_Select_Column_MemoryUsageBytes_Aggregate_Bool_Exp_Stddev_Samp_Arguments_Columns {
+  /** column name */
+  Value = 'value'
+}
+
+/** select "memoryUsageBytes_aggregate_bool_exp_sum_arguments_columns" columns of table "simpipe.memory_usage_bytes" */
+export enum MemoryUsageBytes_Select_Column_MemoryUsageBytes_Aggregate_Bool_Exp_Sum_Arguments_Columns {
+  /** column name */
+  Value = 'value'
+}
+
+/** select "memoryUsageBytes_aggregate_bool_exp_var_samp_arguments_columns" columns of table "simpipe.memory_usage_bytes" */
+export enum MemoryUsageBytes_Select_Column_MemoryUsageBytes_Aggregate_Bool_Exp_Var_Samp_Arguments_Columns {
+  /** column name */
+  Value = 'value'
+}
+
+/** order by stddev() on columns of table "simpipe.memory_usage_bytes" */
+export type MemoryUsageBytes_Stddev_Order_By = {
+  value?: InputMaybe<OrderBy>;
+};
+
+/** order by stddev_pop() on columns of table "simpipe.memory_usage_bytes" */
+export type MemoryUsageBytes_Stddev_Pop_Order_By = {
+  value?: InputMaybe<OrderBy>;
+};
+
+/** order by stddev_samp() on columns of table "simpipe.memory_usage_bytes" */
+export type MemoryUsageBytes_Stddev_Samp_Order_By = {
+  value?: InputMaybe<OrderBy>;
+};
+
+/** order by sum() on columns of table "simpipe.memory_usage_bytes" */
+export type MemoryUsageBytes_Sum_Order_By = {
+  value?: InputMaybe<OrderBy>;
+};
+
+/** order by var_pop() on columns of table "simpipe.memory_usage_bytes" */
+export type MemoryUsageBytes_Var_Pop_Order_By = {
+  value?: InputMaybe<OrderBy>;
+};
+
+/** order by var_samp() on columns of table "simpipe.memory_usage_bytes" */
+export type MemoryUsageBytes_Var_Samp_Order_By = {
+  value?: InputMaybe<OrderBy>;
+};
+
+/** order by variance() on columns of table "simpipe.memory_usage_bytes" */
+export type MemoryUsageBytes_Variance_Order_By = {
+  value?: InputMaybe<OrderBy>;
+};
+
 /** mutation root */
 export type Mutation_Root = {
   __typename?: 'mutation_root';
-  Create_Run_WithInput?: Maybe<Run>;
-  Start_Run?: Maybe<Run>;
-  Stop_Run?: Maybe<Run>;
+  /**  Cancel a run, if the run is running it will be stopped  */
+  cancelRun?: Maybe<Run>;
+  /**  Create a run, but does not start it  */
+  createRun: Run;
   /** insert a single row into the table: "simpipe.simulations" */
   createSimulation?: Maybe<Simulations>;
   /** insert data into the table: "simpipe.simulations" */
@@ -1469,10 +2902,6 @@ export type Mutation_Root = {
   deleteSimpipeLogs?: Maybe<SimpipeLogsMutationResponse>;
   /** delete single row from the table: "simpipe.logs" */
   deleteSimpipeLogsByPk?: Maybe<SimpipeLogs>;
-  /** delete data from the table: "simpipe.resource_usage" */
-  deleteSimpipeResourceUsage?: Maybe<SimpipeResourceUsageMutationResponse>;
-  /** delete single row from the table: "simpipe.resource_usage" */
-  deleteSimpipeResourceUsageByPk?: Maybe<SimpipeResourceUsage>;
   /** delete data from the table: "simpipe.run_status" */
   deleteSimpipeRunStatus?: Maybe<SimpipeRunStatusMutationResponse>;
   /** delete single row from the table: "simpipe.run_status" */
@@ -1501,10 +2930,6 @@ export type Mutation_Root = {
   insertSimpipeLogs?: Maybe<SimpipeLogsMutationResponse>;
   /** insert a single row into the table: "simpipe.logs" */
   insertSimpipeLogsOne?: Maybe<SimpipeLogs>;
-  /** insert data into the table: "simpipe.resource_usage" */
-  insertSimpipeResourceUsage?: Maybe<SimpipeResourceUsageMutationResponse>;
-  /** insert a single row into the table: "simpipe.resource_usage" */
-  insertSimpipeResourceUsageOne?: Maybe<SimpipeResourceUsage>;
   /** insert data into the table: "simpipe.run_status" */
   insertSimpipeRunStatus?: Maybe<SimpipeRunStatusMutationResponse>;
   /** insert a single row into the table: "simpipe.run_status" */
@@ -1517,6 +2942,8 @@ export type Mutation_Root = {
   insertSteps?: Maybe<StepsMutationResponse>;
   /** insert a single row into the table: "simpipe.steps" */
   insertStepsOne?: Maybe<Steps>;
+  /**  Start a run, if other runs are running this run will wait in the queue  */
+  startRun?: Maybe<Run>;
   /** update data of the table: "simpipe.runs" */
   updateRuns?: Maybe<RunsMutationResponse>;
   /** update single row of the table: "simpipe.runs" */
@@ -1535,12 +2962,6 @@ export type Mutation_Root = {
   updateSimpipeLogsByPk?: Maybe<SimpipeLogs>;
   /** update multiples rows of table: "simpipe.logs" */
   updateSimpipeLogsMany?: Maybe<Array<Maybe<SimpipeLogsMutationResponse>>>;
-  /** update data of the table: "simpipe.resource_usage" */
-  updateSimpipeResourceUsage?: Maybe<SimpipeResourceUsageMutationResponse>;
-  /** update single row of the table: "simpipe.resource_usage" */
-  updateSimpipeResourceUsageByPk?: Maybe<SimpipeResourceUsage>;
-  /** update multiples rows of table: "simpipe.resource_usage" */
-  updateSimpipeResourceUsageMany?: Maybe<Array<Maybe<SimpipeResourceUsageMutationResponse>>>;
   /** update data of the table: "simpipe.run_status" */
   updateSimpipeRunStatus?: Maybe<SimpipeRunStatusMutationResponse>;
   /** update single row of the table: "simpipe.run_status" */
@@ -1569,24 +2990,14 @@ export type Mutation_Root = {
 
 
 /** mutation root */
-export type Mutation_RootCreate_Run_WithInputArgs = {
-  env_list?: InputMaybe<Array<InputMaybe<Array<InputMaybe<Scalars['String']>>>>>;
-  name?: InputMaybe<Scalars['String']>;
-  sampleInput?: InputMaybe<Array<InputMaybe<Array<InputMaybe<Scalars['String']>>>>>;
-  simulation_id?: InputMaybe<Scalars['String']>;
-  timeout_values?: InputMaybe<Array<InputMaybe<Scalars['Int']>>>;
+export type Mutation_RootCancelRunArgs = {
+  runId: Scalars['uuid'];
 };
 
 
 /** mutation root */
-export type Mutation_RootStart_RunArgs = {
-  run_id?: InputMaybe<Scalars['uuid']>;
-};
-
-
-/** mutation root */
-export type Mutation_RootStop_RunArgs = {
-  run_id?: InputMaybe<Scalars['uuid']>;
+export type Mutation_RootCreateRunArgs = {
+  run: CreateRunInput;
 };
 
 
@@ -1624,7 +3035,7 @@ export type Mutation_RootDeleteSimpipeEnvsArgs = {
 
 /** mutation root */
 export type Mutation_RootDeleteSimpipeEnvsByPkArgs = {
-  envId: Scalars['Int'];
+  envId: Scalars['uuid'];
 };
 
 
@@ -1637,18 +3048,6 @@ export type Mutation_RootDeleteSimpipeLogsArgs = {
 /** mutation root */
 export type Mutation_RootDeleteSimpipeLogsByPkArgs = {
   stepId: Scalars['uuid'];
-};
-
-
-/** mutation root */
-export type Mutation_RootDeleteSimpipeResourceUsageArgs = {
-  where: SimpipeResourceUsageBoolExp;
-};
-
-
-/** mutation root */
-export type Mutation_RootDeleteSimpipeResourceUsageByPkArgs = {
-  id: Scalars['bigint'];
 };
 
 
@@ -1743,20 +3142,6 @@ export type Mutation_RootInsertSimpipeLogsOneArgs = {
 
 
 /** mutation root */
-export type Mutation_RootInsertSimpipeResourceUsageArgs = {
-  objects: Array<SimpipeResourceUsageInsertInput>;
-  onConflict?: InputMaybe<SimpipeResourceUsageOnConflict>;
-};
-
-
-/** mutation root */
-export type Mutation_RootInsertSimpipeResourceUsageOneArgs = {
-  object: SimpipeResourceUsageInsertInput;
-  onConflict?: InputMaybe<SimpipeResourceUsageOnConflict>;
-};
-
-
-/** mutation root */
 export type Mutation_RootInsertSimpipeRunStatusArgs = {
   objects: Array<SimpipeRunStatusInsertInput>;
   onConflict?: InputMaybe<SimpipeRunStatusOnConflict>;
@@ -1799,6 +3184,12 @@ export type Mutation_RootInsertStepsOneArgs = {
 
 
 /** mutation root */
+export type Mutation_RootStartRunArgs = {
+  runId: Scalars['uuid'];
+};
+
+
+/** mutation root */
 export type Mutation_RootUpdateRunsArgs = {
   _set?: InputMaybe<RunsSetInput>;
   where: RunsBoolExp;
@@ -1820,7 +3211,6 @@ export type Mutation_RootUpdateRunsManyArgs = {
 
 /** mutation root */
 export type Mutation_RootUpdateSimpipeEnvsArgs = {
-  _inc?: InputMaybe<SimpipeEnvsIncInput>;
   _set?: InputMaybe<SimpipeEnvsSetInput>;
   where: SimpipeEnvsBoolExp;
 };
@@ -1828,7 +3218,6 @@ export type Mutation_RootUpdateSimpipeEnvsArgs = {
 
 /** mutation root */
 export type Mutation_RootUpdateSimpipeEnvsByPkArgs = {
-  _inc?: InputMaybe<SimpipeEnvsIncInput>;
   _set?: InputMaybe<SimpipeEnvsSetInput>;
   pk_columns: SimpipeEnvsPkColumnsInput;
 };
@@ -1842,7 +3231,6 @@ export type Mutation_RootUpdateSimpipeEnvsManyArgs = {
 
 /** mutation root */
 export type Mutation_RootUpdateSimpipeLogsArgs = {
-  _inc?: InputMaybe<SimpipeLogsIncInput>;
   _set?: InputMaybe<SimpipeLogsSetInput>;
   where: SimpipeLogsBoolExp;
 };
@@ -1850,7 +3238,6 @@ export type Mutation_RootUpdateSimpipeLogsArgs = {
 
 /** mutation root */
 export type Mutation_RootUpdateSimpipeLogsByPkArgs = {
-  _inc?: InputMaybe<SimpipeLogsIncInput>;
   _set?: InputMaybe<SimpipeLogsSetInput>;
   pk_columns: SimpipeLogsPkColumnsInput;
 };
@@ -1859,28 +3246,6 @@ export type Mutation_RootUpdateSimpipeLogsByPkArgs = {
 /** mutation root */
 export type Mutation_RootUpdateSimpipeLogsManyArgs = {
   updates: Array<SimpipeLogsUpdates>;
-};
-
-
-/** mutation root */
-export type Mutation_RootUpdateSimpipeResourceUsageArgs = {
-  _inc?: InputMaybe<SimpipeResourceUsageIncInput>;
-  _set?: InputMaybe<SimpipeResourceUsageSetInput>;
-  where: SimpipeResourceUsageBoolExp;
-};
-
-
-/** mutation root */
-export type Mutation_RootUpdateSimpipeResourceUsageByPkArgs = {
-  _inc?: InputMaybe<SimpipeResourceUsageIncInput>;
-  _set?: InputMaybe<SimpipeResourceUsageSetInput>;
-  pk_columns: SimpipeResourceUsagePkColumnsInput;
-};
-
-
-/** mutation root */
-export type Mutation_RootUpdateSimpipeResourceUsageManyArgs = {
-  updates: Array<SimpipeResourceUsageUpdates>;
 };
 
 
@@ -1975,21 +3340,858 @@ export type Mutation_RootUpdateStepsManyArgs = {
   updates: Array<StepsUpdates>;
 };
 
+/** columns and relationships of "simpipe.network_received_bytes" */
+export type NetworkReceivedBytes = {
+  __typename?: 'networkReceivedBytes';
+  /** An object relationship */
+  run?: Maybe<Runs>;
+  runId?: Maybe<Scalars['String']>;
+  /** An object relationship */
+  simulation?: Maybe<Simulations>;
+  simulationId?: Maybe<Scalars['String']>;
+  /** An object relationship */
+  step?: Maybe<Steps>;
+  stepId?: Maybe<Scalars['String']>;
+  time?: Maybe<Scalars['timestamptz']>;
+  userId?: Maybe<Scalars['String']>;
+  value?: Maybe<Scalars['float8']>;
+};
+
+/** aggregated selection of "simpipe.network_received_bytes" */
+export type NetworkReceivedBytesAggregate = {
+  __typename?: 'networkReceivedBytesAggregate';
+  aggregate?: Maybe<NetworkReceivedBytesAggregateFields>;
+  nodes: Array<NetworkReceivedBytes>;
+};
+
+/** aggregate fields of "simpipe.network_received_bytes" */
+export type NetworkReceivedBytesAggregateFields = {
+  __typename?: 'networkReceivedBytesAggregateFields';
+  avg?: Maybe<NetworkReceivedBytesAvgFields>;
+  count: Scalars['Int'];
+  max?: Maybe<NetworkReceivedBytesMaxFields>;
+  min?: Maybe<NetworkReceivedBytesMinFields>;
+  stddev?: Maybe<NetworkReceivedBytesStddevFields>;
+  stddevPop?: Maybe<NetworkReceivedBytesStddev_PopFields>;
+  stddevSamp?: Maybe<NetworkReceivedBytesStddev_SampFields>;
+  sum?: Maybe<NetworkReceivedBytesSumFields>;
+  varPop?: Maybe<NetworkReceivedBytesVar_PopFields>;
+  varSamp?: Maybe<NetworkReceivedBytesVar_SampFields>;
+  variance?: Maybe<NetworkReceivedBytesVarianceFields>;
+};
+
+
+/** aggregate fields of "simpipe.network_received_bytes" */
+export type NetworkReceivedBytesAggregateFieldsCountArgs = {
+  columns?: InputMaybe<Array<NetworkReceivedBytesSelectColumn>>;
+  distinct?: InputMaybe<Scalars['Boolean']>;
+};
+
+/** order by aggregate values of table "simpipe.network_received_bytes" */
+export type NetworkReceivedBytesAggregateOrderBy = {
+  avg?: InputMaybe<NetworkReceivedBytes_Avg_Order_By>;
+  count?: InputMaybe<OrderBy>;
+  max?: InputMaybe<NetworkReceivedBytes_Max_Order_By>;
+  min?: InputMaybe<NetworkReceivedBytes_Min_Order_By>;
+  stddev?: InputMaybe<NetworkReceivedBytes_Stddev_Order_By>;
+  stddev_pop?: InputMaybe<NetworkReceivedBytes_Stddev_Pop_Order_By>;
+  stddev_samp?: InputMaybe<NetworkReceivedBytes_Stddev_Samp_Order_By>;
+  sum?: InputMaybe<NetworkReceivedBytes_Sum_Order_By>;
+  var_pop?: InputMaybe<NetworkReceivedBytes_Var_Pop_Order_By>;
+  var_samp?: InputMaybe<NetworkReceivedBytes_Var_Samp_Order_By>;
+  variance?: InputMaybe<NetworkReceivedBytes_Variance_Order_By>;
+};
+
+/** input type for inserting array relation for remote table "simpipe.network_received_bytes" */
+export type NetworkReceivedBytesArrRelInsertInput = {
+  data: Array<NetworkReceivedBytesInsertInput>;
+};
+
+/** aggregate avg on columns */
+export type NetworkReceivedBytesAvgFields = {
+  __typename?: 'networkReceivedBytesAvgFields';
+  value?: Maybe<Scalars['Float']>;
+};
+
+/** Boolean expression to filter rows from the table "simpipe.network_received_bytes". All fields are combined with a logical 'AND'. */
+export type NetworkReceivedBytesBoolExp = {
+  _and?: InputMaybe<Array<NetworkReceivedBytesBoolExp>>;
+  _not?: InputMaybe<NetworkReceivedBytesBoolExp>;
+  _or?: InputMaybe<Array<NetworkReceivedBytesBoolExp>>;
+  run?: InputMaybe<RunsBoolExp>;
+  runId?: InputMaybe<StringComparisonExp>;
+  simulation?: InputMaybe<SimulationsBoolExp>;
+  simulationId?: InputMaybe<StringComparisonExp>;
+  step?: InputMaybe<StepsBoolExp>;
+  stepId?: InputMaybe<StringComparisonExp>;
+  time?: InputMaybe<TimestamptzComparisonExp>;
+  userId?: InputMaybe<StringComparisonExp>;
+  value?: InputMaybe<Float8ComparisonExp>;
+};
+
+/** input type for inserting data into table "simpipe.network_received_bytes" */
+export type NetworkReceivedBytesInsertInput = {
+  run?: InputMaybe<RunsObjRelInsertInput>;
+  runId?: InputMaybe<Scalars['String']>;
+  simulation?: InputMaybe<SimulationsObjRelInsertInput>;
+  simulationId?: InputMaybe<Scalars['String']>;
+  step?: InputMaybe<StepsObjRelInsertInput>;
+  stepId?: InputMaybe<Scalars['String']>;
+  time?: InputMaybe<Scalars['timestamptz']>;
+  userId?: InputMaybe<Scalars['String']>;
+  value?: InputMaybe<Scalars['float8']>;
+};
+
+/** aggregate max on columns */
+export type NetworkReceivedBytesMaxFields = {
+  __typename?: 'networkReceivedBytesMaxFields';
+  runId?: Maybe<Scalars['String']>;
+  simulationId?: Maybe<Scalars['String']>;
+  stepId?: Maybe<Scalars['String']>;
+  time?: Maybe<Scalars['timestamptz']>;
+  userId?: Maybe<Scalars['String']>;
+  value?: Maybe<Scalars['float8']>;
+};
+
+/** aggregate min on columns */
+export type NetworkReceivedBytesMinFields = {
+  __typename?: 'networkReceivedBytesMinFields';
+  runId?: Maybe<Scalars['String']>;
+  simulationId?: Maybe<Scalars['String']>;
+  stepId?: Maybe<Scalars['String']>;
+  time?: Maybe<Scalars['timestamptz']>;
+  userId?: Maybe<Scalars['String']>;
+  value?: Maybe<Scalars['float8']>;
+};
+
+/** Ordering options when selecting data from "simpipe.network_received_bytes". */
+export type NetworkReceivedBytesOrderBy = {
+  run?: InputMaybe<RunsOrderBy>;
+  runId?: InputMaybe<OrderBy>;
+  simulation?: InputMaybe<SimulationsOrderBy>;
+  simulationId?: InputMaybe<OrderBy>;
+  step?: InputMaybe<StepsOrderBy>;
+  stepId?: InputMaybe<OrderBy>;
+  time?: InputMaybe<OrderBy>;
+  userId?: InputMaybe<OrderBy>;
+  value?: InputMaybe<OrderBy>;
+};
+
+/** select columns of table "simpipe.network_received_bytes" */
+export enum NetworkReceivedBytesSelectColumn {
+  /** column name */
+  RunId = 'runId',
+  /** column name */
+  SimulationId = 'simulationId',
+  /** column name */
+  StepId = 'stepId',
+  /** column name */
+  Time = 'time',
+  /** column name */
+  UserId = 'userId',
+  /** column name */
+  Value = 'value'
+}
+
+/** aggregate stddev on columns */
+export type NetworkReceivedBytesStddevFields = {
+  __typename?: 'networkReceivedBytesStddevFields';
+  value?: Maybe<Scalars['Float']>;
+};
+
+/** aggregate stddev_pop on columns */
+export type NetworkReceivedBytesStddev_PopFields = {
+  __typename?: 'networkReceivedBytesStddev_popFields';
+  value?: Maybe<Scalars['Float']>;
+};
+
+/** aggregate stddev_samp on columns */
+export type NetworkReceivedBytesStddev_SampFields = {
+  __typename?: 'networkReceivedBytesStddev_sampFields';
+  value?: Maybe<Scalars['Float']>;
+};
+
+/** Streaming cursor of the table "networkReceivedBytes" */
+export type NetworkReceivedBytesStreamCursorInput = {
+  /** Stream column input with initial value */
+  initialValue: NetworkReceivedBytesStreamCursorValueInput;
+  /** cursor ordering */
+  ordering?: InputMaybe<CursorOrdering>;
+};
+
+/** Initial value of the column from where the streaming should start */
+export type NetworkReceivedBytesStreamCursorValueInput = {
+  runId?: InputMaybe<Scalars['String']>;
+  simulationId?: InputMaybe<Scalars['String']>;
+  stepId?: InputMaybe<Scalars['String']>;
+  time?: InputMaybe<Scalars['timestamptz']>;
+  userId?: InputMaybe<Scalars['String']>;
+  value?: InputMaybe<Scalars['float8']>;
+};
+
+/** aggregate sum on columns */
+export type NetworkReceivedBytesSumFields = {
+  __typename?: 'networkReceivedBytesSumFields';
+  value?: Maybe<Scalars['float8']>;
+};
+
+/** aggregate var_pop on columns */
+export type NetworkReceivedBytesVar_PopFields = {
+  __typename?: 'networkReceivedBytesVar_popFields';
+  value?: Maybe<Scalars['Float']>;
+};
+
+/** aggregate var_samp on columns */
+export type NetworkReceivedBytesVar_SampFields = {
+  __typename?: 'networkReceivedBytesVar_sampFields';
+  value?: Maybe<Scalars['Float']>;
+};
+
+/** aggregate variance on columns */
+export type NetworkReceivedBytesVarianceFields = {
+  __typename?: 'networkReceivedBytesVarianceFields';
+  value?: Maybe<Scalars['Float']>;
+};
+
+export type NetworkReceivedBytes_Aggregate_Bool_Exp = {
+  avg?: InputMaybe<NetworkReceivedBytes_Aggregate_Bool_Exp_Avg>;
+  corr?: InputMaybe<NetworkReceivedBytes_Aggregate_Bool_Exp_Corr>;
+  count?: InputMaybe<NetworkReceivedBytes_Aggregate_Bool_Exp_Count>;
+  covar_samp?: InputMaybe<NetworkReceivedBytes_Aggregate_Bool_Exp_Covar_Samp>;
+  max?: InputMaybe<NetworkReceivedBytes_Aggregate_Bool_Exp_Max>;
+  min?: InputMaybe<NetworkReceivedBytes_Aggregate_Bool_Exp_Min>;
+  stddev_samp?: InputMaybe<NetworkReceivedBytes_Aggregate_Bool_Exp_Stddev_Samp>;
+  sum?: InputMaybe<NetworkReceivedBytes_Aggregate_Bool_Exp_Sum>;
+  var_samp?: InputMaybe<NetworkReceivedBytes_Aggregate_Bool_Exp_Var_Samp>;
+};
+
+export type NetworkReceivedBytes_Aggregate_Bool_Exp_Avg = {
+  arguments: NetworkReceivedBytes_Select_Column_NetworkReceivedBytes_Aggregate_Bool_Exp_Avg_Arguments_Columns;
+  distinct?: InputMaybe<Scalars['Boolean']>;
+  filter?: InputMaybe<NetworkReceivedBytesBoolExp>;
+  predicate: Float8ComparisonExp;
+};
+
+export type NetworkReceivedBytes_Aggregate_Bool_Exp_Corr = {
+  arguments: NetworkReceivedBytes_Aggregate_Bool_Exp_Corr_Arguments;
+  distinct?: InputMaybe<Scalars['Boolean']>;
+  filter?: InputMaybe<NetworkReceivedBytesBoolExp>;
+  predicate: Float8ComparisonExp;
+};
+
+export type NetworkReceivedBytes_Aggregate_Bool_Exp_Corr_Arguments = {
+  X: NetworkReceivedBytes_Select_Column_NetworkReceivedBytes_Aggregate_Bool_Exp_Corr_Arguments_Columns;
+  Y: NetworkReceivedBytes_Select_Column_NetworkReceivedBytes_Aggregate_Bool_Exp_Corr_Arguments_Columns;
+};
+
+export type NetworkReceivedBytes_Aggregate_Bool_Exp_Count = {
+  arguments?: InputMaybe<Array<NetworkReceivedBytesSelectColumn>>;
+  distinct?: InputMaybe<Scalars['Boolean']>;
+  filter?: InputMaybe<NetworkReceivedBytesBoolExp>;
+  predicate: IntComparisonExp;
+};
+
+export type NetworkReceivedBytes_Aggregate_Bool_Exp_Covar_Samp = {
+  arguments: NetworkReceivedBytes_Aggregate_Bool_Exp_Covar_Samp_Arguments;
+  distinct?: InputMaybe<Scalars['Boolean']>;
+  filter?: InputMaybe<NetworkReceivedBytesBoolExp>;
+  predicate: Float8ComparisonExp;
+};
+
+export type NetworkReceivedBytes_Aggregate_Bool_Exp_Covar_Samp_Arguments = {
+  X: NetworkReceivedBytes_Select_Column_NetworkReceivedBytes_Aggregate_Bool_Exp_Covar_Samp_Arguments_Columns;
+  Y: NetworkReceivedBytes_Select_Column_NetworkReceivedBytes_Aggregate_Bool_Exp_Covar_Samp_Arguments_Columns;
+};
+
+export type NetworkReceivedBytes_Aggregate_Bool_Exp_Max = {
+  arguments: NetworkReceivedBytes_Select_Column_NetworkReceivedBytes_Aggregate_Bool_Exp_Max_Arguments_Columns;
+  distinct?: InputMaybe<Scalars['Boolean']>;
+  filter?: InputMaybe<NetworkReceivedBytesBoolExp>;
+  predicate: Float8ComparisonExp;
+};
+
+export type NetworkReceivedBytes_Aggregate_Bool_Exp_Min = {
+  arguments: NetworkReceivedBytes_Select_Column_NetworkReceivedBytes_Aggregate_Bool_Exp_Min_Arguments_Columns;
+  distinct?: InputMaybe<Scalars['Boolean']>;
+  filter?: InputMaybe<NetworkReceivedBytesBoolExp>;
+  predicate: Float8ComparisonExp;
+};
+
+export type NetworkReceivedBytes_Aggregate_Bool_Exp_Stddev_Samp = {
+  arguments: NetworkReceivedBytes_Select_Column_NetworkReceivedBytes_Aggregate_Bool_Exp_Stddev_Samp_Arguments_Columns;
+  distinct?: InputMaybe<Scalars['Boolean']>;
+  filter?: InputMaybe<NetworkReceivedBytesBoolExp>;
+  predicate: Float8ComparisonExp;
+};
+
+export type NetworkReceivedBytes_Aggregate_Bool_Exp_Sum = {
+  arguments: NetworkReceivedBytes_Select_Column_NetworkReceivedBytes_Aggregate_Bool_Exp_Sum_Arguments_Columns;
+  distinct?: InputMaybe<Scalars['Boolean']>;
+  filter?: InputMaybe<NetworkReceivedBytesBoolExp>;
+  predicate: Float8ComparisonExp;
+};
+
+export type NetworkReceivedBytes_Aggregate_Bool_Exp_Var_Samp = {
+  arguments: NetworkReceivedBytes_Select_Column_NetworkReceivedBytes_Aggregate_Bool_Exp_Var_Samp_Arguments_Columns;
+  distinct?: InputMaybe<Scalars['Boolean']>;
+  filter?: InputMaybe<NetworkReceivedBytesBoolExp>;
+  predicate: Float8ComparisonExp;
+};
+
+/** order by avg() on columns of table "simpipe.network_received_bytes" */
+export type NetworkReceivedBytes_Avg_Order_By = {
+  value?: InputMaybe<OrderBy>;
+};
+
+/** order by max() on columns of table "simpipe.network_received_bytes" */
+export type NetworkReceivedBytes_Max_Order_By = {
+  runId?: InputMaybe<OrderBy>;
+  simulationId?: InputMaybe<OrderBy>;
+  stepId?: InputMaybe<OrderBy>;
+  time?: InputMaybe<OrderBy>;
+  userId?: InputMaybe<OrderBy>;
+  value?: InputMaybe<OrderBy>;
+};
+
+/** order by min() on columns of table "simpipe.network_received_bytes" */
+export type NetworkReceivedBytes_Min_Order_By = {
+  runId?: InputMaybe<OrderBy>;
+  simulationId?: InputMaybe<OrderBy>;
+  stepId?: InputMaybe<OrderBy>;
+  time?: InputMaybe<OrderBy>;
+  userId?: InputMaybe<OrderBy>;
+  value?: InputMaybe<OrderBy>;
+};
+
+/** select "networkReceivedBytes_aggregate_bool_exp_avg_arguments_columns" columns of table "simpipe.network_received_bytes" */
+export enum NetworkReceivedBytes_Select_Column_NetworkReceivedBytes_Aggregate_Bool_Exp_Avg_Arguments_Columns {
+  /** column name */
+  Value = 'value'
+}
+
+/** select "networkReceivedBytes_aggregate_bool_exp_corr_arguments_columns" columns of table "simpipe.network_received_bytes" */
+export enum NetworkReceivedBytes_Select_Column_NetworkReceivedBytes_Aggregate_Bool_Exp_Corr_Arguments_Columns {
+  /** column name */
+  Value = 'value'
+}
+
+/** select "networkReceivedBytes_aggregate_bool_exp_covar_samp_arguments_columns" columns of table "simpipe.network_received_bytes" */
+export enum NetworkReceivedBytes_Select_Column_NetworkReceivedBytes_Aggregate_Bool_Exp_Covar_Samp_Arguments_Columns {
+  /** column name */
+  Value = 'value'
+}
+
+/** select "networkReceivedBytes_aggregate_bool_exp_max_arguments_columns" columns of table "simpipe.network_received_bytes" */
+export enum NetworkReceivedBytes_Select_Column_NetworkReceivedBytes_Aggregate_Bool_Exp_Max_Arguments_Columns {
+  /** column name */
+  Value = 'value'
+}
+
+/** select "networkReceivedBytes_aggregate_bool_exp_min_arguments_columns" columns of table "simpipe.network_received_bytes" */
+export enum NetworkReceivedBytes_Select_Column_NetworkReceivedBytes_Aggregate_Bool_Exp_Min_Arguments_Columns {
+  /** column name */
+  Value = 'value'
+}
+
+/** select "networkReceivedBytes_aggregate_bool_exp_stddev_samp_arguments_columns" columns of table "simpipe.network_received_bytes" */
+export enum NetworkReceivedBytes_Select_Column_NetworkReceivedBytes_Aggregate_Bool_Exp_Stddev_Samp_Arguments_Columns {
+  /** column name */
+  Value = 'value'
+}
+
+/** select "networkReceivedBytes_aggregate_bool_exp_sum_arguments_columns" columns of table "simpipe.network_received_bytes" */
+export enum NetworkReceivedBytes_Select_Column_NetworkReceivedBytes_Aggregate_Bool_Exp_Sum_Arguments_Columns {
+  /** column name */
+  Value = 'value'
+}
+
+/** select "networkReceivedBytes_aggregate_bool_exp_var_samp_arguments_columns" columns of table "simpipe.network_received_bytes" */
+export enum NetworkReceivedBytes_Select_Column_NetworkReceivedBytes_Aggregate_Bool_Exp_Var_Samp_Arguments_Columns {
+  /** column name */
+  Value = 'value'
+}
+
+/** order by stddev() on columns of table "simpipe.network_received_bytes" */
+export type NetworkReceivedBytes_Stddev_Order_By = {
+  value?: InputMaybe<OrderBy>;
+};
+
+/** order by stddev_pop() on columns of table "simpipe.network_received_bytes" */
+export type NetworkReceivedBytes_Stddev_Pop_Order_By = {
+  value?: InputMaybe<OrderBy>;
+};
+
+/** order by stddev_samp() on columns of table "simpipe.network_received_bytes" */
+export type NetworkReceivedBytes_Stddev_Samp_Order_By = {
+  value?: InputMaybe<OrderBy>;
+};
+
+/** order by sum() on columns of table "simpipe.network_received_bytes" */
+export type NetworkReceivedBytes_Sum_Order_By = {
+  value?: InputMaybe<OrderBy>;
+};
+
+/** order by var_pop() on columns of table "simpipe.network_received_bytes" */
+export type NetworkReceivedBytes_Var_Pop_Order_By = {
+  value?: InputMaybe<OrderBy>;
+};
+
+/** order by var_samp() on columns of table "simpipe.network_received_bytes" */
+export type NetworkReceivedBytes_Var_Samp_Order_By = {
+  value?: InputMaybe<OrderBy>;
+};
+
+/** order by variance() on columns of table "simpipe.network_received_bytes" */
+export type NetworkReceivedBytes_Variance_Order_By = {
+  value?: InputMaybe<OrderBy>;
+};
+
+/** columns and relationships of "simpipe.network_transmit_bytes" */
+export type NetworkTransmitBytes = {
+  __typename?: 'networkTransmitBytes';
+  /** An object relationship */
+  run?: Maybe<Runs>;
+  runId?: Maybe<Scalars['String']>;
+  /** An object relationship */
+  simulation?: Maybe<Simulations>;
+  simulationId?: Maybe<Scalars['String']>;
+  /** An object relationship */
+  step?: Maybe<Steps>;
+  stepId?: Maybe<Scalars['String']>;
+  time?: Maybe<Scalars['timestamptz']>;
+  userId?: Maybe<Scalars['String']>;
+  value?: Maybe<Scalars['float8']>;
+};
+
+/** aggregated selection of "simpipe.network_transmit_bytes" */
+export type NetworkTransmitBytesAggregate = {
+  __typename?: 'networkTransmitBytesAggregate';
+  aggregate?: Maybe<NetworkTransmitBytesAggregateFields>;
+  nodes: Array<NetworkTransmitBytes>;
+};
+
+/** aggregate fields of "simpipe.network_transmit_bytes" */
+export type NetworkTransmitBytesAggregateFields = {
+  __typename?: 'networkTransmitBytesAggregateFields';
+  avg?: Maybe<NetworkTransmitBytesAvgFields>;
+  count: Scalars['Int'];
+  max?: Maybe<NetworkTransmitBytesMaxFields>;
+  min?: Maybe<NetworkTransmitBytesMinFields>;
+  stddev?: Maybe<NetworkTransmitBytesStddevFields>;
+  stddevPop?: Maybe<NetworkTransmitBytesStddev_PopFields>;
+  stddevSamp?: Maybe<NetworkTransmitBytesStddev_SampFields>;
+  sum?: Maybe<NetworkTransmitBytesSumFields>;
+  varPop?: Maybe<NetworkTransmitBytesVar_PopFields>;
+  varSamp?: Maybe<NetworkTransmitBytesVar_SampFields>;
+  variance?: Maybe<NetworkTransmitBytesVarianceFields>;
+};
+
+
+/** aggregate fields of "simpipe.network_transmit_bytes" */
+export type NetworkTransmitBytesAggregateFieldsCountArgs = {
+  columns?: InputMaybe<Array<NetworkTransmitBytesSelectColumn>>;
+  distinct?: InputMaybe<Scalars['Boolean']>;
+};
+
+/** order by aggregate values of table "simpipe.network_transmit_bytes" */
+export type NetworkTransmitBytesAggregateOrderBy = {
+  avg?: InputMaybe<NetworkTransmitBytes_Avg_Order_By>;
+  count?: InputMaybe<OrderBy>;
+  max?: InputMaybe<NetworkTransmitBytes_Max_Order_By>;
+  min?: InputMaybe<NetworkTransmitBytes_Min_Order_By>;
+  stddev?: InputMaybe<NetworkTransmitBytes_Stddev_Order_By>;
+  stddev_pop?: InputMaybe<NetworkTransmitBytes_Stddev_Pop_Order_By>;
+  stddev_samp?: InputMaybe<NetworkTransmitBytes_Stddev_Samp_Order_By>;
+  sum?: InputMaybe<NetworkTransmitBytes_Sum_Order_By>;
+  var_pop?: InputMaybe<NetworkTransmitBytes_Var_Pop_Order_By>;
+  var_samp?: InputMaybe<NetworkTransmitBytes_Var_Samp_Order_By>;
+  variance?: InputMaybe<NetworkTransmitBytes_Variance_Order_By>;
+};
+
+/** input type for inserting array relation for remote table "simpipe.network_transmit_bytes" */
+export type NetworkTransmitBytesArrRelInsertInput = {
+  data: Array<NetworkTransmitBytesInsertInput>;
+};
+
+/** aggregate avg on columns */
+export type NetworkTransmitBytesAvgFields = {
+  __typename?: 'networkTransmitBytesAvgFields';
+  value?: Maybe<Scalars['Float']>;
+};
+
+/** Boolean expression to filter rows from the table "simpipe.network_transmit_bytes". All fields are combined with a logical 'AND'. */
+export type NetworkTransmitBytesBoolExp = {
+  _and?: InputMaybe<Array<NetworkTransmitBytesBoolExp>>;
+  _not?: InputMaybe<NetworkTransmitBytesBoolExp>;
+  _or?: InputMaybe<Array<NetworkTransmitBytesBoolExp>>;
+  run?: InputMaybe<RunsBoolExp>;
+  runId?: InputMaybe<StringComparisonExp>;
+  simulation?: InputMaybe<SimulationsBoolExp>;
+  simulationId?: InputMaybe<StringComparisonExp>;
+  step?: InputMaybe<StepsBoolExp>;
+  stepId?: InputMaybe<StringComparisonExp>;
+  time?: InputMaybe<TimestamptzComparisonExp>;
+  userId?: InputMaybe<StringComparisonExp>;
+  value?: InputMaybe<Float8ComparisonExp>;
+};
+
+/** input type for inserting data into table "simpipe.network_transmit_bytes" */
+export type NetworkTransmitBytesInsertInput = {
+  run?: InputMaybe<RunsObjRelInsertInput>;
+  runId?: InputMaybe<Scalars['String']>;
+  simulation?: InputMaybe<SimulationsObjRelInsertInput>;
+  simulationId?: InputMaybe<Scalars['String']>;
+  step?: InputMaybe<StepsObjRelInsertInput>;
+  stepId?: InputMaybe<Scalars['String']>;
+  time?: InputMaybe<Scalars['timestamptz']>;
+  userId?: InputMaybe<Scalars['String']>;
+  value?: InputMaybe<Scalars['float8']>;
+};
+
+/** aggregate max on columns */
+export type NetworkTransmitBytesMaxFields = {
+  __typename?: 'networkTransmitBytesMaxFields';
+  runId?: Maybe<Scalars['String']>;
+  simulationId?: Maybe<Scalars['String']>;
+  stepId?: Maybe<Scalars['String']>;
+  time?: Maybe<Scalars['timestamptz']>;
+  userId?: Maybe<Scalars['String']>;
+  value?: Maybe<Scalars['float8']>;
+};
+
+/** aggregate min on columns */
+export type NetworkTransmitBytesMinFields = {
+  __typename?: 'networkTransmitBytesMinFields';
+  runId?: Maybe<Scalars['String']>;
+  simulationId?: Maybe<Scalars['String']>;
+  stepId?: Maybe<Scalars['String']>;
+  time?: Maybe<Scalars['timestamptz']>;
+  userId?: Maybe<Scalars['String']>;
+  value?: Maybe<Scalars['float8']>;
+};
+
+/** Ordering options when selecting data from "simpipe.network_transmit_bytes". */
+export type NetworkTransmitBytesOrderBy = {
+  run?: InputMaybe<RunsOrderBy>;
+  runId?: InputMaybe<OrderBy>;
+  simulation?: InputMaybe<SimulationsOrderBy>;
+  simulationId?: InputMaybe<OrderBy>;
+  step?: InputMaybe<StepsOrderBy>;
+  stepId?: InputMaybe<OrderBy>;
+  time?: InputMaybe<OrderBy>;
+  userId?: InputMaybe<OrderBy>;
+  value?: InputMaybe<OrderBy>;
+};
+
+/** select columns of table "simpipe.network_transmit_bytes" */
+export enum NetworkTransmitBytesSelectColumn {
+  /** column name */
+  RunId = 'runId',
+  /** column name */
+  SimulationId = 'simulationId',
+  /** column name */
+  StepId = 'stepId',
+  /** column name */
+  Time = 'time',
+  /** column name */
+  UserId = 'userId',
+  /** column name */
+  Value = 'value'
+}
+
+/** aggregate stddev on columns */
+export type NetworkTransmitBytesStddevFields = {
+  __typename?: 'networkTransmitBytesStddevFields';
+  value?: Maybe<Scalars['Float']>;
+};
+
+/** aggregate stddev_pop on columns */
+export type NetworkTransmitBytesStddev_PopFields = {
+  __typename?: 'networkTransmitBytesStddev_popFields';
+  value?: Maybe<Scalars['Float']>;
+};
+
+/** aggregate stddev_samp on columns */
+export type NetworkTransmitBytesStddev_SampFields = {
+  __typename?: 'networkTransmitBytesStddev_sampFields';
+  value?: Maybe<Scalars['Float']>;
+};
+
+/** Streaming cursor of the table "networkTransmitBytes" */
+export type NetworkTransmitBytesStreamCursorInput = {
+  /** Stream column input with initial value */
+  initialValue: NetworkTransmitBytesStreamCursorValueInput;
+  /** cursor ordering */
+  ordering?: InputMaybe<CursorOrdering>;
+};
+
+/** Initial value of the column from where the streaming should start */
+export type NetworkTransmitBytesStreamCursorValueInput = {
+  runId?: InputMaybe<Scalars['String']>;
+  simulationId?: InputMaybe<Scalars['String']>;
+  stepId?: InputMaybe<Scalars['String']>;
+  time?: InputMaybe<Scalars['timestamptz']>;
+  userId?: InputMaybe<Scalars['String']>;
+  value?: InputMaybe<Scalars['float8']>;
+};
+
+/** aggregate sum on columns */
+export type NetworkTransmitBytesSumFields = {
+  __typename?: 'networkTransmitBytesSumFields';
+  value?: Maybe<Scalars['float8']>;
+};
+
+/** aggregate var_pop on columns */
+export type NetworkTransmitBytesVar_PopFields = {
+  __typename?: 'networkTransmitBytesVar_popFields';
+  value?: Maybe<Scalars['Float']>;
+};
+
+/** aggregate var_samp on columns */
+export type NetworkTransmitBytesVar_SampFields = {
+  __typename?: 'networkTransmitBytesVar_sampFields';
+  value?: Maybe<Scalars['Float']>;
+};
+
+/** aggregate variance on columns */
+export type NetworkTransmitBytesVarianceFields = {
+  __typename?: 'networkTransmitBytesVarianceFields';
+  value?: Maybe<Scalars['Float']>;
+};
+
+export type NetworkTransmitBytes_Aggregate_Bool_Exp = {
+  avg?: InputMaybe<NetworkTransmitBytes_Aggregate_Bool_Exp_Avg>;
+  corr?: InputMaybe<NetworkTransmitBytes_Aggregate_Bool_Exp_Corr>;
+  count?: InputMaybe<NetworkTransmitBytes_Aggregate_Bool_Exp_Count>;
+  covar_samp?: InputMaybe<NetworkTransmitBytes_Aggregate_Bool_Exp_Covar_Samp>;
+  max?: InputMaybe<NetworkTransmitBytes_Aggregate_Bool_Exp_Max>;
+  min?: InputMaybe<NetworkTransmitBytes_Aggregate_Bool_Exp_Min>;
+  stddev_samp?: InputMaybe<NetworkTransmitBytes_Aggregate_Bool_Exp_Stddev_Samp>;
+  sum?: InputMaybe<NetworkTransmitBytes_Aggregate_Bool_Exp_Sum>;
+  var_samp?: InputMaybe<NetworkTransmitBytes_Aggregate_Bool_Exp_Var_Samp>;
+};
+
+export type NetworkTransmitBytes_Aggregate_Bool_Exp_Avg = {
+  arguments: NetworkTransmitBytes_Select_Column_NetworkTransmitBytes_Aggregate_Bool_Exp_Avg_Arguments_Columns;
+  distinct?: InputMaybe<Scalars['Boolean']>;
+  filter?: InputMaybe<NetworkTransmitBytesBoolExp>;
+  predicate: Float8ComparisonExp;
+};
+
+export type NetworkTransmitBytes_Aggregate_Bool_Exp_Corr = {
+  arguments: NetworkTransmitBytes_Aggregate_Bool_Exp_Corr_Arguments;
+  distinct?: InputMaybe<Scalars['Boolean']>;
+  filter?: InputMaybe<NetworkTransmitBytesBoolExp>;
+  predicate: Float8ComparisonExp;
+};
+
+export type NetworkTransmitBytes_Aggregate_Bool_Exp_Corr_Arguments = {
+  X: NetworkTransmitBytes_Select_Column_NetworkTransmitBytes_Aggregate_Bool_Exp_Corr_Arguments_Columns;
+  Y: NetworkTransmitBytes_Select_Column_NetworkTransmitBytes_Aggregate_Bool_Exp_Corr_Arguments_Columns;
+};
+
+export type NetworkTransmitBytes_Aggregate_Bool_Exp_Count = {
+  arguments?: InputMaybe<Array<NetworkTransmitBytesSelectColumn>>;
+  distinct?: InputMaybe<Scalars['Boolean']>;
+  filter?: InputMaybe<NetworkTransmitBytesBoolExp>;
+  predicate: IntComparisonExp;
+};
+
+export type NetworkTransmitBytes_Aggregate_Bool_Exp_Covar_Samp = {
+  arguments: NetworkTransmitBytes_Aggregate_Bool_Exp_Covar_Samp_Arguments;
+  distinct?: InputMaybe<Scalars['Boolean']>;
+  filter?: InputMaybe<NetworkTransmitBytesBoolExp>;
+  predicate: Float8ComparisonExp;
+};
+
+export type NetworkTransmitBytes_Aggregate_Bool_Exp_Covar_Samp_Arguments = {
+  X: NetworkTransmitBytes_Select_Column_NetworkTransmitBytes_Aggregate_Bool_Exp_Covar_Samp_Arguments_Columns;
+  Y: NetworkTransmitBytes_Select_Column_NetworkTransmitBytes_Aggregate_Bool_Exp_Covar_Samp_Arguments_Columns;
+};
+
+export type NetworkTransmitBytes_Aggregate_Bool_Exp_Max = {
+  arguments: NetworkTransmitBytes_Select_Column_NetworkTransmitBytes_Aggregate_Bool_Exp_Max_Arguments_Columns;
+  distinct?: InputMaybe<Scalars['Boolean']>;
+  filter?: InputMaybe<NetworkTransmitBytesBoolExp>;
+  predicate: Float8ComparisonExp;
+};
+
+export type NetworkTransmitBytes_Aggregate_Bool_Exp_Min = {
+  arguments: NetworkTransmitBytes_Select_Column_NetworkTransmitBytes_Aggregate_Bool_Exp_Min_Arguments_Columns;
+  distinct?: InputMaybe<Scalars['Boolean']>;
+  filter?: InputMaybe<NetworkTransmitBytesBoolExp>;
+  predicate: Float8ComparisonExp;
+};
+
+export type NetworkTransmitBytes_Aggregate_Bool_Exp_Stddev_Samp = {
+  arguments: NetworkTransmitBytes_Select_Column_NetworkTransmitBytes_Aggregate_Bool_Exp_Stddev_Samp_Arguments_Columns;
+  distinct?: InputMaybe<Scalars['Boolean']>;
+  filter?: InputMaybe<NetworkTransmitBytesBoolExp>;
+  predicate: Float8ComparisonExp;
+};
+
+export type NetworkTransmitBytes_Aggregate_Bool_Exp_Sum = {
+  arguments: NetworkTransmitBytes_Select_Column_NetworkTransmitBytes_Aggregate_Bool_Exp_Sum_Arguments_Columns;
+  distinct?: InputMaybe<Scalars['Boolean']>;
+  filter?: InputMaybe<NetworkTransmitBytesBoolExp>;
+  predicate: Float8ComparisonExp;
+};
+
+export type NetworkTransmitBytes_Aggregate_Bool_Exp_Var_Samp = {
+  arguments: NetworkTransmitBytes_Select_Column_NetworkTransmitBytes_Aggregate_Bool_Exp_Var_Samp_Arguments_Columns;
+  distinct?: InputMaybe<Scalars['Boolean']>;
+  filter?: InputMaybe<NetworkTransmitBytesBoolExp>;
+  predicate: Float8ComparisonExp;
+};
+
+/** order by avg() on columns of table "simpipe.network_transmit_bytes" */
+export type NetworkTransmitBytes_Avg_Order_By = {
+  value?: InputMaybe<OrderBy>;
+};
+
+/** order by max() on columns of table "simpipe.network_transmit_bytes" */
+export type NetworkTransmitBytes_Max_Order_By = {
+  runId?: InputMaybe<OrderBy>;
+  simulationId?: InputMaybe<OrderBy>;
+  stepId?: InputMaybe<OrderBy>;
+  time?: InputMaybe<OrderBy>;
+  userId?: InputMaybe<OrderBy>;
+  value?: InputMaybe<OrderBy>;
+};
+
+/** order by min() on columns of table "simpipe.network_transmit_bytes" */
+export type NetworkTransmitBytes_Min_Order_By = {
+  runId?: InputMaybe<OrderBy>;
+  simulationId?: InputMaybe<OrderBy>;
+  stepId?: InputMaybe<OrderBy>;
+  time?: InputMaybe<OrderBy>;
+  userId?: InputMaybe<OrderBy>;
+  value?: InputMaybe<OrderBy>;
+};
+
+/** select "networkTransmitBytes_aggregate_bool_exp_avg_arguments_columns" columns of table "simpipe.network_transmit_bytes" */
+export enum NetworkTransmitBytes_Select_Column_NetworkTransmitBytes_Aggregate_Bool_Exp_Avg_Arguments_Columns {
+  /** column name */
+  Value = 'value'
+}
+
+/** select "networkTransmitBytes_aggregate_bool_exp_corr_arguments_columns" columns of table "simpipe.network_transmit_bytes" */
+export enum NetworkTransmitBytes_Select_Column_NetworkTransmitBytes_Aggregate_Bool_Exp_Corr_Arguments_Columns {
+  /** column name */
+  Value = 'value'
+}
+
+/** select "networkTransmitBytes_aggregate_bool_exp_covar_samp_arguments_columns" columns of table "simpipe.network_transmit_bytes" */
+export enum NetworkTransmitBytes_Select_Column_NetworkTransmitBytes_Aggregate_Bool_Exp_Covar_Samp_Arguments_Columns {
+  /** column name */
+  Value = 'value'
+}
+
+/** select "networkTransmitBytes_aggregate_bool_exp_max_arguments_columns" columns of table "simpipe.network_transmit_bytes" */
+export enum NetworkTransmitBytes_Select_Column_NetworkTransmitBytes_Aggregate_Bool_Exp_Max_Arguments_Columns {
+  /** column name */
+  Value = 'value'
+}
+
+/** select "networkTransmitBytes_aggregate_bool_exp_min_arguments_columns" columns of table "simpipe.network_transmit_bytes" */
+export enum NetworkTransmitBytes_Select_Column_NetworkTransmitBytes_Aggregate_Bool_Exp_Min_Arguments_Columns {
+  /** column name */
+  Value = 'value'
+}
+
+/** select "networkTransmitBytes_aggregate_bool_exp_stddev_samp_arguments_columns" columns of table "simpipe.network_transmit_bytes" */
+export enum NetworkTransmitBytes_Select_Column_NetworkTransmitBytes_Aggregate_Bool_Exp_Stddev_Samp_Arguments_Columns {
+  /** column name */
+  Value = 'value'
+}
+
+/** select "networkTransmitBytes_aggregate_bool_exp_sum_arguments_columns" columns of table "simpipe.network_transmit_bytes" */
+export enum NetworkTransmitBytes_Select_Column_NetworkTransmitBytes_Aggregate_Bool_Exp_Sum_Arguments_Columns {
+  /** column name */
+  Value = 'value'
+}
+
+/** select "networkTransmitBytes_aggregate_bool_exp_var_samp_arguments_columns" columns of table "simpipe.network_transmit_bytes" */
+export enum NetworkTransmitBytes_Select_Column_NetworkTransmitBytes_Aggregate_Bool_Exp_Var_Samp_Arguments_Columns {
+  /** column name */
+  Value = 'value'
+}
+
+/** order by stddev() on columns of table "simpipe.network_transmit_bytes" */
+export type NetworkTransmitBytes_Stddev_Order_By = {
+  value?: InputMaybe<OrderBy>;
+};
+
+/** order by stddev_pop() on columns of table "simpipe.network_transmit_bytes" */
+export type NetworkTransmitBytes_Stddev_Pop_Order_By = {
+  value?: InputMaybe<OrderBy>;
+};
+
+/** order by stddev_samp() on columns of table "simpipe.network_transmit_bytes" */
+export type NetworkTransmitBytes_Stddev_Samp_Order_By = {
+  value?: InputMaybe<OrderBy>;
+};
+
+/** order by sum() on columns of table "simpipe.network_transmit_bytes" */
+export type NetworkTransmitBytes_Sum_Order_By = {
+  value?: InputMaybe<OrderBy>;
+};
+
+/** order by var_pop() on columns of table "simpipe.network_transmit_bytes" */
+export type NetworkTransmitBytes_Var_Pop_Order_By = {
+  value?: InputMaybe<OrderBy>;
+};
+
+/** order by var_samp() on columns of table "simpipe.network_transmit_bytes" */
+export type NetworkTransmitBytes_Var_Samp_Order_By = {
+  value?: InputMaybe<OrderBy>;
+};
+
+/** order by variance() on columns of table "simpipe.network_transmit_bytes" */
+export type NetworkTransmitBytes_Variance_Order_By = {
+  value?: InputMaybe<OrderBy>;
+};
+
 export type Query_Root = {
   __typename?: 'query_root';
-  ComputeUploadPresignedUrl?: Maybe<Scalars['String']>;
-  Ping?: Maybe<Scalars['String']>;
-  Username?: Maybe<Scalars['String']>;
+  /**  Compute a presigned URL for uploading a file using a HTTP PUT.  */
+  computeUploadPresignedUrl: Scalars['String'];
+  /** An array relationship */
+  cpu: Array<Cpu>;
+  /** An aggregate relationship */
+  cpuAggregate: CpuAggregate;
+  /** An array relationship */
+  fsReadsMerged: Array<FsReadsMerged>;
+  /** An aggregate relationship */
+  fsReadsMergedAggregate: FsReadsMergedAggregate;
+  /** An array relationship */
+  fsWritesMerged: Array<FsWritesMerged>;
+  /** An aggregate relationship */
+  fsWritesMergedAggregate: FsWritesMergedAggregate;
+  /** An array relationship */
+  memoryMaxUsageBytes: Array<MemoryMaxUsageBytes>;
+  /** An aggregate relationship */
+  memoryMaxUsageBytesAggregate: MemoryMaxUsageBytesAggregate;
+  /** An array relationship */
+  memoryUsageBytes: Array<MemoryUsageBytes>;
+  /** An aggregate relationship */
+  memoryUsageBytesAggregate: MemoryUsageBytesAggregate;
+  /** An array relationship */
+  networkReceivedBytes: Array<NetworkReceivedBytes>;
+  /** An aggregate relationship */
+  networkReceivedBytesAggregate: NetworkReceivedBytesAggregate;
+  /** An array relationship */
+  networkTransmitBytes: Array<NetworkTransmitBytes>;
+  /** An aggregate relationship */
+  networkTransmitBytesAggregate: NetworkTransmitBytesAggregate;
+  /**  Returns pong if the server is up and running.  */
+  ping: Scalars['String'];
   /** fetch data from the table: "simpipe.runs" using primary key columns */
   run?: Maybe<Runs>;
   /** An array relationship */
   runs: Array<Runs>;
   /** An aggregate relationship */
   runsAggregate: RunsAggregate;
-  /** fetch data from the table: "simpipe.cpu" */
-  simpipeCpu: Array<SimpipeCpu>;
-  /** fetch aggregated fields from the table: "simpipe.cpu" */
-  simpipeCpuAggregate: SimpipeCpuAggregate;
   /** fetch data from the table: "simpipe.envs" */
   simpipeEnvs: Array<SimpipeEnvs>;
   /** fetch aggregated fields from the table: "simpipe.envs" */
@@ -2002,12 +4204,6 @@ export type Query_Root = {
   simpipeLogsAggregate: SimpipeLogsAggregate;
   /** fetch data from the table: "simpipe.logs" using primary key columns */
   simpipeLogsByPk?: Maybe<SimpipeLogs>;
-  /** fetch data from the table: "simpipe.resource_usage" */
-  simpipeResourceUsage: Array<SimpipeResourceUsage>;
-  /** fetch aggregated fields from the table: "simpipe.resource_usage" */
-  simpipeResourceUsageAggregate: SimpipeResourceUsageAggregate;
-  /** fetch data from the table: "simpipe.resource_usage" using primary key columns */
-  simpipeResourceUsageByPk?: Maybe<SimpipeResourceUsage>;
   /** fetch data from the table: "simpipe.run_status" */
   simpipeRunStatus: Array<SimpipeRunStatus>;
   /** fetch aggregated fields from the table: "simpipe.run_status" */
@@ -2032,6 +4228,134 @@ export type Query_Root = {
   stepsAggregate: StepsAggregate;
   /** fetch data from the table: "simpipe.steps" using primary key columns */
   stepsByPk?: Maybe<Steps>;
+  /**  Fetch the current username.  */
+  username: Scalars['String'];
+};
+
+
+export type Query_RootCpuArgs = {
+  distinctOn?: InputMaybe<Array<CpuSelectColumn>>;
+  limit?: InputMaybe<Scalars['Int']>;
+  offset?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<Array<CpuOrderBy>>;
+  where?: InputMaybe<CpuBoolExp>;
+};
+
+
+export type Query_RootCpuAggregateArgs = {
+  distinctOn?: InputMaybe<Array<CpuSelectColumn>>;
+  limit?: InputMaybe<Scalars['Int']>;
+  offset?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<Array<CpuOrderBy>>;
+  where?: InputMaybe<CpuBoolExp>;
+};
+
+
+export type Query_RootFsReadsMergedArgs = {
+  distinctOn?: InputMaybe<Array<FsReadsMergedSelectColumn>>;
+  limit?: InputMaybe<Scalars['Int']>;
+  offset?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<Array<FsReadsMergedOrderBy>>;
+  where?: InputMaybe<FsReadsMergedBoolExp>;
+};
+
+
+export type Query_RootFsReadsMergedAggregateArgs = {
+  distinctOn?: InputMaybe<Array<FsReadsMergedSelectColumn>>;
+  limit?: InputMaybe<Scalars['Int']>;
+  offset?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<Array<FsReadsMergedOrderBy>>;
+  where?: InputMaybe<FsReadsMergedBoolExp>;
+};
+
+
+export type Query_RootFsWritesMergedArgs = {
+  distinctOn?: InputMaybe<Array<FsWritesMergedSelectColumn>>;
+  limit?: InputMaybe<Scalars['Int']>;
+  offset?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<Array<FsWritesMergedOrderBy>>;
+  where?: InputMaybe<FsWritesMergedBoolExp>;
+};
+
+
+export type Query_RootFsWritesMergedAggregateArgs = {
+  distinctOn?: InputMaybe<Array<FsWritesMergedSelectColumn>>;
+  limit?: InputMaybe<Scalars['Int']>;
+  offset?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<Array<FsWritesMergedOrderBy>>;
+  where?: InputMaybe<FsWritesMergedBoolExp>;
+};
+
+
+export type Query_RootMemoryMaxUsageBytesArgs = {
+  distinctOn?: InputMaybe<Array<MemoryMaxUsageBytesSelectColumn>>;
+  limit?: InputMaybe<Scalars['Int']>;
+  offset?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<Array<MemoryMaxUsageBytesOrderBy>>;
+  where?: InputMaybe<MemoryMaxUsageBytesBoolExp>;
+};
+
+
+export type Query_RootMemoryMaxUsageBytesAggregateArgs = {
+  distinctOn?: InputMaybe<Array<MemoryMaxUsageBytesSelectColumn>>;
+  limit?: InputMaybe<Scalars['Int']>;
+  offset?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<Array<MemoryMaxUsageBytesOrderBy>>;
+  where?: InputMaybe<MemoryMaxUsageBytesBoolExp>;
+};
+
+
+export type Query_RootMemoryUsageBytesArgs = {
+  distinctOn?: InputMaybe<Array<MemoryUsageBytesSelectColumn>>;
+  limit?: InputMaybe<Scalars['Int']>;
+  offset?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<Array<MemoryUsageBytesOrderBy>>;
+  where?: InputMaybe<MemoryUsageBytesBoolExp>;
+};
+
+
+export type Query_RootMemoryUsageBytesAggregateArgs = {
+  distinctOn?: InputMaybe<Array<MemoryUsageBytesSelectColumn>>;
+  limit?: InputMaybe<Scalars['Int']>;
+  offset?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<Array<MemoryUsageBytesOrderBy>>;
+  where?: InputMaybe<MemoryUsageBytesBoolExp>;
+};
+
+
+export type Query_RootNetworkReceivedBytesArgs = {
+  distinctOn?: InputMaybe<Array<NetworkReceivedBytesSelectColumn>>;
+  limit?: InputMaybe<Scalars['Int']>;
+  offset?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<Array<NetworkReceivedBytesOrderBy>>;
+  where?: InputMaybe<NetworkReceivedBytesBoolExp>;
+};
+
+
+export type Query_RootNetworkReceivedBytesAggregateArgs = {
+  distinctOn?: InputMaybe<Array<NetworkReceivedBytesSelectColumn>>;
+  limit?: InputMaybe<Scalars['Int']>;
+  offset?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<Array<NetworkReceivedBytesOrderBy>>;
+  where?: InputMaybe<NetworkReceivedBytesBoolExp>;
+};
+
+
+export type Query_RootNetworkTransmitBytesArgs = {
+  distinctOn?: InputMaybe<Array<NetworkTransmitBytesSelectColumn>>;
+  limit?: InputMaybe<Scalars['Int']>;
+  offset?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<Array<NetworkTransmitBytesOrderBy>>;
+  where?: InputMaybe<NetworkTransmitBytesBoolExp>;
+};
+
+
+export type Query_RootNetworkTransmitBytesAggregateArgs = {
+  distinctOn?: InputMaybe<Array<NetworkTransmitBytesSelectColumn>>;
+  limit?: InputMaybe<Scalars['Int']>;
+  offset?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<Array<NetworkTransmitBytesOrderBy>>;
+  where?: InputMaybe<NetworkTransmitBytesBoolExp>;
 };
 
 
@@ -2058,24 +4382,6 @@ export type Query_RootRunsAggregateArgs = {
 };
 
 
-export type Query_RootSimpipeCpuArgs = {
-  distinctOn?: InputMaybe<Array<SimpipeCpuSelectColumn>>;
-  limit?: InputMaybe<Scalars['Int']>;
-  offset?: InputMaybe<Scalars['Int']>;
-  orderBy?: InputMaybe<Array<SimpipeCpuOrderBy>>;
-  where?: InputMaybe<SimpipeCpuBoolExp>;
-};
-
-
-export type Query_RootSimpipeCpuAggregateArgs = {
-  distinctOn?: InputMaybe<Array<SimpipeCpuSelectColumn>>;
-  limit?: InputMaybe<Scalars['Int']>;
-  offset?: InputMaybe<Scalars['Int']>;
-  orderBy?: InputMaybe<Array<SimpipeCpuOrderBy>>;
-  where?: InputMaybe<SimpipeCpuBoolExp>;
-};
-
-
 export type Query_RootSimpipeEnvsArgs = {
   distinctOn?: InputMaybe<Array<SimpipeEnvsSelectColumn>>;
   limit?: InputMaybe<Scalars['Int']>;
@@ -2095,7 +4401,7 @@ export type Query_RootSimpipeEnvsAggregateArgs = {
 
 
 export type Query_RootSimpipeEnvsByPkArgs = {
-  envId: Scalars['Int'];
+  envId: Scalars['uuid'];
 };
 
 
@@ -2119,29 +4425,6 @@ export type Query_RootSimpipeLogsAggregateArgs = {
 
 export type Query_RootSimpipeLogsByPkArgs = {
   stepId: Scalars['uuid'];
-};
-
-
-export type Query_RootSimpipeResourceUsageArgs = {
-  distinctOn?: InputMaybe<Array<SimpipeResourceUsageSelectColumn>>;
-  limit?: InputMaybe<Scalars['Int']>;
-  offset?: InputMaybe<Scalars['Int']>;
-  orderBy?: InputMaybe<Array<SimpipeResourceUsageOrderBy>>;
-  where?: InputMaybe<SimpipeResourceUsageBoolExp>;
-};
-
-
-export type Query_RootSimpipeResourceUsageAggregateArgs = {
-  distinctOn?: InputMaybe<Array<SimpipeResourceUsageSelectColumn>>;
-  limit?: InputMaybe<Scalars['Int']>;
-  offset?: InputMaybe<Scalars['Int']>;
-  orderBy?: InputMaybe<Array<SimpipeResourceUsageOrderBy>>;
-  where?: InputMaybe<SimpipeResourceUsageBoolExp>;
-};
-
-
-export type Query_RootSimpipeResourceUsageByPkArgs = {
-  id: Scalars['bigint'];
 };
 
 
@@ -2239,19 +4522,194 @@ export type Query_RootStepsByPkArgs = {
 /** Simulation run */
 export type Runs = {
   __typename?: 'runs';
-  created: Scalars['timestamptz'];
-  ended?: Maybe<Scalars['timestamptz']>;
-  name?: Maybe<Scalars['String']>;
+  /** An array relationship */
+  cpu: Array<Cpu>;
+  /** An aggregate relationship */
+  cpuAggregate: CpuAggregate;
+  /** DateTime of when the run was created */
+  created: Scalars['timestamp'];
+  /** DateTime of when the run was ended, NULL if not ended */
+  ended?: Maybe<Scalars['timestamp']>;
+  /** An array relationship */
+  fsReadsMerged: Array<FsReadsMerged>;
+  /** An aggregate relationship */
+  fsReadsMergedAggregate: FsReadsMergedAggregate;
+  /** An array relationship */
+  fsWritesMerged: Array<FsWritesMerged>;
+  /** An aggregate relationship */
+  fsWritesMergedAggregate: FsWritesMergedAggregate;
+  /** An array relationship */
+  memoryMaxUsageBytes: Array<MemoryMaxUsageBytes>;
+  /** An aggregate relationship */
+  memoryMaxUsageBytesAggregate: MemoryMaxUsageBytesAggregate;
+  /** An array relationship */
+  memoryUsageBytes: Array<MemoryUsageBytes>;
+  /** An aggregate relationship */
+  memoryUsageBytesAggregate: MemoryUsageBytesAggregate;
+  /** Name of the run, it is unique per simulation */
+  name: Scalars['String'];
+  /** An array relationship */
+  networkReceivedBytes: Array<NetworkReceivedBytes>;
+  /** An aggregate relationship */
+  networkReceivedBytesAggregate: NetworkReceivedBytesAggregate;
+  /** An array relationship */
+  networkTransmitBytes: Array<NetworkTransmitBytes>;
+  /** An aggregate relationship */
+  networkTransmitBytesAggregate: NetworkTransmitBytesAggregate;
+  /** UUID of the run, random by default */
   runId: Scalars['uuid'];
   /** An object relationship */
   simulation: Simulations;
+  /** UUID of the simulation, must exist in the simulations table */
   simulationId: Scalars['uuid'];
-  started?: Maybe<Scalars['timestamptz']>;
+  /** DateTime of when the run was started, NULL if not started */
+  started?: Maybe<Scalars['timestamp']>;
+  /** Status of the run, must be one of the values in the run_status enum */
   status: SimpipeRunStatusEnum;
   /** An array relationship */
   steps: Array<Steps>;
   /** An aggregate relationship */
   stepsAggregate: StepsAggregate;
+};
+
+
+/** Simulation run */
+export type RunsCpuArgs = {
+  distinctOn?: InputMaybe<Array<CpuSelectColumn>>;
+  limit?: InputMaybe<Scalars['Int']>;
+  offset?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<Array<CpuOrderBy>>;
+  where?: InputMaybe<CpuBoolExp>;
+};
+
+
+/** Simulation run */
+export type RunsCpuAggregateArgs = {
+  distinctOn?: InputMaybe<Array<CpuSelectColumn>>;
+  limit?: InputMaybe<Scalars['Int']>;
+  offset?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<Array<CpuOrderBy>>;
+  where?: InputMaybe<CpuBoolExp>;
+};
+
+
+/** Simulation run */
+export type RunsFsReadsMergedArgs = {
+  distinctOn?: InputMaybe<Array<FsReadsMergedSelectColumn>>;
+  limit?: InputMaybe<Scalars['Int']>;
+  offset?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<Array<FsReadsMergedOrderBy>>;
+  where?: InputMaybe<FsReadsMergedBoolExp>;
+};
+
+
+/** Simulation run */
+export type RunsFsReadsMergedAggregateArgs = {
+  distinctOn?: InputMaybe<Array<FsReadsMergedSelectColumn>>;
+  limit?: InputMaybe<Scalars['Int']>;
+  offset?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<Array<FsReadsMergedOrderBy>>;
+  where?: InputMaybe<FsReadsMergedBoolExp>;
+};
+
+
+/** Simulation run */
+export type RunsFsWritesMergedArgs = {
+  distinctOn?: InputMaybe<Array<FsWritesMergedSelectColumn>>;
+  limit?: InputMaybe<Scalars['Int']>;
+  offset?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<Array<FsWritesMergedOrderBy>>;
+  where?: InputMaybe<FsWritesMergedBoolExp>;
+};
+
+
+/** Simulation run */
+export type RunsFsWritesMergedAggregateArgs = {
+  distinctOn?: InputMaybe<Array<FsWritesMergedSelectColumn>>;
+  limit?: InputMaybe<Scalars['Int']>;
+  offset?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<Array<FsWritesMergedOrderBy>>;
+  where?: InputMaybe<FsWritesMergedBoolExp>;
+};
+
+
+/** Simulation run */
+export type RunsMemoryMaxUsageBytesArgs = {
+  distinctOn?: InputMaybe<Array<MemoryMaxUsageBytesSelectColumn>>;
+  limit?: InputMaybe<Scalars['Int']>;
+  offset?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<Array<MemoryMaxUsageBytesOrderBy>>;
+  where?: InputMaybe<MemoryMaxUsageBytesBoolExp>;
+};
+
+
+/** Simulation run */
+export type RunsMemoryMaxUsageBytesAggregateArgs = {
+  distinctOn?: InputMaybe<Array<MemoryMaxUsageBytesSelectColumn>>;
+  limit?: InputMaybe<Scalars['Int']>;
+  offset?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<Array<MemoryMaxUsageBytesOrderBy>>;
+  where?: InputMaybe<MemoryMaxUsageBytesBoolExp>;
+};
+
+
+/** Simulation run */
+export type RunsMemoryUsageBytesArgs = {
+  distinctOn?: InputMaybe<Array<MemoryUsageBytesSelectColumn>>;
+  limit?: InputMaybe<Scalars['Int']>;
+  offset?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<Array<MemoryUsageBytesOrderBy>>;
+  where?: InputMaybe<MemoryUsageBytesBoolExp>;
+};
+
+
+/** Simulation run */
+export type RunsMemoryUsageBytesAggregateArgs = {
+  distinctOn?: InputMaybe<Array<MemoryUsageBytesSelectColumn>>;
+  limit?: InputMaybe<Scalars['Int']>;
+  offset?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<Array<MemoryUsageBytesOrderBy>>;
+  where?: InputMaybe<MemoryUsageBytesBoolExp>;
+};
+
+
+/** Simulation run */
+export type RunsNetworkReceivedBytesArgs = {
+  distinctOn?: InputMaybe<Array<NetworkReceivedBytesSelectColumn>>;
+  limit?: InputMaybe<Scalars['Int']>;
+  offset?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<Array<NetworkReceivedBytesOrderBy>>;
+  where?: InputMaybe<NetworkReceivedBytesBoolExp>;
+};
+
+
+/** Simulation run */
+export type RunsNetworkReceivedBytesAggregateArgs = {
+  distinctOn?: InputMaybe<Array<NetworkReceivedBytesSelectColumn>>;
+  limit?: InputMaybe<Scalars['Int']>;
+  offset?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<Array<NetworkReceivedBytesOrderBy>>;
+  where?: InputMaybe<NetworkReceivedBytesBoolExp>;
+};
+
+
+/** Simulation run */
+export type RunsNetworkTransmitBytesArgs = {
+  distinctOn?: InputMaybe<Array<NetworkTransmitBytesSelectColumn>>;
+  limit?: InputMaybe<Scalars['Int']>;
+  offset?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<Array<NetworkTransmitBytesOrderBy>>;
+  where?: InputMaybe<NetworkTransmitBytesBoolExp>;
+};
+
+
+/** Simulation run */
+export type RunsNetworkTransmitBytesAggregateArgs = {
+  distinctOn?: InputMaybe<Array<NetworkTransmitBytesSelectColumn>>;
+  limit?: InputMaybe<Scalars['Int']>;
+  offset?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<Array<NetworkTransmitBytesOrderBy>>;
+  where?: InputMaybe<NetworkTransmitBytesBoolExp>;
 };
 
 
@@ -2315,13 +4773,27 @@ export type RunsBoolExp = {
   _and?: InputMaybe<Array<RunsBoolExp>>;
   _not?: InputMaybe<RunsBoolExp>;
   _or?: InputMaybe<Array<RunsBoolExp>>;
-  created?: InputMaybe<TimestamptzComparisonExp>;
-  ended?: InputMaybe<TimestamptzComparisonExp>;
+  cpu?: InputMaybe<CpuBoolExp>;
+  cpu_aggregate?: InputMaybe<Cpu_Aggregate_Bool_Exp>;
+  created?: InputMaybe<TimestampComparisonExp>;
+  ended?: InputMaybe<TimestampComparisonExp>;
+  fsReadsMerged?: InputMaybe<FsReadsMergedBoolExp>;
+  fsReadsMerged_aggregate?: InputMaybe<FsReadsMerged_Aggregate_Bool_Exp>;
+  fsWritesMerged?: InputMaybe<FsWritesMergedBoolExp>;
+  fsWritesMerged_aggregate?: InputMaybe<FsWritesMerged_Aggregate_Bool_Exp>;
+  memoryMaxUsageBytes?: InputMaybe<MemoryMaxUsageBytesBoolExp>;
+  memoryMaxUsageBytes_aggregate?: InputMaybe<MemoryMaxUsageBytes_Aggregate_Bool_Exp>;
+  memoryUsageBytes?: InputMaybe<MemoryUsageBytesBoolExp>;
+  memoryUsageBytes_aggregate?: InputMaybe<MemoryUsageBytes_Aggregate_Bool_Exp>;
   name?: InputMaybe<StringComparisonExp>;
+  networkReceivedBytes?: InputMaybe<NetworkReceivedBytesBoolExp>;
+  networkReceivedBytes_aggregate?: InputMaybe<NetworkReceivedBytes_Aggregate_Bool_Exp>;
+  networkTransmitBytes?: InputMaybe<NetworkTransmitBytesBoolExp>;
+  networkTransmitBytes_aggregate?: InputMaybe<NetworkTransmitBytes_Aggregate_Bool_Exp>;
   runId?: InputMaybe<UuidComparisonExp>;
   simulation?: InputMaybe<SimulationsBoolExp>;
   simulationId?: InputMaybe<UuidComparisonExp>;
-  started?: InputMaybe<TimestamptzComparisonExp>;
+  started?: InputMaybe<TimestampComparisonExp>;
   status?: InputMaybe<SimpipeRunStatusEnumComparisonExp>;
   steps?: InputMaybe<StepsBoolExp>;
   steps_aggregate?: InputMaybe<Steps_Aggregate_Bool_Exp>;
@@ -2330,18 +4802,34 @@ export type RunsBoolExp = {
 /** unique or primary key constraints on table "simpipe.runs" */
 export enum RunsConstraint {
   /** unique or primary key constraint on columns "run_id" */
-  RunsPkey = 'runs_pkey'
+  RunsPkey = 'runs_pkey',
+  /** unique or primary key constraint on columns "name", "simulation_id" */
+  UniqueRunNamePerSimulation = 'unique_run_name_per_simulation'
 }
 
 /** input type for inserting data into table "simpipe.runs" */
 export type RunsInsertInput = {
-  created?: InputMaybe<Scalars['timestamptz']>;
-  ended?: InputMaybe<Scalars['timestamptz']>;
+  cpu?: InputMaybe<CpuArrRelInsertInput>;
+  /** DateTime of when the run was created */
+  created?: InputMaybe<Scalars['timestamp']>;
+  /** DateTime of when the run was ended, NULL if not ended */
+  ended?: InputMaybe<Scalars['timestamp']>;
+  fsReadsMerged?: InputMaybe<FsReadsMergedArrRelInsertInput>;
+  fsWritesMerged?: InputMaybe<FsWritesMergedArrRelInsertInput>;
+  memoryMaxUsageBytes?: InputMaybe<MemoryMaxUsageBytesArrRelInsertInput>;
+  memoryUsageBytes?: InputMaybe<MemoryUsageBytesArrRelInsertInput>;
+  /** Name of the run, it is unique per simulation */
   name?: InputMaybe<Scalars['String']>;
+  networkReceivedBytes?: InputMaybe<NetworkReceivedBytesArrRelInsertInput>;
+  networkTransmitBytes?: InputMaybe<NetworkTransmitBytesArrRelInsertInput>;
+  /** UUID of the run, random by default */
   runId?: InputMaybe<Scalars['uuid']>;
   simulation?: InputMaybe<SimulationsObjRelInsertInput>;
+  /** UUID of the simulation, must exist in the simulations table */
   simulationId?: InputMaybe<Scalars['uuid']>;
-  started?: InputMaybe<Scalars['timestamptz']>;
+  /** DateTime of when the run was started, NULL if not started */
+  started?: InputMaybe<Scalars['timestamp']>;
+  /** Status of the run, must be one of the values in the run_status enum */
   status?: InputMaybe<SimpipeRunStatusEnum>;
   steps?: InputMaybe<StepsArrRelInsertInput>;
 };
@@ -2349,23 +4837,35 @@ export type RunsInsertInput = {
 /** aggregate max on columns */
 export type RunsMaxFields = {
   __typename?: 'runsMaxFields';
-  created?: Maybe<Scalars['timestamptz']>;
-  ended?: Maybe<Scalars['timestamptz']>;
+  /** DateTime of when the run was created */
+  created?: Maybe<Scalars['timestamp']>;
+  /** DateTime of when the run was ended, NULL if not ended */
+  ended?: Maybe<Scalars['timestamp']>;
+  /** Name of the run, it is unique per simulation */
   name?: Maybe<Scalars['String']>;
+  /** UUID of the run, random by default */
   runId?: Maybe<Scalars['uuid']>;
+  /** UUID of the simulation, must exist in the simulations table */
   simulationId?: Maybe<Scalars['uuid']>;
-  started?: Maybe<Scalars['timestamptz']>;
+  /** DateTime of when the run was started, NULL if not started */
+  started?: Maybe<Scalars['timestamp']>;
 };
 
 /** aggregate min on columns */
 export type RunsMinFields = {
   __typename?: 'runsMinFields';
-  created?: Maybe<Scalars['timestamptz']>;
-  ended?: Maybe<Scalars['timestamptz']>;
+  /** DateTime of when the run was created */
+  created?: Maybe<Scalars['timestamp']>;
+  /** DateTime of when the run was ended, NULL if not ended */
+  ended?: Maybe<Scalars['timestamp']>;
+  /** Name of the run, it is unique per simulation */
   name?: Maybe<Scalars['String']>;
+  /** UUID of the run, random by default */
   runId?: Maybe<Scalars['uuid']>;
+  /** UUID of the simulation, must exist in the simulations table */
   simulationId?: Maybe<Scalars['uuid']>;
-  started?: Maybe<Scalars['timestamptz']>;
+  /** DateTime of when the run was started, NULL if not started */
+  started?: Maybe<Scalars['timestamp']>;
 };
 
 /** response of any mutation on the table "simpipe.runs" */
@@ -2393,9 +4893,16 @@ export type RunsOnConflict = {
 
 /** Ordering options when selecting data from "simpipe.runs". */
 export type RunsOrderBy = {
+  cpuAggregate?: InputMaybe<CpuAggregateOrderBy>;
   created?: InputMaybe<OrderBy>;
   ended?: InputMaybe<OrderBy>;
+  fsReadsMergedAggregate?: InputMaybe<FsReadsMergedAggregateOrderBy>;
+  fsWritesMergedAggregate?: InputMaybe<FsWritesMergedAggregateOrderBy>;
+  memoryMaxUsageBytesAggregate?: InputMaybe<MemoryMaxUsageBytesAggregateOrderBy>;
+  memoryUsageBytesAggregate?: InputMaybe<MemoryUsageBytesAggregateOrderBy>;
   name?: InputMaybe<OrderBy>;
+  networkReceivedBytesAggregate?: InputMaybe<NetworkReceivedBytesAggregateOrderBy>;
+  networkTransmitBytesAggregate?: InputMaybe<NetworkTransmitBytesAggregateOrderBy>;
   runId?: InputMaybe<OrderBy>;
   simulation?: InputMaybe<SimulationsOrderBy>;
   simulationId?: InputMaybe<OrderBy>;
@@ -2406,6 +4913,7 @@ export type RunsOrderBy = {
 
 /** primary key columns input for table: simpipe.runs */
 export type RunsPkColumnsInput = {
+  /** UUID of the run, random by default */
   runId: Scalars['uuid'];
 };
 
@@ -2429,12 +4937,19 @@ export enum RunsSelectColumn {
 
 /** input type for updating data in table "simpipe.runs" */
 export type RunsSetInput = {
-  created?: InputMaybe<Scalars['timestamptz']>;
-  ended?: InputMaybe<Scalars['timestamptz']>;
+  /** DateTime of when the run was created */
+  created?: InputMaybe<Scalars['timestamp']>;
+  /** DateTime of when the run was ended, NULL if not ended */
+  ended?: InputMaybe<Scalars['timestamp']>;
+  /** Name of the run, it is unique per simulation */
   name?: InputMaybe<Scalars['String']>;
+  /** UUID of the run, random by default */
   runId?: InputMaybe<Scalars['uuid']>;
+  /** UUID of the simulation, must exist in the simulations table */
   simulationId?: InputMaybe<Scalars['uuid']>;
-  started?: InputMaybe<Scalars['timestamptz']>;
+  /** DateTime of when the run was started, NULL if not started */
+  started?: InputMaybe<Scalars['timestamp']>;
+  /** Status of the run, must be one of the values in the run_status enum */
   status?: InputMaybe<SimpipeRunStatusEnum>;
 };
 
@@ -2448,12 +4963,19 @@ export type RunsStreamCursorInput = {
 
 /** Initial value of the column from where the streaming should start */
 export type RunsStreamCursorValueInput = {
-  created?: InputMaybe<Scalars['timestamptz']>;
-  ended?: InputMaybe<Scalars['timestamptz']>;
+  /** DateTime of when the run was created */
+  created?: InputMaybe<Scalars['timestamp']>;
+  /** DateTime of when the run was ended, NULL if not ended */
+  ended?: InputMaybe<Scalars['timestamp']>;
+  /** Name of the run, it is unique per simulation */
   name?: InputMaybe<Scalars['String']>;
+  /** UUID of the run, random by default */
   runId?: InputMaybe<Scalars['uuid']>;
+  /** UUID of the simulation, must exist in the simulations table */
   simulationId?: InputMaybe<Scalars['uuid']>;
-  started?: InputMaybe<Scalars['timestamptz']>;
+  /** DateTime of when the run was started, NULL if not started */
+  started?: InputMaybe<Scalars['timestamp']>;
+  /** Status of the run, must be one of the values in the run_status enum */
   status?: InputMaybe<SimpipeRunStatusEnum>;
 };
 
@@ -2495,21 +5017,33 @@ export type Runs_Aggregate_Bool_Exp_Count = {
 
 /** order by max() on columns of table "simpipe.runs" */
 export type Runs_Max_Order_By = {
+  /** DateTime of when the run was created */
   created?: InputMaybe<OrderBy>;
+  /** DateTime of when the run was ended, NULL if not ended */
   ended?: InputMaybe<OrderBy>;
+  /** Name of the run, it is unique per simulation */
   name?: InputMaybe<OrderBy>;
+  /** UUID of the run, random by default */
   runId?: InputMaybe<OrderBy>;
+  /** UUID of the simulation, must exist in the simulations table */
   simulationId?: InputMaybe<OrderBy>;
+  /** DateTime of when the run was started, NULL if not started */
   started?: InputMaybe<OrderBy>;
 };
 
 /** order by min() on columns of table "simpipe.runs" */
 export type Runs_Min_Order_By = {
+  /** DateTime of when the run was created */
   created?: InputMaybe<OrderBy>;
+  /** DateTime of when the run was ended, NULL if not ended */
   ended?: InputMaybe<OrderBy>;
+  /** Name of the run, it is unique per simulation */
   name?: InputMaybe<OrderBy>;
+  /** UUID of the run, random by default */
   runId?: InputMaybe<OrderBy>;
+  /** UUID of the simulation, must exist in the simulations table */
   simulationId?: InputMaybe<OrderBy>;
+  /** DateTime of when the run was started, NULL if not started */
   started?: InputMaybe<OrderBy>;
 };
 
@@ -2524,207 +5058,215 @@ export type Simpipe_Envs_Aggregate_Bool_Exp_Count = {
   predicate: IntComparisonExp;
 };
 
-/** order by avg() on columns of table "simpipe.envs" */
-export type Simpipe_Envs_Avg_Order_By = {
-  envId?: InputMaybe<OrderBy>;
-  stepId?: InputMaybe<OrderBy>;
-};
-
 /** order by max() on columns of table "simpipe.envs" */
 export type Simpipe_Envs_Max_Order_By = {
+  /** UUID of the env, random by default */
   envId?: InputMaybe<OrderBy>;
+  /** Name of the env, it is unique per step */
   name?: InputMaybe<OrderBy>;
+  /** UUID of the step, must exist in the steps table */
   stepId?: InputMaybe<OrderBy>;
+  /** Value of the env */
   value?: InputMaybe<OrderBy>;
 };
 
 /** order by min() on columns of table "simpipe.envs" */
 export type Simpipe_Envs_Min_Order_By = {
+  /** UUID of the env, random by default */
   envId?: InputMaybe<OrderBy>;
+  /** Name of the env, it is unique per step */
   name?: InputMaybe<OrderBy>;
+  /** UUID of the step, must exist in the steps table */
   stepId?: InputMaybe<OrderBy>;
+  /** Value of the env */
   value?: InputMaybe<OrderBy>;
-};
-
-/** order by stddev() on columns of table "simpipe.envs" */
-export type Simpipe_Envs_Stddev_Order_By = {
-  envId?: InputMaybe<OrderBy>;
-  stepId?: InputMaybe<OrderBy>;
-};
-
-/** order by stddev_pop() on columns of table "simpipe.envs" */
-export type Simpipe_Envs_Stddev_Pop_Order_By = {
-  envId?: InputMaybe<OrderBy>;
-  stepId?: InputMaybe<OrderBy>;
-};
-
-/** order by stddev_samp() on columns of table "simpipe.envs" */
-export type Simpipe_Envs_Stddev_Samp_Order_By = {
-  envId?: InputMaybe<OrderBy>;
-  stepId?: InputMaybe<OrderBy>;
-};
-
-/** order by sum() on columns of table "simpipe.envs" */
-export type Simpipe_Envs_Sum_Order_By = {
-  envId?: InputMaybe<OrderBy>;
-  stepId?: InputMaybe<OrderBy>;
-};
-
-/** order by var_pop() on columns of table "simpipe.envs" */
-export type Simpipe_Envs_Var_Pop_Order_By = {
-  envId?: InputMaybe<OrderBy>;
-  stepId?: InputMaybe<OrderBy>;
-};
-
-/** order by var_samp() on columns of table "simpipe.envs" */
-export type Simpipe_Envs_Var_Samp_Order_By = {
-  envId?: InputMaybe<OrderBy>;
-  stepId?: InputMaybe<OrderBy>;
-};
-
-/** order by variance() on columns of table "simpipe.envs" */
-export type Simpipe_Envs_Variance_Order_By = {
-  envId?: InputMaybe<OrderBy>;
-  stepId?: InputMaybe<OrderBy>;
-};
-
-export type Simpipe_Resource_Usage_Aggregate_Bool_Exp = {
-  count?: InputMaybe<Simpipe_Resource_Usage_Aggregate_Bool_Exp_Count>;
-};
-
-export type Simpipe_Resource_Usage_Aggregate_Bool_Exp_Count = {
-  arguments?: InputMaybe<Array<SimpipeResourceUsageSelectColumn>>;
-  distinct?: InputMaybe<Scalars['Boolean']>;
-  filter?: InputMaybe<SimpipeResourceUsageBoolExp>;
-  predicate: IntComparisonExp;
-};
-
-/** order by avg() on columns of table "simpipe.resource_usage" */
-export type Simpipe_Resource_Usage_Avg_Order_By = {
-  cpu?: InputMaybe<OrderBy>;
-  id?: InputMaybe<OrderBy>;
-  memory?: InputMaybe<OrderBy>;
-  memoryMax?: InputMaybe<OrderBy>;
-  rxValue?: InputMaybe<OrderBy>;
-  stepId?: InputMaybe<OrderBy>;
-  txValue?: InputMaybe<OrderBy>;
-};
-
-/** order by max() on columns of table "simpipe.resource_usage" */
-export type Simpipe_Resource_Usage_Max_Order_By = {
-  cpu?: InputMaybe<OrderBy>;
-  id?: InputMaybe<OrderBy>;
-  memory?: InputMaybe<OrderBy>;
-  memoryMax?: InputMaybe<OrderBy>;
-  rxValue?: InputMaybe<OrderBy>;
-  stepId?: InputMaybe<OrderBy>;
-  time?: InputMaybe<OrderBy>;
-  txValue?: InputMaybe<OrderBy>;
-};
-
-/** order by min() on columns of table "simpipe.resource_usage" */
-export type Simpipe_Resource_Usage_Min_Order_By = {
-  cpu?: InputMaybe<OrderBy>;
-  id?: InputMaybe<OrderBy>;
-  memory?: InputMaybe<OrderBy>;
-  memoryMax?: InputMaybe<OrderBy>;
-  rxValue?: InputMaybe<OrderBy>;
-  stepId?: InputMaybe<OrderBy>;
-  time?: InputMaybe<OrderBy>;
-  txValue?: InputMaybe<OrderBy>;
-};
-
-/** order by stddev() on columns of table "simpipe.resource_usage" */
-export type Simpipe_Resource_Usage_Stddev_Order_By = {
-  cpu?: InputMaybe<OrderBy>;
-  id?: InputMaybe<OrderBy>;
-  memory?: InputMaybe<OrderBy>;
-  memoryMax?: InputMaybe<OrderBy>;
-  rxValue?: InputMaybe<OrderBy>;
-  stepId?: InputMaybe<OrderBy>;
-  txValue?: InputMaybe<OrderBy>;
-};
-
-/** order by stddev_pop() on columns of table "simpipe.resource_usage" */
-export type Simpipe_Resource_Usage_Stddev_Pop_Order_By = {
-  cpu?: InputMaybe<OrderBy>;
-  id?: InputMaybe<OrderBy>;
-  memory?: InputMaybe<OrderBy>;
-  memoryMax?: InputMaybe<OrderBy>;
-  rxValue?: InputMaybe<OrderBy>;
-  stepId?: InputMaybe<OrderBy>;
-  txValue?: InputMaybe<OrderBy>;
-};
-
-/** order by stddev_samp() on columns of table "simpipe.resource_usage" */
-export type Simpipe_Resource_Usage_Stddev_Samp_Order_By = {
-  cpu?: InputMaybe<OrderBy>;
-  id?: InputMaybe<OrderBy>;
-  memory?: InputMaybe<OrderBy>;
-  memoryMax?: InputMaybe<OrderBy>;
-  rxValue?: InputMaybe<OrderBy>;
-  stepId?: InputMaybe<OrderBy>;
-  txValue?: InputMaybe<OrderBy>;
-};
-
-/** order by sum() on columns of table "simpipe.resource_usage" */
-export type Simpipe_Resource_Usage_Sum_Order_By = {
-  cpu?: InputMaybe<OrderBy>;
-  id?: InputMaybe<OrderBy>;
-  memory?: InputMaybe<OrderBy>;
-  memoryMax?: InputMaybe<OrderBy>;
-  rxValue?: InputMaybe<OrderBy>;
-  stepId?: InputMaybe<OrderBy>;
-  txValue?: InputMaybe<OrderBy>;
-};
-
-/** order by var_pop() on columns of table "simpipe.resource_usage" */
-export type Simpipe_Resource_Usage_Var_Pop_Order_By = {
-  cpu?: InputMaybe<OrderBy>;
-  id?: InputMaybe<OrderBy>;
-  memory?: InputMaybe<OrderBy>;
-  memoryMax?: InputMaybe<OrderBy>;
-  rxValue?: InputMaybe<OrderBy>;
-  stepId?: InputMaybe<OrderBy>;
-  txValue?: InputMaybe<OrderBy>;
-};
-
-/** order by var_samp() on columns of table "simpipe.resource_usage" */
-export type Simpipe_Resource_Usage_Var_Samp_Order_By = {
-  cpu?: InputMaybe<OrderBy>;
-  id?: InputMaybe<OrderBy>;
-  memory?: InputMaybe<OrderBy>;
-  memoryMax?: InputMaybe<OrderBy>;
-  rxValue?: InputMaybe<OrderBy>;
-  stepId?: InputMaybe<OrderBy>;
-  txValue?: InputMaybe<OrderBy>;
-};
-
-/** order by variance() on columns of table "simpipe.resource_usage" */
-export type Simpipe_Resource_Usage_Variance_Order_By = {
-  cpu?: InputMaybe<OrderBy>;
-  id?: InputMaybe<OrderBy>;
-  memory?: InputMaybe<OrderBy>;
-  memoryMax?: InputMaybe<OrderBy>;
-  rxValue?: InputMaybe<OrderBy>;
-  stepId?: InputMaybe<OrderBy>;
-  txValue?: InputMaybe<OrderBy>;
 };
 
 /** Simulations */
 export type Simulations = {
   __typename?: 'simulations';
+  /** An array relationship */
+  cpu: Array<Cpu>;
+  /** An aggregate relationship */
+  cpuAggregate: CpuAggregate;
   /** DateTime of when the simulation was created */
-  created: Scalars['timestamptz'];
-  name?: Maybe<Scalars['String']>;
-  pipelineDescription?: Maybe<Scalars['jsonb']>;
+  created: Scalars['timestamp'];
+  /** An array relationship */
+  fsReadsMerged: Array<FsReadsMerged>;
+  /** An aggregate relationship */
+  fsReadsMergedAggregate: FsReadsMergedAggregate;
+  /** An array relationship */
+  fsWritesMerged: Array<FsWritesMerged>;
+  /** An aggregate relationship */
+  fsWritesMergedAggregate: FsWritesMergedAggregate;
+  /** An array relationship */
+  memoryMaxUsageBytes: Array<MemoryMaxUsageBytes>;
+  /** An aggregate relationship */
+  memoryMaxUsageBytesAggregate: MemoryMaxUsageBytesAggregate;
+  /** An array relationship */
+  memoryUsageBytes: Array<MemoryUsageBytes>;
+  /** An aggregate relationship */
+  memoryUsageBytesAggregate: MemoryUsageBytesAggregate;
+  /** Name of the simulation, it is unique */
+  name: Scalars['String'];
+  /** An array relationship */
+  networkReceivedBytes: Array<NetworkReceivedBytes>;
+  /** An aggregate relationship */
+  networkReceivedBytesAggregate: NetworkReceivedBytesAggregate;
+  /** An array relationship */
+  networkTransmitBytes: Array<NetworkTransmitBytes>;
+  /** An aggregate relationship */
+  networkTransmitBytesAggregate: NetworkTransmitBytesAggregate;
+  /** Description of the pipeline in JSON */
+  pipelineDescription: Scalars['jsonb'];
   /** An array relationship */
   runs: Array<Runs>;
   /** An aggregate relationship */
   runsAggregate: RunsAggregate;
-  /** uuid of the simulation */
+  /** UUID of the simulation, random by default */
   simulationId: Scalars['uuid'];
-  userId?: Maybe<Scalars['String']>;
+  /** User ID of the owner of the simulation */
+  userId: Scalars['String'];
+};
+
+
+/** Simulations */
+export type SimulationsCpuArgs = {
+  distinctOn?: InputMaybe<Array<CpuSelectColumn>>;
+  limit?: InputMaybe<Scalars['Int']>;
+  offset?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<Array<CpuOrderBy>>;
+  where?: InputMaybe<CpuBoolExp>;
+};
+
+
+/** Simulations */
+export type SimulationsCpuAggregateArgs = {
+  distinctOn?: InputMaybe<Array<CpuSelectColumn>>;
+  limit?: InputMaybe<Scalars['Int']>;
+  offset?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<Array<CpuOrderBy>>;
+  where?: InputMaybe<CpuBoolExp>;
+};
+
+
+/** Simulations */
+export type SimulationsFsReadsMergedArgs = {
+  distinctOn?: InputMaybe<Array<FsReadsMergedSelectColumn>>;
+  limit?: InputMaybe<Scalars['Int']>;
+  offset?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<Array<FsReadsMergedOrderBy>>;
+  where?: InputMaybe<FsReadsMergedBoolExp>;
+};
+
+
+/** Simulations */
+export type SimulationsFsReadsMergedAggregateArgs = {
+  distinctOn?: InputMaybe<Array<FsReadsMergedSelectColumn>>;
+  limit?: InputMaybe<Scalars['Int']>;
+  offset?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<Array<FsReadsMergedOrderBy>>;
+  where?: InputMaybe<FsReadsMergedBoolExp>;
+};
+
+
+/** Simulations */
+export type SimulationsFsWritesMergedArgs = {
+  distinctOn?: InputMaybe<Array<FsWritesMergedSelectColumn>>;
+  limit?: InputMaybe<Scalars['Int']>;
+  offset?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<Array<FsWritesMergedOrderBy>>;
+  where?: InputMaybe<FsWritesMergedBoolExp>;
+};
+
+
+/** Simulations */
+export type SimulationsFsWritesMergedAggregateArgs = {
+  distinctOn?: InputMaybe<Array<FsWritesMergedSelectColumn>>;
+  limit?: InputMaybe<Scalars['Int']>;
+  offset?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<Array<FsWritesMergedOrderBy>>;
+  where?: InputMaybe<FsWritesMergedBoolExp>;
+};
+
+
+/** Simulations */
+export type SimulationsMemoryMaxUsageBytesArgs = {
+  distinctOn?: InputMaybe<Array<MemoryMaxUsageBytesSelectColumn>>;
+  limit?: InputMaybe<Scalars['Int']>;
+  offset?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<Array<MemoryMaxUsageBytesOrderBy>>;
+  where?: InputMaybe<MemoryMaxUsageBytesBoolExp>;
+};
+
+
+/** Simulations */
+export type SimulationsMemoryMaxUsageBytesAggregateArgs = {
+  distinctOn?: InputMaybe<Array<MemoryMaxUsageBytesSelectColumn>>;
+  limit?: InputMaybe<Scalars['Int']>;
+  offset?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<Array<MemoryMaxUsageBytesOrderBy>>;
+  where?: InputMaybe<MemoryMaxUsageBytesBoolExp>;
+};
+
+
+/** Simulations */
+export type SimulationsMemoryUsageBytesArgs = {
+  distinctOn?: InputMaybe<Array<MemoryUsageBytesSelectColumn>>;
+  limit?: InputMaybe<Scalars['Int']>;
+  offset?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<Array<MemoryUsageBytesOrderBy>>;
+  where?: InputMaybe<MemoryUsageBytesBoolExp>;
+};
+
+
+/** Simulations */
+export type SimulationsMemoryUsageBytesAggregateArgs = {
+  distinctOn?: InputMaybe<Array<MemoryUsageBytesSelectColumn>>;
+  limit?: InputMaybe<Scalars['Int']>;
+  offset?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<Array<MemoryUsageBytesOrderBy>>;
+  where?: InputMaybe<MemoryUsageBytesBoolExp>;
+};
+
+
+/** Simulations */
+export type SimulationsNetworkReceivedBytesArgs = {
+  distinctOn?: InputMaybe<Array<NetworkReceivedBytesSelectColumn>>;
+  limit?: InputMaybe<Scalars['Int']>;
+  offset?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<Array<NetworkReceivedBytesOrderBy>>;
+  where?: InputMaybe<NetworkReceivedBytesBoolExp>;
+};
+
+
+/** Simulations */
+export type SimulationsNetworkReceivedBytesAggregateArgs = {
+  distinctOn?: InputMaybe<Array<NetworkReceivedBytesSelectColumn>>;
+  limit?: InputMaybe<Scalars['Int']>;
+  offset?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<Array<NetworkReceivedBytesOrderBy>>;
+  where?: InputMaybe<NetworkReceivedBytesBoolExp>;
+};
+
+
+/** Simulations */
+export type SimulationsNetworkTransmitBytesArgs = {
+  distinctOn?: InputMaybe<Array<NetworkTransmitBytesSelectColumn>>;
+  limit?: InputMaybe<Scalars['Int']>;
+  offset?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<Array<NetworkTransmitBytesOrderBy>>;
+  where?: InputMaybe<NetworkTransmitBytesBoolExp>;
+};
+
+
+/** Simulations */
+export type SimulationsNetworkTransmitBytesAggregateArgs = {
+  distinctOn?: InputMaybe<Array<NetworkTransmitBytesSelectColumn>>;
+  limit?: InputMaybe<Scalars['Int']>;
+  offset?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<Array<NetworkTransmitBytesOrderBy>>;
+  where?: InputMaybe<NetworkTransmitBytesBoolExp>;
 };
 
 
@@ -2777,6 +5319,7 @@ export type SimulationsAggregateFieldsCountArgs = {
 
 /** append existing jsonb value of filtered columns with new jsonb value */
 export type SimulationsAppendInput = {
+  /** Description of the pipeline in JSON */
   pipelineDescription?: InputMaybe<Scalars['jsonb']>;
 };
 
@@ -2785,8 +5328,22 @@ export type SimulationsBoolExp = {
   _and?: InputMaybe<Array<SimulationsBoolExp>>;
   _not?: InputMaybe<SimulationsBoolExp>;
   _or?: InputMaybe<Array<SimulationsBoolExp>>;
-  created?: InputMaybe<TimestamptzComparisonExp>;
+  cpu?: InputMaybe<CpuBoolExp>;
+  cpu_aggregate?: InputMaybe<Cpu_Aggregate_Bool_Exp>;
+  created?: InputMaybe<TimestampComparisonExp>;
+  fsReadsMerged?: InputMaybe<FsReadsMergedBoolExp>;
+  fsReadsMerged_aggregate?: InputMaybe<FsReadsMerged_Aggregate_Bool_Exp>;
+  fsWritesMerged?: InputMaybe<FsWritesMergedBoolExp>;
+  fsWritesMerged_aggregate?: InputMaybe<FsWritesMerged_Aggregate_Bool_Exp>;
+  memoryMaxUsageBytes?: InputMaybe<MemoryMaxUsageBytesBoolExp>;
+  memoryMaxUsageBytes_aggregate?: InputMaybe<MemoryMaxUsageBytes_Aggregate_Bool_Exp>;
+  memoryUsageBytes?: InputMaybe<MemoryUsageBytesBoolExp>;
+  memoryUsageBytes_aggregate?: InputMaybe<MemoryUsageBytes_Aggregate_Bool_Exp>;
   name?: InputMaybe<StringComparisonExp>;
+  networkReceivedBytes?: InputMaybe<NetworkReceivedBytesBoolExp>;
+  networkReceivedBytes_aggregate?: InputMaybe<NetworkReceivedBytes_Aggregate_Bool_Exp>;
+  networkTransmitBytes?: InputMaybe<NetworkTransmitBytesBoolExp>;
+  networkTransmitBytes_aggregate?: InputMaybe<NetworkTransmitBytes_Aggregate_Bool_Exp>;
   pipelineDescription?: InputMaybe<JsonbComparisonExp>;
   runs?: InputMaybe<RunsBoolExp>;
   runs_aggregate?: InputMaybe<Runs_Aggregate_Bool_Exp>;
@@ -2796,34 +5353,49 @@ export type SimulationsBoolExp = {
 
 /** unique or primary key constraints on table "simpipe.simulations" */
 export enum SimulationsConstraint {
+  /** unique or primary key constraint on columns "name" */
+  SimulationsNameKey = 'simulations_name_key',
   /** unique or primary key constraint on columns "simulation_id" */
   SimulationsPkey = 'simulations_pkey'
 }
 
 /** delete the field or element with specified path (for JSON arrays, negative integers count from the end) */
 export type SimulationsDeleteAtPathInput = {
+  /** Description of the pipeline in JSON */
   pipelineDescription?: InputMaybe<Array<Scalars['String']>>;
 };
 
 /** delete the array element with specified index (negative integers count from the end). throws an error if top level container is not an array */
 export type SimulationsDeleteElemInput = {
+  /** Description of the pipeline in JSON */
   pipelineDescription?: InputMaybe<Scalars['Int']>;
 };
 
 /** delete key/value pair or string element. key/value pairs are matched based on their key value */
 export type SimulationsDeleteKeyInput = {
+  /** Description of the pipeline in JSON */
   pipelineDescription?: InputMaybe<Scalars['String']>;
 };
 
 /** input type for inserting data into table "simpipe.simulations" */
 export type SimulationsInsertInput = {
+  cpu?: InputMaybe<CpuArrRelInsertInput>;
   /** DateTime of when the simulation was created */
-  created?: InputMaybe<Scalars['timestamptz']>;
+  created?: InputMaybe<Scalars['timestamp']>;
+  fsReadsMerged?: InputMaybe<FsReadsMergedArrRelInsertInput>;
+  fsWritesMerged?: InputMaybe<FsWritesMergedArrRelInsertInput>;
+  memoryMaxUsageBytes?: InputMaybe<MemoryMaxUsageBytesArrRelInsertInput>;
+  memoryUsageBytes?: InputMaybe<MemoryUsageBytesArrRelInsertInput>;
+  /** Name of the simulation, it is unique */
   name?: InputMaybe<Scalars['String']>;
+  networkReceivedBytes?: InputMaybe<NetworkReceivedBytesArrRelInsertInput>;
+  networkTransmitBytes?: InputMaybe<NetworkTransmitBytesArrRelInsertInput>;
+  /** Description of the pipeline in JSON */
   pipelineDescription?: InputMaybe<Scalars['jsonb']>;
   runs?: InputMaybe<RunsArrRelInsertInput>;
-  /** uuid of the simulation */
+  /** UUID of the simulation, random by default */
   simulationId?: InputMaybe<Scalars['uuid']>;
+  /** User ID of the owner of the simulation */
   userId?: InputMaybe<Scalars['String']>;
 };
 
@@ -2831,10 +5403,12 @@ export type SimulationsInsertInput = {
 export type SimulationsMaxFields = {
   __typename?: 'simulationsMaxFields';
   /** DateTime of when the simulation was created */
-  created?: Maybe<Scalars['timestamptz']>;
+  created?: Maybe<Scalars['timestamp']>;
+  /** Name of the simulation, it is unique */
   name?: Maybe<Scalars['String']>;
-  /** uuid of the simulation */
+  /** UUID of the simulation, random by default */
   simulationId?: Maybe<Scalars['uuid']>;
+  /** User ID of the owner of the simulation */
   userId?: Maybe<Scalars['String']>;
 };
 
@@ -2842,10 +5416,12 @@ export type SimulationsMaxFields = {
 export type SimulationsMinFields = {
   __typename?: 'simulationsMinFields';
   /** DateTime of when the simulation was created */
-  created?: Maybe<Scalars['timestamptz']>;
+  created?: Maybe<Scalars['timestamp']>;
+  /** Name of the simulation, it is unique */
   name?: Maybe<Scalars['String']>;
-  /** uuid of the simulation */
+  /** UUID of the simulation, random by default */
   simulationId?: Maybe<Scalars['uuid']>;
+  /** User ID of the owner of the simulation */
   userId?: Maybe<Scalars['String']>;
 };
 
@@ -2874,8 +5450,15 @@ export type SimulationsOnConflict = {
 
 /** Ordering options when selecting data from "simpipe.simulations". */
 export type SimulationsOrderBy = {
+  cpuAggregate?: InputMaybe<CpuAggregateOrderBy>;
   created?: InputMaybe<OrderBy>;
+  fsReadsMergedAggregate?: InputMaybe<FsReadsMergedAggregateOrderBy>;
+  fsWritesMergedAggregate?: InputMaybe<FsWritesMergedAggregateOrderBy>;
+  memoryMaxUsageBytesAggregate?: InputMaybe<MemoryMaxUsageBytesAggregateOrderBy>;
+  memoryUsageBytesAggregate?: InputMaybe<MemoryUsageBytesAggregateOrderBy>;
   name?: InputMaybe<OrderBy>;
+  networkReceivedBytesAggregate?: InputMaybe<NetworkReceivedBytesAggregateOrderBy>;
+  networkTransmitBytesAggregate?: InputMaybe<NetworkTransmitBytesAggregateOrderBy>;
   pipelineDescription?: InputMaybe<OrderBy>;
   runsAggregate?: InputMaybe<RunsAggregateOrderBy>;
   simulationId?: InputMaybe<OrderBy>;
@@ -2884,12 +5467,13 @@ export type SimulationsOrderBy = {
 
 /** primary key columns input for table: simpipe.simulations */
 export type SimulationsPkColumnsInput = {
-  /** uuid of the simulation */
+  /** UUID of the simulation, random by default */
   simulationId: Scalars['uuid'];
 };
 
 /** prepend existing jsonb value of filtered columns with new jsonb value */
 export type SimulationsPrependInput = {
+  /** Description of the pipeline in JSON */
   pipelineDescription?: InputMaybe<Scalars['jsonb']>;
 };
 
@@ -2910,11 +5494,14 @@ export enum SimulationsSelectColumn {
 /** input type for updating data in table "simpipe.simulations" */
 export type SimulationsSetInput = {
   /** DateTime of when the simulation was created */
-  created?: InputMaybe<Scalars['timestamptz']>;
+  created?: InputMaybe<Scalars['timestamp']>;
+  /** Name of the simulation, it is unique */
   name?: InputMaybe<Scalars['String']>;
+  /** Description of the pipeline in JSON */
   pipelineDescription?: InputMaybe<Scalars['jsonb']>;
-  /** uuid of the simulation */
+  /** UUID of the simulation, random by default */
   simulationId?: InputMaybe<Scalars['uuid']>;
+  /** User ID of the owner of the simulation */
   userId?: InputMaybe<Scalars['String']>;
 };
 
@@ -2929,11 +5516,14 @@ export type SimulationsStreamCursorInput = {
 /** Initial value of the column from where the streaming should start */
 export type SimulationsStreamCursorValueInput = {
   /** DateTime of when the simulation was created */
-  created?: InputMaybe<Scalars['timestamptz']>;
+  created?: InputMaybe<Scalars['timestamp']>;
+  /** Name of the simulation, it is unique */
   name?: InputMaybe<Scalars['String']>;
+  /** Description of the pipeline in JSON */
   pipelineDescription?: InputMaybe<Scalars['jsonb']>;
-  /** uuid of the simulation */
+  /** UUID of the simulation, random by default */
   simulationId?: InputMaybe<Scalars['uuid']>;
+  /** User ID of the owner of the simulation */
   userId?: InputMaybe<Scalars['String']>;
 };
 
@@ -2968,35 +5558,89 @@ export type SimulationsUpdates = {
   where: SimulationsBoolExp;
 };
 
-/** columns and relationships of "simpipe.steps" */
+/** Steps in a run */
 export type Steps = {
   __typename?: 'steps';
-  created: Scalars['timestamptz'];
-  ended?: Maybe<Scalars['timestamptz']>;
+  /** An array relationship */
+  cpu: Array<Cpu>;
+  /** An aggregate relationship */
+  cpuAggregate: CpuAggregate;
+  /** DateTime of when the step was created */
+  created: Scalars['timestamp'];
+  /** DateTime of when the step was ended, NULL if not ended */
+  ended?: Maybe<Scalars['timestamp']>;
   /** An array relationship */
   envs: Array<SimpipeEnvs>;
   /** An aggregate relationship */
   envsAggregate: SimpipeEnvsAggregate;
+  /** An array relationship */
+  fsReadsMerged: Array<FsReadsMerged>;
+  /** An aggregate relationship */
+  fsReadsMergedAggregate: FsReadsMergedAggregate;
+  /** An array relationship */
+  fsWritesMerged: Array<FsWritesMerged>;
+  /** An aggregate relationship */
+  fsWritesMergedAggregate: FsWritesMergedAggregate;
+  /** Docker image of the step */
   image: Scalars['String'];
   /** An object relationship */
   log?: Maybe<SimpipeLogs>;
-  name: Scalars['String'];
-  pipelineStepNumber: Scalars['Int'];
-  /** An aggregate relationship */
-  resourceUsagesAggregate: SimpipeResourceUsageAggregate;
   /** An array relationship */
-  resource_usages: Array<SimpipeResourceUsage>;
+  memoryMaxUsageBytes: Array<MemoryMaxUsageBytes>;
+  /** An aggregate relationship */
+  memoryMaxUsageBytesAggregate: MemoryMaxUsageBytesAggregate;
+  /** An array relationship */
+  memoryUsageBytes: Array<Steps>;
+  /** An aggregate relationship */
+  memoryUsageBytesAggregate: StepsAggregate;
+  /** Name of the step, it is unique per run */
+  name: Scalars['String'];
+  /** An array relationship */
+  networkReceivedBytes: Array<NetworkReceivedBytes>;
+  /** An aggregate relationship */
+  networkReceivedBytesAggregate: NetworkReceivedBytesAggregate;
+  /** An array relationship */
+  networkTransmitBytes: Array<NetworkTransmitBytes>;
+  /** An aggregate relationship */
+  networkTransmitBytesAggregate: NetworkTransmitBytesAggregate;
+  /** Step number in the pipeline, must be unique per run and a positive integer */
+  pipelineStepNumber: Scalars['Int'];
   /** An object relationship */
   run: Runs;
+  /** UUID of the run, must exist in the runs table */
   runId: Scalars['uuid'];
-  started?: Maybe<Scalars['timestamptz']>;
+  /** DateTime of when the step was started, NULL if not started */
+  started?: Maybe<Scalars['timestamp']>;
+  /** Status of the step, must be one of the values in the step_status enum */
   status: SimpipeStepStatusEnum;
+  /** UUID of the step, random by default */
   stepId: Scalars['uuid'];
+  /** Timeout of the step in seconds, must be between 1 and 86400 */
   timeout: Scalars['Int'];
 };
 
 
-/** columns and relationships of "simpipe.steps" */
+/** Steps in a run */
+export type StepsCpuArgs = {
+  distinctOn?: InputMaybe<Array<CpuSelectColumn>>;
+  limit?: InputMaybe<Scalars['Int']>;
+  offset?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<Array<CpuOrderBy>>;
+  where?: InputMaybe<CpuBoolExp>;
+};
+
+
+/** Steps in a run */
+export type StepsCpuAggregateArgs = {
+  distinctOn?: InputMaybe<Array<CpuSelectColumn>>;
+  limit?: InputMaybe<Scalars['Int']>;
+  offset?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<Array<CpuOrderBy>>;
+  where?: InputMaybe<CpuBoolExp>;
+};
+
+
+/** Steps in a run */
 export type StepsEnvsArgs = {
   distinctOn?: InputMaybe<Array<SimpipeEnvsSelectColumn>>;
   limit?: InputMaybe<Scalars['Int']>;
@@ -3006,7 +5650,7 @@ export type StepsEnvsArgs = {
 };
 
 
-/** columns and relationships of "simpipe.steps" */
+/** Steps in a run */
 export type StepsEnvsAggregateArgs = {
   distinctOn?: InputMaybe<Array<SimpipeEnvsSelectColumn>>;
   limit?: InputMaybe<Scalars['Int']>;
@@ -3016,23 +5660,123 @@ export type StepsEnvsAggregateArgs = {
 };
 
 
-/** columns and relationships of "simpipe.steps" */
-export type StepsResourceUsagesAggregateArgs = {
-  distinctOn?: InputMaybe<Array<SimpipeResourceUsageSelectColumn>>;
+/** Steps in a run */
+export type StepsFsReadsMergedArgs = {
+  distinctOn?: InputMaybe<Array<FsReadsMergedSelectColumn>>;
   limit?: InputMaybe<Scalars['Int']>;
   offset?: InputMaybe<Scalars['Int']>;
-  orderBy?: InputMaybe<Array<SimpipeResourceUsageOrderBy>>;
-  where?: InputMaybe<SimpipeResourceUsageBoolExp>;
+  orderBy?: InputMaybe<Array<FsReadsMergedOrderBy>>;
+  where?: InputMaybe<FsReadsMergedBoolExp>;
 };
 
 
-/** columns and relationships of "simpipe.steps" */
-export type StepsResource_UsagesArgs = {
-  distinctOn?: InputMaybe<Array<SimpipeResourceUsageSelectColumn>>;
+/** Steps in a run */
+export type StepsFsReadsMergedAggregateArgs = {
+  distinctOn?: InputMaybe<Array<FsReadsMergedSelectColumn>>;
   limit?: InputMaybe<Scalars['Int']>;
   offset?: InputMaybe<Scalars['Int']>;
-  orderBy?: InputMaybe<Array<SimpipeResourceUsageOrderBy>>;
-  where?: InputMaybe<SimpipeResourceUsageBoolExp>;
+  orderBy?: InputMaybe<Array<FsReadsMergedOrderBy>>;
+  where?: InputMaybe<FsReadsMergedBoolExp>;
+};
+
+
+/** Steps in a run */
+export type StepsFsWritesMergedArgs = {
+  distinctOn?: InputMaybe<Array<FsWritesMergedSelectColumn>>;
+  limit?: InputMaybe<Scalars['Int']>;
+  offset?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<Array<FsWritesMergedOrderBy>>;
+  where?: InputMaybe<FsWritesMergedBoolExp>;
+};
+
+
+/** Steps in a run */
+export type StepsFsWritesMergedAggregateArgs = {
+  distinctOn?: InputMaybe<Array<FsWritesMergedSelectColumn>>;
+  limit?: InputMaybe<Scalars['Int']>;
+  offset?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<Array<FsWritesMergedOrderBy>>;
+  where?: InputMaybe<FsWritesMergedBoolExp>;
+};
+
+
+/** Steps in a run */
+export type StepsMemoryMaxUsageBytesArgs = {
+  distinctOn?: InputMaybe<Array<MemoryMaxUsageBytesSelectColumn>>;
+  limit?: InputMaybe<Scalars['Int']>;
+  offset?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<Array<MemoryMaxUsageBytesOrderBy>>;
+  where?: InputMaybe<MemoryMaxUsageBytesBoolExp>;
+};
+
+
+/** Steps in a run */
+export type StepsMemoryMaxUsageBytesAggregateArgs = {
+  distinctOn?: InputMaybe<Array<MemoryMaxUsageBytesSelectColumn>>;
+  limit?: InputMaybe<Scalars['Int']>;
+  offset?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<Array<MemoryMaxUsageBytesOrderBy>>;
+  where?: InputMaybe<MemoryMaxUsageBytesBoolExp>;
+};
+
+
+/** Steps in a run */
+export type StepsMemoryUsageBytesArgs = {
+  distinctOn?: InputMaybe<Array<StepsSelectColumn>>;
+  limit?: InputMaybe<Scalars['Int']>;
+  offset?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<Array<StepsOrderBy>>;
+  where?: InputMaybe<StepsBoolExp>;
+};
+
+
+/** Steps in a run */
+export type StepsMemoryUsageBytesAggregateArgs = {
+  distinctOn?: InputMaybe<Array<StepsSelectColumn>>;
+  limit?: InputMaybe<Scalars['Int']>;
+  offset?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<Array<StepsOrderBy>>;
+  where?: InputMaybe<StepsBoolExp>;
+};
+
+
+/** Steps in a run */
+export type StepsNetworkReceivedBytesArgs = {
+  distinctOn?: InputMaybe<Array<NetworkReceivedBytesSelectColumn>>;
+  limit?: InputMaybe<Scalars['Int']>;
+  offset?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<Array<NetworkReceivedBytesOrderBy>>;
+  where?: InputMaybe<NetworkReceivedBytesBoolExp>;
+};
+
+
+/** Steps in a run */
+export type StepsNetworkReceivedBytesAggregateArgs = {
+  distinctOn?: InputMaybe<Array<NetworkReceivedBytesSelectColumn>>;
+  limit?: InputMaybe<Scalars['Int']>;
+  offset?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<Array<NetworkReceivedBytesOrderBy>>;
+  where?: InputMaybe<NetworkReceivedBytesBoolExp>;
+};
+
+
+/** Steps in a run */
+export type StepsNetworkTransmitBytesArgs = {
+  distinctOn?: InputMaybe<Array<NetworkTransmitBytesSelectColumn>>;
+  limit?: InputMaybe<Scalars['Int']>;
+  offset?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<Array<NetworkTransmitBytesOrderBy>>;
+  where?: InputMaybe<NetworkTransmitBytesBoolExp>;
+};
+
+
+/** Steps in a run */
+export type StepsNetworkTransmitBytesAggregateArgs = {
+  distinctOn?: InputMaybe<Array<NetworkTransmitBytesSelectColumn>>;
+  limit?: InputMaybe<Scalars['Int']>;
+  offset?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<Array<NetworkTransmitBytesOrderBy>>;
+  where?: InputMaybe<NetworkTransmitBytesBoolExp>;
 };
 
 /** aggregated selection of "simpipe.steps" */
@@ -3090,8 +5834,9 @@ export type StepsArrRelInsertInput = {
 /** aggregate avg on columns */
 export type StepsAvgFields = {
   __typename?: 'stepsAvgFields';
+  /** Step number in the pipeline, must be unique per run and a positive integer */
   pipelineStepNumber?: Maybe<Scalars['Float']>;
-  stepId?: Maybe<Scalars['Float']>;
+  /** Timeout of the step in seconds, must be between 1 and 86400 */
   timeout?: Maybe<Scalars['Float']>;
 };
 
@@ -3100,21 +5845,33 @@ export type StepsBoolExp = {
   _and?: InputMaybe<Array<StepsBoolExp>>;
   _not?: InputMaybe<StepsBoolExp>;
   _or?: InputMaybe<Array<StepsBoolExp>>;
-  created?: InputMaybe<TimestamptzComparisonExp>;
-  ended?: InputMaybe<TimestamptzComparisonExp>;
+  cpu?: InputMaybe<CpuBoolExp>;
+  cpu_aggregate?: InputMaybe<Cpu_Aggregate_Bool_Exp>;
+  created?: InputMaybe<TimestampComparisonExp>;
+  ended?: InputMaybe<TimestampComparisonExp>;
   envs?: InputMaybe<SimpipeEnvsBoolExp>;
   envs_aggregate?: InputMaybe<Simpipe_Envs_Aggregate_Bool_Exp>;
+  fsReadsMerged?: InputMaybe<FsReadsMergedBoolExp>;
+  fsReadsMerged_aggregate?: InputMaybe<FsReadsMerged_Aggregate_Bool_Exp>;
+  fsWritesMerged?: InputMaybe<FsWritesMergedBoolExp>;
+  fsWritesMerged_aggregate?: InputMaybe<FsWritesMerged_Aggregate_Bool_Exp>;
   image?: InputMaybe<StringComparisonExp>;
   log?: InputMaybe<SimpipeLogsBoolExp>;
+  memoryMaxUsageBytes?: InputMaybe<MemoryMaxUsageBytesBoolExp>;
+  memoryMaxUsageBytes_aggregate?: InputMaybe<MemoryMaxUsageBytes_Aggregate_Bool_Exp>;
+  memoryUsageBytes?: InputMaybe<StepsBoolExp>;
+  memoryUsageBytes_aggregate?: InputMaybe<Steps_Aggregate_Bool_Exp>;
   name?: InputMaybe<StringComparisonExp>;
+  networkReceivedBytes?: InputMaybe<NetworkReceivedBytesBoolExp>;
+  networkReceivedBytes_aggregate?: InputMaybe<NetworkReceivedBytes_Aggregate_Bool_Exp>;
+  networkTransmitBytes?: InputMaybe<NetworkTransmitBytesBoolExp>;
+  networkTransmitBytes_aggregate?: InputMaybe<NetworkTransmitBytes_Aggregate_Bool_Exp>;
   pipelineStepNumber?: InputMaybe<IntComparisonExp>;
-  resource_usages?: InputMaybe<SimpipeResourceUsageBoolExp>;
-  resource_usages_aggregate?: InputMaybe<Simpipe_Resource_Usage_Aggregate_Bool_Exp>;
   run?: InputMaybe<RunsBoolExp>;
   runId?: InputMaybe<UuidComparisonExp>;
-  started?: InputMaybe<TimestamptzComparisonExp>;
+  started?: InputMaybe<TimestampComparisonExp>;
   status?: InputMaybe<SimpipeStepStatusEnumComparisonExp>;
-  stepId?: InputMaybe<StringComparisonExp>;
+  stepId?: InputMaybe<UuidComparisonExp>;
   timeout?: InputMaybe<IntComparisonExp>;
 };
 
@@ -3130,54 +5887,89 @@ export enum StepsConstraint {
 
 /** input type for incrementing numeric columns in table "simpipe.steps" */
 export type StepsIncInput = {
+  /** Step number in the pipeline, must be unique per run and a positive integer */
   pipelineStepNumber?: InputMaybe<Scalars['Int']>;
-  stepId?: InputMaybe<Scalars['uuid']>;
+  /** Timeout of the step in seconds, must be between 1 and 86400 */
   timeout?: InputMaybe<Scalars['Int']>;
 };
 
 /** input type for inserting data into table "simpipe.steps" */
 export type StepsInsertInput = {
-  created?: InputMaybe<Scalars['timestamptz']>;
-  ended?: InputMaybe<Scalars['timestamptz']>;
+  cpu?: InputMaybe<CpuArrRelInsertInput>;
+  /** DateTime of when the step was created */
+  created?: InputMaybe<Scalars['timestamp']>;
+  /** DateTime of when the step was ended, NULL if not ended */
+  ended?: InputMaybe<Scalars['timestamp']>;
   envs?: InputMaybe<SimpipeEnvsArrRelInsertInput>;
+  fsReadsMerged?: InputMaybe<FsReadsMergedArrRelInsertInput>;
+  fsWritesMerged?: InputMaybe<FsWritesMergedArrRelInsertInput>;
+  /** Docker image of the step */
   image?: InputMaybe<Scalars['String']>;
   log?: InputMaybe<SimpipeLogsObjRelInsertInput>;
+  memoryMaxUsageBytes?: InputMaybe<MemoryMaxUsageBytesArrRelInsertInput>;
+  memoryUsageBytes?: InputMaybe<StepsArrRelInsertInput>;
+  /** Name of the step, it is unique per run */
   name?: InputMaybe<Scalars['String']>;
+  networkReceivedBytes?: InputMaybe<NetworkReceivedBytesArrRelInsertInput>;
+  networkTransmitBytes?: InputMaybe<NetworkTransmitBytesArrRelInsertInput>;
+  /** Step number in the pipeline, must be unique per run and a positive integer */
   pipelineStepNumber?: InputMaybe<Scalars['Int']>;
-  resource_usages?: InputMaybe<SimpipeResourceUsageArrRelInsertInput>;
   run?: InputMaybe<RunsObjRelInsertInput>;
+  /** UUID of the run, must exist in the runs table */
   runId?: InputMaybe<Scalars['uuid']>;
-  started?: InputMaybe<Scalars['timestamptz']>;
+  /** DateTime of when the step was started, NULL if not started */
+  started?: InputMaybe<Scalars['timestamp']>;
+  /** Status of the step, must be one of the values in the step_status enum */
   status?: InputMaybe<SimpipeStepStatusEnum>;
+  /** UUID of the step, random by default */
   stepId?: InputMaybe<Scalars['uuid']>;
+  /** Timeout of the step in seconds, must be between 1 and 86400 */
   timeout?: InputMaybe<Scalars['Int']>;
 };
 
 /** aggregate max on columns */
 export type StepsMaxFields = {
   __typename?: 'stepsMaxFields';
-  created?: Maybe<Scalars['timestamptz']>;
-  ended?: Maybe<Scalars['timestamptz']>;
+  /** DateTime of when the step was created */
+  created?: Maybe<Scalars['timestamp']>;
+  /** DateTime of when the step was ended, NULL if not ended */
+  ended?: Maybe<Scalars['timestamp']>;
+  /** Docker image of the step */
   image?: Maybe<Scalars['String']>;
+  /** Name of the step, it is unique per run */
   name?: Maybe<Scalars['String']>;
+  /** Step number in the pipeline, must be unique per run and a positive integer */
   pipelineStepNumber?: Maybe<Scalars['Int']>;
+  /** UUID of the run, must exist in the runs table */
   runId?: Maybe<Scalars['uuid']>;
-  started?: Maybe<Scalars['timestamptz']>;
+  /** DateTime of when the step was started, NULL if not started */
+  started?: Maybe<Scalars['timestamp']>;
+  /** UUID of the step, random by default */
   stepId?: Maybe<Scalars['uuid']>;
+  /** Timeout of the step in seconds, must be between 1 and 86400 */
   timeout?: Maybe<Scalars['Int']>;
 };
 
 /** aggregate min on columns */
 export type StepsMinFields = {
   __typename?: 'stepsMinFields';
-  created?: Maybe<Scalars['timestamptz']>;
-  ended?: Maybe<Scalars['timestamptz']>;
+  /** DateTime of when the step was created */
+  created?: Maybe<Scalars['timestamp']>;
+  /** DateTime of when the step was ended, NULL if not ended */
+  ended?: Maybe<Scalars['timestamp']>;
+  /** Docker image of the step */
   image?: Maybe<Scalars['String']>;
+  /** Name of the step, it is unique per run */
   name?: Maybe<Scalars['String']>;
+  /** Step number in the pipeline, must be unique per run and a positive integer */
   pipelineStepNumber?: Maybe<Scalars['Int']>;
+  /** UUID of the run, must exist in the runs table */
   runId?: Maybe<Scalars['uuid']>;
-  started?: Maybe<Scalars['timestamptz']>;
+  /** DateTime of when the step was started, NULL if not started */
+  started?: Maybe<Scalars['timestamp']>;
+  /** UUID of the step, random by default */
   stepId?: Maybe<Scalars['uuid']>;
+  /** Timeout of the step in seconds, must be between 1 and 86400 */
   timeout?: Maybe<Scalars['Int']>;
 };
 
@@ -3206,14 +5998,20 @@ export type StepsOnConflict = {
 
 /** Ordering options when selecting data from "simpipe.steps". */
 export type StepsOrderBy = {
+  cpuAggregate?: InputMaybe<CpuAggregateOrderBy>;
   created?: InputMaybe<OrderBy>;
   ended?: InputMaybe<OrderBy>;
   envsAggregate?: InputMaybe<SimpipeEnvsAggregateOrderBy>;
+  fsReadsMergedAggregate?: InputMaybe<FsReadsMergedAggregateOrderBy>;
+  fsWritesMergedAggregate?: InputMaybe<FsWritesMergedAggregateOrderBy>;
   image?: InputMaybe<OrderBy>;
   log?: InputMaybe<SimpipeLogsOrderBy>;
+  memoryMaxUsageBytesAggregate?: InputMaybe<MemoryMaxUsageBytesAggregateOrderBy>;
+  memoryUsageBytesAggregate?: InputMaybe<StepsAggregateOrderBy>;
   name?: InputMaybe<OrderBy>;
+  networkReceivedBytesAggregate?: InputMaybe<NetworkReceivedBytesAggregateOrderBy>;
+  networkTransmitBytesAggregate?: InputMaybe<NetworkTransmitBytesAggregateOrderBy>;
   pipelineStepNumber?: InputMaybe<OrderBy>;
-  resource_usagesAggregate?: InputMaybe<SimpipeResourceUsageAggregateOrderBy>;
   run?: InputMaybe<RunsOrderBy>;
   runId?: InputMaybe<OrderBy>;
   started?: InputMaybe<OrderBy>;
@@ -3224,6 +6022,7 @@ export type StepsOrderBy = {
 
 /** primary key columns input for table: simpipe.steps */
 export type StepsPkColumnsInput = {
+  /** UUID of the step, random by default */
   stepId: Scalars['uuid'];
 };
 
@@ -3253,39 +6052,52 @@ export enum StepsSelectColumn {
 
 /** input type for updating data in table "simpipe.steps" */
 export type StepsSetInput = {
-  created?: InputMaybe<Scalars['timestamptz']>;
-  ended?: InputMaybe<Scalars['timestamptz']>;
+  /** DateTime of when the step was created */
+  created?: InputMaybe<Scalars['timestamp']>;
+  /** DateTime of when the step was ended, NULL if not ended */
+  ended?: InputMaybe<Scalars['timestamp']>;
+  /** Docker image of the step */
   image?: InputMaybe<Scalars['String']>;
+  /** Name of the step, it is unique per run */
   name?: InputMaybe<Scalars['String']>;
+  /** Step number in the pipeline, must be unique per run and a positive integer */
   pipelineStepNumber?: InputMaybe<Scalars['Int']>;
+  /** UUID of the run, must exist in the runs table */
   runId?: InputMaybe<Scalars['uuid']>;
-  started?: InputMaybe<Scalars['timestamptz']>;
+  /** DateTime of when the step was started, NULL if not started */
+  started?: InputMaybe<Scalars['timestamp']>;
+  /** Status of the step, must be one of the values in the step_status enum */
   status?: InputMaybe<SimpipeStepStatusEnum>;
+  /** UUID of the step, random by default */
   stepId?: InputMaybe<Scalars['uuid']>;
+  /** Timeout of the step in seconds, must be between 1 and 86400 */
   timeout?: InputMaybe<Scalars['Int']>;
 };
 
 /** aggregate stddev on columns */
 export type StepsStddevFields = {
   __typename?: 'stepsStddevFields';
+  /** Step number in the pipeline, must be unique per run and a positive integer */
   pipelineStepNumber?: Maybe<Scalars['Float']>;
-  stepId?: Maybe<Scalars['Float']>;
+  /** Timeout of the step in seconds, must be between 1 and 86400 */
   timeout?: Maybe<Scalars['Float']>;
 };
 
 /** aggregate stddev_pop on columns */
 export type StepsStddev_PopFields = {
   __typename?: 'stepsStddev_popFields';
+  /** Step number in the pipeline, must be unique per run and a positive integer */
   pipelineStepNumber?: Maybe<Scalars['Float']>;
-  stepId?: Maybe<Scalars['Float']>;
+  /** Timeout of the step in seconds, must be between 1 and 86400 */
   timeout?: Maybe<Scalars['Float']>;
 };
 
 /** aggregate stddev_samp on columns */
 export type StepsStddev_SampFields = {
   __typename?: 'stepsStddev_sampFields';
+  /** Step number in the pipeline, must be unique per run and a positive integer */
   pipelineStepNumber?: Maybe<Scalars['Float']>;
-  stepId?: Maybe<Scalars['Float']>;
+  /** Timeout of the step in seconds, must be between 1 and 86400 */
   timeout?: Maybe<Scalars['Float']>;
 };
 
@@ -3299,23 +6111,34 @@ export type StepsStreamCursorInput = {
 
 /** Initial value of the column from where the streaming should start */
 export type StepsStreamCursorValueInput = {
-  created?: InputMaybe<Scalars['timestamptz']>;
-  ended?: InputMaybe<Scalars['timestamptz']>;
+  /** DateTime of when the step was created */
+  created?: InputMaybe<Scalars['timestamp']>;
+  /** DateTime of when the step was ended, NULL if not ended */
+  ended?: InputMaybe<Scalars['timestamp']>;
+  /** Docker image of the step */
   image?: InputMaybe<Scalars['String']>;
+  /** Name of the step, it is unique per run */
   name?: InputMaybe<Scalars['String']>;
+  /** Step number in the pipeline, must be unique per run and a positive integer */
   pipelineStepNumber?: InputMaybe<Scalars['Int']>;
+  /** UUID of the run, must exist in the runs table */
   runId?: InputMaybe<Scalars['uuid']>;
-  started?: InputMaybe<Scalars['timestamptz']>;
+  /** DateTime of when the step was started, NULL if not started */
+  started?: InputMaybe<Scalars['timestamp']>;
+  /** Status of the step, must be one of the values in the step_status enum */
   status?: InputMaybe<SimpipeStepStatusEnum>;
+  /** UUID of the step, random by default */
   stepId?: InputMaybe<Scalars['uuid']>;
+  /** Timeout of the step in seconds, must be between 1 and 86400 */
   timeout?: InputMaybe<Scalars['Int']>;
 };
 
 /** aggregate sum on columns */
 export type StepsSumFields = {
   __typename?: 'stepsSumFields';
+  /** Step number in the pipeline, must be unique per run and a positive integer */
   pipelineStepNumber?: Maybe<Scalars['Int']>;
-  stepId?: Maybe<Scalars['uuid']>;
+  /** Timeout of the step in seconds, must be between 1 and 86400 */
   timeout?: Maybe<Scalars['Int']>;
 };
 
@@ -3355,24 +6178,27 @@ export type StepsUpdates = {
 /** aggregate var_pop on columns */
 export type StepsVar_PopFields = {
   __typename?: 'stepsVar_popFields';
+  /** Step number in the pipeline, must be unique per run and a positive integer */
   pipelineStepNumber?: Maybe<Scalars['Float']>;
-  stepId?: Maybe<Scalars['Float']>;
+  /** Timeout of the step in seconds, must be between 1 and 86400 */
   timeout?: Maybe<Scalars['Float']>;
 };
 
 /** aggregate var_samp on columns */
 export type StepsVar_SampFields = {
   __typename?: 'stepsVar_sampFields';
+  /** Step number in the pipeline, must be unique per run and a positive integer */
   pipelineStepNumber?: Maybe<Scalars['Float']>;
-  stepId?: Maybe<Scalars['Float']>;
+  /** Timeout of the step in seconds, must be between 1 and 86400 */
   timeout?: Maybe<Scalars['Float']>;
 };
 
 /** aggregate variance on columns */
 export type StepsVarianceFields = {
   __typename?: 'stepsVarianceFields';
+  /** Step number in the pipeline, must be unique per run and a positive integer */
   pipelineStepNumber?: Maybe<Scalars['Float']>;
-  stepId?: Maybe<Scalars['Float']>;
+  /** Timeout of the step in seconds, must be between 1 and 86400 */
   timeout?: Maybe<Scalars['Float']>;
 };
 
@@ -3389,88 +6215,156 @@ export type Steps_Aggregate_Bool_Exp_Count = {
 
 /** order by avg() on columns of table "simpipe.steps" */
 export type Steps_Avg_Order_By = {
+  /** Step number in the pipeline, must be unique per run and a positive integer */
   pipelineStepNumber?: InputMaybe<OrderBy>;
-  stepId?: InputMaybe<OrderBy>;
+  /** Timeout of the step in seconds, must be between 1 and 86400 */
   timeout?: InputMaybe<OrderBy>;
 };
 
 /** order by max() on columns of table "simpipe.steps" */
 export type Steps_Max_Order_By = {
+  /** DateTime of when the step was created */
   created?: InputMaybe<OrderBy>;
+  /** DateTime of when the step was ended, NULL if not ended */
   ended?: InputMaybe<OrderBy>;
+  /** Docker image of the step */
   image?: InputMaybe<OrderBy>;
+  /** Name of the step, it is unique per run */
   name?: InputMaybe<OrderBy>;
+  /** Step number in the pipeline, must be unique per run and a positive integer */
   pipelineStepNumber?: InputMaybe<OrderBy>;
+  /** UUID of the run, must exist in the runs table */
   runId?: InputMaybe<OrderBy>;
+  /** DateTime of when the step was started, NULL if not started */
   started?: InputMaybe<OrderBy>;
+  /** UUID of the step, random by default */
   stepId?: InputMaybe<OrderBy>;
+  /** Timeout of the step in seconds, must be between 1 and 86400 */
   timeout?: InputMaybe<OrderBy>;
 };
 
 /** order by min() on columns of table "simpipe.steps" */
 export type Steps_Min_Order_By = {
+  /** DateTime of when the step was created */
   created?: InputMaybe<OrderBy>;
+  /** DateTime of when the step was ended, NULL if not ended */
   ended?: InputMaybe<OrderBy>;
+  /** Docker image of the step */
   image?: InputMaybe<OrderBy>;
+  /** Name of the step, it is unique per run */
   name?: InputMaybe<OrderBy>;
+  /** Step number in the pipeline, must be unique per run and a positive integer */
   pipelineStepNumber?: InputMaybe<OrderBy>;
+  /** UUID of the run, must exist in the runs table */
   runId?: InputMaybe<OrderBy>;
+  /** DateTime of when the step was started, NULL if not started */
   started?: InputMaybe<OrderBy>;
+  /** UUID of the step, random by default */
   stepId?: InputMaybe<OrderBy>;
+  /** Timeout of the step in seconds, must be between 1 and 86400 */
   timeout?: InputMaybe<OrderBy>;
 };
 
 /** order by stddev() on columns of table "simpipe.steps" */
 export type Steps_Stddev_Order_By = {
+  /** Step number in the pipeline, must be unique per run and a positive integer */
   pipelineStepNumber?: InputMaybe<OrderBy>;
-  stepId?: InputMaybe<OrderBy>;
+  /** Timeout of the step in seconds, must be between 1 and 86400 */
   timeout?: InputMaybe<OrderBy>;
 };
 
 /** order by stddev_pop() on columns of table "simpipe.steps" */
 export type Steps_Stddev_Pop_Order_By = {
+  /** Step number in the pipeline, must be unique per run and a positive integer */
   pipelineStepNumber?: InputMaybe<OrderBy>;
-  stepId?: InputMaybe<OrderBy>;
+  /** Timeout of the step in seconds, must be between 1 and 86400 */
   timeout?: InputMaybe<OrderBy>;
 };
 
 /** order by stddev_samp() on columns of table "simpipe.steps" */
 export type Steps_Stddev_Samp_Order_By = {
+  /** Step number in the pipeline, must be unique per run and a positive integer */
   pipelineStepNumber?: InputMaybe<OrderBy>;
-  stepId?: InputMaybe<OrderBy>;
+  /** Timeout of the step in seconds, must be between 1 and 86400 */
   timeout?: InputMaybe<OrderBy>;
 };
 
 /** order by sum() on columns of table "simpipe.steps" */
 export type Steps_Sum_Order_By = {
+  /** Step number in the pipeline, must be unique per run and a positive integer */
   pipelineStepNumber?: InputMaybe<OrderBy>;
-  stepId?: InputMaybe<OrderBy>;
+  /** Timeout of the step in seconds, must be between 1 and 86400 */
   timeout?: InputMaybe<OrderBy>;
 };
 
 /** order by var_pop() on columns of table "simpipe.steps" */
 export type Steps_Var_Pop_Order_By = {
+  /** Step number in the pipeline, must be unique per run and a positive integer */
   pipelineStepNumber?: InputMaybe<OrderBy>;
-  stepId?: InputMaybe<OrderBy>;
+  /** Timeout of the step in seconds, must be between 1 and 86400 */
   timeout?: InputMaybe<OrderBy>;
 };
 
 /** order by var_samp() on columns of table "simpipe.steps" */
 export type Steps_Var_Samp_Order_By = {
+  /** Step number in the pipeline, must be unique per run and a positive integer */
   pipelineStepNumber?: InputMaybe<OrderBy>;
-  stepId?: InputMaybe<OrderBy>;
+  /** Timeout of the step in seconds, must be between 1 and 86400 */
   timeout?: InputMaybe<OrderBy>;
 };
 
 /** order by variance() on columns of table "simpipe.steps" */
 export type Steps_Variance_Order_By = {
+  /** Step number in the pipeline, must be unique per run and a positive integer */
   pipelineStepNumber?: InputMaybe<OrderBy>;
-  stepId?: InputMaybe<OrderBy>;
+  /** Timeout of the step in seconds, must be between 1 and 86400 */
   timeout?: InputMaybe<OrderBy>;
 };
 
 export type Subscription_Root = {
   __typename?: 'subscription_root';
+  /** An array relationship */
+  cpu: Array<Cpu>;
+  /** An aggregate relationship */
+  cpuAggregate: CpuAggregate;
+  /** fetch data from the table in a streaming manner: "simpipe.cpu" */
+  cpuStream: Array<Cpu>;
+  /** An array relationship */
+  fsReadsMerged: Array<FsReadsMerged>;
+  /** An aggregate relationship */
+  fsReadsMergedAggregate: FsReadsMergedAggregate;
+  /** fetch data from the table in a streaming manner: "simpipe.fs_reads_merged" */
+  fsReadsMergedStream: Array<FsReadsMerged>;
+  /** An array relationship */
+  fsWritesMerged: Array<FsWritesMerged>;
+  /** An aggregate relationship */
+  fsWritesMergedAggregate: FsWritesMergedAggregate;
+  /** fetch data from the table in a streaming manner: "simpipe.fs_writes_merged" */
+  fsWritesMergedStream: Array<FsWritesMerged>;
+  /** An array relationship */
+  memoryMaxUsageBytes: Array<MemoryMaxUsageBytes>;
+  /** An aggregate relationship */
+  memoryMaxUsageBytesAggregate: MemoryMaxUsageBytesAggregate;
+  /** fetch data from the table in a streaming manner: "simpipe.memory_max_usage_bytes" */
+  memoryMaxUsageBytesStream: Array<MemoryMaxUsageBytes>;
+  /** An array relationship */
+  memoryUsageBytes: Array<MemoryUsageBytes>;
+  /** An aggregate relationship */
+  memoryUsageBytesAggregate: MemoryUsageBytesAggregate;
+  /** fetch data from the table in a streaming manner: "simpipe.memory_usage_bytes" */
+  memoryUsageBytesStream: Array<MemoryUsageBytes>;
+  /** An array relationship */
+  networkReceivedBytes: Array<NetworkReceivedBytes>;
+  /** An aggregate relationship */
+  networkReceivedBytesAggregate: NetworkReceivedBytesAggregate;
+  /** fetch data from the table in a streaming manner: "simpipe.network_received_bytes" */
+  networkReceivedBytesStream: Array<NetworkReceivedBytes>;
+  /** An array relationship */
+  networkTransmitBytes: Array<NetworkTransmitBytes>;
+  /** An aggregate relationship */
+  networkTransmitBytesAggregate: NetworkTransmitBytesAggregate;
+  /** fetch data from the table in a streaming manner: "simpipe.network_transmit_bytes" */
+  networkTransmitBytesStream: Array<NetworkTransmitBytes>;
   /** fetch data from the table: "simpipe.runs" using primary key columns */
   run?: Maybe<Runs>;
   /** An array relationship */
@@ -3479,12 +6373,6 @@ export type Subscription_Root = {
   runsAggregate: RunsAggregate;
   /** fetch data from the table in a streaming manner: "simpipe.runs" */
   runsStream: Array<Runs>;
-  /** fetch data from the table: "simpipe.cpu" */
-  simpipeCpu: Array<SimpipeCpu>;
-  /** fetch aggregated fields from the table: "simpipe.cpu" */
-  simpipeCpuAggregate: SimpipeCpuAggregate;
-  /** fetch data from the table in a streaming manner: "simpipe.cpu" */
-  simpipeCpuStream: Array<SimpipeCpu>;
   /** fetch data from the table: "simpipe.envs" */
   simpipeEnvs: Array<SimpipeEnvs>;
   /** fetch aggregated fields from the table: "simpipe.envs" */
@@ -3501,14 +6389,6 @@ export type Subscription_Root = {
   simpipeLogsByPk?: Maybe<SimpipeLogs>;
   /** fetch data from the table in a streaming manner: "simpipe.logs" */
   simpipeLogsStream: Array<SimpipeLogs>;
-  /** fetch data from the table: "simpipe.resource_usage" */
-  simpipeResourceUsage: Array<SimpipeResourceUsage>;
-  /** fetch aggregated fields from the table: "simpipe.resource_usage" */
-  simpipeResourceUsageAggregate: SimpipeResourceUsageAggregate;
-  /** fetch data from the table: "simpipe.resource_usage" using primary key columns */
-  simpipeResourceUsageByPk?: Maybe<SimpipeResourceUsage>;
-  /** fetch data from the table in a streaming manner: "simpipe.resource_usage" */
-  simpipeResourceUsageStream: Array<SimpipeResourceUsage>;
   /** fetch data from the table: "simpipe.run_status" */
   simpipeRunStatus: Array<SimpipeRunStatus>;
   /** fetch aggregated fields from the table: "simpipe.run_status" */
@@ -3544,6 +6424,181 @@ export type Subscription_Root = {
 };
 
 
+export type Subscription_RootCpuArgs = {
+  distinctOn?: InputMaybe<Array<CpuSelectColumn>>;
+  limit?: InputMaybe<Scalars['Int']>;
+  offset?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<Array<CpuOrderBy>>;
+  where?: InputMaybe<CpuBoolExp>;
+};
+
+
+export type Subscription_RootCpuAggregateArgs = {
+  distinctOn?: InputMaybe<Array<CpuSelectColumn>>;
+  limit?: InputMaybe<Scalars['Int']>;
+  offset?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<Array<CpuOrderBy>>;
+  where?: InputMaybe<CpuBoolExp>;
+};
+
+
+export type Subscription_RootCpuStreamArgs = {
+  batchSize: Scalars['Int'];
+  cursor: Array<InputMaybe<CpuStreamCursorInput>>;
+  where?: InputMaybe<CpuBoolExp>;
+};
+
+
+export type Subscription_RootFsReadsMergedArgs = {
+  distinctOn?: InputMaybe<Array<FsReadsMergedSelectColumn>>;
+  limit?: InputMaybe<Scalars['Int']>;
+  offset?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<Array<FsReadsMergedOrderBy>>;
+  where?: InputMaybe<FsReadsMergedBoolExp>;
+};
+
+
+export type Subscription_RootFsReadsMergedAggregateArgs = {
+  distinctOn?: InputMaybe<Array<FsReadsMergedSelectColumn>>;
+  limit?: InputMaybe<Scalars['Int']>;
+  offset?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<Array<FsReadsMergedOrderBy>>;
+  where?: InputMaybe<FsReadsMergedBoolExp>;
+};
+
+
+export type Subscription_RootFsReadsMergedStreamArgs = {
+  batchSize: Scalars['Int'];
+  cursor: Array<InputMaybe<FsReadsMergedStreamCursorInput>>;
+  where?: InputMaybe<FsReadsMergedBoolExp>;
+};
+
+
+export type Subscription_RootFsWritesMergedArgs = {
+  distinctOn?: InputMaybe<Array<FsWritesMergedSelectColumn>>;
+  limit?: InputMaybe<Scalars['Int']>;
+  offset?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<Array<FsWritesMergedOrderBy>>;
+  where?: InputMaybe<FsWritesMergedBoolExp>;
+};
+
+
+export type Subscription_RootFsWritesMergedAggregateArgs = {
+  distinctOn?: InputMaybe<Array<FsWritesMergedSelectColumn>>;
+  limit?: InputMaybe<Scalars['Int']>;
+  offset?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<Array<FsWritesMergedOrderBy>>;
+  where?: InputMaybe<FsWritesMergedBoolExp>;
+};
+
+
+export type Subscription_RootFsWritesMergedStreamArgs = {
+  batchSize: Scalars['Int'];
+  cursor: Array<InputMaybe<FsWritesMergedStreamCursorInput>>;
+  where?: InputMaybe<FsWritesMergedBoolExp>;
+};
+
+
+export type Subscription_RootMemoryMaxUsageBytesArgs = {
+  distinctOn?: InputMaybe<Array<MemoryMaxUsageBytesSelectColumn>>;
+  limit?: InputMaybe<Scalars['Int']>;
+  offset?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<Array<MemoryMaxUsageBytesOrderBy>>;
+  where?: InputMaybe<MemoryMaxUsageBytesBoolExp>;
+};
+
+
+export type Subscription_RootMemoryMaxUsageBytesAggregateArgs = {
+  distinctOn?: InputMaybe<Array<MemoryMaxUsageBytesSelectColumn>>;
+  limit?: InputMaybe<Scalars['Int']>;
+  offset?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<Array<MemoryMaxUsageBytesOrderBy>>;
+  where?: InputMaybe<MemoryMaxUsageBytesBoolExp>;
+};
+
+
+export type Subscription_RootMemoryMaxUsageBytesStreamArgs = {
+  batchSize: Scalars['Int'];
+  cursor: Array<InputMaybe<MemoryMaxUsageBytesStreamCursorInput>>;
+  where?: InputMaybe<MemoryMaxUsageBytesBoolExp>;
+};
+
+
+export type Subscription_RootMemoryUsageBytesArgs = {
+  distinctOn?: InputMaybe<Array<MemoryUsageBytesSelectColumn>>;
+  limit?: InputMaybe<Scalars['Int']>;
+  offset?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<Array<MemoryUsageBytesOrderBy>>;
+  where?: InputMaybe<MemoryUsageBytesBoolExp>;
+};
+
+
+export type Subscription_RootMemoryUsageBytesAggregateArgs = {
+  distinctOn?: InputMaybe<Array<MemoryUsageBytesSelectColumn>>;
+  limit?: InputMaybe<Scalars['Int']>;
+  offset?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<Array<MemoryUsageBytesOrderBy>>;
+  where?: InputMaybe<MemoryUsageBytesBoolExp>;
+};
+
+
+export type Subscription_RootMemoryUsageBytesStreamArgs = {
+  batchSize: Scalars['Int'];
+  cursor: Array<InputMaybe<MemoryUsageBytesStreamCursorInput>>;
+  where?: InputMaybe<MemoryUsageBytesBoolExp>;
+};
+
+
+export type Subscription_RootNetworkReceivedBytesArgs = {
+  distinctOn?: InputMaybe<Array<NetworkReceivedBytesSelectColumn>>;
+  limit?: InputMaybe<Scalars['Int']>;
+  offset?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<Array<NetworkReceivedBytesOrderBy>>;
+  where?: InputMaybe<NetworkReceivedBytesBoolExp>;
+};
+
+
+export type Subscription_RootNetworkReceivedBytesAggregateArgs = {
+  distinctOn?: InputMaybe<Array<NetworkReceivedBytesSelectColumn>>;
+  limit?: InputMaybe<Scalars['Int']>;
+  offset?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<Array<NetworkReceivedBytesOrderBy>>;
+  where?: InputMaybe<NetworkReceivedBytesBoolExp>;
+};
+
+
+export type Subscription_RootNetworkReceivedBytesStreamArgs = {
+  batchSize: Scalars['Int'];
+  cursor: Array<InputMaybe<NetworkReceivedBytesStreamCursorInput>>;
+  where?: InputMaybe<NetworkReceivedBytesBoolExp>;
+};
+
+
+export type Subscription_RootNetworkTransmitBytesArgs = {
+  distinctOn?: InputMaybe<Array<NetworkTransmitBytesSelectColumn>>;
+  limit?: InputMaybe<Scalars['Int']>;
+  offset?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<Array<NetworkTransmitBytesOrderBy>>;
+  where?: InputMaybe<NetworkTransmitBytesBoolExp>;
+};
+
+
+export type Subscription_RootNetworkTransmitBytesAggregateArgs = {
+  distinctOn?: InputMaybe<Array<NetworkTransmitBytesSelectColumn>>;
+  limit?: InputMaybe<Scalars['Int']>;
+  offset?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<Array<NetworkTransmitBytesOrderBy>>;
+  where?: InputMaybe<NetworkTransmitBytesBoolExp>;
+};
+
+
+export type Subscription_RootNetworkTransmitBytesStreamArgs = {
+  batchSize: Scalars['Int'];
+  cursor: Array<InputMaybe<NetworkTransmitBytesStreamCursorInput>>;
+  where?: InputMaybe<NetworkTransmitBytesBoolExp>;
+};
+
+
 export type Subscription_RootRunArgs = {
   runId: Scalars['uuid'];
 };
@@ -3574,31 +6629,6 @@ export type Subscription_RootRunsStreamArgs = {
 };
 
 
-export type Subscription_RootSimpipeCpuArgs = {
-  distinctOn?: InputMaybe<Array<SimpipeCpuSelectColumn>>;
-  limit?: InputMaybe<Scalars['Int']>;
-  offset?: InputMaybe<Scalars['Int']>;
-  orderBy?: InputMaybe<Array<SimpipeCpuOrderBy>>;
-  where?: InputMaybe<SimpipeCpuBoolExp>;
-};
-
-
-export type Subscription_RootSimpipeCpuAggregateArgs = {
-  distinctOn?: InputMaybe<Array<SimpipeCpuSelectColumn>>;
-  limit?: InputMaybe<Scalars['Int']>;
-  offset?: InputMaybe<Scalars['Int']>;
-  orderBy?: InputMaybe<Array<SimpipeCpuOrderBy>>;
-  where?: InputMaybe<SimpipeCpuBoolExp>;
-};
-
-
-export type Subscription_RootSimpipeCpuStreamArgs = {
-  batchSize: Scalars['Int'];
-  cursor: Array<InputMaybe<SimpipeCpuStreamCursorInput>>;
-  where?: InputMaybe<SimpipeCpuBoolExp>;
-};
-
-
 export type Subscription_RootSimpipeEnvsArgs = {
   distinctOn?: InputMaybe<Array<SimpipeEnvsSelectColumn>>;
   limit?: InputMaybe<Scalars['Int']>;
@@ -3618,7 +6648,7 @@ export type Subscription_RootSimpipeEnvsAggregateArgs = {
 
 
 export type Subscription_RootSimpipeEnvsByPkArgs = {
-  envId: Scalars['Int'];
+  envId: Scalars['uuid'];
 };
 
 
@@ -3656,36 +6686,6 @@ export type Subscription_RootSimpipeLogsStreamArgs = {
   batchSize: Scalars['Int'];
   cursor: Array<InputMaybe<SimpipeLogsStreamCursorInput>>;
   where?: InputMaybe<SimpipeLogsBoolExp>;
-};
-
-
-export type Subscription_RootSimpipeResourceUsageArgs = {
-  distinctOn?: InputMaybe<Array<SimpipeResourceUsageSelectColumn>>;
-  limit?: InputMaybe<Scalars['Int']>;
-  offset?: InputMaybe<Scalars['Int']>;
-  orderBy?: InputMaybe<Array<SimpipeResourceUsageOrderBy>>;
-  where?: InputMaybe<SimpipeResourceUsageBoolExp>;
-};
-
-
-export type Subscription_RootSimpipeResourceUsageAggregateArgs = {
-  distinctOn?: InputMaybe<Array<SimpipeResourceUsageSelectColumn>>;
-  limit?: InputMaybe<Scalars['Int']>;
-  offset?: InputMaybe<Scalars['Int']>;
-  orderBy?: InputMaybe<Array<SimpipeResourceUsageOrderBy>>;
-  where?: InputMaybe<SimpipeResourceUsageBoolExp>;
-};
-
-
-export type Subscription_RootSimpipeResourceUsageByPkArgs = {
-  id: Scalars['bigint'];
-};
-
-
-export type Subscription_RootSimpipeResourceUsageStreamArgs = {
-  batchSize: Scalars['Int'];
-  cursor: Array<InputMaybe<SimpipeResourceUsageStreamCursorInput>>;
-  where?: InputMaybe<SimpipeResourceUsageBoolExp>;
 };
 
 
@@ -3813,21 +6813,21 @@ export type GetUserIdFromRunQueryVariables = Exact<{
 }>;
 
 
-export type GetUserIdFromRunQuery = { __typename?: 'query_root', run?: { __typename?: 'runs', simulation: { __typename?: 'simulations', userId?: string | null } } | null };
+export type GetUserIdFromRunQuery = { __typename?: 'query_root', run?: { __typename?: 'runs', simulation: { __typename?: 'simulations', userId: string } } | null };
 
 export type GetUserIdFromSimulationQueryVariables = Exact<{
   simulationId: Scalars['uuid'];
 }>;
 
 
-export type GetUserIdFromSimulationQuery = { __typename?: 'query_root', simulation?: { __typename?: 'simulations', userId?: string | null } | null };
+export type GetUserIdFromSimulationQuery = { __typename?: 'query_root', simulation?: { __typename?: 'simulations', userId: string } | null };
 
 export type GetSimulationDslQueryVariables = Exact<{
   simulationId: Scalars['uuid'];
 }>;
 
 
-export type GetSimulationDslQuery = { __typename?: 'query_root', simulation?: { __typename?: 'simulations', pipelineDescription?: unknown | null } | null };
+export type GetSimulationDslQuery = { __typename?: 'query_root', simulation?: { __typename?: 'simulations', pipelineDescription: unknown } | null };
 
 export type CreateRunMutationVariables = Exact<{
   simulationId: Scalars['uuid'];
@@ -3856,8 +6856,8 @@ export type SetStepAsStartedMutation = { __typename?: 'mutation_root', updateSte
 
 export type SetStepAsEndedSuccessMutationVariables = Exact<{
   stepId: Scalars['uuid'];
-  started: Scalars['timestamptz'];
-  ended: Scalars['timestamptz'];
+  started: Scalars['timestamp'];
+  ended: Scalars['timestamp'];
 }>;
 
 
@@ -3926,14 +6926,14 @@ export type GetSimulationIdandStepsQueryVariables = Exact<{
 }>;
 
 
-export type GetSimulationIdandStepsQuery = { __typename?: 'query_root', run?: { __typename?: 'runs', simulationId: string, name?: string | null, steps: Array<{ __typename?: 'steps', stepId: string, pipelineStepNumber: number, image: string, name: string }> } | null };
+export type GetSimulationIdandStepsQuery = { __typename?: 'query_root', run?: { __typename?: 'runs', simulationId: string, name: string, steps: Array<{ __typename?: 'steps', stepId: string, pipelineStepNumber: number, image: string, name: string }> } | null };
 
 export type GetRunDetailsQueryVariables = Exact<{
   runId: Scalars['uuid'];
 }>;
 
 
-export type GetRunDetailsQuery = { __typename?: 'query_root', run?: { __typename?: 'runs', simulationId: string, name?: string | null, steps: Array<{ __typename?: 'steps', stepId: string, pipelineStepNumber: number, image: string, name: string }> } | null };
+export type GetRunDetailsQuery = { __typename?: 'query_root', run?: { __typename?: 'runs', simulationId: string, name: string, steps: Array<{ __typename?: 'steps', stepId: string, pipelineStepNumber: number, image: string, name: string }> } | null };
 
 export type InsertLogMutationVariables = Exact<{
   stepId: Scalars['uuid'];
@@ -3994,7 +6994,7 @@ export const SetStepAsStartedDocument = gql`
 }
     `;
 export const SetStepAsEndedSuccessDocument = gql`
-    mutation setStepAsEndedSuccess($stepId: uuid!, $started: timestamptz!, $ended: timestamptz!) {
+    mutation setStepAsEndedSuccess($stepId: uuid!, $started: timestamp!, $ended: timestamp!) {
   updateStepsByPk(
     pk_columns: {stepId: $stepId}
     _set: {started: $started, ended: $ended, status: COMPLETED}

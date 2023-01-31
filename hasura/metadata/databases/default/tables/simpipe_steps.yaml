@@ -18,12 +18,75 @@ object_relationships:
     using:
       foreign_key_constraint_on: run_id
 array_relationships:
+  - name: cpu
+    using:
+      manual_configuration:
+        column_mapping:
+          step_id: step_id
+        insertion_order: null
+        remote_table:
+          name: cpu
+          schema: simpipe
   - name: envs
     using:
       foreign_key_constraint_on:
         column: step_id
         table:
           name: envs
+          schema: simpipe
+  - name: fsReadsMerged
+    using:
+      manual_configuration:
+        column_mapping:
+          step_id: step_id
+        insertion_order: null
+        remote_table:
+          name: fs_reads_merged
+          schema: simpipe
+  - name: fsWritesMerged
+    using:
+      manual_configuration:
+        column_mapping:
+          step_id: step_id
+        insertion_order: null
+        remote_table:
+          name: fs_writes_merged
+          schema: simpipe
+  - name: memoryMaxUsageBytes
+    using:
+      manual_configuration:
+        column_mapping:
+          step_id: step_id
+        insertion_order: null
+        remote_table:
+          name: memory_max_usage_bytes
+          schema: simpipe
+  - name: memoryUsageBytes
+    using:
+      manual_configuration:
+        column_mapping:
+          step_id: step_id
+        insertion_order: null
+        remote_table:
+          name: steps
+          schema: simpipe
+  - name: networkReceivedBytes
+    using:
+      manual_configuration:
+        column_mapping:
+          step_id: step_id
+        insertion_order: null
+        remote_table:
+          name: network_received_bytes
+          schema: simpipe
+  - name: networkTransmitBytes
+    using:
+      manual_configuration:
+        column_mapping:
+          step_id: step_id
+        insertion_order: null
+        remote_table:
+          name: network_transmit_bytes
           schema: simpipe
 select_permissions:
   - role: user

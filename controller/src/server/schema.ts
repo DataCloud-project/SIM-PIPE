@@ -19,16 +19,27 @@ export type Scalars = {
 };
 
 export type CreateRunInput = {
+  /**  An optional list of environment variables to set for the steps of the run container  */
   environmentVariables?: InputMaybe<Array<StepEnvironmentVariable>>;
+  /**  The name of the run  */
   name: Scalars['String'];
+  /**
+   *  The simulation to which this run belongs.
+   *
+   * The user must own the simulation.
+   */
   simulationId: Scalars['uuid'];
+  /**  An optional list of timeouts to set for the steps of the run container  */
   timeouts?: InputMaybe<Array<StepTimeout>>;
 };
 
 export type Mutation = {
   __typename?: 'Mutation';
+  /**  Cancel a run, if the run is running it will be stopped  */
   cancelRun?: Maybe<Run>;
+  /**  Create a run, but does not start it  */
   createRun: Run;
+  /**  Start a run, if other runs are running this run will wait in the queue  */
   startRun?: Maybe<Run>;
 };
 
@@ -49,8 +60,11 @@ export type MutationStartRunArgs = {
 
 export type Query = {
   __typename?: 'Query';
+  /**  Compute a presigned URL for uploading a file using a HTTP PUT.  */
   computeUploadPresignedUrl: Scalars['String'];
+  /**  Returns pong if the server is up and running.  */
   ping: Scalars['String'];
+  /**  Fetch the current username.  */
   username: Scalars['String'];
 };
 
@@ -60,13 +74,18 @@ export type Run = {
 };
 
 export type StepEnvironmentVariable = {
+  /**  The name of the environment variable  */
   name: Scalars['String'];
+  /**  The name of the step to set the environment variable for  */
   stepName: Scalars['String'];
+  /**  The value of the environment variable  */
   value: Scalars['String'];
 };
 
 export type StepTimeout = {
+  /**  The name of the step to set the timeout for  */
   stepName: Scalars['String'];
+  /**  The timeout in seconds, must be greater than 0 and less than 86400 (24 hours)  */
   timeout: Scalars['Int'];
 };
 

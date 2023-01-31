@@ -1,8 +1,11 @@
 scalar uuid
 
 type Query {
+  """ Fetch the current username. """
   username: String! @auth
+  """ Compute a presigned URL for uploading a file using a HTTP PUT. """
   computeUploadPresignedUrl: String! @auth
+  """ Returns pong if the server is up and running. """
   ping: String!
 }
 
@@ -11,25 +14,43 @@ type Run {
 }
 
 input StepEnvironmentVariable {
+  """ The name of the step to set the environment variable for """
   stepName: String!
+  """ The name of the environment variable """
   name: String!
+  """ The value of the environment variable """
   value: String!
 }
 
 input StepTimeout {
+  """ The name of the step to set the timeout for """
   stepName: String!
+  """ The timeout in seconds, must be greater than 0 and less than 86400 (24 hours) """
   timeout: Int!
 }
 
 input CreateRunInput {
+  """ The simulation to which this run belongs.
+
+      The user must own the simulation.
+  """
   simulationId: uuid!
+
+  """ The name of the run """
   name: String!
+
+  """ An optional list of environment variables to set for the steps of the run container """
   environmentVariables: [StepEnvironmentVariable!]
+
+  """ An optional list of timeouts to set for the steps of the run container """
   timeouts: [StepTimeout!]
 }
 
 type Mutation @auth {
+  """ Create a run, but does not start it """
   createRun(run: CreateRunInput!): Run!
+  """ Start a run, if other runs are running this run will wait in the queue """
   startRun(runId:uuid!): Run
+  """ Cancel a run, if the run is running it will be stopped """
   cancelRun(runId:uuid!): Run
 }

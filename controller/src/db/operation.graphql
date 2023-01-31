@@ -35,7 +35,7 @@ mutation setStepAsStarted($stepId: uuid!) {
     stepId
   }
 }
-mutation setStepAsEndedSuccess($stepId: uuid!, $started: timestamptz!, $ended: timestamptz!) {
+mutation setStepAsEndedSuccess($stepId: uuid!, $started: timestamp!, $ended: timestamp!) {
   updateStepsByPk(pk_columns: {stepId: $stepId}, _set: {started: $started, ended: $ended, status: COMPLETED}) {
     stepId
   }

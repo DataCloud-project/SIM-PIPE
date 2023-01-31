@@ -15,6 +15,69 @@ configuration:
     update: updateSimulations
     update_by_pk: updateSimulation
 array_relationships:
+  - name: cpu
+    using:
+      manual_configuration:
+        column_mapping:
+          simulation_id: simulation_id
+        insertion_order: null
+        remote_table:
+          name: cpu
+          schema: simpipe
+  - name: fsReadsMerged
+    using:
+      manual_configuration:
+        column_mapping:
+          simulation_id: simulation_id
+        insertion_order: null
+        remote_table:
+          name: fs_reads_merged
+          schema: simpipe
+  - name: fsWritesMerged
+    using:
+      manual_configuration:
+        column_mapping:
+          simulation_id: simulation_id
+        insertion_order: null
+        remote_table:
+          name: fs_writes_merged
+          schema: simpipe
+  - name: memoryMaxUsageBytes
+    using:
+      manual_configuration:
+        column_mapping:
+          simulation_id: simulation_id
+        insertion_order: null
+        remote_table:
+          name: memory_max_usage_bytes
+          schema: simpipe
+  - name: memoryUsageBytes
+    using:
+      manual_configuration:
+        column_mapping:
+          simulation_id: simulation_id
+        insertion_order: null
+        remote_table:
+          name: memory_usage_bytes
+          schema: simpipe
+  - name: networkReceivedBytes
+    using:
+      manual_configuration:
+        column_mapping:
+          simulation_id: simulation_id
+        insertion_order: null
+        remote_table:
+          name: network_received_bytes
+          schema: simpipe
+  - name: networkTransmitBytes
+    using:
+      manual_configuration:
+        column_mapping:
+          simulation_id: simulation_id
+        insertion_order: null
+        remote_table:
+          name: network_transmit_bytes
+          schema: simpipe
   - name: runs
     using:
       foreign_key_constraint_on:
@@ -43,6 +106,12 @@ select_permissions:
         user_id:
           _eq: X-Hasura-User-Id
       allow_aggregations: true
+      query_root_fields:
+        - select
+        - select_by_pk
+      subscription_root_fields:
+        - select
+        - select_by_pk
 update_permissions:
   - role: user
     permission:

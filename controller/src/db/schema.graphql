@@ -5,19 +5,19 @@ schema {
 }
 "whether this query should be cached (Hasura Cloud only)"
 directive @cached("measured in seconds" ttl: Int! = 60, "refresh the cache entry" refresh: Boolean! = false) on QUERY
-"""
-Boolean expression to compare columns of type "bigint". All fields are combined with logical 'AND'.
-"""
-input BigintComparisonExp {
-  _eq: bigint
-  _gt: bigint
-  _gte: bigint
-  _in: [bigint!]
-  _isNull: Boolean
-  _lt: bigint
-  _lte: bigint
-  _neq: bigint
-  _nin: [bigint!]
+input CreateRunInput {
+  " An optional list of environment variables to set for the steps of the run container "
+  environmentVariables: [StepEnvironmentVariable!]
+  " The name of the run "
+  name: String!
+  """
+   The simulation to which this run belongs.
+  
+  The user must own the simulation.
+  """
+  simulationId: uuid!
+  " An optional list of timeouts to set for the steps of the run container "
+  timeouts: [StepTimeout!]
 }
 "ordering argument of a cursor"
 enum CursorOrdering {
@@ -83,20 +83,6 @@ input JsonbComparisonExp {
   _neq: jsonb
   _nin: [jsonb!]
 }
-"""
-Boolean expression to compare columns of type "numeric". All fields are combined with logical 'AND'.
-"""
-input NumericComparisonExp {
-  _eq: numeric
-  _gt: numeric
-  _gte: numeric
-  _in: [numeric!]
-  _isNull: Boolean
-  _lt: numeric
-  _lte: numeric
-  _neq: numeric
-  _nin: [numeric!]
-}
 "column ordering options"
 enum OrderBy {
   "in ascending order, nulls last"
@@ -114,151 +100,19 @@ enum OrderBy {
 }
 type Run {
   Run: runs
-  run_id: uuid
-}
-"""
-columns and relationships of "simpipe.cpu"
-"""
-type SimpipeCpu {
-  seriesId: bigint
-  time: timestamptz
-  userid: String
-  value: float8
-}
-"""
-aggregated selection of "simpipe.cpu"
-"""
-type SimpipeCpuAggregate {
-  aggregate: SimpipeCpuAggregateFields
-  nodes: [SimpipeCpu!]!
-}
-"""
-aggregate fields of "simpipe.cpu"
-"""
-type SimpipeCpuAggregateFields {
-  avg: SimpipeCpuAvgFields
-  count(columns: [SimpipeCpuSelectColumn!], distinct: Boolean): Int!
-  max: SimpipeCpuMaxFields
-  min: SimpipeCpuMinFields
-  stddev: SimpipeCpuStddevFields
-  stddevPop: SimpipeCpuStddev_popFields
-  stddevSamp: SimpipeCpuStddev_sampFields
-  sum: SimpipeCpuSumFields
-  varPop: SimpipeCpuVar_popFields
-  varSamp: SimpipeCpuVar_sampFields
-  variance: SimpipeCpuVarianceFields
-}
-"aggregate avg on columns"
-type SimpipeCpuAvgFields {
-  seriesId: Float
-  value: Float
-}
-"""
-Boolean expression to filter rows from the table "simpipe.cpu". All fields are combined with a logical 'AND'.
-"""
-input SimpipeCpuBoolExp {
-  _and: [SimpipeCpuBoolExp!]
-  _not: SimpipeCpuBoolExp
-  _or: [SimpipeCpuBoolExp!]
-  seriesId: BigintComparisonExp
-  time: TimestamptzComparisonExp
-  userid: StringComparisonExp
-  value: Float8ComparisonExp
-}
-"aggregate max on columns"
-type SimpipeCpuMaxFields {
-  seriesId: bigint
-  time: timestamptz
-  userid: String
-  value: float8
-}
-"aggregate min on columns"
-type SimpipeCpuMinFields {
-  seriesId: bigint
-  time: timestamptz
-  userid: String
-  value: float8
-}
-"""
-Ordering options when selecting data from "simpipe.cpu".
-"""
-input SimpipeCpuOrderBy {
-  seriesId: OrderBy
-  time: OrderBy
-  userid: OrderBy
-  value: OrderBy
-}
-"""
-select columns of table "simpipe.cpu"
-"""
-enum SimpipeCpuSelectColumn {
-  "column name"
-  seriesId
-  "column name"
-  time
-  "column name"
-  userid
-  "column name"
-  value
-}
-"aggregate stddev on columns"
-type SimpipeCpuStddevFields {
-  seriesId: Float
-  value: Float
-}
-"aggregate stddev_pop on columns"
-type SimpipeCpuStddev_popFields {
-  seriesId: Float
-  value: Float
-}
-"aggregate stddev_samp on columns"
-type SimpipeCpuStddev_sampFields {
-  seriesId: Float
-  value: Float
-}
-"""
-Streaming cursor of the table "simpipe_cpu"
-"""
-input SimpipeCpuStreamCursorInput {
-  "Stream column input with initial value"
-  initialValue: SimpipeCpuStreamCursorValueInput!
-  "cursor ordering"
-  ordering: CursorOrdering
-}
-"Initial value of the column from where the streaming should start"
-input SimpipeCpuStreamCursorValueInput {
-  seriesId: bigint
-  time: timestamptz
-  userid: String
-  value: float8
-}
-"aggregate sum on columns"
-type SimpipeCpuSumFields {
-  seriesId: bigint
-  value: float8
-}
-"aggregate var_pop on columns"
-type SimpipeCpuVar_popFields {
-  seriesId: Float
-  value: Float
-}
-"aggregate var_samp on columns"
-type SimpipeCpuVar_sampFields {
-  seriesId: Float
-  value: Float
-}
-"aggregate variance on columns"
-type SimpipeCpuVarianceFields {
-  seriesId: Float
-  value: Float
+  runId: uuid!
 }
 "Environment variables in runs"
 type SimpipeEnvs {
-  envId: Int!
+  "UUID of the env, random by default"
+  envId: uuid!
+  "Name of the env, it is unique per step"
   name: String!
   "An object relationship"
   step: steps!
-  stepId: String!
+  "UUID of the step, must exist in the steps table"
+  stepId: uuid!
+  "Value of the env"
   value: String!
 }
 """
@@ -272,33 +126,17 @@ type SimpipeEnvsAggregate {
 aggregate fields of "simpipe.envs"
 """
 type SimpipeEnvsAggregateFields {
-  avg: SimpipeEnvsAvgFields
   count(columns: [SimpipeEnvsSelectColumn!], distinct: Boolean): Int!
   max: SimpipeEnvsMaxFields
   min: SimpipeEnvsMinFields
-  stddev: SimpipeEnvsStddevFields
-  stddevPop: SimpipeEnvsStddev_popFields
-  stddevSamp: SimpipeEnvsStddev_sampFields
-  sum: SimpipeEnvsSumFields
-  varPop: SimpipeEnvsVar_popFields
-  varSamp: SimpipeEnvsVar_sampFields
-  variance: SimpipeEnvsVarianceFields
 }
 """
 order by aggregate values of table "simpipe.envs"
 """
 input SimpipeEnvsAggregateOrderBy {
-  avg: simpipe_envs_avg_order_by
   count: OrderBy
   max: simpipe_envs_max_order_by
   min: simpipe_envs_min_order_by
-  stddev: simpipe_envs_stddev_order_by
-  stddev_pop: simpipe_envs_stddev_pop_order_by
-  stddev_samp: simpipe_envs_stddev_samp_order_by
-  sum: simpipe_envs_sum_order_by
-  var_pop: simpipe_envs_var_pop_order_by
-  var_samp: simpipe_envs_var_samp_order_by
-  variance: simpipe_envs_variance_order_by
 }
 """
 input type for inserting array relation for remote table "simpipe.envs"
@@ -308,11 +146,6 @@ input SimpipeEnvsArrRelInsertInput {
   "upsert condition"
   onConflict: SimpipeEnvsOnConflict
 }
-"aggregate avg on columns"
-type SimpipeEnvsAvgFields {
-  envId: Float
-  stepId: Float
-}
 """
 Boolean expression to filter rows from the table "simpipe.envs". All fields are combined with a logical 'AND'.
 """
@@ -320,10 +153,10 @@ input SimpipeEnvsBoolExp {
   _and: [SimpipeEnvsBoolExp!]
   _not: SimpipeEnvsBoolExp
   _or: [SimpipeEnvsBoolExp!]
-  envId: IntComparisonExp
+  envId: UuidComparisonExp
   name: StringComparisonExp
   step: stepsBoolExp
-  stepId: StringComparisonExp
+  stepId: UuidComparisonExp
   value: StringComparisonExp
 }
 """
@@ -340,34 +173,39 @@ enum SimpipeEnvsConstraint {
   envs_step_id_name_key
 }
 """
-input type for incrementing numeric columns in table "simpipe.envs"
-"""
-input SimpipeEnvsIncInput {
-  envId: Int
-  stepId: uuid
-}
-"""
 input type for inserting data into table "simpipe.envs"
 """
 input SimpipeEnvsInsertInput {
-  envId: Int
+  "UUID of the env, random by default"
+  envId: uuid
+  "Name of the env, it is unique per step"
   name: String
   step: stepsObjRelInsertInput
+  "UUID of the step, must exist in the steps table"
   stepId: uuid
+  "Value of the env"
   value: String
 }
 "aggregate max on columns"
 type SimpipeEnvsMaxFields {
-  envId: Int
+  "UUID of the env, random by default"
+  envId: uuid
+  "Name of the env, it is unique per step"
   name: String
+  "UUID of the step, must exist in the steps table"
   stepId: uuid
+  "Value of the env"
   value: String
 }
 "aggregate min on columns"
 type SimpipeEnvsMinFields {
-  envId: Int
+  "UUID of the env, random by default"
+  envId: uuid
+  "Name of the env, it is unique per step"
   name: String
+  "UUID of the step, must exist in the steps table"
   stepId: uuid
+  "Value of the env"
   value: String
 }
 """
@@ -399,7 +237,8 @@ input SimpipeEnvsOrderBy {
 }
 "primary key columns input for table: simpipe.envs"
 input SimpipeEnvsPkColumnsInput {
-  envId: Int!
+  "UUID of the env, random by default"
+  envId: uuid!
 }
 """
 select columns of table "simpipe.envs"
@@ -418,25 +257,14 @@ enum SimpipeEnvsSelectColumn {
 input type for updating data in table "simpipe.envs"
 """
 input SimpipeEnvsSetInput {
-  envId: Int
+  "UUID of the env, random by default"
+  envId: uuid
+  "Name of the env, it is unique per step"
   name: String
+  "UUID of the step, must exist in the steps table"
   stepId: uuid
+  "Value of the env"
   value: String
-}
-"aggregate stddev on columns"
-type SimpipeEnvsStddevFields {
-  envId: Float
-  stepId: Float
-}
-"aggregate stddev_pop on columns"
-type SimpipeEnvsStddev_popFields {
-  envId: Float
-  stepId: Float
-}
-"aggregate stddev_samp on columns"
-type SimpipeEnvsStddev_sampFields {
-  envId: Float
-  stepId: Float
 }
 """
 Streaming cursor of the table "simpipe_envs"
@@ -449,15 +277,14 @@ input SimpipeEnvsStreamCursorInput {
 }
 "Initial value of the column from where the streaming should start"
 input SimpipeEnvsStreamCursorValueInput {
-  envId: Int
+  "UUID of the env, random by default"
+  envId: uuid
+  "Name of the env, it is unique per step"
   name: String
+  "UUID of the step, must exist in the steps table"
   stepId: uuid
+  "Value of the env"
   value: String
-}
-"aggregate sum on columns"
-type SimpipeEnvsSumFields {
-  envId: Int
-  stepId: uuid
 }
 """
 update columns of table "simpipe.envs"
@@ -473,35 +300,18 @@ enum SimpipeEnvsUpdateColumn {
   value
 }
 input SimpipeEnvsUpdates {
-  "increments the numeric columns with given value of the filtered values"
-  _inc: SimpipeEnvsIncInput
   "sets the columns of the filtered rows to the given values"
   _set: SimpipeEnvsSetInput
   "filter the rows which have to be updated"
   where: SimpipeEnvsBoolExp!
 }
-"aggregate var_pop on columns"
-type SimpipeEnvsVar_popFields {
-  envId: Float
-  stepId: Float
-}
-"aggregate var_samp on columns"
-type SimpipeEnvsVar_sampFields {
-  envId: Float
-  stepId: Float
-}
-"aggregate variance on columns"
-type SimpipeEnvsVarianceFields {
-  envId: Float
-  stepId: Float
-}
-"""
-columns and relationships of "simpipe.logs"
-"""
+"Logs of the runs"
 type SimpipeLogs {
   "An object relationship"
   step: steps!
+  "UUID of the step, must exist in the steps table"
   stepId: uuid!
+  "Text of the log"
   text: String!
 }
 """
@@ -515,21 +325,9 @@ type SimpipeLogsAggregate {
 aggregate fields of "simpipe.logs"
 """
 type SimpipeLogsAggregateFields {
-  avg: SimpipeLogsAvgFields
   count(columns: [SimpipeLogsSelectColumn!], distinct: Boolean): Int!
   max: SimpipeLogsMaxFields
   min: SimpipeLogsMinFields
-  stddev: SimpipeLogsStddevFields
-  stddevPop: SimpipeLogsStddev_popFields
-  stddevSamp: SimpipeLogsStddev_sampFields
-  sum: SimpipeLogsSumFields
-  varPop: SimpipeLogsVar_popFields
-  varSamp: SimpipeLogsVar_sampFields
-  variance: SimpipeLogsVarianceFields
-}
-"aggregate avg on columns"
-type SimpipeLogsAvgFields {
-  stepId: Float
 }
 """
 Boolean expression to filter rows from the table "simpipe.logs". All fields are combined with a logical 'AND'.
@@ -539,7 +337,7 @@ input SimpipeLogsBoolExp {
   _not: SimpipeLogsBoolExp
   _or: [SimpipeLogsBoolExp!]
   step: stepsBoolExp
-  stepId: StringComparisonExp
+  stepId: UuidComparisonExp
   text: StringComparisonExp
 }
 """
@@ -552,27 +350,27 @@ enum SimpipeLogsConstraint {
   logs_pkey
 }
 """
-input type for incrementing numeric columns in table "simpipe.logs"
-"""
-input SimpipeLogsIncInput {
-  stepId: uuid
-}
-"""
 input type for inserting data into table "simpipe.logs"
 """
 input SimpipeLogsInsertInput {
   step: stepsObjRelInsertInput
+  "UUID of the step, must exist in the steps table"
   stepId: uuid
+  "Text of the log"
   text: String
 }
 "aggregate max on columns"
 type SimpipeLogsMaxFields {
+  "UUID of the step, must exist in the steps table"
   stepId: uuid
+  "Text of the log"
   text: String
 }
 "aggregate min on columns"
 type SimpipeLogsMinFields {
+  "UUID of the step, must exist in the steps table"
   stepId: uuid
+  "Text of the log"
   text: String
 }
 """
@@ -610,6 +408,7 @@ input SimpipeLogsOrderBy {
 }
 "primary key columns input for table: simpipe.logs"
 input SimpipeLogsPkColumnsInput {
+  "UUID of the step, must exist in the steps table"
   stepId: uuid!
 }
 """
@@ -625,20 +424,10 @@ enum SimpipeLogsSelectColumn {
 input type for updating data in table "simpipe.logs"
 """
 input SimpipeLogsSetInput {
+  "UUID of the step, must exist in the steps table"
   stepId: uuid
+  "Text of the log"
   text: String
-}
-"aggregate stddev on columns"
-type SimpipeLogsStddevFields {
-  stepId: Float
-}
-"aggregate stddev_pop on columns"
-type SimpipeLogsStddev_popFields {
-  stepId: Float
-}
-"aggregate stddev_samp on columns"
-type SimpipeLogsStddev_sampFields {
-  stepId: Float
 }
 """
 Streaming cursor of the table "simpipe_logs"
@@ -651,12 +440,10 @@ input SimpipeLogsStreamCursorInput {
 }
 "Initial value of the column from where the streaming should start"
 input SimpipeLogsStreamCursorValueInput {
+  "UUID of the step, must exist in the steps table"
   stepId: uuid
+  "Text of the log"
   text: String
-}
-"aggregate sum on columns"
-type SimpipeLogsSumFields {
-  stepId: uuid
 }
 """
 update columns of table "simpipe.logs"
@@ -668,362 +455,12 @@ enum SimpipeLogsUpdateColumn {
   text
 }
 input SimpipeLogsUpdates {
-  "increments the numeric columns with given value of the filtered values"
-  _inc: SimpipeLogsIncInput
   "sets the columns of the filtered rows to the given values"
   _set: SimpipeLogsSetInput
   "filter the rows which have to be updated"
   where: SimpipeLogsBoolExp!
 }
-"aggregate var_pop on columns"
-type SimpipeLogsVar_popFields {
-  stepId: Float
-}
-"aggregate var_samp on columns"
-type SimpipeLogsVar_sampFields {
-  stepId: Float
-}
-"aggregate variance on columns"
-type SimpipeLogsVarianceFields {
-  stepId: Float
-}
-"""
-columns and relationships of "simpipe.resource_usage"
-"""
-type SimpipeResourceUsage {
-  cpu: numeric!
-  id: bigint!
-  memory: numeric!
-  memoryMax: numeric!
-  rxValue: numeric!
-  "An object relationship"
-  step: steps!
-  stepId: uuid!
-  time: timestamptz!
-  txValue: numeric!
-}
-"""
-aggregated selection of "simpipe.resource_usage"
-"""
-type SimpipeResourceUsageAggregate {
-  aggregate: SimpipeResourceUsageAggregateFields
-  nodes: [SimpipeResourceUsage!]!
-}
-"""
-aggregate fields of "simpipe.resource_usage"
-"""
-type SimpipeResourceUsageAggregateFields {
-  avg: SimpipeResourceUsageAvgFields
-  count(columns: [SimpipeResourceUsageSelectColumn!], distinct: Boolean): Int!
-  max: SimpipeResourceUsageMaxFields
-  min: SimpipeResourceUsageMinFields
-  stddev: SimpipeResourceUsageStddevFields
-  stddevPop: SimpipeResourceUsageStddev_popFields
-  stddevSamp: SimpipeResourceUsageStddev_sampFields
-  sum: SimpipeResourceUsageSumFields
-  varPop: SimpipeResourceUsageVar_popFields
-  varSamp: SimpipeResourceUsageVar_sampFields
-  variance: SimpipeResourceUsageVarianceFields
-}
-"""
-order by aggregate values of table "simpipe.resource_usage"
-"""
-input SimpipeResourceUsageAggregateOrderBy {
-  avg: simpipe_resource_usage_avg_order_by
-  count: OrderBy
-  max: simpipe_resource_usage_max_order_by
-  min: simpipe_resource_usage_min_order_by
-  stddev: simpipe_resource_usage_stddev_order_by
-  stddev_pop: simpipe_resource_usage_stddev_pop_order_by
-  stddev_samp: simpipe_resource_usage_stddev_samp_order_by
-  sum: simpipe_resource_usage_sum_order_by
-  var_pop: simpipe_resource_usage_var_pop_order_by
-  var_samp: simpipe_resource_usage_var_samp_order_by
-  variance: simpipe_resource_usage_variance_order_by
-}
-"""
-input type for inserting array relation for remote table "simpipe.resource_usage"
-"""
-input SimpipeResourceUsageArrRelInsertInput {
-  data: [SimpipeResourceUsageInsertInput!]!
-  "upsert condition"
-  onConflict: SimpipeResourceUsageOnConflict
-}
-"aggregate avg on columns"
-type SimpipeResourceUsageAvgFields {
-  cpu: Float
-  id: Float
-  memory: Float
-  memoryMax: Float
-  rxValue: Float
-  stepId: Float
-  txValue: Float
-}
-"""
-Boolean expression to filter rows from the table "simpipe.resource_usage". All fields are combined with a logical 'AND'.
-"""
-input SimpipeResourceUsageBoolExp {
-  _and: [SimpipeResourceUsageBoolExp!]
-  _not: SimpipeResourceUsageBoolExp
-  _or: [SimpipeResourceUsageBoolExp!]
-  cpu: NumericComparisonExp
-  id: BigintComparisonExp
-  memory: NumericComparisonExp
-  memoryMax: NumericComparisonExp
-  rxValue: NumericComparisonExp
-  step: stepsBoolExp
-  stepId: StringComparisonExp
-  time: TimestamptzComparisonExp
-  txValue: NumericComparisonExp
-}
-"""
-unique or primary key constraints on table "simpipe.resource_usage"
-"""
-enum SimpipeResourceUsageConstraint {
-  """
-  unique or primary key constraint on columns "id"
-  """
-  resource_usage_pkey
-}
-"""
-input type for incrementing numeric columns in table "simpipe.resource_usage"
-"""
-input SimpipeResourceUsageIncInput {
-  cpu: numeric
-  id: bigint
-  memory: numeric
-  memoryMax: numeric
-  rxValue: numeric
-  stepId: uuid
-  txValue: numeric
-}
-"""
-input type for inserting data into table "simpipe.resource_usage"
-"""
-input SimpipeResourceUsageInsertInput {
-  cpu: numeric
-  id: bigint
-  memory: numeric
-  memoryMax: numeric
-  rxValue: numeric
-  step: stepsObjRelInsertInput
-  stepId: uuid
-  time: timestamptz
-  txValue: numeric
-}
-"aggregate max on columns"
-type SimpipeResourceUsageMaxFields {
-  cpu: numeric
-  id: bigint
-  memory: numeric
-  memoryMax: numeric
-  rxValue: numeric
-  stepId: uuid
-  time: timestamptz
-  txValue: numeric
-}
-"aggregate min on columns"
-type SimpipeResourceUsageMinFields {
-  cpu: numeric
-  id: bigint
-  memory: numeric
-  memoryMax: numeric
-  rxValue: numeric
-  stepId: uuid
-  time: timestamptz
-  txValue: numeric
-}
-"""
-response of any mutation on the table "simpipe.resource_usage"
-"""
-type SimpipeResourceUsageMutationResponse {
-  "number of rows affected by the mutation"
-  affected_rows: Int!
-  "data from the rows affected by the mutation"
-  returning: [SimpipeResourceUsage!]!
-}
-"""
-on_conflict condition type for table "simpipe.resource_usage"
-"""
-input SimpipeResourceUsageOnConflict {
-  constraint: SimpipeResourceUsageConstraint!
-  update_columns: [SimpipeResourceUsageUpdateColumn!]! = []
-  where: SimpipeResourceUsageBoolExp
-}
-"""
-Ordering options when selecting data from "simpipe.resource_usage".
-"""
-input SimpipeResourceUsageOrderBy {
-  cpu: OrderBy
-  id: OrderBy
-  memory: OrderBy
-  memoryMax: OrderBy
-  rxValue: OrderBy
-  step: stepsOrderBy
-  stepId: OrderBy
-  time: OrderBy
-  txValue: OrderBy
-}
-"primary key columns input for table: simpipe.resource_usage"
-input SimpipeResourceUsagePkColumnsInput {
-  id: bigint!
-}
-"""
-select columns of table "simpipe.resource_usage"
-"""
-enum SimpipeResourceUsageSelectColumn {
-  "column name"
-  cpu
-  "column name"
-  id
-  "column name"
-  memory
-  "column name"
-  memoryMax
-  "column name"
-  rxValue
-  "column name"
-  stepId
-  "column name"
-  time
-  "column name"
-  txValue
-}
-"""
-input type for updating data in table "simpipe.resource_usage"
-"""
-input SimpipeResourceUsageSetInput {
-  cpu: numeric
-  id: bigint
-  memory: numeric
-  memoryMax: numeric
-  rxValue: numeric
-  stepId: uuid
-  time: timestamptz
-  txValue: numeric
-}
-"aggregate stddev on columns"
-type SimpipeResourceUsageStddevFields {
-  cpu: Float
-  id: Float
-  memory: Float
-  memoryMax: Float
-  rxValue: Float
-  stepId: Float
-  txValue: Float
-}
-"aggregate stddev_pop on columns"
-type SimpipeResourceUsageStddev_popFields {
-  cpu: Float
-  id: Float
-  memory: Float
-  memoryMax: Float
-  rxValue: Float
-  stepId: Float
-  txValue: Float
-}
-"aggregate stddev_samp on columns"
-type SimpipeResourceUsageStddev_sampFields {
-  cpu: Float
-  id: Float
-  memory: Float
-  memoryMax: Float
-  rxValue: Float
-  stepId: Float
-  txValue: Float
-}
-"""
-Streaming cursor of the table "simpipe_resource_usage"
-"""
-input SimpipeResourceUsageStreamCursorInput {
-  "Stream column input with initial value"
-  initialValue: SimpipeResourceUsageStreamCursorValueInput!
-  "cursor ordering"
-  ordering: CursorOrdering
-}
-"Initial value of the column from where the streaming should start"
-input SimpipeResourceUsageStreamCursorValueInput {
-  cpu: numeric
-  id: bigint
-  memory: numeric
-  memoryMax: numeric
-  rxValue: numeric
-  stepId: uuid
-  time: timestamptz
-  txValue: numeric
-}
-"aggregate sum on columns"
-type SimpipeResourceUsageSumFields {
-  cpu: numeric
-  id: bigint
-  memory: numeric
-  memoryMax: numeric
-  rxValue: numeric
-  stepId: uuid
-  txValue: numeric
-}
-"""
-update columns of table "simpipe.resource_usage"
-"""
-enum SimpipeResourceUsageUpdateColumn {
-  "column name"
-  cpu
-  "column name"
-  id
-  "column name"
-  memory
-  "column name"
-  memoryMax
-  "column name"
-  rxValue
-  "column name"
-  stepId
-  "column name"
-  time
-  "column name"
-  txValue
-}
-input SimpipeResourceUsageUpdates {
-  "increments the numeric columns with given value of the filtered values"
-  _inc: SimpipeResourceUsageIncInput
-  "sets the columns of the filtered rows to the given values"
-  _set: SimpipeResourceUsageSetInput
-  "filter the rows which have to be updated"
-  where: SimpipeResourceUsageBoolExp!
-}
-"aggregate var_pop on columns"
-type SimpipeResourceUsageVar_popFields {
-  cpu: Float
-  id: Float
-  memory: Float
-  memoryMax: Float
-  rxValue: Float
-  stepId: Float
-  txValue: Float
-}
-"aggregate var_samp on columns"
-type SimpipeResourceUsageVar_sampFields {
-  cpu: Float
-  id: Float
-  memory: Float
-  memoryMax: Float
-  rxValue: Float
-  stepId: Float
-  txValue: Float
-}
-"aggregate variance on columns"
-type SimpipeResourceUsageVarianceFields {
-  cpu: Float
-  id: Float
-  memory: Float
-  memoryMax: Float
-  rxValue: Float
-  stepId: Float
-  txValue: Float
-}
-"""
-columns and relationships of "simpipe.run_status"
-"""
+"Status of a run"
 type SimpipeRunStatus {
   value: String!
 }
@@ -1158,9 +595,7 @@ input SimpipeRunStatusUpdates {
   "filter the rows which have to be updated"
   where: SimpipeRunStatusBoolExp!
 }
-"""
-columns and relationships of "simpipe.step_status"
-"""
+"Status of a step"
 type SimpipeStepStatus {
   value: String!
 }
@@ -1202,7 +637,7 @@ enum SimpipeStepStatusEnum {
   CANCELLED
   COMPLETED
   FAILED
-  WAITING
+  QUEUED
 }
 """
 Boolean expression to compare columns of type "SimpipeStepStatusEnum". All fields are combined with logical 'AND'.
@@ -1294,6 +729,20 @@ input SimpipeStepStatusUpdates {
   "filter the rows which have to be updated"
   where: SimpipeStepStatusBoolExp!
 }
+input StepEnvironmentVariable {
+  " The name of the environment variable "
+  name: String!
+  " The name of the step to set the environment variable for "
+  stepName: String!
+  " The value of the environment variable "
+  value: String!
+}
+input StepTimeout {
+  " The name of the step to set the timeout for "
+  stepName: String!
+  " The timeout in seconds, must be greater than 0 and less than 86400 (24 hours) "
+  timeout: Int!
+}
 """
 Boolean expression to compare columns of type "String". All fields are combined with logical 'AND'.
 """
@@ -1329,6 +778,20 @@ input StringComparisonExp {
   _similar: String
 }
 """
+Boolean expression to compare columns of type "timestamp". All fields are combined with logical 'AND'.
+"""
+input TimestampComparisonExp {
+  _eq: timestamp
+  _gt: timestamp
+  _gte: timestamp
+  _in: [timestamp!]
+  _isNull: Boolean
+  _lt: timestamp
+  _lte: timestamp
+  _neq: timestamp
+  _nin: [timestamp!]
+}
+"""
 Boolean expression to compare columns of type "timestamptz". All fields are combined with logical 'AND'.
 """
 input TimestamptzComparisonExp {
@@ -1342,7 +805,6 @@ input TimestamptzComparisonExp {
   _neq: timestamptz
   _nin: [timestamptz!]
 }
-scalar uuid
 """
 Boolean expression to compare columns of type "uuid". All fields are combined with logical 'AND'.
 """
@@ -1357,14 +819,1969 @@ input UuidComparisonExp {
   _neq: uuid
   _nin: [uuid!]
 }
-scalar bigint
+"""
+columns and relationships of "simpipe.cpu"
+"""
+type cpu {
+  "An object relationship"
+  run: runs
+  runId: String
+  "An object relationship"
+  simulation: simulations
+  simulationId: String
+  "An object relationship"
+  step: steps
+  stepId: String
+  time: timestamptz
+  userId: String
+  value: float8
+}
+"""
+aggregated selection of "simpipe.cpu"
+"""
+type cpuAggregate {
+  aggregate: cpuAggregateFields
+  nodes: [cpu!]!
+}
+"""
+aggregate fields of "simpipe.cpu"
+"""
+type cpuAggregateFields {
+  avg: cpuAvgFields
+  count(columns: [cpuSelectColumn!], distinct: Boolean): Int!
+  max: cpuMaxFields
+  min: cpuMinFields
+  stddev: cpuStddevFields
+  stddevPop: cpuStddev_popFields
+  stddevSamp: cpuStddev_sampFields
+  sum: cpuSumFields
+  varPop: cpuVar_popFields
+  varSamp: cpuVar_sampFields
+  variance: cpuVarianceFields
+}
+"""
+order by aggregate values of table "simpipe.cpu"
+"""
+input cpuAggregateOrderBy {
+  avg: cpu_avg_order_by
+  count: OrderBy
+  max: cpu_max_order_by
+  min: cpu_min_order_by
+  stddev: cpu_stddev_order_by
+  stddev_pop: cpu_stddev_pop_order_by
+  stddev_samp: cpu_stddev_samp_order_by
+  sum: cpu_sum_order_by
+  var_pop: cpu_var_pop_order_by
+  var_samp: cpu_var_samp_order_by
+  variance: cpu_variance_order_by
+}
+"""
+input type for inserting array relation for remote table "simpipe.cpu"
+"""
+input cpuArrRelInsertInput {
+  data: [cpuInsertInput!]!
+}
+"aggregate avg on columns"
+type cpuAvgFields {
+  value: Float
+}
+"""
+Boolean expression to filter rows from the table "simpipe.cpu". All fields are combined with a logical 'AND'.
+"""
+input cpuBoolExp {
+  _and: [cpuBoolExp!]
+  _not: cpuBoolExp
+  _or: [cpuBoolExp!]
+  run: runsBoolExp
+  runId: StringComparisonExp
+  simulation: simulationsBoolExp
+  simulationId: StringComparisonExp
+  step: stepsBoolExp
+  stepId: StringComparisonExp
+  time: TimestamptzComparisonExp
+  userId: StringComparisonExp
+  value: Float8ComparisonExp
+}
+"""
+input type for inserting data into table "simpipe.cpu"
+"""
+input cpuInsertInput {
+  run: runsObjRelInsertInput
+  runId: String
+  simulation: simulationsObjRelInsertInput
+  simulationId: String
+  step: stepsObjRelInsertInput
+  stepId: String
+  time: timestamptz
+  userId: String
+  value: float8
+}
+"aggregate max on columns"
+type cpuMaxFields {
+  runId: String
+  simulationId: String
+  stepId: String
+  time: timestamptz
+  userId: String
+  value: float8
+}
+"aggregate min on columns"
+type cpuMinFields {
+  runId: String
+  simulationId: String
+  stepId: String
+  time: timestamptz
+  userId: String
+  value: float8
+}
+"""
+Ordering options when selecting data from "simpipe.cpu".
+"""
+input cpuOrderBy {
+  run: runsOrderBy
+  runId: OrderBy
+  simulation: simulationsOrderBy
+  simulationId: OrderBy
+  step: stepsOrderBy
+  stepId: OrderBy
+  time: OrderBy
+  userId: OrderBy
+  value: OrderBy
+}
+"""
+select columns of table "simpipe.cpu"
+"""
+enum cpuSelectColumn {
+  "column name"
+  runId
+  "column name"
+  simulationId
+  "column name"
+  stepId
+  "column name"
+  time
+  "column name"
+  userId
+  "column name"
+  value
+}
+"aggregate stddev on columns"
+type cpuStddevFields {
+  value: Float
+}
+"aggregate stddev_pop on columns"
+type cpuStddev_popFields {
+  value: Float
+}
+"aggregate stddev_samp on columns"
+type cpuStddev_sampFields {
+  value: Float
+}
+"""
+Streaming cursor of the table "cpu"
+"""
+input cpuStreamCursorInput {
+  "Stream column input with initial value"
+  initialValue: cpuStreamCursorValueInput!
+  "cursor ordering"
+  ordering: CursorOrdering
+}
+"Initial value of the column from where the streaming should start"
+input cpuStreamCursorValueInput {
+  runId: String
+  simulationId: String
+  stepId: String
+  time: timestamptz
+  userId: String
+  value: float8
+}
+"aggregate sum on columns"
+type cpuSumFields {
+  value: float8
+}
+"aggregate var_pop on columns"
+type cpuVar_popFields {
+  value: Float
+}
+"aggregate var_samp on columns"
+type cpuVar_sampFields {
+  value: Float
+}
+"aggregate variance on columns"
+type cpuVarianceFields {
+  value: Float
+}
+input cpu_aggregate_bool_exp {
+  avg: cpu_aggregate_bool_exp_avg
+  corr: cpu_aggregate_bool_exp_corr
+  count: cpu_aggregate_bool_exp_count
+  covar_samp: cpu_aggregate_bool_exp_covar_samp
+  max: cpu_aggregate_bool_exp_max
+  min: cpu_aggregate_bool_exp_min
+  stddev_samp: cpu_aggregate_bool_exp_stddev_samp
+  sum: cpu_aggregate_bool_exp_sum
+  var_samp: cpu_aggregate_bool_exp_var_samp
+}
+input cpu_aggregate_bool_exp_avg {
+  arguments: cpu_select_column_cpu_aggregate_bool_exp_avg_arguments_columns!
+  distinct: Boolean
+  filter: cpuBoolExp
+  predicate: Float8ComparisonExp!
+}
+input cpu_aggregate_bool_exp_corr {
+  arguments: cpu_aggregate_bool_exp_corr_arguments!
+  distinct: Boolean
+  filter: cpuBoolExp
+  predicate: Float8ComparisonExp!
+}
+input cpu_aggregate_bool_exp_corr_arguments {
+  X: cpu_select_column_cpu_aggregate_bool_exp_corr_arguments_columns!
+  Y: cpu_select_column_cpu_aggregate_bool_exp_corr_arguments_columns!
+}
+input cpu_aggregate_bool_exp_count {
+  arguments: [cpuSelectColumn!]
+  distinct: Boolean
+  filter: cpuBoolExp
+  predicate: IntComparisonExp!
+}
+input cpu_aggregate_bool_exp_covar_samp {
+  arguments: cpu_aggregate_bool_exp_covar_samp_arguments!
+  distinct: Boolean
+  filter: cpuBoolExp
+  predicate: Float8ComparisonExp!
+}
+input cpu_aggregate_bool_exp_covar_samp_arguments {
+  X: cpu_select_column_cpu_aggregate_bool_exp_covar_samp_arguments_columns!
+  Y: cpu_select_column_cpu_aggregate_bool_exp_covar_samp_arguments_columns!
+}
+input cpu_aggregate_bool_exp_max {
+  arguments: cpu_select_column_cpu_aggregate_bool_exp_max_arguments_columns!
+  distinct: Boolean
+  filter: cpuBoolExp
+  predicate: Float8ComparisonExp!
+}
+input cpu_aggregate_bool_exp_min {
+  arguments: cpu_select_column_cpu_aggregate_bool_exp_min_arguments_columns!
+  distinct: Boolean
+  filter: cpuBoolExp
+  predicate: Float8ComparisonExp!
+}
+input cpu_aggregate_bool_exp_stddev_samp {
+  arguments: cpu_select_column_cpu_aggregate_bool_exp_stddev_samp_arguments_columns!
+  distinct: Boolean
+  filter: cpuBoolExp
+  predicate: Float8ComparisonExp!
+}
+input cpu_aggregate_bool_exp_sum {
+  arguments: cpu_select_column_cpu_aggregate_bool_exp_sum_arguments_columns!
+  distinct: Boolean
+  filter: cpuBoolExp
+  predicate: Float8ComparisonExp!
+}
+input cpu_aggregate_bool_exp_var_samp {
+  arguments: cpu_select_column_cpu_aggregate_bool_exp_var_samp_arguments_columns!
+  distinct: Boolean
+  filter: cpuBoolExp
+  predicate: Float8ComparisonExp!
+}
+"""
+order by avg() on columns of table "simpipe.cpu"
+"""
+input cpu_avg_order_by {
+  value: OrderBy
+}
+"""
+order by max() on columns of table "simpipe.cpu"
+"""
+input cpu_max_order_by {
+  runId: OrderBy
+  simulationId: OrderBy
+  stepId: OrderBy
+  time: OrderBy
+  userId: OrderBy
+  value: OrderBy
+}
+"""
+order by min() on columns of table "simpipe.cpu"
+"""
+input cpu_min_order_by {
+  runId: OrderBy
+  simulationId: OrderBy
+  stepId: OrderBy
+  time: OrderBy
+  userId: OrderBy
+  value: OrderBy
+}
+"""
+select "cpu_aggregate_bool_exp_avg_arguments_columns" columns of table "simpipe.cpu"
+"""
+enum cpu_select_column_cpu_aggregate_bool_exp_avg_arguments_columns {
+  "column name"
+  value
+}
+"""
+select "cpu_aggregate_bool_exp_corr_arguments_columns" columns of table "simpipe.cpu"
+"""
+enum cpu_select_column_cpu_aggregate_bool_exp_corr_arguments_columns {
+  "column name"
+  value
+}
+"""
+select "cpu_aggregate_bool_exp_covar_samp_arguments_columns" columns of table "simpipe.cpu"
+"""
+enum cpu_select_column_cpu_aggregate_bool_exp_covar_samp_arguments_columns {
+  "column name"
+  value
+}
+"""
+select "cpu_aggregate_bool_exp_max_arguments_columns" columns of table "simpipe.cpu"
+"""
+enum cpu_select_column_cpu_aggregate_bool_exp_max_arguments_columns {
+  "column name"
+  value
+}
+"""
+select "cpu_aggregate_bool_exp_min_arguments_columns" columns of table "simpipe.cpu"
+"""
+enum cpu_select_column_cpu_aggregate_bool_exp_min_arguments_columns {
+  "column name"
+  value
+}
+"""
+select "cpu_aggregate_bool_exp_stddev_samp_arguments_columns" columns of table "simpipe.cpu"
+"""
+enum cpu_select_column_cpu_aggregate_bool_exp_stddev_samp_arguments_columns {
+  "column name"
+  value
+}
+"""
+select "cpu_aggregate_bool_exp_sum_arguments_columns" columns of table "simpipe.cpu"
+"""
+enum cpu_select_column_cpu_aggregate_bool_exp_sum_arguments_columns {
+  "column name"
+  value
+}
+"""
+select "cpu_aggregate_bool_exp_var_samp_arguments_columns" columns of table "simpipe.cpu"
+"""
+enum cpu_select_column_cpu_aggregate_bool_exp_var_samp_arguments_columns {
+  "column name"
+  value
+}
+"""
+order by stddev() on columns of table "simpipe.cpu"
+"""
+input cpu_stddev_order_by {
+  value: OrderBy
+}
+"""
+order by stddev_pop() on columns of table "simpipe.cpu"
+"""
+input cpu_stddev_pop_order_by {
+  value: OrderBy
+}
+"""
+order by stddev_samp() on columns of table "simpipe.cpu"
+"""
+input cpu_stddev_samp_order_by {
+  value: OrderBy
+}
+"""
+order by sum() on columns of table "simpipe.cpu"
+"""
+input cpu_sum_order_by {
+  value: OrderBy
+}
+"""
+order by var_pop() on columns of table "simpipe.cpu"
+"""
+input cpu_var_pop_order_by {
+  value: OrderBy
+}
+"""
+order by var_samp() on columns of table "simpipe.cpu"
+"""
+input cpu_var_samp_order_by {
+  value: OrderBy
+}
+"""
+order by variance() on columns of table "simpipe.cpu"
+"""
+input cpu_variance_order_by {
+  value: OrderBy
+}
 scalar float8
+"""
+columns and relationships of "simpipe.fs_reads_merged"
+"""
+type fsReadsMerged {
+  "An object relationship"
+  run: runs
+  runId: String
+  "An object relationship"
+  simulation: simulations
+  simulationId: String
+  "An object relationship"
+  step: steps
+  stepId: String
+  time: timestamptz
+  userId: String
+  value: float8
+}
+"""
+aggregated selection of "simpipe.fs_reads_merged"
+"""
+type fsReadsMergedAggregate {
+  aggregate: fsReadsMergedAggregateFields
+  nodes: [fsReadsMerged!]!
+}
+"""
+aggregate fields of "simpipe.fs_reads_merged"
+"""
+type fsReadsMergedAggregateFields {
+  avg: fsReadsMergedAvgFields
+  count(columns: [fsReadsMergedSelectColumn!], distinct: Boolean): Int!
+  max: fsReadsMergedMaxFields
+  min: fsReadsMergedMinFields
+  stddev: fsReadsMergedStddevFields
+  stddevPop: fsReadsMergedStddev_popFields
+  stddevSamp: fsReadsMergedStddev_sampFields
+  sum: fsReadsMergedSumFields
+  varPop: fsReadsMergedVar_popFields
+  varSamp: fsReadsMergedVar_sampFields
+  variance: fsReadsMergedVarianceFields
+}
+"""
+order by aggregate values of table "simpipe.fs_reads_merged"
+"""
+input fsReadsMergedAggregateOrderBy {
+  avg: fsReadsMerged_avg_order_by
+  count: OrderBy
+  max: fsReadsMerged_max_order_by
+  min: fsReadsMerged_min_order_by
+  stddev: fsReadsMerged_stddev_order_by
+  stddev_pop: fsReadsMerged_stddev_pop_order_by
+  stddev_samp: fsReadsMerged_stddev_samp_order_by
+  sum: fsReadsMerged_sum_order_by
+  var_pop: fsReadsMerged_var_pop_order_by
+  var_samp: fsReadsMerged_var_samp_order_by
+  variance: fsReadsMerged_variance_order_by
+}
+"""
+input type for inserting array relation for remote table "simpipe.fs_reads_merged"
+"""
+input fsReadsMergedArrRelInsertInput {
+  data: [fsReadsMergedInsertInput!]!
+}
+"aggregate avg on columns"
+type fsReadsMergedAvgFields {
+  value: Float
+}
+"""
+Boolean expression to filter rows from the table "simpipe.fs_reads_merged". All fields are combined with a logical 'AND'.
+"""
+input fsReadsMergedBoolExp {
+  _and: [fsReadsMergedBoolExp!]
+  _not: fsReadsMergedBoolExp
+  _or: [fsReadsMergedBoolExp!]
+  run: runsBoolExp
+  runId: StringComparisonExp
+  simulation: simulationsBoolExp
+  simulationId: StringComparisonExp
+  step: stepsBoolExp
+  stepId: StringComparisonExp
+  time: TimestamptzComparisonExp
+  userId: StringComparisonExp
+  value: Float8ComparisonExp
+}
+"""
+input type for inserting data into table "simpipe.fs_reads_merged"
+"""
+input fsReadsMergedInsertInput {
+  run: runsObjRelInsertInput
+  runId: String
+  simulation: simulationsObjRelInsertInput
+  simulationId: String
+  step: stepsObjRelInsertInput
+  stepId: String
+  time: timestamptz
+  userId: String
+  value: float8
+}
+"aggregate max on columns"
+type fsReadsMergedMaxFields {
+  runId: String
+  simulationId: String
+  stepId: String
+  time: timestamptz
+  userId: String
+  value: float8
+}
+"aggregate min on columns"
+type fsReadsMergedMinFields {
+  runId: String
+  simulationId: String
+  stepId: String
+  time: timestamptz
+  userId: String
+  value: float8
+}
+"""
+Ordering options when selecting data from "simpipe.fs_reads_merged".
+"""
+input fsReadsMergedOrderBy {
+  run: runsOrderBy
+  runId: OrderBy
+  simulation: simulationsOrderBy
+  simulationId: OrderBy
+  step: stepsOrderBy
+  stepId: OrderBy
+  time: OrderBy
+  userId: OrderBy
+  value: OrderBy
+}
+"""
+select columns of table "simpipe.fs_reads_merged"
+"""
+enum fsReadsMergedSelectColumn {
+  "column name"
+  runId
+  "column name"
+  simulationId
+  "column name"
+  stepId
+  "column name"
+  time
+  "column name"
+  userId
+  "column name"
+  value
+}
+"aggregate stddev on columns"
+type fsReadsMergedStddevFields {
+  value: Float
+}
+"aggregate stddev_pop on columns"
+type fsReadsMergedStddev_popFields {
+  value: Float
+}
+"aggregate stddev_samp on columns"
+type fsReadsMergedStddev_sampFields {
+  value: Float
+}
+"""
+Streaming cursor of the table "fsReadsMerged"
+"""
+input fsReadsMergedStreamCursorInput {
+  "Stream column input with initial value"
+  initialValue: fsReadsMergedStreamCursorValueInput!
+  "cursor ordering"
+  ordering: CursorOrdering
+}
+"Initial value of the column from where the streaming should start"
+input fsReadsMergedStreamCursorValueInput {
+  runId: String
+  simulationId: String
+  stepId: String
+  time: timestamptz
+  userId: String
+  value: float8
+}
+"aggregate sum on columns"
+type fsReadsMergedSumFields {
+  value: float8
+}
+"aggregate var_pop on columns"
+type fsReadsMergedVar_popFields {
+  value: Float
+}
+"aggregate var_samp on columns"
+type fsReadsMergedVar_sampFields {
+  value: Float
+}
+"aggregate variance on columns"
+type fsReadsMergedVarianceFields {
+  value: Float
+}
+input fsReadsMerged_aggregate_bool_exp {
+  avg: fsReadsMerged_aggregate_bool_exp_avg
+  corr: fsReadsMerged_aggregate_bool_exp_corr
+  count: fsReadsMerged_aggregate_bool_exp_count
+  covar_samp: fsReadsMerged_aggregate_bool_exp_covar_samp
+  max: fsReadsMerged_aggregate_bool_exp_max
+  min: fsReadsMerged_aggregate_bool_exp_min
+  stddev_samp: fsReadsMerged_aggregate_bool_exp_stddev_samp
+  sum: fsReadsMerged_aggregate_bool_exp_sum
+  var_samp: fsReadsMerged_aggregate_bool_exp_var_samp
+}
+input fsReadsMerged_aggregate_bool_exp_avg {
+  arguments: fsReadsMerged_select_column_fsReadsMerged_aggregate_bool_exp_avg_arguments_columns!
+  distinct: Boolean
+  filter: fsReadsMergedBoolExp
+  predicate: Float8ComparisonExp!
+}
+input fsReadsMerged_aggregate_bool_exp_corr {
+  arguments: fsReadsMerged_aggregate_bool_exp_corr_arguments!
+  distinct: Boolean
+  filter: fsReadsMergedBoolExp
+  predicate: Float8ComparisonExp!
+}
+input fsReadsMerged_aggregate_bool_exp_corr_arguments {
+  X: fsReadsMerged_select_column_fsReadsMerged_aggregate_bool_exp_corr_arguments_columns!
+  Y: fsReadsMerged_select_column_fsReadsMerged_aggregate_bool_exp_corr_arguments_columns!
+}
+input fsReadsMerged_aggregate_bool_exp_count {
+  arguments: [fsReadsMergedSelectColumn!]
+  distinct: Boolean
+  filter: fsReadsMergedBoolExp
+  predicate: IntComparisonExp!
+}
+input fsReadsMerged_aggregate_bool_exp_covar_samp {
+  arguments: fsReadsMerged_aggregate_bool_exp_covar_samp_arguments!
+  distinct: Boolean
+  filter: fsReadsMergedBoolExp
+  predicate: Float8ComparisonExp!
+}
+input fsReadsMerged_aggregate_bool_exp_covar_samp_arguments {
+  X: fsReadsMerged_select_column_fsReadsMerged_aggregate_bool_exp_covar_samp_arguments_columns!
+  Y: fsReadsMerged_select_column_fsReadsMerged_aggregate_bool_exp_covar_samp_arguments_columns!
+}
+input fsReadsMerged_aggregate_bool_exp_max {
+  arguments: fsReadsMerged_select_column_fsReadsMerged_aggregate_bool_exp_max_arguments_columns!
+  distinct: Boolean
+  filter: fsReadsMergedBoolExp
+  predicate: Float8ComparisonExp!
+}
+input fsReadsMerged_aggregate_bool_exp_min {
+  arguments: fsReadsMerged_select_column_fsReadsMerged_aggregate_bool_exp_min_arguments_columns!
+  distinct: Boolean
+  filter: fsReadsMergedBoolExp
+  predicate: Float8ComparisonExp!
+}
+input fsReadsMerged_aggregate_bool_exp_stddev_samp {
+  arguments: fsReadsMerged_select_column_fsReadsMerged_aggregate_bool_exp_stddev_samp_arguments_columns!
+  distinct: Boolean
+  filter: fsReadsMergedBoolExp
+  predicate: Float8ComparisonExp!
+}
+input fsReadsMerged_aggregate_bool_exp_sum {
+  arguments: fsReadsMerged_select_column_fsReadsMerged_aggregate_bool_exp_sum_arguments_columns!
+  distinct: Boolean
+  filter: fsReadsMergedBoolExp
+  predicate: Float8ComparisonExp!
+}
+input fsReadsMerged_aggregate_bool_exp_var_samp {
+  arguments: fsReadsMerged_select_column_fsReadsMerged_aggregate_bool_exp_var_samp_arguments_columns!
+  distinct: Boolean
+  filter: fsReadsMergedBoolExp
+  predicate: Float8ComparisonExp!
+}
+"""
+order by avg() on columns of table "simpipe.fs_reads_merged"
+"""
+input fsReadsMerged_avg_order_by {
+  value: OrderBy
+}
+"""
+order by max() on columns of table "simpipe.fs_reads_merged"
+"""
+input fsReadsMerged_max_order_by {
+  runId: OrderBy
+  simulationId: OrderBy
+  stepId: OrderBy
+  time: OrderBy
+  userId: OrderBy
+  value: OrderBy
+}
+"""
+order by min() on columns of table "simpipe.fs_reads_merged"
+"""
+input fsReadsMerged_min_order_by {
+  runId: OrderBy
+  simulationId: OrderBy
+  stepId: OrderBy
+  time: OrderBy
+  userId: OrderBy
+  value: OrderBy
+}
+"""
+select "fsReadsMerged_aggregate_bool_exp_avg_arguments_columns" columns of table "simpipe.fs_reads_merged"
+"""
+enum fsReadsMerged_select_column_fsReadsMerged_aggregate_bool_exp_avg_arguments_columns {
+  "column name"
+  value
+}
+"""
+select "fsReadsMerged_aggregate_bool_exp_corr_arguments_columns" columns of table "simpipe.fs_reads_merged"
+"""
+enum fsReadsMerged_select_column_fsReadsMerged_aggregate_bool_exp_corr_arguments_columns {
+  "column name"
+  value
+}
+"""
+select "fsReadsMerged_aggregate_bool_exp_covar_samp_arguments_columns" columns of table "simpipe.fs_reads_merged"
+"""
+enum fsReadsMerged_select_column_fsReadsMerged_aggregate_bool_exp_covar_samp_arguments_columns {
+  "column name"
+  value
+}
+"""
+select "fsReadsMerged_aggregate_bool_exp_max_arguments_columns" columns of table "simpipe.fs_reads_merged"
+"""
+enum fsReadsMerged_select_column_fsReadsMerged_aggregate_bool_exp_max_arguments_columns {
+  "column name"
+  value
+}
+"""
+select "fsReadsMerged_aggregate_bool_exp_min_arguments_columns" columns of table "simpipe.fs_reads_merged"
+"""
+enum fsReadsMerged_select_column_fsReadsMerged_aggregate_bool_exp_min_arguments_columns {
+  "column name"
+  value
+}
+"""
+select "fsReadsMerged_aggregate_bool_exp_stddev_samp_arguments_columns" columns of table "simpipe.fs_reads_merged"
+"""
+enum fsReadsMerged_select_column_fsReadsMerged_aggregate_bool_exp_stddev_samp_arguments_columns {
+  "column name"
+  value
+}
+"""
+select "fsReadsMerged_aggregate_bool_exp_sum_arguments_columns" columns of table "simpipe.fs_reads_merged"
+"""
+enum fsReadsMerged_select_column_fsReadsMerged_aggregate_bool_exp_sum_arguments_columns {
+  "column name"
+  value
+}
+"""
+select "fsReadsMerged_aggregate_bool_exp_var_samp_arguments_columns" columns of table "simpipe.fs_reads_merged"
+"""
+enum fsReadsMerged_select_column_fsReadsMerged_aggregate_bool_exp_var_samp_arguments_columns {
+  "column name"
+  value
+}
+"""
+order by stddev() on columns of table "simpipe.fs_reads_merged"
+"""
+input fsReadsMerged_stddev_order_by {
+  value: OrderBy
+}
+"""
+order by stddev_pop() on columns of table "simpipe.fs_reads_merged"
+"""
+input fsReadsMerged_stddev_pop_order_by {
+  value: OrderBy
+}
+"""
+order by stddev_samp() on columns of table "simpipe.fs_reads_merged"
+"""
+input fsReadsMerged_stddev_samp_order_by {
+  value: OrderBy
+}
+"""
+order by sum() on columns of table "simpipe.fs_reads_merged"
+"""
+input fsReadsMerged_sum_order_by {
+  value: OrderBy
+}
+"""
+order by var_pop() on columns of table "simpipe.fs_reads_merged"
+"""
+input fsReadsMerged_var_pop_order_by {
+  value: OrderBy
+}
+"""
+order by var_samp() on columns of table "simpipe.fs_reads_merged"
+"""
+input fsReadsMerged_var_samp_order_by {
+  value: OrderBy
+}
+"""
+order by variance() on columns of table "simpipe.fs_reads_merged"
+"""
+input fsReadsMerged_variance_order_by {
+  value: OrderBy
+}
+"""
+columns and relationships of "simpipe.fs_writes_merged"
+"""
+type fsWritesMerged {
+  "An object relationship"
+  run: runs
+  runId: String
+  "An object relationship"
+  simulation: simulations
+  simulationId: String
+  "An object relationship"
+  step: steps
+  stepId: String
+  time: timestamptz
+  userId: String
+  value: float8
+}
+"""
+aggregated selection of "simpipe.fs_writes_merged"
+"""
+type fsWritesMergedAggregate {
+  aggregate: fsWritesMergedAggregateFields
+  nodes: [fsWritesMerged!]!
+}
+"""
+aggregate fields of "simpipe.fs_writes_merged"
+"""
+type fsWritesMergedAggregateFields {
+  avg: fsWritesMergedAvgFields
+  count(columns: [fsWritesMergedSelectColumn!], distinct: Boolean): Int!
+  max: fsWritesMergedMaxFields
+  min: fsWritesMergedMinFields
+  stddev: fsWritesMergedStddevFields
+  stddevPop: fsWritesMergedStddev_popFields
+  stddevSamp: fsWritesMergedStddev_sampFields
+  sum: fsWritesMergedSumFields
+  varPop: fsWritesMergedVar_popFields
+  varSamp: fsWritesMergedVar_sampFields
+  variance: fsWritesMergedVarianceFields
+}
+"""
+order by aggregate values of table "simpipe.fs_writes_merged"
+"""
+input fsWritesMergedAggregateOrderBy {
+  avg: fsWritesMerged_avg_order_by
+  count: OrderBy
+  max: fsWritesMerged_max_order_by
+  min: fsWritesMerged_min_order_by
+  stddev: fsWritesMerged_stddev_order_by
+  stddev_pop: fsWritesMerged_stddev_pop_order_by
+  stddev_samp: fsWritesMerged_stddev_samp_order_by
+  sum: fsWritesMerged_sum_order_by
+  var_pop: fsWritesMerged_var_pop_order_by
+  var_samp: fsWritesMerged_var_samp_order_by
+  variance: fsWritesMerged_variance_order_by
+}
+"""
+input type for inserting array relation for remote table "simpipe.fs_writes_merged"
+"""
+input fsWritesMergedArrRelInsertInput {
+  data: [fsWritesMergedInsertInput!]!
+}
+"aggregate avg on columns"
+type fsWritesMergedAvgFields {
+  value: Float
+}
+"""
+Boolean expression to filter rows from the table "simpipe.fs_writes_merged". All fields are combined with a logical 'AND'.
+"""
+input fsWritesMergedBoolExp {
+  _and: [fsWritesMergedBoolExp!]
+  _not: fsWritesMergedBoolExp
+  _or: [fsWritesMergedBoolExp!]
+  run: runsBoolExp
+  runId: StringComparisonExp
+  simulation: simulationsBoolExp
+  simulationId: StringComparisonExp
+  step: stepsBoolExp
+  stepId: StringComparisonExp
+  time: TimestamptzComparisonExp
+  userId: StringComparisonExp
+  value: Float8ComparisonExp
+}
+"""
+input type for inserting data into table "simpipe.fs_writes_merged"
+"""
+input fsWritesMergedInsertInput {
+  run: runsObjRelInsertInput
+  runId: String
+  simulation: simulationsObjRelInsertInput
+  simulationId: String
+  step: stepsObjRelInsertInput
+  stepId: String
+  time: timestamptz
+  userId: String
+  value: float8
+}
+"aggregate max on columns"
+type fsWritesMergedMaxFields {
+  runId: String
+  simulationId: String
+  stepId: String
+  time: timestamptz
+  userId: String
+  value: float8
+}
+"aggregate min on columns"
+type fsWritesMergedMinFields {
+  runId: String
+  simulationId: String
+  stepId: String
+  time: timestamptz
+  userId: String
+  value: float8
+}
+"""
+Ordering options when selecting data from "simpipe.fs_writes_merged".
+"""
+input fsWritesMergedOrderBy {
+  run: runsOrderBy
+  runId: OrderBy
+  simulation: simulationsOrderBy
+  simulationId: OrderBy
+  step: stepsOrderBy
+  stepId: OrderBy
+  time: OrderBy
+  userId: OrderBy
+  value: OrderBy
+}
+"""
+select columns of table "simpipe.fs_writes_merged"
+"""
+enum fsWritesMergedSelectColumn {
+  "column name"
+  runId
+  "column name"
+  simulationId
+  "column name"
+  stepId
+  "column name"
+  time
+  "column name"
+  userId
+  "column name"
+  value
+}
+"aggregate stddev on columns"
+type fsWritesMergedStddevFields {
+  value: Float
+}
+"aggregate stddev_pop on columns"
+type fsWritesMergedStddev_popFields {
+  value: Float
+}
+"aggregate stddev_samp on columns"
+type fsWritesMergedStddev_sampFields {
+  value: Float
+}
+"""
+Streaming cursor of the table "fsWritesMerged"
+"""
+input fsWritesMergedStreamCursorInput {
+  "Stream column input with initial value"
+  initialValue: fsWritesMergedStreamCursorValueInput!
+  "cursor ordering"
+  ordering: CursorOrdering
+}
+"Initial value of the column from where the streaming should start"
+input fsWritesMergedStreamCursorValueInput {
+  runId: String
+  simulationId: String
+  stepId: String
+  time: timestamptz
+  userId: String
+  value: float8
+}
+"aggregate sum on columns"
+type fsWritesMergedSumFields {
+  value: float8
+}
+"aggregate var_pop on columns"
+type fsWritesMergedVar_popFields {
+  value: Float
+}
+"aggregate var_samp on columns"
+type fsWritesMergedVar_sampFields {
+  value: Float
+}
+"aggregate variance on columns"
+type fsWritesMergedVarianceFields {
+  value: Float
+}
+input fsWritesMerged_aggregate_bool_exp {
+  avg: fsWritesMerged_aggregate_bool_exp_avg
+  corr: fsWritesMerged_aggregate_bool_exp_corr
+  count: fsWritesMerged_aggregate_bool_exp_count
+  covar_samp: fsWritesMerged_aggregate_bool_exp_covar_samp
+  max: fsWritesMerged_aggregate_bool_exp_max
+  min: fsWritesMerged_aggregate_bool_exp_min
+  stddev_samp: fsWritesMerged_aggregate_bool_exp_stddev_samp
+  sum: fsWritesMerged_aggregate_bool_exp_sum
+  var_samp: fsWritesMerged_aggregate_bool_exp_var_samp
+}
+input fsWritesMerged_aggregate_bool_exp_avg {
+  arguments: fsWritesMerged_select_column_fsWritesMerged_aggregate_bool_exp_avg_arguments_columns!
+  distinct: Boolean
+  filter: fsWritesMergedBoolExp
+  predicate: Float8ComparisonExp!
+}
+input fsWritesMerged_aggregate_bool_exp_corr {
+  arguments: fsWritesMerged_aggregate_bool_exp_corr_arguments!
+  distinct: Boolean
+  filter: fsWritesMergedBoolExp
+  predicate: Float8ComparisonExp!
+}
+input fsWritesMerged_aggregate_bool_exp_corr_arguments {
+  X: fsWritesMerged_select_column_fsWritesMerged_aggregate_bool_exp_corr_arguments_columns!
+  Y: fsWritesMerged_select_column_fsWritesMerged_aggregate_bool_exp_corr_arguments_columns!
+}
+input fsWritesMerged_aggregate_bool_exp_count {
+  arguments: [fsWritesMergedSelectColumn!]
+  distinct: Boolean
+  filter: fsWritesMergedBoolExp
+  predicate: IntComparisonExp!
+}
+input fsWritesMerged_aggregate_bool_exp_covar_samp {
+  arguments: fsWritesMerged_aggregate_bool_exp_covar_samp_arguments!
+  distinct: Boolean
+  filter: fsWritesMergedBoolExp
+  predicate: Float8ComparisonExp!
+}
+input fsWritesMerged_aggregate_bool_exp_covar_samp_arguments {
+  X: fsWritesMerged_select_column_fsWritesMerged_aggregate_bool_exp_covar_samp_arguments_columns!
+  Y: fsWritesMerged_select_column_fsWritesMerged_aggregate_bool_exp_covar_samp_arguments_columns!
+}
+input fsWritesMerged_aggregate_bool_exp_max {
+  arguments: fsWritesMerged_select_column_fsWritesMerged_aggregate_bool_exp_max_arguments_columns!
+  distinct: Boolean
+  filter: fsWritesMergedBoolExp
+  predicate: Float8ComparisonExp!
+}
+input fsWritesMerged_aggregate_bool_exp_min {
+  arguments: fsWritesMerged_select_column_fsWritesMerged_aggregate_bool_exp_min_arguments_columns!
+  distinct: Boolean
+  filter: fsWritesMergedBoolExp
+  predicate: Float8ComparisonExp!
+}
+input fsWritesMerged_aggregate_bool_exp_stddev_samp {
+  arguments: fsWritesMerged_select_column_fsWritesMerged_aggregate_bool_exp_stddev_samp_arguments_columns!
+  distinct: Boolean
+  filter: fsWritesMergedBoolExp
+  predicate: Float8ComparisonExp!
+}
+input fsWritesMerged_aggregate_bool_exp_sum {
+  arguments: fsWritesMerged_select_column_fsWritesMerged_aggregate_bool_exp_sum_arguments_columns!
+  distinct: Boolean
+  filter: fsWritesMergedBoolExp
+  predicate: Float8ComparisonExp!
+}
+input fsWritesMerged_aggregate_bool_exp_var_samp {
+  arguments: fsWritesMerged_select_column_fsWritesMerged_aggregate_bool_exp_var_samp_arguments_columns!
+  distinct: Boolean
+  filter: fsWritesMergedBoolExp
+  predicate: Float8ComparisonExp!
+}
+"""
+order by avg() on columns of table "simpipe.fs_writes_merged"
+"""
+input fsWritesMerged_avg_order_by {
+  value: OrderBy
+}
+"""
+order by max() on columns of table "simpipe.fs_writes_merged"
+"""
+input fsWritesMerged_max_order_by {
+  runId: OrderBy
+  simulationId: OrderBy
+  stepId: OrderBy
+  time: OrderBy
+  userId: OrderBy
+  value: OrderBy
+}
+"""
+order by min() on columns of table "simpipe.fs_writes_merged"
+"""
+input fsWritesMerged_min_order_by {
+  runId: OrderBy
+  simulationId: OrderBy
+  stepId: OrderBy
+  time: OrderBy
+  userId: OrderBy
+  value: OrderBy
+}
+"""
+select "fsWritesMerged_aggregate_bool_exp_avg_arguments_columns" columns of table "simpipe.fs_writes_merged"
+"""
+enum fsWritesMerged_select_column_fsWritesMerged_aggregate_bool_exp_avg_arguments_columns {
+  "column name"
+  value
+}
+"""
+select "fsWritesMerged_aggregate_bool_exp_corr_arguments_columns" columns of table "simpipe.fs_writes_merged"
+"""
+enum fsWritesMerged_select_column_fsWritesMerged_aggregate_bool_exp_corr_arguments_columns {
+  "column name"
+  value
+}
+"""
+select "fsWritesMerged_aggregate_bool_exp_covar_samp_arguments_columns" columns of table "simpipe.fs_writes_merged"
+"""
+enum fsWritesMerged_select_column_fsWritesMerged_aggregate_bool_exp_covar_samp_arguments_columns {
+  "column name"
+  value
+}
+"""
+select "fsWritesMerged_aggregate_bool_exp_max_arguments_columns" columns of table "simpipe.fs_writes_merged"
+"""
+enum fsWritesMerged_select_column_fsWritesMerged_aggregate_bool_exp_max_arguments_columns {
+  "column name"
+  value
+}
+"""
+select "fsWritesMerged_aggregate_bool_exp_min_arguments_columns" columns of table "simpipe.fs_writes_merged"
+"""
+enum fsWritesMerged_select_column_fsWritesMerged_aggregate_bool_exp_min_arguments_columns {
+  "column name"
+  value
+}
+"""
+select "fsWritesMerged_aggregate_bool_exp_stddev_samp_arguments_columns" columns of table "simpipe.fs_writes_merged"
+"""
+enum fsWritesMerged_select_column_fsWritesMerged_aggregate_bool_exp_stddev_samp_arguments_columns {
+  "column name"
+  value
+}
+"""
+select "fsWritesMerged_aggregate_bool_exp_sum_arguments_columns" columns of table "simpipe.fs_writes_merged"
+"""
+enum fsWritesMerged_select_column_fsWritesMerged_aggregate_bool_exp_sum_arguments_columns {
+  "column name"
+  value
+}
+"""
+select "fsWritesMerged_aggregate_bool_exp_var_samp_arguments_columns" columns of table "simpipe.fs_writes_merged"
+"""
+enum fsWritesMerged_select_column_fsWritesMerged_aggregate_bool_exp_var_samp_arguments_columns {
+  "column name"
+  value
+}
+"""
+order by stddev() on columns of table "simpipe.fs_writes_merged"
+"""
+input fsWritesMerged_stddev_order_by {
+  value: OrderBy
+}
+"""
+order by stddev_pop() on columns of table "simpipe.fs_writes_merged"
+"""
+input fsWritesMerged_stddev_pop_order_by {
+  value: OrderBy
+}
+"""
+order by stddev_samp() on columns of table "simpipe.fs_writes_merged"
+"""
+input fsWritesMerged_stddev_samp_order_by {
+  value: OrderBy
+}
+"""
+order by sum() on columns of table "simpipe.fs_writes_merged"
+"""
+input fsWritesMerged_sum_order_by {
+  value: OrderBy
+}
+"""
+order by var_pop() on columns of table "simpipe.fs_writes_merged"
+"""
+input fsWritesMerged_var_pop_order_by {
+  value: OrderBy
+}
+"""
+order by var_samp() on columns of table "simpipe.fs_writes_merged"
+"""
+input fsWritesMerged_var_samp_order_by {
+  value: OrderBy
+}
+"""
+order by variance() on columns of table "simpipe.fs_writes_merged"
+"""
+input fsWritesMerged_variance_order_by {
+  value: OrderBy
+}
 scalar jsonb
+"""
+columns and relationships of "simpipe.memory_max_usage_bytes"
+"""
+type memoryMaxUsageBytes {
+  "An object relationship"
+  run: runs
+  runId: String
+  "An object relationship"
+  simulation: simulations
+  simulationId: String
+  "An object relationship"
+  step: steps
+  stepId: String
+  time: timestamptz
+  userId: String
+  value: float8
+}
+"""
+aggregated selection of "simpipe.memory_max_usage_bytes"
+"""
+type memoryMaxUsageBytesAggregate {
+  aggregate: memoryMaxUsageBytesAggregateFields
+  nodes: [memoryMaxUsageBytes!]!
+}
+"""
+aggregate fields of "simpipe.memory_max_usage_bytes"
+"""
+type memoryMaxUsageBytesAggregateFields {
+  avg: memoryMaxUsageBytesAvgFields
+  count(columns: [memoryMaxUsageBytesSelectColumn!], distinct: Boolean): Int!
+  max: memoryMaxUsageBytesMaxFields
+  min: memoryMaxUsageBytesMinFields
+  stddev: memoryMaxUsageBytesStddevFields
+  stddevPop: memoryMaxUsageBytesStddev_popFields
+  stddevSamp: memoryMaxUsageBytesStddev_sampFields
+  sum: memoryMaxUsageBytesSumFields
+  varPop: memoryMaxUsageBytesVar_popFields
+  varSamp: memoryMaxUsageBytesVar_sampFields
+  variance: memoryMaxUsageBytesVarianceFields
+}
+"""
+order by aggregate values of table "simpipe.memory_max_usage_bytes"
+"""
+input memoryMaxUsageBytesAggregateOrderBy {
+  avg: memoryMaxUsageBytes_avg_order_by
+  count: OrderBy
+  max: memoryMaxUsageBytes_max_order_by
+  min: memoryMaxUsageBytes_min_order_by
+  stddev: memoryMaxUsageBytes_stddev_order_by
+  stddev_pop: memoryMaxUsageBytes_stddev_pop_order_by
+  stddev_samp: memoryMaxUsageBytes_stddev_samp_order_by
+  sum: memoryMaxUsageBytes_sum_order_by
+  var_pop: memoryMaxUsageBytes_var_pop_order_by
+  var_samp: memoryMaxUsageBytes_var_samp_order_by
+  variance: memoryMaxUsageBytes_variance_order_by
+}
+"""
+input type for inserting array relation for remote table "simpipe.memory_max_usage_bytes"
+"""
+input memoryMaxUsageBytesArrRelInsertInput {
+  data: [memoryMaxUsageBytesInsertInput!]!
+}
+"aggregate avg on columns"
+type memoryMaxUsageBytesAvgFields {
+  value: Float
+}
+"""
+Boolean expression to filter rows from the table "simpipe.memory_max_usage_bytes". All fields are combined with a logical 'AND'.
+"""
+input memoryMaxUsageBytesBoolExp {
+  _and: [memoryMaxUsageBytesBoolExp!]
+  _not: memoryMaxUsageBytesBoolExp
+  _or: [memoryMaxUsageBytesBoolExp!]
+  run: runsBoolExp
+  runId: StringComparisonExp
+  simulation: simulationsBoolExp
+  simulationId: StringComparisonExp
+  step: stepsBoolExp
+  stepId: StringComparisonExp
+  time: TimestamptzComparisonExp
+  userId: StringComparisonExp
+  value: Float8ComparisonExp
+}
+"""
+input type for inserting data into table "simpipe.memory_max_usage_bytes"
+"""
+input memoryMaxUsageBytesInsertInput {
+  run: runsObjRelInsertInput
+  runId: String
+  simulation: simulationsObjRelInsertInput
+  simulationId: String
+  step: stepsObjRelInsertInput
+  stepId: String
+  time: timestamptz
+  userId: String
+  value: float8
+}
+"aggregate max on columns"
+type memoryMaxUsageBytesMaxFields {
+  runId: String
+  simulationId: String
+  stepId: String
+  time: timestamptz
+  userId: String
+  value: float8
+}
+"aggregate min on columns"
+type memoryMaxUsageBytesMinFields {
+  runId: String
+  simulationId: String
+  stepId: String
+  time: timestamptz
+  userId: String
+  value: float8
+}
+"""
+Ordering options when selecting data from "simpipe.memory_max_usage_bytes".
+"""
+input memoryMaxUsageBytesOrderBy {
+  run: runsOrderBy
+  runId: OrderBy
+  simulation: simulationsOrderBy
+  simulationId: OrderBy
+  step: stepsOrderBy
+  stepId: OrderBy
+  time: OrderBy
+  userId: OrderBy
+  value: OrderBy
+}
+"""
+select columns of table "simpipe.memory_max_usage_bytes"
+"""
+enum memoryMaxUsageBytesSelectColumn {
+  "column name"
+  runId
+  "column name"
+  simulationId
+  "column name"
+  stepId
+  "column name"
+  time
+  "column name"
+  userId
+  "column name"
+  value
+}
+"aggregate stddev on columns"
+type memoryMaxUsageBytesStddevFields {
+  value: Float
+}
+"aggregate stddev_pop on columns"
+type memoryMaxUsageBytesStddev_popFields {
+  value: Float
+}
+"aggregate stddev_samp on columns"
+type memoryMaxUsageBytesStddev_sampFields {
+  value: Float
+}
+"""
+Streaming cursor of the table "memoryMaxUsageBytes"
+"""
+input memoryMaxUsageBytesStreamCursorInput {
+  "Stream column input with initial value"
+  initialValue: memoryMaxUsageBytesStreamCursorValueInput!
+  "cursor ordering"
+  ordering: CursorOrdering
+}
+"Initial value of the column from where the streaming should start"
+input memoryMaxUsageBytesStreamCursorValueInput {
+  runId: String
+  simulationId: String
+  stepId: String
+  time: timestamptz
+  userId: String
+  value: float8
+}
+"aggregate sum on columns"
+type memoryMaxUsageBytesSumFields {
+  value: float8
+}
+"aggregate var_pop on columns"
+type memoryMaxUsageBytesVar_popFields {
+  value: Float
+}
+"aggregate var_samp on columns"
+type memoryMaxUsageBytesVar_sampFields {
+  value: Float
+}
+"aggregate variance on columns"
+type memoryMaxUsageBytesVarianceFields {
+  value: Float
+}
+input memoryMaxUsageBytes_aggregate_bool_exp {
+  avg: memoryMaxUsageBytes_aggregate_bool_exp_avg
+  corr: memoryMaxUsageBytes_aggregate_bool_exp_corr
+  count: memoryMaxUsageBytes_aggregate_bool_exp_count
+  covar_samp: memoryMaxUsageBytes_aggregate_bool_exp_covar_samp
+  max: memoryMaxUsageBytes_aggregate_bool_exp_max
+  min: memoryMaxUsageBytes_aggregate_bool_exp_min
+  stddev_samp: memoryMaxUsageBytes_aggregate_bool_exp_stddev_samp
+  sum: memoryMaxUsageBytes_aggregate_bool_exp_sum
+  var_samp: memoryMaxUsageBytes_aggregate_bool_exp_var_samp
+}
+input memoryMaxUsageBytes_aggregate_bool_exp_avg {
+  arguments: memoryMaxUsageBytes_select_column_memoryMaxUsageBytes_aggregate_bool_exp_avg_arguments_columns!
+  distinct: Boolean
+  filter: memoryMaxUsageBytesBoolExp
+  predicate: Float8ComparisonExp!
+}
+input memoryMaxUsageBytes_aggregate_bool_exp_corr {
+  arguments: memoryMaxUsageBytes_aggregate_bool_exp_corr_arguments!
+  distinct: Boolean
+  filter: memoryMaxUsageBytesBoolExp
+  predicate: Float8ComparisonExp!
+}
+input memoryMaxUsageBytes_aggregate_bool_exp_corr_arguments {
+  X: memoryMaxUsageBytes_select_column_memoryMaxUsageBytes_aggregate_bool_exp_corr_arguments_columns!
+  Y: memoryMaxUsageBytes_select_column_memoryMaxUsageBytes_aggregate_bool_exp_corr_arguments_columns!
+}
+input memoryMaxUsageBytes_aggregate_bool_exp_count {
+  arguments: [memoryMaxUsageBytesSelectColumn!]
+  distinct: Boolean
+  filter: memoryMaxUsageBytesBoolExp
+  predicate: IntComparisonExp!
+}
+input memoryMaxUsageBytes_aggregate_bool_exp_covar_samp {
+  arguments: memoryMaxUsageBytes_aggregate_bool_exp_covar_samp_arguments!
+  distinct: Boolean
+  filter: memoryMaxUsageBytesBoolExp
+  predicate: Float8ComparisonExp!
+}
+input memoryMaxUsageBytes_aggregate_bool_exp_covar_samp_arguments {
+  X: memoryMaxUsageBytes_select_column_memoryMaxUsageBytes_aggregate_bool_exp_covar_samp_arguments_columns!
+  Y: memoryMaxUsageBytes_select_column_memoryMaxUsageBytes_aggregate_bool_exp_covar_samp_arguments_columns!
+}
+input memoryMaxUsageBytes_aggregate_bool_exp_max {
+  arguments: memoryMaxUsageBytes_select_column_memoryMaxUsageBytes_aggregate_bool_exp_max_arguments_columns!
+  distinct: Boolean
+  filter: memoryMaxUsageBytesBoolExp
+  predicate: Float8ComparisonExp!
+}
+input memoryMaxUsageBytes_aggregate_bool_exp_min {
+  arguments: memoryMaxUsageBytes_select_column_memoryMaxUsageBytes_aggregate_bool_exp_min_arguments_columns!
+  distinct: Boolean
+  filter: memoryMaxUsageBytesBoolExp
+  predicate: Float8ComparisonExp!
+}
+input memoryMaxUsageBytes_aggregate_bool_exp_stddev_samp {
+  arguments: memoryMaxUsageBytes_select_column_memoryMaxUsageBytes_aggregate_bool_exp_stddev_samp_arguments_columns!
+  distinct: Boolean
+  filter: memoryMaxUsageBytesBoolExp
+  predicate: Float8ComparisonExp!
+}
+input memoryMaxUsageBytes_aggregate_bool_exp_sum {
+  arguments: memoryMaxUsageBytes_select_column_memoryMaxUsageBytes_aggregate_bool_exp_sum_arguments_columns!
+  distinct: Boolean
+  filter: memoryMaxUsageBytesBoolExp
+  predicate: Float8ComparisonExp!
+}
+input memoryMaxUsageBytes_aggregate_bool_exp_var_samp {
+  arguments: memoryMaxUsageBytes_select_column_memoryMaxUsageBytes_aggregate_bool_exp_var_samp_arguments_columns!
+  distinct: Boolean
+  filter: memoryMaxUsageBytesBoolExp
+  predicate: Float8ComparisonExp!
+}
+"""
+order by avg() on columns of table "simpipe.memory_max_usage_bytes"
+"""
+input memoryMaxUsageBytes_avg_order_by {
+  value: OrderBy
+}
+"""
+order by max() on columns of table "simpipe.memory_max_usage_bytes"
+"""
+input memoryMaxUsageBytes_max_order_by {
+  runId: OrderBy
+  simulationId: OrderBy
+  stepId: OrderBy
+  time: OrderBy
+  userId: OrderBy
+  value: OrderBy
+}
+"""
+order by min() on columns of table "simpipe.memory_max_usage_bytes"
+"""
+input memoryMaxUsageBytes_min_order_by {
+  runId: OrderBy
+  simulationId: OrderBy
+  stepId: OrderBy
+  time: OrderBy
+  userId: OrderBy
+  value: OrderBy
+}
+"""
+select "memoryMaxUsageBytes_aggregate_bool_exp_avg_arguments_columns" columns of table "simpipe.memory_max_usage_bytes"
+"""
+enum memoryMaxUsageBytes_select_column_memoryMaxUsageBytes_aggregate_bool_exp_avg_arguments_columns {
+  "column name"
+  value
+}
+"""
+select "memoryMaxUsageBytes_aggregate_bool_exp_corr_arguments_columns" columns of table "simpipe.memory_max_usage_bytes"
+"""
+enum memoryMaxUsageBytes_select_column_memoryMaxUsageBytes_aggregate_bool_exp_corr_arguments_columns {
+  "column name"
+  value
+}
+"""
+select "memoryMaxUsageBytes_aggregate_bool_exp_covar_samp_arguments_columns" columns of table "simpipe.memory_max_usage_bytes"
+"""
+enum memoryMaxUsageBytes_select_column_memoryMaxUsageBytes_aggregate_bool_exp_covar_samp_arguments_columns {
+  "column name"
+  value
+}
+"""
+select "memoryMaxUsageBytes_aggregate_bool_exp_max_arguments_columns" columns of table "simpipe.memory_max_usage_bytes"
+"""
+enum memoryMaxUsageBytes_select_column_memoryMaxUsageBytes_aggregate_bool_exp_max_arguments_columns {
+  "column name"
+  value
+}
+"""
+select "memoryMaxUsageBytes_aggregate_bool_exp_min_arguments_columns" columns of table "simpipe.memory_max_usage_bytes"
+"""
+enum memoryMaxUsageBytes_select_column_memoryMaxUsageBytes_aggregate_bool_exp_min_arguments_columns {
+  "column name"
+  value
+}
+"""
+select "memoryMaxUsageBytes_aggregate_bool_exp_stddev_samp_arguments_columns" columns of table "simpipe.memory_max_usage_bytes"
+"""
+enum memoryMaxUsageBytes_select_column_memoryMaxUsageBytes_aggregate_bool_exp_stddev_samp_arguments_columns {
+  "column name"
+  value
+}
+"""
+select "memoryMaxUsageBytes_aggregate_bool_exp_sum_arguments_columns" columns of table "simpipe.memory_max_usage_bytes"
+"""
+enum memoryMaxUsageBytes_select_column_memoryMaxUsageBytes_aggregate_bool_exp_sum_arguments_columns {
+  "column name"
+  value
+}
+"""
+select "memoryMaxUsageBytes_aggregate_bool_exp_var_samp_arguments_columns" columns of table "simpipe.memory_max_usage_bytes"
+"""
+enum memoryMaxUsageBytes_select_column_memoryMaxUsageBytes_aggregate_bool_exp_var_samp_arguments_columns {
+  "column name"
+  value
+}
+"""
+order by stddev() on columns of table "simpipe.memory_max_usage_bytes"
+"""
+input memoryMaxUsageBytes_stddev_order_by {
+  value: OrderBy
+}
+"""
+order by stddev_pop() on columns of table "simpipe.memory_max_usage_bytes"
+"""
+input memoryMaxUsageBytes_stddev_pop_order_by {
+  value: OrderBy
+}
+"""
+order by stddev_samp() on columns of table "simpipe.memory_max_usage_bytes"
+"""
+input memoryMaxUsageBytes_stddev_samp_order_by {
+  value: OrderBy
+}
+"""
+order by sum() on columns of table "simpipe.memory_max_usage_bytes"
+"""
+input memoryMaxUsageBytes_sum_order_by {
+  value: OrderBy
+}
+"""
+order by var_pop() on columns of table "simpipe.memory_max_usage_bytes"
+"""
+input memoryMaxUsageBytes_var_pop_order_by {
+  value: OrderBy
+}
+"""
+order by var_samp() on columns of table "simpipe.memory_max_usage_bytes"
+"""
+input memoryMaxUsageBytes_var_samp_order_by {
+  value: OrderBy
+}
+"""
+order by variance() on columns of table "simpipe.memory_max_usage_bytes"
+"""
+input memoryMaxUsageBytes_variance_order_by {
+  value: OrderBy
+}
+"""
+columns and relationships of "simpipe.memory_usage_bytes"
+"""
+type memoryUsageBytes {
+  "An object relationship"
+  run: runs
+  runId: String
+  "An object relationship"
+  simulation: simulations
+  simulationId: String
+  "An object relationship"
+  step: steps
+  stepId: String
+  time: timestamptz
+  userId: String
+  value: float8
+}
+"""
+aggregated selection of "simpipe.memory_usage_bytes"
+"""
+type memoryUsageBytesAggregate {
+  aggregate: memoryUsageBytesAggregateFields
+  nodes: [memoryUsageBytes!]!
+}
+"""
+aggregate fields of "simpipe.memory_usage_bytes"
+"""
+type memoryUsageBytesAggregateFields {
+  avg: memoryUsageBytesAvgFields
+  count(columns: [memoryUsageBytesSelectColumn!], distinct: Boolean): Int!
+  max: memoryUsageBytesMaxFields
+  min: memoryUsageBytesMinFields
+  stddev: memoryUsageBytesStddevFields
+  stddevPop: memoryUsageBytesStddev_popFields
+  stddevSamp: memoryUsageBytesStddev_sampFields
+  sum: memoryUsageBytesSumFields
+  varPop: memoryUsageBytesVar_popFields
+  varSamp: memoryUsageBytesVar_sampFields
+  variance: memoryUsageBytesVarianceFields
+}
+"""
+order by aggregate values of table "simpipe.memory_usage_bytes"
+"""
+input memoryUsageBytesAggregateOrderBy {
+  avg: memoryUsageBytes_avg_order_by
+  count: OrderBy
+  max: memoryUsageBytes_max_order_by
+  min: memoryUsageBytes_min_order_by
+  stddev: memoryUsageBytes_stddev_order_by
+  stddev_pop: memoryUsageBytes_stddev_pop_order_by
+  stddev_samp: memoryUsageBytes_stddev_samp_order_by
+  sum: memoryUsageBytes_sum_order_by
+  var_pop: memoryUsageBytes_var_pop_order_by
+  var_samp: memoryUsageBytes_var_samp_order_by
+  variance: memoryUsageBytes_variance_order_by
+}
+"""
+input type for inserting array relation for remote table "simpipe.memory_usage_bytes"
+"""
+input memoryUsageBytesArrRelInsertInput {
+  data: [memoryUsageBytesInsertInput!]!
+}
+"aggregate avg on columns"
+type memoryUsageBytesAvgFields {
+  value: Float
+}
+"""
+Boolean expression to filter rows from the table "simpipe.memory_usage_bytes". All fields are combined with a logical 'AND'.
+"""
+input memoryUsageBytesBoolExp {
+  _and: [memoryUsageBytesBoolExp!]
+  _not: memoryUsageBytesBoolExp
+  _or: [memoryUsageBytesBoolExp!]
+  run: runsBoolExp
+  runId: StringComparisonExp
+  simulation: simulationsBoolExp
+  simulationId: StringComparisonExp
+  step: stepsBoolExp
+  stepId: StringComparisonExp
+  time: TimestamptzComparisonExp
+  userId: StringComparisonExp
+  value: Float8ComparisonExp
+}
+"""
+input type for inserting data into table "simpipe.memory_usage_bytes"
+"""
+input memoryUsageBytesInsertInput {
+  run: runsObjRelInsertInput
+  runId: String
+  simulation: simulationsObjRelInsertInput
+  simulationId: String
+  step: stepsObjRelInsertInput
+  stepId: String
+  time: timestamptz
+  userId: String
+  value: float8
+}
+"aggregate max on columns"
+type memoryUsageBytesMaxFields {
+  runId: String
+  simulationId: String
+  stepId: String
+  time: timestamptz
+  userId: String
+  value: float8
+}
+"aggregate min on columns"
+type memoryUsageBytesMinFields {
+  runId: String
+  simulationId: String
+  stepId: String
+  time: timestamptz
+  userId: String
+  value: float8
+}
+"""
+Ordering options when selecting data from "simpipe.memory_usage_bytes".
+"""
+input memoryUsageBytesOrderBy {
+  run: runsOrderBy
+  runId: OrderBy
+  simulation: simulationsOrderBy
+  simulationId: OrderBy
+  step: stepsOrderBy
+  stepId: OrderBy
+  time: OrderBy
+  userId: OrderBy
+  value: OrderBy
+}
+"""
+select columns of table "simpipe.memory_usage_bytes"
+"""
+enum memoryUsageBytesSelectColumn {
+  "column name"
+  runId
+  "column name"
+  simulationId
+  "column name"
+  stepId
+  "column name"
+  time
+  "column name"
+  userId
+  "column name"
+  value
+}
+"aggregate stddev on columns"
+type memoryUsageBytesStddevFields {
+  value: Float
+}
+"aggregate stddev_pop on columns"
+type memoryUsageBytesStddev_popFields {
+  value: Float
+}
+"aggregate stddev_samp on columns"
+type memoryUsageBytesStddev_sampFields {
+  value: Float
+}
+"""
+Streaming cursor of the table "memoryUsageBytes"
+"""
+input memoryUsageBytesStreamCursorInput {
+  "Stream column input with initial value"
+  initialValue: memoryUsageBytesStreamCursorValueInput!
+  "cursor ordering"
+  ordering: CursorOrdering
+}
+"Initial value of the column from where the streaming should start"
+input memoryUsageBytesStreamCursorValueInput {
+  runId: String
+  simulationId: String
+  stepId: String
+  time: timestamptz
+  userId: String
+  value: float8
+}
+"aggregate sum on columns"
+type memoryUsageBytesSumFields {
+  value: float8
+}
+"aggregate var_pop on columns"
+type memoryUsageBytesVar_popFields {
+  value: Float
+}
+"aggregate var_samp on columns"
+type memoryUsageBytesVar_sampFields {
+  value: Float
+}
+"aggregate variance on columns"
+type memoryUsageBytesVarianceFields {
+  value: Float
+}
+input memoryUsageBytes_aggregate_bool_exp {
+  avg: memoryUsageBytes_aggregate_bool_exp_avg
+  corr: memoryUsageBytes_aggregate_bool_exp_corr
+  count: memoryUsageBytes_aggregate_bool_exp_count
+  covar_samp: memoryUsageBytes_aggregate_bool_exp_covar_samp
+  max: memoryUsageBytes_aggregate_bool_exp_max
+  min: memoryUsageBytes_aggregate_bool_exp_min
+  stddev_samp: memoryUsageBytes_aggregate_bool_exp_stddev_samp
+  sum: memoryUsageBytes_aggregate_bool_exp_sum
+  var_samp: memoryUsageBytes_aggregate_bool_exp_var_samp
+}
+input memoryUsageBytes_aggregate_bool_exp_avg {
+  arguments: memoryUsageBytes_select_column_memoryUsageBytes_aggregate_bool_exp_avg_arguments_columns!
+  distinct: Boolean
+  filter: memoryUsageBytesBoolExp
+  predicate: Float8ComparisonExp!
+}
+input memoryUsageBytes_aggregate_bool_exp_corr {
+  arguments: memoryUsageBytes_aggregate_bool_exp_corr_arguments!
+  distinct: Boolean
+  filter: memoryUsageBytesBoolExp
+  predicate: Float8ComparisonExp!
+}
+input memoryUsageBytes_aggregate_bool_exp_corr_arguments {
+  X: memoryUsageBytes_select_column_memoryUsageBytes_aggregate_bool_exp_corr_arguments_columns!
+  Y: memoryUsageBytes_select_column_memoryUsageBytes_aggregate_bool_exp_corr_arguments_columns!
+}
+input memoryUsageBytes_aggregate_bool_exp_count {
+  arguments: [memoryUsageBytesSelectColumn!]
+  distinct: Boolean
+  filter: memoryUsageBytesBoolExp
+  predicate: IntComparisonExp!
+}
+input memoryUsageBytes_aggregate_bool_exp_covar_samp {
+  arguments: memoryUsageBytes_aggregate_bool_exp_covar_samp_arguments!
+  distinct: Boolean
+  filter: memoryUsageBytesBoolExp
+  predicate: Float8ComparisonExp!
+}
+input memoryUsageBytes_aggregate_bool_exp_covar_samp_arguments {
+  X: memoryUsageBytes_select_column_memoryUsageBytes_aggregate_bool_exp_covar_samp_arguments_columns!
+  Y: memoryUsageBytes_select_column_memoryUsageBytes_aggregate_bool_exp_covar_samp_arguments_columns!
+}
+input memoryUsageBytes_aggregate_bool_exp_max {
+  arguments: memoryUsageBytes_select_column_memoryUsageBytes_aggregate_bool_exp_max_arguments_columns!
+  distinct: Boolean
+  filter: memoryUsageBytesBoolExp
+  predicate: Float8ComparisonExp!
+}
+input memoryUsageBytes_aggregate_bool_exp_min {
+  arguments: memoryUsageBytes_select_column_memoryUsageBytes_aggregate_bool_exp_min_arguments_columns!
+  distinct: Boolean
+  filter: memoryUsageBytesBoolExp
+  predicate: Float8ComparisonExp!
+}
+input memoryUsageBytes_aggregate_bool_exp_stddev_samp {
+  arguments: memoryUsageBytes_select_column_memoryUsageBytes_aggregate_bool_exp_stddev_samp_arguments_columns!
+  distinct: Boolean
+  filter: memoryUsageBytesBoolExp
+  predicate: Float8ComparisonExp!
+}
+input memoryUsageBytes_aggregate_bool_exp_sum {
+  arguments: memoryUsageBytes_select_column_memoryUsageBytes_aggregate_bool_exp_sum_arguments_columns!
+  distinct: Boolean
+  filter: memoryUsageBytesBoolExp
+  predicate: Float8ComparisonExp!
+}
+input memoryUsageBytes_aggregate_bool_exp_var_samp {
+  arguments: memoryUsageBytes_select_column_memoryUsageBytes_aggregate_bool_exp_var_samp_arguments_columns!
+  distinct: Boolean
+  filter: memoryUsageBytesBoolExp
+  predicate: Float8ComparisonExp!
+}
+"""
+order by avg() on columns of table "simpipe.memory_usage_bytes"
+"""
+input memoryUsageBytes_avg_order_by {
+  value: OrderBy
+}
+"""
+order by max() on columns of table "simpipe.memory_usage_bytes"
+"""
+input memoryUsageBytes_max_order_by {
+  runId: OrderBy
+  simulationId: OrderBy
+  stepId: OrderBy
+  time: OrderBy
+  userId: OrderBy
+  value: OrderBy
+}
+"""
+order by min() on columns of table "simpipe.memory_usage_bytes"
+"""
+input memoryUsageBytes_min_order_by {
+  runId: OrderBy
+  simulationId: OrderBy
+  stepId: OrderBy
+  time: OrderBy
+  userId: OrderBy
+  value: OrderBy
+}
+"""
+select "memoryUsageBytes_aggregate_bool_exp_avg_arguments_columns" columns of table "simpipe.memory_usage_bytes"
+"""
+enum memoryUsageBytes_select_column_memoryUsageBytes_aggregate_bool_exp_avg_arguments_columns {
+  "column name"
+  value
+}
+"""
+select "memoryUsageBytes_aggregate_bool_exp_corr_arguments_columns" columns of table "simpipe.memory_usage_bytes"
+"""
+enum memoryUsageBytes_select_column_memoryUsageBytes_aggregate_bool_exp_corr_arguments_columns {
+  "column name"
+  value
+}
+"""
+select "memoryUsageBytes_aggregate_bool_exp_covar_samp_arguments_columns" columns of table "simpipe.memory_usage_bytes"
+"""
+enum memoryUsageBytes_select_column_memoryUsageBytes_aggregate_bool_exp_covar_samp_arguments_columns {
+  "column name"
+  value
+}
+"""
+select "memoryUsageBytes_aggregate_bool_exp_max_arguments_columns" columns of table "simpipe.memory_usage_bytes"
+"""
+enum memoryUsageBytes_select_column_memoryUsageBytes_aggregate_bool_exp_max_arguments_columns {
+  "column name"
+  value
+}
+"""
+select "memoryUsageBytes_aggregate_bool_exp_min_arguments_columns" columns of table "simpipe.memory_usage_bytes"
+"""
+enum memoryUsageBytes_select_column_memoryUsageBytes_aggregate_bool_exp_min_arguments_columns {
+  "column name"
+  value
+}
+"""
+select "memoryUsageBytes_aggregate_bool_exp_stddev_samp_arguments_columns" columns of table "simpipe.memory_usage_bytes"
+"""
+enum memoryUsageBytes_select_column_memoryUsageBytes_aggregate_bool_exp_stddev_samp_arguments_columns {
+  "column name"
+  value
+}
+"""
+select "memoryUsageBytes_aggregate_bool_exp_sum_arguments_columns" columns of table "simpipe.memory_usage_bytes"
+"""
+enum memoryUsageBytes_select_column_memoryUsageBytes_aggregate_bool_exp_sum_arguments_columns {
+  "column name"
+  value
+}
+"""
+select "memoryUsageBytes_aggregate_bool_exp_var_samp_arguments_columns" columns of table "simpipe.memory_usage_bytes"
+"""
+enum memoryUsageBytes_select_column_memoryUsageBytes_aggregate_bool_exp_var_samp_arguments_columns {
+  "column name"
+  value
+}
+"""
+order by stddev() on columns of table "simpipe.memory_usage_bytes"
+"""
+input memoryUsageBytes_stddev_order_by {
+  value: OrderBy
+}
+"""
+order by stddev_pop() on columns of table "simpipe.memory_usage_bytes"
+"""
+input memoryUsageBytes_stddev_pop_order_by {
+  value: OrderBy
+}
+"""
+order by stddev_samp() on columns of table "simpipe.memory_usage_bytes"
+"""
+input memoryUsageBytes_stddev_samp_order_by {
+  value: OrderBy
+}
+"""
+order by sum() on columns of table "simpipe.memory_usage_bytes"
+"""
+input memoryUsageBytes_sum_order_by {
+  value: OrderBy
+}
+"""
+order by var_pop() on columns of table "simpipe.memory_usage_bytes"
+"""
+input memoryUsageBytes_var_pop_order_by {
+  value: OrderBy
+}
+"""
+order by var_samp() on columns of table "simpipe.memory_usage_bytes"
+"""
+input memoryUsageBytes_var_samp_order_by {
+  value: OrderBy
+}
+"""
+order by variance() on columns of table "simpipe.memory_usage_bytes"
+"""
+input memoryUsageBytes_variance_order_by {
+  value: OrderBy
+}
 "mutation root"
 type mutation_root {
-  Create_Run_WithInput(env_list: [[String]], name: String, sampleInput: [[String]], simulation_id: String, timeout_values: [Int]): Run
-  Start_Run(run_id: uuid): Run
-  Stop_Run(run_id: uuid): Run
+  " Cancel a run, if the run is running it will be stopped "
+  cancelRun(runId: uuid!): Run
+  " Create a run, but does not start it "
+  createRun(run: CreateRunInput!): Run!
   """
   insert a single row into the table: "simpipe.simulations"
   """
@@ -1380,7 +2797,7 @@ type mutation_root {
   """
   delete single row from the table: "simpipe.runs"
   """
-  deleteRunsByPk(runId: uuid!): runs
+  deleteRunsByPk("UUID of the run, random by default" runId: uuid!): runs
   """
   delete data from the table: "simpipe.envs"
   """
@@ -1388,7 +2805,7 @@ type mutation_root {
   """
   delete single row from the table: "simpipe.envs"
   """
-  deleteSimpipeEnvsByPk(envId: Int!): SimpipeEnvs
+  deleteSimpipeEnvsByPk("UUID of the env, random by default" envId: uuid!): SimpipeEnvs
   """
   delete data from the table: "simpipe.logs"
   """
@@ -1396,15 +2813,7 @@ type mutation_root {
   """
   delete single row from the table: "simpipe.logs"
   """
-  deleteSimpipeLogsByPk(stepId: uuid!): SimpipeLogs
-  """
-  delete data from the table: "simpipe.resource_usage"
-  """
-  deleteSimpipeResourceUsage("filter the rows which have to be deleted" where: SimpipeResourceUsageBoolExp!): SimpipeResourceUsageMutationResponse
-  """
-  delete single row from the table: "simpipe.resource_usage"
-  """
-  deleteSimpipeResourceUsageByPk(id: bigint!): SimpipeResourceUsage
+  deleteSimpipeLogsByPk("UUID of the step, must exist in the steps table" stepId: uuid!): SimpipeLogs
   """
   delete data from the table: "simpipe.run_status"
   """
@@ -1424,7 +2833,7 @@ type mutation_root {
   """
   delete single row from the table: "simpipe.simulations"
   """
-  deleteSimulation("uuid of the simulation" simulationId: uuid!): simulations
+  deleteSimulation("UUID of the simulation, random by default" simulationId: uuid!): simulations
   """
   delete data from the table: "simpipe.simulations"
   """
@@ -1436,7 +2845,7 @@ type mutation_root {
   """
   delete single row from the table: "simpipe.steps"
   """
-  deleteStepsByPk(stepId: uuid!): steps
+  deleteStepsByPk("UUID of the step, random by default" stepId: uuid!): steps
   """
   insert data into the table: "simpipe.runs"
   """
@@ -1462,14 +2871,6 @@ type mutation_root {
   """
   insertSimpipeLogsOne("the row to be inserted" object: SimpipeLogsInsertInput!, "upsert condition" onConflict: SimpipeLogsOnConflict): SimpipeLogs
   """
-  insert data into the table: "simpipe.resource_usage"
-  """
-  insertSimpipeResourceUsage("the rows to be inserted" objects: [SimpipeResourceUsageInsertInput!]!, "upsert condition" onConflict: SimpipeResourceUsageOnConflict): SimpipeResourceUsageMutationResponse
-  """
-  insert a single row into the table: "simpipe.resource_usage"
-  """
-  insertSimpipeResourceUsageOne("the row to be inserted" object: SimpipeResourceUsageInsertInput!, "upsert condition" onConflict: SimpipeResourceUsageOnConflict): SimpipeResourceUsage
-  """
   insert data into the table: "simpipe.run_status"
   """
   insertSimpipeRunStatus("the rows to be inserted" objects: [SimpipeRunStatusInsertInput!]!, "upsert condition" onConflict: SimpipeRunStatusOnConflict): SimpipeRunStatusMutationResponse
@@ -1493,6 +2894,8 @@ type mutation_root {
   insert a single row into the table: "simpipe.steps"
   """
   insertStepsOne("the row to be inserted" object: stepsInsertInput!, "upsert condition" onConflict: stepsOnConflict): steps
+  " Start a run, if other runs are running this run will wait in the queue "
+  startRun(runId: uuid!): Run
   """
   update data of the table: "simpipe.runs"
   """
@@ -1508,11 +2911,11 @@ type mutation_root {
   """
   update data of the table: "simpipe.envs"
   """
-  updateSimpipeEnvs("increments the numeric columns with given value of the filtered values" _inc: SimpipeEnvsIncInput, "sets the columns of the filtered rows to the given values" _set: SimpipeEnvsSetInput, "filter the rows which have to be updated" where: SimpipeEnvsBoolExp!): SimpipeEnvsMutationResponse
+  updateSimpipeEnvs("sets the columns of the filtered rows to the given values" _set: SimpipeEnvsSetInput, "filter the rows which have to be updated" where: SimpipeEnvsBoolExp!): SimpipeEnvsMutationResponse
   """
   update single row of the table: "simpipe.envs"
   """
-  updateSimpipeEnvsByPk("increments the numeric columns with given value of the filtered values" _inc: SimpipeEnvsIncInput, "sets the columns of the filtered rows to the given values" _set: SimpipeEnvsSetInput, pk_columns: SimpipeEnvsPkColumnsInput!): SimpipeEnvs
+  updateSimpipeEnvsByPk("sets the columns of the filtered rows to the given values" _set: SimpipeEnvsSetInput, pk_columns: SimpipeEnvsPkColumnsInput!): SimpipeEnvs
   """
   update multiples rows of table: "simpipe.envs"
   """
@@ -1520,27 +2923,15 @@ type mutation_root {
   """
   update data of the table: "simpipe.logs"
   """
-  updateSimpipeLogs("increments the numeric columns with given value of the filtered values" _inc: SimpipeLogsIncInput, "sets the columns of the filtered rows to the given values" _set: SimpipeLogsSetInput, "filter the rows which have to be updated" where: SimpipeLogsBoolExp!): SimpipeLogsMutationResponse
+  updateSimpipeLogs("sets the columns of the filtered rows to the given values" _set: SimpipeLogsSetInput, "filter the rows which have to be updated" where: SimpipeLogsBoolExp!): SimpipeLogsMutationResponse
   """
   update single row of the table: "simpipe.logs"
   """
-  updateSimpipeLogsByPk("increments the numeric columns with given value of the filtered values" _inc: SimpipeLogsIncInput, "sets the columns of the filtered rows to the given values" _set: SimpipeLogsSetInput, pk_columns: SimpipeLogsPkColumnsInput!): SimpipeLogs
+  updateSimpipeLogsByPk("sets the columns of the filtered rows to the given values" _set: SimpipeLogsSetInput, pk_columns: SimpipeLogsPkColumnsInput!): SimpipeLogs
   """
   update multiples rows of table: "simpipe.logs"
   """
   updateSimpipeLogsMany("updates to execute, in order" updates: [SimpipeLogsUpdates!]!): [SimpipeLogsMutationResponse]
-  """
-  update data of the table: "simpipe.resource_usage"
-  """
-  updateSimpipeResourceUsage("increments the numeric columns with given value of the filtered values" _inc: SimpipeResourceUsageIncInput, "sets the columns of the filtered rows to the given values" _set: SimpipeResourceUsageSetInput, "filter the rows which have to be updated" where: SimpipeResourceUsageBoolExp!): SimpipeResourceUsageMutationResponse
-  """
-  update single row of the table: "simpipe.resource_usage"
-  """
-  updateSimpipeResourceUsageByPk("increments the numeric columns with given value of the filtered values" _inc: SimpipeResourceUsageIncInput, "sets the columns of the filtered rows to the given values" _set: SimpipeResourceUsageSetInput, pk_columns: SimpipeResourceUsagePkColumnsInput!): SimpipeResourceUsage
-  """
-  update multiples rows of table: "simpipe.resource_usage"
-  """
-  updateSimpipeResourceUsageMany("updates to execute, in order" updates: [SimpipeResourceUsageUpdates!]!): [SimpipeResourceUsageMutationResponse]
   """
   update data of the table: "simpipe.run_status"
   """
@@ -1590,27 +2981,829 @@ type mutation_root {
   """
   updateStepsMany("updates to execute, in order" updates: [stepsUpdates!]!): [stepsMutationResponse]
 }
-scalar numeric
+"""
+columns and relationships of "simpipe.network_received_bytes"
+"""
+type networkReceivedBytes {
+  "An object relationship"
+  run: runs
+  runId: String
+  "An object relationship"
+  simulation: simulations
+  simulationId: String
+  "An object relationship"
+  step: steps
+  stepId: String
+  time: timestamptz
+  userId: String
+  value: float8
+}
+"""
+aggregated selection of "simpipe.network_received_bytes"
+"""
+type networkReceivedBytesAggregate {
+  aggregate: networkReceivedBytesAggregateFields
+  nodes: [networkReceivedBytes!]!
+}
+"""
+aggregate fields of "simpipe.network_received_bytes"
+"""
+type networkReceivedBytesAggregateFields {
+  avg: networkReceivedBytesAvgFields
+  count(columns: [networkReceivedBytesSelectColumn!], distinct: Boolean): Int!
+  max: networkReceivedBytesMaxFields
+  min: networkReceivedBytesMinFields
+  stddev: networkReceivedBytesStddevFields
+  stddevPop: networkReceivedBytesStddev_popFields
+  stddevSamp: networkReceivedBytesStddev_sampFields
+  sum: networkReceivedBytesSumFields
+  varPop: networkReceivedBytesVar_popFields
+  varSamp: networkReceivedBytesVar_sampFields
+  variance: networkReceivedBytesVarianceFields
+}
+"""
+order by aggregate values of table "simpipe.network_received_bytes"
+"""
+input networkReceivedBytesAggregateOrderBy {
+  avg: networkReceivedBytes_avg_order_by
+  count: OrderBy
+  max: networkReceivedBytes_max_order_by
+  min: networkReceivedBytes_min_order_by
+  stddev: networkReceivedBytes_stddev_order_by
+  stddev_pop: networkReceivedBytes_stddev_pop_order_by
+  stddev_samp: networkReceivedBytes_stddev_samp_order_by
+  sum: networkReceivedBytes_sum_order_by
+  var_pop: networkReceivedBytes_var_pop_order_by
+  var_samp: networkReceivedBytes_var_samp_order_by
+  variance: networkReceivedBytes_variance_order_by
+}
+"""
+input type for inserting array relation for remote table "simpipe.network_received_bytes"
+"""
+input networkReceivedBytesArrRelInsertInput {
+  data: [networkReceivedBytesInsertInput!]!
+}
+"aggregate avg on columns"
+type networkReceivedBytesAvgFields {
+  value: Float
+}
+"""
+Boolean expression to filter rows from the table "simpipe.network_received_bytes". All fields are combined with a logical 'AND'.
+"""
+input networkReceivedBytesBoolExp {
+  _and: [networkReceivedBytesBoolExp!]
+  _not: networkReceivedBytesBoolExp
+  _or: [networkReceivedBytesBoolExp!]
+  run: runsBoolExp
+  runId: StringComparisonExp
+  simulation: simulationsBoolExp
+  simulationId: StringComparisonExp
+  step: stepsBoolExp
+  stepId: StringComparisonExp
+  time: TimestamptzComparisonExp
+  userId: StringComparisonExp
+  value: Float8ComparisonExp
+}
+"""
+input type for inserting data into table "simpipe.network_received_bytes"
+"""
+input networkReceivedBytesInsertInput {
+  run: runsObjRelInsertInput
+  runId: String
+  simulation: simulationsObjRelInsertInput
+  simulationId: String
+  step: stepsObjRelInsertInput
+  stepId: String
+  time: timestamptz
+  userId: String
+  value: float8
+}
+"aggregate max on columns"
+type networkReceivedBytesMaxFields {
+  runId: String
+  simulationId: String
+  stepId: String
+  time: timestamptz
+  userId: String
+  value: float8
+}
+"aggregate min on columns"
+type networkReceivedBytesMinFields {
+  runId: String
+  simulationId: String
+  stepId: String
+  time: timestamptz
+  userId: String
+  value: float8
+}
+"""
+Ordering options when selecting data from "simpipe.network_received_bytes".
+"""
+input networkReceivedBytesOrderBy {
+  run: runsOrderBy
+  runId: OrderBy
+  simulation: simulationsOrderBy
+  simulationId: OrderBy
+  step: stepsOrderBy
+  stepId: OrderBy
+  time: OrderBy
+  userId: OrderBy
+  value: OrderBy
+}
+"""
+select columns of table "simpipe.network_received_bytes"
+"""
+enum networkReceivedBytesSelectColumn {
+  "column name"
+  runId
+  "column name"
+  simulationId
+  "column name"
+  stepId
+  "column name"
+  time
+  "column name"
+  userId
+  "column name"
+  value
+}
+"aggregate stddev on columns"
+type networkReceivedBytesStddevFields {
+  value: Float
+}
+"aggregate stddev_pop on columns"
+type networkReceivedBytesStddev_popFields {
+  value: Float
+}
+"aggregate stddev_samp on columns"
+type networkReceivedBytesStddev_sampFields {
+  value: Float
+}
+"""
+Streaming cursor of the table "networkReceivedBytes"
+"""
+input networkReceivedBytesStreamCursorInput {
+  "Stream column input with initial value"
+  initialValue: networkReceivedBytesStreamCursorValueInput!
+  "cursor ordering"
+  ordering: CursorOrdering
+}
+"Initial value of the column from where the streaming should start"
+input networkReceivedBytesStreamCursorValueInput {
+  runId: String
+  simulationId: String
+  stepId: String
+  time: timestamptz
+  userId: String
+  value: float8
+}
+"aggregate sum on columns"
+type networkReceivedBytesSumFields {
+  value: float8
+}
+"aggregate var_pop on columns"
+type networkReceivedBytesVar_popFields {
+  value: Float
+}
+"aggregate var_samp on columns"
+type networkReceivedBytesVar_sampFields {
+  value: Float
+}
+"aggregate variance on columns"
+type networkReceivedBytesVarianceFields {
+  value: Float
+}
+input networkReceivedBytes_aggregate_bool_exp {
+  avg: networkReceivedBytes_aggregate_bool_exp_avg
+  corr: networkReceivedBytes_aggregate_bool_exp_corr
+  count: networkReceivedBytes_aggregate_bool_exp_count
+  covar_samp: networkReceivedBytes_aggregate_bool_exp_covar_samp
+  max: networkReceivedBytes_aggregate_bool_exp_max
+  min: networkReceivedBytes_aggregate_bool_exp_min
+  stddev_samp: networkReceivedBytes_aggregate_bool_exp_stddev_samp
+  sum: networkReceivedBytes_aggregate_bool_exp_sum
+  var_samp: networkReceivedBytes_aggregate_bool_exp_var_samp
+}
+input networkReceivedBytes_aggregate_bool_exp_avg {
+  arguments: networkReceivedBytes_select_column_networkReceivedBytes_aggregate_bool_exp_avg_arguments_columns!
+  distinct: Boolean
+  filter: networkReceivedBytesBoolExp
+  predicate: Float8ComparisonExp!
+}
+input networkReceivedBytes_aggregate_bool_exp_corr {
+  arguments: networkReceivedBytes_aggregate_bool_exp_corr_arguments!
+  distinct: Boolean
+  filter: networkReceivedBytesBoolExp
+  predicate: Float8ComparisonExp!
+}
+input networkReceivedBytes_aggregate_bool_exp_corr_arguments {
+  X: networkReceivedBytes_select_column_networkReceivedBytes_aggregate_bool_exp_corr_arguments_columns!
+  Y: networkReceivedBytes_select_column_networkReceivedBytes_aggregate_bool_exp_corr_arguments_columns!
+}
+input networkReceivedBytes_aggregate_bool_exp_count {
+  arguments: [networkReceivedBytesSelectColumn!]
+  distinct: Boolean
+  filter: networkReceivedBytesBoolExp
+  predicate: IntComparisonExp!
+}
+input networkReceivedBytes_aggregate_bool_exp_covar_samp {
+  arguments: networkReceivedBytes_aggregate_bool_exp_covar_samp_arguments!
+  distinct: Boolean
+  filter: networkReceivedBytesBoolExp
+  predicate: Float8ComparisonExp!
+}
+input networkReceivedBytes_aggregate_bool_exp_covar_samp_arguments {
+  X: networkReceivedBytes_select_column_networkReceivedBytes_aggregate_bool_exp_covar_samp_arguments_columns!
+  Y: networkReceivedBytes_select_column_networkReceivedBytes_aggregate_bool_exp_covar_samp_arguments_columns!
+}
+input networkReceivedBytes_aggregate_bool_exp_max {
+  arguments: networkReceivedBytes_select_column_networkReceivedBytes_aggregate_bool_exp_max_arguments_columns!
+  distinct: Boolean
+  filter: networkReceivedBytesBoolExp
+  predicate: Float8ComparisonExp!
+}
+input networkReceivedBytes_aggregate_bool_exp_min {
+  arguments: networkReceivedBytes_select_column_networkReceivedBytes_aggregate_bool_exp_min_arguments_columns!
+  distinct: Boolean
+  filter: networkReceivedBytesBoolExp
+  predicate: Float8ComparisonExp!
+}
+input networkReceivedBytes_aggregate_bool_exp_stddev_samp {
+  arguments: networkReceivedBytes_select_column_networkReceivedBytes_aggregate_bool_exp_stddev_samp_arguments_columns!
+  distinct: Boolean
+  filter: networkReceivedBytesBoolExp
+  predicate: Float8ComparisonExp!
+}
+input networkReceivedBytes_aggregate_bool_exp_sum {
+  arguments: networkReceivedBytes_select_column_networkReceivedBytes_aggregate_bool_exp_sum_arguments_columns!
+  distinct: Boolean
+  filter: networkReceivedBytesBoolExp
+  predicate: Float8ComparisonExp!
+}
+input networkReceivedBytes_aggregate_bool_exp_var_samp {
+  arguments: networkReceivedBytes_select_column_networkReceivedBytes_aggregate_bool_exp_var_samp_arguments_columns!
+  distinct: Boolean
+  filter: networkReceivedBytesBoolExp
+  predicate: Float8ComparisonExp!
+}
+"""
+order by avg() on columns of table "simpipe.network_received_bytes"
+"""
+input networkReceivedBytes_avg_order_by {
+  value: OrderBy
+}
+"""
+order by max() on columns of table "simpipe.network_received_bytes"
+"""
+input networkReceivedBytes_max_order_by {
+  runId: OrderBy
+  simulationId: OrderBy
+  stepId: OrderBy
+  time: OrderBy
+  userId: OrderBy
+  value: OrderBy
+}
+"""
+order by min() on columns of table "simpipe.network_received_bytes"
+"""
+input networkReceivedBytes_min_order_by {
+  runId: OrderBy
+  simulationId: OrderBy
+  stepId: OrderBy
+  time: OrderBy
+  userId: OrderBy
+  value: OrderBy
+}
+"""
+select "networkReceivedBytes_aggregate_bool_exp_avg_arguments_columns" columns of table "simpipe.network_received_bytes"
+"""
+enum networkReceivedBytes_select_column_networkReceivedBytes_aggregate_bool_exp_avg_arguments_columns {
+  "column name"
+  value
+}
+"""
+select "networkReceivedBytes_aggregate_bool_exp_corr_arguments_columns" columns of table "simpipe.network_received_bytes"
+"""
+enum networkReceivedBytes_select_column_networkReceivedBytes_aggregate_bool_exp_corr_arguments_columns {
+  "column name"
+  value
+}
+"""
+select "networkReceivedBytes_aggregate_bool_exp_covar_samp_arguments_columns" columns of table "simpipe.network_received_bytes"
+"""
+enum networkReceivedBytes_select_column_networkReceivedBytes_aggregate_bool_exp_covar_samp_arguments_columns {
+  "column name"
+  value
+}
+"""
+select "networkReceivedBytes_aggregate_bool_exp_max_arguments_columns" columns of table "simpipe.network_received_bytes"
+"""
+enum networkReceivedBytes_select_column_networkReceivedBytes_aggregate_bool_exp_max_arguments_columns {
+  "column name"
+  value
+}
+"""
+select "networkReceivedBytes_aggregate_bool_exp_min_arguments_columns" columns of table "simpipe.network_received_bytes"
+"""
+enum networkReceivedBytes_select_column_networkReceivedBytes_aggregate_bool_exp_min_arguments_columns {
+  "column name"
+  value
+}
+"""
+select "networkReceivedBytes_aggregate_bool_exp_stddev_samp_arguments_columns" columns of table "simpipe.network_received_bytes"
+"""
+enum networkReceivedBytes_select_column_networkReceivedBytes_aggregate_bool_exp_stddev_samp_arguments_columns {
+  "column name"
+  value
+}
+"""
+select "networkReceivedBytes_aggregate_bool_exp_sum_arguments_columns" columns of table "simpipe.network_received_bytes"
+"""
+enum networkReceivedBytes_select_column_networkReceivedBytes_aggregate_bool_exp_sum_arguments_columns {
+  "column name"
+  value
+}
+"""
+select "networkReceivedBytes_aggregate_bool_exp_var_samp_arguments_columns" columns of table "simpipe.network_received_bytes"
+"""
+enum networkReceivedBytes_select_column_networkReceivedBytes_aggregate_bool_exp_var_samp_arguments_columns {
+  "column name"
+  value
+}
+"""
+order by stddev() on columns of table "simpipe.network_received_bytes"
+"""
+input networkReceivedBytes_stddev_order_by {
+  value: OrderBy
+}
+"""
+order by stddev_pop() on columns of table "simpipe.network_received_bytes"
+"""
+input networkReceivedBytes_stddev_pop_order_by {
+  value: OrderBy
+}
+"""
+order by stddev_samp() on columns of table "simpipe.network_received_bytes"
+"""
+input networkReceivedBytes_stddev_samp_order_by {
+  value: OrderBy
+}
+"""
+order by sum() on columns of table "simpipe.network_received_bytes"
+"""
+input networkReceivedBytes_sum_order_by {
+  value: OrderBy
+}
+"""
+order by var_pop() on columns of table "simpipe.network_received_bytes"
+"""
+input networkReceivedBytes_var_pop_order_by {
+  value: OrderBy
+}
+"""
+order by var_samp() on columns of table "simpipe.network_received_bytes"
+"""
+input networkReceivedBytes_var_samp_order_by {
+  value: OrderBy
+}
+"""
+order by variance() on columns of table "simpipe.network_received_bytes"
+"""
+input networkReceivedBytes_variance_order_by {
+  value: OrderBy
+}
+"""
+columns and relationships of "simpipe.network_transmit_bytes"
+"""
+type networkTransmitBytes {
+  "An object relationship"
+  run: runs
+  runId: String
+  "An object relationship"
+  simulation: simulations
+  simulationId: String
+  "An object relationship"
+  step: steps
+  stepId: String
+  time: timestamptz
+  userId: String
+  value: float8
+}
+"""
+aggregated selection of "simpipe.network_transmit_bytes"
+"""
+type networkTransmitBytesAggregate {
+  aggregate: networkTransmitBytesAggregateFields
+  nodes: [networkTransmitBytes!]!
+}
+"""
+aggregate fields of "simpipe.network_transmit_bytes"
+"""
+type networkTransmitBytesAggregateFields {
+  avg: networkTransmitBytesAvgFields
+  count(columns: [networkTransmitBytesSelectColumn!], distinct: Boolean): Int!
+  max: networkTransmitBytesMaxFields
+  min: networkTransmitBytesMinFields
+  stddev: networkTransmitBytesStddevFields
+  stddevPop: networkTransmitBytesStddev_popFields
+  stddevSamp: networkTransmitBytesStddev_sampFields
+  sum: networkTransmitBytesSumFields
+  varPop: networkTransmitBytesVar_popFields
+  varSamp: networkTransmitBytesVar_sampFields
+  variance: networkTransmitBytesVarianceFields
+}
+"""
+order by aggregate values of table "simpipe.network_transmit_bytes"
+"""
+input networkTransmitBytesAggregateOrderBy {
+  avg: networkTransmitBytes_avg_order_by
+  count: OrderBy
+  max: networkTransmitBytes_max_order_by
+  min: networkTransmitBytes_min_order_by
+  stddev: networkTransmitBytes_stddev_order_by
+  stddev_pop: networkTransmitBytes_stddev_pop_order_by
+  stddev_samp: networkTransmitBytes_stddev_samp_order_by
+  sum: networkTransmitBytes_sum_order_by
+  var_pop: networkTransmitBytes_var_pop_order_by
+  var_samp: networkTransmitBytes_var_samp_order_by
+  variance: networkTransmitBytes_variance_order_by
+}
+"""
+input type for inserting array relation for remote table "simpipe.network_transmit_bytes"
+"""
+input networkTransmitBytesArrRelInsertInput {
+  data: [networkTransmitBytesInsertInput!]!
+}
+"aggregate avg on columns"
+type networkTransmitBytesAvgFields {
+  value: Float
+}
+"""
+Boolean expression to filter rows from the table "simpipe.network_transmit_bytes". All fields are combined with a logical 'AND'.
+"""
+input networkTransmitBytesBoolExp {
+  _and: [networkTransmitBytesBoolExp!]
+  _not: networkTransmitBytesBoolExp
+  _or: [networkTransmitBytesBoolExp!]
+  run: runsBoolExp
+  runId: StringComparisonExp
+  simulation: simulationsBoolExp
+  simulationId: StringComparisonExp
+  step: stepsBoolExp
+  stepId: StringComparisonExp
+  time: TimestamptzComparisonExp
+  userId: StringComparisonExp
+  value: Float8ComparisonExp
+}
+"""
+input type for inserting data into table "simpipe.network_transmit_bytes"
+"""
+input networkTransmitBytesInsertInput {
+  run: runsObjRelInsertInput
+  runId: String
+  simulation: simulationsObjRelInsertInput
+  simulationId: String
+  step: stepsObjRelInsertInput
+  stepId: String
+  time: timestamptz
+  userId: String
+  value: float8
+}
+"aggregate max on columns"
+type networkTransmitBytesMaxFields {
+  runId: String
+  simulationId: String
+  stepId: String
+  time: timestamptz
+  userId: String
+  value: float8
+}
+"aggregate min on columns"
+type networkTransmitBytesMinFields {
+  runId: String
+  simulationId: String
+  stepId: String
+  time: timestamptz
+  userId: String
+  value: float8
+}
+"""
+Ordering options when selecting data from "simpipe.network_transmit_bytes".
+"""
+input networkTransmitBytesOrderBy {
+  run: runsOrderBy
+  runId: OrderBy
+  simulation: simulationsOrderBy
+  simulationId: OrderBy
+  step: stepsOrderBy
+  stepId: OrderBy
+  time: OrderBy
+  userId: OrderBy
+  value: OrderBy
+}
+"""
+select columns of table "simpipe.network_transmit_bytes"
+"""
+enum networkTransmitBytesSelectColumn {
+  "column name"
+  runId
+  "column name"
+  simulationId
+  "column name"
+  stepId
+  "column name"
+  time
+  "column name"
+  userId
+  "column name"
+  value
+}
+"aggregate stddev on columns"
+type networkTransmitBytesStddevFields {
+  value: Float
+}
+"aggregate stddev_pop on columns"
+type networkTransmitBytesStddev_popFields {
+  value: Float
+}
+"aggregate stddev_samp on columns"
+type networkTransmitBytesStddev_sampFields {
+  value: Float
+}
+"""
+Streaming cursor of the table "networkTransmitBytes"
+"""
+input networkTransmitBytesStreamCursorInput {
+  "Stream column input with initial value"
+  initialValue: networkTransmitBytesStreamCursorValueInput!
+  "cursor ordering"
+  ordering: CursorOrdering
+}
+"Initial value of the column from where the streaming should start"
+input networkTransmitBytesStreamCursorValueInput {
+  runId: String
+  simulationId: String
+  stepId: String
+  time: timestamptz
+  userId: String
+  value: float8
+}
+"aggregate sum on columns"
+type networkTransmitBytesSumFields {
+  value: float8
+}
+"aggregate var_pop on columns"
+type networkTransmitBytesVar_popFields {
+  value: Float
+}
+"aggregate var_samp on columns"
+type networkTransmitBytesVar_sampFields {
+  value: Float
+}
+"aggregate variance on columns"
+type networkTransmitBytesVarianceFields {
+  value: Float
+}
+input networkTransmitBytes_aggregate_bool_exp {
+  avg: networkTransmitBytes_aggregate_bool_exp_avg
+  corr: networkTransmitBytes_aggregate_bool_exp_corr
+  count: networkTransmitBytes_aggregate_bool_exp_count
+  covar_samp: networkTransmitBytes_aggregate_bool_exp_covar_samp
+  max: networkTransmitBytes_aggregate_bool_exp_max
+  min: networkTransmitBytes_aggregate_bool_exp_min
+  stddev_samp: networkTransmitBytes_aggregate_bool_exp_stddev_samp
+  sum: networkTransmitBytes_aggregate_bool_exp_sum
+  var_samp: networkTransmitBytes_aggregate_bool_exp_var_samp
+}
+input networkTransmitBytes_aggregate_bool_exp_avg {
+  arguments: networkTransmitBytes_select_column_networkTransmitBytes_aggregate_bool_exp_avg_arguments_columns!
+  distinct: Boolean
+  filter: networkTransmitBytesBoolExp
+  predicate: Float8ComparisonExp!
+}
+input networkTransmitBytes_aggregate_bool_exp_corr {
+  arguments: networkTransmitBytes_aggregate_bool_exp_corr_arguments!
+  distinct: Boolean
+  filter: networkTransmitBytesBoolExp
+  predicate: Float8ComparisonExp!
+}
+input networkTransmitBytes_aggregate_bool_exp_corr_arguments {
+  X: networkTransmitBytes_select_column_networkTransmitBytes_aggregate_bool_exp_corr_arguments_columns!
+  Y: networkTransmitBytes_select_column_networkTransmitBytes_aggregate_bool_exp_corr_arguments_columns!
+}
+input networkTransmitBytes_aggregate_bool_exp_count {
+  arguments: [networkTransmitBytesSelectColumn!]
+  distinct: Boolean
+  filter: networkTransmitBytesBoolExp
+  predicate: IntComparisonExp!
+}
+input networkTransmitBytes_aggregate_bool_exp_covar_samp {
+  arguments: networkTransmitBytes_aggregate_bool_exp_covar_samp_arguments!
+  distinct: Boolean
+  filter: networkTransmitBytesBoolExp
+  predicate: Float8ComparisonExp!
+}
+input networkTransmitBytes_aggregate_bool_exp_covar_samp_arguments {
+  X: networkTransmitBytes_select_column_networkTransmitBytes_aggregate_bool_exp_covar_samp_arguments_columns!
+  Y: networkTransmitBytes_select_column_networkTransmitBytes_aggregate_bool_exp_covar_samp_arguments_columns!
+}
+input networkTransmitBytes_aggregate_bool_exp_max {
+  arguments: networkTransmitBytes_select_column_networkTransmitBytes_aggregate_bool_exp_max_arguments_columns!
+  distinct: Boolean
+  filter: networkTransmitBytesBoolExp
+  predicate: Float8ComparisonExp!
+}
+input networkTransmitBytes_aggregate_bool_exp_min {
+  arguments: networkTransmitBytes_select_column_networkTransmitBytes_aggregate_bool_exp_min_arguments_columns!
+  distinct: Boolean
+  filter: networkTransmitBytesBoolExp
+  predicate: Float8ComparisonExp!
+}
+input networkTransmitBytes_aggregate_bool_exp_stddev_samp {
+  arguments: networkTransmitBytes_select_column_networkTransmitBytes_aggregate_bool_exp_stddev_samp_arguments_columns!
+  distinct: Boolean
+  filter: networkTransmitBytesBoolExp
+  predicate: Float8ComparisonExp!
+}
+input networkTransmitBytes_aggregate_bool_exp_sum {
+  arguments: networkTransmitBytes_select_column_networkTransmitBytes_aggregate_bool_exp_sum_arguments_columns!
+  distinct: Boolean
+  filter: networkTransmitBytesBoolExp
+  predicate: Float8ComparisonExp!
+}
+input networkTransmitBytes_aggregate_bool_exp_var_samp {
+  arguments: networkTransmitBytes_select_column_networkTransmitBytes_aggregate_bool_exp_var_samp_arguments_columns!
+  distinct: Boolean
+  filter: networkTransmitBytesBoolExp
+  predicate: Float8ComparisonExp!
+}
+"""
+order by avg() on columns of table "simpipe.network_transmit_bytes"
+"""
+input networkTransmitBytes_avg_order_by {
+  value: OrderBy
+}
+"""
+order by max() on columns of table "simpipe.network_transmit_bytes"
+"""
+input networkTransmitBytes_max_order_by {
+  runId: OrderBy
+  simulationId: OrderBy
+  stepId: OrderBy
+  time: OrderBy
+  userId: OrderBy
+  value: OrderBy
+}
+"""
+order by min() on columns of table "simpipe.network_transmit_bytes"
+"""
+input networkTransmitBytes_min_order_by {
+  runId: OrderBy
+  simulationId: OrderBy
+  stepId: OrderBy
+  time: OrderBy
+  userId: OrderBy
+  value: OrderBy
+}
+"""
+select "networkTransmitBytes_aggregate_bool_exp_avg_arguments_columns" columns of table "simpipe.network_transmit_bytes"
+"""
+enum networkTransmitBytes_select_column_networkTransmitBytes_aggregate_bool_exp_avg_arguments_columns {
+  "column name"
+  value
+}
+"""
+select "networkTransmitBytes_aggregate_bool_exp_corr_arguments_columns" columns of table "simpipe.network_transmit_bytes"
+"""
+enum networkTransmitBytes_select_column_networkTransmitBytes_aggregate_bool_exp_corr_arguments_columns {
+  "column name"
+  value
+}
+"""
+select "networkTransmitBytes_aggregate_bool_exp_covar_samp_arguments_columns" columns of table "simpipe.network_transmit_bytes"
+"""
+enum networkTransmitBytes_select_column_networkTransmitBytes_aggregate_bool_exp_covar_samp_arguments_columns {
+  "column name"
+  value
+}
+"""
+select "networkTransmitBytes_aggregate_bool_exp_max_arguments_columns" columns of table "simpipe.network_transmit_bytes"
+"""
+enum networkTransmitBytes_select_column_networkTransmitBytes_aggregate_bool_exp_max_arguments_columns {
+  "column name"
+  value
+}
+"""
+select "networkTransmitBytes_aggregate_bool_exp_min_arguments_columns" columns of table "simpipe.network_transmit_bytes"
+"""
+enum networkTransmitBytes_select_column_networkTransmitBytes_aggregate_bool_exp_min_arguments_columns {
+  "column name"
+  value
+}
+"""
+select "networkTransmitBytes_aggregate_bool_exp_stddev_samp_arguments_columns" columns of table "simpipe.network_transmit_bytes"
+"""
+enum networkTransmitBytes_select_column_networkTransmitBytes_aggregate_bool_exp_stddev_samp_arguments_columns {
+  "column name"
+  value
+}
+"""
+select "networkTransmitBytes_aggregate_bool_exp_sum_arguments_columns" columns of table "simpipe.network_transmit_bytes"
+"""
+enum networkTransmitBytes_select_column_networkTransmitBytes_aggregate_bool_exp_sum_arguments_columns {
+  "column name"
+  value
+}
+"""
+select "networkTransmitBytes_aggregate_bool_exp_var_samp_arguments_columns" columns of table "simpipe.network_transmit_bytes"
+"""
+enum networkTransmitBytes_select_column_networkTransmitBytes_aggregate_bool_exp_var_samp_arguments_columns {
+  "column name"
+  value
+}
+"""
+order by stddev() on columns of table "simpipe.network_transmit_bytes"
+"""
+input networkTransmitBytes_stddev_order_by {
+  value: OrderBy
+}
+"""
+order by stddev_pop() on columns of table "simpipe.network_transmit_bytes"
+"""
+input networkTransmitBytes_stddev_pop_order_by {
+  value: OrderBy
+}
+"""
+order by stddev_samp() on columns of table "simpipe.network_transmit_bytes"
+"""
+input networkTransmitBytes_stddev_samp_order_by {
+  value: OrderBy
+}
+"""
+order by sum() on columns of table "simpipe.network_transmit_bytes"
+"""
+input networkTransmitBytes_sum_order_by {
+  value: OrderBy
+}
+"""
+order by var_pop() on columns of table "simpipe.network_transmit_bytes"
+"""
+input networkTransmitBytes_var_pop_order_by {
+  value: OrderBy
+}
+"""
+order by var_samp() on columns of table "simpipe.network_transmit_bytes"
+"""
+input networkTransmitBytes_var_samp_order_by {
+  value: OrderBy
+}
+"""
+order by variance() on columns of table "simpipe.network_transmit_bytes"
+"""
+input networkTransmitBytes_variance_order_by {
+  value: OrderBy
+}
 type query_root {
-  ComputeUploadPresignedUrl: String
-  Ping: String
-  Username: String
+  " Compute a presigned URL for uploading a file using a HTTP PUT. "
+  computeUploadPresignedUrl: String!
+  "An array relationship"
+  cpu("distinct select on columns" distinctOn: [cpuSelectColumn!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" orderBy: [cpuOrderBy!], "filter the rows returned" where: cpuBoolExp): [cpu!]!
+  "An aggregate relationship"
+  cpuAggregate("distinct select on columns" distinctOn: [cpuSelectColumn!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" orderBy: [cpuOrderBy!], "filter the rows returned" where: cpuBoolExp): cpuAggregate!
+  "An array relationship"
+  fsReadsMerged("distinct select on columns" distinctOn: [fsReadsMergedSelectColumn!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" orderBy: [fsReadsMergedOrderBy!], "filter the rows returned" where: fsReadsMergedBoolExp): [fsReadsMerged!]!
+  "An aggregate relationship"
+  fsReadsMergedAggregate("distinct select on columns" distinctOn: [fsReadsMergedSelectColumn!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" orderBy: [fsReadsMergedOrderBy!], "filter the rows returned" where: fsReadsMergedBoolExp): fsReadsMergedAggregate!
+  "An array relationship"
+  fsWritesMerged("distinct select on columns" distinctOn: [fsWritesMergedSelectColumn!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" orderBy: [fsWritesMergedOrderBy!], "filter the rows returned" where: fsWritesMergedBoolExp): [fsWritesMerged!]!
+  "An aggregate relationship"
+  fsWritesMergedAggregate("distinct select on columns" distinctOn: [fsWritesMergedSelectColumn!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" orderBy: [fsWritesMergedOrderBy!], "filter the rows returned" where: fsWritesMergedBoolExp): fsWritesMergedAggregate!
+  "An array relationship"
+  memoryMaxUsageBytes("distinct select on columns" distinctOn: [memoryMaxUsageBytesSelectColumn!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" orderBy: [memoryMaxUsageBytesOrderBy!], "filter the rows returned" where: memoryMaxUsageBytesBoolExp): [memoryMaxUsageBytes!]!
+  "An aggregate relationship"
+  memoryMaxUsageBytesAggregate("distinct select on columns" distinctOn: [memoryMaxUsageBytesSelectColumn!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" orderBy: [memoryMaxUsageBytesOrderBy!], "filter the rows returned" where: memoryMaxUsageBytesBoolExp): memoryMaxUsageBytesAggregate!
+  "An array relationship"
+  memoryUsageBytes("distinct select on columns" distinctOn: [memoryUsageBytesSelectColumn!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" orderBy: [memoryUsageBytesOrderBy!], "filter the rows returned" where: memoryUsageBytesBoolExp): [memoryUsageBytes!]!
+  "An aggregate relationship"
+  memoryUsageBytesAggregate("distinct select on columns" distinctOn: [memoryUsageBytesSelectColumn!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" orderBy: [memoryUsageBytesOrderBy!], "filter the rows returned" where: memoryUsageBytesBoolExp): memoryUsageBytesAggregate!
+  "An array relationship"
+  networkReceivedBytes("distinct select on columns" distinctOn: [networkReceivedBytesSelectColumn!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" orderBy: [networkReceivedBytesOrderBy!], "filter the rows returned" where: networkReceivedBytesBoolExp): [networkReceivedBytes!]!
+  "An aggregate relationship"
+  networkReceivedBytesAggregate("distinct select on columns" distinctOn: [networkReceivedBytesSelectColumn!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" orderBy: [networkReceivedBytesOrderBy!], "filter the rows returned" where: networkReceivedBytesBoolExp): networkReceivedBytesAggregate!
+  "An array relationship"
+  networkTransmitBytes("distinct select on columns" distinctOn: [networkTransmitBytesSelectColumn!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" orderBy: [networkTransmitBytesOrderBy!], "filter the rows returned" where: networkTransmitBytesBoolExp): [networkTransmitBytes!]!
+  "An aggregate relationship"
+  networkTransmitBytesAggregate("distinct select on columns" distinctOn: [networkTransmitBytesSelectColumn!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" orderBy: [networkTransmitBytesOrderBy!], "filter the rows returned" where: networkTransmitBytesBoolExp): networkTransmitBytesAggregate!
+  " Returns pong if the server is up and running. "
+  ping: String!
   """
   fetch data from the table: "simpipe.runs" using primary key columns
   """
-  run(runId: uuid!): runs
+  run("UUID of the run, random by default" runId: uuid!): runs
   "An array relationship"
   runs("distinct select on columns" distinctOn: [runsSelectColumn!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" orderBy: [runsOrderBy!], "filter the rows returned" where: runsBoolExp): [runs!]!
   "An aggregate relationship"
   runsAggregate("distinct select on columns" distinctOn: [runsSelectColumn!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" orderBy: [runsOrderBy!], "filter the rows returned" where: runsBoolExp): runsAggregate!
-  """
-  fetch data from the table: "simpipe.cpu"
-  """
-  simpipeCpu("distinct select on columns" distinctOn: [SimpipeCpuSelectColumn!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" orderBy: [SimpipeCpuOrderBy!], "filter the rows returned" where: SimpipeCpuBoolExp): [SimpipeCpu!]!
-  """
-  fetch aggregated fields from the table: "simpipe.cpu"
-  """
-  simpipeCpuAggregate("distinct select on columns" distinctOn: [SimpipeCpuSelectColumn!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" orderBy: [SimpipeCpuOrderBy!], "filter the rows returned" where: SimpipeCpuBoolExp): SimpipeCpuAggregate!
   """
   fetch data from the table: "simpipe.envs"
   """
@@ -1622,7 +3815,7 @@ type query_root {
   """
   fetch data from the table: "simpipe.envs" using primary key columns
   """
-  simpipeEnvsByPk(envId: Int!): SimpipeEnvs
+  simpipeEnvsByPk("UUID of the env, random by default" envId: uuid!): SimpipeEnvs
   """
   fetch data from the table: "simpipe.logs"
   """
@@ -1634,19 +3827,7 @@ type query_root {
   """
   fetch data from the table: "simpipe.logs" using primary key columns
   """
-  simpipeLogsByPk(stepId: uuid!): SimpipeLogs
-  """
-  fetch data from the table: "simpipe.resource_usage"
-  """
-  simpipeResourceUsage("distinct select on columns" distinctOn: [SimpipeResourceUsageSelectColumn!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" orderBy: [SimpipeResourceUsageOrderBy!], "filter the rows returned" where: SimpipeResourceUsageBoolExp): [SimpipeResourceUsage!]!
-  """
-  fetch aggregated fields from the table: "simpipe.resource_usage"
-  """
-  simpipeResourceUsageAggregate("distinct select on columns" distinctOn: [SimpipeResourceUsageSelectColumn!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" orderBy: [SimpipeResourceUsageOrderBy!], "filter the rows returned" where: SimpipeResourceUsageBoolExp): SimpipeResourceUsageAggregate!
-  """
-  fetch data from the table: "simpipe.resource_usage" using primary key columns
-  """
-  simpipeResourceUsageByPk(id: bigint!): SimpipeResourceUsage
+  simpipeLogsByPk("UUID of the step, must exist in the steps table" stepId: uuid!): SimpipeLogs
   """
   fetch data from the table: "simpipe.run_status"
   """
@@ -1674,7 +3855,7 @@ type query_root {
   """
   fetch data from the table: "simpipe.simulations" using primary key columns
   """
-  simulation("uuid of the simulation" simulationId: uuid!): simulations
+  simulation("UUID of the simulation, random by default" simulationId: uuid!): simulations
   """
   fetch data from the table: "simpipe.simulations"
   """
@@ -1690,18 +3871,55 @@ type query_root {
   """
   fetch data from the table: "simpipe.steps" using primary key columns
   """
-  stepsByPk(stepId: uuid!): steps
+  stepsByPk("UUID of the step, random by default" stepId: uuid!): steps
+  " Fetch the current username. "
+  username: String!
 }
 "Simulation run"
 type runs {
-  created: timestamptz!
-  ended: timestamptz
-  name: String
+  "An array relationship"
+  cpu("distinct select on columns" distinctOn: [cpuSelectColumn!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" orderBy: [cpuOrderBy!], "filter the rows returned" where: cpuBoolExp): [cpu!]!
+  "An aggregate relationship"
+  cpuAggregate("distinct select on columns" distinctOn: [cpuSelectColumn!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" orderBy: [cpuOrderBy!], "filter the rows returned" where: cpuBoolExp): cpuAggregate!
+  "DateTime of when the run was created"
+  created: timestamp!
+  "DateTime of when the run was ended, NULL if not ended"
+  ended: timestamp
+  "An array relationship"
+  fsReadsMerged("distinct select on columns" distinctOn: [fsReadsMergedSelectColumn!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" orderBy: [fsReadsMergedOrderBy!], "filter the rows returned" where: fsReadsMergedBoolExp): [fsReadsMerged!]!
+  "An aggregate relationship"
+  fsReadsMergedAggregate("distinct select on columns" distinctOn: [fsReadsMergedSelectColumn!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" orderBy: [fsReadsMergedOrderBy!], "filter the rows returned" where: fsReadsMergedBoolExp): fsReadsMergedAggregate!
+  "An array relationship"
+  fsWritesMerged("distinct select on columns" distinctOn: [fsWritesMergedSelectColumn!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" orderBy: [fsWritesMergedOrderBy!], "filter the rows returned" where: fsWritesMergedBoolExp): [fsWritesMerged!]!
+  "An aggregate relationship"
+  fsWritesMergedAggregate("distinct select on columns" distinctOn: [fsWritesMergedSelectColumn!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" orderBy: [fsWritesMergedOrderBy!], "filter the rows returned" where: fsWritesMergedBoolExp): fsWritesMergedAggregate!
+  "An array relationship"
+  memoryMaxUsageBytes("distinct select on columns" distinctOn: [memoryMaxUsageBytesSelectColumn!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" orderBy: [memoryMaxUsageBytesOrderBy!], "filter the rows returned" where: memoryMaxUsageBytesBoolExp): [memoryMaxUsageBytes!]!
+  "An aggregate relationship"
+  memoryMaxUsageBytesAggregate("distinct select on columns" distinctOn: [memoryMaxUsageBytesSelectColumn!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" orderBy: [memoryMaxUsageBytesOrderBy!], "filter the rows returned" where: memoryMaxUsageBytesBoolExp): memoryMaxUsageBytesAggregate!
+  "An array relationship"
+  memoryUsageBytes("distinct select on columns" distinctOn: [memoryUsageBytesSelectColumn!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" orderBy: [memoryUsageBytesOrderBy!], "filter the rows returned" where: memoryUsageBytesBoolExp): [memoryUsageBytes!]!
+  "An aggregate relationship"
+  memoryUsageBytesAggregate("distinct select on columns" distinctOn: [memoryUsageBytesSelectColumn!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" orderBy: [memoryUsageBytesOrderBy!], "filter the rows returned" where: memoryUsageBytesBoolExp): memoryUsageBytesAggregate!
+  "Name of the run, it is unique per simulation"
+  name: String!
+  "An array relationship"
+  networkReceivedBytes("distinct select on columns" distinctOn: [networkReceivedBytesSelectColumn!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" orderBy: [networkReceivedBytesOrderBy!], "filter the rows returned" where: networkReceivedBytesBoolExp): [networkReceivedBytes!]!
+  "An aggregate relationship"
+  networkReceivedBytesAggregate("distinct select on columns" distinctOn: [networkReceivedBytesSelectColumn!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" orderBy: [networkReceivedBytesOrderBy!], "filter the rows returned" where: networkReceivedBytesBoolExp): networkReceivedBytesAggregate!
+  "An array relationship"
+  networkTransmitBytes("distinct select on columns" distinctOn: [networkTransmitBytesSelectColumn!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" orderBy: [networkTransmitBytesOrderBy!], "filter the rows returned" where: networkTransmitBytesBoolExp): [networkTransmitBytes!]!
+  "An aggregate relationship"
+  networkTransmitBytesAggregate("distinct select on columns" distinctOn: [networkTransmitBytesSelectColumn!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" orderBy: [networkTransmitBytesOrderBy!], "filter the rows returned" where: networkTransmitBytesBoolExp): networkTransmitBytesAggregate!
+  "UUID of the run, random by default"
   runId: uuid!
   "An object relationship"
   simulation: simulations!
+  "UUID of the simulation, must exist in the simulations table"
   simulationId: uuid!
-  started: timestamptz
+  "DateTime of when the run was started, NULL if not started"
+  started: timestamp
+  "Status of the run, must be one of the values in the run_status enum"
   status: SimpipeRunStatusEnum!
   "An array relationship"
   steps("distinct select on columns" distinctOn: [stepsSelectColumn!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" orderBy: [stepsOrderBy!], "filter the rows returned" where: stepsBoolExp): [steps!]!
@@ -1746,13 +3964,27 @@ input runsBoolExp {
   _and: [runsBoolExp!]
   _not: runsBoolExp
   _or: [runsBoolExp!]
-  created: TimestamptzComparisonExp
-  ended: TimestamptzComparisonExp
+  cpu: cpuBoolExp
+  cpu_aggregate: cpu_aggregate_bool_exp
+  created: TimestampComparisonExp
+  ended: TimestampComparisonExp
+  fsReadsMerged: fsReadsMergedBoolExp
+  fsReadsMerged_aggregate: fsReadsMerged_aggregate_bool_exp
+  fsWritesMerged: fsWritesMergedBoolExp
+  fsWritesMerged_aggregate: fsWritesMerged_aggregate_bool_exp
+  memoryMaxUsageBytes: memoryMaxUsageBytesBoolExp
+  memoryMaxUsageBytes_aggregate: memoryMaxUsageBytes_aggregate_bool_exp
+  memoryUsageBytes: memoryUsageBytesBoolExp
+  memoryUsageBytes_aggregate: memoryUsageBytes_aggregate_bool_exp
   name: StringComparisonExp
+  networkReceivedBytes: networkReceivedBytesBoolExp
+  networkReceivedBytes_aggregate: networkReceivedBytes_aggregate_bool_exp
+  networkTransmitBytes: networkTransmitBytesBoolExp
+  networkTransmitBytes_aggregate: networkTransmitBytes_aggregate_bool_exp
   runId: UuidComparisonExp
   simulation: simulationsBoolExp
   simulationId: UuidComparisonExp
-  started: TimestamptzComparisonExp
+  started: TimestampComparisonExp
   status: SimpipeRunStatusEnumComparisonExp
   steps: stepsBoolExp
   steps_aggregate: steps_aggregate_bool_exp
@@ -1765,38 +3997,68 @@ enum runsConstraint {
   unique or primary key constraint on columns "run_id"
   """
   runs_pkey
+  """
+  unique or primary key constraint on columns "name", "simulation_id"
+  """
+  unique_run_name_per_simulation
 }
 """
 input type for inserting data into table "simpipe.runs"
 """
 input runsInsertInput {
-  created: timestamptz
-  ended: timestamptz
+  cpu: cpuArrRelInsertInput
+  "DateTime of when the run was created"
+  created: timestamp
+  "DateTime of when the run was ended, NULL if not ended"
+  ended: timestamp
+  fsReadsMerged: fsReadsMergedArrRelInsertInput
+  fsWritesMerged: fsWritesMergedArrRelInsertInput
+  memoryMaxUsageBytes: memoryMaxUsageBytesArrRelInsertInput
+  memoryUsageBytes: memoryUsageBytesArrRelInsertInput
+  "Name of the run, it is unique per simulation"
   name: String
+  networkReceivedBytes: networkReceivedBytesArrRelInsertInput
+  networkTransmitBytes: networkTransmitBytesArrRelInsertInput
+  "UUID of the run, random by default"
   runId: uuid
   simulation: simulationsObjRelInsertInput
+  "UUID of the simulation, must exist in the simulations table"
   simulationId: uuid
-  started: timestamptz
+  "DateTime of when the run was started, NULL if not started"
+  started: timestamp
+  "Status of the run, must be one of the values in the run_status enum"
   status: SimpipeRunStatusEnum
   steps: stepsArrRelInsertInput
 }
 "aggregate max on columns"
 type runsMaxFields {
-  created: timestamptz
-  ended: timestamptz
+  "DateTime of when the run was created"
+  created: timestamp
+  "DateTime of when the run was ended, NULL if not ended"
+  ended: timestamp
+  "Name of the run, it is unique per simulation"
   name: String
+  "UUID of the run, random by default"
   runId: uuid
+  "UUID of the simulation, must exist in the simulations table"
   simulationId: uuid
-  started: timestamptz
+  "DateTime of when the run was started, NULL if not started"
+  started: timestamp
 }
 "aggregate min on columns"
 type runsMinFields {
-  created: timestamptz
-  ended: timestamptz
+  "DateTime of when the run was created"
+  created: timestamp
+  "DateTime of when the run was ended, NULL if not ended"
+  ended: timestamp
+  "Name of the run, it is unique per simulation"
   name: String
+  "UUID of the run, random by default"
   runId: uuid
+  "UUID of the simulation, must exist in the simulations table"
   simulationId: uuid
-  started: timestamptz
+  "DateTime of when the run was started, NULL if not started"
+  started: timestamp
 }
 """
 response of any mutation on the table "simpipe.runs"
@@ -1827,9 +4089,16 @@ input runsOnConflict {
 Ordering options when selecting data from "simpipe.runs".
 """
 input runsOrderBy {
+  cpuAggregate: cpuAggregateOrderBy
   created: OrderBy
   ended: OrderBy
+  fsReadsMergedAggregate: fsReadsMergedAggregateOrderBy
+  fsWritesMergedAggregate: fsWritesMergedAggregateOrderBy
+  memoryMaxUsageBytesAggregate: memoryMaxUsageBytesAggregateOrderBy
+  memoryUsageBytesAggregate: memoryUsageBytesAggregateOrderBy
   name: OrderBy
+  networkReceivedBytesAggregate: networkReceivedBytesAggregateOrderBy
+  networkTransmitBytesAggregate: networkTransmitBytesAggregateOrderBy
   runId: OrderBy
   simulation: simulationsOrderBy
   simulationId: OrderBy
@@ -1839,6 +4108,7 @@ input runsOrderBy {
 }
 "primary key columns input for table: simpipe.runs"
 input runsPkColumnsInput {
+  "UUID of the run, random by default"
   runId: uuid!
 }
 """
@@ -1864,12 +4134,19 @@ enum runsSelectColumn {
 input type for updating data in table "simpipe.runs"
 """
 input runsSetInput {
-  created: timestamptz
-  ended: timestamptz
+  "DateTime of when the run was created"
+  created: timestamp
+  "DateTime of when the run was ended, NULL if not ended"
+  ended: timestamp
+  "Name of the run, it is unique per simulation"
   name: String
+  "UUID of the run, random by default"
   runId: uuid
+  "UUID of the simulation, must exist in the simulations table"
   simulationId: uuid
-  started: timestamptz
+  "DateTime of when the run was started, NULL if not started"
+  started: timestamp
+  "Status of the run, must be one of the values in the run_status enum"
   status: SimpipeRunStatusEnum
 }
 """
@@ -1883,12 +4160,19 @@ input runsStreamCursorInput {
 }
 "Initial value of the column from where the streaming should start"
 input runsStreamCursorValueInput {
-  created: timestamptz
-  ended: timestamptz
+  "DateTime of when the run was created"
+  created: timestamp
+  "DateTime of when the run was ended, NULL if not ended"
+  ended: timestamp
+  "Name of the run, it is unique per simulation"
   name: String
+  "UUID of the run, random by default"
   runId: uuid
+  "UUID of the simulation, must exist in the simulations table"
   simulationId: uuid
-  started: timestamptz
+  "DateTime of when the run was started, NULL if not started"
+  started: timestamp
+  "Status of the run, must be one of the values in the run_status enum"
   status: SimpipeRunStatusEnum
 }
 """
@@ -1929,22 +4213,34 @@ input runs_aggregate_bool_exp_count {
 order by max() on columns of table "simpipe.runs"
 """
 input runs_max_order_by {
+  "DateTime of when the run was created"
   created: OrderBy
+  "DateTime of when the run was ended, NULL if not ended"
   ended: OrderBy
+  "Name of the run, it is unique per simulation"
   name: OrderBy
+  "UUID of the run, random by default"
   runId: OrderBy
+  "UUID of the simulation, must exist in the simulations table"
   simulationId: OrderBy
+  "DateTime of when the run was started, NULL if not started"
   started: OrderBy
 }
 """
 order by min() on columns of table "simpipe.runs"
 """
 input runs_min_order_by {
+  "DateTime of when the run was created"
   created: OrderBy
+  "DateTime of when the run was ended, NULL if not ended"
   ended: OrderBy
+  "Name of the run, it is unique per simulation"
   name: OrderBy
+  "UUID of the run, random by default"
   runId: OrderBy
+  "UUID of the simulation, must exist in the simulations table"
   simulationId: OrderBy
+  "DateTime of when the run was started, NULL if not started"
   started: OrderBy
 }
 input simpipe_envs_aggregate_bool_exp {
@@ -1957,223 +4253,75 @@ input simpipe_envs_aggregate_bool_exp_count {
   predicate: IntComparisonExp!
 }
 """
-order by avg() on columns of table "simpipe.envs"
-"""
-input simpipe_envs_avg_order_by {
-  envId: OrderBy
-  stepId: OrderBy
-}
-"""
 order by max() on columns of table "simpipe.envs"
 """
 input simpipe_envs_max_order_by {
+  "UUID of the env, random by default"
   envId: OrderBy
+  "Name of the env, it is unique per step"
   name: OrderBy
+  "UUID of the step, must exist in the steps table"
   stepId: OrderBy
+  "Value of the env"
   value: OrderBy
 }
 """
 order by min() on columns of table "simpipe.envs"
 """
 input simpipe_envs_min_order_by {
+  "UUID of the env, random by default"
   envId: OrderBy
+  "Name of the env, it is unique per step"
   name: OrderBy
+  "UUID of the step, must exist in the steps table"
   stepId: OrderBy
+  "Value of the env"
   value: OrderBy
-}
-"""
-order by stddev() on columns of table "simpipe.envs"
-"""
-input simpipe_envs_stddev_order_by {
-  envId: OrderBy
-  stepId: OrderBy
-}
-"""
-order by stddev_pop() on columns of table "simpipe.envs"
-"""
-input simpipe_envs_stddev_pop_order_by {
-  envId: OrderBy
-  stepId: OrderBy
-}
-"""
-order by stddev_samp() on columns of table "simpipe.envs"
-"""
-input simpipe_envs_stddev_samp_order_by {
-  envId: OrderBy
-  stepId: OrderBy
-}
-"""
-order by sum() on columns of table "simpipe.envs"
-"""
-input simpipe_envs_sum_order_by {
-  envId: OrderBy
-  stepId: OrderBy
-}
-"""
-order by var_pop() on columns of table "simpipe.envs"
-"""
-input simpipe_envs_var_pop_order_by {
-  envId: OrderBy
-  stepId: OrderBy
-}
-"""
-order by var_samp() on columns of table "simpipe.envs"
-"""
-input simpipe_envs_var_samp_order_by {
-  envId: OrderBy
-  stepId: OrderBy
-}
-"""
-order by variance() on columns of table "simpipe.envs"
-"""
-input simpipe_envs_variance_order_by {
-  envId: OrderBy
-  stepId: OrderBy
-}
-input simpipe_resource_usage_aggregate_bool_exp {
-  count: simpipe_resource_usage_aggregate_bool_exp_count
-}
-input simpipe_resource_usage_aggregate_bool_exp_count {
-  arguments: [SimpipeResourceUsageSelectColumn!]
-  distinct: Boolean
-  filter: SimpipeResourceUsageBoolExp
-  predicate: IntComparisonExp!
-}
-"""
-order by avg() on columns of table "simpipe.resource_usage"
-"""
-input simpipe_resource_usage_avg_order_by {
-  cpu: OrderBy
-  id: OrderBy
-  memory: OrderBy
-  memoryMax: OrderBy
-  rxValue: OrderBy
-  stepId: OrderBy
-  txValue: OrderBy
-}
-"""
-order by max() on columns of table "simpipe.resource_usage"
-"""
-input simpipe_resource_usage_max_order_by {
-  cpu: OrderBy
-  id: OrderBy
-  memory: OrderBy
-  memoryMax: OrderBy
-  rxValue: OrderBy
-  stepId: OrderBy
-  time: OrderBy
-  txValue: OrderBy
-}
-"""
-order by min() on columns of table "simpipe.resource_usage"
-"""
-input simpipe_resource_usage_min_order_by {
-  cpu: OrderBy
-  id: OrderBy
-  memory: OrderBy
-  memoryMax: OrderBy
-  rxValue: OrderBy
-  stepId: OrderBy
-  time: OrderBy
-  txValue: OrderBy
-}
-"""
-order by stddev() on columns of table "simpipe.resource_usage"
-"""
-input simpipe_resource_usage_stddev_order_by {
-  cpu: OrderBy
-  id: OrderBy
-  memory: OrderBy
-  memoryMax: OrderBy
-  rxValue: OrderBy
-  stepId: OrderBy
-  txValue: OrderBy
-}
-"""
-order by stddev_pop() on columns of table "simpipe.resource_usage"
-"""
-input simpipe_resource_usage_stddev_pop_order_by {
-  cpu: OrderBy
-  id: OrderBy
-  memory: OrderBy
-  memoryMax: OrderBy
-  rxValue: OrderBy
-  stepId: OrderBy
-  txValue: OrderBy
-}
-"""
-order by stddev_samp() on columns of table "simpipe.resource_usage"
-"""
-input simpipe_resource_usage_stddev_samp_order_by {
-  cpu: OrderBy
-  id: OrderBy
-  memory: OrderBy
-  memoryMax: OrderBy
-  rxValue: OrderBy
-  stepId: OrderBy
-  txValue: OrderBy
-}
-"""
-order by sum() on columns of table "simpipe.resource_usage"
-"""
-input simpipe_resource_usage_sum_order_by {
-  cpu: OrderBy
-  id: OrderBy
-  memory: OrderBy
-  memoryMax: OrderBy
-  rxValue: OrderBy
-  stepId: OrderBy
-  txValue: OrderBy
-}
-"""
-order by var_pop() on columns of table "simpipe.resource_usage"
-"""
-input simpipe_resource_usage_var_pop_order_by {
-  cpu: OrderBy
-  id: OrderBy
-  memory: OrderBy
-  memoryMax: OrderBy
-  rxValue: OrderBy
-  stepId: OrderBy
-  txValue: OrderBy
-}
-"""
-order by var_samp() on columns of table "simpipe.resource_usage"
-"""
-input simpipe_resource_usage_var_samp_order_by {
-  cpu: OrderBy
-  id: OrderBy
-  memory: OrderBy
-  memoryMax: OrderBy
-  rxValue: OrderBy
-  stepId: OrderBy
-  txValue: OrderBy
-}
-"""
-order by variance() on columns of table "simpipe.resource_usage"
-"""
-input simpipe_resource_usage_variance_order_by {
-  cpu: OrderBy
-  id: OrderBy
-  memory: OrderBy
-  memoryMax: OrderBy
-  rxValue: OrderBy
-  stepId: OrderBy
-  txValue: OrderBy
 }
 "Simulations"
 type simulations {
+  "An array relationship"
+  cpu("distinct select on columns" distinctOn: [cpuSelectColumn!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" orderBy: [cpuOrderBy!], "filter the rows returned" where: cpuBoolExp): [cpu!]!
+  "An aggregate relationship"
+  cpuAggregate("distinct select on columns" distinctOn: [cpuSelectColumn!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" orderBy: [cpuOrderBy!], "filter the rows returned" where: cpuBoolExp): cpuAggregate!
   "DateTime of when the simulation was created"
-  created: timestamptz!
-  name: String
-  pipelineDescription("JSON select path" path: String): jsonb
+  created: timestamp!
+  "An array relationship"
+  fsReadsMerged("distinct select on columns" distinctOn: [fsReadsMergedSelectColumn!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" orderBy: [fsReadsMergedOrderBy!], "filter the rows returned" where: fsReadsMergedBoolExp): [fsReadsMerged!]!
+  "An aggregate relationship"
+  fsReadsMergedAggregate("distinct select on columns" distinctOn: [fsReadsMergedSelectColumn!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" orderBy: [fsReadsMergedOrderBy!], "filter the rows returned" where: fsReadsMergedBoolExp): fsReadsMergedAggregate!
+  "An array relationship"
+  fsWritesMerged("distinct select on columns" distinctOn: [fsWritesMergedSelectColumn!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" orderBy: [fsWritesMergedOrderBy!], "filter the rows returned" where: fsWritesMergedBoolExp): [fsWritesMerged!]!
+  "An aggregate relationship"
+  fsWritesMergedAggregate("distinct select on columns" distinctOn: [fsWritesMergedSelectColumn!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" orderBy: [fsWritesMergedOrderBy!], "filter the rows returned" where: fsWritesMergedBoolExp): fsWritesMergedAggregate!
+  "An array relationship"
+  memoryMaxUsageBytes("distinct select on columns" distinctOn: [memoryMaxUsageBytesSelectColumn!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" orderBy: [memoryMaxUsageBytesOrderBy!], "filter the rows returned" where: memoryMaxUsageBytesBoolExp): [memoryMaxUsageBytes!]!
+  "An aggregate relationship"
+  memoryMaxUsageBytesAggregate("distinct select on columns" distinctOn: [memoryMaxUsageBytesSelectColumn!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" orderBy: [memoryMaxUsageBytesOrderBy!], "filter the rows returned" where: memoryMaxUsageBytesBoolExp): memoryMaxUsageBytesAggregate!
+  "An array relationship"
+  memoryUsageBytes("distinct select on columns" distinctOn: [memoryUsageBytesSelectColumn!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" orderBy: [memoryUsageBytesOrderBy!], "filter the rows returned" where: memoryUsageBytesBoolExp): [memoryUsageBytes!]!
+  "An aggregate relationship"
+  memoryUsageBytesAggregate("distinct select on columns" distinctOn: [memoryUsageBytesSelectColumn!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" orderBy: [memoryUsageBytesOrderBy!], "filter the rows returned" where: memoryUsageBytesBoolExp): memoryUsageBytesAggregate!
+  "Name of the simulation, it is unique"
+  name: String!
+  "An array relationship"
+  networkReceivedBytes("distinct select on columns" distinctOn: [networkReceivedBytesSelectColumn!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" orderBy: [networkReceivedBytesOrderBy!], "filter the rows returned" where: networkReceivedBytesBoolExp): [networkReceivedBytes!]!
+  "An aggregate relationship"
+  networkReceivedBytesAggregate("distinct select on columns" distinctOn: [networkReceivedBytesSelectColumn!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" orderBy: [networkReceivedBytesOrderBy!], "filter the rows returned" where: networkReceivedBytesBoolExp): networkReceivedBytesAggregate!
+  "An array relationship"
+  networkTransmitBytes("distinct select on columns" distinctOn: [networkTransmitBytesSelectColumn!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" orderBy: [networkTransmitBytesOrderBy!], "filter the rows returned" where: networkTransmitBytesBoolExp): [networkTransmitBytes!]!
+  "An aggregate relationship"
+  networkTransmitBytesAggregate("distinct select on columns" distinctOn: [networkTransmitBytesSelectColumn!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" orderBy: [networkTransmitBytesOrderBy!], "filter the rows returned" where: networkTransmitBytesBoolExp): networkTransmitBytesAggregate!
+  "Description of the pipeline in JSON"
+  pipelineDescription("JSON select path" path: String): jsonb!
   "An array relationship"
   runs("distinct select on columns" distinctOn: [runsSelectColumn!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" orderBy: [runsOrderBy!], "filter the rows returned" where: runsBoolExp): [runs!]!
   "An aggregate relationship"
   runsAggregate("distinct select on columns" distinctOn: [runsSelectColumn!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" orderBy: [runsOrderBy!], "filter the rows returned" where: runsBoolExp): runsAggregate!
-  "uuid of the simulation"
+  "UUID of the simulation, random by default"
   simulationId: uuid!
-  userId: String
+  "User ID of the owner of the simulation"
+  userId: String!
 }
 """
 aggregated selection of "simpipe.simulations"
@@ -2192,6 +4340,7 @@ type simulationsAggregateFields {
 }
 "append existing jsonb value of filtered columns with new jsonb value"
 input simulationsAppendInput {
+  "Description of the pipeline in JSON"
   pipelineDescription: jsonb
 }
 """
@@ -2201,8 +4350,22 @@ input simulationsBoolExp {
   _and: [simulationsBoolExp!]
   _not: simulationsBoolExp
   _or: [simulationsBoolExp!]
-  created: TimestamptzComparisonExp
+  cpu: cpuBoolExp
+  cpu_aggregate: cpu_aggregate_bool_exp
+  created: TimestampComparisonExp
+  fsReadsMerged: fsReadsMergedBoolExp
+  fsReadsMerged_aggregate: fsReadsMerged_aggregate_bool_exp
+  fsWritesMerged: fsWritesMergedBoolExp
+  fsWritesMerged_aggregate: fsWritesMerged_aggregate_bool_exp
+  memoryMaxUsageBytes: memoryMaxUsageBytesBoolExp
+  memoryMaxUsageBytes_aggregate: memoryMaxUsageBytes_aggregate_bool_exp
+  memoryUsageBytes: memoryUsageBytesBoolExp
+  memoryUsageBytes_aggregate: memoryUsageBytes_aggregate_bool_exp
   name: StringComparisonExp
+  networkReceivedBytes: networkReceivedBytesBoolExp
+  networkReceivedBytes_aggregate: networkReceivedBytes_aggregate_bool_exp
+  networkTransmitBytes: networkTransmitBytesBoolExp
+  networkTransmitBytes_aggregate: networkTransmitBytes_aggregate_bool_exp
   pipelineDescription: JsonbComparisonExp
   runs: runsBoolExp
   runs_aggregate: runs_aggregate_bool_exp
@@ -2214,51 +4377,72 @@ unique or primary key constraints on table "simpipe.simulations"
 """
 enum simulationsConstraint {
   """
+  unique or primary key constraint on columns "name"
+  """
+  simulations_name_key
+  """
   unique or primary key constraint on columns "simulation_id"
   """
   simulations_pkey
 }
 "delete the field or element with specified path (for JSON arrays, negative integers count from the end)"
 input simulationsDeleteAtPathInput {
+  "Description of the pipeline in JSON"
   pipelineDescription: [String!]
 }
 "delete the array element with specified index (negative integers count from the end). throws an error if top level container is not an array"
 input simulationsDeleteElemInput {
+  "Description of the pipeline in JSON"
   pipelineDescription: Int
 }
 "delete key/value pair or string element. key/value pairs are matched based on their key value"
 input simulationsDeleteKeyInput {
+  "Description of the pipeline in JSON"
   pipelineDescription: String
 }
 """
 input type for inserting data into table "simpipe.simulations"
 """
 input simulationsInsertInput {
+  cpu: cpuArrRelInsertInput
   "DateTime of when the simulation was created"
-  created: timestamptz
+  created: timestamp
+  fsReadsMerged: fsReadsMergedArrRelInsertInput
+  fsWritesMerged: fsWritesMergedArrRelInsertInput
+  memoryMaxUsageBytes: memoryMaxUsageBytesArrRelInsertInput
+  memoryUsageBytes: memoryUsageBytesArrRelInsertInput
+  "Name of the simulation, it is unique"
   name: String
+  networkReceivedBytes: networkReceivedBytesArrRelInsertInput
+  networkTransmitBytes: networkTransmitBytesArrRelInsertInput
+  "Description of the pipeline in JSON"
   pipelineDescription: jsonb
   runs: runsArrRelInsertInput
-  "uuid of the simulation"
+  "UUID of the simulation, random by default"
   simulationId: uuid
+  "User ID of the owner of the simulation"
   userId: String
 }
 "aggregate max on columns"
 type simulationsMaxFields {
   "DateTime of when the simulation was created"
-  created: timestamptz
+  created: timestamp
+  "Name of the simulation, it is unique"
   name: String
-  "uuid of the simulation"
+  "UUID of the simulation, random by default"
   simulationId: uuid
+  "User ID of the owner of the simulation"
   userId: String
 }
 "aggregate min on columns"
 type simulationsMinFields {
   "DateTime of when the simulation was created"
-  created: timestamptz
+  created: timestamp
+  "Name of the simulation, it is unique"
   name: String
-  "uuid of the simulation"
+  "UUID of the simulation, random by default"
   simulationId: uuid
+  "User ID of the owner of the simulation"
   userId: String
 }
 """
@@ -2290,8 +4474,15 @@ input simulationsOnConflict {
 Ordering options when selecting data from "simpipe.simulations".
 """
 input simulationsOrderBy {
+  cpuAggregate: cpuAggregateOrderBy
   created: OrderBy
+  fsReadsMergedAggregate: fsReadsMergedAggregateOrderBy
+  fsWritesMergedAggregate: fsWritesMergedAggregateOrderBy
+  memoryMaxUsageBytesAggregate: memoryMaxUsageBytesAggregateOrderBy
+  memoryUsageBytesAggregate: memoryUsageBytesAggregateOrderBy
   name: OrderBy
+  networkReceivedBytesAggregate: networkReceivedBytesAggregateOrderBy
+  networkTransmitBytesAggregate: networkTransmitBytesAggregateOrderBy
   pipelineDescription: OrderBy
   runsAggregate: runsAggregateOrderBy
   simulationId: OrderBy
@@ -2299,11 +4490,12 @@ input simulationsOrderBy {
 }
 "primary key columns input for table: simpipe.simulations"
 input simulationsPkColumnsInput {
-  "uuid of the simulation"
+  "UUID of the simulation, random by default"
   simulationId: uuid!
 }
 "prepend existing jsonb value of filtered columns with new jsonb value"
 input simulationsPrependInput {
+  "Description of the pipeline in JSON"
   pipelineDescription: jsonb
 }
 """
@@ -2326,11 +4518,14 @@ input type for updating data in table "simpipe.simulations"
 """
 input simulationsSetInput {
   "DateTime of when the simulation was created"
-  created: timestamptz
+  created: timestamp
+  "Name of the simulation, it is unique"
   name: String
+  "Description of the pipeline in JSON"
   pipelineDescription: jsonb
-  "uuid of the simulation"
+  "UUID of the simulation, random by default"
   simulationId: uuid
+  "User ID of the owner of the simulation"
   userId: String
 }
 """
@@ -2345,11 +4540,14 @@ input simulationsStreamCursorInput {
 "Initial value of the column from where the streaming should start"
 input simulationsStreamCursorValueInput {
   "DateTime of when the simulation was created"
-  created: timestamptz
+  created: timestamp
+  "Name of the simulation, it is unique"
   name: String
+  "Description of the pipeline in JSON"
   pipelineDescription: jsonb
-  "uuid of the simulation"
+  "UUID of the simulation, random by default"
   simulationId: uuid
+  "User ID of the owner of the simulation"
   userId: String
 }
 """
@@ -2383,31 +4581,63 @@ input simulationsUpdates {
   "filter the rows which have to be updated"
   where: simulationsBoolExp!
 }
-"""
-columns and relationships of "simpipe.steps"
-"""
+"Steps in a run"
 type steps {
-  created: timestamptz!
-  ended: timestamptz
+  "An array relationship"
+  cpu("distinct select on columns" distinctOn: [cpuSelectColumn!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" orderBy: [cpuOrderBy!], "filter the rows returned" where: cpuBoolExp): [cpu!]!
+  "An aggregate relationship"
+  cpuAggregate("distinct select on columns" distinctOn: [cpuSelectColumn!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" orderBy: [cpuOrderBy!], "filter the rows returned" where: cpuBoolExp): cpuAggregate!
+  "DateTime of when the step was created"
+  created: timestamp!
+  "DateTime of when the step was ended, NULL if not ended"
+  ended: timestamp
   "An array relationship"
   envs("distinct select on columns" distinctOn: [SimpipeEnvsSelectColumn!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" orderBy: [SimpipeEnvsOrderBy!], "filter the rows returned" where: SimpipeEnvsBoolExp): [SimpipeEnvs!]!
   "An aggregate relationship"
   envsAggregate("distinct select on columns" distinctOn: [SimpipeEnvsSelectColumn!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" orderBy: [SimpipeEnvsOrderBy!], "filter the rows returned" where: SimpipeEnvsBoolExp): SimpipeEnvsAggregate!
+  "An array relationship"
+  fsReadsMerged("distinct select on columns" distinctOn: [fsReadsMergedSelectColumn!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" orderBy: [fsReadsMergedOrderBy!], "filter the rows returned" where: fsReadsMergedBoolExp): [fsReadsMerged!]!
+  "An aggregate relationship"
+  fsReadsMergedAggregate("distinct select on columns" distinctOn: [fsReadsMergedSelectColumn!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" orderBy: [fsReadsMergedOrderBy!], "filter the rows returned" where: fsReadsMergedBoolExp): fsReadsMergedAggregate!
+  "An array relationship"
+  fsWritesMerged("distinct select on columns" distinctOn: [fsWritesMergedSelectColumn!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" orderBy: [fsWritesMergedOrderBy!], "filter the rows returned" where: fsWritesMergedBoolExp): [fsWritesMerged!]!
+  "An aggregate relationship"
+  fsWritesMergedAggregate("distinct select on columns" distinctOn: [fsWritesMergedSelectColumn!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" orderBy: [fsWritesMergedOrderBy!], "filter the rows returned" where: fsWritesMergedBoolExp): fsWritesMergedAggregate!
+  "Docker image of the step"
   image: String!
   "An object relationship"
   log: SimpipeLogs
-  name: String!
-  pipelineStepNumber: Int!
-  "An aggregate relationship"
-  resourceUsagesAggregate("distinct select on columns" distinctOn: [SimpipeResourceUsageSelectColumn!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" orderBy: [SimpipeResourceUsageOrderBy!], "filter the rows returned" where: SimpipeResourceUsageBoolExp): SimpipeResourceUsageAggregate!
   "An array relationship"
-  resource_usages("distinct select on columns" distinctOn: [SimpipeResourceUsageSelectColumn!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" orderBy: [SimpipeResourceUsageOrderBy!], "filter the rows returned" where: SimpipeResourceUsageBoolExp): [SimpipeResourceUsage!]!
+  memoryMaxUsageBytes("distinct select on columns" distinctOn: [memoryMaxUsageBytesSelectColumn!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" orderBy: [memoryMaxUsageBytesOrderBy!], "filter the rows returned" where: memoryMaxUsageBytesBoolExp): [memoryMaxUsageBytes!]!
+  "An aggregate relationship"
+  memoryMaxUsageBytesAggregate("distinct select on columns" distinctOn: [memoryMaxUsageBytesSelectColumn!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" orderBy: [memoryMaxUsageBytesOrderBy!], "filter the rows returned" where: memoryMaxUsageBytesBoolExp): memoryMaxUsageBytesAggregate!
+  "An array relationship"
+  memoryUsageBytes("distinct select on columns" distinctOn: [stepsSelectColumn!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" orderBy: [stepsOrderBy!], "filter the rows returned" where: stepsBoolExp): [steps!]!
+  "An aggregate relationship"
+  memoryUsageBytesAggregate("distinct select on columns" distinctOn: [stepsSelectColumn!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" orderBy: [stepsOrderBy!], "filter the rows returned" where: stepsBoolExp): stepsAggregate!
+  "Name of the step, it is unique per run"
+  name: String!
+  "An array relationship"
+  networkReceivedBytes("distinct select on columns" distinctOn: [networkReceivedBytesSelectColumn!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" orderBy: [networkReceivedBytesOrderBy!], "filter the rows returned" where: networkReceivedBytesBoolExp): [networkReceivedBytes!]!
+  "An aggregate relationship"
+  networkReceivedBytesAggregate("distinct select on columns" distinctOn: [networkReceivedBytesSelectColumn!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" orderBy: [networkReceivedBytesOrderBy!], "filter the rows returned" where: networkReceivedBytesBoolExp): networkReceivedBytesAggregate!
+  "An array relationship"
+  networkTransmitBytes("distinct select on columns" distinctOn: [networkTransmitBytesSelectColumn!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" orderBy: [networkTransmitBytesOrderBy!], "filter the rows returned" where: networkTransmitBytesBoolExp): [networkTransmitBytes!]!
+  "An aggregate relationship"
+  networkTransmitBytesAggregate("distinct select on columns" distinctOn: [networkTransmitBytesSelectColumn!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" orderBy: [networkTransmitBytesOrderBy!], "filter the rows returned" where: networkTransmitBytesBoolExp): networkTransmitBytesAggregate!
+  "Step number in the pipeline, must be unique per run and a positive integer"
+  pipelineStepNumber: Int!
   "An object relationship"
   run: runs!
+  "UUID of the run, must exist in the runs table"
   runId: uuid!
-  started: timestamptz
+  "DateTime of when the step was started, NULL if not started"
+  started: timestamp
+  "Status of the step, must be one of the values in the step_status enum"
   status: SimpipeStepStatusEnum!
+  "UUID of the step, random by default"
   stepId: uuid!
+  "Timeout of the step in seconds, must be between 1 and 86400"
   timeout: Int!
 }
 """
@@ -2459,8 +4689,9 @@ input stepsArrRelInsertInput {
 }
 "aggregate avg on columns"
 type stepsAvgFields {
+  "Step number in the pipeline, must be unique per run and a positive integer"
   pipelineStepNumber: Float
-  stepId: Float
+  "Timeout of the step in seconds, must be between 1 and 86400"
   timeout: Float
 }
 """
@@ -2470,21 +4701,33 @@ input stepsBoolExp {
   _and: [stepsBoolExp!]
   _not: stepsBoolExp
   _or: [stepsBoolExp!]
-  created: TimestamptzComparisonExp
-  ended: TimestamptzComparisonExp
+  cpu: cpuBoolExp
+  cpu_aggregate: cpu_aggregate_bool_exp
+  created: TimestampComparisonExp
+  ended: TimestampComparisonExp
   envs: SimpipeEnvsBoolExp
   envs_aggregate: simpipe_envs_aggregate_bool_exp
+  fsReadsMerged: fsReadsMergedBoolExp
+  fsReadsMerged_aggregate: fsReadsMerged_aggregate_bool_exp
+  fsWritesMerged: fsWritesMergedBoolExp
+  fsWritesMerged_aggregate: fsWritesMerged_aggregate_bool_exp
   image: StringComparisonExp
   log: SimpipeLogsBoolExp
+  memoryMaxUsageBytes: memoryMaxUsageBytesBoolExp
+  memoryMaxUsageBytes_aggregate: memoryMaxUsageBytes_aggregate_bool_exp
+  memoryUsageBytes: stepsBoolExp
+  memoryUsageBytes_aggregate: steps_aggregate_bool_exp
   name: StringComparisonExp
+  networkReceivedBytes: networkReceivedBytesBoolExp
+  networkReceivedBytes_aggregate: networkReceivedBytes_aggregate_bool_exp
+  networkTransmitBytes: networkTransmitBytesBoolExp
+  networkTransmitBytes_aggregate: networkTransmitBytes_aggregate_bool_exp
   pipelineStepNumber: IntComparisonExp
-  resource_usages: SimpipeResourceUsageBoolExp
-  resource_usages_aggregate: simpipe_resource_usage_aggregate_bool_exp
   run: runsBoolExp
   runId: UuidComparisonExp
-  started: TimestamptzComparisonExp
+  started: TimestampComparisonExp
   status: SimpipeStepStatusEnumComparisonExp
-  stepId: StringComparisonExp
+  stepId: UuidComparisonExp
   timeout: IntComparisonExp
 }
 """
@@ -2508,51 +4751,86 @@ enum stepsConstraint {
 input type for incrementing numeric columns in table "simpipe.steps"
 """
 input stepsIncInput {
+  "Step number in the pipeline, must be unique per run and a positive integer"
   pipelineStepNumber: Int
-  stepId: uuid
+  "Timeout of the step in seconds, must be between 1 and 86400"
   timeout: Int
 }
 """
 input type for inserting data into table "simpipe.steps"
 """
 input stepsInsertInput {
-  created: timestamptz
-  ended: timestamptz
+  cpu: cpuArrRelInsertInput
+  "DateTime of when the step was created"
+  created: timestamp
+  "DateTime of when the step was ended, NULL if not ended"
+  ended: timestamp
   envs: SimpipeEnvsArrRelInsertInput
+  fsReadsMerged: fsReadsMergedArrRelInsertInput
+  fsWritesMerged: fsWritesMergedArrRelInsertInput
+  "Docker image of the step"
   image: String
   log: SimpipeLogsObjRelInsertInput
+  memoryMaxUsageBytes: memoryMaxUsageBytesArrRelInsertInput
+  memoryUsageBytes: stepsArrRelInsertInput
+  "Name of the step, it is unique per run"
   name: String
+  networkReceivedBytes: networkReceivedBytesArrRelInsertInput
+  networkTransmitBytes: networkTransmitBytesArrRelInsertInput
+  "Step number in the pipeline, must be unique per run and a positive integer"
   pipelineStepNumber: Int
-  resource_usages: SimpipeResourceUsageArrRelInsertInput
   run: runsObjRelInsertInput
+  "UUID of the run, must exist in the runs table"
   runId: uuid
-  started: timestamptz
+  "DateTime of when the step was started, NULL if not started"
+  started: timestamp
+  "Status of the step, must be one of the values in the step_status enum"
   status: SimpipeStepStatusEnum
+  "UUID of the step, random by default"
   stepId: uuid
+  "Timeout of the step in seconds, must be between 1 and 86400"
   timeout: Int
 }
 "aggregate max on columns"
 type stepsMaxFields {
-  created: timestamptz
-  ended: timestamptz
+  "DateTime of when the step was created"
+  created: timestamp
+  "DateTime of when the step was ended, NULL if not ended"
+  ended: timestamp
+  "Docker image of the step"
   image: String
+  "Name of the step, it is unique per run"
   name: String
+  "Step number in the pipeline, must be unique per run and a positive integer"
   pipelineStepNumber: Int
+  "UUID of the run, must exist in the runs table"
   runId: uuid
-  started: timestamptz
+  "DateTime of when the step was started, NULL if not started"
+  started: timestamp
+  "UUID of the step, random by default"
   stepId: uuid
+  "Timeout of the step in seconds, must be between 1 and 86400"
   timeout: Int
 }
 "aggregate min on columns"
 type stepsMinFields {
-  created: timestamptz
-  ended: timestamptz
+  "DateTime of when the step was created"
+  created: timestamp
+  "DateTime of when the step was ended, NULL if not ended"
+  ended: timestamp
+  "Docker image of the step"
   image: String
+  "Name of the step, it is unique per run"
   name: String
+  "Step number in the pipeline, must be unique per run and a positive integer"
   pipelineStepNumber: Int
+  "UUID of the run, must exist in the runs table"
   runId: uuid
-  started: timestamptz
+  "DateTime of when the step was started, NULL if not started"
+  started: timestamp
+  "UUID of the step, random by default"
   stepId: uuid
+  "Timeout of the step in seconds, must be between 1 and 86400"
   timeout: Int
 }
 """
@@ -2584,14 +4862,20 @@ input stepsOnConflict {
 Ordering options when selecting data from "simpipe.steps".
 """
 input stepsOrderBy {
+  cpuAggregate: cpuAggregateOrderBy
   created: OrderBy
   ended: OrderBy
   envsAggregate: SimpipeEnvsAggregateOrderBy
+  fsReadsMergedAggregate: fsReadsMergedAggregateOrderBy
+  fsWritesMergedAggregate: fsWritesMergedAggregateOrderBy
   image: OrderBy
   log: SimpipeLogsOrderBy
+  memoryMaxUsageBytesAggregate: memoryMaxUsageBytesAggregateOrderBy
+  memoryUsageBytesAggregate: stepsAggregateOrderBy
   name: OrderBy
+  networkReceivedBytesAggregate: networkReceivedBytesAggregateOrderBy
+  networkTransmitBytesAggregate: networkTransmitBytesAggregateOrderBy
   pipelineStepNumber: OrderBy
-  resource_usagesAggregate: SimpipeResourceUsageAggregateOrderBy
   run: runsOrderBy
   runId: OrderBy
   started: OrderBy
@@ -2601,6 +4885,7 @@ input stepsOrderBy {
 }
 "primary key columns input for table: simpipe.steps"
 input stepsPkColumnsInput {
+  "UUID of the step, random by default"
   stepId: uuid!
 }
 """
@@ -2632,33 +4917,46 @@ enum stepsSelectColumn {
 input type for updating data in table "simpipe.steps"
 """
 input stepsSetInput {
-  created: timestamptz
-  ended: timestamptz
+  "DateTime of when the step was created"
+  created: timestamp
+  "DateTime of when the step was ended, NULL if not ended"
+  ended: timestamp
+  "Docker image of the step"
   image: String
+  "Name of the step, it is unique per run"
   name: String
+  "Step number in the pipeline, must be unique per run and a positive integer"
   pipelineStepNumber: Int
+  "UUID of the run, must exist in the runs table"
   runId: uuid
-  started: timestamptz
+  "DateTime of when the step was started, NULL if not started"
+  started: timestamp
+  "Status of the step, must be one of the values in the step_status enum"
   status: SimpipeStepStatusEnum
+  "UUID of the step, random by default"
   stepId: uuid
+  "Timeout of the step in seconds, must be between 1 and 86400"
   timeout: Int
 }
 "aggregate stddev on columns"
 type stepsStddevFields {
+  "Step number in the pipeline, must be unique per run and a positive integer"
   pipelineStepNumber: Float
-  stepId: Float
+  "Timeout of the step in seconds, must be between 1 and 86400"
   timeout: Float
 }
 "aggregate stddev_pop on columns"
 type stepsStddev_popFields {
+  "Step number in the pipeline, must be unique per run and a positive integer"
   pipelineStepNumber: Float
-  stepId: Float
+  "Timeout of the step in seconds, must be between 1 and 86400"
   timeout: Float
 }
 "aggregate stddev_samp on columns"
 type stepsStddev_sampFields {
+  "Step number in the pipeline, must be unique per run and a positive integer"
   pipelineStepNumber: Float
-  stepId: Float
+  "Timeout of the step in seconds, must be between 1 and 86400"
   timeout: Float
 }
 """
@@ -2672,21 +4970,32 @@ input stepsStreamCursorInput {
 }
 "Initial value of the column from where the streaming should start"
 input stepsStreamCursorValueInput {
-  created: timestamptz
-  ended: timestamptz
+  "DateTime of when the step was created"
+  created: timestamp
+  "DateTime of when the step was ended, NULL if not ended"
+  ended: timestamp
+  "Docker image of the step"
   image: String
+  "Name of the step, it is unique per run"
   name: String
+  "Step number in the pipeline, must be unique per run and a positive integer"
   pipelineStepNumber: Int
+  "UUID of the run, must exist in the runs table"
   runId: uuid
-  started: timestamptz
+  "DateTime of when the step was started, NULL if not started"
+  started: timestamp
+  "Status of the step, must be one of the values in the step_status enum"
   status: SimpipeStepStatusEnum
+  "UUID of the step, random by default"
   stepId: uuid
+  "Timeout of the step in seconds, must be between 1 and 86400"
   timeout: Int
 }
 "aggregate sum on columns"
 type stepsSumFields {
+  "Step number in the pipeline, must be unique per run and a positive integer"
   pipelineStepNumber: Int
-  stepId: uuid
+  "Timeout of the step in seconds, must be between 1 and 86400"
   timeout: Int
 }
 """
@@ -2724,20 +5033,23 @@ input stepsUpdates {
 }
 "aggregate var_pop on columns"
 type stepsVar_popFields {
+  "Step number in the pipeline, must be unique per run and a positive integer"
   pipelineStepNumber: Float
-  stepId: Float
+  "Timeout of the step in seconds, must be between 1 and 86400"
   timeout: Float
 }
 "aggregate var_samp on columns"
 type stepsVar_sampFields {
+  "Step number in the pipeline, must be unique per run and a positive integer"
   pipelineStepNumber: Float
-  stepId: Float
+  "Timeout of the step in seconds, must be between 1 and 86400"
   timeout: Float
 }
 "aggregate variance on columns"
 type stepsVarianceFields {
+  "Step number in the pipeline, must be unique per run and a positive integer"
   pipelineStepNumber: Float
-  stepId: Float
+  "Timeout of the step in seconds, must be between 1 and 86400"
   timeout: Float
 }
 input steps_aggregate_bool_exp {
@@ -2753,99 +5065,181 @@ input steps_aggregate_bool_exp_count {
 order by avg() on columns of table "simpipe.steps"
 """
 input steps_avg_order_by {
+  "Step number in the pipeline, must be unique per run and a positive integer"
   pipelineStepNumber: OrderBy
-  stepId: OrderBy
+  "Timeout of the step in seconds, must be between 1 and 86400"
   timeout: OrderBy
 }
 """
 order by max() on columns of table "simpipe.steps"
 """
 input steps_max_order_by {
+  "DateTime of when the step was created"
   created: OrderBy
+  "DateTime of when the step was ended, NULL if not ended"
   ended: OrderBy
+  "Docker image of the step"
   image: OrderBy
+  "Name of the step, it is unique per run"
   name: OrderBy
+  "Step number in the pipeline, must be unique per run and a positive integer"
   pipelineStepNumber: OrderBy
+  "UUID of the run, must exist in the runs table"
   runId: OrderBy
+  "DateTime of when the step was started, NULL if not started"
   started: OrderBy
+  "UUID of the step, random by default"
   stepId: OrderBy
+  "Timeout of the step in seconds, must be between 1 and 86400"
   timeout: OrderBy
 }
 """
 order by min() on columns of table "simpipe.steps"
 """
 input steps_min_order_by {
+  "DateTime of when the step was created"
   created: OrderBy
+  "DateTime of when the step was ended, NULL if not ended"
   ended: OrderBy
+  "Docker image of the step"
   image: OrderBy
+  "Name of the step, it is unique per run"
   name: OrderBy
+  "Step number in the pipeline, must be unique per run and a positive integer"
   pipelineStepNumber: OrderBy
+  "UUID of the run, must exist in the runs table"
   runId: OrderBy
+  "DateTime of when the step was started, NULL if not started"
   started: OrderBy
+  "UUID of the step, random by default"
   stepId: OrderBy
+  "Timeout of the step in seconds, must be between 1 and 86400"
   timeout: OrderBy
 }
 """
 order by stddev() on columns of table "simpipe.steps"
 """
 input steps_stddev_order_by {
+  "Step number in the pipeline, must be unique per run and a positive integer"
   pipelineStepNumber: OrderBy
-  stepId: OrderBy
+  "Timeout of the step in seconds, must be between 1 and 86400"
   timeout: OrderBy
 }
 """
 order by stddev_pop() on columns of table "simpipe.steps"
 """
 input steps_stddev_pop_order_by {
+  "Step number in the pipeline, must be unique per run and a positive integer"
   pipelineStepNumber: OrderBy
-  stepId: OrderBy
+  "Timeout of the step in seconds, must be between 1 and 86400"
   timeout: OrderBy
 }
 """
 order by stddev_samp() on columns of table "simpipe.steps"
 """
 input steps_stddev_samp_order_by {
+  "Step number in the pipeline, must be unique per run and a positive integer"
   pipelineStepNumber: OrderBy
-  stepId: OrderBy
+  "Timeout of the step in seconds, must be between 1 and 86400"
   timeout: OrderBy
 }
 """
 order by sum() on columns of table "simpipe.steps"
 """
 input steps_sum_order_by {
+  "Step number in the pipeline, must be unique per run and a positive integer"
   pipelineStepNumber: OrderBy
-  stepId: OrderBy
+  "Timeout of the step in seconds, must be between 1 and 86400"
   timeout: OrderBy
 }
 """
 order by var_pop() on columns of table "simpipe.steps"
 """
 input steps_var_pop_order_by {
+  "Step number in the pipeline, must be unique per run and a positive integer"
   pipelineStepNumber: OrderBy
-  stepId: OrderBy
+  "Timeout of the step in seconds, must be between 1 and 86400"
   timeout: OrderBy
 }
 """
 order by var_samp() on columns of table "simpipe.steps"
 """
 input steps_var_samp_order_by {
+  "Step number in the pipeline, must be unique per run and a positive integer"
   pipelineStepNumber: OrderBy
-  stepId: OrderBy
+  "Timeout of the step in seconds, must be between 1 and 86400"
   timeout: OrderBy
 }
 """
 order by variance() on columns of table "simpipe.steps"
 """
 input steps_variance_order_by {
+  "Step number in the pipeline, must be unique per run and a positive integer"
   pipelineStepNumber: OrderBy
-  stepId: OrderBy
+  "Timeout of the step in seconds, must be between 1 and 86400"
   timeout: OrderBy
 }
 type subscription_root {
+  "An array relationship"
+  cpu("distinct select on columns" distinctOn: [cpuSelectColumn!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" orderBy: [cpuOrderBy!], "filter the rows returned" where: cpuBoolExp): [cpu!]!
+  "An aggregate relationship"
+  cpuAggregate("distinct select on columns" distinctOn: [cpuSelectColumn!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" orderBy: [cpuOrderBy!], "filter the rows returned" where: cpuBoolExp): cpuAggregate!
+  """
+  fetch data from the table in a streaming manner: "simpipe.cpu"
+  """
+  cpuStream("maximum number of rows returned in a single batch" batchSize: Int!, "cursor to stream the results returned by the query" cursor: [cpuStreamCursorInput]!, "filter the rows returned" where: cpuBoolExp): [cpu!]!
+  "An array relationship"
+  fsReadsMerged("distinct select on columns" distinctOn: [fsReadsMergedSelectColumn!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" orderBy: [fsReadsMergedOrderBy!], "filter the rows returned" where: fsReadsMergedBoolExp): [fsReadsMerged!]!
+  "An aggregate relationship"
+  fsReadsMergedAggregate("distinct select on columns" distinctOn: [fsReadsMergedSelectColumn!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" orderBy: [fsReadsMergedOrderBy!], "filter the rows returned" where: fsReadsMergedBoolExp): fsReadsMergedAggregate!
+  """
+  fetch data from the table in a streaming manner: "simpipe.fs_reads_merged"
+  """
+  fsReadsMergedStream("maximum number of rows returned in a single batch" batchSize: Int!, "cursor to stream the results returned by the query" cursor: [fsReadsMergedStreamCursorInput]!, "filter the rows returned" where: fsReadsMergedBoolExp): [fsReadsMerged!]!
+  "An array relationship"
+  fsWritesMerged("distinct select on columns" distinctOn: [fsWritesMergedSelectColumn!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" orderBy: [fsWritesMergedOrderBy!], "filter the rows returned" where: fsWritesMergedBoolExp): [fsWritesMerged!]!
+  "An aggregate relationship"
+  fsWritesMergedAggregate("distinct select on columns" distinctOn: [fsWritesMergedSelectColumn!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" orderBy: [fsWritesMergedOrderBy!], "filter the rows returned" where: fsWritesMergedBoolExp): fsWritesMergedAggregate!
+  """
+  fetch data from the table in a streaming manner: "simpipe.fs_writes_merged"
+  """
+  fsWritesMergedStream("maximum number of rows returned in a single batch" batchSize: Int!, "cursor to stream the results returned by the query" cursor: [fsWritesMergedStreamCursorInput]!, "filter the rows returned" where: fsWritesMergedBoolExp): [fsWritesMerged!]!
+  "An array relationship"
+  memoryMaxUsageBytes("distinct select on columns" distinctOn: [memoryMaxUsageBytesSelectColumn!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" orderBy: [memoryMaxUsageBytesOrderBy!], "filter the rows returned" where: memoryMaxUsageBytesBoolExp): [memoryMaxUsageBytes!]!
+  "An aggregate relationship"
+  memoryMaxUsageBytesAggregate("distinct select on columns" distinctOn: [memoryMaxUsageBytesSelectColumn!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" orderBy: [memoryMaxUsageBytesOrderBy!], "filter the rows returned" where: memoryMaxUsageBytesBoolExp): memoryMaxUsageBytesAggregate!
+  """
+  fetch data from the table in a streaming manner: "simpipe.memory_max_usage_bytes"
+  """
+  memoryMaxUsageBytesStream("maximum number of rows returned in a single batch" batchSize: Int!, "cursor to stream the results returned by the query" cursor: [memoryMaxUsageBytesStreamCursorInput]!, "filter the rows returned" where: memoryMaxUsageBytesBoolExp): [memoryMaxUsageBytes!]!
+  "An array relationship"
+  memoryUsageBytes("distinct select on columns" distinctOn: [memoryUsageBytesSelectColumn!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" orderBy: [memoryUsageBytesOrderBy!], "filter the rows returned" where: memoryUsageBytesBoolExp): [memoryUsageBytes!]!
+  "An aggregate relationship"
+  memoryUsageBytesAggregate("distinct select on columns" distinctOn: [memoryUsageBytesSelectColumn!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" orderBy: [memoryUsageBytesOrderBy!], "filter the rows returned" where: memoryUsageBytesBoolExp): memoryUsageBytesAggregate!
+  """
+  fetch data from the table in a streaming manner: "simpipe.memory_usage_bytes"
+  """
+  memoryUsageBytesStream("maximum number of rows returned in a single batch" batchSize: Int!, "cursor to stream the results returned by the query" cursor: [memoryUsageBytesStreamCursorInput]!, "filter the rows returned" where: memoryUsageBytesBoolExp): [memoryUsageBytes!]!
+  "An array relationship"
+  networkReceivedBytes("distinct select on columns" distinctOn: [networkReceivedBytesSelectColumn!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" orderBy: [networkReceivedBytesOrderBy!], "filter the rows returned" where: networkReceivedBytesBoolExp): [networkReceivedBytes!]!
+  "An aggregate relationship"
+  networkReceivedBytesAggregate("distinct select on columns" distinctOn: [networkReceivedBytesSelectColumn!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" orderBy: [networkReceivedBytesOrderBy!], "filter the rows returned" where: networkReceivedBytesBoolExp): networkReceivedBytesAggregate!
+  """
+  fetch data from the table in a streaming manner: "simpipe.network_received_bytes"
+  """
+  networkReceivedBytesStream("maximum number of rows returned in a single batch" batchSize: Int!, "cursor to stream the results returned by the query" cursor: [networkReceivedBytesStreamCursorInput]!, "filter the rows returned" where: networkReceivedBytesBoolExp): [networkReceivedBytes!]!
+  "An array relationship"
+  networkTransmitBytes("distinct select on columns" distinctOn: [networkTransmitBytesSelectColumn!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" orderBy: [networkTransmitBytesOrderBy!], "filter the rows returned" where: networkTransmitBytesBoolExp): [networkTransmitBytes!]!
+  "An aggregate relationship"
+  networkTransmitBytesAggregate("distinct select on columns" distinctOn: [networkTransmitBytesSelectColumn!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" orderBy: [networkTransmitBytesOrderBy!], "filter the rows returned" where: networkTransmitBytesBoolExp): networkTransmitBytesAggregate!
+  """
+  fetch data from the table in a streaming manner: "simpipe.network_transmit_bytes"
+  """
+  networkTransmitBytesStream("maximum number of rows returned in a single batch" batchSize: Int!, "cursor to stream the results returned by the query" cursor: [networkTransmitBytesStreamCursorInput]!, "filter the rows returned" where: networkTransmitBytesBoolExp): [networkTransmitBytes!]!
   """
   fetch data from the table: "simpipe.runs" using primary key columns
   """
-  run(runId: uuid!): runs
+  run("UUID of the run, random by default" runId: uuid!): runs
   "An array relationship"
   runs("distinct select on columns" distinctOn: [runsSelectColumn!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" orderBy: [runsOrderBy!], "filter the rows returned" where: runsBoolExp): [runs!]!
   "An aggregate relationship"
@@ -2854,18 +5248,6 @@ type subscription_root {
   fetch data from the table in a streaming manner: "simpipe.runs"
   """
   runsStream("maximum number of rows returned in a single batch" batchSize: Int!, "cursor to stream the results returned by the query" cursor: [runsStreamCursorInput]!, "filter the rows returned" where: runsBoolExp): [runs!]!
-  """
-  fetch data from the table: "simpipe.cpu"
-  """
-  simpipeCpu("distinct select on columns" distinctOn: [SimpipeCpuSelectColumn!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" orderBy: [SimpipeCpuOrderBy!], "filter the rows returned" where: SimpipeCpuBoolExp): [SimpipeCpu!]!
-  """
-  fetch aggregated fields from the table: "simpipe.cpu"
-  """
-  simpipeCpuAggregate("distinct select on columns" distinctOn: [SimpipeCpuSelectColumn!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" orderBy: [SimpipeCpuOrderBy!], "filter the rows returned" where: SimpipeCpuBoolExp): SimpipeCpuAggregate!
-  """
-  fetch data from the table in a streaming manner: "simpipe.cpu"
-  """
-  simpipeCpuStream("maximum number of rows returned in a single batch" batchSize: Int!, "cursor to stream the results returned by the query" cursor: [SimpipeCpuStreamCursorInput]!, "filter the rows returned" where: SimpipeCpuBoolExp): [SimpipeCpu!]!
   """
   fetch data from the table: "simpipe.envs"
   """
@@ -2877,7 +5259,7 @@ type subscription_root {
   """
   fetch data from the table: "simpipe.envs" using primary key columns
   """
-  simpipeEnvsByPk(envId: Int!): SimpipeEnvs
+  simpipeEnvsByPk("UUID of the env, random by default" envId: uuid!): SimpipeEnvs
   """
   fetch data from the table in a streaming manner: "simpipe.envs"
   """
@@ -2893,27 +5275,11 @@ type subscription_root {
   """
   fetch data from the table: "simpipe.logs" using primary key columns
   """
-  simpipeLogsByPk(stepId: uuid!): SimpipeLogs
+  simpipeLogsByPk("UUID of the step, must exist in the steps table" stepId: uuid!): SimpipeLogs
   """
   fetch data from the table in a streaming manner: "simpipe.logs"
   """
   simpipeLogsStream("maximum number of rows returned in a single batch" batchSize: Int!, "cursor to stream the results returned by the query" cursor: [SimpipeLogsStreamCursorInput]!, "filter the rows returned" where: SimpipeLogsBoolExp): [SimpipeLogs!]!
-  """
-  fetch data from the table: "simpipe.resource_usage"
-  """
-  simpipeResourceUsage("distinct select on columns" distinctOn: [SimpipeResourceUsageSelectColumn!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" orderBy: [SimpipeResourceUsageOrderBy!], "filter the rows returned" where: SimpipeResourceUsageBoolExp): [SimpipeResourceUsage!]!
-  """
-  fetch aggregated fields from the table: "simpipe.resource_usage"
-  """
-  simpipeResourceUsageAggregate("distinct select on columns" distinctOn: [SimpipeResourceUsageSelectColumn!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" orderBy: [SimpipeResourceUsageOrderBy!], "filter the rows returned" where: SimpipeResourceUsageBoolExp): SimpipeResourceUsageAggregate!
-  """
-  fetch data from the table: "simpipe.resource_usage" using primary key columns
-  """
-  simpipeResourceUsageByPk(id: bigint!): SimpipeResourceUsage
-  """
-  fetch data from the table in a streaming manner: "simpipe.resource_usage"
-  """
-  simpipeResourceUsageStream("maximum number of rows returned in a single batch" batchSize: Int!, "cursor to stream the results returned by the query" cursor: [SimpipeResourceUsageStreamCursorInput]!, "filter the rows returned" where: SimpipeResourceUsageBoolExp): [SimpipeResourceUsage!]!
   """
   fetch data from the table: "simpipe.run_status"
   """
@@ -2949,7 +5315,7 @@ type subscription_root {
   """
   fetch data from the table: "simpipe.simulations" using primary key columns
   """
-  simulation("uuid of the simulation" simulationId: uuid!): simulations
+  simulation("UUID of the simulation, random by default" simulationId: uuid!): simulations
   """
   fetch data from the table: "simpipe.simulations"
   """
@@ -2969,12 +5335,12 @@ type subscription_root {
   """
   fetch data from the table: "simpipe.steps" using primary key columns
   """
-  stepsByPk(stepId: uuid!): steps
+  stepsByPk("UUID of the step, random by default" stepId: uuid!): steps
   """
   fetch data from the table in a streaming manner: "simpipe.steps"
   """
   stepsStream("maximum number of rows returned in a single batch" batchSize: Int!, "cursor to stream the results returned by the query" cursor: [stepsStreamCursorInput]!, "filter the rows returned" where: stepsBoolExp): [steps!]!
 }
+scalar timestamp
 scalar timestamptz
 scalar uuid
-scalar float8

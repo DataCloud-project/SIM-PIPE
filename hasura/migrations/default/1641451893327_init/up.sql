@@ -220,3 +220,6 @@ SELECT data."time",
       FROM prom_data.container_fs_writes_merged_total as data
       LEFT JOIN prom_series.container_fs_writes_merged_total as series
         ON series.series_id = data.series_id;
+
+-- Automatically cast uuid to text for convenience
+CREATE CAST (uuid AS text) WITH INOUT AS IMPLICIT;
