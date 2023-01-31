@@ -1,8 +1,40 @@
-# - name: SIM-PIPE-backend
-#   definition:
-#     url: http://192.168.0.249:9000/graphql
-#     timeout_seconds: 60
-#     headers:
-#       - value: Bearer jwt-example
-#         name: authorization
-#   comment: ""
+- name: controller
+  definition:
+    url_from_env: CONTROLLER_URL
+    timeout_seconds: 60
+    customization: {}
+    forward_client_headers: true
+  permissions:
+    - role: user
+      definition:
+        schema: |
+          schema {
+            query: Query
+            mutation: Mutation
+          }
+          scalar UUID
+          type Mutation {
+            Create_Run_WithInput(simulation_id: String, name: String, sampleInput: [[String]], env_list: [[String]], timeout_values: [Int]): Run
+            Start_Run(run_id: UUID): Run
+            Stop_Run(run_id: UUID): Run
+          }
+          type Query {
+            ComputeUploadPresignedUrl: String
+            Username: String
+          }
+          type Run {
+            run_id: UUID
+          }
+  remote_relationships:
+    - relationships:
+        - definition:
+            to_source:
+              field_mapping:
+                run_id: run_id
+              relationship_type: object
+              source: default
+              table:
+                name: runs
+                schema: simpipe
+          name: Run
+      type_name: Run

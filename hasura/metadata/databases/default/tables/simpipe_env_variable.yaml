@@ -1,6 +1,6 @@
 table:
-  schema: simpipe
   name: env_variable
+  schema: simpipe
 select_permissions:
   - role: anonymous
     permission:

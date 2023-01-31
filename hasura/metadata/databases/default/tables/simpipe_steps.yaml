@@ -1,35 +1,39 @@
 table:
-  schema: simpipe
   name: steps
+  schema: simpipe
 configuration:
-  custom_root_fields: {}
-  custom_name: steps
+  column_config: {}
   custom_column_names: {}
+  custom_name: steps
+  custom_root_fields: {}
 object_relationships:
   - name: log
     using:
       foreign_key_constraint_on:
         column: step_id
         table:
-          schema: simpipe
           name: logs
+          schema: simpipe
+  - name: run
+    using:
+      foreign_key_constraint_on: run_id
 array_relationships:
-  - name: env_variables
+  - name: envs
     using:
       foreign_key_constraint_on:
-        column: step_id
+        column: step_id_tmp
         table:
+          name: envs
           schema: simpipe
-          name: env_variable
   - name: resource_usages
     using:
       foreign_key_constraint_on:
         column: step_id
         table:
-          schema: simpipe
           name: resource_usage
+          schema: simpipe
 select_permissions:
-  - role: anonymous
+  - role: user
     permission:
       columns:
         - created
@@ -37,8 +41,26 @@ select_permissions:
         - image
         - name
         - pipeline_step_number
-        - run_id
         - started
         - status
-        - step_id
-      filter: {}
+        - temp_step_id
+        - timeout
+      filter:
+        run:
+          simulation:
+            user_id:
+              _eq: X-Hasura-User-Id
+      allow_aggregations: true
+      query_root_fields: []
+      subscription_root_fields: []
+update_permissions:
+  - role: user
+    permission:
+      columns:
+        - name
+      filter:
+        run:
+          simulation:
+            user_id:
+              _eq: X-Hasura-User-Id
+      check: null

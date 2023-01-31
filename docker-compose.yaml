@@ -11,6 +11,7 @@ services:
       TIMESCALEDB_TELEMETRY: "off"
       TS_TUNE_MEMORY: "512MB"
       TSTUNE_PROFILE: promscale
+      TS_TUNE_MAX_CONNS: "64"
     ports:
       - "5432:5432"
   hasura:
@@ -24,7 +25,7 @@ services:
       - ./hasura/migrations:/hasura-migrations:ro
       - ./hasura/metadata:/hasura-metadata:ro
     extra_hosts:
-      - "controller:10.218.148.241"
+      - "controller:10.218.144.78"
     environment:
       HASURA_GRAPHQL_METADATA_DATABASE_URL: postgres://postgres:${POSTGRES_PASSWORD}@timescaledb:5432/postgres
       PG_DATABASE_URL: postgres://postgres:${POSTGRES_PASSWORD}@timescaledb:5432/postgres
@@ -42,6 +43,7 @@ services:
           "type": "Ed25519",
           "jwk_url": "http://controller:9000/hasura/jwk"
         }
+      HASURA_GRAPHQL_EXPERIMENTAL_FEATURES: "naming_convention"
   sandbox:
     build: ./sandbox/simple-sandbox
     hostname: sandbox
@@ -53,7 +55,7 @@ services:
     volumes:
       - sandbox-docker-certs-ca:/certs/ca
       - sandbox-docker-certs-server:/certs/server
-      - sandbox-docker-certs-client:/certs/client
+      - ./sandbox/certs:/certs/client
       - sandbox-docker-data:/var/lib/docker
       - /etc/machine-id:/etc/machine-id:ro
       - /dev/disk/:/dev/disk:ro
@@ -71,6 +73,7 @@ services:
       #   restart: on-failure:2
       #   volumes:
       #     - ./controller/simulations:/simulations
+      # - ./sandbox/certs:/certs/client
       #     - ./controller/uploaded_files:/uploaded_files
       #     - ./controller/log:/log
       #   environment:
@@ -188,6 +191,6 @@ volumes:
   minio_config: null
   sandbox-docker-certs-ca: null
   sandbox-docker-certs-server: null
-  sandbox-docker-certs-client: null
+
   sandbox-docker-data: null
   grafana-storage: null

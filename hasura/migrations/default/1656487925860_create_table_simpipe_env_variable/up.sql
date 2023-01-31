@@ -1,1 +1,0 @@
-CREATE TABLE "simpipe"."env_variable" ("name" text NOT NULL, "value" text NOT NULL, "step_id" integer NOT NULL, "id" integer NOT NULL DEFAULT nextval('simpipe.resource_usage_id_seq'::regclass), PRIMARY KEY ("id") , FOREIGN KEY ("step_id") REFERENCES "simpipe"."steps"("step_id") ON UPDATE cascade ON DELETE cascade, UNIQUE ("id"));

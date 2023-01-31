@@ -1,5 +1,5 @@
 table:
-  name: logs
+  name: envs
   schema: simpipe
 object_relationships:
   - name: step
@@ -9,7 +9,8 @@ select_permissions:
   - role: user
     permission:
       columns:
-        - text
+        - name
+        - value
       filter:
         step:
           run:

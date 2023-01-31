@@ -1,6 +1,6 @@
-- "!include simpipe_env_variable.yaml"
+- "!include simpipe_env_variables.yaml"
+- "!include simpipe_envs.yaml"
 - "!include simpipe_logs.yaml"
-- "!include simpipe_resource_usage.yaml"
 - "!include simpipe_run_status.yaml"
 - "!include simpipe_runs.yaml"
 - "!include simpipe_simulations.yaml"
