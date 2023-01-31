@@ -7,7 +7,7 @@ COMMENT ON EXTENSION pgcrypto IS 'cryptographic functions';
 CREATE TABLE simpipe.simulations (
     simulation_id uuid DEFAULT public.gen_random_uuid() NOT NULL PRIMARY KEY,
     name text NOT NULL UNIQUE,
-    created timestamp with time zone DEFAULT now() NOT NULL,
+    created timestamp without time zone DEFAULT now() NOT NULL,
     pipeline_description jsonb NOT NULL,
     user_id text NOT NULL
 );
@@ -49,11 +49,11 @@ CREATE TABLE simpipe.runs (
     simulation_id uuid NOT NULL,
     name text NOT NULL,
     status text DEFAULT 'waiting'::text NOT NULL,
-    created timestamp with time zone DEFAULT now() NOT NULL,
-    started timestamp with time zone,
-    ended timestamp with time zone,
+    created timestamp without time zone DEFAULT now() NOT NULL,
+    started timestamp without time zone,
+    ended timestamp without time zone,
     CONSTRAINT "ended started constraint" CHECK ((((status = 'waiting'::text) AND (started IS NULL) AND (ended IS NULL)) OR ((status = 'active'::text) AND (started IS NOT NULL) AND (ended IS NULL)) OR ((status = 'completed'::text) AND (started IS NOT NULL) AND (ended IS NOT NULL)) OR (((status = 'failed'::text) OR (status = 'cancelled'::text)) AND ((ended IS NULL) OR (started IS NOT NULL))) OR ((started IS NULL) AND (ended IS NULL)))),
-    CONSTRAINT "valid timestamps" CHECK (started == NULL OR started >= created) AND (ended == NULL OR ended >= started)
+    CONSTRAINT "valid timestamps" CHECK ((started IS NULL OR started >= created) AND (ended IS NULL OR ended >= started))
 );
 COMMENT ON TABLE simpipe.runs IS 'Simulation run';
 COMMENT ON COLUMN simpipe.runs.run_id IS 'UUID of the run, random by default';
@@ -80,13 +80,13 @@ CREATE TABLE simpipe.steps (
     image text NOT NULL,
     timeout integer DEFAULT 30 NOT NULL,
     status text DEFAULT 'waiting'::text NOT NULL,
-    created timestamp with time zone DEFAULT now() NOT NULL,
-    started timestamp with time zone,
-    ended timestamp with time zone,
+    created timestamp without time zone DEFAULT now() NOT NULL,
+    started timestamp without time zone,
+    ended timestamp without time zone,
     CONSTRAINT "ended started constraint" CHECK ((((status = 'waiting'::text) AND (started IS NULL) AND (ended IS NULL)) OR ((status = 'active'::text) AND (started IS NOT NULL) AND (ended IS NULL)) OR ((status = 'completed'::text) AND (started IS NOT NULL) AND (ended IS NOT NULL)) OR (((status = 'failed'::text) OR (status = 'cancelled'::text)) AND ((ended IS NULL) OR (started IS NOT NULL))))),
     CONSTRAINT "normal timeout" CHECK (((timeout >= 1) AND (timeout < 86400))),
     CONSTRAINT "positive step number" CHECK ((pipeline_step_number >= 0)),
-    CONSTRAINT "valid timestamps" CHECK (started == NULL OR started >= created) AND (ended == NULL OR ended >= started)
+    CONSTRAINT "valid timestamps" CHECK ((started IS NULL OR started >= created) AND (ended IS NULL OR ended >= started))
 );
 COMMENT ON TABLE simpipe.steps IS 'Steps in a run';
 COMMENT ON COLUMN simpipe.steps.step_id IS 'UUID of the step, random by default';
@@ -197,26 +197,26 @@ SELECT data."time",
       LEFT JOIN prom_series.container_network_transmit_bytes_total as series
         ON series.series_id = data.series_id;
 
--- Network fs reads bytes view
-CREATE VIEW simpipe.fs_reads_bytes AS
+-- Network fs reads merged view
+CREATE VIEW simpipe.fs_reads_merged AS
 SELECT data."time",
       data.value,
       series.container_label_user_id as user_id,
       series.container_label_simulation_id as simulation_id,
       series.container_label_run_id as run_id,
       series.container_label_step_id as step_id
-      FROM prom_data.container_fs_reads_bytes_total as data
-      LEFT JOIN prom_series.container_fs_reads_bytes_total as series
+      FROM prom_data.container_fs_reads_merged_total as data
+      LEFT JOIN prom_series.container_fs_reads_merged_total as series
         ON series.series_id = data.series_id;
 
--- Network fs writes bytes view
-CREATE VIEW simpipe.fs_writes_bytes AS
+-- Network fs writes merged view
+CREATE VIEW simpipe.fs_writes_merged AS
 SELECT data."time",
       data.value,
       series.container_label_user_id as user_id,
       series.container_label_simulation_id as simulation_id,
       series.container_label_run_id as run_id,
       series.container_label_step_id as step_id
-      FROM prom_data.container_fs_writes_bytes_total as data
-      LEFT JOIN prom_series.container_fs_writes_bytes_total as series
+      FROM prom_data.container_fs_writes_merged_total as data
+      LEFT JOIN prom_series.container_fs_writes_merged_total as series
         ON series.series_id = data.series_id;

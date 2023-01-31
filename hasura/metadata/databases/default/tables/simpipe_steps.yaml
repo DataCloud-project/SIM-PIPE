@@ -21,16 +21,9 @@ array_relationships:
   - name: envs
     using:
       foreign_key_constraint_on:
-        column: step_id_tmp
-        table:
-          name: envs
-          schema: simpipe
-  - name: resource_usages
-    using:
-      foreign_key_constraint_on:
         column: step_id
         table:
-          name: resource_usage
+          name: envs
           schema: simpipe
 select_permissions:
   - role: user
@@ -43,7 +36,7 @@ select_permissions:
         - pipeline_step_number
         - started
         - status
-        - temp_step_id
+        - step_id
         - timeout
       filter:
         run:

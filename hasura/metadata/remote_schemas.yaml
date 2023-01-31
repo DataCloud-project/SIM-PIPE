@@ -12,25 +12,41 @@
             query: Query
             mutation: Mutation
           }
-          scalar UUID
+          scalar uuid
           type Mutation {
-            Create_Run_WithInput(simulation_id: String, name: String, sampleInput: [[String]], env_list: [[String]], timeout_values: [Int]): Run
-            Start_Run(run_id: UUID): Run
-            Stop_Run(run_id: UUID): Run
+            cancelRun(runId: uuid!): Run
+            createRun(run: CreateRunInput!): Run!
+            startRun(runId: uuid!): Run
           }
           type Query {
-            ComputeUploadPresignedUrl: String
-            Username: String
+            computeUploadPresignedUrl: String!
+            ping: String!
+            username: String!
           }
           type Run {
-            run_id: UUID
+            runId: uuid!
+          }
+          input CreateRunInput {
+            environmentVariables: [StepEnvironmentVariable!]
+            name: String!
+            simulationId: uuid!
+            timeouts: [StepTimeout!]
+          }
+          input StepEnvironmentVariable {
+            name: String!
+            stepName: String!
+            value: String!
+          }
+          input StepTimeout {
+            stepName: String!
+            timeout: Int!
           }
   remote_relationships:
     - relationships:
         - definition:
             to_source:
               field_mapping:
-                run_id: run_id
+                runId: run_id
               relationship_type: object
               source: default
               table:

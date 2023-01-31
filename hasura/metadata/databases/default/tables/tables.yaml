@@ -1,4 +1,3 @@
-- "!include simpipe_env_variables.yaml"
 - "!include simpipe_envs.yaml"
 - "!include simpipe_logs.yaml"
 - "!include simpipe_run_status.yaml"
