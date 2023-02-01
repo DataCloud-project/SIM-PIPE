@@ -3,7 +3,8 @@ import asyncHandler from 'express-async-handler';
 
 import { jwtDevMode as jwtDevelopmentMode, user } from '../config.js';
 import { keycloakAuthJwtMiddleware } from './auth-jwt-middleware.js';
-import { generateJWTForHasura, getVaultKeyPair } from './hasura-jwt.js';
+import { generateJWTForHasura, getVaultKeyPair, hasuraJwtMiddleware } from './hasura-jwt.js';
+import hasuraProxyMiddleware from './hasura-proxy.js';
 import type { Auth } from './auth-jwt-middleware.js';
 
 export default function createRouter(): Router {
@@ -34,6 +35,13 @@ export default function createRouter(): Router {
       keys: [key],
     });
   }));
+
+  // Proxy endpoint to use Hasura without managing a new JWT token
+  router.post('/hasura/graphql',
+    keycloakAuthJwtMiddleware,
+    hasuraJwtMiddleware,
+    hasuraProxyMiddleware(),
+  );
 
   // Generate a local development JWT token that is not authenticated
   // This feature MUST NOT be enabled in production

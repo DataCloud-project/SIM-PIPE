@@ -78,6 +78,7 @@
     "graphql-tag": "^2.12.6",
     "graphql-type-json": "^0.3.2",
     "helmet": "^6.0.1",
+    "http-proxy-middleware": "^3.0.0-beta.0",
     "jose": "^4.11.2",
     "jsonwebtoken": "^9.0.0",
     "minio": "^7.0.32",

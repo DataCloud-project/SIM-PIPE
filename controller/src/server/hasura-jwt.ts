@@ -1,8 +1,11 @@
+import expressAsyncHandler from 'express-async-handler';
 import { SignJWT } from 'jose';
 import crypto from 'node:crypto';
+import type { NextFunction, Request, Response } from 'express';
 import type { JsonWebKeyInput, KeyObject } from 'node:crypto';
 
 import { hasuraControllerJwtPrivateKey } from '../config.js';
+import type { Auth } from './auth-jwt-middleware.js';
 
 type KeyPair = { publicKey: KeyObject; privateKey: KeyObject };
 
@@ -78,3 +81,18 @@ export async function generateJWTForHasura({
     .sign(privateKey);
   return jwt;
 }
+
+async function hasuraJwtMiddlewareAsync(
+  request: Request, response: Response, next: NextFunction,
+): Promise<void> {
+  const { auth } = request as unknown as { auth: Auth };
+  if (!auth) {
+    throw new Error('No auth provided, make sure to popuplate the auth object in the request');
+  }
+  const jwt = await generateJWTForHasura(auth);
+  // Set request header for Hasura
+  request.headers.authorization = `Bearer ${jwt}`;
+  next();
+}
+
+export const hasuraJwtMiddleware = expressAsyncHandler(hasuraJwtMiddlewareAsync);
