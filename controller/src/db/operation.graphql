@@ -1,3 +1,6 @@
+query ping($_: Boolean) {
+  __typename
+}
 
 query getUserIdFromRun ($runId: uuid!) {
   run (runId: $runId) {
@@ -6,19 +9,20 @@ query getUserIdFromRun ($runId: uuid!) {
 }
 
 query getUserIdFromSimulation ($simulationId: uuid!) {
-  simulation (simulationId: {_eq: $simulationId}) {
+  simulation (simulationId: $simulationId) {
     userId
   }
 }
 
 query getSimulationDSL ($simulationId: uuid!) {
-  simulation(simulationId: {_eq: $simulationId}) {
+  simulation(simulationId: $simulationId) {
     pipelineDescription
   }
 }
 
 # api functions ..
-mutation createRun($simulationId: uuid!, $name:String) {
+
+mutation createRun($simulationId: uuid!, $name:String!) {
   insertRunsOne(object: {simulationId: $simulationId, name: $name}) {
     runId
   }
@@ -83,7 +87,7 @@ mutation setRunAsFailed($runId: uuid!) {
 
 # modified create simulation to add json string arg for pipeline description
 mutation createSimulation ($name: String, $pipelineDescription: jsonb, $userId: String) {
-  createSimulation(object: {name: $name, pipelineDescription: $pipelineDescription, userId:$userId }) {
+  insertSimulationsOne(object: {name: $name, pipelineDescription: $pipelineDescription, userId:$userId }) {
     simulationId
   }
 }

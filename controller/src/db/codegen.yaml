@@ -13,12 +13,13 @@ generates:
       strictScalars: true
       scalars:
         bigint: number
-        jsonb: unknown
         numeric: number
         run_status: "'WAITING'|'ACTIVE'|'COMPLETED'|'FAILED'|'CANCELLED'|'QUEUED'"
         step_status: "'WAITING'|'ACTIVE'|'COMPLETED'|'FAILED'|'CANCELLED'"
         timestamp: string
         timestamptz: string
         uuid: string
+        json: string
+        jsonb: unknown
         JSON: jsonb
         float8: number

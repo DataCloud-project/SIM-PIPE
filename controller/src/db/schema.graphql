@@ -5,6 +5,7 @@ schema {
 }
 "whether this query should be cached (Hasura Cloud only)"
 directive @cached("measured in seconds" ttl: Int! = 60, "refresh the cache entry" refresh: Boolean! = false) on QUERY
+" The input data to create a run "
 input CreateRunInput {
   " An optional list of environment variables to set for the steps of the run container "
   environmentVariables: [StepEnvironmentVariable!]
@@ -18,6 +19,15 @@ input CreateRunInput {
   simulationId: uuid!
   " An optional list of timeouts to set for the steps of the run container "
   timeouts: [StepTimeout!]
+}
+input CreateSimulationInput {
+  " The name of the simulation "
+  name: String!
+  """
+   The description of the simulation pipeline.
+  It is a JSON document.
+  """
+  pipelineDescription: json!
 }
 "ordering argument of a cursor"
 enum CursorOrdering {
@@ -99,7 +109,8 @@ enum OrderBy {
   DESC_NULLS_LAST
 }
 type Run {
-  Run: runs
+  run: runs
+  " UUID of the run "
   runId: uuid!
 }
 "Environment variables in runs"
@@ -728,6 +739,11 @@ input SimpipeStepStatusUpdates {
   _set: SimpipeStepStatusSetInput
   "filter the rows which have to be updated"
   where: SimpipeStepStatusBoolExp!
+}
+type Simulation {
+  simulation: simulations
+  " UUID of the simulation "
+  simulationId: uuid!
 }
 input StepEnvironmentVariable {
   " The name of the environment variable "
@@ -1993,6 +2009,7 @@ order by variance() on columns of table "simpipe.fs_writes_merged"
 input fsWritesMerged_variance_order_by {
   value: OrderBy
 }
+scalar json
 scalar jsonb
 """
 columns and relationships of "simpipe.memory_max_usage_bytes"
@@ -2782,14 +2799,8 @@ type mutation_root {
   cancelRun(runId: uuid!): Run
   " Create a run, but does not start it "
   createRun(run: CreateRunInput!): Run!
-  """
-  insert a single row into the table: "simpipe.simulations"
-  """
-  createSimulation("the row to be inserted" object: simulationsInsertInput!, "upsert condition" onConflict: simulationsOnConflict): simulations
-  """
-  insert data into the table: "simpipe.simulations"
-  """
-  createSimulations("the rows to be inserted" objects: [simulationsInsertInput!]!, "upsert condition" onConflict: simulationsOnConflict): simulationsMutationResponse
+  " Create a simulation "
+  createSimulation(simulation: CreateSimulationInput!): Simulation!
   """
   delete data from the table: "simpipe.runs"
   """
@@ -2886,6 +2897,14 @@ type mutation_root {
   insert a single row into the table: "simpipe.step_status"
   """
   insertSimpipeStepStatusOne("the row to be inserted" object: SimpipeStepStatusInsertInput!, "upsert condition" onConflict: SimpipeStepStatusOnConflict): SimpipeStepStatus
+  """
+  insert data into the table: "simpipe.simulations"
+  """
+  insertSimulations("the rows to be inserted" objects: [simulationsInsertInput!]!, "upsert condition" onConflict: simulationsOnConflict): simulationsMutationResponse
+  """
+  insert a single row into the table: "simpipe.simulations"
+  """
+  insertSimulationsOne("the row to be inserted" object: simulationsInsertInput!, "upsert condition" onConflict: simulationsOnConflict): simulations
   """
   insert data into the table: "simpipe.steps"
   """

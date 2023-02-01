@@ -12,3 +12,4 @@ generates:
       strictScalars: true
       scalars:
         uuid: string
+        json: string

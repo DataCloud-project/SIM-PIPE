@@ -15,9 +15,11 @@ export type Scalars = {
   Boolean: boolean;
   Int: number;
   Float: number;
+  json: string;
   uuid: string;
 };
 
+/**  The input data to create a run  */
 export type CreateRunInput = {
   /**  An optional list of environment variables to set for the steps of the run container  */
   environmentVariables?: InputMaybe<Array<StepEnvironmentVariable>>;
@@ -33,12 +35,24 @@ export type CreateRunInput = {
   timeouts?: InputMaybe<Array<StepTimeout>>;
 };
 
+export type CreateSimulationInput = {
+  /**  The name of the simulation  */
+  name: Scalars['String'];
+  /**
+   *  The description of the simulation pipeline.
+   * It is a JSON document but it is sent as a string.
+   */
+  pipelineDescription: Scalars['json'];
+};
+
 export type Mutation = {
   __typename?: 'Mutation';
   /**  Cancel a run, if the run is running it will be stopped  */
   cancelRun?: Maybe<Run>;
   /**  Create a run, but does not start it  */
   createRun: Run;
+  /**  Create a simulation  */
+  createSimulation: Simulation;
   /**  Start a run, if other runs are running this run will wait in the queue  */
   startRun?: Maybe<Run>;
 };
@@ -51,6 +65,11 @@ export type MutationCancelRunArgs = {
 
 export type MutationCreateRunArgs = {
   run: CreateRunInput;
+};
+
+
+export type MutationCreateSimulationArgs = {
+  simulation: CreateSimulationInput;
 };
 
 
@@ -70,7 +89,14 @@ export type Query = {
 
 export type Run = {
   __typename?: 'Run';
+  /**  UUID of the run  */
   runId: Scalars['uuid'];
+};
+
+export type Simulation = {
+  __typename?: 'Simulation';
+  /**  UUID of the simulation  */
+  simulationId: Scalars['uuid'];
 };
 
 export type StepEnvironmentVariable = {
@@ -160,13 +186,16 @@ export type DirectiveResolverFn<TResult = {}, TParent = {}, TContext = {}, TArgs
 export type ResolversTypes = {
   Boolean: ResolverTypeWrapper<Scalars['Boolean']>;
   CreateRunInput: CreateRunInput;
+  CreateSimulationInput: CreateSimulationInput;
   Int: ResolverTypeWrapper<Scalars['Int']>;
   Mutation: ResolverTypeWrapper<{}>;
   Query: ResolverTypeWrapper<{}>;
   Run: ResolverTypeWrapper<Run>;
+  Simulation: ResolverTypeWrapper<Simulation>;
   StepEnvironmentVariable: StepEnvironmentVariable;
   StepTimeout: StepTimeout;
   String: ResolverTypeWrapper<Scalars['String']>;
+  json: ResolverTypeWrapper<Scalars['json']>;
   uuid: ResolverTypeWrapper<Scalars['uuid']>;
 };
 
@@ -174,19 +203,23 @@ export type ResolversTypes = {
 export type ResolversParentTypes = {
   Boolean: Scalars['Boolean'];
   CreateRunInput: CreateRunInput;
+  CreateSimulationInput: CreateSimulationInput;
   Int: Scalars['Int'];
   Mutation: {};
   Query: {};
   Run: Run;
+  Simulation: Simulation;
   StepEnvironmentVariable: StepEnvironmentVariable;
   StepTimeout: StepTimeout;
   String: Scalars['String'];
+  json: Scalars['json'];
   uuid: Scalars['uuid'];
 };
 
 export type MutationResolvers<ContextType = any, ParentType extends ResolversParentTypes['Mutation'] = ResolversParentTypes['Mutation']> = {
   cancelRun?: Resolver<Maybe<ResolversTypes['Run']>, ParentType, ContextType, RequireFields<MutationCancelRunArgs, 'runId'>>;
   createRun?: Resolver<ResolversTypes['Run'], ParentType, ContextType, RequireFields<MutationCreateRunArgs, 'run'>>;
+  createSimulation?: Resolver<ResolversTypes['Simulation'], ParentType, ContextType, RequireFields<MutationCreateSimulationArgs, 'simulation'>>;
   startRun?: Resolver<Maybe<ResolversTypes['Run']>, ParentType, ContextType, RequireFields<MutationStartRunArgs, 'runId'>>;
 };
 
@@ -201,6 +234,15 @@ export type RunResolvers<ContextType = any, ParentType extends ResolversParentTy
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
+export type SimulationResolvers<ContextType = any, ParentType extends ResolversParentTypes['Simulation'] = ResolversParentTypes['Simulation']> = {
+  simulationId?: Resolver<ResolversTypes['uuid'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export interface JsonScalarConfig extends GraphQLScalarTypeConfig<ResolversTypes['json'], any> {
+  name: 'json';
+}
+
 export interface UuidScalarConfig extends GraphQLScalarTypeConfig<ResolversTypes['uuid'], any> {
   name: 'uuid';
 }
@@ -209,6 +251,8 @@ export type Resolvers<ContextType = any> = {
   Mutation?: MutationResolvers<ContextType>;
   Query?: QueryResolvers<ContextType>;
   Run?: RunResolvers<ContextType>;
+  Simulation?: SimulationResolvers<ContextType>;
+  json?: GraphQLScalarType;
   uuid?: GraphQLScalarType;
 };
 

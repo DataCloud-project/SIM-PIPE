@@ -1,9 +1,5 @@
-import * as dotenv from 'dotenv';
-import { GraphQLClient } from 'graphql-request';
-
-import { hasuraAdminSecret, hasuraEndpoint } from '../config.js';
 import startController from '../controller.js';
-import { getSdk } from '../db/database.js';
+import sdk from '../db/sdk.js';
 import logger from '../logger.js';
 import DSL from './dsl.js';
 import TaskQueue from './taskqueue.js';
@@ -15,23 +11,6 @@ import type {
 import type { Step, UUID } from '../types.js';
 import type { StepDSLType as StepDSL } from './dsl.js';
 import type { CreateRunInput } from './schema.js';
-
-dotenv.config();
-
-let client: GraphQLClient;
-let sdk: ReturnType<typeof getSdk>;
-
-(function connectHasuraEndpoint(): void {
-  if (!hasuraAdminSecret) {
-    throw new Error('Hasura admin password not set in env file');
-  }
-  client = new GraphQLClient(hasuraEndpoint, {
-    headers: {
-      'x-hasura-admin-secret': hasuraAdminSecret,
-    },
-  });
-  sdk = getSdk(client);
-}());
 
 async function createStep(runId: UUID, name: string, image: string,
   pipelineStepNumber: number): Promise<UUID> {
@@ -174,7 +153,7 @@ async function startRun(runId: UUID): Promise<UUID> {
       try {
         // set input path for next step as output path of the previous step returned and start step
         // const nextInput = await startController(client, currentStep);
-        await startController(client, currentStep);
+        await startController(currentStep);
         // currentStep.inputPath = nextInput;
       } catch (error) {
         logger.error(`Run ${runId} execution has failed\n${(error as Error).message}`);

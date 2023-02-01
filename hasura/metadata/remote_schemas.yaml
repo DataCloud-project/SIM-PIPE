@@ -12,10 +12,12 @@
             query: Query
             mutation: Mutation
           }
+          scalar json
           scalar uuid
           type Mutation {
             cancelRun(runId: uuid!): Run
             createRun(run: CreateRunInput!): Run!
+            createSimulation(simulation: CreateSimulationInput!): Simulation!
             startRun(runId: uuid!): Run
           }
           type Query {
@@ -26,11 +28,18 @@
           type Run {
             runId: uuid!
           }
+          type Simulation {
+            simulationId: uuid!
+          }
           input CreateRunInput {
             environmentVariables: [StepEnvironmentVariable!]
             name: String!
             simulationId: uuid!
             timeouts: [StepTimeout!]
+          }
+          input CreateSimulationInput {
+            name: String!
+            pipelineDescription: json!
           }
           input StepEnvironmentVariable {
             name: String!
@@ -52,5 +61,17 @@
               table:
                 name: runs
                 schema: simpipe
-          name: Run
+          name: run
       type_name: Run
+    - relationships:
+        - definition:
+            to_source:
+              field_mapping:
+                simulationId: simulation_id
+              relationship_type: object
+              source: default
+              table:
+                name: simulations
+                schema: simpipe
+          name: simulation
+      type_name: Simulation

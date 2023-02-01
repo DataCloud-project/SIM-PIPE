@@ -1,4 +1,5 @@
 scalar uuid
+scalar json
 
 type Query {
   """ Fetch the current username. """
@@ -10,7 +11,13 @@ type Query {
 }
 
 type Run {
+  """ UUID of the run """
   runId: uuid!
+}
+
+type Simulation {
+  """ UUID of the simulation """
+  simulationId: uuid!
 }
 
 input StepEnvironmentVariable {
@@ -29,6 +36,7 @@ input StepTimeout {
   timeout: Int!
 }
 
+""" The input data to create a run """
 input CreateRunInput {
   """ The simulation to which this run belongs.
 
@@ -46,11 +54,25 @@ input CreateRunInput {
   timeouts: [StepTimeout!]
 }
 
+input CreateSimulationInput {
+  """ The name of the simulation """
+  name: String!
+  """ The description of the simulation pipeline.
+  It is a JSON document but it is sent as a string.
+  """
+  pipelineDescription: json!
+}
+
 type Mutation @auth {
+  """ Create a simulation """
+  createSimulation(simulation: CreateSimulationInput!): Simulation!
+
   """ Create a run, but does not start it """
   createRun(run: CreateRunInput!): Run!
+
   """ Start a run, if other runs are running this run will wait in the queue """
   startRun(runId:uuid!): Run
+
   """ Cancel a run, if the run is running it will be stopped """
   cancelRun(runId:uuid!): Run
 }

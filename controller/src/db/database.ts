@@ -14,12 +14,14 @@ export type Scalars = {
   Int: number;
   Float: number;
   float8: number;
+  json: string;
   jsonb: unknown;
   timestamp: string;
   timestamptz: string;
   uuid: string;
 };
 
+/**  The input data to create a run  */
 export type CreateRunInput = {
   /**  An optional list of environment variables to set for the steps of the run container  */
   environmentVariables?: InputMaybe<Array<StepEnvironmentVariable>>;
@@ -33,6 +35,16 @@ export type CreateRunInput = {
   simulationId: Scalars['uuid'];
   /**  An optional list of timeouts to set for the steps of the run container  */
   timeouts?: InputMaybe<Array<StepTimeout>>;
+};
+
+export type CreateSimulationInput = {
+  /**  The name of the simulation  */
+  name: Scalars['String'];
+  /**
+   *  The description of the simulation pipeline.
+   * It is a JSON document.
+   */
+  pipelineDescription: Scalars['json'];
 };
 
 /** ordering argument of a cursor */
@@ -115,7 +127,8 @@ export enum OrderBy {
 
 export type Run = {
   __typename?: 'Run';
-  Run?: Maybe<Runs>;
+  run?: Maybe<Runs>;
+  /**  UUID of the run  */
   runId: Scalars['uuid'];
 };
 
@@ -759,6 +772,13 @@ export type SimpipeStepStatusUpdates = {
   _set?: InputMaybe<SimpipeStepStatusSetInput>;
   /** filter the rows which have to be updated */
   where: SimpipeStepStatusBoolExp;
+};
+
+export type Simulation = {
+  __typename?: 'Simulation';
+  simulation?: Maybe<Simulations>;
+  /**  UUID of the simulation  */
+  simulationId: Scalars['uuid'];
 };
 
 export type StepEnvironmentVariable = {
@@ -2886,10 +2906,8 @@ export type Mutation_Root = {
   cancelRun?: Maybe<Run>;
   /**  Create a run, but does not start it  */
   createRun: Run;
-  /** insert a single row into the table: "simpipe.simulations" */
-  createSimulation?: Maybe<Simulations>;
-  /** insert data into the table: "simpipe.simulations" */
-  createSimulations?: Maybe<SimulationsMutationResponse>;
+  /**  Create a simulation  */
+  createSimulation: Simulation;
   /** delete data from the table: "simpipe.runs" */
   deleteRuns?: Maybe<RunsMutationResponse>;
   /** delete single row from the table: "simpipe.runs" */
@@ -2938,6 +2956,10 @@ export type Mutation_Root = {
   insertSimpipeStepStatus?: Maybe<SimpipeStepStatusMutationResponse>;
   /** insert a single row into the table: "simpipe.step_status" */
   insertSimpipeStepStatusOne?: Maybe<SimpipeStepStatus>;
+  /** insert data into the table: "simpipe.simulations" */
+  insertSimulations?: Maybe<SimulationsMutationResponse>;
+  /** insert a single row into the table: "simpipe.simulations" */
+  insertSimulationsOne?: Maybe<Simulations>;
   /** insert data into the table: "simpipe.steps" */
   insertSteps?: Maybe<StepsMutationResponse>;
   /** insert a single row into the table: "simpipe.steps" */
@@ -3003,15 +3025,7 @@ export type Mutation_RootCreateRunArgs = {
 
 /** mutation root */
 export type Mutation_RootCreateSimulationArgs = {
-  object: SimulationsInsertInput;
-  onConflict?: InputMaybe<SimulationsOnConflict>;
-};
-
-
-/** mutation root */
-export type Mutation_RootCreateSimulationsArgs = {
-  objects: Array<SimulationsInsertInput>;
-  onConflict?: InputMaybe<SimulationsOnConflict>;
+  simulation: CreateSimulationInput;
 };
 
 
@@ -3166,6 +3180,20 @@ export type Mutation_RootInsertSimpipeStepStatusArgs = {
 export type Mutation_RootInsertSimpipeStepStatusOneArgs = {
   object: SimpipeStepStatusInsertInput;
   onConflict?: InputMaybe<SimpipeStepStatusOnConflict>;
+};
+
+
+/** mutation root */
+export type Mutation_RootInsertSimulationsArgs = {
+  objects: Array<SimulationsInsertInput>;
+  onConflict?: InputMaybe<SimulationsOnConflict>;
+};
+
+
+/** mutation root */
+export type Mutation_RootInsertSimulationsOneArgs = {
+  object: SimulationsInsertInput;
+  onConflict?: InputMaybe<SimulationsOnConflict>;
 };
 
 
@@ -6808,6 +6836,13 @@ export type Subscription_RootStepsStreamArgs = {
   where?: InputMaybe<StepsBoolExp>;
 };
 
+export type PingQueryVariables = Exact<{
+  _?: InputMaybe<Scalars['Boolean']>;
+}>;
+
+
+export type PingQuery = { __typename: 'query_root' };
+
 export type GetUserIdFromRunQueryVariables = Exact<{
   runId: Scalars['uuid'];
 }>;
@@ -6831,7 +6866,7 @@ export type GetSimulationDslQuery = { __typename?: 'query_root', simulation?: { 
 
 export type CreateRunMutationVariables = Exact<{
   simulationId: Scalars['uuid'];
-  name?: InputMaybe<Scalars['String']>;
+  name: Scalars['String'];
 }>;
 
 
@@ -6919,7 +6954,7 @@ export type CreateSimulationMutationVariables = Exact<{
 }>;
 
 
-export type CreateSimulationMutation = { __typename?: 'mutation_root', createSimulation?: { __typename?: 'simulations', simulationId: string } | null };
+export type CreateSimulationMutation = { __typename?: 'mutation_root', insertSimulationsOne?: { __typename?: 'simulations', simulationId: string } | null };
 
 export type GetSimulationIdandStepsQueryVariables = Exact<{
   runId: Scalars['uuid'];
@@ -6944,6 +6979,11 @@ export type InsertLogMutationVariables = Exact<{
 export type InsertLogMutation = { __typename?: 'mutation_root', insertSimpipeLogsOne?: { __typename?: 'SimpipeLogs', stepId: string } | null };
 
 
+export const PingDocument = gql`
+    query ping($_: Boolean) {
+  __typename
+}
+    `;
 export const GetUserIdFromRunDocument = gql`
     query getUserIdFromRun($runId: uuid!) {
   run(runId: $runId) {
@@ -6955,20 +6995,20 @@ export const GetUserIdFromRunDocument = gql`
     `;
 export const GetUserIdFromSimulationDocument = gql`
     query getUserIdFromSimulation($simulationId: uuid!) {
-  simulation(simulationId: {_eq: $simulationId}) {
+  simulation(simulationId: $simulationId) {
     userId
   }
 }
     `;
 export const GetSimulationDslDocument = gql`
     query getSimulationDSL($simulationId: uuid!) {
-  simulation(simulationId: {_eq: $simulationId}) {
+  simulation(simulationId: $simulationId) {
     pipelineDescription
   }
 }
     `;
 export const CreateRunDocument = gql`
-    mutation createRun($simulationId: uuid!, $name: String) {
+    mutation createRun($simulationId: uuid!, $name: String!) {
   insertRunsOne(object: {simulationId: $simulationId, name: $name}) {
     runId
   }
@@ -7060,7 +7100,7 @@ export const SetRunAsFailedDocument = gql`
     `;
 export const CreateSimulationDocument = gql`
     mutation createSimulation($name: String, $pipelineDescription: jsonb, $userId: String) {
-  createSimulation(
+  insertSimulationsOne(
     object: {name: $name, pipelineDescription: $pipelineDescription, userId: $userId}
   ) {
     simulationId
@@ -7110,6 +7150,9 @@ const defaultWrapper: SdkFunctionWrapper = (action, _operationName, _operationTy
 
 export function getSdk(client: GraphQLClient, withWrapper: SdkFunctionWrapper = defaultWrapper) {
   return {
+    ping(variables?: PingQueryVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<PingQuery> {
+      return withWrapper((wrappedRequestHeaders) => client.request<PingQuery>(PingDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'ping', 'query');
+    },
     getUserIdFromRun(variables: GetUserIdFromRunQueryVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<GetUserIdFromRunQuery> {
       return withWrapper((wrappedRequestHeaders) => client.request<GetUserIdFromRunQuery>(GetUserIdFromRunDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'getUserIdFromRun', 'query');
     },

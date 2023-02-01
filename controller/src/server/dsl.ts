@@ -5,7 +5,7 @@ const StepDSL = z.object({
   step_number: z.number().min(0),
   image: z.string().min(1),
   env: z.array(z.string().regex(/^[A-Z_]+=.+$/)),
-  prerequisite: z.array(z.number().min(0)),
+  prerequisite: z.array(z.number().min(0)).optional(),
   type: z.string(),
 });
 

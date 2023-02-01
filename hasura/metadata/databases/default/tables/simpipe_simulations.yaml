@@ -8,8 +8,6 @@ configuration:
   custom_root_fields:
     delete: deleteSimulations
     delete_by_pk: deleteSimulation
-    insert: createSimulations
-    insert_one: createSimulation
     select: simulations
     select_by_pk: simulation
     update: updateSimulations
@@ -85,15 +83,6 @@ array_relationships:
         table:
           name: runs
           schema: simpipe
-insert_permissions:
-  - role: user
-    permission:
-      check: {}
-      set:
-        user_id: x-hasura-User-ID
-      columns:
-        - name
-        - pipeline_description
 select_permissions:
   - role: user
     permission:

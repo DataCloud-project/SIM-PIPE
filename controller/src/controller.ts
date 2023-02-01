@@ -2,7 +2,6 @@ import Docker from 'dockerode';
 import fsAsync from 'node:fs/promises';
 import path from 'node:path';
 import { setTimeout } from 'node:timers/promises';
-import type { GraphQLClient } from 'graphql-request';
 import type { Stream } from 'node:stream';
 
 import {
@@ -10,11 +9,11 @@ import {
   dockerProtocol, dockerSocketPath, dockerTlsCertPath, dockerTlsKeyPath, remote,
 } from './config.js';
 import { getSdk } from './db/database.js';
+import sdk from './db/sdk.js';
 import logger from './logger.js';
 import type * as types from './types.js';
 
 let docker: Docker;
-let sdk: ReturnType<typeof getSdk>;
 
 if (remote) {
   const caCert = dockerCaCertPath ? await fsAsync.readFile(dockerCaCertPath) : undefined;
@@ -42,22 +41,23 @@ if (remote) {
 }
 
 // Ping docker deamon to check if it is running
-async function pingDocker(): Promise<void> {
-  try {
-    const pingResult = await Promise.race<string | unknown>([
-      setTimeout(5000, 'timeout'),
-      docker.ping(),
-    ]);
-    if (pingResult === 'timeout') {
-      throw new Error('ping timeout');
-    }
-    logger.info('🐳 Docker daemon is running');
-  } catch (error) {
-    logger.error('🐳 Docker daemon is not running');
-    throw new Error(`🎌 Error pinging docker daemon\n${error as string}`);
+export async function pingDocker(): Promise<void> {
+  const pingResult = await Promise.race<string | unknown>([
+    setTimeout(5000, 'timeout'),
+    docker.ping(),
+  ]);
+  if (pingResult === 'timeout') {
+    throw new Error('ping timeout');
   }
 }
-await pingDocker();
+
+try {
+  await pingDocker();
+  logger.info('🐳 Docker daemon is running');
+} catch (error) {
+  logger.error('🐳 Docker daemon is not running');
+  throw new Error(`🎌 Error pinging docker daemon\n${error as string}`);
+}
 
 let targetDirectory: string;
 let createdContainer: Docker.Container;
@@ -71,7 +71,7 @@ function init(step: types.Step): void {
   process.env.STOP_SIGNAL_SENT = 'false';
 }
 
-async function pullImagePromise(image: string): Promise<void> {
+export async function pullImage(image: string): Promise<void> {
   return new Promise<void>((resolve, reject) => {
     const onFinished = (): void => {
       resolve();
@@ -96,7 +96,7 @@ async function pullImagePromise(image: string): Promise<void> {
 async function startContainer(
   image: string, stepId: string, environment: string[],
 ): Promise<void> {
-  await pullImagePromise(image); // pull docker image before creating container
+  await pullImage(image); // pull docker image before creating container
   createdContainer = (await docker.createContainer({
     Image: image,
     Tty: true,
@@ -149,13 +149,12 @@ async function waitForContainer(): Promise<void> {
   }
 }
 
-export default async function start(client: GraphQLClient, step: types.Step): Promise<string> {
+export default async function start(step: types.Step): Promise<string> {
   if (!step.stepNumber || !step.stepId || !step.image || !step.env) {
     throw new Error('🎌 Error in controller.start: step_number, image, env or step_id not defined');
   }
   try {
     init(step);
-    sdk = getSdk(client);
     logger.info(`Starting simulation for step ${step.stepNumber}`);
     // const remoteInputFolder = process.env.REMOTE_INPUT_DIR ?? 'in/';
     // await sftp.putFolderToSandbox(step.inputPath, remoteInputFolder, targetDirectory);
