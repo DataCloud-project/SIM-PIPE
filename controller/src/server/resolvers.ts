@@ -2,8 +2,7 @@ import { randomUUID } from 'node:crypto';
 
 import { pingDocker } from '../controller.js';
 import sdk from '../db/sdk.js';
-import { DSLParsingError, PingError } from './apollo-errors.js';
-import DSL from './dsl.js';
+import { PingError } from './apollo-errors.js';
 import * as functions from './functions.js';
 import { computePresignedPutUrl } from './minio.js';
 import type {
@@ -76,25 +75,11 @@ const resolvers = {
       arguments_: MutationCreateSimulationArguments,
       context: AuthenticatedContext,
     ): Promise<Simulation> {
-      // Load input data
       const { name, pipelineDescription } = arguments_.simulation;
       const { sub: userId } = context.user;
-
-      // Parse the DSL to make sure it is valid before saving broken data
-      try {
-        DSL.parse(JSON.parse(pipelineDescription));
-      } catch (error) {
-        throw new DSLParsingError(error as Error);
-      }
-
-      // Save the simulation in the database
-      const result = await sdk.createSimulation({ name, pipelineDescription, userId });
-
-      // Return the simulation id
-      const simulationId = result.insertSimulationsOne?.simulationId;
-      if (!simulationId) {
-        throw new Error('🎌 Undefined results from sdk.createSimulation function');
-      }
+      const simulationId = await functions.createSimulation({
+        name, pipelineDescription, userId,
+      });
       return { simulationId };
     },
     async createRun(

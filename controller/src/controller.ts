@@ -8,7 +8,6 @@ import {
   dockerCaCertPath, dockerHost, dockerPort,
   dockerProtocol, dockerSocketPath, dockerTlsCertPath, dockerTlsKeyPath, remote,
 } from './config.js';
-import { getSdk } from './db/database.js';
 import sdk from './db/sdk.js';
 import logger from './logger.js';
 import type * as types from './types.js';

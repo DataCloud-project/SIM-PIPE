@@ -37,7 +37,7 @@ CREATE TABLE simpipe.step_status (
 );
 COMMENT ON TABLE simpipe.step_status IS 'Status of a step';
 INSERT INTO simpipe.step_status (value) VALUES
-  ('queued'),
+  ('waiting'),
   ('active'),
   ('completed'),
   ('failed'),

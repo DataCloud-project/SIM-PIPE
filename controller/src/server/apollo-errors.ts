@@ -23,4 +23,14 @@ export class PingError extends GraphQLError {
   }
 }
 
+export class NotFoundError extends GraphQLError {
+  constructor(message: string) {
+    super(message, {
+      extensions: {
+        code: 'NOT_FOUND_ERROR',
+      },
+    });
+  }
+}
+
 /* eslint-enable max-classes-per-file */

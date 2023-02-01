@@ -1,6 +1,7 @@
 import startController from '../controller.js';
 import sdk from '../db/sdk.js';
 import logger from '../logger.js';
+import { DSLParsingError, NotFoundError } from './apollo-errors.js';
 import DSL from './dsl.js';
 import TaskQueue from './taskqueue.js';
 import type {
@@ -9,8 +10,8 @@ import type {
   GetSimulationDslQuery,
 } from '../db/database.js';
 import type { Step, UUID } from '../types.js';
-import type { StepDSLType as StepDSL } from './dsl.js';
-import type { CreateRunInput } from './schema.js';
+import type { DSLType, StepDSLType as StepDSL } from './dsl.js';
+import type { CreateRunInput, CreateSimulationInput } from './schema.js';
 
 async function createStep(runId: UUID, name: string, image: string,
   pipelineStepNumber: number): Promise<UUID> {
@@ -69,14 +70,14 @@ export async function createRun(simulationId: string, name: string): Promise<str
 export async function checkRunOwner(runId: string, userId: string): Promise<void> {
   const result = await sdk.getUserIdFromRun({ runId });
   if (result.run?.simulation.userId !== userId) {
-    throw new Error('Invalid access; run does not belong to the user');
+    throw new NotFoundError('Run not found');
   }
 }
 
 export async function checkSimulationOwner(simulationId: string, userId: string): Promise<void> {
   const result = await sdk.getUserIdFromSimulation({ simulationId });
   if (result.simulation?.userId !== userId) {
-    throw new Error('Invalid access; simulation does not belong to the user');
+    throw new NotFoundError('Simulation not found');
   }
 }
 
@@ -215,13 +216,40 @@ async function runScheduler(): Promise<void> {
 export async function queueRun(runId: string, userId: string): Promise<string> {
   // throw error if run does not belong to the user
   await checkRunOwner(runId, userId);
+  await sdk.setRunAsQueued({ runId });
   if (isSimulationRunning) {
     logger.info(`RunId ${runId} added to task queue`);
   }
   taskQueue.enqueue(runId);
-  await sdk.setRunAsQueued({ runId });
   runScheduler().catch((error) => {
     logger.error(`Error in run scheduler\n${(error as Error).message}`);
   });
   return 'ok';
+}
+
+export async function createSimulation({
+  name, userId, pipelineDescription,
+}: CreateSimulationInput & { userId: string }): Promise<string> {
+  // Parse the DSL to make sure it is valid before saving broken data
+  let parsedPipelineDescription: DSLType;
+  try {
+    parsedPipelineDescription = DSL.parse(JSON.parse(pipelineDescription));
+  } catch (error) {
+    throw new DSLParsingError(error as Error);
+  }
+
+  // Save the simulation in the database
+  const result = await sdk.createSimulation({
+    name,
+    pipelineDescription: parsedPipelineDescription,
+    userId,
+  });
+
+  // Return the simulation id
+  const simulationId = result.insertSimulationsOne?.simulationId;
+  if (!simulationId) {
+    throw new Error('🎌 Undefined results from sdk.createSimulation function');
+  }
+  // create simulation in the database
+  return simulationId;
 }

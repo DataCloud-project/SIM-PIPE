@@ -13,6 +13,7 @@ const DSL = z.object({
   steps: z.array(StepDSL),
 });
 
+export type DSLType = z.infer<typeof DSL>;
 export type StepDSLType = z.infer<typeof StepDSL>;
 
 export default DSL;

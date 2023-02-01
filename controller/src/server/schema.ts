@@ -40,7 +40,10 @@ export type CreateSimulationInput = {
   name: Scalars['String'];
   /**
    *  The description of the simulation pipeline.
-   * It is a JSON document but it is sent as a string.
+   *
+   * It is a JSON document but it must be sent as a string,
+   * because not all GraphQL clients support sending JSON documents
+   * in input variables.
    */
   pipelineDescription: Scalars['json'];
 };
