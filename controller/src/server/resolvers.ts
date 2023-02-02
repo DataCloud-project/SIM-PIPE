@@ -1,10 +1,6 @@
-import { randomUUID } from 'node:crypto';
-
 import sdk from '../db/sdk.js';
-import { pingRunner } from '../runner/runner-utils.js';
-import { PingError } from './apollo-errors.js';
+import { FeatureDisabledError, PingError } from './apollo-errors.js';
 import * as functions from './functions.js';
-import { computePresignedPutUrl } from './minio.js';
 import type {
   MutationCancelRunArgs as MutationCancelRunArguments,
   MutationCreateRunArgs as MutationCreateRunArguments,
@@ -47,7 +43,6 @@ const resolvers = {
       try {
         await Promise.all([
           sdk.ping(),
-          pingRunner(),
         ]);
       } catch (error) {
         throw new PingError(error as Error);
@@ -55,18 +50,8 @@ const resolvers = {
 
       return 'pong';
     },
-    async computeUploadPresignedUrl(
-      _p: EmptyParent, _a: EmptyArguments, context: AuthenticatedContext,
-    ): Promise<string> {
-      const { sub } = context.user;
-      // Make sure the user is a filesystem safe string
-      if (!/^[\w-]+$/i.test(sub)) {
-        throw new Error('User identifier (sub) is unsupported for files');
-      }
-      const uuid = randomUUID();
-      const objectName = `${sub}/${uuid}`;
-      const url = await computePresignedPutUrl(objectName);
-      return url;
+    async computeUploadPresignedUrl(): Promise<string> {
+      throw new FeatureDisabledError('Uploads are disabled');
     },
   } as QueryResolvers<AuthenticatedContext, EmptyParent>,
   Mutation: {

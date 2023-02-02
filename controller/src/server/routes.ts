@@ -46,25 +46,8 @@ export default function createRouter(): Router {
   // Minio webhook endpoint
   router.post('/minio/webhook', json(), (request, response) => {
     // TODO
-    console.log(request.body, JSON.stringify(request.body, null, 2));
-    /* {
-  EventName: 's3:ObjectCreated:Put',
-  Key: 'simpipe/00427-1735007140-A man wearing a cowboy hat and a bandana, riding a duck in the middle of the ocean, seen from the side, in a storm.png',
-  Records: [
-    {
-      eventVersion: '2.0',
-      eventSource: 'minio:s3',
-      awsRegion: '',
-      eventTime: '2023-02-02T09:33:22.394Z',
-      eventName: 's3:ObjectCreated:Put',
-      userIdentity: [Object],
-      requestParameters: [Object],
-      responseElements: [Object],
-      s3: [Object],
-      source: [Object]
-    }
-  ]
-} */
+    // eslint-disable-next-line no-console
+    console.log(JSON.stringify(request.body, undefined, 2));
     response.sendStatus(204);
   });
 

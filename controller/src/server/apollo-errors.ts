@@ -33,4 +33,14 @@ export class NotFoundError extends GraphQLError {
   }
 }
 
+export class FeatureDisabledError extends GraphQLError {
+  constructor(message: string) {
+    super(message, {
+      extensions: {
+        code: 'FEATURE_DISABLED_ERROR',
+      },
+    });
+  }
+}
+
 /* eslint-enable max-classes-per-file */
