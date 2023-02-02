@@ -137,89 +137,75 @@ COMMENT ON COLUMN simpipe.logs.text IS 'Text of the log';
 ALTER TABLE ONLY simpipe.logs
     ADD CONSTRAINT logs_step_id_fkey FOREIGN KEY (step_id) REFERENCES simpipe.steps(step_id) ON UPDATE CASCADE ON DELETE CASCADE;
 
--- CPU view
-CREATE VIEW simpipe.cpu AS
-SELECT data."time",
-      data.value,
-      series.container_label_user_id as user_id,
-      series.container_label_simulation_id as simulation_id,
-      series.container_label_run_id as run_id,
-      series.container_label_step_id as step_id
-      FROM prom_data.container_cpu_user_seconds_total as data
-      LEFT JOIN prom_series.container_cpu_user_seconds_total as series
-        ON series.series_id = data.series_id;
+-- CPU table
+CREATE TABLE simpipe.cpu (
+    "time" timestamp without time zone NOT NULL,
+    value double precision NOT NULL,
+    user_id text NOT NULL,
+    simulation_id text NOT NULL,
+    run_id text NOT NULL,
+    step_id text NOT NULL
+);
 
--- Memory view
-CREATE VIEW simpipe.memory_usage_bytes AS
-SELECT data."time",
-      data.value,
-      series.container_label_user_id as user_id,
-      series.container_label_simulation_id as simulation_id,
-      series.container_label_run_id as run_id,
-      series.container_label_step_id as step_id
-      FROM prom_data.container_memory_usage_bytes as data
-      LEFT JOIN prom_series.container_memory_usage_bytes as series
-        ON series.series_id = data.series_id;
+-- Memory table
+CREATE TABLE simpipe.memory_usage_bytes (
+    "time" timestamp without time zone NOT NULL,
+    value double precision NOT NULL,
+    user_id text NOT NULL,
+    simulation_id text NOT NULL,
+    run_id text NOT NULL,
+    step_id text NOT NULL
+);
 
--- Memory max usage view
-CREATE VIEW simpipe.memory_max_usage_bytes AS
-SELECT data."time",
-      data.value,
-      series.container_label_user_id as user_id,
-      series.container_label_simulation_id as simulation_id,
-      series.container_label_run_id as run_id,
-      series.container_label_step_id as step_id
-      FROM prom_data.container_memory_max_usage_bytes as data
-      LEFT JOIN prom_series.container_memory_max_usage_bytes as series
-        ON series.series_id = data.series_id;
+-- Memory max usage table
+CREATE TABLE simpipe.memory_max_usage_bytes (
+    "time" timestamp without time zone NOT NULL,
+    value double precision NOT NULL,
+    user_id text NOT NULL,
+    simulation_id text NOT NULL,
+    run_id text NOT NULL,
+    step_id text NOT NULL
+);
 
--- Network received bytes view
-CREATE VIEW simpipe.network_received_bytes AS
-SELECT data."time",
-      data.value,
-      series.container_label_user_id as user_id,
-      series.container_label_simulation_id as simulation_id,
-      series.container_label_run_id as run_id,
-      series.container_label_step_id as step_id
-      FROM prom_data.container_network_receive_bytes_total as data
-      LEFT JOIN prom_series.container_network_receive_bytes_total as series
-        ON series.series_id = data.series_id;
+-- Network received bytes table
+CREATE TABLE simpipe.network_received_bytes (
+    "time" timestamp without time zone NOT NULL,
+    value double precision NOT NULL,
+    user_id text NOT NULL,
+    simulation_id text NOT NULL,
+    run_id text NOT NULL,
+    step_id text NOT NULL
+);
 
--- Network transmit bytes view
-CREATE VIEW simpipe.network_transmit_bytes AS
-SELECT data."time",
-      data.value,
-      series.container_label_user_id as user_id,
-      series.container_label_simulation_id as simulation_id,
-      series.container_label_run_id as run_id,
-      series.container_label_step_id as step_id
-      FROM prom_data.container_network_transmit_bytes_total as data
-      LEFT JOIN prom_series.container_network_transmit_bytes_total as series
-        ON series.series_id = data.series_id;
+-- Network transmit bytes table
+CREATE TABLE simpipe.network_transmit_bytes (
+    "time" timestamp without time zone NOT NULL,
+    value double precision NOT NULL,
+    user_id text NOT NULL,
+    simulation_id text NOT NULL,
+    run_id text NOT NULL,
+    step_id text NOT NULL
+);
 
--- Network fs reads merged view
-CREATE VIEW simpipe.fs_reads_merged AS
-SELECT data."time",
-      data.value,
-      series.container_label_user_id as user_id,
-      series.container_label_simulation_id as simulation_id,
-      series.container_label_run_id as run_id,
-      series.container_label_step_id as step_id
-      FROM prom_data.container_fs_reads_merged_total as data
-      LEFT JOIN prom_series.container_fs_reads_merged_total as series
-        ON series.series_id = data.series_id;
+-- Network fs reads merged table
+CREATE TABLE simpipe.fs_reads_merged (
+    "time" timestamp without time zone NOT NULL,
+    value double precision NOT NULL,
+    user_id text NOT NULL,
+    simulation_id text NOT NULL,
+    run_id text NOT NULL,
+    step_id text NOT NULL
+);
 
--- Network fs writes merged view
-CREATE VIEW simpipe.fs_writes_merged AS
-SELECT data."time",
-      data.value,
-      series.container_label_user_id as user_id,
-      series.container_label_simulation_id as simulation_id,
-      series.container_label_run_id as run_id,
-      series.container_label_step_id as step_id
-      FROM prom_data.container_fs_writes_merged_total as data
-      LEFT JOIN prom_series.container_fs_writes_merged_total as series
-        ON series.series_id = data.series_id;
+-- Network fs writes merged table
+CREATE TABLE simpipe.fs_writes_merged (
+    "time" timestamp without time zone NOT NULL,
+    value double precision NOT NULL,
+    user_id text NOT NULL,
+    simulation_id text NOT NULL,
+    run_id text NOT NULL,
+    step_id text NOT NULL
+);
 
 -- Automatically cast uuid to text for convenience
 CREATE CAST (uuid AS text) WITH INOUT AS IMPLICIT;
