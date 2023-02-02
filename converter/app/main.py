@@ -4,8 +4,8 @@ import re
 import json
 app = FastAPI()
 
-@app.get("/convert/{response}")
-def read_item(response: str):
+@app.get("/convert/")
+def converter(response: str):
     (code, pipeline_description) = convert(response)
     return code, pipeline_description
 
@@ -36,8 +36,15 @@ def convert(response):
 
         # step name
         steps[index]["name"] = matched_name.group().split(' ')[1]
-        # not provided in def-pipe response, step_number assumed as the order of appearance
+        """
+        Dependency and step number are not provided in def-pipe response currently.
+        Step_number is therefore assumed as the order of appearance.
+        Prerequisite is also filled in this way
+        TODO: this should be changed when DEF-PIPE gets updated with relavant values
+        """ 
         steps[index]["step_number"] = index + 1 
+        if index > 0:
+            steps[index]["prerequisite"] = steps[index-1]["step_number"] 
 
         # image name
         if(matched_imagenames[index].group().split(' ')[1] == 'container-implementation'):    
