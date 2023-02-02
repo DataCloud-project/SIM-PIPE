@@ -57,16 +57,16 @@ services:
       HASURA_URL: ${HASURA_URL}
 
   svelte:
-    image: simpipe-frontend 
-    # build:
-    #   context: ./frontend
-    #   dockerfile: Dockerfile
-    #   args:
-    #     SIM_PIPE_CONTROLLER_URL: http://192.168.0.249:9000/graphql
+    image: simpipe-frontend   
     ports:
       - "9090:3000"
     depends_on:
       - "controller"   
+
+  converter:
+    image: simpipe-converter   
+    ports:
+      - "9005:9005"    
 volumes:
   db_data1:
     null
