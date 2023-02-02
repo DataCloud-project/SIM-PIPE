@@ -127,7 +127,7 @@ export async function createWebhookEndpoint(): Promise<void> {
   throw new Error('Minio did not restart');
 }
 
-export async function setupBucket(): Promise<void> {
+export async function setupStorageBucket(): Promise<void> {
   await createWebhookEndpoint();
 
   // Create the bucket if it doesn't already exist
