@@ -35,5 +35,6 @@ export default async function createApolloGraphqlServer(): Promise<ApolloServer>
       return { user: undefined };
     },
     introspection: true,
+    persistedQueries: false,
   });
 }
