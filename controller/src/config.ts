@@ -41,10 +41,23 @@ export const hasuraAdminSecret = process.env.HASURA_ADMIN_SECRET;
 export const hasuraControllerJwtPrivateKey = process.env.HASURA_CONTROLLER_JWT_PRIVATE_KEY;
 
 // Minio
-export const minioAccesskey = process.env.MINIO_ACCESS_KEY;
-export const minioSecretkey = process.env.MINIO_SECRET_KEY;
+export const minioAccessKey = process.env.MINIO_ACCESS_KEY;
+export const minioSecretKey = process.env.MINIO_SECRET_KEY;
 export const minioEndpoint = process.env.MINIO_ENDPOINT ?? 'localhost';
 export const minioPort = process.env.MINIO_PORT
   ? Number.parseInt(process.env.MINIO_PORT, 10) : undefined;
 export const minioUseSSL = !!process.env.MINIO_USE_SSL;
-export const minioBucketName = process.env.MINIO_BUCKET_NAME ?? 'simpipe';
+export const minioBucketName = process.env.MINIO_BUCKET_NAME ?? 'simpipe2';
+
+export const minioApiAccessKey = process.env.MINIO_API_ACCESS_KEY ?? minioAccessKey;
+export const minioApiSecretKey = process.env.MINIO_API_SECRET_KEY ?? minioSecretKey;
+export const minioApiEndpoint = process.env.MINIO_API_ENDPOINT ?? minioEndpoint;
+export const minioApiPort = process.env.MINIO_API_PORT
+  ? Number.parseInt(process.env.MINIO_API_PORT, 10) : undefined;
+export const minioApiUseSSL = process.env.MINIO_API_USE_SSL === undefined
+  ? minioUseSSL : !!process.env.MINIO_API_USE_SSL;
+export const minioWebhookEndpoint = process.env.MINIO_WEBHOOK_ENDPOINT ?? 'http://controller:9000/minio/webhook';
+
+// Runner
+export const runnerContainerStopTimeout = process.env.RUNNER_CONTAINER_STOP_TIMEOUT
+  ? Number.parseInt(process.env.RUNNER_CONTAINER_STOP_TIMEOUT, 10) : 5;

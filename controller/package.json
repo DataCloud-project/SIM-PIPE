@@ -45,6 +45,7 @@
     "@types/node": "^18.11.18",
     "@types/set-interval-async": "^1.0.0",
     "@types/ssh2-sftp-client": "^9.0.0",
+    "@types/tough-cookie": "^4.0.2",
     "@typescript-eslint/eslint-plugin": "^5.49.0",
     "@typescript-eslint/parser": "^5.49.0",
     "eslint": "^8.33.0",
@@ -86,6 +87,7 @@
     "p-memoize": "^7.1.1",
     "set-interval-async": "^3.0.3",
     "ssh2-sftp-client": "^9.0.4",
+    "tough-cookie": "^4.1.2",
     "winston": "^3.8.2",
     "zod": "^3.20.2"
   }

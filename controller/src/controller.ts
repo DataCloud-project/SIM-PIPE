@@ -1,62 +1,9 @@
-import Docker from 'dockerode';
-import fsAsync from 'node:fs/promises';
 import path from 'node:path';
 import { setTimeout } from 'node:timers/promises';
-import type { Stream } from 'node:stream';
 
-import {
-  dockerCaCertPath, dockerHost, dockerPort,
-  dockerProtocol, dockerSocketPath, dockerTlsCertPath, dockerTlsKeyPath, remote,
-} from './config.js';
 import sdk from './db/sdk.js';
 import logger from './logger.js';
 import type * as types from './types.js';
-
-let docker: Docker;
-
-if (remote) {
-  const caCert = dockerCaCertPath ? await fsAsync.readFile(dockerCaCertPath) : undefined;
-  const tlsCert = dockerTlsCertPath ? await fsAsync.readFile(dockerTlsCertPath) : undefined;
-  const tlsKey = dockerTlsKeyPath ? await fsAsync.readFile(dockerTlsKeyPath) : undefined;
-
-  // remote connection to docker daemon
-  docker = new Docker({
-    host: dockerHost,
-    port: dockerPort,
-    protocol: dockerProtocol,
-    ca: caCert,
-    cert: tlsCert,
-    key: tlsKey,
-  });
-} else {
-  // local connection to docker dameon
-  const stats = await fsAsync.stat(dockerSocketPath);
-
-  if (!stats.isSocket()) {
-    throw new Error('🎌 Are you sure the docker is running?');
-  }
-
-  docker = new Docker({ socketPath: dockerSocketPath });
-}
-
-// Ping docker deamon to check if it is running
-export async function pingDocker(): Promise<void> {
-  const pingResult = await Promise.race<string | unknown>([
-    setTimeout(5000, 'timeout'),
-    docker.ping(),
-  ]);
-  if (pingResult === 'timeout') {
-    throw new Error('ping timeout');
-  }
-}
-
-try {
-  await pingDocker();
-  logger.info('🐳 Docker daemon is running');
-} catch (error) {
-  logger.error('🐳 Docker daemon is not running');
-  throw new Error(`🎌 Error pinging docker daemon\n${error as string}`);
-}
 
 let targetDirectory: string;
 let createdContainer: Docker.Container;
@@ -68,28 +15,6 @@ function init(step: types.Step): void {
   targetDirectory = path.join('/app/simulations', step.simulationId, step.runId, `${step.stepNumber}`);
   process.env.PROCESS_COMPLETED = 'false';
   process.env.STOP_SIGNAL_SENT = 'false';
-}
-
-export async function pullImage(image: string): Promise<void> {
-  return new Promise<void>((resolve, reject) => {
-    const onFinished = (): void => {
-      resolve();
-    };
-    docker.pull(image, async (error: unknown, stream: Stream) => {
-      if (error) {
-        reject(error);
-      } else {
-        try {
-          docker.modem.followProgress(stream, onFinished);
-        } catch (dockerModemError) {
-          if ((dockerModemError as Error).name === 'TypeError') resolve();
-          else reject(dockerModemError);
-        }
-      }
-    }).catch((error) => {
-      reject(error);
-    });
-  });
 }
 
 async function startContainer(

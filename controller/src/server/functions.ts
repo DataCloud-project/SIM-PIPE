@@ -1,6 +1,7 @@
 import startController from '../controller.js';
 import sdk from '../db/sdk.js';
 import logger from '../logger.js';
+import runRun from '../runner/run-run.js';
 import { DSLParsingError, NotFoundError } from './apollo-errors.js';
 import DSL from './dsl.js';
 import TaskQueue from './taskqueue.js';
@@ -137,7 +138,7 @@ async function startRun(runId: UUID): Promise<UUID> {
         stepNumber: pipelineStepNumber,
         name,
         image,
-        env: [],
+        // env: [],
       };
       /* if (!environmentList || !timeoutValues) {
         throw new Error('Error! List of environment variables/ timeout values for container
@@ -216,6 +217,27 @@ async function runScheduler(): Promise<void> {
 export async function queueRun(runId: string, userId: string): Promise<string> {
   // throw error if run does not belong to the user
   await checkRunOwner(runId, userId);
+  // TODO
+  const result: GetRunDetailsQuery = await sdk.getRunDetails({ runId });
+  if (!result.run) {
+    throw new NotFoundError('Run not found');
+  }
+  // get steps
+  const { steps, simulationId } = result.run;
+  await runRun({
+    userId,
+    runId,
+    simulationId,
+    steps: steps.map((step) => ({
+      userId,
+      simulationId,
+      runId,
+      stepId: step.stepId,
+      stepNumber: step.pipelineStepNumber,
+      name: step.name,
+      image: step.image,
+    })),
+  });
   await sdk.setRunAsQueued({ runId });
   if (isSimulationRunning) {
     logger.info(`RunId ${runId} added to task queue`);

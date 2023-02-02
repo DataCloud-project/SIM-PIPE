@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 
-import { pingDocker } from '../controller.js';
 import sdk from '../db/sdk.js';
+import { pingRunner } from '../runner/runner-utils.js';
 import { PingError } from './apollo-errors.js';
 import * as functions from './functions.js';
 import { computePresignedPutUrl } from './minio.js';
@@ -47,7 +47,7 @@ const resolvers = {
       try {
         await Promise.all([
           sdk.ping(),
-          pingDocker(),
+          pingRunner(),
         ]);
       } catch (error) {
         throw new PingError(error as Error);
