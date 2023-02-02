@@ -78,17 +78,6 @@ export async function checkSimulationOwner(simulationId: string, userId: string)
   }
 }
 
-/**
- * function to check if a simulation belongs to the logged in user
- */
-
-export async function createRunWithInput({
-  simulationId, name, /* environmentVariables, timeouts, */ userId,
-}: CreateRunInput & { userId: string }): Promise<string> {
-  await checkSimulationOwner(simulationId, userId);
-  return await createRun(simulationId, name);
-}
-
 export async function stopRun(runId: string, userId: string): Promise<string> {
   // throw error if run does not belong to the user
   await checkRunOwner(runId, userId);
