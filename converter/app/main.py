@@ -1,14 +1,20 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 import re
 import json
 app = FastAPI()
 
+# added allowed origin as * for now, TODO: later can be modified to have the ip of the svelte frontend server
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=['*']
+)
+
 @app.get("/convert/")
 def converter(response: str):
     (code, pipeline_description) = convert(response)
     return code, pipeline_description
-
 
 def convert(response):
     response = str(response)
@@ -44,7 +50,7 @@ def convert(response):
         """ 
         steps[index]["step_number"] = index + 1 
         if index > 0:
-            steps[index]["prerequisite"] = steps[index-1]["step_number"] 
+            steps[index]["prerequisite"] = [steps[index-1]["step_number"]] 
 
         # image name
         if(matched_imagenames[index].group().split(' ')[1] == 'container-implementation'):    
