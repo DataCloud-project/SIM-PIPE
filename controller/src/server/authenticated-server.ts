@@ -66,7 +66,7 @@ const resolvers = {
     async ImportPipelineFromDEFPIPE(_p: unknown, arguments_: { name:string }, context: { auth:string, user: any }):Promise<unknown> {
       const headers:{ Authorization:string, mode:string, 'Content-Type':string } = { Authorization: context.auth, mode: 'no-cors', 'Content-Type': 'application/json' };
       // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-      const result = await fetch(`${process.env.DEF_PIPE_API_PIPELINE}/${context.user.preferred_username}/${arguments_.name}`, {
+      const result = await fetch(`${process.env.DEF_PIPE_API_PIPELINE}${context.user.preferred_username}/${arguments_.name}`, {
         headers,
       }).then((response) => response.json())
         .then((json_response) => json_response.data);
@@ -76,7 +76,7 @@ const resolvers = {
     async ViewPipelinesFromDEFPIPE(_p: unknown, arguments_: unknown, context: { auth:string, user: { sub: string; preferred_username: string; } }):Promise<unknown> {
       const headers:{ Authorization:string, mode:string, 'Content-Type':string } = { Authorization: context.auth, mode: 'no-cors', 'Content-Type': 'application/json' };
       // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-      const result = await fetch(`${process.env.DEF_PIPE_API_LIST}/${context.user.preferred_username}`, {
+      const result = await fetch(`${process.env.DEF_PIPE_API_LIST}${context.user.preferred_username}`, {
         headers,
       }).then((response) => response.json())
         .then((json_response) => json_response.data);

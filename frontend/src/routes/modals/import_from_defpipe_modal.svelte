@@ -7,6 +7,7 @@
 	import Alert from './alert.svelte';
 	import { import_pipeline_from_defpipe_query } from '../../queries/import_pipeline_from_defpipe.svelte';
 	import {SIM_PIPE_CONVERTER_URL} from '../../config/config';
+
 	export let all_currentuser_pipelines;
 	const { open, close } = getContext('simple-modal');
 	const get_pipeline_from_defpipe = async () => {
@@ -14,7 +15,8 @@
 		{name: selected_pipeline})).ImportPipelineFromDEFPIPE;
 	}
 	
-	let selected_pipeline = 'Select pipeline';
+	let selected_pipeline = '';
+	let placeholder = 'Select pipeline';
 	
 	const import_from_defpipe = async () => {
 		var selected_pipeline_definition = await get_pipeline_from_defpipe();
@@ -29,7 +31,7 @@
 		// check if conversion was succesful
 		if(converted_pipeline[0] == 'error') {
 			open(Alert, { message: '🎌 Failed! Selected pipeline definition is incomplete' });
-			setTimeout(async function () {close();}, 1500);
+			setTimeout(async function () {close();}, 1000);
 			return;
 		}
 		// call create simulation with the converted pipeline description
@@ -46,7 +48,7 @@
 		} else {
 			open(Alert, { message: JSON.parse(result.Create_Simulation).message });
 		}
-		setTimeout(async function () {close();}, 1500);
+		setTimeout(async function () {close();}, 1000);
 	}
 </script>
 
@@ -54,6 +56,7 @@
 	<h1>Choose a pipeline to import:</h1>
 	<br />
 	<select bind:value={selected_pipeline}>
+        <option value="" disabled selected>{placeholder}</option>
 		<br />
 		{#each all_currentuser_pipelines as value}
 			<option value={value}>
