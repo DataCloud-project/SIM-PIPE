@@ -12,7 +12,7 @@
 </script>
 
 <button class="action_button" on:click={open_create_simulation_modal}>Import simulation manually</button>
-<!-- Integration change -->
+<!-- DEF-PIPE Integration change -->
 <br/>
 <button class="action_button" on:click={open_import_defpipe_modal}>Import from DEF-PIPE</button>
-<!-- Integration change -->
+<!-- DEF-PIPE Integration change -->

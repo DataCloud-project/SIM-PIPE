@@ -1,7 +1,7 @@
 <script context="module">
 	import { GraphQLClient } from 'graphql-request';
 	import Keycloak from 'keycloak-js';
-	import { graphQLClient, username } from '../../stores/stores';
+	import { graphQLClient, username, usertoken } from '../../stores/stores';
 	import * as config from '../../config/config';
 
 	export async function init_keycloak() {
@@ -18,6 +18,7 @@
 				authorization: 'Bearer ' + keycloak.token,
 				mode: 'cors'
 			};
+			usertoken.set(keycloak.token);
 			username.set(keycloak.idTokenParsed.preferred_username);
 			let graphqlUrl;
 			if (config.SIM_PIPE_CONTROLLER_URL === '') {

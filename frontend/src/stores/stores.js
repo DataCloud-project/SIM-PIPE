@@ -1,9 +1,10 @@
 import { writable } from 'svelte/store';
 
 /**
- * username of the currently logged in user
+ * username and token of the currently logged in user
  */
 export let username = writable('');
+export let usertoken = writable('');
 /**
  * indicators to show if a run or step is clicked
  */
