@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi import Body
 
 import re
 import json
@@ -8,17 +9,22 @@ app = FastAPI()
 # added allowed origin as * for now, TODO: later can be modified to have the ip of the svelte frontend server
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=['*']
+    allow_origins=['*'],
+    allow_methods=["POST"],
+    allow_headers=["*"],
 )
 
-@app.get("/convert/")
-def converter(response: str):
-    (code, pipeline_description) = convert(response)
+@app.post("/convert/")
+def converter(response: str = Body()):
+    (code, pipeline_description) = convert(json.loads(response)['response'])
     return code, pipeline_description
 
 def convert(response):
-    response = str(response)
-    response = json.loads(response)["data"]
+    # print('response received in fast API')
+    # print(response)
+    # response = str(response)
+    # response = json.loads(response)["data"]
+    # response = json.loads(response)
 
     pipeline_description = {}
     steps = []
@@ -66,4 +72,6 @@ def convert(response):
             steps[index]["env"] = env_list
 
     pipeline_description["steps"] = steps
+    print('finished parsing')
+    print(pipeline_description)
     return "success", pipeline_description
