@@ -1,4 +1,7 @@
 /* eslint-disable eslint-comments/disable-enable-pair */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/unbound-method */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import { gql } from 'apollo-server';
@@ -27,6 +30,8 @@ const typeDefs = gql`
       Get_Simulation(simulation_id:String):JSON #String
       Get_Simulation_Run_Results(simulation_id: String, run_id:String): JSON # String
       All_Runs_Steps: JSON #String
+      # Integration def pipe version 1
+      Test: String
   },
   type Mutation {
     Create_Simulation(name:String, pipeline_description:String): String
@@ -54,6 +59,15 @@ const resolvers = {
     },
     All_Runs_Steps(_p: unknown, arguments_: unknown, context: { user: any }):unknown {
       return functions.allRunsSteps(context.user.sub as string);
+    },
+    // Integration def pipe version 1
+    async Test(_p: unknown, arguments_: unknown, context: { auth:string, user: any }):Promise<unknown> {
+      const headers:{ Authorization:string, mode:string, 'Content-Type':string } = { Authorization: context.auth, mode: 'no-cors', 'Content-Type': 'application/json' };
+      const result = await fetch('https://crowdserv.sys.kth.se/api/repo/export/testuser/AllValues', {
+        headers,
+      }).then((response) => response.json())
+        .then((json_response) => json_response.data);
+      return result;
     },
   },
   Mutation: {
@@ -213,17 +227,18 @@ const startSecureServer = async (): Promise<void> => {
   const server = new ApolloServer({
     typeDefs,
     resolvers,
-    context: ({ req }): { user: { sub: string; preferred_username: string; }; } => {
+    context: ({ req }): { auth: string; user: { sub: string; preferred_username: string; }; } => {
       if (!req.headers.authorization) {
         throw new Error('🎌 No authorization header found');
       }
+      // Integration def pipe version 1
+      const auth:string = req.headers.authorization;
       // definition of user can be extended later to include all required attributes
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       const user:{
         sub: string,
         preferred_username: string
       } = jwt_decode(req.headers.authorization);
-      return { user };
+      return { auth, user };
     },
   });
 
