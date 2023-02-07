@@ -127,7 +127,6 @@
 			timestamps.push(dayjs(usage.time).valueOf()); // timestamps in seconds from the first timestamp
 			// timestamps.push(dayjs(usage.time)); // timestamps in seconds from the first timestamp
 		});
-		console.log(timestamps);
 		render_highchart('cpu_container', 'CPU', 'CPU usage in percentage', [
 			{
 				name: 'CPU usage',

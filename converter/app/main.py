@@ -20,12 +20,6 @@ def converter(response: str = Body()):
     return code, pipeline_description
 
 def convert(response):
-    # print('response received in fast API')
-    # print(response)
-    # response = str(response)
-    # response = json.loads(response)["data"]
-    # response = json.loads(response)
-
     pipeline_description = {}
     steps = []
 
