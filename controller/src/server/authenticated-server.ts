@@ -31,7 +31,9 @@ const typeDefs = gql`
       Get_Simulation_Run_Results(simulation_id: String, run_id:String): JSON # String
       All_Runs_Steps: JSON #String
       # Integration def pipe version 1
-      Test: String
+      ImportPipelineFromDEFPIPE(name:String): String
+      # Integration def pipe version 2
+      ViewPipelinesFromDEFPIPE: JSON
   },
   type Mutation {
     Create_Simulation(name:String, pipeline_description:String): String
@@ -61,9 +63,19 @@ const resolvers = {
       return functions.allRunsSteps(context.user.sub as string);
     },
     // Integration def pipe version 1
-    async Test(_p: unknown, arguments_: unknown, context: { auth:string, user: any }):Promise<unknown> {
+    async ImportPipelineFromDEFPIPE(_p: unknown, arguments_: { name:string }, context: { auth:string, user: any }):Promise<unknown> {
       const headers:{ Authorization:string, mode:string, 'Content-Type':string } = { Authorization: context.auth, mode: 'no-cors', 'Content-Type': 'application/json' };
-      const result = await fetch('https://crowdserv.sys.kth.se/api/repo/export/testuser/AllValues', {
+      // const result = await fetch(`https://crowdserv.sys.kth.se/api/repo/export/testuser/AllValues`, {
+      const result = await fetch(`https://crowdserv.sys.kth.se/api/repo/export/${context.user.preferred_username}/${arguments_.name}`, {
+        headers,
+      }).then((response) => response.json())
+        .then((json_response) => json_response.data);
+      return result;
+    },
+    // Integration def pipe version 2
+    async ViewPipelinesFromDEFPIPE(_p: unknown, arguments_: unknown, context: { auth:string, user: { sub: string; preferred_username: string; } }):Promise<unknown> {
+      const headers:{ Authorization:string, mode:string, 'Content-Type':string } = { Authorization: context.auth, mode: 'no-cors', 'Content-Type': 'application/json' };
+      const result = await fetch(`https://crowdserv.sys.kth.se/api/repo/${context.user.preferred_username}`, {
         headers,
       }).then((response) => response.json())
         .then((json_response) => json_response.data);
