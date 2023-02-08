@@ -20,23 +20,27 @@ def converter(response: str = Body()):
     return code, pipeline_description
 
 def convert(response):
+    if( response is None):
+        return "error", "Given pipeline description is empty"
+
     pipeline_description = {}
     steps = []
-
     pipeline_name = re.finditer('Pipeline [a-zA-Z]+', response)
     for match in pipeline_name:
         pipeline_description["name"] = match.group().split(' ')[1]
 
-    # extract relevant information based on string matching
+    # extract relevant information using string matching
     matched_stepnames = list(re.finditer('step [a-zA-Z]+', response))
     matched_imagenames = list(re.finditer('implementation: container-implementation image: \'[a-zA-Z\.:0-9]+\'', response))
     response = re.sub('\n', '', response)
     response = re.sub('\t', '', response)
-    matched_envlist = list(re.finditer("environmentParameters: {[^}]+}", response))
+    matched_envlist = list(re.finditer("step ([a-zA-Z]+)[^{]*environmentParameters: ({[^}]+})", response))
 
-    if( not (len(matched_stepnames) == len(matched_imagenames) == len(matched_envlist))):
-        return "error", "Given input is not valid"
-        
+    if( not (len(matched_stepnames) == len(matched_imagenames))):
+        return "error", "Given pipeline description is not valid"
+
+    # go through each set of matches and assign attributes to current step
+    env_list_index = 0 # every step need not have an env_list, so a separate index to retreive matched env list
     for index, matched_name in enumerate(matched_stepnames):
         steps.append({})
 
@@ -57,13 +61,17 @@ def convert(response):
             steps[index]["image"] = matched_imagenames[index].group().split(' ')[3]
 
         # env 
-        matches = re.split(r' |: |{|}|\'|,', matched_envlist[index].group())
-        matches = list(filter(None, matches))
-        env_list = []
-        if (len(matches) > 1): # some parameters are given
-            for i in range(1, len(matches), 2):
-                env_list.append('='.join([matches[i], matches[i+1]]))
-            steps[index]["env"] = env_list
-
+        # check if the current step has any env list specified
+        if(matched_envlist[env_list_index][1] == steps[index]["name"]):
+            matches = re.split(r' |: |{|}|\'|,', matched_envlist[env_list_index][2].group())
+            matches = list(filter(None, matches))
+            env_list = []
+            if (len(matches) > 1): # some parameters are given
+                for i in range(1, len(matches), 2):
+                    env_list.append('='.join([matches[i], matches[i+1]]))
+                steps[index]["env"] = env_list
+            env_list_index += 1 # increase env_list only if matched
+        else:
+            steps[index]["env"] = []    #no environmentParameters specified for current step
     pipeline_description["steps"] = steps
     return "success", pipeline_description
