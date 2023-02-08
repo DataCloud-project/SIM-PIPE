@@ -54,8 +54,8 @@ services:
       REMOTE_INPUT_DIR: 'in/'
       SANDBOX_IP: ${SANDBOX_IP} 
       # REMOTE_DOCKER: true
-      # HASURA_URL: ${HASURA_URL}
-      DEF_PIPE_API_LIST: 'https://crowdserv.sys.kth.se/api/repo/'
+      DEF_PIPE_LIST_API: 'https://crowdserv.sys.kth.se/api/repo/'
+      DEF_PIPE_PIPELINE_API: 'https://crowdserv.sys.kth.se/api/repo/export/'
       DEF_PIPE_API_PIPELINE: 'https://crowdserv.sys.kth.se/api/repo/export/'
 
   svelte:

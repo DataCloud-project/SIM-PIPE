@@ -15,15 +15,14 @@ import type {
   AllRunsAndStepsQuery, AllRunsAndStepsQueryVariables, AllSimulationsQuery,
   AllSimulationsQueryVariables, CreateRunMutation, CreateRunMutationVariables,
   CreateSimulationMutation, CreateSimulationMutationVariables, CreateStepMutation,
-  CreateStepMutationVariables, DeleteRunMutation, DeleteRunMutationVariables, DeleteSimulationMutation, DeleteSimulationMutationVariables,
-  GetRunDetailsQuery, GetRunDetailsQueryVariables,
-  GetSimulationDslQuery, GetSimulationDslQueryVariables,
-  GetSimulationIdandStepsQuery, GetSimulationIdandStepsQueryVariables, GetSimulationQuery, GetSimulationQueryVariables,
-  GetSimulationRunResultsQuery,
-  GetSimulationRunResultsQueryVariables, GetUseridFromRunQuery, GetUseridFromRunQueryVariables,
-  GetUseridFromSimulationQuery, GetUseridFromSimulationQueryVariables,
-  InsertLogMutation, InsertLogMutationVariables, InsertResourceUsageMutation,
-  InsertResourceUsageMutationVariables, SetRunAsCancelledMutation,
+  CreateStepMutationVariables, DeleteRunMutation, DeleteRunMutationVariables,
+  DeleteSimulationMutation, DeleteSimulationMutationVariables, GetRunDetailsQuery,
+  GetRunDetailsQueryVariables, GetSimulationDslQuery, GetSimulationDslQueryVariables,
+  GetSimulationIdandStepsQuery, GetSimulationIdandStepsQueryVariables, GetSimulationQuery,
+  GetSimulationQueryVariables, GetSimulationRunResultsQuery, GetSimulationRunResultsQueryVariables,
+  GetUseridFromRunQuery, GetUseridFromRunQueryVariables, GetUseridFromSimulationQuery,
+  GetUseridFromSimulationQueryVariables, InsertLogMutation, InsertLogMutationVariables,
+  InsertResourceUsageMutation, InsertResourceUsageMutationVariables, SetRunAsCancelledMutation,
   SetRunAsCancelledMutationVariables, SetRunAsEndedSuccessMutation,
   SetRunAsEndedSuccessMutationVariables, SetRunAsFailedMutation, SetRunAsFailedMutationVariables,
   SetRunAsQueuedMutation, SetRunAsQueuedMutationVariables, SetRunAsStartedMutation,
@@ -87,15 +86,12 @@ export async function allSimulations(userid:string):Promise<AllSimulationsQuery>
  */
 export async function getSimulationRunResults(simulation_id:string,
   run_id:string, userid:string):Promise<GetSimulationRunResultsQuery> {
-  // eslint-disable-next-line @typescript-eslint/await-thenable
   const result:GetSimulationRunResultsQuery = await
   sdk.getSimulationRunResults({ simulation_id, run_id, userid });
-  // return JSON.stringify(result);
   return result;
 }
 
 export async function allRunsSteps(userid:string):Promise<AllRunsAndStepsQuery> {
-  // return JSON.stringify(await sdk.allRunsAndSteps({ userid }));
   return await sdk.allRunsAndSteps({ userid });
 }
 
@@ -122,8 +118,6 @@ interface StepDSL {
  * */
 export async function createStep(run_id:string, name:string, image:string,
   pipeline_step_number:number):Promise<string> {
-  // disabling await-thenable, await is needed to wait till sdk.createStep completes execution
-  // eslint-disable-next-line @typescript-eslint/await-thenable
   const result:CreateStepMutation = await sdk.createStep({
     run_id,
     name,
@@ -189,8 +183,15 @@ async function isCyclic(pipeline_description:string):Promise<boolean> {
   const visited = Array.from({ length: steps.length + 1 }).fill(false);
   const recursiveStack = Array.from({ length: steps.length + 1 }).fill(false);
   prerequisites = [];
+  let initial_step_count = 0;
   for await (const step of steps) {
     prerequisites[step.step_number] = step.prerequisite || [];
+    // check if the number of initial steps; throw error if more than 1 initial step is present
+    // TODO: change this once the modification is made
+    if (!step.prerequisite) initial_step_count += 1;
+  }
+  if (initial_step_count > 1) {
+    throw new Error('Failed! Pipeline with more than 1 initial steps are currently not supported');
   }
   for await (const step of steps) {
     const result = await isCyclicRecursive(step.step_number, visited, recursiveStack);
@@ -201,10 +202,8 @@ async function isCyclic(pipeline_description:string):Promise<boolean> {
 
 export async function createSimulation(name:string, pipeline_description:string, userid:string):
 Promise<string> {
-  const value = await isCyclic(pipeline_description);
-  if (value) throw new Error(`Given simulation has cyclic dependency in step numbers: ${cyclic_step_numbers as unknown as string}`);
-  // disabling await-thenable, await is needed for sequential execution
-  // eslint-disable-next-line @typescript-eslint/await-thenable
+  const cyclicFlag = await isCyclic(pipeline_description);
+  if (cyclicFlag) throw new Error(`Given simulation has cyclic dependency in step numbers: ${cyclic_step_numbers as unknown as string}`);
   const result:CreateSimulationMutation = await sdk.createSimulation({
     name,
     pipeline_description,
@@ -297,7 +296,6 @@ export async function startRun(run_id:string):Promise<string> {
   // set run as started in the database
   await sdk.setRunAsStarted({ run_id });
   // get simulationId and step details of runId
-  // eslint-disable-next-line @typescript-eslint/await-thenable
   const result:GetRunDetailsQuery = await sdk.getRunDetails({ run_id });
   const { simulation_id } = result.runs[0];
   if (!result.runs) {
@@ -317,6 +315,7 @@ export async function startRun(run_id:string):Promise<string> {
     stepDefs[index].stepId = step.step_id;
     stepDefs[index].timeout = (timeout_values as number[])[index];
   }
+
   // set input path for the first step
   process.env.INPUT_PATH = `${uploadDirectory}${run_id}/`;
   // disabling no-restricted-syntax; running each step must be done in a sequence
@@ -326,9 +325,7 @@ export async function startRun(run_id:string):Promise<string> {
     // changed to cancel remaining steps only if the entire run is cancelled
     if (!step.stepId) throw new Error('stepId not defined');
     if ((process.env.CANCEL_RUN_LIST as string).includes(run_id)) {
-      // eslint-disable-next-line no-await-in-loop
       await sdk.setStepAsCancelled({ step_id: step.stepId });
-      // eslint-disable-next-line no-await-in-loop
       await sdk.insertLog({ step_id: step.stepId, text: 'Run has been cancelled' });
       cancelled.push(step.step_number);
       // eslint-disable-next-line no-continue
@@ -362,7 +359,6 @@ export async function startRun(run_id:string):Promise<string> {
       currentStep.image = step.image;
       currentStep.stepNumber = step.step_number;
       currentStep.stepId = step.stepId;
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       currentStep.env = step.env;
       // set the variable values in env file
       process.env.STEP_NUMBER = `${step.step_number}`;
@@ -371,7 +367,6 @@ export async function startRun(run_id:string):Promise<string> {
       process.env.CONTAINER_TIME_LIMIT = `${step.timeout}`;
       // adding try catch to handle failed steps
       try {
-        // eslint-disable-next-line no-await-in-loop
         await controller.start(client, currentStep);
         completed.push(step.step_number); // add successful step to the completed list
       } catch (error) {
@@ -474,9 +469,7 @@ export async function queueRun(run_id:string, userid:string):Promise<string> {
  * function to get all details and runs of a simulation
  */
 export async function getSimulation(userid:string, simulation_id:string):Promise<GetSimulationQuery> {
-  // eslint-disable-next-line @typescript-eslint/await-thenable
   const result:GetSimulationQuery = await sdk.getSimulation({ userid, simulation_id });
-  // return JSON.stringify(result);
   return result;
 }
 

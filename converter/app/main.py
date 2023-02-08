@@ -66,6 +66,4 @@ def convert(response):
             steps[index]["env"] = env_list
 
     pipeline_description["steps"] = steps
-    print('finished parsing')
-    print(pipeline_description)
     return "success", pipeline_description
