@@ -58,6 +58,23 @@ mutation setStepAsFailed($stepId: uuid!) {
 mutation setRunAsStarted($runId: uuid!) {
   updateRunsByPk(pk_columns: {runId: $runId}, _set: {started: "now()", status: ACTIVE}) {
     runId
+    name
+    simulation {
+      name
+      simulationId
+      userId
+    }
+    steps(orderBy: {pipelineStepNumber: ASC}) {
+      stepId
+      name
+      image
+      timeout
+      pipelineStepNumber
+      envs {
+        name
+        value
+      }
+    }
   }
 }
 
@@ -121,16 +138,5 @@ query getRunDetails($runId: uuid!) {
 mutation insertLog($stepId: uuid!, $text: String!) {
   insertSimpipeLogsOne(object: {stepId: $stepId, text: $text}) {
     stepId
-  }
-}
-
-mutation markRunAsRunningAndStepsAsScheduled($runId: uuid!) {
-  updateRunsByPk(pk_columns: {runId: $runId}, _set: {status: ACTIVE, started: "now()"}) {
-    runId
-  }
-  updateSteps(where: {runId: {_eq: $runId}}, _set: {status: WAITING}) {
-    returning {
-      stepId
-    }
   }
 }

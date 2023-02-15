@@ -6,7 +6,7 @@ import {
   dockerProtocol, dockerTlsCertPath, dockerTlsKeyPath,
 } from '../config.js';
 
-export async function createDockerClient(): Promise<Docker> {
+async function createDockerClient(): Promise<Docker> {
   const caCert = dockerCaCertPath ? await fsAsync.readFile(dockerCaCertPath) : undefined;
   const tlsCert = dockerTlsCertPath ? await fsAsync.readFile(dockerTlsCertPath) : undefined;
   const tlsKey = dockerTlsKeyPath ? await fsAsync.readFile(dockerTlsKeyPath) : undefined;

@@ -1,10 +1,8 @@
 import startController from '../controller.js';
 import sdk from '../db/sdk.js';
 import logger from '../logger.js';
-import runRun from '../runner/run-run.js';
 import { DSLParsingError, NotFoundError } from './apollo-errors.js';
 import DSL from './dsl.js';
-import TaskQueue from './taskqueue.js';
 import type {
   CreateRunMutation, CreateStepMutation,
   GetRunDetailsQuery,
@@ -82,33 +80,6 @@ export async function checkSimulationOwner(simulationId: string, userId: string)
   }
 }
 
-/**
- * function to check if a simulation belongs to the logged in user
- */
-
-export async function createRunWithInput({
-  simulationId, name, /* environmentVariables, timeouts, */ userId,
-}: CreateRunInput & { userId: string }): Promise<string> {
-  // only owner of the simulation can create a new run
-  await checkSimulationOwner(simulationId, userId);
-  return await createRun(simulationId, name);
-  /* // Sanitize the run id to make it a safe directory name
-  if (!/^[\w-]+$/.test(runId)) {
-    throw new Error('Invalid run id');
-  }
-  // write sample input to uploaded_files/runId
-  for (const [inputName, inputContent] of sampleInput) {
-    if (!inputContent) {
-      throw new Error('Content of input file undefined in functions.createRunWithInput');
-    }
-    // TODO: huge security risk right there
-    fs.writeFile(`${uploadDirectory}${runId}/${inputName}`, inputContent, (error) => {
-      if (error) { throw new Error('Error in createRunWithInput'); }
-    });
-  }
-  return runId; */
-}
-
 async function startRun(runId: UUID): Promise<UUID> {
   // set run as started in the database
   await sdk.setRunAsStarted({ runId });
@@ -183,70 +154,6 @@ async function startRun(runId: UUID): Promise<UUID> {
   // set run as completed successully in the database
   await sdk.setRunAsEndedSuccess({ runId });
   return runId;
-}
-
-export async function stopRun(runId: string, userId: string): Promise<string> {
-  // throw error if run does not belong to the user
-  await checkRunOwner(runId, userId);
-  // add the current runid to the environment var to denote stop signal has been sent
-  // to runid
-  // find the current running container
-  process.env.CANCEL_RUN_LIST = `${process.env.CANCEL_RUN_LIST as string},${runId}`;
-  // stop and kill current container
-  // stop the start run function to stop all the next steps
-  // change the status of runs and steps to 'cancelled'
-  return runId;
-}
-
-const taskQueue = new TaskQueue();
-let isSimulationRunning = false;
-
-async function runScheduler(): Promise<void> {
-  if (!isSimulationRunning) {
-    while (taskQueue.getItemsCount() > 0) {
-      // set variable to denote a simulation is running currently
-      isSimulationRunning = true;
-      // eslint-disable-next-line no-await-in-loop
-      await startRun(taskQueue.dequeue());
-    }
-    // set variable to denote no running simulations
-    isSimulationRunning = false;
-  }
-}
-
-export async function queueRun(runId: string, userId: string): Promise<string> {
-  // throw error if run does not belong to the user
-  await checkRunOwner(runId, userId);
-  // TODO
-  const result: GetRunDetailsQuery = await sdk.getRunDetails({ runId });
-  if (!result.run) {
-    throw new NotFoundError('Run not found');
-  }
-  // get steps
-  const { steps, simulationId } = result.run;
-  await runRun({
-    userId,
-    runId,
-    simulationId,
-    steps: steps.map((step) => ({
-      userId,
-      simulationId,
-      runId,
-      stepId: step.stepId,
-      stepNumber: step.pipelineStepNumber,
-      name: step.name,
-      image: step.image,
-    })),
-  });
-  await sdk.setRunAsQueued({ runId });
-  if (isSimulationRunning) {
-    logger.info(`RunId ${runId} added to task queue`);
-  }
-  taskQueue.enqueue(runId);
-  runScheduler().catch((error) => {
-    logger.error(`Error in run scheduler\n${(error as Error).message}`);
-  });
-  return 'ok';
 }
 
 export async function createSimulation({

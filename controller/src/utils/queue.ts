@@ -34,4 +34,11 @@ export default class Queue<T> {
       }
     });
   }
+
+  rejectAllWaiting(reason: Error): void {
+    for (const { reject } of this.resolveQueue) {
+      reject(reason);
+    }
+    this.resolveQueue = [];
+  }
 }

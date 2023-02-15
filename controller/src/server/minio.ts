@@ -48,7 +48,7 @@ export async function computePresignedGetUrl(objectName: string): Promise<string
 }
 
 let hasLoggedIn = false;
-export async function apiLogin(): Promise<void> {
+async function apiLogin(): Promise<void> {
   if (hasLoggedIn) {
     return;
   }
@@ -69,7 +69,7 @@ interface WebHookConfigurationResult {
   }[] | null;
 }
 
-export async function createWebhookEndpoint(): Promise<void> {
+async function createWebhookEndpoint(): Promise<void> {
   await apiLogin();
   // If a webhook service is already configured, we don't need to create it
   const webhookConfig = await minioApiClient.get('admin/notification_endpoints')

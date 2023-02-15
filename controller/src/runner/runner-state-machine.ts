@@ -1,11 +1,16 @@
 import { assign, createMachine } from 'xstate';
 
+import createContainers from './create-containers.js';
+import createVolumes from './create-volumes.js';
 import loadNextRun from './load-next-run.js';
-import markRunAsRunningAndStepsAsScheduled from './mark-run-as-running.js';
+import markRunAsFailed from './mark-run-as-failed.js';
+import markRunAsStarted from './mark-run-as-started.js';
+import pullAllImages from './pull-all-images.js';
+import type RunData from './run-data.js';
 import type { RunInStream } from './runs-stream.js';
 
 export default createMachine({
-  id: 'SIM-PIPE Simulation',
+  id: 'simPipeRunner',
   initial: 'idling',
   // eslint-disable-next-line @typescript-eslint/consistent-type-imports
   tsTypes: {} as import('./runner-state-machine.typegen').Typegen0,
@@ -15,7 +20,7 @@ export default createMachine({
       invoke: {
         src: 'loadNextRun',
         onError: {
-          target: 'idling',
+          target: 'errorCooldown',
         },
         onDone: {
           target: 'run',
@@ -23,29 +28,78 @@ export default createMachine({
         },
       },
     },
+    errorCooldown: {
+      after: {
+        cooldownDelay: {
+          target: 'idling',
+        },
+      },
+    },
     run: {
-      initial: 'Mark run as running and steps as scheduled',
+      initial: 'markRunAsStarted',
       states: {
-        'Mark run as running and steps as scheduled': {
-          on: {
-            Ok: {
-              target: 'Compute list of steps in the right order',
-            },
-          },
+        markRunAsStarted: {
           invoke: {
-            src: 'markRunAsRunningAndStepsAsScheduled',
+            src: 'markRunAsStarted',
             onDone: {
-              target: '#SIM-PIPE Simulation.idling',
+              target: 'pullAllImages',
+              actions: 'setRunData',
+            },
+            onError: {
+              target: 'error',
             },
           },
         },
-        'Pull all images': {
-          on: {
-            Ok: {
-              target: 'Create container and volumes',
+        error: {
+          invoke: {
+            src: 'markRunAsFailed',
+            onDone: {
+              target: 'errorCooldown',
             },
-            Error: {
-              target: 'Mark run as failed and remaining steps as cancelled',
+            onError: {
+              target: 'errorCooldown',
+            },
+          },
+        },
+        errorCooldown: {
+          after: {
+            cooldownDelay: {
+              target: '#simPipeRunner.idling',
+            },
+          },
+        },
+        pullAllImages: {
+          invoke: {
+            src: 'pullAllImages',
+            onDone: {
+              target: 'createVolumes',
+            },
+            onError: {
+              target: 'error',
+            },
+          },
+        },
+        createVolumes: {
+          invoke: {
+            src: 'createVolumes',
+            onDone: {
+              target: 'createContainers',
+              actions: 'setRunData',
+            },
+            onError: {
+              target: 'error',
+            },
+          },
+        },
+        createContainers: {
+          invoke: {
+            src: 'createContainers',
+            onDone: {
+              target: 'runSteps',
+              actions: 'doNothing',
+            },
+            onError: {
+              target: 'error',
             },
           },
         },
@@ -58,7 +112,7 @@ export default createMachine({
                   target: 'Mark step as started',
                 },
                 'No step left': {
-                  target: '#SIM-PIPE Simulation.run.Upload last output files',
+                  target: '#simPipeRunner.run.Upload last output files',
                 },
               },
             },
@@ -76,7 +130,7 @@ export default createMachine({
               on: {
                 Ok: {
                   target:
-                    '#SIM-PIPE Simulation.run.Mark run as failed and remaining steps as cancelled',
+                    '#simPipeRunner.run.Mark run as failed and remaining steps as cancelled',
                 },
               },
             },
@@ -96,14 +150,14 @@ export default createMachine({
                 'Check running state': {
                   on: {
                     Finished: {
-                      target: '#SIM-PIPE Simulation.run.runSteps.Save logs',
+                      target: '#simPipeRunner.run.runSteps.Save logs',
                     },
                     Running: {
                       target: 'Wait 5s',
                     },
                     Timeout: {
                       target:
-                        '#SIM-PIPE Simulation.run.runSteps.Stop container',
+                        '#simPipeRunner.run.runSteps.Stop container',
                     },
                   },
                 },
@@ -166,7 +220,7 @@ export default createMachine({
         'Compute list of steps in the right order': {
           on: {
             Ok: {
-              target: 'Pull all images',
+              target: 'pullAllImages',
             },
           },
         },
@@ -183,14 +237,14 @@ export default createMachine({
         'Mark run as failed and remaining steps as cancelled': {
           on: {
             Ok: {
-              target: '#SIM-PIPE Simulation.Garbage collection',
+              target: '#simPipeRunner.Garbage collection',
             },
           },
         },
         'Mark run as successful': {
           on: {
             Ok: {
-              target: '#SIM-PIPE Simulation.Garbage collection',
+              target: '#simPipeRunner.Garbage collection',
             },
           },
         },
@@ -225,6 +279,7 @@ export default createMachine({
   schema: {
     context: {} as {
       runId: string | undefined;
+      runData: RunData | undefined;
     },
     events: {} as
       | { type: 'NEW_RUN' }
@@ -248,15 +303,25 @@ export default createMachine({
   },
   context: {
     runId: undefined,
+    runData: undefined,
   },
   predictableActionArguments: true,
   preserveActionOrder: true,
 }, {
   services: {
     loadNextRun,
-    markRunAsRunningAndStepsAsScheduled,
+    markRunAsStarted,
+    markRunAsFailed,
+    pullAllImages,
+    createVolumes,
+    createContainers,
   },
   actions: {
     setRunId: assign({ runId: (_, event) => event.data.runId }),
+    setRunData: assign({ runData: (_f, event) => event.data as RunData }),
+    doNothing: () => { /* nop */ },
+  },
+  delays: {
+    cooldownDelay: () => Math.round(Math.random() * 2000) + 4000,
   },
 });

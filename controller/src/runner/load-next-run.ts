@@ -1,23 +1,30 @@
+import logger from '../logger.js';
 import RunsStream from './runs-stream.js';
 import type Queue from '../utils/queue.js';
 import type { RunInStream } from './runs-stream.js';
 
+let runsStreamSingleton: RunsStream | undefined;
 let runsStreamQueueSingleton: Queue<RunInStream> | undefined;
 
 function getQueue(): Queue<RunInStream> {
-  if (!runsStreamQueueSingleton) {
-    const runsStream = new RunsStream();
-    runsStream.on('error', (error) => {
-      throw new Error(`Error in runs stream\n${error as string}`);
+  if (!runsStreamSingleton
+    || !runsStreamQueueSingleton
+    || runsStreamSingleton.hasEncounteredError) {
+    runsStreamSingleton = new RunsStream();
+    runsStreamSingleton.on('error', (error: Error) => {
+      if (runsStreamQueueSingleton) {
+        runsStreamQueueSingleton.rejectAllWaiting(error);
+      }
+      runsStreamSingleton = undefined;
+      runsStreamQueueSingleton = undefined;
+      logger.error(`Error in runs stream: ${error.message}`);
     });
-    runsStreamQueueSingleton = runsStream.asQueue();
+    runsStreamQueueSingleton = runsStreamSingleton.asQueue();
   }
 
   return runsStreamQueueSingleton;
 }
 
 export default async function loadNextRun(): Promise<RunInStream> {
-  const a = await getQueue().dequeue();
-  console.log(a);
-  return a;
+  return await getQueue().dequeue();
 }

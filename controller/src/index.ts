@@ -1,8 +1,8 @@
 import { interpret } from 'xstate';
 
 import logger from './logger.js';
+import pingRunner from './runner/ping-runner.js';
 import runnerStateMachine from './runner/runner-state-machine.js';
-import { pingRunner } from './runner/runner-utils.js';
 import startSleeper from './runner/start-sleeper.js';
 import { setupStorageBucket } from './server/minio.js';
 import startServer from './server/server.js';

@@ -14,6 +14,8 @@ export interface RunInStream {
 export default class RunsStream extends EventEmitter {
   client: Client;
 
+  internalHasEncounteredError = false;
+
   constructor() {
     super();
     this.client = createClient({
@@ -28,8 +30,8 @@ export default class RunsStream extends EventEmitter {
     });
 
     this.client.subscribe({
-      query: `subscription MyQuery {
-    runsStream(batchSize: 10, cursor: {initialValue: {created: "1970-01-01T00:00:00.000Z"}, ordering: ASC}, where: {status: {_eq: WAITING}}) {
+      query: `subscription RunsStream {
+    runsStream(batchSize: 10, cursor: {initialValue: {created: "1970-01-01T00:00:00.000Z"}, ordering: ASC}, where: {status: {_eq: QUEUED}}) {
       runId
     }
   }`,
@@ -44,13 +46,23 @@ export default class RunsStream extends EventEmitter {
           this.emit('error', new Error('Unexpected data'));
         }
       },
-      error: (error) => this.emit('error', error),
+      error: (error) => {
+        this.internalHasEncounteredError = true;
+        this.emit('error', error);
+      },
       // eslint-disable-next-line unicorn/no-null
       complete: () => this.emit('data', null),
     });
   }
 
+  get hasEncounteredError(): boolean {
+    return this.internalHasEncounteredError;
+  }
+
   asQueue(): Queue<RunInStream> {
+    if (this.hasEncounteredError) {
+      throw new Error('Cannot get queue after error');
+    }
     const queue = new Queue<RunInStream>();
     this.on('data', (run) => queue.enqueue(run as RunInStream));
     return queue;

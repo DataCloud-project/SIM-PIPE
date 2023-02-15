@@ -3,25 +3,75 @@
 export interface Typegen0 {
   "@@xstate/typegen": true;
   internalEvents: {
-    "done.invoke.SIM-PIPE Simulation.idling:invocation[0]": {
-      type: "done.invoke.SIM-PIPE Simulation.idling:invocation[0]";
+    "done.invoke.simPipeRunner.idling:invocation[0]": {
+      type: "done.invoke.simPipeRunner.idling:invocation[0]";
       data: unknown;
       __tip: "See the XState TS docs to learn how to strongly type this.";
     };
-    "done.invoke.SIM-PIPE Simulation.run.Mark run as running and steps as scheduled:invocation[0]": {
-      type: "done.invoke.SIM-PIPE Simulation.run.Mark run as running and steps as scheduled:invocation[0]";
+    "done.invoke.simPipeRunner.run.createContainers:invocation[0]": {
+      type: "done.invoke.simPipeRunner.run.createContainers:invocation[0]";
       data: unknown;
       __tip: "See the XState TS docs to learn how to strongly type this.";
     };
-    "error.platform.SIM-PIPE Simulation.idling:invocation[0]": {
-      type: "error.platform.SIM-PIPE Simulation.idling:invocation[0]";
+    "done.invoke.simPipeRunner.run.createVolumes:invocation[0]": {
+      type: "done.invoke.simPipeRunner.run.createVolumes:invocation[0]";
       data: unknown;
+      __tip: "See the XState TS docs to learn how to strongly type this.";
+    };
+    "done.invoke.simPipeRunner.run.error:invocation[0]": {
+      type: "done.invoke.simPipeRunner.run.error:invocation[0]";
+      data: unknown;
+      __tip: "See the XState TS docs to learn how to strongly type this.";
+    };
+    "done.invoke.simPipeRunner.run.markRunAsStarted:invocation[0]": {
+      type: "done.invoke.simPipeRunner.run.markRunAsStarted:invocation[0]";
+      data: unknown;
+      __tip: "See the XState TS docs to learn how to strongly type this.";
+    };
+    "done.invoke.simPipeRunner.run.pullAllImages:invocation[0]": {
+      type: "done.invoke.simPipeRunner.run.pullAllImages:invocation[0]";
+      data: unknown;
+      __tip: "See the XState TS docs to learn how to strongly type this.";
+    };
+    "error.platform.simPipeRunner.idling:invocation[0]": {
+      type: "error.platform.simPipeRunner.idling:invocation[0]";
+      data: unknown;
+    };
+    "error.platform.simPipeRunner.run.createContainers:invocation[0]": {
+      type: "error.platform.simPipeRunner.run.createContainers:invocation[0]";
+      data: unknown;
+    };
+    "error.platform.simPipeRunner.run.createVolumes:invocation[0]": {
+      type: "error.platform.simPipeRunner.run.createVolumes:invocation[0]";
+      data: unknown;
+    };
+    "error.platform.simPipeRunner.run.error:invocation[0]": {
+      type: "error.platform.simPipeRunner.run.error:invocation[0]";
+      data: unknown;
+    };
+    "error.platform.simPipeRunner.run.markRunAsStarted:invocation[0]": {
+      type: "error.platform.simPipeRunner.run.markRunAsStarted:invocation[0]";
+      data: unknown;
+    };
+    "error.platform.simPipeRunner.run.pullAllImages:invocation[0]": {
+      type: "error.platform.simPipeRunner.run.pullAllImages:invocation[0]";
+      data: unknown;
+    };
+    "xstate.after(cooldownDelay)#simPipeRunner.errorCooldown": {
+      type: "xstate.after(cooldownDelay)#simPipeRunner.errorCooldown";
+    };
+    "xstate.after(cooldownDelay)#simPipeRunner.run.errorCooldown": {
+      type: "xstate.after(cooldownDelay)#simPipeRunner.run.errorCooldown";
     };
     "xstate.init": { type: "xstate.init" };
   };
   invokeSrcNameMap: {
-    loadNextRun: "done.invoke.SIM-PIPE Simulation.idling:invocation[0]";
-    markRunAsRunningAndStepsAsScheduled: "done.invoke.SIM-PIPE Simulation.run.Mark run as running and steps as scheduled:invocation[0]";
+    createContainers: "done.invoke.simPipeRunner.run.createContainers:invocation[0]";
+    createVolumes: "done.invoke.simPipeRunner.run.createVolumes:invocation[0]";
+    loadNextRun: "done.invoke.simPipeRunner.idling:invocation[0]";
+    markRunAsFailed: "done.invoke.simPipeRunner.run.error:invocation[0]";
+    markRunAsStarted: "done.invoke.simPipeRunner.run.markRunAsStarted:invocation[0]";
+    pullAllImages: "done.invoke.simPipeRunner.run.pullAllImages:invocation[0]";
   };
   missingImplementations: {
     actions: never;
@@ -30,32 +80,56 @@ export interface Typegen0 {
     services: never;
   };
   eventsCausingActions: {
-    setRunId: "done.invoke.SIM-PIPE Simulation.idling:invocation[0]";
+    doNothing: "done.invoke.simPipeRunner.run.createContainers:invocation[0]";
+    setRunData:
+      | "done.invoke.simPipeRunner.run.createVolumes:invocation[0]"
+      | "done.invoke.simPipeRunner.run.markRunAsStarted:invocation[0]";
+    setRunId: "done.invoke.simPipeRunner.idling:invocation[0]";
   };
-  eventsCausingDelays: {};
+  eventsCausingDelays: {
+    cooldownDelay:
+      | "done.invoke.simPipeRunner.run.error:invocation[0]"
+      | "error.platform.simPipeRunner.idling:invocation[0]"
+      | "error.platform.simPipeRunner.run.error:invocation[0]";
+  };
   eventsCausingGuards: {};
   eventsCausingServices: {
+    createContainers: "done.invoke.simPipeRunner.run.createVolumes:invocation[0]";
+    createVolumes: "done.invoke.simPipeRunner.run.pullAllImages:invocation[0]";
     loadNextRun:
       | "Ok"
-      | "done.invoke.SIM-PIPE Simulation.run.Mark run as running and steps as scheduled:invocation[0]"
-      | "error.platform.SIM-PIPE Simulation.idling:invocation[0]"
+      | "xstate.after(cooldownDelay)#simPipeRunner.errorCooldown"
+      | "xstate.after(cooldownDelay)#simPipeRunner.run.errorCooldown"
       | "xstate.init";
-    markRunAsRunningAndStepsAsScheduled: "done.invoke.SIM-PIPE Simulation.idling:invocation[0]";
+    markRunAsFailed:
+      | "error.platform.simPipeRunner.run.createContainers:invocation[0]"
+      | "error.platform.simPipeRunner.run.createVolumes:invocation[0]"
+      | "error.platform.simPipeRunner.run.markRunAsStarted:invocation[0]"
+      | "error.platform.simPipeRunner.run.pullAllImages:invocation[0]";
+    markRunAsStarted: "done.invoke.simPipeRunner.idling:invocation[0]";
+    pullAllImages:
+      | "Ok"
+      | "done.invoke.simPipeRunner.run.markRunAsStarted:invocation[0]";
   };
   matchesStates:
     | "Garbage collection"
     | "Garbage collection.Delete the old step containers"
     | "Garbage collection.Delete the old unused images"
     | "Garbage collection.Delete the old unused volumes"
+    | "errorCooldown"
     | "idling"
     | "run"
     | "run.Compute list of steps in the right order"
     | "run.Create container and volumes"
     | "run.Mark run as failed and remaining steps as cancelled"
-    | "run.Mark run as running and steps as scheduled"
     | "run.Mark run as successful"
-    | "run.Pull all images"
     | "run.Upload last output files"
+    | "run.createContainers"
+    | "run.createVolumes"
+    | "run.error"
+    | "run.errorCooldown"
+    | "run.markRunAsStarted"
+    | "run.pullAllImages"
     | "run.runSteps"
     | "run.runSteps.Check container status"
     | "run.runSteps.Computer is running"
@@ -78,10 +152,14 @@ export interface Typegen0 {
           | "Compute list of steps in the right order"
           | "Create container and volumes"
           | "Mark run as failed and remaining steps as cancelled"
-          | "Mark run as running and steps as scheduled"
           | "Mark run as successful"
-          | "Pull all images"
           | "Upload last output files"
+          | "createContainers"
+          | "createVolumes"
+          | "error"
+          | "errorCooldown"
+          | "markRunAsStarted"
+          | "pullAllImages"
           | "runSteps"
           | {
               runSteps?:

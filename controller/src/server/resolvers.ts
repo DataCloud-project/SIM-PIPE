@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 
 import sdk from '../db/sdk.js';
-import { pingRunner } from '../runner/runner-utils.js';
+import pingRunner from '../runner/ping-runner.js';
 import { PingError } from './apollo-errors.js';
 import * as functions from './functions.js';
 import { computePresignedPutUrl } from './minio.js';
@@ -102,7 +102,7 @@ const resolvers = {
       const { runId } = arguments_;
       const { sub: userId } = context.user;
       await functions.checkRunOwner(runId, userId);
-      await functions.queueRun(runId, userId);
+      await sdk.setRunAsQueued({ runId });
       return { runId };
     },
     async cancelRun(
@@ -113,8 +113,8 @@ const resolvers = {
       const { runId } = arguments_;
       const { sub: userId } = context.user;
       await functions.checkRunOwner(runId, userId);
-      await functions.stopRun(runId, userId);
-      return { runId };
+      throw new Error('Not implemented');
+      // return { runId };
     },
   } as MutationResolvers<AuthenticatedContext, EmptyParent>,
 };

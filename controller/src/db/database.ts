@@ -6302,7 +6302,7 @@ export type SetRunAsStartedMutationVariables = Exact<{
 }>;
 
 
-export type SetRunAsStartedMutation = { __typename?: 'mutation_root', updateRunsByPk?: { __typename?: 'runs', runId: string } | null };
+export type SetRunAsStartedMutation = { __typename?: 'mutation_root', updateRunsByPk?: { __typename?: 'runs', runId: string, name: string, simulation: { __typename?: 'simulations', name: string, simulationId: string, userId: string }, steps: Array<{ __typename?: 'steps', stepId: string, name: string, image: string, timeout: number, pipelineStepNumber: number, envs: Array<{ __typename?: 'SimpipeEnvs', name: string, value: string }> }> } | null };
 
 export type SetRunAsQueuedMutationVariables = Exact<{
   runId: Scalars['uuid'];
@@ -6362,13 +6362,6 @@ export type InsertLogMutationVariables = Exact<{
 
 
 export type InsertLogMutation = { __typename?: 'mutation_root', insertSimpipeLogsOne?: { __typename?: 'SimpipeLogs', stepId: string } | null };
-
-export type MarkRunAsRunningAndStepsAsScheduledMutationVariables = Exact<{
-  runId: Scalars['uuid'];
-}>;
-
-
-export type MarkRunAsRunningAndStepsAsScheduledMutation = { __typename?: 'mutation_root', updateRunsByPk?: { __typename?: 'runs', runId: string } | null, updateSteps?: { __typename?: 'stepsMutationResponse', returning: Array<{ __typename?: 'steps', stepId: string }> } | null };
 
 
 export const PingDocument = gql`
@@ -6456,6 +6449,23 @@ export const SetRunAsStartedDocument = gql`
     _set: {started: "now()", status: ACTIVE}
   ) {
     runId
+    name
+    simulation {
+      name
+      simulationId
+      userId
+    }
+    steps(orderBy: {pipelineStepNumber: ASC}) {
+      stepId
+      name
+      image
+      timeout
+      pipelineStepNumber
+      envs {
+        name
+        value
+      }
+    }
   }
 }
     `;
@@ -6534,21 +6544,6 @@ export const InsertLogDocument = gql`
   }
 }
     `;
-export const MarkRunAsRunningAndStepsAsScheduledDocument = gql`
-    mutation markRunAsRunningAndStepsAsScheduled($runId: uuid!) {
-  updateRunsByPk(
-    pk_columns: {runId: $runId}
-    _set: {status: ACTIVE, started: "now()"}
-  ) {
-    runId
-  }
-  updateSteps(where: {runId: {_eq: $runId}}, _set: {status: WAITING}) {
-    returning {
-      stepId
-    }
-  }
-}
-    `;
 
 export type SdkFunctionWrapper = <T>(action: (requestHeaders?:Record<string, string>) => Promise<T>, operationName: string, operationType?: string) => Promise<T>;
 
@@ -6613,9 +6608,6 @@ export function getSdk(client: GraphQLClient, withWrapper: SdkFunctionWrapper = 
     },
     insertLog(variables: InsertLogMutationVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<InsertLogMutation> {
       return withWrapper((wrappedRequestHeaders) => client.request<InsertLogMutation>(InsertLogDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'insertLog', 'mutation');
-    },
-    markRunAsRunningAndStepsAsScheduled(variables: MarkRunAsRunningAndStepsAsScheduledMutationVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<MarkRunAsRunningAndStepsAsScheduledMutation> {
-      return withWrapper((wrappedRequestHeaders) => client.request<MarkRunAsRunningAndStepsAsScheduledMutation>(MarkRunAsRunningAndStepsAsScheduledDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'markRunAsRunningAndStepsAsScheduled', 'mutation');
     }
   };
 }
