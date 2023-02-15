@@ -25,7 +25,10 @@ input CreateSimulationInput {
   name: String!
   """
    The description of the simulation pipeline.
-  It is a JSON document.
+  
+  It is a JSON document but it must be sent as a string,
+  because not all GraphQL clients support sending JSON documents
+  in input variables.
   """
   pipelineDescription: json!
 }
@@ -648,7 +651,7 @@ enum SimpipeStepStatusEnum {
   CANCELLED
   COMPLETED
   FAILED
-  QUEUED
+  WAITING
 }
 """
 Boolean expression to compare columns of type "SimpipeStepStatusEnum". All fields are combined with logical 'AND'.
@@ -2442,28 +2445,6 @@ type memoryUsageBytesAggregateFields {
   varSamp: memoryUsageBytesVar_sampFields
   variance: memoryUsageBytesVarianceFields
 }
-"""
-order by aggregate values of table "simpipe.memory_usage_bytes"
-"""
-input memoryUsageBytesAggregateOrderBy {
-  avg: memoryUsageBytes_avg_order_by
-  count: OrderBy
-  max: memoryUsageBytes_max_order_by
-  min: memoryUsageBytes_min_order_by
-  stddev: memoryUsageBytes_stddev_order_by
-  stddev_pop: memoryUsageBytes_stddev_pop_order_by
-  stddev_samp: memoryUsageBytes_stddev_samp_order_by
-  sum: memoryUsageBytes_sum_order_by
-  var_pop: memoryUsageBytes_var_pop_order_by
-  var_samp: memoryUsageBytes_var_samp_order_by
-  variance: memoryUsageBytes_variance_order_by
-}
-"""
-input type for inserting array relation for remote table "simpipe.memory_usage_bytes"
-"""
-input memoryUsageBytesArrRelInsertInput {
-  data: [memoryUsageBytesInsertInput!]!
-}
 "aggregate avg on columns"
 type memoryUsageBytesAvgFields {
   value: Float
@@ -2484,20 +2465,6 @@ input memoryUsageBytesBoolExp {
   time: TimestamptzComparisonExp
   userId: StringComparisonExp
   value: Float8ComparisonExp
-}
-"""
-input type for inserting data into table "simpipe.memory_usage_bytes"
-"""
-input memoryUsageBytesInsertInput {
-  run: runsObjRelInsertInput
-  runId: String
-  simulation: simulationsObjRelInsertInput
-  simulationId: String
-  step: stepsObjRelInsertInput
-  stepId: String
-  time: timestamptz
-  userId: String
-  value: float8
 }
 "aggregate max on columns"
 type memoryUsageBytesMaxFields {
@@ -2593,205 +2560,6 @@ type memoryUsageBytesVar_sampFields {
 "aggregate variance on columns"
 type memoryUsageBytesVarianceFields {
   value: Float
-}
-input memoryUsageBytes_aggregate_bool_exp {
-  avg: memoryUsageBytes_aggregate_bool_exp_avg
-  corr: memoryUsageBytes_aggregate_bool_exp_corr
-  count: memoryUsageBytes_aggregate_bool_exp_count
-  covar_samp: memoryUsageBytes_aggregate_bool_exp_covar_samp
-  max: memoryUsageBytes_aggregate_bool_exp_max
-  min: memoryUsageBytes_aggregate_bool_exp_min
-  stddev_samp: memoryUsageBytes_aggregate_bool_exp_stddev_samp
-  sum: memoryUsageBytes_aggregate_bool_exp_sum
-  var_samp: memoryUsageBytes_aggregate_bool_exp_var_samp
-}
-input memoryUsageBytes_aggregate_bool_exp_avg {
-  arguments: memoryUsageBytes_select_column_memoryUsageBytes_aggregate_bool_exp_avg_arguments_columns!
-  distinct: Boolean
-  filter: memoryUsageBytesBoolExp
-  predicate: Float8ComparisonExp!
-}
-input memoryUsageBytes_aggregate_bool_exp_corr {
-  arguments: memoryUsageBytes_aggregate_bool_exp_corr_arguments!
-  distinct: Boolean
-  filter: memoryUsageBytesBoolExp
-  predicate: Float8ComparisonExp!
-}
-input memoryUsageBytes_aggregate_bool_exp_corr_arguments {
-  X: memoryUsageBytes_select_column_memoryUsageBytes_aggregate_bool_exp_corr_arguments_columns!
-  Y: memoryUsageBytes_select_column_memoryUsageBytes_aggregate_bool_exp_corr_arguments_columns!
-}
-input memoryUsageBytes_aggregate_bool_exp_count {
-  arguments: [memoryUsageBytesSelectColumn!]
-  distinct: Boolean
-  filter: memoryUsageBytesBoolExp
-  predicate: IntComparisonExp!
-}
-input memoryUsageBytes_aggregate_bool_exp_covar_samp {
-  arguments: memoryUsageBytes_aggregate_bool_exp_covar_samp_arguments!
-  distinct: Boolean
-  filter: memoryUsageBytesBoolExp
-  predicate: Float8ComparisonExp!
-}
-input memoryUsageBytes_aggregate_bool_exp_covar_samp_arguments {
-  X: memoryUsageBytes_select_column_memoryUsageBytes_aggregate_bool_exp_covar_samp_arguments_columns!
-  Y: memoryUsageBytes_select_column_memoryUsageBytes_aggregate_bool_exp_covar_samp_arguments_columns!
-}
-input memoryUsageBytes_aggregate_bool_exp_max {
-  arguments: memoryUsageBytes_select_column_memoryUsageBytes_aggregate_bool_exp_max_arguments_columns!
-  distinct: Boolean
-  filter: memoryUsageBytesBoolExp
-  predicate: Float8ComparisonExp!
-}
-input memoryUsageBytes_aggregate_bool_exp_min {
-  arguments: memoryUsageBytes_select_column_memoryUsageBytes_aggregate_bool_exp_min_arguments_columns!
-  distinct: Boolean
-  filter: memoryUsageBytesBoolExp
-  predicate: Float8ComparisonExp!
-}
-input memoryUsageBytes_aggregate_bool_exp_stddev_samp {
-  arguments: memoryUsageBytes_select_column_memoryUsageBytes_aggregate_bool_exp_stddev_samp_arguments_columns!
-  distinct: Boolean
-  filter: memoryUsageBytesBoolExp
-  predicate: Float8ComparisonExp!
-}
-input memoryUsageBytes_aggregate_bool_exp_sum {
-  arguments: memoryUsageBytes_select_column_memoryUsageBytes_aggregate_bool_exp_sum_arguments_columns!
-  distinct: Boolean
-  filter: memoryUsageBytesBoolExp
-  predicate: Float8ComparisonExp!
-}
-input memoryUsageBytes_aggregate_bool_exp_var_samp {
-  arguments: memoryUsageBytes_select_column_memoryUsageBytes_aggregate_bool_exp_var_samp_arguments_columns!
-  distinct: Boolean
-  filter: memoryUsageBytesBoolExp
-  predicate: Float8ComparisonExp!
-}
-"""
-order by avg() on columns of table "simpipe.memory_usage_bytes"
-"""
-input memoryUsageBytes_avg_order_by {
-  value: OrderBy
-}
-"""
-order by max() on columns of table "simpipe.memory_usage_bytes"
-"""
-input memoryUsageBytes_max_order_by {
-  runId: OrderBy
-  simulationId: OrderBy
-  stepId: OrderBy
-  time: OrderBy
-  userId: OrderBy
-  value: OrderBy
-}
-"""
-order by min() on columns of table "simpipe.memory_usage_bytes"
-"""
-input memoryUsageBytes_min_order_by {
-  runId: OrderBy
-  simulationId: OrderBy
-  stepId: OrderBy
-  time: OrderBy
-  userId: OrderBy
-  value: OrderBy
-}
-"""
-select "memoryUsageBytes_aggregate_bool_exp_avg_arguments_columns" columns of table "simpipe.memory_usage_bytes"
-"""
-enum memoryUsageBytes_select_column_memoryUsageBytes_aggregate_bool_exp_avg_arguments_columns {
-  "column name"
-  value
-}
-"""
-select "memoryUsageBytes_aggregate_bool_exp_corr_arguments_columns" columns of table "simpipe.memory_usage_bytes"
-"""
-enum memoryUsageBytes_select_column_memoryUsageBytes_aggregate_bool_exp_corr_arguments_columns {
-  "column name"
-  value
-}
-"""
-select "memoryUsageBytes_aggregate_bool_exp_covar_samp_arguments_columns" columns of table "simpipe.memory_usage_bytes"
-"""
-enum memoryUsageBytes_select_column_memoryUsageBytes_aggregate_bool_exp_covar_samp_arguments_columns {
-  "column name"
-  value
-}
-"""
-select "memoryUsageBytes_aggregate_bool_exp_max_arguments_columns" columns of table "simpipe.memory_usage_bytes"
-"""
-enum memoryUsageBytes_select_column_memoryUsageBytes_aggregate_bool_exp_max_arguments_columns {
-  "column name"
-  value
-}
-"""
-select "memoryUsageBytes_aggregate_bool_exp_min_arguments_columns" columns of table "simpipe.memory_usage_bytes"
-"""
-enum memoryUsageBytes_select_column_memoryUsageBytes_aggregate_bool_exp_min_arguments_columns {
-  "column name"
-  value
-}
-"""
-select "memoryUsageBytes_aggregate_bool_exp_stddev_samp_arguments_columns" columns of table "simpipe.memory_usage_bytes"
-"""
-enum memoryUsageBytes_select_column_memoryUsageBytes_aggregate_bool_exp_stddev_samp_arguments_columns {
-  "column name"
-  value
-}
-"""
-select "memoryUsageBytes_aggregate_bool_exp_sum_arguments_columns" columns of table "simpipe.memory_usage_bytes"
-"""
-enum memoryUsageBytes_select_column_memoryUsageBytes_aggregate_bool_exp_sum_arguments_columns {
-  "column name"
-  value
-}
-"""
-select "memoryUsageBytes_aggregate_bool_exp_var_samp_arguments_columns" columns of table "simpipe.memory_usage_bytes"
-"""
-enum memoryUsageBytes_select_column_memoryUsageBytes_aggregate_bool_exp_var_samp_arguments_columns {
-  "column name"
-  value
-}
-"""
-order by stddev() on columns of table "simpipe.memory_usage_bytes"
-"""
-input memoryUsageBytes_stddev_order_by {
-  value: OrderBy
-}
-"""
-order by stddev_pop() on columns of table "simpipe.memory_usage_bytes"
-"""
-input memoryUsageBytes_stddev_pop_order_by {
-  value: OrderBy
-}
-"""
-order by stddev_samp() on columns of table "simpipe.memory_usage_bytes"
-"""
-input memoryUsageBytes_stddev_samp_order_by {
-  value: OrderBy
-}
-"""
-order by sum() on columns of table "simpipe.memory_usage_bytes"
-"""
-input memoryUsageBytes_sum_order_by {
-  value: OrderBy
-}
-"""
-order by var_pop() on columns of table "simpipe.memory_usage_bytes"
-"""
-input memoryUsageBytes_var_pop_order_by {
-  value: OrderBy
-}
-"""
-order by var_samp() on columns of table "simpipe.memory_usage_bytes"
-"""
-input memoryUsageBytes_var_samp_order_by {
-  value: OrderBy
-}
-"""
-order by variance() on columns of table "simpipe.memory_usage_bytes"
-"""
-input memoryUsageBytes_variance_order_by {
-  value: OrderBy
 }
 "mutation root"
 type mutation_root {
@@ -3801,9 +3569,13 @@ type query_root {
   memoryMaxUsageBytes("distinct select on columns" distinctOn: [memoryMaxUsageBytesSelectColumn!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" orderBy: [memoryMaxUsageBytesOrderBy!], "filter the rows returned" where: memoryMaxUsageBytesBoolExp): [memoryMaxUsageBytes!]!
   "An aggregate relationship"
   memoryMaxUsageBytesAggregate("distinct select on columns" distinctOn: [memoryMaxUsageBytesSelectColumn!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" orderBy: [memoryMaxUsageBytesOrderBy!], "filter the rows returned" where: memoryMaxUsageBytesBoolExp): memoryMaxUsageBytesAggregate!
-  "An array relationship"
+  """
+  fetch data from the table: "simpipe.memory_usage_bytes"
+  """
   memoryUsageBytes("distinct select on columns" distinctOn: [memoryUsageBytesSelectColumn!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" orderBy: [memoryUsageBytesOrderBy!], "filter the rows returned" where: memoryUsageBytesBoolExp): [memoryUsageBytes!]!
-  "An aggregate relationship"
+  """
+  fetch aggregated fields from the table: "simpipe.memory_usage_bytes"
+  """
   memoryUsageBytesAggregate("distinct select on columns" distinctOn: [memoryUsageBytesSelectColumn!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" orderBy: [memoryUsageBytesOrderBy!], "filter the rows returned" where: memoryUsageBytesBoolExp): memoryUsageBytesAggregate!
   "An array relationship"
   networkReceivedBytes("distinct select on columns" distinctOn: [networkReceivedBytesSelectColumn!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" orderBy: [networkReceivedBytesOrderBy!], "filter the rows returned" where: networkReceivedBytesBoolExp): [networkReceivedBytes!]!
@@ -3896,40 +3668,12 @@ type query_root {
 }
 "Simulation run"
 type runs {
-  "An array relationship"
-  cpu("distinct select on columns" distinctOn: [cpuSelectColumn!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" orderBy: [cpuOrderBy!], "filter the rows returned" where: cpuBoolExp): [cpu!]!
-  "An aggregate relationship"
-  cpuAggregate("distinct select on columns" distinctOn: [cpuSelectColumn!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" orderBy: [cpuOrderBy!], "filter the rows returned" where: cpuBoolExp): cpuAggregate!
   "DateTime of when the run was created"
   created: timestamp!
   "DateTime of when the run was ended, NULL if not ended"
   ended: timestamp
-  "An array relationship"
-  fsReadsMerged("distinct select on columns" distinctOn: [fsReadsMergedSelectColumn!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" orderBy: [fsReadsMergedOrderBy!], "filter the rows returned" where: fsReadsMergedBoolExp): [fsReadsMerged!]!
-  "An aggregate relationship"
-  fsReadsMergedAggregate("distinct select on columns" distinctOn: [fsReadsMergedSelectColumn!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" orderBy: [fsReadsMergedOrderBy!], "filter the rows returned" where: fsReadsMergedBoolExp): fsReadsMergedAggregate!
-  "An array relationship"
-  fsWritesMerged("distinct select on columns" distinctOn: [fsWritesMergedSelectColumn!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" orderBy: [fsWritesMergedOrderBy!], "filter the rows returned" where: fsWritesMergedBoolExp): [fsWritesMerged!]!
-  "An aggregate relationship"
-  fsWritesMergedAggregate("distinct select on columns" distinctOn: [fsWritesMergedSelectColumn!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" orderBy: [fsWritesMergedOrderBy!], "filter the rows returned" where: fsWritesMergedBoolExp): fsWritesMergedAggregate!
-  "An array relationship"
-  memoryMaxUsageBytes("distinct select on columns" distinctOn: [memoryMaxUsageBytesSelectColumn!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" orderBy: [memoryMaxUsageBytesOrderBy!], "filter the rows returned" where: memoryMaxUsageBytesBoolExp): [memoryMaxUsageBytes!]!
-  "An aggregate relationship"
-  memoryMaxUsageBytesAggregate("distinct select on columns" distinctOn: [memoryMaxUsageBytesSelectColumn!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" orderBy: [memoryMaxUsageBytesOrderBy!], "filter the rows returned" where: memoryMaxUsageBytesBoolExp): memoryMaxUsageBytesAggregate!
-  "An array relationship"
-  memoryUsageBytes("distinct select on columns" distinctOn: [memoryUsageBytesSelectColumn!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" orderBy: [memoryUsageBytesOrderBy!], "filter the rows returned" where: memoryUsageBytesBoolExp): [memoryUsageBytes!]!
-  "An aggregate relationship"
-  memoryUsageBytesAggregate("distinct select on columns" distinctOn: [memoryUsageBytesSelectColumn!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" orderBy: [memoryUsageBytesOrderBy!], "filter the rows returned" where: memoryUsageBytesBoolExp): memoryUsageBytesAggregate!
   "Name of the run, it is unique per simulation"
   name: String!
-  "An array relationship"
-  networkReceivedBytes("distinct select on columns" distinctOn: [networkReceivedBytesSelectColumn!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" orderBy: [networkReceivedBytesOrderBy!], "filter the rows returned" where: networkReceivedBytesBoolExp): [networkReceivedBytes!]!
-  "An aggregate relationship"
-  networkReceivedBytesAggregate("distinct select on columns" distinctOn: [networkReceivedBytesSelectColumn!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" orderBy: [networkReceivedBytesOrderBy!], "filter the rows returned" where: networkReceivedBytesBoolExp): networkReceivedBytesAggregate!
-  "An array relationship"
-  networkTransmitBytes("distinct select on columns" distinctOn: [networkTransmitBytesSelectColumn!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" orderBy: [networkTransmitBytesOrderBy!], "filter the rows returned" where: networkTransmitBytesBoolExp): [networkTransmitBytes!]!
-  "An aggregate relationship"
-  networkTransmitBytesAggregate("distinct select on columns" distinctOn: [networkTransmitBytesSelectColumn!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" orderBy: [networkTransmitBytesOrderBy!], "filter the rows returned" where: networkTransmitBytesBoolExp): networkTransmitBytesAggregate!
   "UUID of the run, random by default"
   runId: uuid!
   "An object relationship"
@@ -3983,23 +3727,9 @@ input runsBoolExp {
   _and: [runsBoolExp!]
   _not: runsBoolExp
   _or: [runsBoolExp!]
-  cpu: cpuBoolExp
-  cpu_aggregate: cpu_aggregate_bool_exp
   created: TimestampComparisonExp
   ended: TimestampComparisonExp
-  fsReadsMerged: fsReadsMergedBoolExp
-  fsReadsMerged_aggregate: fsReadsMerged_aggregate_bool_exp
-  fsWritesMerged: fsWritesMergedBoolExp
-  fsWritesMerged_aggregate: fsWritesMerged_aggregate_bool_exp
-  memoryMaxUsageBytes: memoryMaxUsageBytesBoolExp
-  memoryMaxUsageBytes_aggregate: memoryMaxUsageBytes_aggregate_bool_exp
-  memoryUsageBytes: memoryUsageBytesBoolExp
-  memoryUsageBytes_aggregate: memoryUsageBytes_aggregate_bool_exp
   name: StringComparisonExp
-  networkReceivedBytes: networkReceivedBytesBoolExp
-  networkReceivedBytes_aggregate: networkReceivedBytes_aggregate_bool_exp
-  networkTransmitBytes: networkTransmitBytesBoolExp
-  networkTransmitBytes_aggregate: networkTransmitBytes_aggregate_bool_exp
   runId: UuidComparisonExp
   simulation: simulationsBoolExp
   simulationId: UuidComparisonExp
@@ -4025,19 +3755,12 @@ enum runsConstraint {
 input type for inserting data into table "simpipe.runs"
 """
 input runsInsertInput {
-  cpu: cpuArrRelInsertInput
   "DateTime of when the run was created"
   created: timestamp
   "DateTime of when the run was ended, NULL if not ended"
   ended: timestamp
-  fsReadsMerged: fsReadsMergedArrRelInsertInput
-  fsWritesMerged: fsWritesMergedArrRelInsertInput
-  memoryMaxUsageBytes: memoryMaxUsageBytesArrRelInsertInput
-  memoryUsageBytes: memoryUsageBytesArrRelInsertInput
   "Name of the run, it is unique per simulation"
   name: String
-  networkReceivedBytes: networkReceivedBytesArrRelInsertInput
-  networkTransmitBytes: networkTransmitBytesArrRelInsertInput
   "UUID of the run, random by default"
   runId: uuid
   simulation: simulationsObjRelInsertInput
@@ -4108,16 +3831,9 @@ input runsOnConflict {
 Ordering options when selecting data from "simpipe.runs".
 """
 input runsOrderBy {
-  cpuAggregate: cpuAggregateOrderBy
   created: OrderBy
   ended: OrderBy
-  fsReadsMergedAggregate: fsReadsMergedAggregateOrderBy
-  fsWritesMergedAggregate: fsWritesMergedAggregateOrderBy
-  memoryMaxUsageBytesAggregate: memoryMaxUsageBytesAggregateOrderBy
-  memoryUsageBytesAggregate: memoryUsageBytesAggregateOrderBy
   name: OrderBy
-  networkReceivedBytesAggregate: networkReceivedBytesAggregateOrderBy
-  networkTransmitBytesAggregate: networkTransmitBytesAggregateOrderBy
   runId: OrderBy
   simulation: simulationsOrderBy
   simulationId: OrderBy
@@ -4299,38 +4015,10 @@ input simpipe_envs_min_order_by {
 }
 "Simulations"
 type simulations {
-  "An array relationship"
-  cpu("distinct select on columns" distinctOn: [cpuSelectColumn!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" orderBy: [cpuOrderBy!], "filter the rows returned" where: cpuBoolExp): [cpu!]!
-  "An aggregate relationship"
-  cpuAggregate("distinct select on columns" distinctOn: [cpuSelectColumn!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" orderBy: [cpuOrderBy!], "filter the rows returned" where: cpuBoolExp): cpuAggregate!
   "DateTime of when the simulation was created"
   created: timestamp!
-  "An array relationship"
-  fsReadsMerged("distinct select on columns" distinctOn: [fsReadsMergedSelectColumn!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" orderBy: [fsReadsMergedOrderBy!], "filter the rows returned" where: fsReadsMergedBoolExp): [fsReadsMerged!]!
-  "An aggregate relationship"
-  fsReadsMergedAggregate("distinct select on columns" distinctOn: [fsReadsMergedSelectColumn!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" orderBy: [fsReadsMergedOrderBy!], "filter the rows returned" where: fsReadsMergedBoolExp): fsReadsMergedAggregate!
-  "An array relationship"
-  fsWritesMerged("distinct select on columns" distinctOn: [fsWritesMergedSelectColumn!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" orderBy: [fsWritesMergedOrderBy!], "filter the rows returned" where: fsWritesMergedBoolExp): [fsWritesMerged!]!
-  "An aggregate relationship"
-  fsWritesMergedAggregate("distinct select on columns" distinctOn: [fsWritesMergedSelectColumn!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" orderBy: [fsWritesMergedOrderBy!], "filter the rows returned" where: fsWritesMergedBoolExp): fsWritesMergedAggregate!
-  "An array relationship"
-  memoryMaxUsageBytes("distinct select on columns" distinctOn: [memoryMaxUsageBytesSelectColumn!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" orderBy: [memoryMaxUsageBytesOrderBy!], "filter the rows returned" where: memoryMaxUsageBytesBoolExp): [memoryMaxUsageBytes!]!
-  "An aggregate relationship"
-  memoryMaxUsageBytesAggregate("distinct select on columns" distinctOn: [memoryMaxUsageBytesSelectColumn!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" orderBy: [memoryMaxUsageBytesOrderBy!], "filter the rows returned" where: memoryMaxUsageBytesBoolExp): memoryMaxUsageBytesAggregate!
-  "An array relationship"
-  memoryUsageBytes("distinct select on columns" distinctOn: [memoryUsageBytesSelectColumn!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" orderBy: [memoryUsageBytesOrderBy!], "filter the rows returned" where: memoryUsageBytesBoolExp): [memoryUsageBytes!]!
-  "An aggregate relationship"
-  memoryUsageBytesAggregate("distinct select on columns" distinctOn: [memoryUsageBytesSelectColumn!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" orderBy: [memoryUsageBytesOrderBy!], "filter the rows returned" where: memoryUsageBytesBoolExp): memoryUsageBytesAggregate!
   "Name of the simulation, it is unique"
   name: String!
-  "An array relationship"
-  networkReceivedBytes("distinct select on columns" distinctOn: [networkReceivedBytesSelectColumn!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" orderBy: [networkReceivedBytesOrderBy!], "filter the rows returned" where: networkReceivedBytesBoolExp): [networkReceivedBytes!]!
-  "An aggregate relationship"
-  networkReceivedBytesAggregate("distinct select on columns" distinctOn: [networkReceivedBytesSelectColumn!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" orderBy: [networkReceivedBytesOrderBy!], "filter the rows returned" where: networkReceivedBytesBoolExp): networkReceivedBytesAggregate!
-  "An array relationship"
-  networkTransmitBytes("distinct select on columns" distinctOn: [networkTransmitBytesSelectColumn!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" orderBy: [networkTransmitBytesOrderBy!], "filter the rows returned" where: networkTransmitBytesBoolExp): [networkTransmitBytes!]!
-  "An aggregate relationship"
-  networkTransmitBytesAggregate("distinct select on columns" distinctOn: [networkTransmitBytesSelectColumn!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" orderBy: [networkTransmitBytesOrderBy!], "filter the rows returned" where: networkTransmitBytesBoolExp): networkTransmitBytesAggregate!
   "Description of the pipeline in JSON"
   pipelineDescription("JSON select path" path: String): jsonb!
   "An array relationship"
@@ -4369,22 +4057,8 @@ input simulationsBoolExp {
   _and: [simulationsBoolExp!]
   _not: simulationsBoolExp
   _or: [simulationsBoolExp!]
-  cpu: cpuBoolExp
-  cpu_aggregate: cpu_aggregate_bool_exp
   created: TimestampComparisonExp
-  fsReadsMerged: fsReadsMergedBoolExp
-  fsReadsMerged_aggregate: fsReadsMerged_aggregate_bool_exp
-  fsWritesMerged: fsWritesMergedBoolExp
-  fsWritesMerged_aggregate: fsWritesMerged_aggregate_bool_exp
-  memoryMaxUsageBytes: memoryMaxUsageBytesBoolExp
-  memoryMaxUsageBytes_aggregate: memoryMaxUsageBytes_aggregate_bool_exp
-  memoryUsageBytes: memoryUsageBytesBoolExp
-  memoryUsageBytes_aggregate: memoryUsageBytes_aggregate_bool_exp
   name: StringComparisonExp
-  networkReceivedBytes: networkReceivedBytesBoolExp
-  networkReceivedBytes_aggregate: networkReceivedBytes_aggregate_bool_exp
-  networkTransmitBytes: networkTransmitBytesBoolExp
-  networkTransmitBytes_aggregate: networkTransmitBytes_aggregate_bool_exp
   pipelineDescription: JsonbComparisonExp
   runs: runsBoolExp
   runs_aggregate: runs_aggregate_bool_exp
@@ -4423,17 +4097,10 @@ input simulationsDeleteKeyInput {
 input type for inserting data into table "simpipe.simulations"
 """
 input simulationsInsertInput {
-  cpu: cpuArrRelInsertInput
   "DateTime of when the simulation was created"
   created: timestamp
-  fsReadsMerged: fsReadsMergedArrRelInsertInput
-  fsWritesMerged: fsWritesMergedArrRelInsertInput
-  memoryMaxUsageBytes: memoryMaxUsageBytesArrRelInsertInput
-  memoryUsageBytes: memoryUsageBytesArrRelInsertInput
   "Name of the simulation, it is unique"
   name: String
-  networkReceivedBytes: networkReceivedBytesArrRelInsertInput
-  networkTransmitBytes: networkTransmitBytesArrRelInsertInput
   "Description of the pipeline in JSON"
   pipelineDescription: jsonb
   runs: runsArrRelInsertInput
@@ -4493,15 +4160,8 @@ input simulationsOnConflict {
 Ordering options when selecting data from "simpipe.simulations".
 """
 input simulationsOrderBy {
-  cpuAggregate: cpuAggregateOrderBy
   created: OrderBy
-  fsReadsMergedAggregate: fsReadsMergedAggregateOrderBy
-  fsWritesMergedAggregate: fsWritesMergedAggregateOrderBy
-  memoryMaxUsageBytesAggregate: memoryMaxUsageBytesAggregateOrderBy
-  memoryUsageBytesAggregate: memoryUsageBytesAggregateOrderBy
   name: OrderBy
-  networkReceivedBytesAggregate: networkReceivedBytesAggregateOrderBy
-  networkTransmitBytesAggregate: networkTransmitBytesAggregateOrderBy
   pipelineDescription: OrderBy
   runsAggregate: runsAggregateOrderBy
   simulationId: OrderBy
@@ -5231,9 +4891,13 @@ type subscription_root {
   fetch data from the table in a streaming manner: "simpipe.memory_max_usage_bytes"
   """
   memoryMaxUsageBytesStream("maximum number of rows returned in a single batch" batchSize: Int!, "cursor to stream the results returned by the query" cursor: [memoryMaxUsageBytesStreamCursorInput]!, "filter the rows returned" where: memoryMaxUsageBytesBoolExp): [memoryMaxUsageBytes!]!
-  "An array relationship"
+  """
+  fetch data from the table: "simpipe.memory_usage_bytes"
+  """
   memoryUsageBytes("distinct select on columns" distinctOn: [memoryUsageBytesSelectColumn!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" orderBy: [memoryUsageBytesOrderBy!], "filter the rows returned" where: memoryUsageBytesBoolExp): [memoryUsageBytes!]!
-  "An aggregate relationship"
+  """
+  fetch aggregated fields from the table: "simpipe.memory_usage_bytes"
+  """
   memoryUsageBytesAggregate("distinct select on columns" distinctOn: [memoryUsageBytesSelectColumn!], "limit the number of rows returned" limit: Int, "skip the first n rows. Use only with order_by" offset: Int, "sort the rows by one or more columns" orderBy: [memoryUsageBytesOrderBy!], "filter the rows returned" where: memoryUsageBytesBoolExp): memoryUsageBytesAggregate!
   """
   fetch data from the table in a streaming manner: "simpipe.memory_usage_bytes"

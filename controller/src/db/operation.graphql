@@ -123,3 +123,14 @@ mutation insertLog($stepId: uuid!, $text: String!) {
     stepId
   }
 }
+
+mutation markRunAsRunningAndStepsAsScheduled($runId: uuid!) {
+  updateRunsByPk(pk_columns: {runId: $runId}, _set: {status: ACTIVE, started: "now()"}) {
+    runId
+  }
+  updateSteps(where: {runId: {_eq: $runId}}, _set: {status: WAITING}) {
+    returning {
+      stepId
+    }
+  }
+}

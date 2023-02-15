@@ -17,7 +17,8 @@
     "download-db-schema": "npx @apollo/rover graph introspect http://localhost:8080/v1/graphql --header x-hasura-admin-secret:hasuraadminsecret > src/db/schema.graphql",
     "codegen-db": "graphql-codegen --config src/db/codegen.yaml",
     "codegen-server": "graphql-codegen --config src/server/codegen.yaml",
-    "find-deadcode": "ts-prune --error --ignore src/db/database.ts --ignore src/server/schema.ts"
+    "find-deadcode": "ts-prune --error --ignore src/db/database.ts --ignore src/server/schema.ts",
+    "typegen": "npx @xstate/cli typegen src/runner/runner-state-machine.ts"
   },
   "engines": {
     "node": ">=16.0.0"
@@ -43,13 +44,14 @@
     "@types/dockerode": "^3.3.14",
     "@types/minio": "^7.0.15",
     "@types/morgan": "^1.9.4",
-    "@types/node": "^18.11.18",
+    "@types/node": "^18.13.0",
     "@types/set-interval-async": "^1.0.0",
     "@types/ssh2-sftp-client": "^9.0.0",
     "@types/tough-cookie": "^4.0.2",
-    "@typescript-eslint/eslint-plugin": "^5.49.0",
-    "@typescript-eslint/parser": "^5.49.0",
-    "eslint": "^8.33.0",
+    "@typescript-eslint/eslint-plugin": "^5.51.0",
+    "@typescript-eslint/parser": "^5.51.0",
+    "@xstate/cli": "^0.4.2",
+    "eslint": "^8.34.0",
     "eslint-config-airbnb-base": "^15.0.0",
     "eslint-config-airbnb-typescript": "^17.0.0",
     "eslint-plugin-eslint-comments": "^3.2.0",
@@ -57,16 +59,16 @@
     "eslint-plugin-node": "^11.1.0",
     "eslint-plugin-simple-import-sort": "^10.0.0",
     "eslint-plugin-unicorn": "^45.0.2",
-    "hasura-cli": "^2.17.0",
+    "hasura-cli": "^2.17.1",
     "spectaql": "^2.0.4",
     "ts-node": "^10.9.1",
     "ts-prune": "^0.10.3",
-    "typescript": "^4.9.4"
+    "typescript": "^4.9.5"
   },
   "dependencies": {
     "@graphql-tools/load-files": "^6.6.1",
-    "@graphql-tools/schema": "^9.0.14",
-    "@graphql-tools/utils": "^9.1.4",
+    "@graphql-tools/schema": "^9.0.16",
+    "@graphql-tools/utils": "^9.2.1",
     "apollo-server": "^3.6.1",
     "apollo-server-express": "^3.10.0",
     "dockerode": "^3.3.4",
@@ -79,9 +81,10 @@
     "graphql-request": "^5.1.0",
     "graphql-tag": "^2.12.6",
     "graphql-type-json": "^0.3.2",
+    "graphql-ws": "^5.11.3",
     "helmet": "^6.0.1",
     "http-proxy-middleware": "^3.0.0-beta.0",
-    "jose": "^4.11.2",
+    "jose": "^4.11.4",
     "jsonwebtoken": "^9.0.0",
     "minio": "^7.0.32",
     "morgan": "^1.10.0",
@@ -90,6 +93,8 @@
     "ssh2-sftp-client": "^9.0.4",
     "tough-cookie": "^4.1.2",
     "winston": "^3.8.2",
-    "zod": "^3.20.2"
+    "ws": "^8.12.1",
+    "xstate": "^4.36.0",
+    "zod": "^3.20.6"
   }
 }

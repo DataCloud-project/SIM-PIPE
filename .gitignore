@@ -6,5 +6,6 @@ controller/simulations/*
 controller/log/controller.log
 controller/uploaded_files/*
 controller/node_modules
+controller/dist
 example/sftp/in/*
 example/sftp/out/*

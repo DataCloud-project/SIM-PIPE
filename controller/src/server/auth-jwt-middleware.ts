@@ -101,10 +101,11 @@ async function hybridAuthJwtMiddlewareAsync(
   // Load the JWT token
   const jwt = authHeader.slice(7);
   const alg = extractAlgFromToken(jwt);
+  // If we get a EdDSA token, we assume it's not a keycloak token but a hasura token
+  const isHasura = alg === 'EdDSA';
   let auth: Auth;
   try {
-    // If we get a EdDSA token, we assume it's not a keycloak token but a hasura token
-    auth = await (alg === 'EdDSA' ? jwtVerifyHasuraToken(jwt) : jwtVerifyKeycloakToken(jwt));
+    auth = await (isHasura ? jwtVerifyHasuraToken(jwt) : jwtVerifyKeycloakToken(jwt));
   } catch (error) {
     // eslint-disable-next-line no-console
     console.error(error);
@@ -114,6 +115,7 @@ async function hybridAuthJwtMiddlewareAsync(
 
   // Attach the payload to the request
   (request as unknown as { auth: Auth }).auth = auth;
+  (request as unknown as { isHasura: boolean }).isHasura = isHasura;
 
   next();
 }

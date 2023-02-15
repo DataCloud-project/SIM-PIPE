@@ -42,7 +42,10 @@ export type CreateSimulationInput = {
   name: Scalars['String'];
   /**
    *  The description of the simulation pipeline.
-   * It is a JSON document.
+   *
+   * It is a JSON document but it must be sent as a string,
+   * because not all GraphQL clients support sending JSON documents
+   * in input variables.
    */
   pipelineDescription: Scalars['json'];
 };
@@ -682,7 +685,7 @@ export enum SimpipeStepStatusEnum {
   Cancelled = 'CANCELLED',
   Completed = 'COMPLETED',
   Failed = 'FAILED',
-  Queued = 'QUEUED'
+  Waiting = 'WAITING'
 }
 
 /** Boolean expression to compare columns of type "SimpipeStepStatusEnum". All fields are combined with logical 'AND'. */
@@ -2540,26 +2543,6 @@ export type MemoryUsageBytesAggregateFieldsCountArgs = {
   distinct?: InputMaybe<Scalars['Boolean']>;
 };
 
-/** order by aggregate values of table "simpipe.memory_usage_bytes" */
-export type MemoryUsageBytesAggregateOrderBy = {
-  avg?: InputMaybe<MemoryUsageBytes_Avg_Order_By>;
-  count?: InputMaybe<OrderBy>;
-  max?: InputMaybe<MemoryUsageBytes_Max_Order_By>;
-  min?: InputMaybe<MemoryUsageBytes_Min_Order_By>;
-  stddev?: InputMaybe<MemoryUsageBytes_Stddev_Order_By>;
-  stddev_pop?: InputMaybe<MemoryUsageBytes_Stddev_Pop_Order_By>;
-  stddev_samp?: InputMaybe<MemoryUsageBytes_Stddev_Samp_Order_By>;
-  sum?: InputMaybe<MemoryUsageBytes_Sum_Order_By>;
-  var_pop?: InputMaybe<MemoryUsageBytes_Var_Pop_Order_By>;
-  var_samp?: InputMaybe<MemoryUsageBytes_Var_Samp_Order_By>;
-  variance?: InputMaybe<MemoryUsageBytes_Variance_Order_By>;
-};
-
-/** input type for inserting array relation for remote table "simpipe.memory_usage_bytes" */
-export type MemoryUsageBytesArrRelInsertInput = {
-  data: Array<MemoryUsageBytesInsertInput>;
-};
-
 /** aggregate avg on columns */
 export type MemoryUsageBytesAvgFields = {
   __typename?: 'memoryUsageBytesAvgFields';
@@ -2580,19 +2563,6 @@ export type MemoryUsageBytesBoolExp = {
   time?: InputMaybe<TimestamptzComparisonExp>;
   userId?: InputMaybe<StringComparisonExp>;
   value?: InputMaybe<Float8ComparisonExp>;
-};
-
-/** input type for inserting data into table "simpipe.memory_usage_bytes" */
-export type MemoryUsageBytesInsertInput = {
-  run?: InputMaybe<RunsObjRelInsertInput>;
-  runId?: InputMaybe<Scalars['String']>;
-  simulation?: InputMaybe<SimulationsObjRelInsertInput>;
-  simulationId?: InputMaybe<Scalars['String']>;
-  step?: InputMaybe<StepsObjRelInsertInput>;
-  stepId?: InputMaybe<Scalars['String']>;
-  time?: InputMaybe<Scalars['timestamptz']>;
-  userId?: InputMaybe<Scalars['String']>;
-  value?: InputMaybe<Scalars['float8']>;
 };
 
 /** aggregate max on columns */
@@ -2704,199 +2674,6 @@ export type MemoryUsageBytesVar_SampFields = {
 export type MemoryUsageBytesVarianceFields = {
   __typename?: 'memoryUsageBytesVarianceFields';
   value?: Maybe<Scalars['Float']>;
-};
-
-export type MemoryUsageBytes_Aggregate_Bool_Exp = {
-  avg?: InputMaybe<MemoryUsageBytes_Aggregate_Bool_Exp_Avg>;
-  corr?: InputMaybe<MemoryUsageBytes_Aggregate_Bool_Exp_Corr>;
-  count?: InputMaybe<MemoryUsageBytes_Aggregate_Bool_Exp_Count>;
-  covar_samp?: InputMaybe<MemoryUsageBytes_Aggregate_Bool_Exp_Covar_Samp>;
-  max?: InputMaybe<MemoryUsageBytes_Aggregate_Bool_Exp_Max>;
-  min?: InputMaybe<MemoryUsageBytes_Aggregate_Bool_Exp_Min>;
-  stddev_samp?: InputMaybe<MemoryUsageBytes_Aggregate_Bool_Exp_Stddev_Samp>;
-  sum?: InputMaybe<MemoryUsageBytes_Aggregate_Bool_Exp_Sum>;
-  var_samp?: InputMaybe<MemoryUsageBytes_Aggregate_Bool_Exp_Var_Samp>;
-};
-
-export type MemoryUsageBytes_Aggregate_Bool_Exp_Avg = {
-  arguments: MemoryUsageBytes_Select_Column_MemoryUsageBytes_Aggregate_Bool_Exp_Avg_Arguments_Columns;
-  distinct?: InputMaybe<Scalars['Boolean']>;
-  filter?: InputMaybe<MemoryUsageBytesBoolExp>;
-  predicate: Float8ComparisonExp;
-};
-
-export type MemoryUsageBytes_Aggregate_Bool_Exp_Corr = {
-  arguments: MemoryUsageBytes_Aggregate_Bool_Exp_Corr_Arguments;
-  distinct?: InputMaybe<Scalars['Boolean']>;
-  filter?: InputMaybe<MemoryUsageBytesBoolExp>;
-  predicate: Float8ComparisonExp;
-};
-
-export type MemoryUsageBytes_Aggregate_Bool_Exp_Corr_Arguments = {
-  X: MemoryUsageBytes_Select_Column_MemoryUsageBytes_Aggregate_Bool_Exp_Corr_Arguments_Columns;
-  Y: MemoryUsageBytes_Select_Column_MemoryUsageBytes_Aggregate_Bool_Exp_Corr_Arguments_Columns;
-};
-
-export type MemoryUsageBytes_Aggregate_Bool_Exp_Count = {
-  arguments?: InputMaybe<Array<MemoryUsageBytesSelectColumn>>;
-  distinct?: InputMaybe<Scalars['Boolean']>;
-  filter?: InputMaybe<MemoryUsageBytesBoolExp>;
-  predicate: IntComparisonExp;
-};
-
-export type MemoryUsageBytes_Aggregate_Bool_Exp_Covar_Samp = {
-  arguments: MemoryUsageBytes_Aggregate_Bool_Exp_Covar_Samp_Arguments;
-  distinct?: InputMaybe<Scalars['Boolean']>;
-  filter?: InputMaybe<MemoryUsageBytesBoolExp>;
-  predicate: Float8ComparisonExp;
-};
-
-export type MemoryUsageBytes_Aggregate_Bool_Exp_Covar_Samp_Arguments = {
-  X: MemoryUsageBytes_Select_Column_MemoryUsageBytes_Aggregate_Bool_Exp_Covar_Samp_Arguments_Columns;
-  Y: MemoryUsageBytes_Select_Column_MemoryUsageBytes_Aggregate_Bool_Exp_Covar_Samp_Arguments_Columns;
-};
-
-export type MemoryUsageBytes_Aggregate_Bool_Exp_Max = {
-  arguments: MemoryUsageBytes_Select_Column_MemoryUsageBytes_Aggregate_Bool_Exp_Max_Arguments_Columns;
-  distinct?: InputMaybe<Scalars['Boolean']>;
-  filter?: InputMaybe<MemoryUsageBytesBoolExp>;
-  predicate: Float8ComparisonExp;
-};
-
-export type MemoryUsageBytes_Aggregate_Bool_Exp_Min = {
-  arguments: MemoryUsageBytes_Select_Column_MemoryUsageBytes_Aggregate_Bool_Exp_Min_Arguments_Columns;
-  distinct?: InputMaybe<Scalars['Boolean']>;
-  filter?: InputMaybe<MemoryUsageBytesBoolExp>;
-  predicate: Float8ComparisonExp;
-};
-
-export type MemoryUsageBytes_Aggregate_Bool_Exp_Stddev_Samp = {
-  arguments: MemoryUsageBytes_Select_Column_MemoryUsageBytes_Aggregate_Bool_Exp_Stddev_Samp_Arguments_Columns;
-  distinct?: InputMaybe<Scalars['Boolean']>;
-  filter?: InputMaybe<MemoryUsageBytesBoolExp>;
-  predicate: Float8ComparisonExp;
-};
-
-export type MemoryUsageBytes_Aggregate_Bool_Exp_Sum = {
-  arguments: MemoryUsageBytes_Select_Column_MemoryUsageBytes_Aggregate_Bool_Exp_Sum_Arguments_Columns;
-  distinct?: InputMaybe<Scalars['Boolean']>;
-  filter?: InputMaybe<MemoryUsageBytesBoolExp>;
-  predicate: Float8ComparisonExp;
-};
-
-export type MemoryUsageBytes_Aggregate_Bool_Exp_Var_Samp = {
-  arguments: MemoryUsageBytes_Select_Column_MemoryUsageBytes_Aggregate_Bool_Exp_Var_Samp_Arguments_Columns;
-  distinct?: InputMaybe<Scalars['Boolean']>;
-  filter?: InputMaybe<MemoryUsageBytesBoolExp>;
-  predicate: Float8ComparisonExp;
-};
-
-/** order by avg() on columns of table "simpipe.memory_usage_bytes" */
-export type MemoryUsageBytes_Avg_Order_By = {
-  value?: InputMaybe<OrderBy>;
-};
-
-/** order by max() on columns of table "simpipe.memory_usage_bytes" */
-export type MemoryUsageBytes_Max_Order_By = {
-  runId?: InputMaybe<OrderBy>;
-  simulationId?: InputMaybe<OrderBy>;
-  stepId?: InputMaybe<OrderBy>;
-  time?: InputMaybe<OrderBy>;
-  userId?: InputMaybe<OrderBy>;
-  value?: InputMaybe<OrderBy>;
-};
-
-/** order by min() on columns of table "simpipe.memory_usage_bytes" */
-export type MemoryUsageBytes_Min_Order_By = {
-  runId?: InputMaybe<OrderBy>;
-  simulationId?: InputMaybe<OrderBy>;
-  stepId?: InputMaybe<OrderBy>;
-  time?: InputMaybe<OrderBy>;
-  userId?: InputMaybe<OrderBy>;
-  value?: InputMaybe<OrderBy>;
-};
-
-/** select "memoryUsageBytes_aggregate_bool_exp_avg_arguments_columns" columns of table "simpipe.memory_usage_bytes" */
-export enum MemoryUsageBytes_Select_Column_MemoryUsageBytes_Aggregate_Bool_Exp_Avg_Arguments_Columns {
-  /** column name */
-  Value = 'value'
-}
-
-/** select "memoryUsageBytes_aggregate_bool_exp_corr_arguments_columns" columns of table "simpipe.memory_usage_bytes" */
-export enum MemoryUsageBytes_Select_Column_MemoryUsageBytes_Aggregate_Bool_Exp_Corr_Arguments_Columns {
-  /** column name */
-  Value = 'value'
-}
-
-/** select "memoryUsageBytes_aggregate_bool_exp_covar_samp_arguments_columns" columns of table "simpipe.memory_usage_bytes" */
-export enum MemoryUsageBytes_Select_Column_MemoryUsageBytes_Aggregate_Bool_Exp_Covar_Samp_Arguments_Columns {
-  /** column name */
-  Value = 'value'
-}
-
-/** select "memoryUsageBytes_aggregate_bool_exp_max_arguments_columns" columns of table "simpipe.memory_usage_bytes" */
-export enum MemoryUsageBytes_Select_Column_MemoryUsageBytes_Aggregate_Bool_Exp_Max_Arguments_Columns {
-  /** column name */
-  Value = 'value'
-}
-
-/** select "memoryUsageBytes_aggregate_bool_exp_min_arguments_columns" columns of table "simpipe.memory_usage_bytes" */
-export enum MemoryUsageBytes_Select_Column_MemoryUsageBytes_Aggregate_Bool_Exp_Min_Arguments_Columns {
-  /** column name */
-  Value = 'value'
-}
-
-/** select "memoryUsageBytes_aggregate_bool_exp_stddev_samp_arguments_columns" columns of table "simpipe.memory_usage_bytes" */
-export enum MemoryUsageBytes_Select_Column_MemoryUsageBytes_Aggregate_Bool_Exp_Stddev_Samp_Arguments_Columns {
-  /** column name */
-  Value = 'value'
-}
-
-/** select "memoryUsageBytes_aggregate_bool_exp_sum_arguments_columns" columns of table "simpipe.memory_usage_bytes" */
-export enum MemoryUsageBytes_Select_Column_MemoryUsageBytes_Aggregate_Bool_Exp_Sum_Arguments_Columns {
-  /** column name */
-  Value = 'value'
-}
-
-/** select "memoryUsageBytes_aggregate_bool_exp_var_samp_arguments_columns" columns of table "simpipe.memory_usage_bytes" */
-export enum MemoryUsageBytes_Select_Column_MemoryUsageBytes_Aggregate_Bool_Exp_Var_Samp_Arguments_Columns {
-  /** column name */
-  Value = 'value'
-}
-
-/** order by stddev() on columns of table "simpipe.memory_usage_bytes" */
-export type MemoryUsageBytes_Stddev_Order_By = {
-  value?: InputMaybe<OrderBy>;
-};
-
-/** order by stddev_pop() on columns of table "simpipe.memory_usage_bytes" */
-export type MemoryUsageBytes_Stddev_Pop_Order_By = {
-  value?: InputMaybe<OrderBy>;
-};
-
-/** order by stddev_samp() on columns of table "simpipe.memory_usage_bytes" */
-export type MemoryUsageBytes_Stddev_Samp_Order_By = {
-  value?: InputMaybe<OrderBy>;
-};
-
-/** order by sum() on columns of table "simpipe.memory_usage_bytes" */
-export type MemoryUsageBytes_Sum_Order_By = {
-  value?: InputMaybe<OrderBy>;
-};
-
-/** order by var_pop() on columns of table "simpipe.memory_usage_bytes" */
-export type MemoryUsageBytes_Var_Pop_Order_By = {
-  value?: InputMaybe<OrderBy>;
-};
-
-/** order by var_samp() on columns of table "simpipe.memory_usage_bytes" */
-export type MemoryUsageBytes_Var_Samp_Order_By = {
-  value?: InputMaybe<OrderBy>;
-};
-
-/** order by variance() on columns of table "simpipe.memory_usage_bytes" */
-export type MemoryUsageBytes_Variance_Order_By = {
-  value?: InputMaybe<OrderBy>;
 };
 
 /** mutation root */
@@ -4200,9 +3977,9 @@ export type Query_Root = {
   memoryMaxUsageBytes: Array<MemoryMaxUsageBytes>;
   /** An aggregate relationship */
   memoryMaxUsageBytesAggregate: MemoryMaxUsageBytesAggregate;
-  /** An array relationship */
+  /** fetch data from the table: "simpipe.memory_usage_bytes" */
   memoryUsageBytes: Array<MemoryUsageBytes>;
-  /** An aggregate relationship */
+  /** fetch aggregated fields from the table: "simpipe.memory_usage_bytes" */
   memoryUsageBytesAggregate: MemoryUsageBytesAggregate;
   /** An array relationship */
   networkReceivedBytes: Array<NetworkReceivedBytes>;
@@ -4550,40 +4327,12 @@ export type Query_RootStepsByPkArgs = {
 /** Simulation run */
 export type Runs = {
   __typename?: 'runs';
-  /** An array relationship */
-  cpu: Array<Cpu>;
-  /** An aggregate relationship */
-  cpuAggregate: CpuAggregate;
   /** DateTime of when the run was created */
   created: Scalars['timestamp'];
   /** DateTime of when the run was ended, NULL if not ended */
   ended?: Maybe<Scalars['timestamp']>;
-  /** An array relationship */
-  fsReadsMerged: Array<FsReadsMerged>;
-  /** An aggregate relationship */
-  fsReadsMergedAggregate: FsReadsMergedAggregate;
-  /** An array relationship */
-  fsWritesMerged: Array<FsWritesMerged>;
-  /** An aggregate relationship */
-  fsWritesMergedAggregate: FsWritesMergedAggregate;
-  /** An array relationship */
-  memoryMaxUsageBytes: Array<MemoryMaxUsageBytes>;
-  /** An aggregate relationship */
-  memoryMaxUsageBytesAggregate: MemoryMaxUsageBytesAggregate;
-  /** An array relationship */
-  memoryUsageBytes: Array<MemoryUsageBytes>;
-  /** An aggregate relationship */
-  memoryUsageBytesAggregate: MemoryUsageBytesAggregate;
   /** Name of the run, it is unique per simulation */
   name: Scalars['String'];
-  /** An array relationship */
-  networkReceivedBytes: Array<NetworkReceivedBytes>;
-  /** An aggregate relationship */
-  networkReceivedBytesAggregate: NetworkReceivedBytesAggregate;
-  /** An array relationship */
-  networkTransmitBytes: Array<NetworkTransmitBytes>;
-  /** An aggregate relationship */
-  networkTransmitBytesAggregate: NetworkTransmitBytesAggregate;
   /** UUID of the run, random by default */
   runId: Scalars['uuid'];
   /** An object relationship */
@@ -4598,146 +4347,6 @@ export type Runs = {
   steps: Array<Steps>;
   /** An aggregate relationship */
   stepsAggregate: StepsAggregate;
-};
-
-
-/** Simulation run */
-export type RunsCpuArgs = {
-  distinctOn?: InputMaybe<Array<CpuSelectColumn>>;
-  limit?: InputMaybe<Scalars['Int']>;
-  offset?: InputMaybe<Scalars['Int']>;
-  orderBy?: InputMaybe<Array<CpuOrderBy>>;
-  where?: InputMaybe<CpuBoolExp>;
-};
-
-
-/** Simulation run */
-export type RunsCpuAggregateArgs = {
-  distinctOn?: InputMaybe<Array<CpuSelectColumn>>;
-  limit?: InputMaybe<Scalars['Int']>;
-  offset?: InputMaybe<Scalars['Int']>;
-  orderBy?: InputMaybe<Array<CpuOrderBy>>;
-  where?: InputMaybe<CpuBoolExp>;
-};
-
-
-/** Simulation run */
-export type RunsFsReadsMergedArgs = {
-  distinctOn?: InputMaybe<Array<FsReadsMergedSelectColumn>>;
-  limit?: InputMaybe<Scalars['Int']>;
-  offset?: InputMaybe<Scalars['Int']>;
-  orderBy?: InputMaybe<Array<FsReadsMergedOrderBy>>;
-  where?: InputMaybe<FsReadsMergedBoolExp>;
-};
-
-
-/** Simulation run */
-export type RunsFsReadsMergedAggregateArgs = {
-  distinctOn?: InputMaybe<Array<FsReadsMergedSelectColumn>>;
-  limit?: InputMaybe<Scalars['Int']>;
-  offset?: InputMaybe<Scalars['Int']>;
-  orderBy?: InputMaybe<Array<FsReadsMergedOrderBy>>;
-  where?: InputMaybe<FsReadsMergedBoolExp>;
-};
-
-
-/** Simulation run */
-export type RunsFsWritesMergedArgs = {
-  distinctOn?: InputMaybe<Array<FsWritesMergedSelectColumn>>;
-  limit?: InputMaybe<Scalars['Int']>;
-  offset?: InputMaybe<Scalars['Int']>;
-  orderBy?: InputMaybe<Array<FsWritesMergedOrderBy>>;
-  where?: InputMaybe<FsWritesMergedBoolExp>;
-};
-
-
-/** Simulation run */
-export type RunsFsWritesMergedAggregateArgs = {
-  distinctOn?: InputMaybe<Array<FsWritesMergedSelectColumn>>;
-  limit?: InputMaybe<Scalars['Int']>;
-  offset?: InputMaybe<Scalars['Int']>;
-  orderBy?: InputMaybe<Array<FsWritesMergedOrderBy>>;
-  where?: InputMaybe<FsWritesMergedBoolExp>;
-};
-
-
-/** Simulation run */
-export type RunsMemoryMaxUsageBytesArgs = {
-  distinctOn?: InputMaybe<Array<MemoryMaxUsageBytesSelectColumn>>;
-  limit?: InputMaybe<Scalars['Int']>;
-  offset?: InputMaybe<Scalars['Int']>;
-  orderBy?: InputMaybe<Array<MemoryMaxUsageBytesOrderBy>>;
-  where?: InputMaybe<MemoryMaxUsageBytesBoolExp>;
-};
-
-
-/** Simulation run */
-export type RunsMemoryMaxUsageBytesAggregateArgs = {
-  distinctOn?: InputMaybe<Array<MemoryMaxUsageBytesSelectColumn>>;
-  limit?: InputMaybe<Scalars['Int']>;
-  offset?: InputMaybe<Scalars['Int']>;
-  orderBy?: InputMaybe<Array<MemoryMaxUsageBytesOrderBy>>;
-  where?: InputMaybe<MemoryMaxUsageBytesBoolExp>;
-};
-
-
-/** Simulation run */
-export type RunsMemoryUsageBytesArgs = {
-  distinctOn?: InputMaybe<Array<MemoryUsageBytesSelectColumn>>;
-  limit?: InputMaybe<Scalars['Int']>;
-  offset?: InputMaybe<Scalars['Int']>;
-  orderBy?: InputMaybe<Array<MemoryUsageBytesOrderBy>>;
-  where?: InputMaybe<MemoryUsageBytesBoolExp>;
-};
-
-
-/** Simulation run */
-export type RunsMemoryUsageBytesAggregateArgs = {
-  distinctOn?: InputMaybe<Array<MemoryUsageBytesSelectColumn>>;
-  limit?: InputMaybe<Scalars['Int']>;
-  offset?: InputMaybe<Scalars['Int']>;
-  orderBy?: InputMaybe<Array<MemoryUsageBytesOrderBy>>;
-  where?: InputMaybe<MemoryUsageBytesBoolExp>;
-};
-
-
-/** Simulation run */
-export type RunsNetworkReceivedBytesArgs = {
-  distinctOn?: InputMaybe<Array<NetworkReceivedBytesSelectColumn>>;
-  limit?: InputMaybe<Scalars['Int']>;
-  offset?: InputMaybe<Scalars['Int']>;
-  orderBy?: InputMaybe<Array<NetworkReceivedBytesOrderBy>>;
-  where?: InputMaybe<NetworkReceivedBytesBoolExp>;
-};
-
-
-/** Simulation run */
-export type RunsNetworkReceivedBytesAggregateArgs = {
-  distinctOn?: InputMaybe<Array<NetworkReceivedBytesSelectColumn>>;
-  limit?: InputMaybe<Scalars['Int']>;
-  offset?: InputMaybe<Scalars['Int']>;
-  orderBy?: InputMaybe<Array<NetworkReceivedBytesOrderBy>>;
-  where?: InputMaybe<NetworkReceivedBytesBoolExp>;
-};
-
-
-/** Simulation run */
-export type RunsNetworkTransmitBytesArgs = {
-  distinctOn?: InputMaybe<Array<NetworkTransmitBytesSelectColumn>>;
-  limit?: InputMaybe<Scalars['Int']>;
-  offset?: InputMaybe<Scalars['Int']>;
-  orderBy?: InputMaybe<Array<NetworkTransmitBytesOrderBy>>;
-  where?: InputMaybe<NetworkTransmitBytesBoolExp>;
-};
-
-
-/** Simulation run */
-export type RunsNetworkTransmitBytesAggregateArgs = {
-  distinctOn?: InputMaybe<Array<NetworkTransmitBytesSelectColumn>>;
-  limit?: InputMaybe<Scalars['Int']>;
-  offset?: InputMaybe<Scalars['Int']>;
-  orderBy?: InputMaybe<Array<NetworkTransmitBytesOrderBy>>;
-  where?: InputMaybe<NetworkTransmitBytesBoolExp>;
 };
 
 
@@ -4801,23 +4410,9 @@ export type RunsBoolExp = {
   _and?: InputMaybe<Array<RunsBoolExp>>;
   _not?: InputMaybe<RunsBoolExp>;
   _or?: InputMaybe<Array<RunsBoolExp>>;
-  cpu?: InputMaybe<CpuBoolExp>;
-  cpu_aggregate?: InputMaybe<Cpu_Aggregate_Bool_Exp>;
   created?: InputMaybe<TimestampComparisonExp>;
   ended?: InputMaybe<TimestampComparisonExp>;
-  fsReadsMerged?: InputMaybe<FsReadsMergedBoolExp>;
-  fsReadsMerged_aggregate?: InputMaybe<FsReadsMerged_Aggregate_Bool_Exp>;
-  fsWritesMerged?: InputMaybe<FsWritesMergedBoolExp>;
-  fsWritesMerged_aggregate?: InputMaybe<FsWritesMerged_Aggregate_Bool_Exp>;
-  memoryMaxUsageBytes?: InputMaybe<MemoryMaxUsageBytesBoolExp>;
-  memoryMaxUsageBytes_aggregate?: InputMaybe<MemoryMaxUsageBytes_Aggregate_Bool_Exp>;
-  memoryUsageBytes?: InputMaybe<MemoryUsageBytesBoolExp>;
-  memoryUsageBytes_aggregate?: InputMaybe<MemoryUsageBytes_Aggregate_Bool_Exp>;
   name?: InputMaybe<StringComparisonExp>;
-  networkReceivedBytes?: InputMaybe<NetworkReceivedBytesBoolExp>;
-  networkReceivedBytes_aggregate?: InputMaybe<NetworkReceivedBytes_Aggregate_Bool_Exp>;
-  networkTransmitBytes?: InputMaybe<NetworkTransmitBytesBoolExp>;
-  networkTransmitBytes_aggregate?: InputMaybe<NetworkTransmitBytes_Aggregate_Bool_Exp>;
   runId?: InputMaybe<UuidComparisonExp>;
   simulation?: InputMaybe<SimulationsBoolExp>;
   simulationId?: InputMaybe<UuidComparisonExp>;
@@ -4837,19 +4432,12 @@ export enum RunsConstraint {
 
 /** input type for inserting data into table "simpipe.runs" */
 export type RunsInsertInput = {
-  cpu?: InputMaybe<CpuArrRelInsertInput>;
   /** DateTime of when the run was created */
   created?: InputMaybe<Scalars['timestamp']>;
   /** DateTime of when the run was ended, NULL if not ended */
   ended?: InputMaybe<Scalars['timestamp']>;
-  fsReadsMerged?: InputMaybe<FsReadsMergedArrRelInsertInput>;
-  fsWritesMerged?: InputMaybe<FsWritesMergedArrRelInsertInput>;
-  memoryMaxUsageBytes?: InputMaybe<MemoryMaxUsageBytesArrRelInsertInput>;
-  memoryUsageBytes?: InputMaybe<MemoryUsageBytesArrRelInsertInput>;
   /** Name of the run, it is unique per simulation */
   name?: InputMaybe<Scalars['String']>;
-  networkReceivedBytes?: InputMaybe<NetworkReceivedBytesArrRelInsertInput>;
-  networkTransmitBytes?: InputMaybe<NetworkTransmitBytesArrRelInsertInput>;
   /** UUID of the run, random by default */
   runId?: InputMaybe<Scalars['uuid']>;
   simulation?: InputMaybe<SimulationsObjRelInsertInput>;
@@ -4921,16 +4509,9 @@ export type RunsOnConflict = {
 
 /** Ordering options when selecting data from "simpipe.runs". */
 export type RunsOrderBy = {
-  cpuAggregate?: InputMaybe<CpuAggregateOrderBy>;
   created?: InputMaybe<OrderBy>;
   ended?: InputMaybe<OrderBy>;
-  fsReadsMergedAggregate?: InputMaybe<FsReadsMergedAggregateOrderBy>;
-  fsWritesMergedAggregate?: InputMaybe<FsWritesMergedAggregateOrderBy>;
-  memoryMaxUsageBytesAggregate?: InputMaybe<MemoryMaxUsageBytesAggregateOrderBy>;
-  memoryUsageBytesAggregate?: InputMaybe<MemoryUsageBytesAggregateOrderBy>;
   name?: InputMaybe<OrderBy>;
-  networkReceivedBytesAggregate?: InputMaybe<NetworkReceivedBytesAggregateOrderBy>;
-  networkTransmitBytesAggregate?: InputMaybe<NetworkTransmitBytesAggregateOrderBy>;
   runId?: InputMaybe<OrderBy>;
   simulation?: InputMaybe<SimulationsOrderBy>;
   simulationId?: InputMaybe<OrderBy>;
@@ -5113,38 +4694,10 @@ export type Simpipe_Envs_Min_Order_By = {
 /** Simulations */
 export type Simulations = {
   __typename?: 'simulations';
-  /** An array relationship */
-  cpu: Array<Cpu>;
-  /** An aggregate relationship */
-  cpuAggregate: CpuAggregate;
   /** DateTime of when the simulation was created */
   created: Scalars['timestamp'];
-  /** An array relationship */
-  fsReadsMerged: Array<FsReadsMerged>;
-  /** An aggregate relationship */
-  fsReadsMergedAggregate: FsReadsMergedAggregate;
-  /** An array relationship */
-  fsWritesMerged: Array<FsWritesMerged>;
-  /** An aggregate relationship */
-  fsWritesMergedAggregate: FsWritesMergedAggregate;
-  /** An array relationship */
-  memoryMaxUsageBytes: Array<MemoryMaxUsageBytes>;
-  /** An aggregate relationship */
-  memoryMaxUsageBytesAggregate: MemoryMaxUsageBytesAggregate;
-  /** An array relationship */
-  memoryUsageBytes: Array<MemoryUsageBytes>;
-  /** An aggregate relationship */
-  memoryUsageBytesAggregate: MemoryUsageBytesAggregate;
   /** Name of the simulation, it is unique */
   name: Scalars['String'];
-  /** An array relationship */
-  networkReceivedBytes: Array<NetworkReceivedBytes>;
-  /** An aggregate relationship */
-  networkReceivedBytesAggregate: NetworkReceivedBytesAggregate;
-  /** An array relationship */
-  networkTransmitBytes: Array<NetworkTransmitBytes>;
-  /** An aggregate relationship */
-  networkTransmitBytesAggregate: NetworkTransmitBytesAggregate;
   /** Description of the pipeline in JSON */
   pipelineDescription: Scalars['jsonb'];
   /** An array relationship */
@@ -5155,146 +4708,6 @@ export type Simulations = {
   simulationId: Scalars['uuid'];
   /** User ID of the owner of the simulation */
   userId: Scalars['String'];
-};
-
-
-/** Simulations */
-export type SimulationsCpuArgs = {
-  distinctOn?: InputMaybe<Array<CpuSelectColumn>>;
-  limit?: InputMaybe<Scalars['Int']>;
-  offset?: InputMaybe<Scalars['Int']>;
-  orderBy?: InputMaybe<Array<CpuOrderBy>>;
-  where?: InputMaybe<CpuBoolExp>;
-};
-
-
-/** Simulations */
-export type SimulationsCpuAggregateArgs = {
-  distinctOn?: InputMaybe<Array<CpuSelectColumn>>;
-  limit?: InputMaybe<Scalars['Int']>;
-  offset?: InputMaybe<Scalars['Int']>;
-  orderBy?: InputMaybe<Array<CpuOrderBy>>;
-  where?: InputMaybe<CpuBoolExp>;
-};
-
-
-/** Simulations */
-export type SimulationsFsReadsMergedArgs = {
-  distinctOn?: InputMaybe<Array<FsReadsMergedSelectColumn>>;
-  limit?: InputMaybe<Scalars['Int']>;
-  offset?: InputMaybe<Scalars['Int']>;
-  orderBy?: InputMaybe<Array<FsReadsMergedOrderBy>>;
-  where?: InputMaybe<FsReadsMergedBoolExp>;
-};
-
-
-/** Simulations */
-export type SimulationsFsReadsMergedAggregateArgs = {
-  distinctOn?: InputMaybe<Array<FsReadsMergedSelectColumn>>;
-  limit?: InputMaybe<Scalars['Int']>;
-  offset?: InputMaybe<Scalars['Int']>;
-  orderBy?: InputMaybe<Array<FsReadsMergedOrderBy>>;
-  where?: InputMaybe<FsReadsMergedBoolExp>;
-};
-
-
-/** Simulations */
-export type SimulationsFsWritesMergedArgs = {
-  distinctOn?: InputMaybe<Array<FsWritesMergedSelectColumn>>;
-  limit?: InputMaybe<Scalars['Int']>;
-  offset?: InputMaybe<Scalars['Int']>;
-  orderBy?: InputMaybe<Array<FsWritesMergedOrderBy>>;
-  where?: InputMaybe<FsWritesMergedBoolExp>;
-};
-
-
-/** Simulations */
-export type SimulationsFsWritesMergedAggregateArgs = {
-  distinctOn?: InputMaybe<Array<FsWritesMergedSelectColumn>>;
-  limit?: InputMaybe<Scalars['Int']>;
-  offset?: InputMaybe<Scalars['Int']>;
-  orderBy?: InputMaybe<Array<FsWritesMergedOrderBy>>;
-  where?: InputMaybe<FsWritesMergedBoolExp>;
-};
-
-
-/** Simulations */
-export type SimulationsMemoryMaxUsageBytesArgs = {
-  distinctOn?: InputMaybe<Array<MemoryMaxUsageBytesSelectColumn>>;
-  limit?: InputMaybe<Scalars['Int']>;
-  offset?: InputMaybe<Scalars['Int']>;
-  orderBy?: InputMaybe<Array<MemoryMaxUsageBytesOrderBy>>;
-  where?: InputMaybe<MemoryMaxUsageBytesBoolExp>;
-};
-
-
-/** Simulations */
-export type SimulationsMemoryMaxUsageBytesAggregateArgs = {
-  distinctOn?: InputMaybe<Array<MemoryMaxUsageBytesSelectColumn>>;
-  limit?: InputMaybe<Scalars['Int']>;
-  offset?: InputMaybe<Scalars['Int']>;
-  orderBy?: InputMaybe<Array<MemoryMaxUsageBytesOrderBy>>;
-  where?: InputMaybe<MemoryMaxUsageBytesBoolExp>;
-};
-
-
-/** Simulations */
-export type SimulationsMemoryUsageBytesArgs = {
-  distinctOn?: InputMaybe<Array<MemoryUsageBytesSelectColumn>>;
-  limit?: InputMaybe<Scalars['Int']>;
-  offset?: InputMaybe<Scalars['Int']>;
-  orderBy?: InputMaybe<Array<MemoryUsageBytesOrderBy>>;
-  where?: InputMaybe<MemoryUsageBytesBoolExp>;
-};
-
-
-/** Simulations */
-export type SimulationsMemoryUsageBytesAggregateArgs = {
-  distinctOn?: InputMaybe<Array<MemoryUsageBytesSelectColumn>>;
-  limit?: InputMaybe<Scalars['Int']>;
-  offset?: InputMaybe<Scalars['Int']>;
-  orderBy?: InputMaybe<Array<MemoryUsageBytesOrderBy>>;
-  where?: InputMaybe<MemoryUsageBytesBoolExp>;
-};
-
-
-/** Simulations */
-export type SimulationsNetworkReceivedBytesArgs = {
-  distinctOn?: InputMaybe<Array<NetworkReceivedBytesSelectColumn>>;
-  limit?: InputMaybe<Scalars['Int']>;
-  offset?: InputMaybe<Scalars['Int']>;
-  orderBy?: InputMaybe<Array<NetworkReceivedBytesOrderBy>>;
-  where?: InputMaybe<NetworkReceivedBytesBoolExp>;
-};
-
-
-/** Simulations */
-export type SimulationsNetworkReceivedBytesAggregateArgs = {
-  distinctOn?: InputMaybe<Array<NetworkReceivedBytesSelectColumn>>;
-  limit?: InputMaybe<Scalars['Int']>;
-  offset?: InputMaybe<Scalars['Int']>;
-  orderBy?: InputMaybe<Array<NetworkReceivedBytesOrderBy>>;
-  where?: InputMaybe<NetworkReceivedBytesBoolExp>;
-};
-
-
-/** Simulations */
-export type SimulationsNetworkTransmitBytesArgs = {
-  distinctOn?: InputMaybe<Array<NetworkTransmitBytesSelectColumn>>;
-  limit?: InputMaybe<Scalars['Int']>;
-  offset?: InputMaybe<Scalars['Int']>;
-  orderBy?: InputMaybe<Array<NetworkTransmitBytesOrderBy>>;
-  where?: InputMaybe<NetworkTransmitBytesBoolExp>;
-};
-
-
-/** Simulations */
-export type SimulationsNetworkTransmitBytesAggregateArgs = {
-  distinctOn?: InputMaybe<Array<NetworkTransmitBytesSelectColumn>>;
-  limit?: InputMaybe<Scalars['Int']>;
-  offset?: InputMaybe<Scalars['Int']>;
-  orderBy?: InputMaybe<Array<NetworkTransmitBytesOrderBy>>;
-  where?: InputMaybe<NetworkTransmitBytesBoolExp>;
 };
 
 
@@ -5356,22 +4769,8 @@ export type SimulationsBoolExp = {
   _and?: InputMaybe<Array<SimulationsBoolExp>>;
   _not?: InputMaybe<SimulationsBoolExp>;
   _or?: InputMaybe<Array<SimulationsBoolExp>>;
-  cpu?: InputMaybe<CpuBoolExp>;
-  cpu_aggregate?: InputMaybe<Cpu_Aggregate_Bool_Exp>;
   created?: InputMaybe<TimestampComparisonExp>;
-  fsReadsMerged?: InputMaybe<FsReadsMergedBoolExp>;
-  fsReadsMerged_aggregate?: InputMaybe<FsReadsMerged_Aggregate_Bool_Exp>;
-  fsWritesMerged?: InputMaybe<FsWritesMergedBoolExp>;
-  fsWritesMerged_aggregate?: InputMaybe<FsWritesMerged_Aggregate_Bool_Exp>;
-  memoryMaxUsageBytes?: InputMaybe<MemoryMaxUsageBytesBoolExp>;
-  memoryMaxUsageBytes_aggregate?: InputMaybe<MemoryMaxUsageBytes_Aggregate_Bool_Exp>;
-  memoryUsageBytes?: InputMaybe<MemoryUsageBytesBoolExp>;
-  memoryUsageBytes_aggregate?: InputMaybe<MemoryUsageBytes_Aggregate_Bool_Exp>;
   name?: InputMaybe<StringComparisonExp>;
-  networkReceivedBytes?: InputMaybe<NetworkReceivedBytesBoolExp>;
-  networkReceivedBytes_aggregate?: InputMaybe<NetworkReceivedBytes_Aggregate_Bool_Exp>;
-  networkTransmitBytes?: InputMaybe<NetworkTransmitBytesBoolExp>;
-  networkTransmitBytes_aggregate?: InputMaybe<NetworkTransmitBytes_Aggregate_Bool_Exp>;
   pipelineDescription?: InputMaybe<JsonbComparisonExp>;
   runs?: InputMaybe<RunsBoolExp>;
   runs_aggregate?: InputMaybe<Runs_Aggregate_Bool_Exp>;
@@ -5407,17 +4806,10 @@ export type SimulationsDeleteKeyInput = {
 
 /** input type for inserting data into table "simpipe.simulations" */
 export type SimulationsInsertInput = {
-  cpu?: InputMaybe<CpuArrRelInsertInput>;
   /** DateTime of when the simulation was created */
   created?: InputMaybe<Scalars['timestamp']>;
-  fsReadsMerged?: InputMaybe<FsReadsMergedArrRelInsertInput>;
-  fsWritesMerged?: InputMaybe<FsWritesMergedArrRelInsertInput>;
-  memoryMaxUsageBytes?: InputMaybe<MemoryMaxUsageBytesArrRelInsertInput>;
-  memoryUsageBytes?: InputMaybe<MemoryUsageBytesArrRelInsertInput>;
   /** Name of the simulation, it is unique */
   name?: InputMaybe<Scalars['String']>;
-  networkReceivedBytes?: InputMaybe<NetworkReceivedBytesArrRelInsertInput>;
-  networkTransmitBytes?: InputMaybe<NetworkTransmitBytesArrRelInsertInput>;
   /** Description of the pipeline in JSON */
   pipelineDescription?: InputMaybe<Scalars['jsonb']>;
   runs?: InputMaybe<RunsArrRelInsertInput>;
@@ -5478,15 +4870,8 @@ export type SimulationsOnConflict = {
 
 /** Ordering options when selecting data from "simpipe.simulations". */
 export type SimulationsOrderBy = {
-  cpuAggregate?: InputMaybe<CpuAggregateOrderBy>;
   created?: InputMaybe<OrderBy>;
-  fsReadsMergedAggregate?: InputMaybe<FsReadsMergedAggregateOrderBy>;
-  fsWritesMergedAggregate?: InputMaybe<FsWritesMergedAggregateOrderBy>;
-  memoryMaxUsageBytesAggregate?: InputMaybe<MemoryMaxUsageBytesAggregateOrderBy>;
-  memoryUsageBytesAggregate?: InputMaybe<MemoryUsageBytesAggregateOrderBy>;
   name?: InputMaybe<OrderBy>;
-  networkReceivedBytesAggregate?: InputMaybe<NetworkReceivedBytesAggregateOrderBy>;
-  networkTransmitBytesAggregate?: InputMaybe<NetworkTransmitBytesAggregateOrderBy>;
   pipelineDescription?: InputMaybe<OrderBy>;
   runsAggregate?: InputMaybe<RunsAggregateOrderBy>;
   simulationId?: InputMaybe<OrderBy>;
@@ -6375,9 +5760,9 @@ export type Subscription_Root = {
   memoryMaxUsageBytesAggregate: MemoryMaxUsageBytesAggregate;
   /** fetch data from the table in a streaming manner: "simpipe.memory_max_usage_bytes" */
   memoryMaxUsageBytesStream: Array<MemoryMaxUsageBytes>;
-  /** An array relationship */
+  /** fetch data from the table: "simpipe.memory_usage_bytes" */
   memoryUsageBytes: Array<MemoryUsageBytes>;
-  /** An aggregate relationship */
+  /** fetch aggregated fields from the table: "simpipe.memory_usage_bytes" */
   memoryUsageBytesAggregate: MemoryUsageBytesAggregate;
   /** fetch data from the table in a streaming manner: "simpipe.memory_usage_bytes" */
   memoryUsageBytesStream: Array<MemoryUsageBytes>;
@@ -6978,6 +6363,13 @@ export type InsertLogMutationVariables = Exact<{
 
 export type InsertLogMutation = { __typename?: 'mutation_root', insertSimpipeLogsOne?: { __typename?: 'SimpipeLogs', stepId: string } | null };
 
+export type MarkRunAsRunningAndStepsAsScheduledMutationVariables = Exact<{
+  runId: Scalars['uuid'];
+}>;
+
+
+export type MarkRunAsRunningAndStepsAsScheduledMutation = { __typename?: 'mutation_root', updateRunsByPk?: { __typename?: 'runs', runId: string } | null, updateSteps?: { __typename?: 'stepsMutationResponse', returning: Array<{ __typename?: 'steps', stepId: string }> } | null };
+
 
 export const PingDocument = gql`
     query ping($_: Boolean) {
@@ -7142,6 +6534,21 @@ export const InsertLogDocument = gql`
   }
 }
     `;
+export const MarkRunAsRunningAndStepsAsScheduledDocument = gql`
+    mutation markRunAsRunningAndStepsAsScheduled($runId: uuid!) {
+  updateRunsByPk(
+    pk_columns: {runId: $runId}
+    _set: {status: ACTIVE, started: "now()"}
+  ) {
+    runId
+  }
+  updateSteps(where: {runId: {_eq: $runId}}, _set: {status: WAITING}) {
+    returning {
+      stepId
+    }
+  }
+}
+    `;
 
 export type SdkFunctionWrapper = <T>(action: (requestHeaders?:Record<string, string>) => Promise<T>, operationName: string, operationType?: string) => Promise<T>;
 
@@ -7206,6 +6613,9 @@ export function getSdk(client: GraphQLClient, withWrapper: SdkFunctionWrapper = 
     },
     insertLog(variables: InsertLogMutationVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<InsertLogMutation> {
       return withWrapper((wrappedRequestHeaders) => client.request<InsertLogMutation>(InsertLogDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'insertLog', 'mutation');
+    },
+    markRunAsRunningAndStepsAsScheduled(variables: MarkRunAsRunningAndStepsAsScheduledMutationVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<MarkRunAsRunningAndStepsAsScheduledMutation> {
+      return withWrapper((wrappedRequestHeaders) => client.request<MarkRunAsRunningAndStepsAsScheduledMutation>(MarkRunAsRunningAndStepsAsScheduledDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'markRunAsRunningAndStepsAsScheduled', 'mutation');
     }
   };
 }

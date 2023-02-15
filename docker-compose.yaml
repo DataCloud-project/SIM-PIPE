@@ -2,7 +2,7 @@ version: "3.8"
 
 services:
   timescaledb:
-    image: timescale/timescaledb-ha:pg14.6-ts2.9.2-latest
+    image: timescale/timescaledb-ha:pg15.2-ts2.9.3-latest
     restart: unless-stopped
     volumes:
       - db_data:/var/lib/postgresql/data
@@ -15,7 +15,7 @@ services:
     ports:
       - "5432:5432"
   hasura:
-    image: hasura/graphql-engine:v2.17.1-ce.cli-migrations-v3
+    image: hasura/graphql-engine:v2.18.0-ce.cli-migrations-v3
     ports:
       - "8080:8080"
     depends_on:
@@ -25,7 +25,9 @@ services:
       - ./hasura/migrations:/hasura-migrations:ro
       - ./hasura/metadata:/hasura-metadata:ro
     extra_hosts:
-      - "controller:10.218.144.78"
+      #- "controller:192.168.86.42" #10.218.144.78"
+      #- "controller:10.218.150.42"
+      - "controller:10.218.148.84"
     environment:
       HASURA_GRAPHQL_METADATA_DATABASE_URL: postgres://postgres:${POSTGRES_PASSWORD}@timescaledb:5432/postgres
       PG_DATABASE_URL: postgres://postgres:${POSTGRES_PASSWORD}@timescaledb:5432/postgres
@@ -100,21 +102,32 @@ services:
       #   depends_on:
       #     - "controller"
   minio:
-    image: quay.io/minio/minio:RELEASE.2023-01-25T00-19-54Z
+    image: quay.io/minio/minio:RELEASE.2023-02-10T18-48-39Z
     restart: unless-stopped
     volumes:
       - minio_data:/data
       - minio_config:/root/.minio
     environment:
-      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
-      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
-    entrypoint: sh
-    command: -c "mkdir -p /data/simpipe && minio server /data --console-address \":9001\""
+      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY}
+      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY}
+    extra_hosts:
+      #- "controller:192.168.86.42" #10.218.144.78"
+      # - "controller:10.218.150.42"
+      - "controller:10.218.148.84"
+    #entrypoint: sh
+    command: minio server /data --console-address ":9001"
+    #command: -c "mkdir -p /data/simpipe && minio server /data --console-address \":9001\""
     ports:
       - "9002:9000"
       - "9001:9001"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9001/minio/health/live"]
+      interval: 30s
+      timeout: 30s
+      retries: 5
+      start_period: 30s
   prometheus:
-    image: prom/prometheus:v2.41.0
+    image: prom/prometheus:v2.42.0
     restart: unless-stopped
     volumes:
       - ${PWD}/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
@@ -167,7 +180,7 @@ services:
   #   #   --housekeeping_interval=1s
   #   # --docker="tcp://10.218.148.241:2376" --docker-tls --docker-tls-cert=$(pwd)/client-cert.pem --docker-tls-key=$(pwd)/client-key.pem --docker-tls-ca=$(pwd)/ca.pem
   grafana:
-    image: grafana/grafana:9.3.4
+    image: grafana/grafana:9.3.6
     restart: unless-stopped
     ports:
       - "3000:3000"

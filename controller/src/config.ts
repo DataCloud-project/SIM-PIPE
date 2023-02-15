@@ -2,9 +2,7 @@ import { config as loadDotenv } from 'dotenv';
 
 loadDotenv();
 
-export const remote = process.argv[2] ? process.argv[2] === 'remote' : true;
-
-export const user = process.env.USER ?? 'local';
+export const jwtUser = process.env.JWT_USER ?? 'local';
 
 // Docker client configuration
 export const dockerHost = process.env.SANDBOX_IP ?? process.env.DOCKER_HOST ?? 'localhost';
@@ -16,7 +14,6 @@ export const dockerProtocol = (process.env.SANDBOX_TLS_VERIFY ?? process.env.DOC
 export const dockerPort = process.env.SANDBOX_PORT ?? process.env.DOCKER_PORT ?? (
   dockerProtocol === 'https' ? 2376 : 2375
 );
-export const dockerSocketPath = process.env.DOCKER_SOCKET ?? '/var/run/docker.sock';
 
 // User authentication
 export const keycloakRealmEndpoint = process.env.KEYCLOAK_REALM_ENDPOINT
@@ -35,6 +32,7 @@ export const authenticationExpiryTimeout = process.env.AUTHENTICATION_EXPIRY_TIM
 // Hasura
 
 export const hasuraEndpoint = process.env.HASURA ?? 'http://localhost:8080/v1/graphql';
+export const hasuraWsEndpoint = process.env.HASURA_WS ?? hasuraEndpoint.replace(/^http/, 'ws');
 export const hasuraAdminSecret = process.env.HASURA_ADMIN_SECRET;
 // In case we want a hardcoded key, we can use the environment variable
 // Please note that the keys will not be automatically rotated
@@ -48,6 +46,7 @@ export const minioPort = process.env.MINIO_PORT
   ? Number.parseInt(process.env.MINIO_PORT, 10) : undefined;
 export const minioUseSSL = !!process.env.MINIO_USE_SSL;
 export const minioBucketName = process.env.MINIO_BUCKET_NAME ?? 'simpipe2';
+export const minioRegion = process.env.MINIO_REGION ?? 'no-region';
 
 export const minioApiAccessKey = process.env.MINIO_API_ACCESS_KEY ?? minioAccessKey;
 export const minioApiSecretKey = process.env.MINIO_API_SECRET_KEY ?? minioSecretKey;
@@ -57,7 +56,14 @@ export const minioApiPort = process.env.MINIO_API_PORT
 export const minioApiUseSSL = process.env.MINIO_API_USE_SSL === undefined
   ? minioUseSSL : !!process.env.MINIO_API_USE_SSL;
 export const minioWebhookEndpoint = process.env.MINIO_WEBHOOK_ENDPOINT ?? 'http://controller:9000/minio/webhook';
+export const minioWebhookAuthToken = process.env.MINIO_WEBHOOK_AUTH_TOKEN;
+if (!minioWebhookAuthToken) {
+  throw new Error('MINIO_WEBHOOK_AUTH_TOKEN is not set');
+}
 
 // Runner
 export const runnerContainerStopTimeout = process.env.RUNNER_CONTAINER_STOP_TIMEOUT
   ? Number.parseInt(process.env.RUNNER_CONTAINER_STOP_TIMEOUT, 10) : 5;
+
+export const runnerSleeperImage = process.env.RUNNER_SLEEPER_IMAGE
+  ?? 'sim-pipe-sleeper';

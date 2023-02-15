@@ -8,7 +8,7 @@ import {
   minioApiEndpoint, minioApiPort,
   minioApiSecretKey, minioApiUseSSL,
   minioBucketName, minioEndpoint,
-  minioPort, minioSecretKey, minioUseSSL, minioWebhookEndpoint,
+  minioPort, minioRegion, minioSecretKey, minioUseSSL, minioWebhookAuthToken, minioWebhookEndpoint,
 } from '../config.js';
 import logger from '../logger.js';
 
@@ -25,6 +25,7 @@ const minioClient = new minio.Client({
   useSSL: minioUseSSL,
   accessKey: minioAccessKey,
   secretKey: minioSecretKey,
+  region: minioRegion,
 });
 
 const minioApiCookieJar = new CookieJar();
@@ -79,7 +80,12 @@ export async function createWebhookEndpoint(): Promise<void> {
 
   // Create the webhook
   logger.info('Creating webhook in MinIO');
-  const createWebhookPayload = { key_values: [{ key: 'endpoint', value: minioWebhookEndpoint }] };
+  const createWebhookPayload = {
+    key_values: [
+      { key: 'endpoint', value: minioWebhookEndpoint },
+      { key: 'auth_token', value: minioWebhookAuthToken },
+    ],
+  };
   const createWebhookResponse = await minioApiClient.put('configs/notify_webhook', {
     json: createWebhookPayload,
   }).json<{ restart: boolean }>();

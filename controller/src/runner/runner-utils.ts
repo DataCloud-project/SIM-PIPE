@@ -3,10 +3,11 @@ import type Docker from 'dockerode';
 import type { Stream } from 'node:stream';
 
 import { runnerContainerStopTimeout } from '../config.js';
-import docker from './docker.js';
+import getDocker from './docker.js';
 import type { Step, UUID } from '../types.js';
 
 export async function pullImage(image: string): Promise<void> {
+  const docker = await getDocker();
   return new Promise<void>((resolve, reject) => {
     const onFinished = (): void => {
       resolve();
@@ -34,6 +35,7 @@ export async function pullAllImages(images: string[]): Promise<void> {
 
 // Ping docker deamon to check if it is running
 export async function pingRunner(): Promise<void> {
+  const docker = await getDocker();
   const pingResult = await Promise.race<string | unknown>([
     setTimeout(5000, 'timeout'),
     docker.ping(),
@@ -55,6 +57,7 @@ export async function createVolume({
   stepId?: UUID;
   number?: number;
 }): Promise<string> {
+  const docker = await getDocker();
   let name: string;
   if (stepId !== undefined) {
     if (type !== 'work' || number !== undefined) {
@@ -93,6 +96,7 @@ export async function createContainer({
   step: Step, inputVolume: string, outputVolume: string, workVolume: string
 },
 ): Promise<Docker.Container> {
+  const docker = await getDocker();
   const environment: string[] = step.env
     ? Object.entries(step.env).map(([key, value]) => `${key}=${value}`)
     : [];

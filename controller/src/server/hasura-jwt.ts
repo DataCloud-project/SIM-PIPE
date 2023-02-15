@@ -89,6 +89,12 @@ async function hasuraJwtMiddlewareAsync(
   if (!auth) {
     throw new Error('No auth provided, make sure to popuplate the auth object in the request');
   }
+  const { isHasura } = request as unknown as { isHasura: boolean | undefined };
+  if (isHasura) {
+    next();
+    return;
+  }
+
   const jwt = await generateJWTForHasura(auth);
   // Set request header for Hasura
   request.headers.authorization = `Bearer ${jwt}`;
