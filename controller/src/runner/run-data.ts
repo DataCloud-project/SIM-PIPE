@@ -10,7 +10,7 @@ export interface Step {
   volumes?: StepVolume;
 }
 
-export interface StepVolume {
+interface StepVolume {
   input: string;
   output: string;
   work: string;
@@ -31,7 +31,7 @@ export default interface RunData {
   steps: Array<Step>;
 }
 
-export interface RunDataWithVolumes extends RunData {
+interface RunDataWithVolumes extends RunData {
   steps: Array<StepWithVolume>;
 }
 

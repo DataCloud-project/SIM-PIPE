@@ -1,16 +1,15 @@
-import startController from '../controller.js';
 import sdk from '../db/sdk.js';
 import logger from '../logger.js';
 import { DSLParsingError, NotFoundError } from './apollo-errors.js';
 import DSL from './dsl.js';
 import type {
-  CreateRunMutation, CreateStepMutation,
-  GetRunDetailsQuery,
+  CreateRunMutation,
+  CreateStepMutation,
   GetSimulationDslQuery,
 } from '../db/database.js';
-import type { Step, UUID } from '../types.js';
+import type { UUID } from '../types.js';
 import type { DSLType, StepDSLType as StepDSL } from './dsl.js';
-import type { CreateRunInput, CreateSimulationInput } from './schema.js';
+import type { CreateSimulationInput } from './schema.js';
 
 async function createStep(runId: UUID, name: string, image: string,
   pipelineStepNumber: number): Promise<UUID> {
@@ -78,82 +77,6 @@ export async function checkSimulationOwner(simulationId: string, userId: string)
   if (result.simulation?.userId !== userId) {
     throw new NotFoundError('Simulation not found');
   }
-}
-
-async function startRun(runId: UUID): Promise<UUID> {
-  // set run as started in the database
-  await sdk.setRunAsStarted({ runId });
-  // get simulationId and step details of runId
-  const result: GetRunDetailsQuery = await sdk.getRunDetails({ runId });
-  if (!result.run) {
-    throw new Error('GetRunDetailsQuery fetched no run');
-  }
-  // get steps
-  const { steps, simulationId } = result.run;
-  for await (const step of steps) {
-    const {
-      stepId, name, image, pipelineStepNumber,
-    } = step;
-    // check if there is a stop signal set to true or failed run signal set
-    // TODO: don't use process as a global variable
-    if ((process.env.CANCEL_RUN_LIST as string).includes(runId)
-      || process.env.FAILED_RUN === 'true') {
-      // mark all the remaining steps as cancelled
-      await sdk.setStepAsCancelled({ stepId });
-    } else {
-      // testing step type
-      const currentStep: Step = {
-        stepId,
-        runId,
-        simulationId,
-        stepNumber: pipelineStepNumber,
-        name,
-        image,
-        // env: [],
-      };
-      /* if (!environmentList || !timeoutValues) {
-        throw new Error('Error! List of environment variables/ timeout values for container
-        undefined');
-      }
-      currentStep.env = (environmentList as [[string]])[step.pipeline_step_number - 1]; */
-      // set the variable values in env file
-      // process.env.STEP_NUMBER = `${step.pipeline_step_number}`;
-      // process.env.IMAGE = step.image;
-      // process.env.CONTAINER_TIME_LIMIT = `${(timeoutValues as [number])[
-      //  step.pipeline_step_number - 1]}`;
-      // testing step type
-      // adding try catch to handle failed steps
-      try {
-        // set input path for next step as output path of the previous step returned and start step
-        // const nextInput = await startController(client, currentStep);
-        await startController(currentStep);
-        // currentStep.inputPath = nextInput;
-      } catch (error) {
-        logger.error(`Run ${runId} execution has failed\n${(error as Error).message}`);
-        process.env.FAILED_RUN = 'true';
-      }
-    }
-  }
-  // remove sample input files for the run from ./uploaded folder
-  // fs.rmSync(`${uploadDirectory}${runId}`, { recursive: true, force: true });
-  if ((process.env.CANCEL_RUN_LIST as string).includes(runId)) {
-    // mark the run as cancelled
-    logger.info(`Run ${runId} execution is cancelled\n`);
-    await sdk.setRunAsCancelled({ runId });
-    // remove current runid from CANCEL signal
-    (process.env.CANCEL_RUN_LIST as string).replace(runId, '');
-    return 'cancelled';
-  }
-  if (process.env.FAILED_RUN === 'true') {
-    // mark the run as failed
-    await sdk.setRunAsFailed({ runId });
-    // set STOP signal to false for the next run
-    process.env.FAILED_RUN = 'false';
-    return 'failed';
-  }
-  // set run as completed successully in the database
-  await sdk.setRunAsEndedSuccess({ runId });
-  return runId;
 }
 
 export async function createSimulation({
