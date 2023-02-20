@@ -11,10 +11,10 @@
     open(CreateSimulationModal);
   }
   async function openImportDefPipeModal(): Promise<void> {
-    const response = await $graphQLClient.request<{ ViewPipelinesFromDEFPIPE: { name: string }[] }>(
-      pipelineListFromDefpipeQuery,
-    );
-    const allCurrentUserPipelines = response.ViewPipelinesFromDEFPIPE.map(
+    const response = await $graphQLClient.request<{
+      ViewPipelinesFromDEFPIPE: { data: { name: string }[] };
+    }>(pipelineListFromDefpipeQuery);
+    const allCurrentUserPipelines = response.ViewPipelinesFromDEFPIPE.data.map(
       (item: { name: string }) => item.name,
     );
     open(ImportFromDefpipeModal, { allCurrentuserPipelines: allCurrentUserPipelines });
