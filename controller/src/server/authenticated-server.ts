@@ -24,6 +24,10 @@ const typeDefs = gql`
       Get_Simulation(simulation_id:String):JSON #String
       Get_Simulation_Run_Results(simulation_id: String, run_id:String): JSON # String
       All_Runs_Steps: JSON #String
+      # Integration def pipe version 1
+      ImportPipelineFromDEFPIPE(name:String): String
+      # Integration def pipe version 1
+      ViewPipelinesFromDEFPIPE: JSON
   },
   type Mutation {
     Create_Simulation(name:String, pipeline_description:String): String
@@ -67,6 +71,46 @@ const resolvers = {
     All_Runs_Steps(_p: unknown, arguments_: unknown, context: Context): unknown {
       return functions.allRunsSteps(context.user.sub);
     },
+    // Integration def pipe version 1
+    async ImportPipelineFromDEFPIPE(_p: unknown, arguments_: { name: string }, context: { auth: string, user: any }): Promise<unknown> {
+      const headers: { Authorization: string, mode: string, 'Content-Type': string } = { Authorization: context.auth, mode: 'no-cors', 'Content-Type': 'application/json' };
+      // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+      const result = await fetch(`${process.env.DEF_PIPE_PIPELINE_API}${context.user.preferred_username}/${arguments_.name}`, {
+        headers,
+      }).then((response) => response.json())
+        .then((json_response) => json_response.data);
+      return result;
+    },
+    // Integration def pipe version 1
+    async ViewPipelinesFromDEFPIPE(_p: unknown, arguments_: unknown, context: { auth: string, user: { sub: string; preferred_username: string; } }): Promise<unknown> {
+      const headers: { Authorization: string, mode: string, 'Content-Type': string } = { Authorization: context.auth, mode: 'no-cors', 'Content-Type': 'application/json' };
+      // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+      const result = await fetch(`${process.env.DEF_PIPE_LIST_API}${context.user.preferred_username}`, {
+        headers,
+      }).then((response) => response.json())
+        .then((json_response) => json_response.data);
+      return result;
+    },
+    // Integration def pipe version 1
+    async ImportPipelineFromDEFPIPE(_p: unknown, arguments_: { name: string }, context: { auth: string, user: any }): Promise<unknown> {
+      const headers: { Authorization: string, mode: string, 'Content-Type': string } = { Authorization: context.auth, mode: 'no-cors', 'Content-Type': 'application/json' };
+      // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+      const result = await fetch(`${process.env.DEF_PIPE_PIPELINE_API}${context.user.preferred_username}/${arguments_.name}`, {
+        headers,
+      }).then((response) => response.json())
+        .then((json_response) => json_response.data);
+      return result;
+    },
+    // Integration def pipe version 1
+    async ViewPipelinesFromDEFPIPE(_p: unknown, arguments_: unknown, context: { auth: string, user: { sub: string; preferred_username: string; } }): Promise<unknown> {
+      const headers: { Authorization: string, mode: string, 'Content-Type': string } = { Authorization: context.auth, mode: 'no-cors', 'Content-Type': 'application/json' };
+      // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+      const result = await fetch(`${process.env.DEF_PIPE_LIST_API}${context.user.preferred_username}`, {
+        headers,
+      }).then((response) => response.json())
+        .then((json_response) => json_response.data);
+      return result;
+    },
   },
   Mutation: {
     async Create_Simulation(_p: unknown, arguments_: {
@@ -82,8 +126,7 @@ const resolvers = {
           message: `Simulation has been created with id ${newSimId}`,
         });
       } catch (error) {
-        const errorMessage = `🎌 Error creating new simulation:
-      ${(error as Error).message}`;
+        const errorMessage = `🎌 Error : ${(error as Error).message}`;
         logger.error(errorMessage);
         return JSON.stringify({
           code: 300,
@@ -235,16 +278,18 @@ const startSecureServer = async (): Promise<void> => {
   const server = new ApolloServer({
     typeDefs,
     resolvers,
-    context: ({ req }): { user: { sub: string; preferred_username: string; }; } => {
+    context: ({ req }): { auth: string; user: { sub: string; preferred_username: string; }; } => {
       if (!req.headers.authorization) {
         throw new Error('🎌 No authorization header found');
       }
+      // Integration def pipe version 1
+      const auth: string = req.headers.authorization;
       // definition of user can be extended later to include all required attributes
       const user: {
         sub: string,
         preferred_username: string
       } = jwt_decode(req.headers.authorization);
-      return { user };
+      return { auth, user };
     },
   });
 

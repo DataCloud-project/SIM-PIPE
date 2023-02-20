@@ -41,32 +41,34 @@ services:
       - "22:22"
     restart: on-failure:2
     volumes:
-      - ./controller/simulations:/simulations
-      - ./controller/uploaded_files:/uploaded_files
+      - ./controller/simulations:/app/simulations
+      - ./controller/uploaded_files:/app/uploaded_files
       - ./controller/log:/log
     environment:
       HASURA: http://hasura:8080/v1/graphql
-      SANDBOX_IP: ${SANDBOX_IP} 
-      # REMOTE_DOCKER: true
+      HASURA_ADMIN_SECRET: ${HASURA_ADMIN_SECRET}      
       CONTAINER_TIME_LIMIT: ${CONTAINER_TIME_LIMIT}
       CONTAINER_STOP_TIMEOUT : ${CONTAINER_STOP_TIMEOUT}
       POLLING_INTERVAL: ${POLLING_INTERVAL}
       REMOTE_OUTPUT_DIR: 'out/'
       REMOTE_INPUT_DIR: 'in/'
-      HASURA_ADMIN_SECRET: ${HASURA_ADMIN_SECRET}      
-      HASURA_URL: ${HASURA_URL}
+      SANDBOX_IP: ${SANDBOX_IP} 
+      # REMOTE_DOCKER: true
+      DEF_PIPE_LIST_API: 'https://crowdserv.sys.kth.se/api/repo/'
+      DEF_PIPE_PIPELINE_API: 'https://crowdserv.sys.kth.se/api/repo/export/'
+      DEF_PIPE_API_PIPELINE: 'https://crowdserv.sys.kth.se/api/repo/export/'
 
   svelte:
-    image: simpipe-frontend 
-    # build:
-    #   context: ./frontend
-    #   dockerfile: Dockerfile
-    #   args:
-    #     SIM_PIPE_CONTROLLER_URL: http://192.168.0.249:9000/graphql
+    image: simpipe-frontend   
     ports:
       - "9090:3000"
     depends_on:
       - "controller"   
+
+  converter:
+    image: simpipe-converter   
+    ports:
+      - "9005:9005"    
 volumes:
   db_data1:
     null

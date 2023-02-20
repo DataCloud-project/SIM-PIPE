@@ -49,13 +49,72 @@ export async function allSimulations(userid: string): Promise<AllSimulationsQuer
 }
 
 export async function allRunsSteps(userid: string): Promise<AllRunsAndStepsQuery> {
-  // return JSON.stringify(await sdk.allRunsAndSteps({ userid }));
   return await sdk.allRunsAndSteps({ userid });
+}
+
+// variable to represent prerequistes for each step number; used in detecting cycles
+let prerequisites: number[][] = [];
+const cyclic_step_numbers: number[] = [];
+
+/**
+ * WIP recursive function to check for cycles in the pipeline
+ * reference algorithm: https://www.geeksforgeeks.org/detect-cycle-in-a-graph/
+ * */
+async function isCyclicRecursive(step_number: number, visited: any[], recursiveStack: any[]): Promise<boolean> {
+  if (recursiveStack[step_number]) return true;
+  if (visited[step_number]) return false;
+
+  // eslint-disable-next-line no-param-reassign
+  recursiveStack[step_number] = true;
+  // eslint-disable-next-line no-param-reassign
+  visited[step_number] = true;
+  for await (const prereq_step of prerequisites[step_number]) {
+    const result = await isCyclicRecursive(prereq_step, visited, recursiveStack);
+    if (result) {
+      cyclic_step_numbers.push(prereq_step);
+      return true;
+    }
+  }
+  // eslint-disable-next-line no-param-reassign
+  recursiveStack[step_number] = false;
+  return false;
+}
+
+/**
+ * WIP function to check for cycles in the pipeline
+ * reference algorithm: https://www.geeksforgeeks.org/detect-cycle-in-a-graph/
+ * */
+async function isCyclic(pipeline_description: string): Promise<boolean> {
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+  const steps = JSON.parse(pipeline_description).steps as Array<StepDSL>;
+  const visited = Array.from({ length: steps.length + 1 }).fill(false);
+  const recursiveStack = Array.from({ length: steps.length + 1 }).fill(false);
+  prerequisites = [];
+  let initial_step_count = 0;
+  for await (const step of steps) {
+    prerequisites[step.step_number] = step.prerequisite || [];
+    // check if the number of initial steps; throw error if more than 1 initial step is present
+    // TODO: change this once the modification is made
+    if (!step.prerequisite) initial_step_count += 1;
+  }
+  if (initial_step_count > 1) {
+    throw new Error('Failed! Pipeline with more than 1 initial steps are currently not supported');
+  }
+  for await (const step of steps) {
+    const result = await isCyclicRecursive(step.step_number, visited, recursiveStack);
+    if (result) return true;
+  }
+  return false;
 }
 
 export async function createSimulation(
   name: string, pipeline_description: string, userid: string,
 ): Promise<string> {
+  const cyclicFlag = await isCyclic(pipeline_description);
+  if (cyclicFlag) {
+    throw new Error(`Given simulation has cyclic dependency in step numbers: ${cyclic_step_numbers.join(', ')}`);
+  }
+
   // disabling await-thenable, await is needed for sequential execution
   const result: CreateSimulationMutation = await sdk.createSimulation({
     name,
@@ -99,6 +158,9 @@ async function parseDSL(simulation_id: string): Promise<StepDSL[]> {
   return steps;
 }
 
+/**
+ * function to create a run and each component step in the database
+ */
 export async function createRun(simulation_id: string, name: string, userid: string,
   environment_list: [[string]], timeout_values: [number]): Promise<string> {
   // read dsl, validate and use it to create steps in the run
@@ -142,14 +204,17 @@ async function checkSimulationOwner(simulation_id: string, userid: string): Prom
   }
 }
 
+/**
+ * function to validate creation of a new run and storage of sample input provided
+ */
 export async function createRunWithInput(simulation_id: string,
   name: string, sampleInput: [[string, string]], userid: string, environment_list: [[string]],
   timeout_values: [number]): Promise<string> {
   // only owner of the simulation can create a new run
   await checkSimulationOwner(simulation_id, userid);
   const runId = await createRun(simulation_id, name, userid, environment_list, timeout_values);
-  fs.mkdirSync(`${uploadDirectory}${runId}`, { recursive: true });
   // write sample input to uploaded_files/runId
+  fs.mkdirSync(`${uploadDirectory}${runId}`, { recursive: true });
   for (const [inputName, inputContent] of sampleInput) {
     if (!inputContent) {
       throw new Error('Content of input file undefined in functions.createRunWithInput');
@@ -161,7 +226,15 @@ export async function createRunWithInput(simulation_id: string,
   return runId;
 }
 
+/**
+ * function to start a run and execute each step in the SIM-PIPE sandbox
+ */
 export async function startRun(run_id: string): Promise<string> {
+  // define lists of completed, cancelled, and failed steps
+  const completed: number[] = [];
+  const cancelled: number[] = [];
+  const failed: number[] = [];
+  let step_ready = true;
   // set run as started in the database
   await sdk.setRunAsStarted({ run_id });
   // get simulationId and step details of runId
@@ -169,47 +242,87 @@ export async function startRun(run_id: string): Promise<string> {
   if (!result.runs) {
     throw new Error('GetRunDetailsQuery fetched no rows');
   }
+  const { simulation_id } = result.runs[0];
+
   // get steps, and runtime configuration entered during create run
   const { steps, env_list: environmentList, timeout_values: timeoutValues } = result.runs[0];
   // set runId and simulationId once for all runs
   const currentStep: types.Step = {
-    simId: result.runs[0].simulation_id,
+    simId: simulation_id,
     runId: run_id,
-    inputPath: `${uploadDirectory}${run_id}/`,
+    inputPath: [`${uploadDirectory}${run_id}/`],
   };
+  // get the definition of step from the simulation dsl column
+  const stepDefs: Array<StepDSL> = await parseDSL(simulation_id);
+  for await (const [index, step] of steps.entries()) {
+    stepDefs[index].stepId = step.step_id;
+    stepDefs[index].timeout = (timeout_values as number[])[index];
+  }
   // set input path for the first step
   process.env.INPUT_PATH = `${uploadDirectory}${run_id}/`;
 
-  for await (const step of steps) {
+  for await (const step of stepsDefs) {
+    step_ready = true;
     // check if there is a stop signal set to true or failed run signal set
-    if ((process.env.CANCEL_RUN_LIST as string).includes(run_id)
-      || process.env.FAILED_RUN === 'true') {
+    // changed to cancel remaining steps only if the entire run is cancelled
+    if (!step.stepId) throw new Error('stepId not defined');
+    if ((process.env.CANCEL_RUN_LIST as string).includes(run_id)) {
       // mark all the remaining steps as cancelled
       await sdk.setStepAsCancelled({ step_id: step.step_id });
+      await sdk.insertLog({ step_id: step.stepId, text: 'Run has been cancelled' });
+      cancelled.push(step.step_number);
     } else {
-      // testing step type
-      currentStep.image = step.image;
-      currentStep.stepNumber = step.pipeline_step_number;
-      currentStep.stepId = step.step_id;
       if (!environmentList || !timeoutValues) {
         throw new Error('Error! List of environment variables/ timeout values for container undefined');
       }
-      currentStep.env = (environmentList as [[string]])[step.pipeline_step_number - 1];
-      // set the variable values in env file
-      process.env.STEP_NUMBER = `${step.pipeline_step_number}`;
-      process.env.IMAGE = step.image;
-      process.env.CONTAINER_TIME_LIMIT = `${(timeoutValues as [number])[step.pipeline_step_number - 1]}`;
-      // testing step type
-      // adding try catch to handle failed steps
-      try {
-        // set input path for next step as output path of the previous step returned and start step
-        const nextInput = await controller.start(client, currentStep);
-        currentStep.inputPath = nextInput;
-      } catch (error) {
-        logger.error(`Run ${run_id} execution has failed\n${(error as Error).message}`);
-        process.env.FAILED_RUN = 'true';
+      // get prerequisite step numbers of the current step and verify if it can be executed at this point
+      if (step.prerequisite?.length > 0) {
+        for (const prereq_step of step.prerequisite) {
+          // if the prereq_step is completed, add input file and continue
+          if (completed.includes(prereq_step)) {
+            currentStep.inputPath.push(`/app/simulations/${simulation_id}/${run_id}/${prereq_step}/outputs/`);
+          } else if (failed.includes(prereq_step) || cancelled.includes(prereq_step)) { // if the prereq_step is failed/cancelled, reset input file and add it to cancelled because it cannot be executed
+            // eslint-disable-next-line no-await-in-loop
+            await sdk.setStepAsCancelled({ step_id: step.stepId });
+            // eslint-disable-next-line no-await-in-loop
+            await sdk.insertLog({ step_id: step.stepId, text: 'Step cannot be executed as a dependent step has failed/cancelled' });
+            cancelled.push(step.step_number);
+            step_ready = false;
+            break;
+          } else { // if the prereq_step is waiting, reset input file and add it to end of queue
+            stepDefs.push(step);
+            step_ready = false;
+            break;
+          }
+        }
+      }
+      if (step_ready) {
+        currentStep.image = step.image;
+        currentStep.stepNumber = step.step_number;
+        currentStep.stepId = step.stepId;
+        currentStep.env = step.env;
+        // set the variable values in env file
+        process.env.STEP_NUMBER = `${step.step_number}`;
+        process.env.IMAGE = step.image;
+        // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+        process.env.CONTAINER_TIME_LIMIT = `${step.timeout}`;
+        // adding try catch to handle failed steps
+        // currentStep.env = (environmentList as [[string]])[step.pipeline_step_number - 1];
+        // set the variable values in env file
+        // process.env.STEP_NUMBER = `${step.pipeline_step_number}`;
+        // process.env.IMAGE = step.image;
+        // process.env.CONTAINER_TIME_LIMIT = `${(timeoutValues as [number])[step.pipeline_step_number - 1]}`;
+        try {
+          await controller.start(client, currentStep);
+          completed.push(step.step_number); // add successful step to the completed list
+        } catch (error) {
+          logger.error(`Run ${run_id} execution has failed\n${(error as Error).message}`);
+          process.env.FAILED_RUN = 'true';
+          failed.push(step.step_number); // add failed step to the list
+        }
       }
     }
+    currentStep.inputPath = [];
   }
   // remove sample input files for the run from ./uploaded folder
   fs.rmSync(`${uploadDirectory}${run_id}`, { recursive: true, force: true });
@@ -233,6 +346,9 @@ export async function startRun(run_id: string): Promise<string> {
   return run_id;
 }
 
+/**
+ * function to return simulation, run and step details from the database
+ */
 export async function getSimulationRunResults(simulation_id: string,
   run_id: string, userid: string): Promise<GetSimulationRunResultsQuery> {
   const result: GetSimulationRunResultsQuery = await sdk.getSimulationRunResults({
@@ -244,24 +360,30 @@ export async function getSimulationRunResults(simulation_id: string,
   return result;
 }
 
+/**
+ * function to stop an active run and cancel all its remaining steps
+ */
 export async function stopRun(run_id: string, userid: string): Promise<string> {
   // throw error if run does not belong to the user
   await checkRunOwner(run_id, userid);
-  // add the current runid to the environment var to denote stop signal has been sent
-  // to runid
-  // find the current running container
+  // add the current runid to the environment var to denote stop signal has been sent to runid
   process.env.CANCEL_RUN_LIST = `${process.env.CANCEL_RUN_LIST as string},${run_id}`;
-  // stop and kill current container
-  // stop the start run function to stop all the next steps
-  // change the status of runs and steps to 'cancelled'
   return run_id;
 }
+
+/**
+ * function to delete a run from the database
+ */
 export async function deleteRun(run_id: string, userid: string): Promise<string> {
   // throw error if run does not belong to the user
   await checkRunOwner(run_id, userid);
   await sdk.deleteRun({ run_id });
   return run_id;
 }
+
+/**
+ * function to delete a simulation from the database
+ */
 export async function deleteSimulation(simulation_id: string, userid: string): Promise<string> {
   // throw error if simulation does not belong to the user
   await checkSimulationOwner(simulation_id, userid);
@@ -271,6 +393,9 @@ export async function deleteSimulation(simulation_id: string, userid: string): P
 
 const taskQueue = new TaskQueue();
 
+/**
+ * the scheduler to start runs waiting in the task queue in FIFO manner
+ */
 async function runScheduler(): Promise<void> {
   if (process.env.IS_SIMULATION_RUNNING === 'false') {
     while (taskQueue.getItemsCount() > 0) {
@@ -284,6 +409,9 @@ async function runScheduler(): Promise<void> {
   }
 }
 
+/**
+ * function to queue a run that is to be started
+ */
 export async function queueRun(run_id: string, userid: string): Promise<string> {
   // throw error if run does not belong to the user
   await checkRunOwner(run_id, userid);
@@ -304,9 +432,7 @@ export async function queueRun(run_id: string, userid: string): Promise<string> 
 export async function getSimulation(
   userid: string, simulation_id: string,
 ): Promise<GetSimulationQuery> {
-  // export async function getSimulation(userid:string, simulation_id:string):Promise<string> {
   const result: GetSimulationQuery = await sdk.getSimulation({ userid, simulation_id });
-  // return JSON.stringify(result);
   return result;
 }
 
@@ -316,11 +442,8 @@ export async function getSimulation(
  */
 export async function createSampleSimulation(): Promise<string> {
   await setTimeout(7000);
-  // let result;
   try {
     connectHasuraEndpoint();
-    // check if there are simulations in the database
-    // result = await sdk.AllSimulations();
   } catch (error) {
     const errorMessage = `\n 🎌 Error connecting from SIM-PIPE controller to hasura endpoint:\n
     ${(error as Error).message}
@@ -330,19 +453,5 @@ export async function createSampleSimulation(): Promise<string> {
     await setTimeout(5000);
     connectHasuraEndpoint();
   }
-  /**
-   * disabling creating sample simulation, as simulations must belng to a user now
-   * TODO: find alternative
-   */
-  // if (!result) {
-  //   throw new Error('🎌 Error creating sample simulation at server start up, '
-  // + 'hasura endpoint could not be connected, check hasura endpoint settings');
-  // }
-  // if (result.simulations.length === 0) {
-  //   const simId = await createSimulation('c97fc83a-b0fc-11ec-b909-0242ac120002',
-  //     'Sample Simulation');
-  //   return `Sample simulation with id ${simId} created on startup`;
-  // }
-  // return 'No sample simulation created as there are existing simulations';
   return 'No sample simulation created for the user';
 }

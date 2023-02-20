@@ -13,7 +13,8 @@ export type Step = {
   runId: string;
   stepNumber?: number;
   image?:string;
-  inputPath: string;
+  inputPath: string[]; // to handle complex pipelines
   env?: string[];
   stepId?: number;
+  prerequisite?:number[]; // to handle complex pipelines
 };

@@ -61,14 +61,25 @@ git clone https://github.com/DataCloud-project/SIM-PIPE.git
 cd SIM-PIPE
 ```
 
-#### Step 2. Build the simpipe-backend Docker image
+#### Step 2. Build the necessary Docker images
+
+Build the docker image to containerize SIM-PIPE controller from the controller folder.
 
 Command line:
 
 ```
+cd controller
 sudo docker build -t simpipe-backend -f Dockerfile .
 ```
 
+Build the docker image to containerize SIM-PIPE frontend from the frontend folder.
+
+Command line:
+
+```
+cd frontend
+sudo docker build -t simpipe-frontend -f Dockerfile .
+```
 <!--#### Step 3. Configure the environment settings in the .env file
 
 The [.env](https://github.com/DataCloud-project/SIM-PIPE/blob/main/.env) file contains environment settings for the Hasura service that must be updated.
@@ -169,12 +180,11 @@ Finally, launch the SIM-PIPE Frontend app.
 
 ![alt text](https://raw.githubusercontent.com/DataCloud-project/SIM-PIPE/main/docs/sim-pipe_frontend_simulations.png) -->
 
-### Setting up SIM-PIPE Svelte user interface
+<!-- ### Setting up SIM-PIPE Svelte user interface
 
-<!-- will move this into a docker container -->
 Go into ```simpipe-frontend ```folder and run the following command.
 ```
 npm run dev --open
 ```
 In the output, the message ```VITE v3.0.4  ready in *** ms``` will be displayed followed by a URL.
-The SIM-PIPE user interface can be accessed by entring the URL in a browser.
+The SIM-PIPE user interface can be accessed by entring the URL in a browser. -->

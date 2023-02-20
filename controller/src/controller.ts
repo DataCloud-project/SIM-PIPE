@@ -93,7 +93,7 @@ function init(step: types.Step): void {
   if (!step.stepNumber) {
     throw new Error('🎌 Error in controller.init: step number not defined');
   }
-  targetDirectory = path.join('simulations', step.simId, step.runId, `${step.stepNumber}`);
+  targetDirectory = path.join('/app/simulations', step.simId, step.runId, `${step.stepNumber}`);
   counter = 1;
   process.env.PROCESS_COMPLETED = 'false';
   process.env.STOP_SIGNAL_SENT = 'false';
@@ -362,7 +362,10 @@ export async function start(client: GraphQLClient, step: types.Step): Promise<st
     sdk = getSdk(client);
     logger.info(`Starting simulation for step ${step.stepNumber}`);
     const remoteInputFolder = process.env.REMOTE_INPUT_DIR ?? 'in/';
-    await sftp.putFolderToSandbox(step.inputPath, remoteInputFolder, targetDirectory);
+    // to handle complex pipelines
+    for await (const input of step.inputPath) {
+      await sftp.putFolderToSandbox(input, remoteInputFolder, targetDirectory);
+    }
     const startedAt = await startContainer(step.image, step.stepId, step.env);
     startPollingStats(startedAt, step);
     await waitForContainer();
