@@ -337,7 +337,9 @@ export async function startRun(run_id: string): Promise<string> {
     logger.info(`Run ${run_id} execution is cancelled\n`);
     await sdk.setRunAsCancelled({ run_id });
     // remove current runid from CANCEL signal
-    (process.env.CANCEL_RUN_LIST as string).replace(run_id, '');
+    // TODO this is not working, a run id can contain another unrelated other run id
+    // and no need for env variable
+    process.env.CANCEL_RUN_LIST = (process.env.CANCEL_RUN_LIST ?? '').replace(run_id, '');
     return 'cancelled';
   }
   if (process.env.FAILED_RUN === 'true') {

@@ -54,7 +54,7 @@
       return;
     }
     // call create simulation with the converted pipeline description
-    const { name } = convertedPipelineJson[1];
+    const { name } = convertedPipelineJson[1] as { name: string };
     const variables = {
       name,
       pipeline_description: JSON.stringify(convertedPipelineJson[1]),
