@@ -1,7 +1,7 @@
 import { GraphQLClient } from 'graphql-request';
 import Keycloak from 'keycloak-js';
 import * as config from '../config/config.js';
-import { graphQLClient, username } from '../stores/stores.js';
+import { graphQLClient, username, usertoken } from '../stores/stores.js';
 // eslint-disable-next-line import/extensions
 import { browser } from '$app/environment';
 
@@ -29,6 +29,7 @@ async function internalInitKeycloak(): Promise<void> {
   if (typeof keycloak.idTokenParsed.preferred_username !== 'string') {
     throw new TypeError("Keycloak didn't return a valid preferred_username");
   }
+  usertoken.set(keycloak.token);
   username.set(keycloak.idTokenParsed.preferred_username);
 
   let graphqlUrl;

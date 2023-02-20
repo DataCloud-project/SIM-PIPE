@@ -7,6 +7,8 @@ export const StepDSL = z.object({
   env: z.array(z.string().regex(/^[A-Z_]+=.+$/)),
   prerequisite: z.array(z.number().min(0)),
   type: z.string(),
+  stepId: z.number().min(0).optional(),
+  timeout: z.number().min(0).optional(),
 });
 
 export const DSL = z.object({

@@ -6,6 +6,7 @@ import type { ResourceUsage, Run, Simulation, Step } from 'src/types';
  * username of the currently logged in user
  */
 export const username = writable('');
+export const usertoken = writable('');
 /**
  * indicators to show if a run or step is clicked
  */

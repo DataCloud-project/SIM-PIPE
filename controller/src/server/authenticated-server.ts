@@ -6,10 +6,10 @@ import { expressjwt } from 'express-jwt';
 import got from 'got';
 import jwt_decode from 'jwt-decode';
 import pMemoize from 'p-memoize';
-import type { GetSimulationQuery, GetSimulationRunResultsQuery } from 'db/database.js';
 
 import logger from '../logger.js';
 import * as functions from './functions.js';
+import type { GetSimulationQuery, GetSimulationRunResultsQuery } from '../db/database.js';
 
 process.env.IS_SIMULATION_RUNNING = 'false';
 process.env.CANCEL_RUN_LIST = '';
@@ -46,6 +46,7 @@ interface Context {
     sub: string
     preferred_username: string
   }
+  auth: string
 }
 
 const resolvers = {
@@ -72,44 +73,45 @@ const resolvers = {
       return functions.allRunsSteps(context.user.sub);
     },
     // Integration def pipe version 1
-    async ImportPipelineFromDEFPIPE(_p: unknown, arguments_: { name: string }, context: { auth: string, user: any }): Promise<unknown> {
-      const headers: { Authorization: string, mode: string, 'Content-Type': string } = { Authorization: context.auth, mode: 'no-cors', 'Content-Type': 'application/json' };
-      // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-      const result = await fetch(`${process.env.DEF_PIPE_PIPELINE_API}${context.user.preferred_username}/${arguments_.name}`, {
-        headers,
-      }).then((response) => response.json())
-        .then((json_response) => json_response.data);
-      return result;
+    async ImportPipelineFromDEFPIPE(_p: unknown, arguments_: {
+      name: string,
+    }, context: Context): Promise<unknown> {
+      const prefixUrl = process.env.DEF_PIPE_PIPELINE_API;
+      if (!prefixUrl) {
+        throw new Error('DEF_PIPE_PIPELINE_API is not defined');
+      }
+      const response = await got({
+        prefixUrl,
+        url: `${encodeURIComponent(context.user.preferred_username)}/${encodeURIComponent(arguments_.name)}`,
+        responseType: 'json',
+        headers: {
+          Authorization: context.auth,
+          ContentType: 'application/json',
+          mode: 'no-cors', // ???
+        },
+      });
+
+      return response.body;
     },
     // Integration def pipe version 1
-    async ViewPipelinesFromDEFPIPE(_p: unknown, arguments_: unknown, context: { auth: string, user: { sub: string; preferred_username: string; } }): Promise<unknown> {
-      const headers: { Authorization: string, mode: string, 'Content-Type': string } = { Authorization: context.auth, mode: 'no-cors', 'Content-Type': 'application/json' };
-      // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-      const result = await fetch(`${process.env.DEF_PIPE_LIST_API}${context.user.preferred_username}`, {
-        headers,
-      }).then((response) => response.json())
-        .then((json_response) => json_response.data);
-      return result;
-    },
-    // Integration def pipe version 1
-    async ImportPipelineFromDEFPIPE(_p: unknown, arguments_: { name: string }, context: { auth: string, user: any }): Promise<unknown> {
-      const headers: { Authorization: string, mode: string, 'Content-Type': string } = { Authorization: context.auth, mode: 'no-cors', 'Content-Type': 'application/json' };
-      // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-      const result = await fetch(`${process.env.DEF_PIPE_PIPELINE_API}${context.user.preferred_username}/${arguments_.name}`, {
-        headers,
-      }).then((response) => response.json())
-        .then((json_response) => json_response.data);
-      return result;
-    },
-    // Integration def pipe version 1
-    async ViewPipelinesFromDEFPIPE(_p: unknown, arguments_: unknown, context: { auth: string, user: { sub: string; preferred_username: string; } }): Promise<unknown> {
-      const headers: { Authorization: string, mode: string, 'Content-Type': string } = { Authorization: context.auth, mode: 'no-cors', 'Content-Type': 'application/json' };
-      // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-      const result = await fetch(`${process.env.DEF_PIPE_LIST_API}${context.user.preferred_username}`, {
-        headers,
-      }).then((response) => response.json())
-        .then((json_response) => json_response.data);
-      return result;
+    async ViewPipelinesFromDEFPIPE(_p: unknown, arguments_: unknown, context: Context,
+    ): Promise<unknown> {
+      const prefixUrl = process.env.DEF_PIPE_LIST_API;
+      if (!prefixUrl) {
+        throw new Error('DEF_PIPE_LIST_API is not defined');
+      }
+      const response = await got({
+        prefixUrl,
+        url: `${encodeURIComponent(context.user.preferred_username)}`,
+        responseType: 'json',
+        headers: {
+          Authorization: context.auth,
+          ContentType: 'application/json',
+          mode: 'no-cors', // ???
+        },
+      });
+
+      return response.body;
     },
   },
   Mutation: {

@@ -140,5 +140,11 @@ module.exports = {
         groups: ['builtin', 'external', 'internal', 'parent', 'sibling', 'type'],
       },
     ],
+    'unicorn/prevent-abbreviations': [
+      'error',
+      {
+        ignore: ['Def'],
+      },
+    ],
   },
 };

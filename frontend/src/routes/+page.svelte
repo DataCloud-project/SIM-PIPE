@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { get } from 'svelte/store';
   import Modal from 'svelte-simple-modal';
   import CreateSimulationButton from '../components/create-simulation-button.svelte';
   import all_simulations_query from '../queries/all-simulations.js';
@@ -9,7 +8,7 @@
 
   const loading = async (): Promise<Simulation[]> => {
     await initKeycloak();
-    const response = await get(graphQLClient).request<{
+    const response = await $graphQLClient.request<{
       All_Simulations: {
         simulations: Simulation[];
       };

@@ -27,9 +27,14 @@
       // refresh list of simulations after new simulation is created
       $simulationsList = await $graphQLClient.request(allSimulationsQuery);
     } else {
-      open(Alert, { message: '🎌 Failed! Error creating simulation' });
+      const json = JSON.parse(result.Create_Simulation) as { message: string };
+      if (json.message) {
+        open(Alert, { message: json.message });
+      } else {
+        open(Alert, { message: 'Unable to create simulation' });
+      }
     }
-    setTimeout(close, 1000);
+    setTimeout(close, 1500);
   }
 </script>
 

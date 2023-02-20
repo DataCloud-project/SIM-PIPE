@@ -54,29 +54,31 @@ export async function allRunsSteps(userid: string): Promise<AllRunsAndStepsQuery
 
 // variable to represent prerequistes for each step number; used in detecting cycles
 let prerequisites: number[][] = [];
-const cyclic_step_numbers: number[] = [];
+const cyclicStepNumbers: number[] = [];
 
 /**
  * WIP recursive function to check for cycles in the pipeline
  * reference algorithm: https://www.geeksforgeeks.org/detect-cycle-in-a-graph/
  * */
-async function isCyclicRecursive(step_number: number, visited: any[], recursiveStack: any[]): Promise<boolean> {
-  if (recursiveStack[step_number]) return true;
-  if (visited[step_number]) return false;
+function isCyclicRecursive(
+  stepNumber: number, visited: boolean[], recursiveStack: boolean[],
+): boolean {
+  if (recursiveStack[stepNumber]) return true;
+  if (visited[stepNumber]) return false;
 
   // eslint-disable-next-line no-param-reassign
-  recursiveStack[step_number] = true;
+  recursiveStack[stepNumber] = true;
   // eslint-disable-next-line no-param-reassign
-  visited[step_number] = true;
-  for await (const prereq_step of prerequisites[step_number]) {
-    const result = await isCyclicRecursive(prereq_step, visited, recursiveStack);
+  visited[stepNumber] = true;
+  for (const prereqStep of prerequisites[stepNumber]) {
+    const result = isCyclicRecursive(prereqStep, visited, recursiveStack);
     if (result) {
-      cyclic_step_numbers.push(prereq_step);
+      cyclicStepNumbers.push(prereqStep);
       return true;
     }
   }
   // eslint-disable-next-line no-param-reassign
-  recursiveStack[step_number] = false;
+  recursiveStack[stepNumber] = false;
   return false;
 }
 
@@ -86,22 +88,22 @@ async function isCyclicRecursive(step_number: number, visited: any[], recursiveS
  * */
 async function isCyclic(pipeline_description: string): Promise<boolean> {
   // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-  const steps = JSON.parse(pipeline_description).steps as Array<StepDSL>;
-  const visited = Array.from({ length: steps.length + 1 }).fill(false);
-  const recursiveStack = Array.from({ length: steps.length + 1 }).fill(false);
+  const { steps } = DSL.parse(pipeline_description);
+  const visited = Array.from({ length: steps.length + 1 }).fill(false) as boolean[];
+  const recursiveStack = Array.from({ length: steps.length + 1 }).fill(false) as boolean[];
   prerequisites = [];
-  let initial_step_count = 0;
+  let initialStepCount = 0;
   for await (const step of steps) {
     prerequisites[step.step_number] = step.prerequisite || [];
     // check if the number of initial steps; throw error if more than 1 initial step is present
     // TODO: change this once the modification is made
-    if (!step.prerequisite) initial_step_count += 1;
+    if (!step.prerequisite) initialStepCount += 1;
   }
-  if (initial_step_count > 1) {
+  if (initialStepCount > 1) {
     throw new Error('Failed! Pipeline with more than 1 initial steps are currently not supported');
   }
   for await (const step of steps) {
-    const result = await isCyclicRecursive(step.step_number, visited, recursiveStack);
+    const result = isCyclicRecursive(step.step_number, visited, recursiveStack);
     if (result) return true;
   }
   return false;
@@ -112,7 +114,7 @@ export async function createSimulation(
 ): Promise<string> {
   const cyclicFlag = await isCyclic(pipeline_description);
   if (cyclicFlag) {
-    throw new Error(`Given simulation has cyclic dependency in step numbers: ${cyclic_step_numbers.join(', ')}`);
+    throw new Error(`Given simulation has cyclic dependency in step numbers: ${cyclicStepNumbers.join(', ')}`);
   }
 
   // disabling await-thenable, await is needed for sequential execution
@@ -234,7 +236,7 @@ export async function startRun(run_id: string): Promise<string> {
   const completed: number[] = [];
   const cancelled: number[] = [];
   const failed: number[] = [];
-  let step_ready = true;
+  let stepReady = true;
   // set run as started in the database
   await sdk.setRunAsStarted({ run_id });
   // get simulationId and step details of runId
@@ -242,61 +244,64 @@ export async function startRun(run_id: string): Promise<string> {
   if (!result.runs) {
     throw new Error('GetRunDetailsQuery fetched no rows');
   }
-  const { simulation_id } = result.runs[0];
+  const { simulation_id: simulationId } = result.runs[0];
 
   // get steps, and runtime configuration entered during create run
   const { steps, env_list: environmentList, timeout_values: timeoutValues } = result.runs[0];
   // set runId and simulationId once for all runs
   const currentStep: types.Step = {
-    simId: simulation_id,
+    simId: simulationId,
     runId: run_id,
     inputPath: [`${uploadDirectory}${run_id}/`],
   };
   // get the definition of step from the simulation dsl column
-  const stepDefs: Array<StepDSL> = await parseDSL(simulation_id);
+  const stepDefs: Array<StepDSL> = await parseDSL(simulationId);
   for await (const [index, step] of steps.entries()) {
     stepDefs[index].stepId = step.step_id;
-    stepDefs[index].timeout = (timeout_values as number[])[index];
+    stepDefs[index].timeout = (timeoutValues as number[])[index];
   }
   // set input path for the first step
   process.env.INPUT_PATH = `${uploadDirectory}${run_id}/`;
 
-  for await (const step of stepsDefs) {
-    step_ready = true;
+  for await (const step of stepDefs) {
+    stepReady = true;
     // check if there is a stop signal set to true or failed run signal set
     // changed to cancel remaining steps only if the entire run is cancelled
     if (!step.stepId) throw new Error('stepId not defined');
     if ((process.env.CANCEL_RUN_LIST as string).includes(run_id)) {
       // mark all the remaining steps as cancelled
-      await sdk.setStepAsCancelled({ step_id: step.step_id });
+      await sdk.setStepAsCancelled({ step_id: step.stepId });
       await sdk.insertLog({ step_id: step.stepId, text: 'Run has been cancelled' });
       cancelled.push(step.step_number);
     } else {
       if (!environmentList || !timeoutValues) {
         throw new Error('Error! List of environment variables/ timeout values for container undefined');
       }
-      // get prerequisite step numbers of the current step and verify if it can be executed at this point
+      // get prerequisite step numbers of the current step and verify if
+      // it can be executed at this point
       if (step.prerequisite?.length > 0) {
-        for (const prereq_step of step.prerequisite) {
+        for (const prereqStep of step.prerequisite) {
           // if the prereq_step is completed, add input file and continue
-          if (completed.includes(prereq_step)) {
-            currentStep.inputPath.push(`/app/simulations/${simulation_id}/${run_id}/${prereq_step}/outputs/`);
-          } else if (failed.includes(prereq_step) || cancelled.includes(prereq_step)) { // if the prereq_step is failed/cancelled, reset input file and add it to cancelled because it cannot be executed
+          if (completed.includes(prereqStep)) {
+            currentStep.inputPath.push(`/app/simulations/${simulationId}/${run_id}/${prereqStep}/outputs/`);
+          } else if (failed.includes(prereqStep) || cancelled.includes(prereqStep)) {
+            // if the prereq_step is failed/cancelled, reset input file and add it to cancelled
+            // because it cannot be executed
             // eslint-disable-next-line no-await-in-loop
             await sdk.setStepAsCancelled({ step_id: step.stepId });
             // eslint-disable-next-line no-await-in-loop
             await sdk.insertLog({ step_id: step.stepId, text: 'Step cannot be executed as a dependent step has failed/cancelled' });
             cancelled.push(step.step_number);
-            step_ready = false;
+            stepReady = false;
             break;
           } else { // if the prereq_step is waiting, reset input file and add it to end of queue
             stepDefs.push(step);
-            step_ready = false;
+            stepReady = false;
             break;
           }
         }
       }
-      if (step_ready) {
+      if (stepReady) {
         currentStep.image = step.image;
         currentStep.stepNumber = step.step_number;
         currentStep.stepId = step.stepId;
@@ -311,7 +316,8 @@ export async function startRun(run_id: string): Promise<string> {
         // set the variable values in env file
         // process.env.STEP_NUMBER = `${step.pipeline_step_number}`;
         // process.env.IMAGE = step.image;
-        // process.env.CONTAINER_TIME_LIMIT = `${(timeoutValues as [number])[step.pipeline_step_number - 1]}`;
+        // process.env.CONTAINER_TIME_LIMIT =
+        // `${(timeoutValues as [number])[step.pipeline_step_number - 1]}`;
         try {
           await controller.start(client, currentStep);
           completed.push(step.step_number); // add successful step to the completed list
