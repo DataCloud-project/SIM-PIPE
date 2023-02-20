@@ -42,6 +42,7 @@ async function createVolume({
       user_id: userId,
       simulation_id: simulationId,
       run_id: runId,
+      simpipe: 'true',
     },
     // dockerode types are wrong again
     // TODO make a pull request to fix this

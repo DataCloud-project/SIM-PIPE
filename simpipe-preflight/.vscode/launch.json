@@ -1,0 +1,50 @@
+{
+  // Use IntelliSense to learn about possible attributes.
+  // Hover to view descriptions of existing attributes.
+  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "Debug executable 'simpipe-preflight'",
+      "cargo": {
+        "args": [
+          "build",
+          "--bin=simpipe-preflight",
+          "--package=simpipe-preflight"
+        ],
+        "filter": {
+          "name": "simpipe-preflight",
+          "kind": "bin"
+        }
+      },
+      "args": [],
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "DOWNLOAD_test.txt": "http://perdu.com",
+        "DOWNLOAD_etc_passwd": "https://perdu.com",
+        "OUTPUT_FOLDER": "./output",
+      }
+    },
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "Debug unit tests in executable 'simpipe-preflight'",
+      "cargo": {
+        "args": [
+          "test",
+          "--no-run",
+          "--bin=simpipe-preflight",
+          "--package=simpipe-preflight"
+        ],
+        "filter": {
+          "name": "simpipe-preflight",
+          "kind": "bin"
+        }
+      },
+      "args": [],
+      "cwd": "${workspaceFolder}"
+    }
+  ]
+}

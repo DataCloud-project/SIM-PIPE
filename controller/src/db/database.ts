@@ -6302,7 +6302,7 @@ export type SetRunAsStartedMutationVariables = Exact<{
 }>;
 
 
-export type SetRunAsStartedMutation = { __typename?: 'mutation_root', updateRunsByPk?: { __typename?: 'runs', runId: string, name: string, simulation: { __typename?: 'simulations', name: string, simulationId: string, userId: string }, steps: Array<{ __typename?: 'steps', stepId: string, name: string, image: string, timeout: number, pipelineStepNumber: number, envs: Array<{ __typename?: 'SimpipeEnvs', name: string, value: string }> }> } | null };
+export type SetRunAsStartedMutation = { __typename?: 'mutation_root', updateRunsByPk?: { __typename?: 'runs', runId: string, name: string, simulation: { __typename?: 'simulations', name: string, simulationId: string, userId: string }, steps: Array<{ __typename?: 'steps', stepId: string, name: string, image: string, timeout: number, pipelineStepNumber: number, status: SimpipeStepStatusEnum, envs: Array<{ __typename?: 'SimpipeEnvs', name: string, value: string }> }> } | null };
 
 export type SetRunAsQueuedMutationVariables = Exact<{
   runId: Scalars['uuid'];
@@ -6465,6 +6465,7 @@ export const SetRunAsStartedDocument = gql`
         name
         value
       }
+      status
     }
   }
 }

@@ -1,10 +1,19 @@
 import type { UUID } from '../types.js';
 
+export enum SimpipeStepStatusEnum {
+  Active = 'ACTIVE',
+  Cancelled = 'CANCELLED',
+  Completed = 'COMPLETED',
+  Failed = 'FAILED',
+  Waiting = 'WAITING',
+}
+
 export interface Step {
   stepId: UUID;
   name: string;
   image: string;
   timeout: number;
+  status: SimpipeStepStatusEnum;
   pipelineStepNumber: number;
   envs: Array<{ name: string, value: string }>;
   volumes?: StepVolume;
@@ -29,10 +38,15 @@ export default interface RunData {
     userId: string;
   };
   steps: Array<Step>;
+  currentStep?: StepWithVolume;
 }
 
 interface RunDataWithVolumes extends RunData {
   steps: Array<StepWithVolume>;
+}
+
+interface RunDataWithCurrentStep extends RunData {
+  currentStep: StepWithVolume;
 }
 
 export function assertRunData(
@@ -53,5 +67,16 @@ export function assertRunDataWithVolumes(
     if (!step.volumes) {
       throw new Error('step.volumes is undefined');
     }
+  }
+}
+
+export function assertRunDataWithCurrentStep(
+  context: { runData: RunData | undefined },
+): asserts context is { runData: RunDataWithCurrentStep } {
+  if (!context.runData) {
+    throw new Error('runData is undefined');
+  }
+  if (!context.runData.currentStep) {
+    throw new Error('runData.currentStep is undefined');
   }
 }

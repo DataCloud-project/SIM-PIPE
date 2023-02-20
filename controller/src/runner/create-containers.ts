@@ -33,9 +33,9 @@ async function createContainer({
   }
 
   const binds = [
-    `/var/lib/docker/volumes/${inputVolume}/_data:/app/in`,
-    `/var/lib/docker/volumes/${outputVolume}/_data:/app/out`,
-    `/var/lib/docker/volumes/${workVolume}/_data:/app/work`,
+    `/var/lib/docker/volumes/${inputVolume}/_data:/app/in:ro`,
+    `/var/lib/docker/volumes/${outputVolume}/_data:/app/out:rw`,
+    `/var/lib/docker/volumes/${workVolume}/_data:/app/work:rw`,
   ];
 
   return await docker.createContainer({
@@ -46,6 +46,7 @@ async function createContainer({
       run_id: runId,
       step_id: step.stepId,
       step_number: step.pipelineStepNumber.toString(),
+      simpipe: 'true',
     },
     Image: step.image,
     Volumes: {},

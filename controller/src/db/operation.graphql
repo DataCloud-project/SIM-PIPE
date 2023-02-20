@@ -74,6 +74,7 @@ mutation setRunAsStarted($runId: uuid!) {
         name
         value
       }
+      status
     }
   }
 }

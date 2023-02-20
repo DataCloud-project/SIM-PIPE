@@ -9,7 +9,7 @@ import getDocker from './docker.js';
 const SLEEPER_UUID = '11112222-3333-4444-5555-123456789abc';
 
 // AMD64 sleeper image
-// See the sandbox/sleeper directory to see how it is built.
+// See the sleeper directory to see how it is built.
 const SLEEPER_IMAGE = `
 H4sIADPU7GMCA+2a3W7bNhSA1XYbkO2mewODu3VtkiIl2cAKZ4mHFsjmos06bGkQUBRla5ElQ6SLGoHRPlKvd7UX2D
 NllCw7sfPjxHG8FOB3YfHn8Ec8PsekD0nDoUEYYt9pUNQQHLrUCZlPMPYCyjBBEAsfcuogFDRQEDZCP6SYowByX/AA

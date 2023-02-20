@@ -2,19 +2,28 @@ import { assign, createMachine } from 'xstate';
 
 import createContainers from './create-containers.js';
 import createVolumes from './create-volumes.js';
+import dockerPruning from './docker-pruning.js';
 import loadNextRun from './load-next-run.js';
+import loadNextStep from './load-next-step.js';
 import markRunAsFailed from './mark-run-as-failed.js';
 import markRunAsStarted from './mark-run-as-started.js';
+import markStepAsStarted from './mark-step-as-started.js';
 import pullAllImages from './pull-all-images.js';
+import startContainer from './start-container.js';
+import updateStepStatus from './update-step-status.js';
+import waitForContainer from './wait-for-container.js';
 import type RunData from './run-data.js';
 import type { RunInStream } from './runs-stream.js';
 
 export default createMachine({
   id: 'simPipeRunner',
-  initial: 'idling',
+  initial: 'start',
   // eslint-disable-next-line @typescript-eslint/consistent-type-imports
   tsTypes: {} as import('./runner-state-machine.typegen').Typegen0,
   states: {
+    start: {
+      always: 'idling',
+    },
     idling: {
       onEntry: assign({ runId: undefined }),
       invoke: {
@@ -104,25 +113,114 @@ export default createMachine({
           },
         },
         runSteps: {
-          initial: 'Load next step',
+          initial: 'loadNextStep',
           states: {
-            'Load next step': {
-              on: {
-                Ok: {
-                  target: 'Mark step as started',
+            error: {
+              invoke: {
+                src: 'markCurrentStepAsFailed',
+                onDone: {
+                  target: '#simPipeRunner.run.errorCooldown',
                 },
-                'No step left': {
-                  target: '#simPipeRunner.run.Upload last output files',
+                onError: {
+                  target: '#simPipeRunner.run.errorCooldown',
                 },
               },
             },
-            'Copy input files': {
-              on: {
-                'Failed to copy input files': {
-                  target: 'Mark step as failed',
+            loadNextStep: {
+              initial: 'loading',
+              states: {
+                loading: {
+                  invoke: {
+                    src: 'loadNextStep',
+                    onDone: {
+                      target: 'loaded',
+                      actions: 'setRunData',
+                    },
+                    onError: {
+                      target: '#simPipeRunner.run.runSteps.error',
+                    },
+                  },
                 },
-                Ok: {
-                  target: 'Start step container',
+                loaded: {
+                  type: 'final',
+                  always: [
+                    {
+                      target: '#simPipeRunner.run.runSteps.startStep',
+                      cond: 'hasStepLeft',
+                    },
+                    {
+                      target: '#simPipeRunner.run.end',
+                    },
+                  ],
+                },
+              },
+            },
+            startStep: {
+              type: 'parallel',
+              states: {
+                markStepAsStarted: {
+                  initial: 'loading',
+                  states: {
+                    loading: {
+                      invoke: {
+                        src: 'markStepAsStarted',
+                        onDone: {
+                          target: 'complete',
+                          actions: 'setRunData',
+                        },
+                        onError: {
+                          target: '#simPipeRunner.run.runSteps.error',
+                        },
+                      },
+                    },
+                    complete: {
+                      type: 'final',
+                    },
+                  },
+                },
+                startContainer: {
+                  initial: 'loading',
+                  states: {
+                    loading: {
+                      invoke: {
+                        src: 'startContainer',
+                        onDone: {
+                          target: 'started',
+                          actions: 'doNothing',
+                        },
+                      },
+                    },
+                    started: {
+                      type: 'final',
+                    },
+                  },
+                },
+              },
+              onDone: {
+                target: 'waitStepToFinish',
+              },
+            },
+            waitStepToFinish: {
+              invoke: {
+                src: 'waitForContainer',
+                onDone: {
+                  target: 'updateStepStatus',
+                  actions: 'doNothing',
+                },
+              },
+              after: {
+                100_000: {
+                  target: 'timeout',
+                },
+              },
+            },
+            timeout: {},
+            updateStepStatus: {
+              invoke: {
+                src: 'updateStepStatus',
+                onDone: {
+                  actions: 'setRunData',
+                  target: 'loadNextStep',
                 },
               },
             },
@@ -131,42 +229,6 @@ export default createMachine({
                 Ok: {
                   target:
                     '#simPipeRunner.run.Mark run as failed and remaining steps as cancelled',
-                },
-              },
-            },
-            'Start step container': {
-              on: {
-                Error: {
-                  target: 'Mark step as failed',
-                },
-                Started: {
-                  target: 'Computer is running',
-                },
-              },
-            },
-            'Computer is running': {
-              initial: 'Check running state',
-              states: {
-                'Check running state': {
-                  on: {
-                    Finished: {
-                      target: '#simPipeRunner.run.runSteps.Save logs',
-                    },
-                    Running: {
-                      target: 'Wait 5s',
-                    },
-                    Timeout: {
-                      target:
-                        '#simPipeRunner.run.runSteps.Stop container',
-                    },
-                  },
-                },
-                'Wait 5s': {
-                  on: {
-                    '5s': {
-                      target: 'Check running state',
-                    },
-                  },
                 },
               },
             },
@@ -180,17 +242,10 @@ export default createMachine({
                 },
               },
             },
-            'Mark step as started': {
-              on: {
-                Ok: {
-                  target: 'Copy input files',
-                },
-              },
-            },
             'Mark step as success': {
               on: {
                 Ok: {
-                  target: 'Load next step',
+                  target: 'loadNextStep',
                 },
               },
             },
@@ -208,6 +263,11 @@ export default createMachine({
                 },
               },
             },
+          },
+        },
+        end: {
+          always: {
+            target: '#simPipeRunner.pruning',
           },
         },
         'Create container and volumes': {
@@ -237,41 +297,29 @@ export default createMachine({
         'Mark run as failed and remaining steps as cancelled': {
           on: {
             Ok: {
-              target: '#simPipeRunner.Garbage collection',
+              target: '#simPipeRunner.pruning',
             },
           },
         },
         'Mark run as successful': {
           on: {
             Ok: {
-              target: '#simPipeRunner.Garbage collection',
+              target: '#simPipeRunner.pruning',
             },
           },
         },
       },
     },
-    'Garbage collection': {
-      initial: 'Delete the old step containers',
-      states: {
-        'Delete the old step containers': {
-          on: {
-            Ok: {
-              target: 'Delete the old unused volumes',
-            },
-          },
+    pruning: {
+      invoke: {
+        src: 'dockerPruning',
+        onDone: {
+          target: 'start',
+          actions: 'doNothing',
         },
-        'Delete the old unused volumes': {
-          on: {
-            Ok: {
-              target: 'Delete the old unused images',
-            },
-          },
-        },
-        'Delete the old unused images': {},
-      },
-      on: {
-        Ok: {
-          target: 'idling',
+        onError: {
+          target: 'start',
+          actions: 'doNothing',
         },
       },
     },
@@ -310,11 +358,17 @@ export default createMachine({
 }, {
   services: {
     loadNextRun,
+    loadNextStep,
     markRunAsStarted,
     markRunAsFailed,
     pullAllImages,
     createVolumes,
     createContainers,
+    markStepAsStarted,
+    startContainer,
+    waitForContainer,
+    dockerPruning,
+    updateStepStatus,
   },
   actions: {
     setRunId: assign({ runId: (_, event) => event.data.runId }),
@@ -323,5 +377,8 @@ export default createMachine({
   },
   delays: {
     cooldownDelay: () => Math.round(Math.random() * 2000) + 4000,
+  },
+  guards: {
+    hasStepLeft: (context) => context.runData?.currentStep !== undefined,
   },
 });
