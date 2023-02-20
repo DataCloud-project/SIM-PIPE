@@ -33,7 +33,6 @@
     "graphql-request": "^5.1.0",
     "highcharts": "^10.3.2",
     "highcharts-more": "^0.1.7",
-    "keycloak-js": "^20.0.2",
     "prettier": "^2.8.1",
     "prettier-plugin-svelte": "^2.9.0",
     "save": "^2.9.0",
@@ -43,6 +42,9 @@
     "tslib": "^2.4.1",
     "typescript": "^4.9.4",
     "vite": "^4.0.4"
+  },
+  "dependencies": {
+    "keycloak-js": "^20.0.2"
   },
   "type": "module"
 }
