@@ -34,7 +34,7 @@ services:
       HASURA_GRAPHQL_LOG_LEVEL: debug
       # REMOTE_SCHEMA_URL: ${REMOTE_SCHEMA_URL}
   controller:
-    image: simpipe-backend
+    image: simpipe-controller
     ports:
       - "9000:9000"
       - "2375:2375"
@@ -46,7 +46,7 @@ services:
       - ./controller/log:/log
     environment:
       HASURA: http://hasura:8080/v1/graphql
-      SANDBOX_IP: ${SANDBOX_IP} 
+      SANDBOX_IP: 172.18.0.1
       # REMOTE_DOCKER: true
       CONTAINER_TIME_LIMIT: ${CONTAINER_TIME_LIMIT}
       CONTAINER_STOP_TIMEOUT : ${CONTAINER_STOP_TIMEOUT}
@@ -55,6 +55,7 @@ services:
       REMOTE_INPUT_DIR: 'in/'
       HASURA_ADMIN_SECRET: ${HASURA_ADMIN_SECRET}      
       HASURA_URL: ${HASURA_URL}
+      DOCKER_PORT: '2000'
 
   svelte:
     image: simpipe-frontend 

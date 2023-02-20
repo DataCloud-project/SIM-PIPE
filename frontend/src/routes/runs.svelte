@@ -87,6 +87,45 @@
 			{/each}
 			<Scroll threshold={100} />
 		</ul>
+		<table>
+			<tr>
+				<td>NAME</td>
+				<td>STATUS</td>
+				<td>REMARK</td>
+				<td >RUN</td>
+				<td>STOP</td>
+				<td>DELETE</td>
+			</tr>
+		
+				{#each data as item, index (item)}
+				<tr
+				class:active={item === $clicked_run}
+				{index}
+				on:click={() => runOnClick(item)}
+				>
+				    <td>{item.name}</td>
+					<td>{item.status}</td>
+					<td>{display_run_msg(item)}</td>
+					<td>
+						{#if item.status == 'waiting'}
+							<Modal><StartRunButton /></Modal>
+						{/if}
+						</td>
+					<td>
+						{#if item.status == 'waiting'}
+							<Modal><StopRunButton /></Modal>
+						{/if}
+					</td>
+					<td>
+						{#if $clicked_run != '' && $clicked_run.status != 'active' && $clicked_run.status != 'queued'}
+						<Modal><DeleteRunButton /></Modal>
+						{/if}
+					</td>
+				</tr>
+				{/each}
+			
+		</table>
+		<Scroll threshold={100} />
 	</main>
 {/if}
 

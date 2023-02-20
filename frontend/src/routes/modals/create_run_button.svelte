@@ -5,6 +5,10 @@
 	function open_create_run_modal() {
 		open(CreateRunModal);
 	}
+
+	var a = document.body;
+	a.style.overflow="scroll";
+	a.style.position = '';
 </script>
 
 <button class="action_button" on:click={open_create_run_modal}>Create new run</button>
