@@ -33,17 +33,18 @@
     <br />
     {#await simulationsPromise}
       <p style="font-size:20px;">Loading simulations...</p>
-    {:then simulations}
-      {#each simulations as simulation}
+    {:catch}
+      <p style="font-size:20px;">🎌 Error! could not load simulations</p>
+    {/await}
+    {#if $simulationsList !== undefined}
+      {#each $simulationsList as simulation}
         <li class="pointer row">
           <a href="{`/${simulation.simulation_id}`}">
             {simulation.name}
           </a>
         </li>
       {/each}
-    {:catch}
-      <p style="font-size:20px;">🎌 Error! could not load simulations</p>
-    {/await}
+    {/if}
   </ul>
   <br />
   <div class="create_sim_box">
