@@ -45,12 +45,12 @@
     if (
       !Array.isArray(convertedPipelineJson) ||
       convertedPipelineJson[0] === 'error' ||
-      convertedPipelineJson[1]?.name !== undefined
+      convertedPipelineJson[1]?.name === undefined
     ) {
       open(Alert, { message: '🎌 Failed! Selected pipeline definition is incomplete' });
       setTimeout(() => {
         close();
-      }, 1000);
+      }, 3000);
       return;
     }
     // call create simulation with the converted pipeline description
