@@ -75,12 +75,12 @@ const resolvers = {
     // Integration def pipe version 1
     async ImportPipelineFromDEFPIPE(_p: unknown, arguments_: {
       name: string,
-    }, context: Context): Promise<unknown> {
+    }, context: Context): Promise<string> {
       const prefixUrl = process.env.DEF_PIPE_PIPELINE_API;
       if (!prefixUrl) {
         throw new Error('DEF_PIPE_PIPELINE_API is not defined');
       }
-      const response = await got({
+      const response = await got<{ data: string }>({
         prefixUrl,
         url: `${encodeURIComponent(context.user.preferred_username)}/${encodeURIComponent(arguments_.name)}`,
         responseType: 'json',
@@ -91,7 +91,7 @@ const resolvers = {
         },
       });
 
-      return response.body;
+      return response.body.data;
     },
     // Integration def pipe version 1
     async ViewPipelinesFromDEFPIPE(_p: unknown, arguments_: unknown, context: Context,
