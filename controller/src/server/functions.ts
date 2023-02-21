@@ -120,7 +120,7 @@ export async function createSimulation(
   // disabling await-thenable, await is needed for sequential execution
   const result: CreateSimulationMutation = await sdk.createSimulation({
     name,
-    pipeline_description,
+    pipeline_description: JSON.parse(pipeline_description),
     userid,
   });
   if (!result?.create_simulation?.simulation_id) {
