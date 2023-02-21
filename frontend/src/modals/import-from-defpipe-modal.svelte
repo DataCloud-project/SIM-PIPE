@@ -7,7 +7,7 @@
   import importPipelineFromDefpipeQuery from '../queries/import-pipeline-from-defpipe.js';
   import { SIM_PIPE_CONVERTER_URL } from '../config/config.js';
   import Alert from './alert-modal.svelte';
-  import type { ModalContext } from '../types';
+  import type { ModalContext, Simulation } from '../types';
 
   export let allCurrentuserPipelines: string[] = [];
 
@@ -67,7 +67,11 @@
     if (code === 200) {
       open(Alert, { message: `🎐 Success! ${name} is created` });
       // refresh list of simulations after new simulation is created
-      $simulationsList = await $graphQLClient.request(allSimulationsQuery);
+      // $simulationsList = await $graphQLClient.request(allSimulationsQuery);
+      const simulationListResponse = await $graphQLClient.request<{
+        All_Simulations: { simulations: Simulation[] };
+      }>(allSimulationsQuery);
+      $simulationsList = simulationListResponse.All_Simulations.simulations;
     } else {
       open(Alert, { message });
     }

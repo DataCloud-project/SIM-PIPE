@@ -4,7 +4,7 @@
   import createSimulationMutation from '../queries/create-simulation.js';
   import { graphQLClient, simulationsList } from '../stores/stores.js';
   import Alert from './alert-modal.svelte';
-  import type { ModalContext } from '../types';
+  import type { ModalContext, Simulation } from '../types';
 
   const { open, close } = getContext<ModalContext>('simple-modal');
   let name = '';
@@ -25,7 +25,10 @@
     if (output.code >= 200 && output.code < 300) {
       open(Alert, { message: `🎐 Success! ${name} is created` });
       // refresh list of simulations after new simulation is created
-      $simulationsList = await $graphQLClient.request(allSimulationsQuery);
+      const simulationListResponse = await $graphQLClient.request<{
+        All_Simulations: { simulations: Simulation[] };
+      }>(allSimulationsQuery);
+      $simulationsList = simulationListResponse.All_Simulations.simulations;
     } else {
       const json = JSON.parse(result.Create_Simulation) as { message: string };
       if (json.message) {
