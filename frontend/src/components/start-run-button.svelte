@@ -5,7 +5,7 @@
   import startRunMutation from '../queries/start-run.js';
   import { clickedRun, graphQLClient } from '../stores/stores.js';
   import refreshActiveRuns from '../utils/refresh-runs.js';
-  import type { ModalContext } from 'src/types';
+  import type { ModalContext } from '../types';
 
   const { open, close } = getContext<ModalContext>('simple-modal');
 

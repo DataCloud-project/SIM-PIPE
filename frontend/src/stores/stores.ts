@@ -1,6 +1,6 @@
 import { writable } from 'svelte/store';
 import type { GraphQLClient } from 'graphql-request';
-import type { ResourceUsage, Run, Simulation, Step } from 'src/types';
+import type { ResourceUsage, Run, Simulation, Step } from '../types';
 
 /**
  * username of the currently logged in user

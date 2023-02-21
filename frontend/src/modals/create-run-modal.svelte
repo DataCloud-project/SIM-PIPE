@@ -4,7 +4,7 @@
   import getSimulationQuery from '../queries/get-simulation.js';
   import { clickedSimulation, graphQLClient } from '../stores/stores.js';
   import Alert from './alert-modal.svelte';
-  import type { ModalContext, Simulation, StepDescription } from 'src/types';
+  import type { ModalContext, Simulation, StepDescription } from '../types';
 
   const { close, open } = getContext<ModalContext>('simple-modal');
 

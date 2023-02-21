@@ -4,7 +4,7 @@
   import all_simulations_query from '../queries/all-simulations.js';
   import { graphQLClient, simulationsList } from '../stores/stores.js';
   import initKeycloak from '../utils/keycloak.js';
-  import type { Simulation } from 'src/types';
+  import type { Simulation } from '../types';
 
   const loading = async (): Promise<Simulation[]> => {
     await initKeycloak();

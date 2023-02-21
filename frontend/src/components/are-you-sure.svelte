@@ -11,7 +11,7 @@
     showStepsList,
     showUsages,
   } from '../stores/stores.js';
-  import type { ModalContext, Simulation } from 'src/types';
+  import type { ModalContext, Simulation } from '../types';
   // eslint-disable-next-line import/extensions
   import { goto } from '$app/navigation';
 

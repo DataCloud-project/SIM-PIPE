@@ -1,7 +1,7 @@
 <script lang="ts">
   import { getContext } from 'svelte';
   import AreYouSure from './are-you-sure.svelte';
-  import type { ModalContext } from 'src/types';
+  import type { ModalContext } from '../types';
 
   const { open } = getContext<ModalContext>('simple-modal');
 

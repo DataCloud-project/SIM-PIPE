@@ -3,7 +3,7 @@
   import Alert from '../modals/alert-modal.svelte';
   import getSimulationQuery from '../queries/get-simulation.js';
   import { clickedRun, clickedSimulation, graphQLClient, stepsList } from '../stores/stores.js';
-  import type { ModalContext, Simulation } from 'src/types';
+  import type { ModalContext, Simulation } from '../types';
   // eslint-disable-next-line import/extensions
   import { goto } from '$app/navigation';
 

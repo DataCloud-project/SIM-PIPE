@@ -1,7 +1,7 @@
 <script lang="ts">
   import { getContext } from 'svelte';
   import CreateRunModal from '../modals/create-run-modal.svelte';
-  import type { ModalContext } from 'src/types';
+  import type { ModalContext } from '../types';
 
   const { open } = getContext<ModalContext>('simple-modal');
   function openCreateRunModal(): void {

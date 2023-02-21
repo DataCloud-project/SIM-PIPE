@@ -4,7 +4,7 @@
   import ImportFromDefpipeModal from '../modals/import-from-defpipe-modal.svelte';
   import { graphQLClient } from '../stores/stores.js';
   import pipelineListFromDefpipeQuery from '../queries/view-pipelines-from-defpipe.js';
-  import type { ModalContext } from 'src/types';
+  import type { ModalContext } from '../types';
 
   const { open } = getContext<ModalContext>('simple-modal');
   function openCreateSimulationModal(): void {

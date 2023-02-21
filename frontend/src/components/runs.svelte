@@ -15,7 +15,7 @@
   import Scroll from './scroll.svelte';
   import StartRunButton from './start-run-button.svelte';
   import StopRunButton from './stop-run-button.svelte';
-  import type { Run } from 'src/types';
+  import type { Run } from '../types';
 
   let data: Run[] = [];
   $clickedRun = undefined;

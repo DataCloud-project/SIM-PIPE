@@ -3,7 +3,7 @@
   import Alert from '../modals/alert-modal.svelte';
   import stop_run_mutation from '../queries/stop-run.js';
   import { clickedRun, graphQLClient } from '../stores/stores.js';
-  import type { ModalContext } from 'src/types';
+  import type { ModalContext } from '../types';
 
   const { open, close } = getContext<ModalContext>('simple-modal');
 

@@ -2,7 +2,7 @@ import { get } from 'svelte/store';
 
 import getSimulationQuery from '../queries/get-simulation.js';
 import { clickedRun, clickedSimulation, graphQLClient, stepsList } from '../stores/stores.js';
-import type { Simulation } from 'src/types';
+import type { Simulation } from '../types';
 
 let refreshActiveRunsPromise: Promise<void> | undefined;
 let currentRefreshedSimulationId: string | undefined;

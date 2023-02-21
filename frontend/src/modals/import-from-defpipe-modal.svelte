@@ -7,7 +7,7 @@
   import importPipelineFromDefpipeQuery from '../queries/import-pipeline-from-defpipe.js';
   import { SIM_PIPE_CONVERTER_URL } from '../config/config.js';
   import Alert from './alert-modal.svelte';
-  import type { ModalContext } from 'src/types';
+  import type { ModalContext } from '../types';
 
   export let allCurrentuserPipelines: string[] = [];
 

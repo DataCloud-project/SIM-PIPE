@@ -2,7 +2,7 @@ import { get } from 'svelte/store';
 import initKeycloak from '../../utils/keycloak.js';
 import getSimulationQuery from '../../queries/get-simulation.js';
 import { clickedSimulation, graphQLClient } from '../../stores/stores.js';
-import type { Simulation } from 'src/types';
+import type { Simulation } from '../../types';
 // eslint-disable-next-line import/extensions
 import { browser } from '$app/environment';
 

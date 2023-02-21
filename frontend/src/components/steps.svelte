@@ -8,7 +8,7 @@
     stepsList,
   } from '../stores/stores.js';
   import Scroll from './scroll.svelte';
-  import type { Step } from 'src/types';
+  import type { Step } from '../types';
 
   let data: Step[] = [];
   $clickedStep = undefined;
