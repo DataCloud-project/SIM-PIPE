@@ -31,9 +31,9 @@ def convert(response):
 
     # extract relevant information using string matching
     matched_stepnames = list(re.finditer('step [a-zA-Z]+', response))
-    matched_imagenames = list(re.finditer('implementation: container-implementation image: \'[a-zA-Z\.:0-9]+\'', response))
-    response = re.sub('\n', '', response)
-    response = re.sub('\t', '', response)
+    matched_imagenames = list(re.finditer('implementation: container-implementation\s*image:\s*\'+(.+)\'+', response))
+    response = re.sub('\n', ' ', response)
+    response = re.sub('\t', ' ', response)
     matched_envlist = list(re.finditer("step ([a-zA-Z]+)[^{]*environmentParameters: ({[^}]+})", response))
 
     if( not (len(matched_stepnames) == len(matched_imagenames))):
@@ -63,11 +63,11 @@ def convert(response):
         # env 
         # check if the current step has any env list specified
         if(matched_envlist[env_list_index][1] == steps[index]["name"]):
-            matches = re.split(r' |: |{|}|\'|,', matched_envlist[env_list_index][2].group())
+            matches = re.split(r' |: |{|}|\'|,', matched_envlist[env_list_index][2])
             matches = list(filter(None, matches))
             env_list = []
             if (len(matches) > 1): # some parameters are given
-                for i in range(1, len(matches), 2):
+                for i in range(0, len(matches), 2):
                     env_list.append('='.join([matches[i], matches[i+1]]))
                 steps[index]["env"] = env_list
             env_list_index += 1 # increase env_list only if matched
