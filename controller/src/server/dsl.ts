@@ -4,7 +4,7 @@ export const StepDSL = z.object({
   name: z.string().min(1),
   step_number: z.number().min(0),
   image: z.string().min(1),
-  env: z.array(z.string().regex(/^[A-Z_]+=.+$/)),
+  env: z.array(z.string().regex(/^[A-Z_a-z]+=.+$/)),
   prerequisite: z.array(z.number().min(0)).optional(),
   type: z.string().optional(),
   stepId: z.number().min(0).optional(),
