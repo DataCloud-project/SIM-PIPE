@@ -33,6 +33,7 @@
   }
 
   const timeoutValues: string[] = [];
+  const timeoutNumberValues: number[] = [];
   const showEnvironmentList: boolean[] = [];
   for (const [index, step] of pipelineSteps.entries()) {
     showEnvironmentList[index] = false;
@@ -53,16 +54,23 @@
         environmentList[index].push([key, environmentEntry[key]].join('='));
       }
       // checking timeout_values and resetting to 0 for undefined
-      timeoutValues[index] = Number.parseInt(timeoutValues[index], 10).toFixed(0);
+      let timeoutValue = Math.ceil(Number.parseInt(timeoutValues[index], 10));
+      if (Number.isNaN(timeoutValue)) {
+        timeoutValue = 0;
+      }
+      timeoutValues[index] = timeoutValue.toString();
+      timeoutNumberValues[index] = timeoutValue;
     }
     // get sample input files for the run
     const sampleInput: string[][] = [];
-    for (const [index, file] of [...files].entries()) {
-      sampleInput[index] = [];
-      sampleInput[index].push(file.name);
-      // eslint-disable-next-line no-await-in-loop
-      const text = await file.text();
-      sampleInput[index].push(text);
+    if (files) {
+      for (const [index, file] of [...files].entries()) {
+        sampleInput[index] = [];
+        sampleInput[index].push(file.name);
+        // eslint-disable-next-line no-await-in-loop
+        const text = await file.text();
+        sampleInput[index].push(text);
+      }
     }
     // call create run with the entered details
     const variables = {
@@ -70,7 +78,7 @@
       name,
       sampleInput,
       env_list: environmentList,
-      timeout_values: timeoutValues,
+      timeout_values: timeoutNumberValues,
     };
     let result;
     result = await $graphQLClient.request<{
