@@ -88,7 +88,9 @@ function isCyclicRecursive(
  * */
 async function isCyclic(pipeline_description: string): Promise<boolean> {
   // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-  const { steps } = DSL.parse(pipeline_description);
+  const json: unknown = JSON.parse(pipeline_description);
+  const dslInstance = DSL.parse(json);
+  const { steps } = dslInstance;
   const visited = Array.from({ length: steps.length + 1 }).fill(false) as boolean[];
   const recursiveStack = Array.from({ length: steps.length + 1 }).fill(false) as boolean[];
   prerequisites = [];
@@ -120,7 +122,7 @@ export async function createSimulation(
   // disabling await-thenable, await is needed for sequential execution
   const result: CreateSimulationMutation = await sdk.createSimulation({
     name,
-    pipeline_description: JSON.parse(pipeline_description),
+    pipeline_description,
     userid,
   });
   if (!result?.create_simulation?.simulation_id) {
