@@ -281,7 +281,7 @@ export async function startRun(run_id: string): Promise<string> {
       }
       // get prerequisite step numbers of the current step and verify if
       // it can be executed at this point
-      if (step.prerequisite?.length > 0) {
+      if (step.prerequisite !== undefined && step.prerequisite?.length > 0) {
         for (const prereqStep of step.prerequisite) {
           // if the prereq_step is completed, add input file and continue
           if (completed.includes(prereqStep)) {
