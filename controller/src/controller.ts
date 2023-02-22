@@ -117,6 +117,13 @@ function init(step: types.Step): void {
 let timer: SetIntervalAsyncTimer<void[]>;
 
 async function pullImagePromise(image: string): Promise<void> {
+  // Do nothing if the image already exist
+  const images = await docker.listImages();
+  if (images.some((img) => img.RepoTags?.includes(image))) {
+    // eslint-disable-next-line unicorn/no-useless-promise-resolve-reject
+    return Promise.resolve();
+  }
+
   return new Promise<void>((resolve, reject) => {
     const onFinished = (): void => {
       resolve();
