@@ -1,4 +1,4 @@
-import * as Sentry from '@sentry/node';
+import { captureException } from '@sentry/node';
 import { gql } from 'apollo-server';
 import { ApolloServer } from 'apollo-server-express';
 import ExpiryMap from 'expiry-map';
@@ -14,14 +14,6 @@ import type { GetSimulationQuery, GetSimulationRunResultsQuery } from '../db/dat
 
 process.env.IS_SIMULATION_RUNNING = 'false';
 process.env.CANCEL_RUN_LIST = '';
-
-if (process.env.SENTRY_DSN) {
-  Sentry.init({
-    dsn: process.env.SENTRY_DSN,
-  });
-
-  Sentry.captureException(new Error('Test Sentry'));
-}
 
 /**
  * graphql query and resolvers
@@ -137,6 +129,7 @@ const resolvers = {
           message: `Simulation has been created with id ${newSimId}`,
         });
       } catch (error) {
+        captureException(error);
         const errorMessage = `🎌 Error : ${(error as Error).message}`;
         logger.error(errorMessage);
         return JSON.stringify({
@@ -169,6 +162,7 @@ const resolvers = {
           message: `Run has been created with id ${newRunId}`,
         });
       } catch (error) {
+        captureException(error);
         const errorMessage = `🎌 Error creating new run:
       ${(error as Error).message}`;
         logger.error(errorMessage);
@@ -188,6 +182,7 @@ const resolvers = {
           message: 'Run has been added to queue',
         });
       } catch (error) {
+        captureException(error);
         const errorMessage = `🎌 Failed! Error starting run:
       ${(error as Error).message}`;
         logger.error(errorMessage);
@@ -205,6 +200,7 @@ const resolvers = {
           message: 'Successfully sent stop signal to current run',
         });
       } catch (error) {
+        captureException(error);
         const errorMessage = `🎌 Error stopping run:
       ${(error as Error).message}`;
         logger.error(errorMessage);
@@ -224,6 +220,7 @@ const resolvers = {
           message: 'Successfully deleted run',
         });
       } catch (error) {
+        captureException(error);
         const errorMessage = `🎌 Error deleting run:
       ${(error as Error).message}`;
         logger.error(errorMessage);
@@ -243,6 +240,7 @@ const resolvers = {
           message: 'Successfully deleted simulation',
         });
       } catch (error) {
+        captureException(error);
         const errorMessage = `🎌 Error deleting simulation:
       ${(error as Error).message}`;
         logger.error(errorMessage);
@@ -328,6 +326,7 @@ const startSecureServer = async (): Promise<void> => {
       () => console.log(`🚀 Authenticated server running on http://localhost:9000${server.graphqlPath}`),
     );
   } catch (error) {
+    captureException(error);
     throw new Error(`🎌 Error starting the server\n${error as string}`);
   }
 };

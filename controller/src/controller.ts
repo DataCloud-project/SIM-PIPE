@@ -1,3 +1,4 @@
+import { captureException, init as SentryInit } from '@sentry/node';
 import Docker from 'dockerode';
 import * as dotenv from 'dotenv';
 import fsAsync from 'node:fs/promises';
@@ -17,6 +18,20 @@ import type * as types from './types.js';
 dotenv.config();
 
 // TODO: remove global variables
+
+if (process.env.SENTRY_DSN) {
+  SentryInit({
+    dsn: process.env.SENTRY_DSN,
+  });
+} else {
+  SentryInit({
+    dsn: '',
+    // eslint-disable-next-line unicorn/no-null
+    beforeSend: () => null,
+  });
+}
+
+captureException(new Error('Test Sentry'));
 
 // remote is true by default
 const remote: boolean = process.argv[2] ? process.argv[2] === 'remote' : true;
@@ -80,6 +95,7 @@ async function pingDocker(): Promise<void> {
     logger.info('🐳 Docker daemon is running');
   } catch (error) {
     logger.error('🐳 Docker daemon is not running');
+    captureException(error);
     throw new Error(`🎌 Error pinging docker daemon\n${error as string}`);
   }
 }
@@ -105,20 +121,25 @@ async function pullImagePromise(image: string): Promise<void> {
     const onFinished = (): void => {
       resolve();
     };
-    docker.pull(image, async (error: unknown, stream: Stream) => {
+    // eslint-disable-next-line no-void
+    void docker.pull(image, async (error: unknown, stream: Stream) => {
       if (error) {
         reject(error);
       } else {
         try {
           docker.modem.followProgress(stream, onFinished);
         } catch (dockerModemError) {
-          if ((dockerModemError as Error).name === 'TypeError') resolve();
-          else reject(dockerModemError);
+          if ((dockerModemError as Error).name === 'TypeError') {
+            resolve();
+          } else {
+            captureException(dockerModemError);
+            reject(dockerModemError);
+          }
         }
       }
-    }).catch((error) => {
+    });/* ;.catch((error) => {
       reject(error);
-    });
+    }); */
   });
 }
 
@@ -202,6 +223,7 @@ export async function parseStats(stepId: number): Promise<void> {
           time, cpu, systemCpu, memory, memory_max: memoryMax, rxValue, txValue,
         };
       } catch (error) {
+        captureException(error);
         logger.error(`🎌 Error parsing stats file: ${fullFilename}`);
         logger.error(error);
         return undefined;
@@ -341,6 +363,7 @@ function startPollingStats(startedAt: number, step: types.Step): void {
     try {
       await getStatsUntilExit(createdContainer, exitTimeout, startedAt, step);
     } catch (error) {
+      captureException(error);
       logger.error(error);
     }
   }, pollingInterval);
@@ -379,6 +402,7 @@ export async function start(client: GraphQLClient, step: types.Step): Promise<st
     }
     return `${targetDirectory}/outputs/`;
   } catch (error) {
+    captureException(error);
     const message: string = error instanceof Error ? error.message : 'Error that is not an Error instance';
     // set step as failed on exception
     await sdk.setStepAsFailed({ step_id: step.stepId });

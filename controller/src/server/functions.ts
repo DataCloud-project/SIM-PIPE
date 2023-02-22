@@ -1,3 +1,4 @@
+import { captureException } from '@sentry/node';
 import * as dotenv from 'dotenv';
 import { GraphQLClient } from 'graphql-request';
 import * as fs from 'node:fs';
@@ -324,6 +325,7 @@ export async function startRun(run_id: string): Promise<string> {
           await controller.start(client, currentStep);
           completed.push(step.step_number); // add successful step to the completed list
         } catch (error) {
+          captureException(error);
           logger.error(`Run ${run_id} execution has failed\n${(error as Error).message}`);
           process.env.FAILED_RUN = 'true';
           failed.push(step.step_number); // add failed step to the list
@@ -455,6 +457,7 @@ export async function createSampleSimulation(): Promise<string> {
   try {
     connectHasuraEndpoint();
   } catch (error) {
+    captureException(error);
     const errorMessage = `\n 🎌 Error connecting from SIM-PIPE controller to hasura endpoint:\n
     ${(error as Error).message}
     Check HASURA_URL in env file, hasura endpoint and admin secret\n`;
