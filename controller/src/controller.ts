@@ -119,7 +119,9 @@ let timer: SetIntervalAsyncTimer<void[]>;
 async function pullImagePromise(image: string): Promise<void> {
   // Do nothing if the image already exist
   const images = await docker.listImages();
-  if (images.some((img) => img.RepoTags?.includes(image))) {
+  // If a tag is not included at the end, add the :latest tag
+  const imageWithTag = /:\w+$/.test(image) ? image : `${image}:latest`;
+  if (images.some((img) => img.RepoTags?.includes(imageWithTag))) {
     // eslint-disable-next-line unicorn/no-useless-promise-resolve-reject
     return Promise.resolve();
   }
