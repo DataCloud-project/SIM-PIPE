@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/node';
 import { gql } from 'apollo-server';
 import { ApolloServer } from 'apollo-server-express';
 import ExpiryMap from 'expiry-map';
@@ -13,6 +14,14 @@ import type { GetSimulationQuery, GetSimulationRunResultsQuery } from '../db/dat
 
 process.env.IS_SIMULATION_RUNNING = 'false';
 process.env.CANCEL_RUN_LIST = '';
+
+if (process.env.SENTRY_DSN) {
+  Sentry.init({
+    dsn: process.env.SENTRY_DSN,
+  });
+
+  Sentry.captureException(new Error('Test Sentry'));
+}
 
 /**
  * graphql query and resolvers

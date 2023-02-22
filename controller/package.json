@@ -55,6 +55,7 @@
     "typescript": "^4.9.4"
   },
   "dependencies": {
+    "@sentry/node": "^7.38.0",
     "apollo-server": "^3.6.1",
     "apollo-server-express": "^3.10.0",
     "dockerode": "^3.3.4",
