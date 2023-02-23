@@ -309,6 +309,7 @@ export async function startRun(run_id: string): Promise<string> {
         currentStep.stepNumber = step.step_number;
         currentStep.stepId = step.stepId;
         currentStep.env = step.env;
+        currentStep.type = step.type;
         // set the variable values in env file
         process.env.STEP_NUMBER = `${step.step_number}`;
         process.env.IMAGE = step.image;
