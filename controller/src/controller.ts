@@ -297,7 +297,7 @@ async function postExitProcessing(
   const result = await createdContainer.inspect();
   const exitCode = result.State.ExitCode;
   logger.info(`Exit code ${exitCode}`);
-  if (exitCode === 0  || exitCode === 15) { // graceful termination/sucessful completion
+  if (exitCode === 0 || exitCode === 15) { // graceful termination/sucessful completion
     await sdk.insertLog({ step_id: stepId, text: logText });
     // update the step status as ended succesfully
     await sdk.setStepAsEndedSuccess({
