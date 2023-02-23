@@ -17,4 +17,5 @@ export type Step = {
   env?: string[];
   stepId?: number;
   prerequisite?:number[]; // to handle complex pipelines
+  type?:string;
 };
