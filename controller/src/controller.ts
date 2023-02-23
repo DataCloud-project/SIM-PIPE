@@ -297,7 +297,7 @@ async function postExitProcessing(
   const result = await createdContainer.inspect();
   const exitCode = result.State.ExitCode;
   logger.info(`Exit code ${exitCode}`);
-  if (exitCode === 0) {
+  if (exitCode === 0  || exitCode === 15) { // graceful termination/sucessful completion
     await sdk.insertLog({ step_id: stepId, text: logText });
     // update the step status as ended succesfully
     await sdk.setStepAsEndedSuccess({
@@ -402,12 +402,12 @@ export async function start(client: GraphQLClient, step: types.Step): Promise<st
     startPollingStats(startedAt, step);
     await waitForContainer();
     const result = await createdContainer.inspect();
-    if (result.State.ExitCode !== 0) {
+    if (result.State.ExitCode !== 0 && result.State.ExitCode !== 15) { // exit code 15: graceful termination
       if (process.env.STOP_SIGNAL_SENT) {
         logger.error('Process was timed out before completion');
         throw new Error('Process was timed out before completion');
       }
-      throw new Error('Exit code indicates step failed');
+      throw new Error(`Exit code ${result.State.ExitCode} indicates step failed`);
     }
     return `${targetDirectory}/outputs/`;
   } catch (error) {
