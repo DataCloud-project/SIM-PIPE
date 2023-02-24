@@ -279,7 +279,7 @@ function stopPollingStats(): void {
 }
 
 async function postExitProcessing(
-  container: Docker.Container, stepId: number, stepNumber: number,
+  container: Docker.Container, stepId: number, stepNumber: number, stepType:string
 ): Promise<void> {
   await setTimeout(1000); // Wait 1s before parsing the stats
   await parseStats(stepId);
@@ -297,8 +297,10 @@ async function postExitProcessing(
   const result = await createdContainer.inspect();
   const exitCode = result.State.ExitCode;
   logger.info(`Exit code ${exitCode}`);
-  if (exitCode === 0 || exitCode === 15) { // graceful termination/sucessful completion
-    await sdk.insertLog({ step_id: stepId, text: logText });
+  // successful completion/continuous pipelines which are terminated after a specified time interval
+  if (exitCode === 0 || stepType === 'continuous') {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+    await sdk.insertLog({ step_id: stepId, text: `${logStream}\n Exit code ${exitCode}` });
     // update the step status as ended succesfully
     await sdk.setStepAsEndedSuccess({
       step_id: stepId,
@@ -353,7 +355,7 @@ async function getStatsUntilExit(
       process.env.PROCESS_COMPLETED = 'true';
     } else { // if step executed successfully
       logger.info('Completed execution of container');
-      await postExitProcessing(container, step.stepId as number, step.stepNumber as number);
+      await postExitProcessing(container, step.stepId as number, step.stepNumber as number, step.type as string);
     }
   }
 }
@@ -402,7 +404,7 @@ export async function start(client: GraphQLClient, step: types.Step): Promise<st
     startPollingStats(startedAt, step);
     await waitForContainer();
     const result = await createdContainer.inspect();
-    if (result.State.ExitCode !== 0 && result.State.ExitCode !== 15) { // exit code 15: graceful termination
+    if (result.State.ExitCode !== 0 && step.type !== 'continuous') { // exit code 15: graceful termination
       if (process.env.STOP_SIGNAL_SENT) {
         logger.error('Process was timed out before completion');
         throw new Error('Process was timed out before completion');
