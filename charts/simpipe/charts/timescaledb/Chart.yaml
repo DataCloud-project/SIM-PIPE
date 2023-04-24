@@ -3,4 +3,4 @@ name: timescaledb
 description: Simple Deployment of TimescaleDB
 type: application
 version: 0.1.0
-appVersion: pg15.2-ts2.10.1-oss-latest
+appVersion: pg15.2-ts2.10.2-latest

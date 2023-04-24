@@ -5,9 +5,6 @@ dependencies:
 - name: prometheus
   repository: https://prometheus-community.github.io/helm-charts
   version: 19.7.2
-- name: timescaledb-single
-  repository: https://charts.timescale.com
-  version: 0.33.1
 - name: promscale
   repository: https://charts.timescale.com
   version: 15.0.0
@@ -29,8 +26,8 @@ dependencies:
 - name: sftpgo
   repository: https://charts.sagikazarmark.dev
   version: 0.14.2
-- name: postgresql
-  repository: https://charts.bitnami.com/bitnami
-  version: 12.2.5
-digest: sha256:f5341cdddeae9c3219f49fb5a52d3805181d978b0011c3fda6d3e80b2cc5eb5a
-generated: "2023-03-23T15:04:41.22242+01:00"
+- name: timescaledb
+  repository: ""
+  version: 0.1.0
+digest: sha256:224cf1c83ecc580ec2f8f93fc99ded311cb7b15eab6f2d8f5e477484122f44e4
+generated: "2023-04-24T14:41:55.910992+02:00"

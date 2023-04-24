@@ -2,140 +2,6 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
-cadvisor:
-  enabled: true
-  nameOverride: simpipe-cadvisor
-
-  container:
-    additionalArgs:
-      - --housekeeping_interval=1s
-      - --max_housekeeping_interval=2s
-      #- --docker_only
-      - --event_storage_event_limit=default=0
-      - --event_storage_age_limit=default=0
-    hostPaths:
-      - name: rootfs
-        path: "/"
-        mount: "/rootfs"
-      - name: var-run
-        path: "/var/run"
-      - name: sys
-        path: "/sys"
-      - name: docker
-        path: "/var/lib/docker"
-      - name: disk
-        path: "/dev/disk"
-
-  #nodeSelector:
-  #  node-role.kubernetes.io/worker: worker
-
-timescaledb-single:
-  enabled: false
-  fullnameOverride: simpipe-timescaledb
-
-  replicaCount: 1
-
-  backup:
-    enabled: false
-
-  persistentVolumes:
-    data:
-      size: 32Gi
-
-  secrets:
-    credentials:
-      # Consider using a safe password, and use something like sops to encrypt it.
-      PATRONI_SUPERUSER_PASSWORD: "simpipe"
-
-# Please note that PromScale is being deprecated.
-# We will replace it eventually.
-promscale:
-  enabled: false
-  fullnameOverride: simpipe-promscale
-
-  connection:
-    user: postgres
-    password: simpipe
-    host: simpipe-timescaledb
-    port: 5432
-    dbName: postgres
-
-prometheus:
-  enabled: false
-  kube-state-metrics:
-    enabled: false
-  alertmanager:
-    enabled: false
-  prometheus-node-exporter:
-    enabled: false
-  prometheus-pushgateway:
-    enabled: true
-
-  serverFiles:
-    prometheus.yml:
-      scrape_configs:
-        - job_name: cadvisor
-          kubernetes_sd_configs:
-            - role: pod
-          relabel_configs:
-            - source_labels: [__meta_kubernetes_pod_label_app]
-              action: keep
-              regex: simpipe-cadvisor
-            # - action: labelmap
-            #   regex: __meta_kubernetes_pod_label_(.+)
-            # - source_labels: [__meta_kubernetes_namespace]
-            #   action: replace
-            #   target_label: namespace
-            # - source_labels: [__meta_kubernetes_pod_name]
-            #   action: replace
-            #   target_label: pod
-          metric_relabel_configs:
-            # - action: replace
-            #   replacement: wololo-${1}
-            #   source_labels: [__meta_kubernetes_pod_label_id, id]
-            #   target_label: fuckyou
-            - source_labels: [id]
-              regex: "^/kubepods/(guaranteed|burstable|besteffort)/([^/]+)/([^/]+)$"
-              target_label: pod
-              replacement: "$2"
-              action: replace
-            - source_labels: [id]
-              regex: "^/kubepods/(guaranteed|burstable|besteffort)/([^/]+)/([^/]+)$"
-              target_label: container
-              replacement: "$3"
-              action: replace
-            # remove label id
-            - regex: "id"
-              action: labeldrop
-
-          # Scrape faster
-          scrape_interval: 2s
-        - job_name: "simpipe-prometheus-pushgateway"
-          honor_labels: true
-
-          kubernetes_sd_configs:
-            - role: service
-
-          relabel_configs:
-            - source_labels:
-                [__meta_kubernetes_service_annotation_prometheus_io_probe]
-              action: keep
-              regex: pushgateway
-        - job_name: kubernetes-pods
-          honor_labels: true
-          kubernetes_sd_configs:
-            - role: pod
-
-  # # See https://github.com/timescale/timescaledb-kubernetes/issues/394
-  # # and https://github.com/timescale/timescaledb-kubernetes/issues/278#issuecomment-1104895032
-  # service:
-  #   primary:
-  #     spec:
-  #       selector:
-  #         app: sandbox-toys-timescaledb
-  #         cluster-name: simpipe
-  #         role: master
-
 replicaCount: 1
 
 image:
@@ -334,22 +200,126 @@ sftpgo:
       subPath: sftpgo.json
       readOnly: true
 
-postgresql:
-  enabled: false
-  global:
-    postgresql:
-      auth:
-        username: simpipe
-        password: simpipe1234
-        postgresPassword: simpipe1234
-  architecture: standalone
-  primary:
-    persistence:
-      size: 32Gi
-
 timescaledb:
   enabled: true
   auth:
     postgresPassword: simpipe1234
   persistence:
     size: 32Gi
+
+# Please note that PromScale is being deprecated.
+# We will replace it eventually.
+promscale:
+  enabled: true
+  fullnameOverride: simpipe-promscale
+
+  connection:
+    user: postgres
+    password: simpipe1234
+    host: simpipe-timescaledb.default.svc.cluster.local
+    port: 5432
+    dbName: postgres
+    sslMode: disable
+
+cadvisor:
+  enabled: true
+  nameOverride: simpipe-cadvisor
+
+  container:
+    additionalArgs:
+      - --housekeeping_interval=1s
+      - --max_housekeeping_interval=2s
+      #- --docker_only
+      - --event_storage_event_limit=default=0
+      - --event_storage_age_limit=default=0
+    hostPaths:
+      - name: rootfs
+        path: "/"
+        mount: "/rootfs"
+      - name: var-run
+        path: "/var/run"
+      - name: sys
+        path: "/sys"
+      - name: docker
+        path: "/var/lib/docker"
+      - name: disk
+        path: "/dev/disk"
+
+  #nodeSelector:
+  #  node-role.kubernetes.io/worker: worker
+
+prometheus:
+  enabled: false
+  kube-state-metrics:
+    enabled: false
+  alertmanager:
+    enabled: false
+  prometheus-node-exporter:
+    enabled: false
+  prometheus-pushgateway:
+    enabled: true
+
+  serverFiles:
+    prometheus.yml:
+      scrape_configs:
+        - job_name: cadvisor
+          kubernetes_sd_configs:
+            - role: pod
+          relabel_configs:
+            - source_labels: [__meta_kubernetes_pod_label_app]
+              action: keep
+              regex: simpipe-cadvisor
+            # - action: labelmap
+            #   regex: __meta_kubernetes_pod_label_(.+)
+            # - source_labels: [__meta_kubernetes_namespace]
+            #   action: replace
+            #   target_label: namespace
+            # - source_labels: [__meta_kubernetes_pod_name]
+            #   action: replace
+            #   target_label: pod
+          metric_relabel_configs:
+            # - action: replace
+            #   replacement: wololo-${1}
+            #   source_labels: [__meta_kubernetes_pod_label_id, id]
+            #   target_label: fuckyou
+            - source_labels: [id]
+              regex: "^/kubepods/(guaranteed|burstable|besteffort)/([^/]+)/([^/]+)$"
+              target_label: pod
+              replacement: "$2"
+              action: replace
+            - source_labels: [id]
+              regex: "^/kubepods/(guaranteed|burstable|besteffort)/([^/]+)/([^/]+)$"
+              target_label: container
+              replacement: "$3"
+              action: replace
+            # remove label id
+            - regex: "id"
+              action: labeldrop
+
+          # Scrape faster
+          scrape_interval: 2s
+        - job_name: "simpipe-prometheus-pushgateway"
+          honor_labels: true
+
+          kubernetes_sd_configs:
+            - role: service
+
+          relabel_configs:
+            - source_labels:
+                [__meta_kubernetes_service_annotation_prometheus_io_probe]
+              action: keep
+              regex: pushgateway
+        - job_name: kubernetes-pods
+          honor_labels: true
+          kubernetes_sd_configs:
+            - role: pod
+
+  # # See https://github.com/timescale/timescaledb-kubernetes/issues/394
+  # # and https://github.com/timescale/timescaledb-kubernetes/issues/278#issuecomment-1104895032
+  # service:
+  #   primary:
+  #     spec:
+  #       selector:
+  #         app: sandbox-toys-timescaledb
+  #         cluster-name: simpipe
+  #         role: master

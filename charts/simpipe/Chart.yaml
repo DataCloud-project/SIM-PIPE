@@ -13,10 +13,6 @@ dependencies:
     version: "19.7.2"
     repository: https://prometheus-community.github.io/helm-charts
     condition: prometheus.enabled
-  - name: timescaledb-single
-    version: "0.33.1"
-    repository: https://charts.timescale.com
-    condition: timescaledb-single.enabled
   - name: promscale
     version: "15.0.0"
     repository: https://charts.timescale.com
@@ -45,10 +41,6 @@ dependencies:
     version: "0.14.2"
     repository: https://charts.sagikazarmark.dev
     condition: sftpgo.enabled
-  - name: postgresql
-    version: "12.2.5"
-    repository: https://charts.bitnami.com/bitnami
-    condition: postgresql.enabled
   - name: timescaledb
     version: "0.1.0"
     condition: timescaledb.enabled
