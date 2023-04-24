@@ -1,0 +1,17 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  generateName: hello-world-
+  annotations:
+    workflows.argoproj.io/description: |
+      This is a simple hello world example.
+spec:
+  entrypoint: asm-hello
+  templates:
+    - name: asm-hello
+      container:
+        #image: mycluster-registry:54397/hello-world:latest
+        # We do not pull as we use a local image
+        imagePullPolicy: Never
+        image: hello-world:latest
+        command: ["/hello_world"]

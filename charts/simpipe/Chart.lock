@@ -1,0 +1,36 @@
+dependencies:
+- name: cadvisor
+  repository: https://ckotzbauer.github.io/helm-charts
+  version: 2.2.4
+- name: prometheus
+  repository: https://prometheus-community.github.io/helm-charts
+  version: 19.7.2
+- name: timescaledb-single
+  repository: https://charts.timescale.com
+  version: 0.33.1
+- name: promscale
+  repository: https://charts.timescale.com
+  version: 15.0.0
+- name: kube-prometheus-stack
+  repository: https://prometheus-community.github.io/helm-charts
+  version: 45.7.1
+- name: argo-workflows
+  repository: https://argoproj.github.io/argo-helm
+  version: 0.22.13
+- name: argo-events
+  repository: https://argoproj.github.io/argo-helm
+  version: 2.1.3
+- name: minio
+  repository: https://charts.bitnami.com/bitnami
+  version: 12.1.12
+- name: docker-registry
+  repository: https://helm.twun.io
+  version: 2.2.2
+- name: sftpgo
+  repository: https://charts.sagikazarmark.dev
+  version: 0.14.2
+- name: postgresql
+  repository: https://charts.bitnami.com/bitnami
+  version: 12.2.5
+digest: sha256:f5341cdddeae9c3219f49fb5a52d3805181d978b0011c3fda6d3e80b2cc5eb5a
+generated: "2023-03-23T15:04:41.22242+01:00"
