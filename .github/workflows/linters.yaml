@@ -1,10 +1,6 @@
 name: Node.js CI
 
-on:
-  push:
-    branches:
-      - main
-  pull_request:
+on: {}
 
 jobs:
   check-controller:

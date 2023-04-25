@@ -1,14 +1,6 @@
 name: Create and publish example software containers
 
-on:
-  push:
-    branches:
-      - main
-    paths:
-      - 'example/**'
-  pull_request:
-    paths:
-      - 'example/**'
+on: {}
 
 env:
   REGISTRY: ghcr.io
