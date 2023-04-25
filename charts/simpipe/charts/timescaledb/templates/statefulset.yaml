@@ -38,6 +38,16 @@ spec:
                 secretKeyRef:
                   name: {{ include "timescaledb-simple.fullname" . }}
                   key: postgres-password
+            - name: TS_TUNE_MEMORY
+              value: {{ .Values.tune.memory }}
+            - name: TS_TUNE_NUM_CPUS
+              value: {{ .Values.tune.cpus | quote }}
+            - name: TS_TUNE_MAX_BG_WORKERS
+              value: {{ .Values.tune.maxBgWorkers | quote }}
+            {{- if .Values.tune.profile }}
+            - name: TSTUNE_PROFILE
+              value: {{ .Values.tune.profile }}
+            {{- end }}
           ports:
             - name: postgresql
               containerPort: {{ .Values.service.port }}

@@ -105,6 +105,16 @@ kube-prometheus-stack:
   prometheus-node-exporter:
     hostRootFsMount:
       enabled: false
+  prometheus:
+    prometheusSpec:
+      additionalRemoteWrite:
+        - url: "http://simpipe-promscale.default.svc.cluster.local:9201/write"
+          remoteTimeout: 100s
+          queueConfig:
+            maxSamplesPerSend: 10000
+      additionalRemoteRead:
+        - url: "http://simpipe-promscale.default.svc.cluster.local:9201/read"
+          readRecent: true
 
 argo-workflows:
   enabled: true
@@ -206,6 +216,11 @@ timescaledb:
     postgresPassword: simpipe1234
   persistence:
     size: 32Gi
+  resources:
+    # timescaledb will use ALL the resources it can get by default…
+    limits:
+      cpu: 256m
+      memory: 2Gi
 
 # Please note that PromScale is being deprecated.
 # We will replace it eventually.

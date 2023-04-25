@@ -11,7 +11,7 @@ from install import install_or_upgrade_simpipe
 from install import main as install_main
 
 
-def start_colima(cpu=4, memory=6):
+def start_colima(cpu, memory):
     print("⏳ Starting colima...")
     subprocess.run(
         [
@@ -29,6 +29,9 @@ def start_colima(cpu=4, memory=6):
             str(cpu),
             "--memory",
             str(memory),
+            # set the current docker/kubernetes context
+            "--activate",
+            "simpipe",
         ],
         check=True,
     )

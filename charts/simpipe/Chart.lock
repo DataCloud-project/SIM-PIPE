@@ -10,7 +10,7 @@ dependencies:
   version: 15.0.0
 - name: kube-prometheus-stack
   repository: https://prometheus-community.github.io/helm-charts
-  version: 45.7.1
+  version: 45.20.0
 - name: argo-workflows
   repository: https://argoproj.github.io/argo-helm
   version: 0.22.13
@@ -29,5 +29,5 @@ dependencies:
 - name: timescaledb
   repository: ""
   version: 0.1.0
-digest: sha256:224cf1c83ecc580ec2f8f93fc99ded311cb7b15eab6f2d8f5e477484122f44e4
-generated: "2023-04-24T14:41:55.910992+02:00"
+digest: sha256:2a9e2a85fbd8a809d717e460f4a04c70f61465560baf830a1239d94118e30667
+generated: "2023-04-24T15:00:40.457019+02:00"

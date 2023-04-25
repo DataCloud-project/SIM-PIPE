@@ -16,6 +16,12 @@ auth:
   # Replace the password with a strong password
   postgresPassword: password
 
+tune:
+  memory: 1GB
+  cpus: 1
+  maxBgWorkers: 16
+  profile: promscale
+
 persistence:
   size: 16Gi
   storageClass: ""
