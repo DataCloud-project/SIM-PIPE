@@ -156,10 +156,22 @@ def check_argo_installed():
     return True
 
 
+def check_docker_installed():
+    if not check_if_installed("docker"):
+        print("❌ docker is not installed")
+        print("Check https://docs.docker.com/get-docker/ for installation instructions")
+        if sys.platform == "darwin":
+            print("\nYou can also install docker using brew:")
+            print("brew install docker")
+        return False
+    return True
+
+
 def check_tools_installed():
     return all(
         [
             check_kubectl_installed(),
+            check_docker_installed(),
             check_helm_installed(),
             check_helm_diff_installed(),
             check_argo_installed(),

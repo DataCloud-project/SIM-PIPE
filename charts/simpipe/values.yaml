@@ -107,14 +107,18 @@ kube-prometheus-stack:
       enabled: false
   prometheus:
     prometheusSpec:
+      retention: 10y
       additionalRemoteWrite:
-        - url: "http://simpipe-promscale.default.svc.cluster.local:9201/write"
-          remoteTimeout: 100s
-          queueConfig:
-            maxSamplesPerSend: 10000
+        []
+        # - url: "http://simpipe-promscale.default.svc.cluster.local:9201/write"
+        #   remoteTimeout: 100s
+        #   queueConfig:
+        #     maxSamplesPerSend: 10000
+        #- url: "http://simpipe-influxdb.default.svc.cluster.local:8086/api/
       additionalRemoteRead:
-        - url: "http://simpipe-promscale.default.svc.cluster.local:9201/read"
-          readRecent: true
+        []
+        # - url: "http://simpipe-promscale.default.svc.cluster.local:9201/read"
+        #   readRecent: true
 
 argo-workflows:
   enabled: true
@@ -151,7 +155,7 @@ argo-workflows:
       archive: true
       clusterName: simpipe
       postgresql:
-        host: simpipe-timescaledb.default.svc.cluster.local
+        host: simpipe-postgresql.default.svc.cluster.local
         port: 5432
         database: postgres
         tableName: postgres
@@ -210,8 +214,21 @@ sftpgo:
       subPath: sftpgo.json
       readOnly: true
 
-timescaledb:
+postgresql:
   enabled: true
+  global:
+    postgresql:
+      auth:
+        username: simpipe
+        password: simpipe1234
+        postgresPassword: simpipe1234
+  architecture: standalone
+  primary:
+    persistence:
+      size: 32Gi
+
+timescaledb:
+  enabled: false
   auth:
     postgresPassword: simpipe1234
   persistence:
@@ -225,16 +242,29 @@ timescaledb:
 # Please note that PromScale is being deprecated.
 # We will replace it eventually.
 promscale:
-  enabled: true
+  enabled: false
   fullnameOverride: simpipe-promscale
 
   connection:
     user: postgres
     password: simpipe1234
-    host: simpipe-timescaledb.default.svc.cluster.local
+    host: simpipe-postgresql.default.svc.cluster.local
     port: 5432
     dbName: postgres
     sslMode: disable
+
+influxdb:
+  enabled: false
+  auth:
+    admin:
+      password: simpipe1234
+    user:
+      name: simpipe
+      password: simpipe1234
+      bucket: simpipe
+  persistence:
+    enabled: true
+    size: 16Gi
 
 cadvisor:
   enabled: true

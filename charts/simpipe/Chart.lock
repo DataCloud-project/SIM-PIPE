@@ -29,5 +29,11 @@ dependencies:
 - name: timescaledb
   repository: ""
   version: 0.1.0
-digest: sha256:2a9e2a85fbd8a809d717e460f4a04c70f61465560baf830a1239d94118e30667
-generated: "2023-04-24T15:00:40.457019+02:00"
+- name: postgresql
+  repository: https://charts.bitnami.com/bitnami
+  version: 12.3.1
+- name: influxdb
+  repository: https://charts.bitnami.com/bitnami
+  version: 5.4.23
+digest: sha256:cceef3e9945c849e3f2db02de35de19ed5154a44b215b4f8d98e4cefd62c62e3
+generated: "2023-04-25T11:57:29.57826+02:00"

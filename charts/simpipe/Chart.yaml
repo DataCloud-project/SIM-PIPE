@@ -44,3 +44,11 @@ dependencies:
   - name: timescaledb
     version: "0.1.0"
     condition: timescaledb.enabled
+  - name: postgresql
+    version: "12.3.1"
+    repository: https://charts.bitnami.com/bitnami
+    condition: postgresql.enabled
+  - name: influxdb
+    version: "5.4.23"
+    repository: https://charts.bitnami.com/bitnami
+    condition: influxdb.enabled
