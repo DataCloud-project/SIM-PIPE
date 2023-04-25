@@ -164,6 +164,15 @@ def check_docker_installed():
             print("\nYou can also install docker using brew:")
             print("brew install docker")
         return False
+    if not check_if_installed("docker-buildx"):
+        print("❌ docker-buildx is not installed")
+        print(
+            "Check https://docs.docker.com/buildx/working-with-buildx/ for installation instructions"
+        )
+        if sys.platform == "darwin":
+            print("\nYou can also install docker-buildx using brew:")
+            print("brew install docker-buildx")
+        return False
     return True
 
 

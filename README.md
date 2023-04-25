@@ -26,7 +26,7 @@ Build the hello-world software container image locally:
 
 ```bash
 # Example using Docker
-docker build -t hello-world images/hello-world
+docker buildx build -t hello-world images/hello-world
 ```
 
 Run the hello-world pipeline:

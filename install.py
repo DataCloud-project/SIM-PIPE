@@ -23,7 +23,7 @@ def install_tools():
         print("You can use the checklist.py script to check your environment.")
         sys.exit(1)
 
-    tools = ["kubernetes-cli", "colima", "helm", "argo", "docker"]
+    tools = ["kubernetes-cli", "colima", "helm", "argo", "docker", "docker-buildx"]
     print("⏳ Installing tools: " + ", ".join(tools) + "...")
 
     subprocess.run(["brew", "install", *tools], check=True)
