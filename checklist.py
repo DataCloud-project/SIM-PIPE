@@ -106,6 +106,9 @@ def check_helm_installed():
 
 
 def check_helm_diff_installed(silent=False):
+    if not check_if_installed("helm"):
+        return False
+
     try:
         result = subprocess.run(
             ["helm", "plugin", "list"],
