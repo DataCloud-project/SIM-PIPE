@@ -54,20 +54,23 @@ def main():
     install_main()
 
     if platform.system() == "Darwin":
-
         start_colima(cpu=args.cpu, memory=args.memory)
     else:
-        print("😫 This script only starts Kubernetes automatically on macOS for now.")
-        print("Please start your Kubernetes cluster manually.")
+        kubernetes_has_started = check_cluster_status(silent=True)
+        if not kubernetes_has_started:
+            print(
+                "😫 This script only starts Kubernetes automatically on macOS for now."
+            )
+            print("Please start your Kubernetes cluster manually.")
 
-    nb_tentatives = 0
-    while not check_cluster_status(silent=True):
-        print("😴 Waiting for Kubernetes cluster to be ready...")
-        nb_tentatives += 1
-        if nb_tentatives > 8:
-            if not check_cluster_status(silent=False):
-                sys.exit(1)
-        time.sleep(5)
+            nb_tentatives = 0
+            while not check_cluster_status(silent=True):
+                print("😴 Waiting for Kubernetes cluster to be ready...")
+                nb_tentatives += 1
+                if nb_tentatives > 8:
+                    if not check_cluster_status(silent=False):
+                        sys.exit(1)
+                time.sleep(5)
     print("🎉 the kubernetes cluster is ready.")
 
     install_or_upgrade_simpipe()
