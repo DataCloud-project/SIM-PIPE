@@ -132,10 +132,14 @@ def check_helm_diff_installed(silent=False):
         if int(match.group("major")) < 3:
             if not silent:
                 print("❌ helm-diff plugin version is not 3.1 or higher")
+                print("Please upgrade it.")
+                print("https://github.com/databus23/helm-diff")
             return False
     else:
         if not silent:
             print("❌ helm-diff plugin is not installed")
+            print("Follow the helm plugin manager installation instructions:")
+            print("https://github.com/databus23/helm-diff")
         return False
 
     return True
