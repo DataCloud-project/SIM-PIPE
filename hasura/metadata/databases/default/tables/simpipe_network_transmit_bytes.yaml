@@ -1,0 +1,51 @@
+table:
+  name: network_transmit_bytes
+  schema: simpipe
+configuration:
+  column_config: {}
+  custom_column_names: {}
+  custom_name: networkTransmitBytes
+  custom_root_fields: {}
+object_relationships:
+  - name: run
+    using:
+      manual_configuration:
+        column_mapping:
+          run_id: run_id
+        insertion_order: null
+        remote_table:
+          name: runs
+          schema: simpipe
+  - name: simulation
+    using:
+      manual_configuration:
+        column_mapping:
+          simulation_id: simulation_id
+        insertion_order: null
+        remote_table:
+          name: simulations
+          schema: simpipe
+  - name: step
+    using:
+      manual_configuration:
+        column_mapping:
+          step_id: step_id
+        insertion_order: null
+        remote_table:
+          name: steps
+          schema: simpipe
+select_permissions:
+  - role: user
+    permission:
+      columns:
+        - run_id
+        - simulation_id
+        - step_id
+        - time
+        - value
+      filter:
+        user_id:
+          _eq: X-Hasura-User-Id
+      allow_aggregations: true
+      query_root_fields: []
+      subscription_root_fields: []

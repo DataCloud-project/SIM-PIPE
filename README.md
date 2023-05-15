@@ -11,6 +11,36 @@ SIM-PIPE generates and simulates a deployment configuration for the final deploy
 -	Evaluating pipeline step performance by recording and analysing metrics about its execution in order to identify bottlenecks and steps to be optimized
 -	Identification of resource requirements for pipeline by calculating step performance per resource used
 
+
+## Installation
+
+Run the following command to install and start SIM-PIPE:
+
+```bash
+python start.py
+```
+
+## Quick Start
+
+Build the hello-world software container image locally:
+
+```bash
+# Example using Docker
+docker-buildx build -t hello-world images/hello-world
+```
+
+Run the hello-world pipeline:
+
+```bash
+argo submit --watch examples/hello-world.yaml
+```
+
+Check the logs of the hello-world pipeline:
+
+```bash
+argo logs @latest
+```
+
 ## Architecture
 
 The architecture of the SIM-PIPE consists of three main components:
@@ -20,7 +50,7 @@ The architecture of the SIM-PIPE consists of three main components:
 2. [SIM-PIPE Simulation Controller](https://github.com/DataCloud-project/SIM-PIPE/tree/main/controller) that performs simulations and analytics related to a specific simulation job or run and exposes REST APIs for the front-end and other services. It provides the following functionality:
 
     - It provides dispatcher service that dispatches requests and jobs to other sub-components of the back-end, including the sandbox.
-    - It stores intermediate files that are produced by each step that takes part in the simulation on disk to feed further steps of the pipeline. The files can be provided to the user of the simulator to analyse the performance/function of the steps. 
+    - It stores intermediate files that are produced by each step that takes part in the simulation on disk to feed further steps of the pipeline. The files can be provided to the user of the simulator to analyse the performance/function of the steps.
     - It executes simulation runs in an asynchronous manner. The simulation API will provide a controllable queue of pending simulations (allowing adding/removing items by the user as well as starting and ending a "run").
     - It provides a simulation analytics service that gathers metrics for each run and performs statistical analysis. The results of these analyses will be provided through the REST API and can be displayed to the user during or after a simulation run.
 
@@ -46,25 +76,14 @@ As the request comes in from the UI with a pipeline description, the controller 
 * The execution input, output, logs and usage statistics will be stored in the following folder structure:
 
         ├── SimulationID                # The simulation ID of the current simulation
-            ├── runID                # The run ID of the simulation corresponding to the current run    
+            ├── runID                # The run ID of the simulation corresponding to the current run
                 ├── stepID           # step number of the pipeline which is currently run
                     ├── input        # input file to the pipeline step
                     ├── output       # output file from the pipeline step
                     ├── logs         # logs generated from stdout and stderr
                     └── statistics   # CPU, memory, and network usage of the execution
 
-* Once the simulation is completed and all relevant files have been retreived, the simulation controller then cleans out the /in, /work and /out folders in Sandbox local storage to prepare for the next run. 
-
-## Installation
-
-To install SIM-PIPE follow these steps:
-
-1. The SIM-PIPE Sandbox environment must be set up first. Follow the installation instructions in the [sandbox](https://github.com/DataCloud-project/SIM-PIPE-Simulation-Controller/tree/main/sandbox) folder.
-2. After the sandbox is set up, proceed to install the other components of the SIM-PIPE tool (i.e., User Interface and Simulation Controller) by following the installations instructions in the [controller](https://github.com/DataCloud-project/SIM-PIPE/tree/main/controller) folder.
-
-## Running your first data pipeline simulation
-
-See the [example](https://github.com/DataCloud-project/SIM-PIPE/tree/main/example) folder for instructions on how to run your first data pipeline simulation.
+* Once the simulation is completed and all relevant files have been retreived, the simulation controller then cleans out the /in, /work and /out folders in Sandbox local storage to prepare for the next run.
 
 ## Contributing
 

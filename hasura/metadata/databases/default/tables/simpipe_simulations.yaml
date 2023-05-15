@@ -1,31 +1,56 @@
 table:
-  schema: simpipe
   name: simulations
+  schema: simpipe
 configuration:
-  custom_root_fields:
-    insert: create_simulations
-    insert_one: create_simulation
-    select_by_pk: get_simulation
-    select: simulations
-    delete: delete_simulations
-    delete_by_pk: delete_simulation
-  custom_name: simulations
+  column_config: {}
   custom_column_names: {}
+  custom_name: simulations
+  custom_root_fields:
+    delete: deleteSimulations
+    delete_by_pk: deleteSimulation
+    select: simulations
+    select_by_pk: simulation
+    update: updateSimulations
+    update_by_pk: updateSimulation
 array_relationships:
   - name: runs
     using:
       foreign_key_constraint_on:
         column: simulation_id
         table:
-          schema: simpipe
           name: runs
+          schema: simpipe
 select_permissions:
-  - role: anonymous
+  - role: user
     permission:
       columns:
         - created
         - name
         - pipeline_description
         - simulation_id
-        - userid
-      filter: {}
+      filter:
+        user_id:
+          _eq: X-Hasura-User-Id
+      allow_aggregations: true
+      query_root_fields:
+        - select_aggregate
+        - select
+        - select_by_pk
+      subscription_root_fields:
+        - select
+        - select_by_pk
+update_permissions:
+  - role: user
+    permission:
+      columns:
+        - name
+      filter:
+        user_id:
+          _eq: X-Hasura-User-Id
+      check: null
+delete_permissions:
+  - role: user
+    permission:
+      filter:
+        user_id:
+          _eq: X-Hasura-User-Id

@@ -1,8 +1,77 @@
-# - name: SIM-PIPE-backend
-#   definition:
-#     url: http://192.168.0.249:9000/graphql
-#     timeout_seconds: 60
-#     headers:
-#       - value: Bearer jwt-example
-#         name: authorization
-#   comment: ""
+- name: controller
+  definition:
+    url_from_env: CONTROLLER_URL
+    timeout_seconds: 60
+    customization: {}
+    forward_client_headers: true
+  permissions:
+    - role: user
+      definition:
+        schema: |
+          schema {
+            query: Query
+            mutation: Mutation
+          }
+          scalar json
+          scalar uuid
+          type Mutation {
+            cancelRun(runId: uuid!): Run
+            createRun(run: CreateRunInput!): Run!
+            createSimulation(simulation: CreateSimulationInput!): Simulation!
+            startRun(runId: uuid!): Run
+          }
+          type Query {
+            computeUploadPresignedUrl: String!
+            ping: String!
+            username: String!
+          }
+          type Run {
+            runId: uuid!
+          }
+          type Simulation {
+            simulationId: uuid!
+          }
+          input CreateRunInput {
+            environmentVariables: [StepEnvironmentVariable!]
+            name: String!
+            simulationId: uuid!
+            timeouts: [StepTimeout!]
+          }
+          input CreateSimulationInput {
+            name: String!
+            pipelineDescription: json!
+          }
+          input StepEnvironmentVariable {
+            name: String!
+            stepName: String!
+            value: String!
+          }
+          input StepTimeout {
+            stepName: String!
+            timeout: Int!
+          }
+  remote_relationships:
+    - relationships:
+        - definition:
+            to_source:
+              field_mapping:
+                runId: run_id
+              relationship_type: object
+              source: default
+              table:
+                name: runs
+                schema: simpipe
+          name: run
+      type_name: Run
+    - relationships:
+        - definition:
+            to_source:
+              field_mapping:
+                simulationId: simulation_id
+              relationship_type: object
+              source: default
+              table:
+                name: simulations
+                schema: simpipe
+          name: simulation
+      type_name: Simulation

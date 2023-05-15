@@ -20,7 +20,27 @@
       ],
       "args": [
         "src/index.ts",
-        "remote"
+        "both"
+      ],
+      "cwd": "${workspaceRoot}/controller",
+      "internalConsoleOptions": "openOnSessionStart",
+      "outputCapture": "std",
+      "envFile": "${workspaceFolder}/.env"
+    },
+    {
+      "type": "pwa-node",
+      "request": "launch",
+      "name": "Launch controller from dist",
+      "skipFiles": [
+        "<node_internals>/**"
+      ],
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        "--experimental-specifier-resolution=node",
+      ],
+      "args": [
+        "dist/index.js",
+        "both"
       ],
       "cwd": "${workspaceRoot}/controller",
       "internalConsoleOptions": "openOnSessionStart",
@@ -41,7 +61,10 @@
         "--loader",
         "ts-node/esm/transpile-only",
       ],
-      "args": ["src/sftp-utils.ts", "get"],
+      "args": [
+        "src/sftp-utils.ts",
+        "get"
+      ],
       "cwd": "${workspaceRoot}",
       "internalConsoleOptions": "openOnSessionStart",
       "outputCapture": "std",

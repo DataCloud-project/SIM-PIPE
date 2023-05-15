@@ -1,15 +1,13 @@
 table:
-  schema: simpipe
   name: runs
+  schema: simpipe
 configuration:
-  custom_root_fields:
-    insert: insert_runs
-    insert_one: insert_runs_one
-    select_by_pk: get_run
-    select: runs
-    delete: delete_previous_run
-  custom_name: runs
+  column_config: {}
   custom_column_names: {}
+  custom_name: runs
+  custom_root_fields:
+    select: runs
+    select_by_pk: run
 object_relationships:
   - name: simulation
     using:
@@ -20,32 +18,43 @@ array_relationships:
       foreign_key_constraint_on:
         column: run_id
         table:
-          schema: simpipe
           name: steps
-insert_permissions:
-  - role: anonymous
-    permission:
-      check: {}
-      columns: []
-      backend_only: false
+          schema: simpipe
 select_permissions:
-  - role: anonymous
+  - role: user
     permission:
       columns:
         - created
         - ended
-        - env_list
         - name
         - run_id
-        - simulation_id
         - started
         - status
-        - timeout_values
-        - userid
-      filter: {}
+      filter:
+        simulation:
+          user_id:
+            _eq: X-Hasura-User-Id
+      allow_aggregations: true
+      query_root_fields:
+        - select
+        - select_by_pk
+      subscription_root_fields:
+        - select
+        - select_by_pk
 update_permissions:
-  - role: anonymous
+  - role: user
     permission:
-      columns: []
-      filter: {}
+      columns:
+        - name
+      filter:
+        simulation:
+          user_id:
+            _eq: X-Hasura-User-Id
       check: null
+delete_permissions:
+  - role: user
+    permission:
+      filter:
+        simulation:
+          user_id:
+            _eq: X-Hasura-User-Id

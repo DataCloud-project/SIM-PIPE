@@ -1,0 +1,15 @@
+overwrite: true
+schema: "src/server/schema.graphql"
+documents: []
+generates:
+  src/server/schema.ts:
+    plugins:
+      - typescript
+      - typescript-operations
+      - typescript-resolvers
+      - typescript-graphql-request
+    config:
+      strictScalars: true
+      scalars:
+        uuid: string
+        json: string
