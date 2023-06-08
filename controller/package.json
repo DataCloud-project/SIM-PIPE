@@ -65,6 +65,7 @@
     "@graphql-tools/load-files": "^6.6.1",
     "@graphql-tools/schema": "^9.0.19",
     "@graphql-tools/utils": "^9.2.1",
+    "@kubernetes/client-node": "^0.18.1",
     "apollo-server": "^3.6.1",
     "apollo-server-express": "^3.10.0",
     "dockerode": "^3.3.5",

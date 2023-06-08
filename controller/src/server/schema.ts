@@ -1,7 +1,4 @@
 import { GraphQLResolveInfo, GraphQLScalarType, GraphQLScalarTypeConfig } from 'graphql';
-import { GraphQLClient } from 'graphql-request';
-import * as Dom from 'graphql-request/dist/types.dom';
-import gql from 'graphql-tag';
 export type Maybe<T> = T | null;
 export type InputMaybe<T> = Maybe<T>;
 export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
@@ -48,21 +45,53 @@ export type CreateSimulationInput = {
   pipelineDescription: Scalars['json'];
 };
 
+export type DockerRegistryCredential = {
+  __typename?: 'DockerRegistryCredential';
+  /**  The name of the docker registry  */
+  name: Scalars['String'];
+  /**  The docker registry endpoint  */
+  server: Scalars['String'];
+  /**  The username to use when authenticating with the docker registry  */
+  username: Scalars['String'];
+};
+
+export type DockerRegistryCredentialInput = {
+  /**  The name of the docker registry  */
+  name: Scalars['String'];
+  /**  The password to use when authenticating with the docker registry  */
+  password: Scalars['String'];
+  /**  The docker registry endpoint  */
+  server: Scalars['String'];
+  /**  The username to use when authenticating with the docker registry  */
+  username: Scalars['String'];
+};
+
 export type Mutation = {
   __typename?: 'Mutation';
   /**  Cancel a run, if the run is running it will be stopped  */
   cancelRun?: Maybe<Run>;
+  /**  Create a docker registry credential  */
+  createDockerRegistryCredential: DockerRegistryCredential;
   /**  Create a run, but does not start it  */
   createRun: Run;
   /**  Create a simulation  */
   createSimulation: Simulation;
+  /**  Delete a docker registry credential  */
+  deleteDockerRegistryCredential: Scalars['Boolean'];
   /**  Start a run, if other runs are running this run will wait in the queue  */
   startRun?: Maybe<Run>;
+  /**  Update a docker registry credential  */
+  updateDockerRegistryCredential: DockerRegistryCredential;
 };
 
 
 export type MutationCancelRunArgs = {
   runId: Scalars['uuid'];
+};
+
+
+export type MutationCreateDockerRegistryCredentialArgs = {
+  credential: DockerRegistryCredentialInput;
 };
 
 
@@ -76,14 +105,26 @@ export type MutationCreateSimulationArgs = {
 };
 
 
+export type MutationDeleteDockerRegistryCredentialArgs = {
+  name: Scalars['String'];
+};
+
+
 export type MutationStartRunArgs = {
   runId: Scalars['uuid'];
+};
+
+
+export type MutationUpdateDockerRegistryCredentialArgs = {
+  credential: DockerRegistryCredentialInput;
 };
 
 export type Query = {
   __typename?: 'Query';
   /**  Compute a presigned URL for uploading a file using a HTTP PUT.  */
   computeUploadPresignedUrl: Scalars['String'];
+  /**  List of docker registry credentials.  */
+  dockerRegistryCredentials: Array<DockerRegistryCredential>;
   /**  Returns pong if the server is up and running.  */
   ping: Scalars['String'];
   /**  Fetch the current username.  */
@@ -185,11 +226,15 @@ export type DirectiveResolverFn<TResult = {}, TParent = {}, TContext = {}, TArgs
   info: GraphQLResolveInfo
 ) => TResult | Promise<TResult>;
 
+
+
 /** Mapping between all available schema types and the resolvers types */
 export type ResolversTypes = {
   Boolean: ResolverTypeWrapper<Scalars['Boolean']>;
   CreateRunInput: CreateRunInput;
   CreateSimulationInput: CreateSimulationInput;
+  DockerRegistryCredential: ResolverTypeWrapper<DockerRegistryCredential>;
+  DockerRegistryCredentialInput: DockerRegistryCredentialInput;
   Int: ResolverTypeWrapper<Scalars['Int']>;
   Mutation: ResolverTypeWrapper<{}>;
   Query: ResolverTypeWrapper<{}>;
@@ -207,6 +252,8 @@ export type ResolversParentTypes = {
   Boolean: Scalars['Boolean'];
   CreateRunInput: CreateRunInput;
   CreateSimulationInput: CreateSimulationInput;
+  DockerRegistryCredential: DockerRegistryCredential;
+  DockerRegistryCredentialInput: DockerRegistryCredentialInput;
   Int: Scalars['Int'];
   Mutation: {};
   Query: {};
@@ -219,15 +266,26 @@ export type ResolversParentTypes = {
   uuid: Scalars['uuid'];
 };
 
+export type DockerRegistryCredentialResolvers<ContextType = any, ParentType extends ResolversParentTypes['DockerRegistryCredential'] = ResolversParentTypes['DockerRegistryCredential']> = {
+  name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  server?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  username?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
 export type MutationResolvers<ContextType = any, ParentType extends ResolversParentTypes['Mutation'] = ResolversParentTypes['Mutation']> = {
   cancelRun?: Resolver<Maybe<ResolversTypes['Run']>, ParentType, ContextType, RequireFields<MutationCancelRunArgs, 'runId'>>;
+  createDockerRegistryCredential?: Resolver<ResolversTypes['DockerRegistryCredential'], ParentType, ContextType, RequireFields<MutationCreateDockerRegistryCredentialArgs, 'credential'>>;
   createRun?: Resolver<ResolversTypes['Run'], ParentType, ContextType, RequireFields<MutationCreateRunArgs, 'run'>>;
   createSimulation?: Resolver<ResolversTypes['Simulation'], ParentType, ContextType, RequireFields<MutationCreateSimulationArgs, 'simulation'>>;
+  deleteDockerRegistryCredential?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationDeleteDockerRegistryCredentialArgs, 'name'>>;
   startRun?: Resolver<Maybe<ResolversTypes['Run']>, ParentType, ContextType, RequireFields<MutationStartRunArgs, 'runId'>>;
+  updateDockerRegistryCredential?: Resolver<ResolversTypes['DockerRegistryCredential'], ParentType, ContextType, RequireFields<MutationUpdateDockerRegistryCredentialArgs, 'credential'>>;
 };
 
 export type QueryResolvers<ContextType = any, ParentType extends ResolversParentTypes['Query'] = ResolversParentTypes['Query']> = {
   computeUploadPresignedUrl?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  dockerRegistryCredentials?: Resolver<Array<ResolversTypes['DockerRegistryCredential']>, ParentType, ContextType>;
   ping?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   username?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
 };
@@ -251,6 +309,7 @@ export interface UuidScalarConfig extends GraphQLScalarTypeConfig<ResolversTypes
 }
 
 export type Resolvers<ContextType = any> = {
+  DockerRegistryCredential?: DockerRegistryCredentialResolvers<ContextType>;
   Mutation?: MutationResolvers<ContextType>;
   Query?: QueryResolvers<ContextType>;
   Run?: RunResolvers<ContextType>;
@@ -259,17 +318,3 @@ export type Resolvers<ContextType = any> = {
   uuid?: GraphQLScalarType;
 };
 
-
-
-
-export type SdkFunctionWrapper = <T>(action: (requestHeaders?:Record<string, string>) => Promise<T>, operationName: string, operationType?: string) => Promise<T>;
-
-
-const defaultWrapper: SdkFunctionWrapper = (action, _operationName, _operationType) => action();
-
-export function getSdk(client: GraphQLClient, withWrapper: SdkFunctionWrapper = defaultWrapper) {
-  return {
-
-  };
-}
-export type Sdk = ReturnType<typeof getSdk>;

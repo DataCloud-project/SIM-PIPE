@@ -28,7 +28,7 @@ type DockerRegistryCredential {
   """ The username to use when authenticating with the docker registry """
   username: String!
   """ The docker registry endpoint """
-  endpoint: String!
+  server: String!
 }
 
 input DockerRegistryCredentialInput {
@@ -39,7 +39,7 @@ input DockerRegistryCredentialInput {
   """ The password to use when authenticating with the docker registry """
   password: String!
   """ The docker registry endpoint """
-  endpoint: String!
+  server: String!
 }
 
 
@@ -106,7 +106,7 @@ type Mutation @auth {
   createDockerRegistryCredential(credential: DockerRegistryCredentialInput!): DockerRegistryCredential!
 
   """ Delete a docker registry credential """
-  deleteDockerRegistryCredential(name: String!): DockerRegistryCredential!
+  deleteDockerRegistryCredential(name: String!): Boolean!
 
   """ Update a docker registry credential """
   updateDockerRegistryCredential(credential: DockerRegistryCredentialInput!): DockerRegistryCredential!

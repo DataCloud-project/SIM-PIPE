@@ -1,12 +1,16 @@
+import { CoreV1Api, KubeConfig } from '@kubernetes/client-node';
+
 import ArgoWorkflowClient from './argo/argo-client.js';
+import { argoClientEndpoint } from './config.js';
 import startServer from './server/server.js';
 
-await startServer();
+const kubeconfig = new KubeConfig();
+kubeconfig.loadFromDefault();
+const k8sClient = kubeconfig.makeApiClient(CoreV1Api);
 
-const argoClient = new ArgoWorkflowClient('http://localhost:2746/');
+const argoClient = new ArgoWorkflowClient(argoClientEndpoint);
 
-const workflows = await argoClient.listWorkflows();
-for (const workflow of workflows) {
-  console.log(workflow.metadata.name);
-  console.log(workflow.spec);
-}
+await startServer({
+  argoClient,
+  k8sClient,
+});

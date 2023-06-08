@@ -1,10 +1,12 @@
 import express from 'express';
 import helmet from 'helmet';
 import morgan from 'morgan';
+import type { CoreV1Api } from '@kubernetes/client-node';
 
 import createApolloGraphqlServer from './apollo-graphql.js';
 import authJwtMiddleware from './auth-jwt-middleware.js';
 import createRouter from './routes.js';
+import type ArgoWorkflowClient from '../argo/argo-client.js';
 
 /**
  * Create and start the Express server.
@@ -12,7 +14,13 @@ import createRouter from './routes.js';
  * It starts an Apollo GraphQL server and applies it to the Express app.
  * It also starts a classic small REST API.
  */
-export default async function startSecureServer(): Promise<void> {
+export default async function startSecureServer({
+  argoClient,
+  k8sClient,
+}: {
+  argoClient: ArgoWorkflowClient,
+  k8sClient: CoreV1Api,
+}): Promise<void> {
   const app = express();
 
   // Setup security middleware with helmet
@@ -25,7 +33,10 @@ export default async function startSecureServer(): Promise<void> {
   app.use(createRouter());
 
   // Start the Apollo GraphQL server and apply it to the Express app
-  const graphqlServer = await createApolloGraphqlServer();
+  const graphqlServer = await createApolloGraphqlServer({
+    argoClient,
+    k8sClient,
+  });
   await graphqlServer.start();
   app.use(authJwtMiddleware);
   graphqlServer.applyMiddleware({ app, path: '/graphql' });

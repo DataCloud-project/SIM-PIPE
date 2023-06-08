@@ -22,4 +22,7 @@ export const minioBucketName = process.env.MINIO_BUCKET_NAME ?? 'simpipe2';
 export const minioRegion = process.env.MINIO_REGION ?? 'no-region';
 
 // Argo client
-export const argoClientEndpoint = process.env.ARGO_CLIENT_ENDPOINT ?? 'http://localhost:2746';
+export const argoClientEndpoint = process.env.ARGO_CLIENT_ENDPOINT ?? 'http://localhost:8084/';
+
+// Kubernetes client
+export const kubernetesNamespace = process.env.KUBERNETES_NAMESPACE ?? 'default';
