@@ -14,7 +14,7 @@ export class DSLParsingError extends GraphQLError {
 
 export class PingError extends GraphQLError {
   constructor(originalError?: Error) {
-    super('Unable to ping the database or docker', {
+    super('Unable to ping the installation', {
       extensions: {
         code: 'PING_ERROR',
       },

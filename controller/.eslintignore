@@ -1,3 +1,2 @@
-src/db/database.ts
 src/server/schema.ts
-src/runner/runner-state-machine.typegen.ts
+src/argo/schema.d.ts

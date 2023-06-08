@@ -3,7 +3,7 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 
 import createApolloGraphqlServer from './apollo-graphql.js';
-import { hybridAuthJwtMiddleware } from './auth-jwt-middleware.js';
+import authJwtMiddleware from './auth-jwt-middleware.js';
 import createRouter from './routes.js';
 
 /**
@@ -27,7 +27,7 @@ export default async function startSecureServer(): Promise<void> {
   // Start the Apollo GraphQL server and apply it to the Express app
   const graphqlServer = await createApolloGraphqlServer();
   await graphqlServer.start();
-  app.use(hybridAuthJwtMiddleware);
+  app.use(authJwtMiddleware);
   graphqlServer.applyMiddleware({ app, path: '/graphql' });
 
   // Start the Express server

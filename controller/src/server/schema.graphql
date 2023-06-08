@@ -8,6 +8,8 @@ type Query {
   computeUploadPresignedUrl: String! @auth
   """ Returns pong if the server is up and running. """
   ping: String!
+  """ List of docker registry credentials. """
+  dockerRegistryCredentials: [DockerRegistryCredential!]! @auth
 }
 
 type Run {
@@ -19,6 +21,27 @@ type Simulation {
   """ UUID of the simulation """
   simulationId: uuid!
 }
+
+type DockerRegistryCredential {
+  """ The name of the docker registry """
+  name: String!
+  """ The username to use when authenticating with the docker registry """
+  username: String!
+  """ The docker registry endpoint """
+  endpoint: String!
+}
+
+input DockerRegistryCredentialInput {
+  """ The name of the docker registry """
+  name: String!
+  """ The username to use when authenticating with the docker registry """
+  username: String!
+  """ The password to use when authenticating with the docker registry """
+  password: String!
+  """ The docker registry endpoint """
+  endpoint: String!
+}
+
 
 input StepEnvironmentVariable {
   """ The name of the step to set the environment variable for """
@@ -78,4 +101,13 @@ type Mutation @auth {
 
   """ Cancel a run, if the run is running it will be stopped """
   cancelRun(runId:uuid!): Run
+
+  """ Create a docker registry credential """
+  createDockerRegistryCredential(credential: DockerRegistryCredentialInput!): DockerRegistryCredential!
+
+  """ Delete a docker registry credential """
+  deleteDockerRegistryCredential(name: String!): DockerRegistryCredential!
+
+  """ Update a docker registry credential """
+  updateDockerRegistryCredential(credential: DockerRegistryCredentialInput!): DockerRegistryCredential!
 }

@@ -1,7 +1,5 @@
 import { randomUUID } from 'node:crypto';
 
-import sdk from '../db/sdk.js';
-import pingRunner from '../runner/ping-runner.js';
 import { PingError } from './apollo-errors.js';
 import * as functions from './functions.js';
 import { computePresignedPutUrl } from './minio.js';
@@ -46,8 +44,7 @@ const resolvers = {
     async ping(): Promise<string> {
       try {
         await Promise.all([
-          sdk.ping(),
-          pingRunner(),
+          // Ping argo, kubernetes, prometheus, and minio
         ]);
       } catch (error) {
         throw new PingError(error as Error);
@@ -102,7 +99,6 @@ const resolvers = {
       const { runId } = arguments_;
       const { sub: userId } = context.user;
       await functions.checkRunOwner(runId, userId);
-      await sdk.setRunAsQueued({ runId });
       return { runId };
     },
     async cancelRun(
