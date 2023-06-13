@@ -3,7 +3,7 @@ import type { CoreV1Api, V1Secret } from '@kubernetes/client-node';
 
 import type {
   DockerRegistryCredentialInput, Mutation, Query,
-} from './schema';
+} from './schema.js';
 
 const AuthSchema = z.object({
   username: z.string(),

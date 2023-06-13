@@ -1,4 +1,4 @@
-import minio from 'minio';
+import { Client as MinioClient } from 'minio';
 
 import {
   minioAccessKey,
@@ -14,7 +14,7 @@ if (!minioSecretKey) {
   throw new Error('MINIO_SECRET_KEY is not set');
 }
 
-const minioClient = new minio.Client({
+const minioClient = new MinioClient({
   endPoint: minioEndpoint,
   port: minioPort,
   useSSL: minioUseSSL,

@@ -4,16 +4,18 @@ export type InputMaybe<T> = Maybe<T>;
 export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
 export type MakeOptional<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]?: Maybe<T[SubKey]> };
 export type MakeMaybe<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]: Maybe<T[SubKey]> };
+export type MakeEmpty<T extends { [key: string]: unknown }, K extends keyof T> = { [_ in K]?: never };
+export type Incremental<T> = T | { [P in keyof T]?: P extends ' $fragmentName' | '__typename' ? T[P] : never };
 export type RequireFields<T, K extends keyof T> = Omit<T, K> & { [P in K]-?: NonNullable<T[P]> };
 /** All built-in and custom scalars, mapped to their actual values */
 export type Scalars = {
-  ID: string;
-  String: string;
-  Boolean: boolean;
-  Int: number;
-  Float: number;
-  json: string;
-  uuid: string;
+  ID: { input: string | number; output: string; }
+  String: { input: string; output: string; }
+  Boolean: { input: boolean; output: boolean; }
+  Int: { input: number; output: number; }
+  Float: { input: number; output: number; }
+  json: { input: string; output: string; }
+  uuid: { input: string; output: string; }
 };
 
 /**  The input data to create a run  */
@@ -21,20 +23,20 @@ export type CreateRunInput = {
   /**  An optional list of environment variables to set for the steps of the run container  */
   environmentVariables?: InputMaybe<Array<StepEnvironmentVariable>>;
   /**  The name of the run  */
-  name: Scalars['String'];
+  name: Scalars['String']['input'];
   /**
    *  The simulation to which this run belongs.
    *
    * The user must own the simulation.
    */
-  simulationId: Scalars['uuid'];
+  simulationId: Scalars['uuid']['input'];
   /**  An optional list of timeouts to set for the steps of the run container  */
   timeouts?: InputMaybe<Array<StepTimeout>>;
 };
 
 export type CreateSimulationInput = {
   /**  The name of the simulation  */
-  name: Scalars['String'];
+  name: Scalars['String']['input'];
   /**
    *  The description of the simulation pipeline.
    *
@@ -42,28 +44,28 @@ export type CreateSimulationInput = {
    * because not all GraphQL clients support sending JSON documents
    * in input variables.
    */
-  pipelineDescription: Scalars['json'];
+  pipelineDescription: Scalars['json']['input'];
 };
 
 export type DockerRegistryCredential = {
   __typename?: 'DockerRegistryCredential';
   /**  The name of the docker registry  */
-  name: Scalars['String'];
+  name: Scalars['String']['output'];
   /**  The docker registry endpoint  */
-  server: Scalars['String'];
+  server: Scalars['String']['output'];
   /**  The username to use when authenticating with the docker registry  */
-  username: Scalars['String'];
+  username: Scalars['String']['output'];
 };
 
 export type DockerRegistryCredentialInput = {
   /**  The name of the docker registry  */
-  name: Scalars['String'];
+  name: Scalars['String']['input'];
   /**  The password to use when authenticating with the docker registry  */
-  password: Scalars['String'];
+  password: Scalars['String']['input'];
   /**  The docker registry endpoint  */
-  server: Scalars['String'];
+  server: Scalars['String']['input'];
   /**  The username to use when authenticating with the docker registry  */
-  username: Scalars['String'];
+  username: Scalars['String']['input'];
 };
 
 export type Mutation = {
@@ -77,7 +79,7 @@ export type Mutation = {
   /**  Create a simulation  */
   createSimulation: Simulation;
   /**  Delete a docker registry credential  */
-  deleteDockerRegistryCredential: Scalars['Boolean'];
+  deleteDockerRegistryCredential: Scalars['Boolean']['output'];
   /**  Start a run, if other runs are running this run will wait in the queue  */
   startRun?: Maybe<Run>;
   /**  Update a docker registry credential  */
@@ -86,7 +88,7 @@ export type Mutation = {
 
 
 export type MutationCancelRunArgs = {
-  runId: Scalars['uuid'];
+  runId: Scalars['uuid']['input'];
 };
 
 
@@ -106,12 +108,12 @@ export type MutationCreateSimulationArgs = {
 
 
 export type MutationDeleteDockerRegistryCredentialArgs = {
-  name: Scalars['String'];
+  name: Scalars['String']['input'];
 };
 
 
 export type MutationStartRunArgs = {
-  runId: Scalars['uuid'];
+  runId: Scalars['uuid']['input'];
 };
 
 
@@ -122,41 +124,41 @@ export type MutationUpdateDockerRegistryCredentialArgs = {
 export type Query = {
   __typename?: 'Query';
   /**  Compute a presigned URL for uploading a file using a HTTP PUT.  */
-  computeUploadPresignedUrl: Scalars['String'];
+  computeUploadPresignedUrl: Scalars['String']['output'];
   /**  List of docker registry credentials.  */
   dockerRegistryCredentials: Array<DockerRegistryCredential>;
   /**  Returns pong if the server is up and running.  */
-  ping: Scalars['String'];
+  ping: Scalars['String']['output'];
   /**  Fetch the current username.  */
-  username: Scalars['String'];
+  username: Scalars['String']['output'];
 };
 
 export type Run = {
   __typename?: 'Run';
   /**  UUID of the run  */
-  runId: Scalars['uuid'];
+  runId: Scalars['uuid']['output'];
 };
 
 export type Simulation = {
   __typename?: 'Simulation';
   /**  UUID of the simulation  */
-  simulationId: Scalars['uuid'];
+  simulationId: Scalars['uuid']['output'];
 };
 
 export type StepEnvironmentVariable = {
   /**  The name of the environment variable  */
-  name: Scalars['String'];
+  name: Scalars['String']['input'];
   /**  The name of the step to set the environment variable for  */
-  stepName: Scalars['String'];
+  stepName: Scalars['String']['input'];
   /**  The value of the environment variable  */
-  value: Scalars['String'];
+  value: Scalars['String']['input'];
 };
 
 export type StepTimeout = {
   /**  The name of the step to set the timeout for  */
-  stepName: Scalars['String'];
+  stepName: Scalars['String']['input'];
   /**  The timeout in seconds, must be greater than 0 and less than 86400 (24 hours)  */
-  timeout: Scalars['Int'];
+  timeout: Scalars['Int']['input'];
 };
 
 
@@ -230,40 +232,40 @@ export type DirectiveResolverFn<TResult = {}, TParent = {}, TContext = {}, TArgs
 
 /** Mapping between all available schema types and the resolvers types */
 export type ResolversTypes = {
-  Boolean: ResolverTypeWrapper<Scalars['Boolean']>;
+  Boolean: ResolverTypeWrapper<Scalars['Boolean']['output']>;
   CreateRunInput: CreateRunInput;
   CreateSimulationInput: CreateSimulationInput;
   DockerRegistryCredential: ResolverTypeWrapper<DockerRegistryCredential>;
   DockerRegistryCredentialInput: DockerRegistryCredentialInput;
-  Int: ResolverTypeWrapper<Scalars['Int']>;
+  Int: ResolverTypeWrapper<Scalars['Int']['output']>;
   Mutation: ResolverTypeWrapper<{}>;
   Query: ResolverTypeWrapper<{}>;
   Run: ResolverTypeWrapper<Run>;
   Simulation: ResolverTypeWrapper<Simulation>;
   StepEnvironmentVariable: StepEnvironmentVariable;
   StepTimeout: StepTimeout;
-  String: ResolverTypeWrapper<Scalars['String']>;
-  json: ResolverTypeWrapper<Scalars['json']>;
-  uuid: ResolverTypeWrapper<Scalars['uuid']>;
+  String: ResolverTypeWrapper<Scalars['String']['output']>;
+  json: ResolverTypeWrapper<Scalars['json']['output']>;
+  uuid: ResolverTypeWrapper<Scalars['uuid']['output']>;
 };
 
 /** Mapping between all available schema types and the resolvers parents */
 export type ResolversParentTypes = {
-  Boolean: Scalars['Boolean'];
+  Boolean: Scalars['Boolean']['output'];
   CreateRunInput: CreateRunInput;
   CreateSimulationInput: CreateSimulationInput;
   DockerRegistryCredential: DockerRegistryCredential;
   DockerRegistryCredentialInput: DockerRegistryCredentialInput;
-  Int: Scalars['Int'];
+  Int: Scalars['Int']['output'];
   Mutation: {};
   Query: {};
   Run: Run;
   Simulation: Simulation;
   StepEnvironmentVariable: StepEnvironmentVariable;
   StepTimeout: StepTimeout;
-  String: Scalars['String'];
-  json: Scalars['json'];
-  uuid: Scalars['uuid'];
+  String: Scalars['String']['output'];
+  json: Scalars['json']['output'];
+  uuid: Scalars['uuid']['output'];
 };
 
 export type DockerRegistryCredentialResolvers<ContextType = any, ParentType extends ResolversParentTypes['DockerRegistryCredential'] = ResolversParentTypes['DockerRegistryCredential']> = {
