@@ -1,25 +1,27 @@
 import { randomUUID } from 'node:crypto';
-import type { CoreV1Api } from '@kubernetes/client-node';
+import type K8sClient from 'k8s/k8s-client.js';
 
-import { PingError } from './apollo-errors.js';
 import {
   createDockerRegistryCredential,
   deleteDockerRegistryCredential,
   dockerRegistryCredentials,
   updateDockerRegistryCredential,
-} from './docker-registry.js';
+} from '../k8s/docker-config-json.js';
+import { createProject } from '../k8s/projects.js';
+import { computePresignedPutUrl } from '../minio/minio.js';
+import { PingError } from './apollo-errors.js';
 import * as functions from './functions.js';
-import { computePresignedPutUrl } from './minio.js';
 import type ArgoWorkflowClient from '../argo/argo-client.js';
 import type {
   Mutation,
-  MutationCancelRunArgs as MutationCancelRunArguments,
+  MutationCancelDryRunArgs as MutationCancelDryRunArguments,
   MutationCreateDockerRegistryCredentialArgs as MutationCreateDockerRegistryCredentialArguments,
-  MutationCreateRunArgs as MutationCreateRunArguments,
+  MutationCreateDryRunArgs as MutationCreateDryRunArguments,
+  MutationCreateProjectArgs as MutationCreateProjectArguments,
   MutationCreateSimulationArgs as MutationCreateSimulationArguments,
   MutationDeleteDockerRegistryCredentialArgs as MutationDeleteDockerRegistryCredentialArguments,
   MutationResolvers,
-  MutationStartRunArgs as MutationStartRunArguments,
+  MutationStartDryRunArgs as MutationStartDryRunArguments,
   MutationUpdateDockerRegistryCredentialArgs as MutationUpdateDockerRegistryCredentialArguments,
   Query,
   QueryResolvers,
@@ -33,7 +35,7 @@ interface ContextUser {
 export interface Context {
   user?: ContextUser
   argoClient: ArgoWorkflowClient
-  k8sClient: CoreV1Api
+  k8sClient: K8sClient
   k8sNamespace: string
 }
 
@@ -65,7 +67,7 @@ const resolvers = {
       try {
         await Promise.all([
           argoClient.ping(),
-          k8sClient.listNode(),
+          k8sClient.core.listNode(),
           // Ping argo, kubernetes, prometheus, and minio
         ]);
       } catch (error) {
@@ -94,6 +96,12 @@ const resolvers = {
       const { k8sClient, k8sNamespace } = context;
       return await dockerRegistryCredentials(k8sClient, k8sNamespace);
     },
+    async projects(
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      _p: EmptyParent, _a: EmptyArguments, context: AuthenticatedContext,
+    ): Promise<Query['projects']> {
+      return [];
+    },
   } as Required<QueryResolvers<AuthenticatedContext, EmptyParent>>,
   Mutation: {
     async createSimulation(
@@ -108,11 +116,11 @@ const resolvers = {
       });
       return { simulationId };
     },
-    async createRun(
+    async createDryRun(
       _p: EmptyParent,
-      arguments_: MutationCreateRunArguments,
+      arguments_: MutationCreateDryRunArguments,
       context: AuthenticatedContext,
-    ): Promise<Mutation['createRun']> {
+    ): Promise<Mutation['createDryRun']> {
       const { simulationId, name } = arguments_.run;
       const { sub: userId } = context.user;
       await functions.checkSimulationOwner(simulationId, userId);
@@ -120,21 +128,21 @@ const resolvers = {
       // TODO do something about timeouts and envs
       return { runId };
     },
-    async startRun(
+    async startDryRun(
       _p: EmptyParent,
-      arguments_: MutationStartRunArguments,
+      arguments_: MutationStartDryRunArguments,
       context: AuthenticatedContext,
-    ): Promise<Mutation['startRun']> {
+    ): Promise<Mutation['startDryRun']> {
       const { runId } = arguments_;
       const { sub: userId } = context.user;
       await functions.checkRunOwner(runId, userId);
       return { runId };
     },
-    async cancelRun(
+    async cancelDryRun(
       _p: EmptyParent,
-      arguments_: MutationCancelRunArguments,
+      arguments_: MutationCancelDryRunArguments,
       context: AuthenticatedContext,
-    ): Promise<Mutation['cancelRun']> {
+    ): Promise<Mutation['cancelDryRun']> {
       const { runId } = arguments_;
       const { sub: userId } = context.user;
       await functions.checkRunOwner(runId, userId);
@@ -167,6 +175,22 @@ const resolvers = {
       const { name } = arguments_;
       const { k8sClient, k8sNamespace } = context;
       return await deleteDockerRegistryCredential(name, k8sClient, k8sNamespace);
+    },
+    async createProject(
+      _p: EmptyParent,
+      arguments_: MutationCreateProjectArguments,
+      context: AuthenticatedContext,
+    ): Promise<Mutation['createProject']> {
+      const { project } = arguments_;
+      const { k8sClient, k8sNamespace } = context;
+      const response = await createProject(project, k8sClient, k8sNamespace);
+      return {
+        name: response.name,
+        id: response.id,
+        createdAt: response.createdAt,
+        updatedAt: response.updatedAt,
+        dryRuns: [],
+      };
     },
   } as Required<MutationResolvers<AuthenticatedContext, EmptyParent>>,
 };

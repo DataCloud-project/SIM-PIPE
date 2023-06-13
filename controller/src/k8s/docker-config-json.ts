@@ -1,9 +1,10 @@
 import z from 'zod';
-import type { CoreV1Api, V1Secret } from '@kubernetes/client-node';
+import type { V1Secret } from '@kubernetes/client-node';
 
 import type {
   DockerRegistryCredentialInput, Mutation, Query,
-} from './schema.js';
+} from '../server/schema.js';
+import type K8sClient from './k8s-client.js';
 
 const AuthSchema = z.object({
   username: z.string(),
@@ -16,9 +17,9 @@ const DocumentSchema = z.object({
 });
 
 export async function dockerRegistryCredentials(
-  k8sClient: CoreV1Api, k8sNamespace: string,
+  k8sClient: K8sClient, k8sNamespace: string,
 ): Promise<Query['dockerRegistryCredentials']> {
-  const credentials = await k8sClient.listNamespacedSecret(
+  const credentials = await k8sClient.core.listNamespacedSecret(
     k8sNamespace, undefined, undefined, undefined, 'type=kubernetes.io/dockerconfigjson',
   );
   const credentialsData = credentials.body.items.flatMap((item) => {
@@ -65,7 +66,7 @@ function createDockerConfigJsonBase64(server: string, username: string, password
 
 export async function createDockerRegistryCredential(
   credentialInput: DockerRegistryCredentialInput,
-  k8sClient: CoreV1Api, k8sNamespace: string,
+  k8sClient: K8sClient, k8sNamespace: string,
 ): Promise<Mutation['createDockerRegistryCredential']> {
   const {
     name, username, password, server,
@@ -83,7 +84,7 @@ export async function createDockerRegistryCredential(
     },
   };
 
-  const response = await k8sClient.createNamespacedSecret(k8sNamespace, secret);
+  const response = await k8sClient.core.createNamespacedSecret(k8sNamespace, secret);
   const createdSecret = response.body;
 
   return {
@@ -95,13 +96,13 @@ export async function createDockerRegistryCredential(
 
 export async function updateDockerRegistryCredential(
   credentialInput: DockerRegistryCredentialInput,
-  k8sClient: CoreV1Api, k8sNamespace: string,
+  k8sClient: K8sClient, k8sNamespace: string,
 ): Promise<Mutation['updateDockerRegistryCredential']> {
   const {
     name, username, password, server,
   } = credentialInput;
 
-  await k8sClient.patchNamespacedSecret(name, k8sNamespace, [{
+  await k8sClient.core.patchNamespacedSecret(name, k8sNamespace, [{
     op: 'replace',
     path: '/data/.dockerconfigjson',
     value: createDockerConfigJsonBase64(server, username, password),
@@ -119,10 +120,10 @@ export async function updateDockerRegistryCredential(
 }
 
 export async function deleteDockerRegistryCredential(
-  name: string, k8sClient: CoreV1Api, k8sNamespace: string,
+  name: string, k8sClient: K8sClient, k8sNamespace: string,
 ): Promise<Mutation['deleteDockerRegistryCredential']> {
   try {
-    await k8sClient.deleteNamespacedSecret(name, k8sNamespace);
+    await k8sClient.core.deleteNamespacedSecret(name, k8sNamespace);
     return true;
   } catch (error) {
     // If 404, return false, otherwise throws

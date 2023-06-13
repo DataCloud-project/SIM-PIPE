@@ -1,7 +1,7 @@
 import express from 'express';
 import helmet from 'helmet';
 import morgan from 'morgan';
-import type { CoreV1Api } from '@kubernetes/client-node';
+import type K8sClient from 'k8s/k8s-client.js';
 
 import createApolloGraphqlServer from './apollo-graphql.js';
 import authJwtMiddleware from './auth-jwt-middleware.js';
@@ -19,7 +19,7 @@ export default async function startSecureServer({
   k8sClient,
 }: {
   argoClient: ArgoWorkflowClient,
-  k8sClient: CoreV1Api,
+  k8sClient: K8sClient,
 }): Promise<void> {
   const app = express();
 
