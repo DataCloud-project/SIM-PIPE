@@ -10,9 +10,25 @@ type Query {
   ping: String!
   """ List of docker registry credentials. """
   dockerRegistryCredentials: [DockerRegistryCredential!]! @auth
+
+  """ List of projects """
+  projects: [Project!]! @auth
 }
 
-type Run {
+type Project {
+  """ The name of the project """
+  name: String!
+  """ The identifier of the project """
+  id: uuid!
+  """ Date of creation """
+  createdAt: String!
+  """ Date of last update """
+  updatedAt: String!
+  """ The dry runs in the project """
+  dryRuns: [DryRun!]!
+}
+
+type DryRun {
   """ UUID of the run """
   runId: uuid!
 }
@@ -59,8 +75,16 @@ input StepTimeout {
   timeout: Int!
 }
 
+input CreateProjectInput {
+  """ The name of the project """
+  name: String!
+
+  """ The id name of the project (optional) """
+  id: String
+}
+
 """ The input data to create a run """
-input CreateRunInput {
+input CreateDryRunInput {
   """ The simulation to which this run belongs.
 
       The user must own the simulation.
@@ -90,17 +114,20 @@ input CreateSimulationInput {
 }
 
 type Mutation @auth {
+  """ Create a project """
+  createProject(project: CreateProjectInput!): Project!
+
   """ Create a simulation """
   createSimulation(simulation: CreateSimulationInput!): Simulation!
 
   """ Create a run, but does not start it """
-  createRun(run: CreateRunInput!): Run!
+  createDryRun(run: CreateDryRunInput!): DryRun!
 
   """ Start a run, if other runs are running this run will wait in the queue """
-  startRun(runId:uuid!): Run
+  startDryRun(runId:uuid!): DryRun
 
   """ Cancel a run, if the run is running it will be stopped """
-  cancelRun(runId:uuid!): Run
+  cancelDryRun(runId:uuid!): DryRun
 
   """ Create a docker registry credential """
   createDockerRegistryCredential(credential: DockerRegistryCredentialInput!): DockerRegistryCredential!

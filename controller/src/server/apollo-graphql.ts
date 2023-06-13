@@ -2,7 +2,7 @@ import { loadFiles } from '@graphql-tools/load-files';
 import { makeExecutableSchema } from '@graphql-tools/schema';
 import { ApolloServer } from 'apollo-server-express';
 import { fileURLToPath } from 'node:url';
-import type { CoreV1Api } from '@kubernetes/client-node';
+import type K8sClient from 'k8s/k8s-client.js';
 
 import { kubernetesNamespace } from '../config.js';
 import { authDirectiveTransformer, authDirectiveTypeDefs } from './auth-directive.js';
@@ -16,7 +16,7 @@ export default async function createApolloGraphqlServer({
   k8sClient,
 }: {
   argoClient: ArgoWorkflowClient,
-  k8sClient: CoreV1Api,
+  k8sClient: K8sClient,
 }): Promise<ApolloServer> {
   const typeDefsPaths = fileURLToPath(new URL('schema.graphql', import.meta.url));
   const typeDefs = await loadFiles(typeDefsPaths);

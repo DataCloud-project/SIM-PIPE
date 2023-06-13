@@ -1,2 +1,3 @@
 src/server/schema.ts
 src/argo/schema.d.ts
+src/argo/argo-schema.d.ts

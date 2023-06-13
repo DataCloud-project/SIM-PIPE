@@ -1,12 +1,9 @@
-import { CoreV1Api, KubeConfig } from '@kubernetes/client-node';
-
 import ArgoWorkflowClient from './argo/argo-client.js';
 import { argoClientEndpoint } from './config.js';
+import K8sClient from './k8s/k8s-client.js';
 import startServer from './server/server.js';
 
-const kubeconfig = new KubeConfig();
-kubeconfig.loadFromDefault();
-const k8sClient = kubeconfig.makeApiClient(CoreV1Api);
+const k8sClient = new K8sClient();
 
 const argoClient = new ArgoWorkflowClient(argoClientEndpoint);
 

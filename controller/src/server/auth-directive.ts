@@ -1,6 +1,6 @@
 import { getDirective, MapperKind, mapSchema } from '@graphql-tools/utils';
 import { defaultFieldResolver, GraphQLError } from 'graphql';
-import gql from 'graphql-tag';
+import { gql } from 'graphql-tag';
 import type { GraphQLSchema } from 'graphql';
 
 import type { Context } from './resolvers.js';
