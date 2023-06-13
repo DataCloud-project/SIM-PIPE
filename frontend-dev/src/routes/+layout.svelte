@@ -31,9 +31,13 @@
 
 	<!-- (sidebarLeft) -->
 	<svelte:fragment slot="sidebarLeft">
+
 		<AppRail >
+			<AppRailTile label="Projects" href="/projects"><HomeIcon size=1.5x/></AppRailTile>
 			<AppRailTile label="Kubernetes Secrets" href="/secrets" ><HomeIcon size=1.5x/></AppRailTile>
-			<AppRailTile label="Add New Secret" href="/new_secret"><LockIcon size=1.5x/></AppRailTile>
+			<!-- 
+				<AppRailTile label="Add New Secret" href="/new_secret"><LockIcon size=1.5x/></AppRailTile>
+			-->
 		</AppRail>
 	</svelte:fragment>
 
