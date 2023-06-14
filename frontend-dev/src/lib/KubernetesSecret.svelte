@@ -1,5 +1,5 @@
 <script lang="ts">
-    let secret: { [key: string]: string} = {
+    export let secret: { [key: string]: string} = {
         name: 'kube-secret',
         username: 'kube-username',
         password: 'kube-password',

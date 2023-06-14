@@ -11,7 +11,7 @@
 
 	import { page } from '$app/stores';
 	import { derived } from 'svelte/store';
-	import { HomeIcon, LockIcon } from 'svelte-feather-icons';
+	import { HomeIcon, LockIcon, BookOpenIcon } from 'svelte-feather-icons';
 
 	const selected = derived(page, $page => $page.url.pathname);
 
@@ -23,17 +23,23 @@
 	<!-- (header) -->
 	<svelte:fragment slot="header">
 		<AppBar gridColumns="grid-cols-3" slotDefault="place-self-center" slotTrail="place-content-end">
-			<svelte:fragment slot="lead">(placeholder icon)</svelte:fragment>
-			SIM-PIPE
+			<svelte:fragment slot="lead">
+				<div class="flex justify-start"><h1 class="text-blue-500">SIM</h1><h1>PIPE</h1></div>
+				<a href="/projects"><BookOpenIcon size=1.5x/></a>
+			</svelte:fragment>
 			<svelte:fragment slot="trail"><LightSwitch/></svelte:fragment>
 		</AppBar>
 	</svelte:fragment>
 
 	<!-- (sidebarLeft) -->
 	<svelte:fragment slot="sidebarLeft">
+
 		<AppRail >
-			<AppRailTile label="Kubernetes Secrets" href="/secrets" ><HomeIcon size=1.5x/></AppRailTile>
-			<AppRailTile label="Add New Secret" href="/new_secret"><LockIcon size=1.5x/></AppRailTile>
+			<AppRailTile label="Projects" href="/projects"><BookOpenIcon size=1.5x/></AppRailTile>
+			<AppRailTile label="Kubernetes Secrets" href="/secrets" ><LockIcon size=1.5x/></AppRailTile>
+			<!-- 
+				<AppRailTile label="Add New Secret" href="/new_secret"><LockIcon size=1.5x/></AppRailTile>
+			-->
 		</AppRail>
 	</svelte:fragment>
 
