@@ -73,7 +73,7 @@
 			<tbody>
 				{#each dry_runs.data as run}
 					<tr class="table-row-checked" on:click={() => onSelectRow(run.name)}>
-						<td><input type="checkbox" /></td>
+						<td><input type="checkbox" class="checkbox" /></td>
 						<td>{run.name}</td>
 						<td><SymbolForRunResult run_result={run.run_result} /></td>
 						<td>{transformSecondsToHoursMinutesSeconds(run.duration_seconds)}</td>
