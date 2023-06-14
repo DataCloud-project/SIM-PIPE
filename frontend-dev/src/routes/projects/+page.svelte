@@ -9,7 +9,9 @@
     }
 </script>
 
-<h1>My Projects</h1>
+
+<!-- Page Header -->
+<h1 class="flex justify-left p-2">Projects</h1>
 
 
 <!-- Responsive Container (recommended) -->
@@ -26,16 +28,18 @@
             </tr>
 		</thead>
 		<tbody>
-			{#each projects as project, i}
-				<tr>
-                    <td>{project.name}</td>
-                    <td>{project.created_date}</td>
-					<td>{project.dry_run_count}</td>
-                    <td>{project.simulations_count}</td>
-                </tr>
+			{#each projects as project}
+                <!-- TODO fix routing per row in table -->
+                <a href="/projects/[project_id]/dry-run/{project.project_id}">
+                    <tr>
+                        <td>{project.name}</td>
+                        <td>{project.created_date}</td>
+                        <td>{project.dry_run_count}</td>
+                        <td>{project.simulations_count}</td>
+                    </tr>
+                </a>
 			{/each}
 		</tbody>
 	</table>
 </div>
-
 
