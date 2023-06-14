@@ -6,7 +6,7 @@
 
 {#if action == 'rerun'}
 	<div class="relative">
-		<PlusIcon size="13" class="absolute left-5 top-0" />
+		<div class="absolute left-5 bottom-2 font-bold">+</div>
 		<PlayCircleIcon size="20" />
 	</div>
 {:else if action == 'run'}

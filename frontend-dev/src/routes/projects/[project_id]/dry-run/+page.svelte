@@ -77,7 +77,11 @@
 						<td>{run.name}</td>
 						<td><SymbolForRunResult run_result={run.run_result} /></td>
 						<td>{transformSecondsToHoursMinutesSeconds(run.duration_seconds)}</td>
-						<td><SymbolForAction action={run.action} /></td>
+						<td>
+							<button type="button" class="btn-icon btn-icon-sm variant-soft">
+								<SymbolForAction action={run.action} />
+							</button>
+						</td>
 						<td>{run.created_at}</td>
 					</tr>
 				{/each}
