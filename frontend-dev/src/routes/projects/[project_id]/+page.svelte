@@ -1,6 +1,6 @@
 <script lang='ts'>
-    import { graphQlClient } from "$stores/stores";
-    project_id = ''
+    import { graphQlClient } from "../../../stores/stores";
+    export const project_id = '';
     //let projects: any[] = [];
     function getProject() {
         //project = graphQlClient.request(project_query)
