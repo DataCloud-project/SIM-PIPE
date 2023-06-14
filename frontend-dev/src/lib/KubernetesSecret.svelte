@@ -1,4 +1,7 @@
 <script lang="ts">
+    import { onMount } from "svelte";
+    //import { setContext } from "svelte";
+
     export let secret: { [key: string]: string} = {
         name: 'kube-secret',
         username: 'kube-username',
@@ -6,23 +9,23 @@
         host: 'kube-host',
     };
 
-    let checked: boolean = false;
-
     function returnDots(input_text: string) {
         let star = "*";
         return star.repeat(input_text.length)
     }
-    </script>
+</script>
 
 <!-- Visual part of component -->
 <div class="table-container">
     <header class="card-header container-fluid">
-        <div align="left">{ secret.name }</div>
-        <div align="right"><input type=checkbox checked={checked}></div>
+        <div class="flex justify-between">
+            <div>{ secret.name }</div>
+            <div><input type="checkbox"></div>
+        </div>
     <table class="table table-hover">
         {#each Object.keys(secret) as key}
             <tr>
-                {#if key === 'password'}
+                {#if secret.name === 'password'}
                     <td>{key}: {returnDots(secret[key])}</td>
                 {:else}
                     <td>{key}: {secret[key]}</td>

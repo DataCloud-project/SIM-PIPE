@@ -11,7 +11,7 @@
 
 	import { page } from '$app/stores';
 	import { derived } from 'svelte/store';
-	import { HomeIcon, LockIcon, BookOpenIcon } from 'svelte-feather-icons';
+	import { LockIcon, BookOpenIcon, ApertureIcon } from 'svelte-feather-icons';
 
 	const selected = derived(page, $page => $page.url.pathname);
 
@@ -37,6 +37,7 @@
 		<AppRail >
 			<AppRailTile label="Projects" href="/projects"><BookOpenIcon size=1.5x/></AppRailTile>
 			<AppRailTile label="Kubernetes Secrets" href="/secrets" ><LockIcon size=1.5x/></AppRailTile>
+			<AppRailTile label="Dry Runs" href="/projects/1234/dry-run"><ApertureIcon size=1.5x/></AppRailTile>
 			<!-- 
 				<AppRailTile label="Add New Secret" href="/new_secret"><LockIcon size=1.5x/></AppRailTile>
 			-->

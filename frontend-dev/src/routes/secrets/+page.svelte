@@ -22,25 +22,26 @@
 </script>
 
 <!-- Page Header -->
-<h1 class="flex justify-left p-2">Secrets</h1>
-
-<span>
-	<div class="flex content-around">
-		<div>
-			<button type="button" class="btn variant-filled" on:click={() => redirectToAddNewSecretPage()}>
-				<span>Add new secret</span>
-		</div>
-		<div>
-			<button type="button" class="btn variant-filled-warning">
-				<span>Delete selected secrets</span>
-			</button>
-		</div>
+<div class="p-2">
+	<h1>Secrets</h1>
+		<div class="flex-col content-around p-5">
+			<div class="p-2">
+				<div class=p-2>
+					<button type="button" class="btn btn-sm variant-filled" on:click={() => redirectToAddNewSecretPage()}>
+						<span>Add new secret</span>
+				</div>
+				<div class=p-2>
+					<button type="button" class="btn btn-sm variant-filled-warning">
+						<span>Delete selected secrets</span>
+					</button>
+				</div>
+			</div>
+		<table>
+		{#each secrets as secret}
+		<tr>
+			<td><KubernetesSecret secret={secret} /></td>
+		</tr>
+		{/each}
+		</table>
 	</div>
-</span>
-<table>
-{#each secrets as secret}
-<tr>
-	<td><KubernetesSecret secret={secret} /></td>
-</tr>
-{/each}
-</table>
+</div>
