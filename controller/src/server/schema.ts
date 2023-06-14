@@ -95,6 +95,10 @@ export type Mutation = {
   createSimulation: Simulation;
   /**  Delete a docker registry credential  */
   deleteDockerRegistryCredential: Scalars['Boolean']['output'];
+  /**  Delete a project  */
+  deleteProject: Scalars['Boolean']['output'];
+  /**  Rename a project  */
+  renameProject: Project;
   /**  Start a run, if other runs are running this run will wait in the queue  */
   startDryRun?: Maybe<DryRun>;
   /**  Update a docker registry credential  */
@@ -132,6 +136,17 @@ export type MutationDeleteDockerRegistryCredentialArgs = {
 };
 
 
+export type MutationDeleteProjectArgs = {
+  id: Scalars['String']['input'];
+};
+
+
+export type MutationRenameProjectArgs = {
+  id: Scalars['String']['input'];
+  name: Scalars['String']['input'];
+};
+
+
 export type MutationStartDryRunArgs = {
   runId: Scalars['uuid']['input'];
 };
@@ -146,13 +161,11 @@ export type Project = {
   /**  Date of creation  */
   createdAt: Scalars['String']['output'];
   /**  The dry runs in the project  */
-  dryRuns: Array<DryRun>;
+  dryRuns?: Maybe<Array<DryRun>>;
   /**  The identifier of the project  */
   id: Scalars['uuid']['output'];
   /**  The name of the project  */
   name: Scalars['String']['output'];
-  /**  Date of last update  */
-  updatedAt: Scalars['String']['output'];
 };
 
 export type Query = {
@@ -163,10 +176,17 @@ export type Query = {
   dockerRegistryCredentials: Array<DockerRegistryCredential>;
   /**  Returns pong if the server is up and running.  */
   ping: Scalars['String']['output'];
+  /**  Get a project by id  */
+  project: Project;
   /**  List of projects  */
   projects: Array<Project>;
   /**  Fetch the current username.  */
   username: Scalars['String']['output'];
+};
+
+
+export type QueryProjectArgs = {
+  id: Scalars['String']['input'];
 };
 
 export type Simulation = {
@@ -321,16 +341,17 @@ export type MutationResolvers<ContextType = any, ParentType extends ResolversPar
   createProject?: Resolver<ResolversTypes['Project'], ParentType, ContextType, RequireFields<MutationCreateProjectArgs, 'project'>>;
   createSimulation?: Resolver<ResolversTypes['Simulation'], ParentType, ContextType, RequireFields<MutationCreateSimulationArgs, 'simulation'>>;
   deleteDockerRegistryCredential?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationDeleteDockerRegistryCredentialArgs, 'name'>>;
+  deleteProject?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationDeleteProjectArgs, 'id'>>;
+  renameProject?: Resolver<ResolversTypes['Project'], ParentType, ContextType, RequireFields<MutationRenameProjectArgs, 'id' | 'name'>>;
   startDryRun?: Resolver<Maybe<ResolversTypes['DryRun']>, ParentType, ContextType, RequireFields<MutationStartDryRunArgs, 'runId'>>;
   updateDockerRegistryCredential?: Resolver<ResolversTypes['DockerRegistryCredential'], ParentType, ContextType, RequireFields<MutationUpdateDockerRegistryCredentialArgs, 'credential'>>;
 };
 
 export type ProjectResolvers<ContextType = any, ParentType extends ResolversParentTypes['Project'] = ResolversParentTypes['Project']> = {
   createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  dryRuns?: Resolver<Array<ResolversTypes['DryRun']>, ParentType, ContextType>;
+  dryRuns?: Resolver<Maybe<Array<ResolversTypes['DryRun']>>, ParentType, ContextType>;
   id?: Resolver<ResolversTypes['uuid'], ParentType, ContextType>;
   name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  updatedAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -338,6 +359,7 @@ export type QueryResolvers<ContextType = any, ParentType extends ResolversParent
   computeUploadPresignedUrl?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   dockerRegistryCredentials?: Resolver<Array<ResolversTypes['DockerRegistryCredential']>, ParentType, ContextType>;
   ping?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  project?: Resolver<ResolversTypes['Project'], ParentType, ContextType, RequireFields<QueryProjectArgs, 'id'>>;
   projects?: Resolver<Array<ResolversTypes['Project']>, ParentType, ContextType>;
   username?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
 };

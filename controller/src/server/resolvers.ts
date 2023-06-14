@@ -7,7 +7,9 @@ import {
   dockerRegistryCredentials,
   updateDockerRegistryCredential,
 } from '../k8s/docker-config-json.js';
-import { createProject } from '../k8s/projects.js';
+import {
+  createProject, deleteProject, getProject, projects, renameProject,
+} from '../k8s/projects.js';
 import { computePresignedPutUrl } from '../minio/minio.js';
 import { PingError } from './apollo-errors.js';
 import * as functions from './functions.js';
@@ -20,10 +22,13 @@ import type {
   MutationCreateProjectArgs as MutationCreateProjectArguments,
   MutationCreateSimulationArgs as MutationCreateSimulationArguments,
   MutationDeleteDockerRegistryCredentialArgs as MutationDeleteDockerRegistryCredentialArguments,
+  MutationDeleteProjectArgs as MutationDeleteProjectArguments,
+  MutationRenameProjectArgs as MutationRenameProjectArguments,
   MutationResolvers,
   MutationStartDryRunArgs as MutationStartDryRunArguments,
   MutationUpdateDockerRegistryCredentialArgs as MutationUpdateDockerRegistryCredentialArguments,
   Query,
+  QueryProjectArgs as QueryProjectArguments,
   QueryResolvers,
 } from './schema.js';
 
@@ -100,7 +105,15 @@ const resolvers = {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       _p: EmptyParent, _a: EmptyArguments, context: AuthenticatedContext,
     ): Promise<Query['projects']> {
-      return [];
+      const { k8sClient, k8sNamespace } = context;
+      return await projects(k8sClient, k8sNamespace);
+    },
+    async project(
+      _p: EmptyParent, arguments_: QueryProjectArguments, context: AuthenticatedContext,
+    ): Promise<Query['project']> {
+      const { k8sClient, k8sNamespace } = context;
+      const { id } = arguments_;
+      return await getProject(id, k8sClient, k8sNamespace);
     },
   } as Required<QueryResolvers<AuthenticatedContext, EmptyParent>>,
   Mutation: {
@@ -183,14 +196,25 @@ const resolvers = {
     ): Promise<Mutation['createProject']> {
       const { project } = arguments_;
       const { k8sClient, k8sNamespace } = context;
-      const response = await createProject(project, k8sClient, k8sNamespace);
-      return {
-        name: response.name,
-        id: response.id,
-        createdAt: response.createdAt,
-        updatedAt: response.updatedAt,
-        dryRuns: [],
-      };
+      return await createProject(project, k8sClient, k8sNamespace);
+    },
+    async renameProject(
+      _p: EmptyParent,
+      arguments_: MutationRenameProjectArguments,
+      context: AuthenticatedContext,
+    ): Promise<Mutation['renameProject']> {
+      const { id, name } = arguments_;
+      const { k8sClient, k8sNamespace } = context;
+      return await renameProject(id, name, k8sClient, k8sNamespace);
+    },
+    async deleteProject(
+      _p: EmptyParent,
+      arguments_: MutationDeleteProjectArguments,
+      context: AuthenticatedContext,
+    ): Promise<Mutation['deleteProject']> {
+      const { id } = arguments_;
+      const { k8sClient, k8sNamespace } = context;
+      return await deleteProject(id, k8sClient, k8sNamespace);
     },
   } as Required<MutationResolvers<AuthenticatedContext, EmptyParent>>,
 };

@@ -13,6 +13,9 @@ type Query {
 
   """ List of projects """
   projects: [Project!]! @auth
+
+  """ Get a project by id """
+  project(id: String!): Project! @auth
 }
 
 type Project {
@@ -22,10 +25,8 @@ type Project {
   id: uuid!
   """ Date of creation """
   createdAt: String!
-  """ Date of last update """
-  updatedAt: String!
   """ The dry runs in the project """
-  dryRuns: [DryRun!]!
+  dryRuns: [DryRun!]
 }
 
 type DryRun {
@@ -116,6 +117,12 @@ input CreateSimulationInput {
 type Mutation @auth {
   """ Create a project """
   createProject(project: CreateProjectInput!): Project!
+
+  """ Rename a project """
+  renameProject(id: String!, name: String!): Project!
+
+  """ Delete a project """
+  deleteProject(id: String!): Boolean!
 
   """ Create a simulation """
   createSimulation(simulation: CreateSimulationInput!): Simulation!
