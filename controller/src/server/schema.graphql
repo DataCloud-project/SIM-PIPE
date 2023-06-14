@@ -1,5 +1,6 @@
 scalar uuid
 scalar json
+scalar ArgoWorkflow
 
 type Query {
   """ Fetch the current username. """
@@ -13,29 +14,72 @@ type Query {
 
   """ List of projects """
   projects: [Project!]! @auth
+
+  """ Get a project by id """
+  project(id: String!): Project! @auth
+
+  """ Get a dry run by id """
+  dryRun(id: uuid!): DryRun! @auth
 }
 
 type Project {
   """ The name of the project """
   name: String!
   """ The identifier of the project """
-  id: uuid!
+  id: String!
   """ Date of creation """
   createdAt: String!
-  """ Date of last update """
-  updatedAt: String!
   """ The dry runs in the project """
-  dryRuns: [DryRun!]!
+  dryRuns: [DryRun!]
 }
+
 
 type DryRun {
-  """ UUID of the run """
-  runId: uuid!
+  """ The identifier of the run """
+  id: String!
+
+  """ Date of creation """
+  createdAt: String!
+
+  """ The raw Argo workflow document"""
+  argoWorkflow: ArgoWorkflow!
+
+  """ Status of the run """
+  status: DryRunStatus!
+
+  """ The project to which the run belongs """
+  project: Project
 }
 
-type Simulation {
-  """ UUID of the simulation """
-  simulationId: uuid!
+type DryRunStatus {
+  """ Phase a simple, high-level summary of where the workflow is in its lifecycle.
+  Will be "Unknown, "Pending", or "Running" before the workflow is completed,
+  and "Succeeded", "Failed" or "Error" once the workflow has completed. """
+  phase: DryRunPhase!
+
+  """ The current status of the run """
+  startedAt: String
+
+  """ Time at which this workflow completed """
+  finishedAt: String
+
+  """ Progress to completion """
+  progress: String
+
+  """ Human readable message indicating details about why the workflow is in this condition """
+  message: String
+
+  """ Estimated duration in seconds """
+  estimatedDuration: Int
+}
+
+enum DryRunPhase {
+  Unknown
+  Pending
+  Running
+  Succeeded
+  Failed
+  Error
 }
 
 type DockerRegistryCredential {
@@ -117,8 +161,11 @@ type Mutation @auth {
   """ Create a project """
   createProject(project: CreateProjectInput!): Project!
 
-  """ Create a simulation """
-  createSimulation(simulation: CreateSimulationInput!): Simulation!
+  """ Rename a project """
+  renameProject(id: String!, name: String!): Project!
+
+  """ Delete a project """
+  deleteProject(id: String!): Boolean!
 
   """ Create a run, but does not start it """
   createDryRun(run: CreateDryRunInput!): DryRun!

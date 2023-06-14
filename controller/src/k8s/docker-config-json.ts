@@ -1,6 +1,7 @@
 import z from 'zod';
 import type { V1Secret } from '@kubernetes/client-node';
 
+import { NotFoundError } from '../server/apollo-errors.js';
 import type {
   DockerRegistryCredentialInput, Mutation, Query,
 } from '../server/schema.js';
@@ -129,7 +130,7 @@ export async function deleteDockerRegistryCredential(
     // If 404, return false, otherwise throws
     if ((error as Error & { response?: { statusCode: number } })
       .response?.statusCode === 404) {
-      return false;
+      throw new NotFoundError('Docker registry credential not found');
     }
     throw error;
   }

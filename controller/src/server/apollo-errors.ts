@@ -33,4 +33,24 @@ export class NotFoundError extends GraphQLError {
   }
 }
 
+export class ConflictError extends GraphQLError {
+  constructor(message: string) {
+    super(message, {
+      extensions: {
+        code: 'CONFLICT_ERROR',
+      },
+    });
+  }
+}
+
+export class InputValidationError extends GraphQLError {
+  constructor(message: string) {
+    super(message, {
+      extensions: {
+        code: 'INPUT_VALIDATION_ERROR',
+      },
+    });
+  }
+}
+
 /* eslint-enable max-classes-per-file */
