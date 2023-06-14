@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import type K8sClient from 'k8s/k8s-client.js';
 
+import { getDryRun } from '../argo/dry-runs.js';
 import {
   createDockerRegistryCredential,
   deleteDockerRegistryCredential,
@@ -20,14 +21,15 @@ import type {
   MutationCreateDockerRegistryCredentialArgs as MutationCreateDockerRegistryCredentialArguments,
   MutationCreateDryRunArgs as MutationCreateDryRunArguments,
   MutationCreateProjectArgs as MutationCreateProjectArguments,
-  MutationCreateSimulationArgs as MutationCreateSimulationArguments,
   MutationDeleteDockerRegistryCredentialArgs as MutationDeleteDockerRegistryCredentialArguments,
   MutationDeleteProjectArgs as MutationDeleteProjectArguments,
   MutationRenameProjectArgs as MutationRenameProjectArguments,
   MutationResolvers,
   MutationStartDryRunArgs as MutationStartDryRunArguments,
   MutationUpdateDockerRegistryCredentialArgs as MutationUpdateDockerRegistryCredentialArguments,
+  Project,
   Query,
+  QueryDryRunArgs as QueryDryRunArguments,
   QueryProjectArgs as QueryProjectArguments,
   QueryResolvers,
 } from './schema.js';
@@ -115,20 +117,15 @@ const resolvers = {
       const { id } = arguments_;
       return await getProject(id, k8sClient, k8sNamespace);
     },
+    async dryRun(
+      _p: EmptyParent, arguments_: QueryDryRunArguments, context: AuthenticatedContext,
+    ): Promise<Query['dryRun']> {
+      const { id } = arguments_;
+      const { argoClient } = context;
+      return await getDryRun(id, argoClient);
+    },
   } as Required<QueryResolvers<AuthenticatedContext, EmptyParent>>,
   Mutation: {
-    async createSimulation(
-      _p: EmptyParent,
-      arguments_: MutationCreateSimulationArguments,
-      context: AuthenticatedContext,
-    ): Promise<Mutation['createSimulation']> {
-      const { name, pipelineDescription } = arguments_.simulation;
-      const { sub: userId } = context.user;
-      const simulationId = await functions.createSimulation({
-        name, pipelineDescription, userId,
-      });
-      return { simulationId };
-    },
     async createDryRun(
       _p: EmptyParent,
       arguments_: MutationCreateDryRunArguments,
@@ -217,6 +214,15 @@ const resolvers = {
       return await deleteProject(id, k8sClient, k8sNamespace);
     },
   } as Required<MutationResolvers<AuthenticatedContext, EmptyParent>>,
+  Project: {
+    async dryRuns(
+      parent: Project,
+      _a: EmptyArguments,
+      context: AuthenticatedContext,
+    ): Promise<Project['dryRuns']> {
+      return [{ runId: 'toto' }];
+    },
+  },
 };
 
 export default resolvers;

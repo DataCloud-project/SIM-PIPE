@@ -12,3 +12,4 @@ generates:
       scalars:
         uuid: string
         json: string
+        ArgoWorkflow: unknown

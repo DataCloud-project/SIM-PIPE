@@ -5,7 +5,7 @@ import { ConflictError, InputValidationError, NotFoundError } from '../server/ap
 import type { CreateProjectInput, Mutation } from '../server/schema.js';
 import type K8sClient from './k8s-client.js';
 
-export interface Project {
+interface Project {
   name: string
   id: string
   createdAt: string

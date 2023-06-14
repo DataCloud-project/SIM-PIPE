@@ -55,6 +55,7 @@ export async function checkSimulationOwner(simulationId: string, userId: string)
   // }
 }
 
+/*
 export async function createSimulation({
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   name, userId, pipelineDescription,
@@ -83,3 +84,4 @@ export async function createSimulation({
   // return simulationId;
   return 'todo';
 }
+*/
