@@ -30,7 +30,7 @@
 		<tbody>
 			{#each projects as project}
                 <!-- TODO fix routing per row in table -->
-                <a href="/projects/[project_id]/dry-run/{project.project_id}">
+                <a href="/projects/[project_id]/{project.project_id}">
                     <tr>
                         <td>{project.name}</td>
                         <td>{project.created_date}</td>
