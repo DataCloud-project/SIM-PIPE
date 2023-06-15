@@ -37,7 +37,13 @@
 
 	function onDeleteSelected() {
 		let selected_runs = Object.keys(checkboxes).filter((run_name) => checkboxes[run_name]);
-		console.log(selected_runs);
+		dry_runs.data.forEach(run => {
+			if (selected_runs.includes(run.name)) {
+				// TODO: delete run
+				console.log(`deleting ${run.name}`);
+				//dry_runs.data = dry_runs.data.filter(run => !selected_runs.includes(run.name));
+			}
+		});
 	}
 </script>
 
@@ -58,7 +64,7 @@
 	<!-- Responsive Container (recommended) -->
 	<div class="table-container pt-5">
 		<!-- Native Table Element -->
-		<!-- TODO add margin/padding for table elements -->
+		<!-- TODO: add margin/padding for table elements -->
 		<table class="table table-interactive">
 			<thead>
 				<tr>

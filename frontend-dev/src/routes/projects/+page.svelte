@@ -29,7 +29,7 @@
 		</thead>
 		<tbody>
 			{#each projects as project}
-                <!-- TODO fix routing per row in table -->
+                <!-- TODO: fix routing per row in table -->
                 <a href="/projects/[project_id]/dry-run/{project.project_id}">
                     <tr>
                         <td>{project.name}</td>

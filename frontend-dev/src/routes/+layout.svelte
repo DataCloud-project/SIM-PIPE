@@ -27,7 +27,26 @@
 					<h1 class="text-blue-500">SIM</h1>
 					<h1>PIPE</h1>
 				</div>
-				<a href="/projects"><BookOpenIcon size="1.5x" /></a>
+			</svelte:fragment>
+			<svelte:fragment>
+				<div class="flex-row grid grid-cols-4 gap-2">
+					<div class="flex-col justify-items-center">
+						<div><a href="/projects"><BookOpenIcon size="20" /></a></div>
+						<div><p class="text-xs">Projects</p></div>
+					</div>
+					<div>
+						<a href="/projects"><BookOpenIcon size="20" /></a>
+						<p class="text-xs">Projects</p>
+					</div>
+					<div>
+						<a href="/projects"><BookOpenIcon size="20" /></a>
+						<p class="text-xs">Projects</p>
+					</div>
+					<div>
+						<a href="/projects"><BookOpenIcon size="20" /></a>
+						<p class="text-xs">Projects</p>
+					</div>
+				</div>
 			</svelte:fragment>
 			<svelte:fragment slot="trail"><LightSwitch /></svelte:fragment>
 		</AppBar>

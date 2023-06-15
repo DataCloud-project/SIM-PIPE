@@ -41,7 +41,7 @@
 	},
 	"type": "module",
 	"dependencies": {
-		"svelte-feather-icons": "^4.0.1",
-		"@fontsource/ibm-plex-sans": "^5.0.3"
+		"@fontsource/ibm-plex-sans": "^5.0.3",
+		"svelte-feather-icons": "^4.0.1"
 	}
 }
