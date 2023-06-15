@@ -7,6 +7,7 @@
         // TODO replace with actual query
         console.log("hello world")
     }
+    let project_id = '10';
 </script>
 
 
@@ -29,17 +30,19 @@
 		</thead>
 		<tbody>
 			{#each projects as project}
+<<<<<<< HEAD
                 <!-- TODO: fix routing per row in table -->
                 <a href="/projects/[project_id]/dry-run/{project.project_id}">
                     <tr>
+=======
+                <tr class="clickable"  onclick="window.location=`/projects/[project_id]/{project.project_id}`">
+>>>>>>> c35c82d33a9b1f41947d78823c90673e067f9a06
                         <td>{project.name}</td>
                         <td>{project.created_date}</td>
                         <td>{project.dry_run_count}</td>
                         <td>{project.simulations_count}</td>
-                    </tr>
-                </a>
+                </tr>
 			{/each}
 		</tbody>
 	</table>
 </div>
-
