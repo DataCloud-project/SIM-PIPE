@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import dry_runs from '../../../../stores/dry-runs.json';
+	import { dry_runs } from '../../../../stores/stores.js';
 	import SymbolForRunResult from './symbol-for-run-result.svelte';
 	import SymbolForAction from './symbol-for-action.svelte';
 
@@ -35,16 +35,13 @@
 		console.log(checkboxes);
 	}
 
+	// TODO: replace with actual api call; just a temporary delete function to mimic deletion
 	function onDeleteSelected() {
 		let selected_runs = Object.keys(checkboxes).filter((run_name) => checkboxes[run_name]);
-		dry_runs.data.forEach(run => {
-			if (selected_runs.includes(run.name)) {
-				// TODO: delete run
-				console.log(`deleting ${run.name}`);
-				//dry_runs.data = dry_runs.data.filter(run => !selected_runs.includes(run.name));
-			}
-		});
+		dry_runs["data"] = dry_runs["data"].filter(item => !(selected_runs.includes(item.name)));
+		Object.keys(checkboxes).forEach(v => checkboxes[v] = false);
 	}
+
 </script>
 
 <!-- Page Header -->
@@ -52,14 +49,15 @@
 	<h1>Project: {dry_runs.name}</h1>
 	<div class="flex justify-between">
 		<div>
-			<p class="text-xs">id: {dry_runs.project_id}</p>
+			<!-- <p class="text-xs">id: {dry_runs.project_id}</p> -->
 			<p class="text-xs">dry runs: {dry_runs.dry_run_count}</p>
 		</div>
-		<div class="flex place-content-end">
+		<!-- TODO: add Create button -->
+		<div class="flex place-content-end">	
 			<button type="button" class="btn btn-sm variant-filled" on:click={() => onDeleteSelected()}>
 				<span>Delete</span>
 			</button>
-		</div>
+		</div>		
 	</div>
 	<!-- Responsive Container (recommended) -->
 	<div class="table-container pt-5">
@@ -78,8 +76,8 @@
 			</thead>
 			<tbody>
 				{#each dry_runs.data as run}
-					<tr class="table-row-checked" on:click={() => onSelectRow(run.name)}>
-						<td><input type="checkbox" class="checkbox" /></td>
+					<tr class="table-row-checked">
+						<td><input type="checkbox" bind:checked={checkboxes[run.name]} class="checkbox" /></td>
 						<td>{run.name}</td>
 						<td><SymbolForRunResult run_result={run.run_result} /></td>
 						<td>{transformSecondsToHoursMinutesSeconds(run.duration_seconds)}</td>
