@@ -4,7 +4,6 @@
 	import { Modal, modalStore } from '@skeletonlabs/skeleton';
 	import type { ModalSettings, ModalComponent } from '@skeletonlabs/skeleton';
 	import ModalSubmitNewSecret from './modal-submit-new-secret.svelte';
-  import { FSWatcher } from 'vite';
 
 	const modalComponent: ModalComponent = {
 		ref: ModalSubmitNewSecret,
