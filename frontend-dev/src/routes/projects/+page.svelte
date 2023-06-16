@@ -12,7 +12,7 @@
 
 
 <!-- Page Header -->
-<h1 class="flex justify-left p-2">Projects</h1>
+<h1 class="flex justify-left p-5">Projects</h1>
 
 
 <!-- Responsive Container (recommended) -->

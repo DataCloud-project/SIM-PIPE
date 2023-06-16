@@ -1,7 +1,4 @@
 <script lang="ts">
-    import { onMount } from "svelte";
-    //import { setContext } from "svelte";
-
     export let secret: { [key: string]: string} = {
         name: 'kube-secret',
         username: 'kube-username',

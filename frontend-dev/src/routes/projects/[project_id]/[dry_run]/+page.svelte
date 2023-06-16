@@ -3,7 +3,21 @@
 	import { dry_runs } from '../../../../stores/stores.js';
 	import SymbolForRunResult from './symbol-for-run-result.svelte';
 	import SymbolForAction from './symbol-for-action.svelte';
+	import { Modal, modalStore } from '@skeletonlabs/skeleton';
+	import type { ModalSettings, ModalComponent } from '@skeletonlabs/skeleton';
+	import ModalSubmitNewDryRun from './modal-submit-new-dry-run.svelte';
 
+	const modalSubmitNewDryRun: ModalComponent = {
+		ref: ModalSubmitNewDryRun,
+	};
+
+	const modal: ModalSettings = {
+		type: 'component',
+		component: modalSubmitNewDryRun,
+		title: 'Add new dry run',
+		body: 'Enter details of dry run',
+	};
+	
 	let checkboxes: Record<string, boolean> = {};
 
 	// onMount add dry_run.names to checkboxes
@@ -28,37 +42,32 @@
 		let formattedSeconds = secondsLeft.toString().padStart(2, '0');
 
 		return `${formattedHours}:${formattedMinutes}:${formattedSeconds}`;
-	}
-
-	function onSelectRow(run_name: string) {
-		checkboxes[run_name] = !checkboxes[run_name];
-		console.log(checkboxes);
-	}
+	}		
 
 	// TODO: replace with actual api call; just a temporary delete function to mimic deletion
 	function onDeleteSelected() {
 		let selected_runs = Object.keys(checkboxes).filter((run_name) => checkboxes[run_name]);
 		dry_runs["data"] = dry_runs["data"].filter(item => !(selected_runs.includes(item.name)));
-		Object.keys(checkboxes).forEach(v => checkboxes[v] = false);
 	}
 
 </script>
-
 <!-- Page Header -->
-<div class="flex-col p-5">
-	<h1>Project: {dry_runs.name}</h1>
+<div class="flex-row p-5">
+	<h1>Projecs <span STYLE="font-size:14px">/ </span>{dry_runs.name}</h1>
 	<div class="flex justify-between">
 		<div>
-			<!-- <p class="text-xs">id: {dry_runs.project_id}</p> -->
 			<p class="text-xs">dry runs: {dry_runs.dry_run_count}</p>
 		</div>
-		<!-- TODO: add Create button -->
-		<div class="flex place-content-end">	
-			<button type="button" class="btn btn-sm variant-filled" on:click={() => onDeleteSelected()}>
+		<div class="flex-row justify-content-end">	
+			<button type="button" class="btn btn-sm variant-filled" on:click={() => (modalStore.trigger(modal))}>
+				<span>Create</span>
+			</button>			
+			<button type="button" class="btn btn-sm variant-filled" on:click={onDeleteSelected}>
 				<span>Delete</span>
 			</button>
 		</div>		
 	</div>
+	
 	<!-- Responsive Container (recommended) -->
 	<div class="table-container pt-5">
 		<!-- Native Table Element -->
@@ -93,3 +102,5 @@
 		</table>
 	</div>
 </div>
+
+<Modal />

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import {cBase, cHeader, cForm} from '../../styles/styles.js';
 	// Props
 	/** Exposes parent props to this component. */
 	export let parent: any;
@@ -18,11 +19,6 @@
 		if ($modalStore[0].response) $modalStore[0].response(formData);
 		modalStore.close();
 	}
-
-	// Base Classes
-	const cBase = 'card p-4 w-modal shadow-xl space-y-4';
-	const cHeader = 'text-2xl font-bold';
-	const cForm = 'border border-surface-500 p-4 space-y-4 rounded-container-token';
 
 </script>
 
