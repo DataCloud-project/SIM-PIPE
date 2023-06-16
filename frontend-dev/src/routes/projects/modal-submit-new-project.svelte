@@ -1,5 +1,5 @@
 <script lang="ts">
-	import {cBase, cHeader, cForm} from '../../../../styles/styles.js';
+	import {cBase, cHeader, cForm} from '../../styles/styles.js';
 	export let parent: any;
 
 	// Stores
@@ -11,7 +11,7 @@
 	};
 
 	// TODO: replace with actual api call
-	function onCreateDryRunSubmit(): void {
+	function onCreateProjectSubmit(): void {
 		console.log('to be implemented');
 		modalStore.close();
 	}	
@@ -24,14 +24,14 @@
 		<article>{$modalStore[0].body ?? '(body missing)'}</article>
 		<form class="modal-form {cForm}">
 			<label class="label">
-				<span>Dry run name</span>
+				<span>Project name</span>
 				<input class="input" type="text" bind:value={formData.name} placeholder="Enter name..." />
 			</label>
 			<!-- TODO: Fill the rest -->
 		</form>
 		<footer class="modal-footer {parent.regionFooter}">
         <button class="btn {parent.buttonNeutral}" on:click={parent.onClose}>{parent.buttonTextCancel}</button>
-        <button class="btn {parent.buttonPositive}" on:click={onCreateDryRunSubmit}>Submit</button>
+        <button class="btn {parent.buttonPositive}" on:click={onCreateProjectSubmit}>Submit</button>
     </footer>
 	</div>
 {/if}
