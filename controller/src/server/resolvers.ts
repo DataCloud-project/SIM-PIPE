@@ -1,5 +1,4 @@
 import { randomUUID } from 'node:crypto';
-import type K8sClient from 'k8s/k8s-client.js';
 
 import {
   createDryRun, deleteDryRun, dryRunsForProject,
@@ -19,6 +18,7 @@ import { computePresignedPutUrl } from '../minio/minio.js';
 import { PingError } from './apollo-errors.js';
 import type { ArgoWorkflow } from '../argo/argo-client.js';
 import type ArgoWorkflowClient from '../argo/argo-client.js';
+import type K8sClient from '../k8s/k8s-client.js';
 import type {
   Mutation,
   MutationCreateDockerRegistryCredentialArgs as MutationCreateDockerRegistryCredentialArguments,
