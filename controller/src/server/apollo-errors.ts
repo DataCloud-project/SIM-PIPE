@@ -1,17 +1,6 @@
 /* eslint-disable max-classes-per-file */
 import { GraphQLError } from 'graphql';
 
-export class DSLParsingError extends GraphQLError {
-  constructor(originalError?: Error) {
-    super('Unable to parse the DSL', {
-      extensions: {
-        code: 'DSL_PARSING_ERROR',
-      },
-      originalError,
-    });
-  }
-}
-
 export class PingError extends GraphQLError {
   constructor(originalError?: Error) {
     super('Unable to ping the installation', {
@@ -48,6 +37,26 @@ export class InputValidationError extends GraphQLError {
     super(message, {
       extensions: {
         code: 'INPUT_VALIDATION_ERROR',
+      },
+    });
+  }
+}
+
+export class InvalidArgoWorkflowError extends GraphQLError {
+  constructor(message: string) {
+    super(message, {
+      extensions: {
+        code: 'INVALID_ARGO_WORKFLOW_ERROR',
+      },
+    });
+  }
+}
+
+export class WrongRequestError extends GraphQLError {
+  constructor(message: string) {
+    super(message, {
+      extensions: {
+        code: 'WRONG_REQUEST_ERROR',
       },
     });
   }

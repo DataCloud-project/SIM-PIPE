@@ -2,12 +2,12 @@ import { loadFiles } from '@graphql-tools/load-files';
 import { makeExecutableSchema } from '@graphql-tools/schema';
 import { ApolloServer } from 'apollo-server-express';
 import { fileURLToPath } from 'node:url';
-import type K8sClient from 'k8s/k8s-client.js';
 
 import { kubernetesNamespace } from '../config.js';
 import { authDirectiveTransformer, authDirectiveTypeDefs } from './auth-directive.js';
 import resolvers from './resolvers.js';
 import type ArgoWorkflowClient from '../argo/argo-client.js';
+import type K8sClient from '../k8s/k8s-client.js';
 import type { Auth } from './auth-jwt-middleware.js';
 import type { Context } from './resolvers.js';
 

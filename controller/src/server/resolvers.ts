@@ -1,7 +1,12 @@
 import { randomUUID } from 'node:crypto';
-import type K8sClient from 'k8s/k8s-client.js';
 
-import { getDryRun } from '../argo/dry-runs.js';
+import {
+  convertArgoWorkflowToDryRun,
+  createDryRun, deleteDryRun, dryRunsForProject,
+  getDryRun, getDryRunLog, resubmitDryRun, resumeDryRun,
+  retryDryRun, SIMPIPE_PROJECT_LABEL, stopDryRun, suspendDryRun,
+} from '../argo/dry-runs.js';
+import assignArgoWorkflowToProject from '../k8s/assign-argoworkflow-to-project.js';
 import {
   createDockerRegistryCredential,
   deleteDockerRegistryCredential,
@@ -13,19 +18,27 @@ import {
 } from '../k8s/projects.js';
 import { computePresignedPutUrl } from '../minio/minio.js';
 import { PingError } from './apollo-errors.js';
-import * as functions from './functions.js';
+import type { ArgoWorkflow } from '../argo/argo-client.js';
 import type ArgoWorkflowClient from '../argo/argo-client.js';
+import type K8sClient from '../k8s/k8s-client.js';
 import type {
+  DryRun,
+  DryRunLogArgs as DryRunLogArguments,
   Mutation,
-  MutationCancelDryRunArgs as MutationCancelDryRunArguments,
+  MutationAssignDryRunToProjectArgs as MutationAssignDryRunToProjectArguments,
   MutationCreateDockerRegistryCredentialArgs as MutationCreateDockerRegistryCredentialArguments,
   MutationCreateDryRunArgs as MutationCreateDryRunArguments,
   MutationCreateProjectArgs as MutationCreateProjectArguments,
   MutationDeleteDockerRegistryCredentialArgs as MutationDeleteDockerRegistryCredentialArguments,
+  MutationDeleteDryRunArgs as MutationDeleteDryRunArguments,
   MutationDeleteProjectArgs as MutationDeleteProjectArguments,
   MutationRenameProjectArgs as MutationRenameProjectArguments,
   MutationResolvers,
-  MutationStartDryRunArgs as MutationStartDryRunArguments,
+  MutationResubmitDryRunArgs as MutationResubmitDryRunArguments,
+  MutationResumeDryRunArgs as MutationResumeDryRunArguments,
+  MutationRetryDryRunArgs as MutationRetryDryRunArguments,
+  MutationStopDryRunArgs as MutationStopDryRunArguments,
+  MutationSuspendDryRunArgs as MutationSuspendDryRunArguments,
   MutationUpdateDockerRegistryCredentialArgs as MutationUpdateDockerRegistryCredentialArguments,
   Project,
   Query,
@@ -114,15 +127,15 @@ const resolvers = {
       _p: EmptyParent, arguments_: QueryProjectArguments, context: AuthenticatedContext,
     ): Promise<Query['project']> {
       const { k8sClient, k8sNamespace } = context;
-      const { id } = arguments_;
-      return await getProject(id, k8sClient, k8sNamespace);
+      const { projectId } = arguments_;
+      return await getProject(projectId, k8sClient, k8sNamespace);
     },
     async dryRun(
       _p: EmptyParent, arguments_: QueryDryRunArguments, context: AuthenticatedContext,
     ): Promise<Query['dryRun']> {
-      const { id } = arguments_;
+      const { dryRunId } = arguments_;
       const { argoClient } = context;
-      return await getDryRun(id, argoClient);
+      return await getDryRun(dryRunId, argoClient);
     },
   } as Required<QueryResolvers<AuthenticatedContext, EmptyParent>>,
   Mutation: {
@@ -131,33 +144,89 @@ const resolvers = {
       arguments_: MutationCreateDryRunArguments,
       context: AuthenticatedContext,
     ): Promise<Mutation['createDryRun']> {
-      const { simulationId, name } = arguments_.run;
-      const { sub: userId } = context.user;
-      await functions.checkSimulationOwner(simulationId, userId);
-      const runId = await functions.createRun(simulationId, name);
-      // TODO do something about timeouts and envs
-      return { runId };
+      const { argoWorkflow, dryRunId, projectId } = arguments_;
+      const { argoClient } = context;
+      return await createDryRun({
+        argoWorkflow: (argoWorkflow as ArgoWorkflow),
+        projectId: projectId ?? undefined,
+        dryRunId: dryRunId ?? undefined,
+        argoClient,
+      });
+      // const { sub: userId } = context.user;
+      // await functions.checkSimulationOwner(simulationId, userId);
+      // const runId = await functions.createRun(simulationId, name);
     },
-    async startDryRun(
+    async suspendDryRun(
       _p: EmptyParent,
-      arguments_: MutationStartDryRunArguments,
+      arguments_: MutationSuspendDryRunArguments,
       context: AuthenticatedContext,
-    ): Promise<Mutation['startDryRun']> {
-      const { runId } = arguments_;
-      const { sub: userId } = context.user;
-      await functions.checkRunOwner(runId, userId);
-      return { runId };
+    ): Promise<Mutation['suspendDryRun']> {
+      const { dryRunId } = arguments_;
+      const { argoClient } = context;
+      return await suspendDryRun(dryRunId, argoClient);
     },
-    async cancelDryRun(
+    async resumeDryRun(
       _p: EmptyParent,
-      arguments_: MutationCancelDryRunArguments,
+      arguments_: MutationResumeDryRunArguments,
       context: AuthenticatedContext,
-    ): Promise<Mutation['cancelDryRun']> {
-      const { runId } = arguments_;
-      const { sub: userId } = context.user;
-      await functions.checkRunOwner(runId, userId);
-      throw new Error('Not implemented');
-      // return { runId };
+    ): Promise<Mutation['resumeDryRun']> {
+      const { dryRunId } = arguments_;
+      const { argoClient } = context;
+      return await resumeDryRun(dryRunId, argoClient);
+    },
+    async retryDryRun(
+      _p: EmptyParent,
+      arguments_: MutationRetryDryRunArguments,
+      context: AuthenticatedContext,
+    ): Promise<Mutation['retryDryRun']> {
+      const { dryRunId } = arguments_;
+      const { argoClient } = context;
+      return await retryDryRun(dryRunId, argoClient);
+    },
+    async resubmitDryRun(
+      _p: EmptyParent,
+      arguments_: MutationResubmitDryRunArguments,
+      context: AuthenticatedContext,
+    ): Promise<Mutation['resumeDryRun']> {
+      const { dryRunId } = arguments_;
+      const { argoClient } = context;
+      return await resubmitDryRun(dryRunId, argoClient);
+    },
+    async stopDryRun(
+      _p: EmptyParent,
+      arguments_: MutationStopDryRunArguments,
+      context: AuthenticatedContext,
+    ): Promise<Mutation['stopDryRun']> {
+      const { dryRunId, terminate } = arguments_;
+      const { argoClient } = context;
+      return await stopDryRun(dryRunId, terminate ?? false, argoClient);
+    },
+    async deleteDryRun(
+      _p: EmptyParent,
+      arguments_: MutationDeleteDryRunArguments,
+      context: AuthenticatedContext,
+    ): Promise<Mutation['deleteDryRun']> {
+      const { dryRunId } = arguments_;
+      const { argoClient } = context;
+      await deleteDryRun(dryRunId, argoClient);
+      return true;
+    },
+    async assignDryRunToProject(
+      _p: EmptyParent,
+      arguments_: MutationAssignDryRunToProjectArguments,
+      context: AuthenticatedContext,
+    ): Promise<Mutation['assignDryRunToProject']> {
+      const { dryRunId, projectId } = arguments_;
+      const { k8sClient, k8sNamespace } = context;
+      // load project to make sure it exists,
+      // it has a small window where it could be deleted
+      // between the check and the assignment
+      // but it's better than nothing.
+      await getProject(projectId, k8sClient, k8sNamespace);
+      const workflow = await assignArgoWorkflowToProject(
+        dryRunId, projectId, k8sClient, k8sNamespace,
+      );
+      return convertArgoWorkflowToDryRun(workflow);
     },
     async createDockerRegistryCredential(
       _p: EmptyParent,
@@ -200,18 +269,18 @@ const resolvers = {
       arguments_: MutationRenameProjectArguments,
       context: AuthenticatedContext,
     ): Promise<Mutation['renameProject']> {
-      const { id, name } = arguments_;
+      const { projectId, name } = arguments_;
       const { k8sClient, k8sNamespace } = context;
-      return await renameProject(id, name, k8sClient, k8sNamespace);
+      return await renameProject(projectId, name, k8sClient, k8sNamespace);
     },
     async deleteProject(
       _p: EmptyParent,
       arguments_: MutationDeleteProjectArguments,
       context: AuthenticatedContext,
     ): Promise<Mutation['deleteProject']> {
-      const { id } = arguments_;
+      const { projectId } = arguments_;
       const { k8sClient, k8sNamespace } = context;
-      return await deleteProject(id, k8sClient, k8sNamespace);
+      return await deleteProject(projectId, k8sClient, k8sNamespace);
     },
   } as Required<MutationResolvers<AuthenticatedContext, EmptyParent>>,
   Project: {
@@ -220,7 +289,39 @@ const resolvers = {
       _a: EmptyArguments,
       context: AuthenticatedContext,
     ): Promise<Project['dryRuns']> {
-      return [{ runId: 'toto' }];
+      const { id } = parent;
+      const { argoClient } = context;
+      return await dryRunsForProject(id, argoClient);
+    },
+  },
+  DryRun: {
+    async project(
+      parent: DryRun,
+      _a: EmptyArguments,
+      context: AuthenticatedContext,
+    ): Promise<DryRun['project']> {
+      const projectId = (parent.argoWorkflow as ArgoWorkflow)
+        .metadata.labels?.[SIMPIPE_PROJECT_LABEL];
+      if (!projectId) {
+        return undefined;
+      }
+      const { k8sClient, k8sNamespace } = context;
+      return await getProject(projectId, k8sClient, k8sNamespace);
+    },
+    async log(
+      parent: DryRun,
+      _arguments: DryRunLogArguments,
+      context: AuthenticatedContext,
+    ): Promise<DryRun['log']> {
+      const { id } = parent;
+      const { maxLines, grep } = _arguments;
+      const { argoClient } = context;
+      return await getDryRunLog({
+        dryRunId: id,
+        maxLines: maxLines ?? undefined,
+        grep: grep ?? undefined,
+        argoClient,
+      });
     },
   },
 };
