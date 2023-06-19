@@ -213,3 +213,26 @@ export async function deleteDryRun(
     handleArgoException(error);
   }
 }
+
+export async function getDryRunLog({
+  dryRunId,
+  maxLines,
+  grep,
+  argoClient,
+}: {
+  dryRunId: string,
+  maxLines?: number,
+  grep?: string,
+  argoClient: ArgoWorkflowClient,
+}): Promise<string[]> {
+  try {
+    return await argoClient.getWorkflowLog({
+      workflowName: dryRunId,
+      tailLines: maxLines,
+      grep,
+    });
+  } catch (error) {
+    handleArgoException(error);
+  }
+  throw new Error('Unreachable');
+}

@@ -3,7 +3,7 @@ import { randomUUID } from 'node:crypto';
 import {
   convertArgoWorkflowToDryRun,
   createDryRun, deleteDryRun, dryRunsForProject,
-  getDryRun, resubmitDryRun, resumeDryRun,
+  getDryRun, getDryRunLog, resubmitDryRun, resumeDryRun,
   retryDryRun, SIMPIPE_PROJECT_LABEL, stopDryRun, suspendDryRun,
 } from '../argo/dry-runs.js';
 import assignArgoWorkflowToProject from '../k8s/assign-argoworkflow-to-project.js';
@@ -23,6 +23,7 @@ import type ArgoWorkflowClient from '../argo/argo-client.js';
 import type K8sClient from '../k8s/k8s-client.js';
 import type {
   DryRun,
+  DryRunLogArgs as DryRunLogArguments,
   Mutation,
   MutationAssignDryRunToProjectArgs as MutationAssignDryRunToProjectArguments,
   MutationCreateDockerRegistryCredentialArgs as MutationCreateDockerRegistryCredentialArguments,
@@ -306,6 +307,21 @@ const resolvers = {
       }
       const { k8sClient, k8sNamespace } = context;
       return await getProject(projectId, k8sClient, k8sNamespace);
+    },
+    async log(
+      parent: DryRun,
+      _arguments: DryRunLogArguments,
+      context: AuthenticatedContext,
+    ): Promise<DryRun['log']> {
+      const { id } = parent;
+      const { maxLines, grep } = _arguments;
+      const { argoClient } = context;
+      return await getDryRunLog({
+        dryRunId: id,
+        maxLines: maxLines ?? undefined,
+        grep: grep ?? undefined,
+        argoClient,
+      });
     },
   },
 };

@@ -50,6 +50,9 @@ type DryRun {
 
   """ The project to which the run belongs """
   project: Project
+
+  """ The logs of the run """
+  log(maxLines: Int, grep: String): [String!]
 }
 
 type DryRunStatus {

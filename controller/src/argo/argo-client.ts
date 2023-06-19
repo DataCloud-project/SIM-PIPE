@@ -139,24 +139,43 @@ export default class ArgoWorkflowClient {
   // This is not working because it returns an event stream only.
   // Also it needs the pod to not be deleted.
   // It may be better to get the logs from the artifact.
-  async getWorkflowLogs(name: string, podName?: string): Promise<string> {
-    interface ArgoLogEntry {
-      content: string;
-      podName: string;
-    }
-
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const stream = await this.client.get<ArgoLogEntry>(
-      `api/v1/workflows/${encodeURIComponent(this.namespace)}/${encodeURIComponent(name)}/log`,
+  async getWorkflowLog({
+    workflowName,
+    podName,
+    containerName = 'main',
+    sinceSeconds,
+    grep,
+    tailLines = 1000,
+  }: {
+    workflowName: string;
+    podName?: string;
+    containerName?: string;
+    sinceSeconds?: number;
+    grep?: string;
+    tailLines?: number;
+  }): Promise<string[]> {
+    const stream = this.client.stream(
+      `api/v1/workflows/${encodeURIComponent(this.namespace)}/${encodeURIComponent(workflowName)}/log`,
       {
         searchParams: {
           podName,
-          'logOptions.previous': 'true',
+          grep,
+          'logOptions.container': containerName,
+          'logOptions.sinceSeconds': sinceSeconds,
+          'logOptions.tailLines': tailLines,
+          'logOptions.limitBytes': '16777216', // 16MB max
+          // 'logOptions.previous': 'true',
+          // 'logOptions.follow': 'false',
         },
       },
     );
 
-    throw new Error('Not implemented');
+    const entries = [];
+    for await (const entry of stream) {
+      entries.push((entry as Buffer).toString());
+    }
+
+    return entries;
   }
 }
 

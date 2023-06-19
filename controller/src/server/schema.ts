@@ -71,10 +71,18 @@ export type DryRun = {
   createdAt: Scalars['String']['output'];
   /**  The identifier of the run  */
   id: Scalars['String']['output'];
+  /**  The logs of the run  */
+  log?: Maybe<Array<Scalars['String']['output']>>;
   /**  The project to which the run belongs  */
   project?: Maybe<Project>;
   /**  Status of the run  */
   status: DryRunStatus;
+};
+
+
+export type DryRunLogArgs = {
+  grep?: InputMaybe<Scalars['String']['input']>;
+  maxLines?: InputMaybe<Scalars['Int']['input']>;
 };
 
 export enum DryRunPhase {
@@ -378,6 +386,7 @@ export type DryRunResolvers<ContextType = any, ParentType extends ResolversParen
   argoWorkflow?: Resolver<ResolversTypes['ArgoWorkflow'], ParentType, ContextType>;
   createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  log?: Resolver<Maybe<Array<ResolversTypes['String']>>, ParentType, ContextType, Partial<DryRunLogArgs>>;
   project?: Resolver<Maybe<ResolversTypes['Project']>, ParentType, ContextType>;
   status?: Resolver<ResolversTypes['DryRunStatus'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
