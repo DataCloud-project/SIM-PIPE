@@ -6,6 +6,8 @@ import type { DryRun } from '../server/schema.js';
 import type { ArgoClientActionNames, ArgoWorkflow } from './argo-client.js';
 import type ArgoWorkflowClient from './argo-client.js';
 
+export const SIMPIPE_PROJECT_LABEL = 'simpipe.sct.sintef.no/project';
+
 function convertArgoStatusPhaseToDryRunStatusPhase(
   argoStatusPhase: string | undefined,
 ): DryRunPhase {
@@ -28,7 +30,7 @@ function convertArgoStatusPhaseToDryRunStatusPhase(
   }
 }
 
-function convertArgoWorkflowToDryRun(argoWorkflow: ArgoWorkflow): DryRun {
+export function convertArgoWorkflowToDryRun(argoWorkflow: ArgoWorkflow): DryRun {
   const { metadata, status } = argoWorkflow;
   return {
     id: metadata.name ?? '',
@@ -46,7 +48,7 @@ export async function dryRunsForProject(
   argoClient: ArgoWorkflowClient,
 ): Promise<DryRun[]> {
   const dryRuns = await argoClient.listWorkflows({
-    'simpipe.sct.sintef.no/project': projectId,
+    [SIMPIPE_PROJECT_LABEL]: projectId,
   });
   // return dryRuns.filter((dryRun) => dryRun.metadata.labels?.project === project.id);
   return dryRuns.map((dryRun) => convertArgoWorkflowToDryRun(dryRun));
@@ -97,12 +99,12 @@ export async function createDryRun({
   }
 
   if (projectId) {
-    argoWorkflow.metadata.labels['simpipe.sct.sintef.no/project'] = projectId;
+    argoWorkflow.metadata.labels[SIMPIPE_PROJECT_LABEL] = projectId;
   }
   if (dryRunId) {
     argoWorkflow.metadata.name = dryRunId;
   } else if (!argoWorkflow.metadata.name && !argoWorkflow.metadata.generateName) {
-    const projectLabelName = argoWorkflow.metadata.labels['simpipe.sct.sintef.no/project'];
+    const projectLabelName = argoWorkflow.metadata.labels[SIMPIPE_PROJECT_LABEL];
     argoWorkflow.metadata.generateName = projectLabelName
       ? `${projectLabelName}-` : 'simpipe-unknown-project-';
   }

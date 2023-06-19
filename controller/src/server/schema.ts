@@ -9,7 +9,7 @@ export type Incremental<T> = T | { [P in keyof T]?: P extends ' $fragmentName' |
 export type RequireFields<T, K extends keyof T> = Omit<T, K> & { [P in K]-?: NonNullable<T[P]> };
 /** All built-in and custom scalars, mapped to their actual values */
 export type Scalars = {
-  ID: { input: string | number; output: string; }
+  ID: { input: string; output: string; }
   String: { input: string; output: string; }
   Boolean: { input: boolean; output: boolean; }
   Int: { input: number; output: number; }
@@ -108,6 +108,8 @@ export type DryRunStatus = {
 
 export type Mutation = {
   __typename?: 'Mutation';
+  /**  Assign a dry run to a project  */
+  assignDryRunToProject: DryRun;
   /**  Create a docker registry credential  */
   createDockerRegistryCredential: DockerRegistryCredential;
   /**
@@ -129,17 +131,23 @@ export type Mutation = {
   /**  Rename a project  */
   renameProject: Project;
   /**  Resubmit a run.  */
-  resubmitDryRun?: Maybe<DryRun>;
+  resubmitDryRun: DryRun;
   /**  Resume a run.  */
-  resumeDryRun?: Maybe<DryRun>;
+  resumeDryRun: DryRun;
   /**  Retry a run.  */
-  retryDryRun?: Maybe<DryRun>;
+  retryDryRun: DryRun;
   /**  Stop a run.  */
-  stopDryRun?: Maybe<DryRun>;
+  stopDryRun: DryRun;
   /**  Suspend a run.  */
-  suspendDryRun?: Maybe<DryRun>;
+  suspendDryRun: DryRun;
   /**  Update a docker registry credential  */
   updateDockerRegistryCredential: DockerRegistryCredential;
+};
+
+
+export type MutationAssignDryRunToProjectArgs = {
+  dryRunId: Scalars['String']['input'];
+  projectId: Scalars['String']['input'];
 };
 
 
@@ -386,6 +394,7 @@ export type DryRunStatusResolvers<ContextType = any, ParentType extends Resolver
 };
 
 export type MutationResolvers<ContextType = any, ParentType extends ResolversParentTypes['Mutation'] = ResolversParentTypes['Mutation']> = {
+  assignDryRunToProject?: Resolver<ResolversTypes['DryRun'], ParentType, ContextType, RequireFields<MutationAssignDryRunToProjectArgs, 'dryRunId' | 'projectId'>>;
   createDockerRegistryCredential?: Resolver<ResolversTypes['DockerRegistryCredential'], ParentType, ContextType, RequireFields<MutationCreateDockerRegistryCredentialArgs, 'credential'>>;
   createDryRun?: Resolver<ResolversTypes['DryRun'], ParentType, ContextType, RequireFields<MutationCreateDryRunArgs, 'argoWorkflow'>>;
   createProject?: Resolver<ResolversTypes['Project'], ParentType, ContextType, RequireFields<MutationCreateProjectArgs, 'project'>>;
@@ -393,11 +402,11 @@ export type MutationResolvers<ContextType = any, ParentType extends ResolversPar
   deleteDryRun?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationDeleteDryRunArgs, 'dryRunId'>>;
   deleteProject?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationDeleteProjectArgs, 'projectId'>>;
   renameProject?: Resolver<ResolversTypes['Project'], ParentType, ContextType, RequireFields<MutationRenameProjectArgs, 'name' | 'projectId'>>;
-  resubmitDryRun?: Resolver<Maybe<ResolversTypes['DryRun']>, ParentType, ContextType, RequireFields<MutationResubmitDryRunArgs, 'dryRunId'>>;
-  resumeDryRun?: Resolver<Maybe<ResolversTypes['DryRun']>, ParentType, ContextType, RequireFields<MutationResumeDryRunArgs, 'dryRunId'>>;
-  retryDryRun?: Resolver<Maybe<ResolversTypes['DryRun']>, ParentType, ContextType, RequireFields<MutationRetryDryRunArgs, 'dryRunId'>>;
-  stopDryRun?: Resolver<Maybe<ResolversTypes['DryRun']>, ParentType, ContextType, RequireFields<MutationStopDryRunArgs, 'dryRunId'>>;
-  suspendDryRun?: Resolver<Maybe<ResolversTypes['DryRun']>, ParentType, ContextType, RequireFields<MutationSuspendDryRunArgs, 'dryRunId'>>;
+  resubmitDryRun?: Resolver<ResolversTypes['DryRun'], ParentType, ContextType, RequireFields<MutationResubmitDryRunArgs, 'dryRunId'>>;
+  resumeDryRun?: Resolver<ResolversTypes['DryRun'], ParentType, ContextType, RequireFields<MutationResumeDryRunArgs, 'dryRunId'>>;
+  retryDryRun?: Resolver<ResolversTypes['DryRun'], ParentType, ContextType, RequireFields<MutationRetryDryRunArgs, 'dryRunId'>>;
+  stopDryRun?: Resolver<ResolversTypes['DryRun'], ParentType, ContextType, RequireFields<MutationStopDryRunArgs, 'dryRunId'>>;
+  suspendDryRun?: Resolver<ResolversTypes['DryRun'], ParentType, ContextType, RequireFields<MutationSuspendDryRunArgs, 'dryRunId'>>;
   updateDockerRegistryCredential?: Resolver<ResolversTypes['DockerRegistryCredential'], ParentType, ContextType, RequireFields<MutationUpdateDockerRegistryCredentialArgs, 'credential'>>;
 };
 

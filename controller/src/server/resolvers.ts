@@ -1,10 +1,12 @@
 import { randomUUID } from 'node:crypto';
 
 import {
+  convertArgoWorkflowToDryRun,
   createDryRun, deleteDryRun, dryRunsForProject,
   getDryRun, resubmitDryRun, resumeDryRun,
-  retryDryRun, stopDryRun, suspendDryRun,
+  retryDryRun, SIMPIPE_PROJECT_LABEL, stopDryRun, suspendDryRun,
 } from '../argo/dry-runs.js';
+import assignArgoWorkflowToProject from '../k8s/assign-argoworkflow-to-project.js';
 import {
   createDockerRegistryCredential,
   deleteDockerRegistryCredential,
@@ -20,7 +22,9 @@ import type { ArgoWorkflow } from '../argo/argo-client.js';
 import type ArgoWorkflowClient from '../argo/argo-client.js';
 import type K8sClient from '../k8s/k8s-client.js';
 import type {
+  DryRun,
   Mutation,
+  MutationAssignDryRunToProjectArgs as MutationAssignDryRunToProjectArguments,
   MutationCreateDockerRegistryCredentialArgs as MutationCreateDockerRegistryCredentialArguments,
   MutationCreateDryRunArgs as MutationCreateDryRunArguments,
   MutationCreateProjectArgs as MutationCreateProjectArguments,
@@ -206,6 +210,23 @@ const resolvers = {
       await deleteDryRun(dryRunId, argoClient);
       return true;
     },
+    async assignDryRunToProject(
+      _p: EmptyParent,
+      arguments_: MutationAssignDryRunToProjectArguments,
+      context: AuthenticatedContext,
+    ): Promise<Mutation['assignDryRunToProject']> {
+      const { dryRunId, projectId } = arguments_;
+      const { k8sClient, k8sNamespace } = context;
+      // load project to make sure it exists,
+      // it has a small window where it could be deleted
+      // between the check and the assignment
+      // but it's better than nothing.
+      await getProject(projectId, k8sClient, k8sNamespace);
+      const workflow = await assignArgoWorkflowToProject(
+        dryRunId, projectId, k8sClient, k8sNamespace,
+      );
+      return convertArgoWorkflowToDryRun(workflow);
+    },
     async createDockerRegistryCredential(
       _p: EmptyParent,
       arguments_: MutationCreateDockerRegistryCredentialArguments,
@@ -270,6 +291,21 @@ const resolvers = {
       const { id } = parent;
       const { argoClient } = context;
       return await dryRunsForProject(id, argoClient);
+    },
+  },
+  DryRun: {
+    async project(
+      parent: DryRun,
+      _a: EmptyArguments,
+      context: AuthenticatedContext,
+    ): Promise<DryRun['project']> {
+      const projectId = (parent.argoWorkflow as ArgoWorkflow)
+        .metadata.labels?.[SIMPIPE_PROJECT_LABEL];
+      if (!projectId) {
+        return undefined;
+      }
+      const { k8sClient, k8sNamespace } = context;
+      return await getProject(projectId, k8sClient, k8sNamespace);
     },
   },
 };

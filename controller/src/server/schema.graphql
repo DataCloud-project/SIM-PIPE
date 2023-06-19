@@ -149,22 +149,25 @@ type Mutation @auth {
   createDryRun(argoWorkflow: ArgoWorkflow!, projectId: String, dryRunId: String): DryRun!
 
   """ Suspend a run. """
-  suspendDryRun(dryRunId:String!): DryRun
+  suspendDryRun(dryRunId:String!): DryRun!
 
   """ Resume a run. """
-  resumeDryRun(dryRunId:String!): DryRun
+  resumeDryRun(dryRunId:String!): DryRun!
 
   """ Retry a run. """
-  retryDryRun(dryRunId:String!): DryRun
+  retryDryRun(dryRunId:String!): DryRun!
 
   """ Resubmit a run. """
-  resubmitDryRun(dryRunId:String!): DryRun
+  resubmitDryRun(dryRunId:String!): DryRun!
 
   """ Stop a run. """
-  stopDryRun(dryRunId:String!, terminate: Boolean): DryRun
+  stopDryRun(dryRunId:String!, terminate: Boolean): DryRun!
 
   """ Delete a run. """
   deleteDryRun(dryRunId:String!): Boolean!
+
+  """ Assign a dry run to a project """
+  assignDryRunToProject(dryRunId: String!, projectId: String!): DryRun!
 
   """ Create a docker registry credential """
   createDockerRegistryCredential(credential: DockerRegistryCredentialInput!): DockerRegistryCredential!
