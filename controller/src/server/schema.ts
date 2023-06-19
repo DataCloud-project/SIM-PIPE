@@ -15,24 +15,24 @@ export type Scalars = {
   Int: { input: number; output: number; }
   Float: { input: number; output: number; }
   ArgoWorkflow: { input: unknown; output: unknown; }
-  json: { input: string; output: string; }
-  uuid: { input: string; output: string; }
 };
 
 /**  The input data to create a run  */
 export type CreateDryRunInput = {
-  /**  An optional list of environment variables to set for the steps of the run container  */
-  environmentVariables?: InputMaybe<Array<StepEnvironmentVariable>>;
-  /**  The name of the run  */
-  name: Scalars['String']['input'];
   /**
-   *  The simulation to which this run belongs.
+   *  The raw Argo workflow document.
+   *
+   * It's project id and and name will be overwritten if provided.
+   */
+  argoWorkflow: Scalars['ArgoWorkflow']['input'];
+  /**  The id of the run (optional), will be generated if not provided  */
+  dryRunId?: InputMaybe<Scalars['String']['input']>;
+  /**
+   *  The project to which this run belongs (optional).
    *
    * The user must own the simulation.
    */
-  simulationId: Scalars['uuid']['input'];
-  /**  An optional list of timeouts to set for the steps of the run container  */
-  timeouts?: InputMaybe<Array<StepTimeout>>;
+  projectId?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type CreateProjectInput = {
@@ -40,19 +40,6 @@ export type CreateProjectInput = {
   id?: InputMaybe<Scalars['String']['input']>;
   /**  The name of the project  */
   name: Scalars['String']['input'];
-};
-
-export type CreateSimulationInput = {
-  /**  The name of the simulation  */
-  name: Scalars['String']['input'];
-  /**
-   *  The description of the simulation pipeline.
-   *
-   * It is a JSON document but it must be sent as a string,
-   * because not all GraphQL clients support sending JSON documents
-   * in input variables.
-   */
-  pipelineDescription: Scalars['json']['input'];
 };
 
 export type DockerRegistryCredential = {
@@ -84,6 +71,8 @@ export type DryRun = {
   createdAt: Scalars['String']['output'];
   /**  The identifier of the run  */
   id: Scalars['String']['output'];
+  /**  The project to which the run belongs  */
+  project?: Maybe<Project>;
   /**  Status of the run  */
   status: DryRunStatus;
 };
@@ -119,29 +108,38 @@ export type DryRunStatus = {
 
 export type Mutation = {
   __typename?: 'Mutation';
-  /**  Cancel a run, if the run is running it will be stopped  */
-  cancelDryRun?: Maybe<DryRun>;
   /**  Create a docker registry credential  */
   createDockerRegistryCredential: DockerRegistryCredential;
-  /**  Create a run, but does not start it  */
+  /**
+   *  Create a run.
+   *
+   * projectId and id are optional and will be generated.
+   * If provided in the createDryRun arguments, they will overwrite the
+   * values in the argoWorkflow document.
+   */
   createDryRun: DryRun;
   /**  Create a project  */
   createProject: Project;
   /**  Delete a docker registry credential  */
   deleteDockerRegistryCredential: Scalars['Boolean']['output'];
+  /**  Delete a run.  */
+  deleteDryRun: Scalars['Boolean']['output'];
   /**  Delete a project  */
   deleteProject: Scalars['Boolean']['output'];
   /**  Rename a project  */
   renameProject: Project;
-  /**  Start a run, if other runs are running this run will wait in the queue  */
-  startDryRun?: Maybe<DryRun>;
+  /**  Resubmit a run.  */
+  resubmitDryRun?: Maybe<DryRun>;
+  /**  Resume a run.  */
+  resumeDryRun?: Maybe<DryRun>;
+  /**  Retry a run.  */
+  retryDryRun?: Maybe<DryRun>;
+  /**  Stop a run.  */
+  stopDryRun?: Maybe<DryRun>;
+  /**  Suspend a run.  */
+  suspendDryRun?: Maybe<DryRun>;
   /**  Update a docker registry credential  */
   updateDockerRegistryCredential: DockerRegistryCredential;
-};
-
-
-export type MutationCancelDryRunArgs = {
-  runId: Scalars['uuid']['input'];
 };
 
 
@@ -151,7 +149,9 @@ export type MutationCreateDockerRegistryCredentialArgs = {
 
 
 export type MutationCreateDryRunArgs = {
-  run: CreateDryRunInput;
+  argoWorkflow: Scalars['ArgoWorkflow']['input'];
+  dryRunId?: InputMaybe<Scalars['String']['input']>;
+  projectId?: InputMaybe<Scalars['String']['input']>;
 };
 
 
@@ -165,19 +165,45 @@ export type MutationDeleteDockerRegistryCredentialArgs = {
 };
 
 
+export type MutationDeleteDryRunArgs = {
+  dryRunId: Scalars['String']['input'];
+};
+
+
 export type MutationDeleteProjectArgs = {
-  id: Scalars['String']['input'];
+  projectId: Scalars['String']['input'];
 };
 
 
 export type MutationRenameProjectArgs = {
-  id: Scalars['String']['input'];
   name: Scalars['String']['input'];
+  projectId: Scalars['String']['input'];
 };
 
 
-export type MutationStartDryRunArgs = {
-  runId: Scalars['uuid']['input'];
+export type MutationResubmitDryRunArgs = {
+  dryRunId: Scalars['String']['input'];
+};
+
+
+export type MutationResumeDryRunArgs = {
+  dryRunId: Scalars['String']['input'];
+};
+
+
+export type MutationRetryDryRunArgs = {
+  dryRunId: Scalars['String']['input'];
+};
+
+
+export type MutationStopDryRunArgs = {
+  dryRunId: Scalars['String']['input'];
+  terminate?: InputMaybe<Scalars['Boolean']['input']>;
+};
+
+
+export type MutationSuspendDryRunArgs = {
+  dryRunId: Scalars['String']['input'];
 };
 
 
@@ -217,28 +243,12 @@ export type Query = {
 
 
 export type QueryDryRunArgs = {
-  id: Scalars['String']['input'];
+  dryRunId: Scalars['String']['input'];
 };
 
 
 export type QueryProjectArgs = {
-  id: Scalars['String']['input'];
-};
-
-export type StepEnvironmentVariable = {
-  /**  The name of the environment variable  */
-  name: Scalars['String']['input'];
-  /**  The name of the step to set the environment variable for  */
-  stepName: Scalars['String']['input'];
-  /**  The value of the environment variable  */
-  value: Scalars['String']['input'];
-};
-
-export type StepTimeout = {
-  /**  The name of the step to set the timeout for  */
-  stepName: Scalars['String']['input'];
-  /**  The timeout in seconds, must be greater than 0 and less than 86400 (24 hours)  */
-  timeout: Scalars['Int']['input'];
+  projectId: Scalars['String']['input'];
 };
 
 
@@ -316,7 +326,6 @@ export type ResolversTypes = {
   Boolean: ResolverTypeWrapper<Scalars['Boolean']['output']>;
   CreateDryRunInput: CreateDryRunInput;
   CreateProjectInput: CreateProjectInput;
-  CreateSimulationInput: CreateSimulationInput;
   DockerRegistryCredential: ResolverTypeWrapper<DockerRegistryCredential>;
   DockerRegistryCredentialInput: DockerRegistryCredentialInput;
   DryRun: ResolverTypeWrapper<DryRun>;
@@ -326,11 +335,7 @@ export type ResolversTypes = {
   Mutation: ResolverTypeWrapper<{}>;
   Project: ResolverTypeWrapper<Project>;
   Query: ResolverTypeWrapper<{}>;
-  StepEnvironmentVariable: StepEnvironmentVariable;
-  StepTimeout: StepTimeout;
   String: ResolverTypeWrapper<Scalars['String']['output']>;
-  json: ResolverTypeWrapper<Scalars['json']['output']>;
-  uuid: ResolverTypeWrapper<Scalars['uuid']['output']>;
 };
 
 /** Mapping between all available schema types and the resolvers parents */
@@ -339,7 +344,6 @@ export type ResolversParentTypes = {
   Boolean: Scalars['Boolean']['output'];
   CreateDryRunInput: CreateDryRunInput;
   CreateProjectInput: CreateProjectInput;
-  CreateSimulationInput: CreateSimulationInput;
   DockerRegistryCredential: DockerRegistryCredential;
   DockerRegistryCredentialInput: DockerRegistryCredentialInput;
   DryRun: DryRun;
@@ -348,11 +352,7 @@ export type ResolversParentTypes = {
   Mutation: {};
   Project: Project;
   Query: {};
-  StepEnvironmentVariable: StepEnvironmentVariable;
-  StepTimeout: StepTimeout;
   String: Scalars['String']['output'];
-  json: Scalars['json']['output'];
-  uuid: Scalars['uuid']['output'];
 };
 
 export interface ArgoWorkflowScalarConfig extends GraphQLScalarTypeConfig<ResolversTypes['ArgoWorkflow'], any> {
@@ -370,6 +370,7 @@ export type DryRunResolvers<ContextType = any, ParentType extends ResolversParen
   argoWorkflow?: Resolver<ResolversTypes['ArgoWorkflow'], ParentType, ContextType>;
   createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  project?: Resolver<Maybe<ResolversTypes['Project']>, ParentType, ContextType>;
   status?: Resolver<ResolversTypes['DryRunStatus'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
@@ -385,14 +386,18 @@ export type DryRunStatusResolvers<ContextType = any, ParentType extends Resolver
 };
 
 export type MutationResolvers<ContextType = any, ParentType extends ResolversParentTypes['Mutation'] = ResolversParentTypes['Mutation']> = {
-  cancelDryRun?: Resolver<Maybe<ResolversTypes['DryRun']>, ParentType, ContextType, RequireFields<MutationCancelDryRunArgs, 'runId'>>;
   createDockerRegistryCredential?: Resolver<ResolversTypes['DockerRegistryCredential'], ParentType, ContextType, RequireFields<MutationCreateDockerRegistryCredentialArgs, 'credential'>>;
-  createDryRun?: Resolver<ResolversTypes['DryRun'], ParentType, ContextType, RequireFields<MutationCreateDryRunArgs, 'run'>>;
+  createDryRun?: Resolver<ResolversTypes['DryRun'], ParentType, ContextType, RequireFields<MutationCreateDryRunArgs, 'argoWorkflow'>>;
   createProject?: Resolver<ResolversTypes['Project'], ParentType, ContextType, RequireFields<MutationCreateProjectArgs, 'project'>>;
   deleteDockerRegistryCredential?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationDeleteDockerRegistryCredentialArgs, 'name'>>;
-  deleteProject?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationDeleteProjectArgs, 'id'>>;
-  renameProject?: Resolver<ResolversTypes['Project'], ParentType, ContextType, RequireFields<MutationRenameProjectArgs, 'id' | 'name'>>;
-  startDryRun?: Resolver<Maybe<ResolversTypes['DryRun']>, ParentType, ContextType, RequireFields<MutationStartDryRunArgs, 'runId'>>;
+  deleteDryRun?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationDeleteDryRunArgs, 'dryRunId'>>;
+  deleteProject?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationDeleteProjectArgs, 'projectId'>>;
+  renameProject?: Resolver<ResolversTypes['Project'], ParentType, ContextType, RequireFields<MutationRenameProjectArgs, 'name' | 'projectId'>>;
+  resubmitDryRun?: Resolver<Maybe<ResolversTypes['DryRun']>, ParentType, ContextType, RequireFields<MutationResubmitDryRunArgs, 'dryRunId'>>;
+  resumeDryRun?: Resolver<Maybe<ResolversTypes['DryRun']>, ParentType, ContextType, RequireFields<MutationResumeDryRunArgs, 'dryRunId'>>;
+  retryDryRun?: Resolver<Maybe<ResolversTypes['DryRun']>, ParentType, ContextType, RequireFields<MutationRetryDryRunArgs, 'dryRunId'>>;
+  stopDryRun?: Resolver<Maybe<ResolversTypes['DryRun']>, ParentType, ContextType, RequireFields<MutationStopDryRunArgs, 'dryRunId'>>;
+  suspendDryRun?: Resolver<Maybe<ResolversTypes['DryRun']>, ParentType, ContextType, RequireFields<MutationSuspendDryRunArgs, 'dryRunId'>>;
   updateDockerRegistryCredential?: Resolver<ResolversTypes['DockerRegistryCredential'], ParentType, ContextType, RequireFields<MutationUpdateDockerRegistryCredentialArgs, 'credential'>>;
 };
 
@@ -407,20 +412,12 @@ export type ProjectResolvers<ContextType = any, ParentType extends ResolversPare
 export type QueryResolvers<ContextType = any, ParentType extends ResolversParentTypes['Query'] = ResolversParentTypes['Query']> = {
   computeUploadPresignedUrl?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   dockerRegistryCredentials?: Resolver<Array<ResolversTypes['DockerRegistryCredential']>, ParentType, ContextType>;
-  dryRun?: Resolver<ResolversTypes['DryRun'], ParentType, ContextType, RequireFields<QueryDryRunArgs, 'id'>>;
+  dryRun?: Resolver<ResolversTypes['DryRun'], ParentType, ContextType, RequireFields<QueryDryRunArgs, 'dryRunId'>>;
   ping?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  project?: Resolver<ResolversTypes['Project'], ParentType, ContextType, RequireFields<QueryProjectArgs, 'id'>>;
+  project?: Resolver<ResolversTypes['Project'], ParentType, ContextType, RequireFields<QueryProjectArgs, 'projectId'>>;
   projects?: Resolver<Array<ResolversTypes['Project']>, ParentType, ContextType>;
   username?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
 };
-
-export interface JsonScalarConfig extends GraphQLScalarTypeConfig<ResolversTypes['json'], any> {
-  name: 'json';
-}
-
-export interface UuidScalarConfig extends GraphQLScalarTypeConfig<ResolversTypes['uuid'], any> {
-  name: 'uuid';
-}
 
 export type Resolvers<ContextType = any> = {
   ArgoWorkflow?: GraphQLScalarType;
@@ -430,7 +427,5 @@ export type Resolvers<ContextType = any> = {
   Mutation?: MutationResolvers<ContextType>;
   Project?: ProjectResolvers<ContextType>;
   Query?: QueryResolvers<ContextType>;
-  json?: GraphQLScalarType;
-  uuid?: GraphQLScalarType;
 };
 

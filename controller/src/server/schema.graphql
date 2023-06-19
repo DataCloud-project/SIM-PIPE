@@ -1,5 +1,3 @@
-scalar uuid
-scalar json
 scalar ArgoWorkflow
 
 type Query {
@@ -16,19 +14,22 @@ type Query {
   projects: [Project!]! @auth
 
   """ Get a project by id """
-  project(id: String!): Project! @auth
+  project(projectId: String!): Project! @auth
 
   """ Get a dry run by id """
-  dryRun(id: uuid!): DryRun! @auth
+  dryRun(dryRunId: String!): DryRun! @auth
 }
 
 type Project {
   """ The name of the project """
   name: String!
+
   """ The identifier of the project """
   id: String!
+
   """ Date of creation """
   createdAt: String!
+
   """ The dry runs in the project """
   dryRuns: [DryRun!]
 }
@@ -103,22 +104,6 @@ input DockerRegistryCredentialInput {
 }
 
 
-input StepEnvironmentVariable {
-  """ The name of the step to set the environment variable for """
-  stepName: String!
-  """ The name of the environment variable """
-  name: String!
-  """ The value of the environment variable """
-  value: String!
-}
-
-input StepTimeout {
-  """ The name of the step to set the timeout for """
-  stepName: String!
-  """ The timeout in seconds, must be greater than 0 and less than 86400 (24 hours) """
-  timeout: Int!
-}
-
 input CreateProjectInput {
   """ The name of the project """
   name: String!
@@ -129,32 +114,20 @@ input CreateProjectInput {
 
 """ The input data to create a run """
 input CreateDryRunInput {
-  """ The simulation to which this run belongs.
+  """ The project to which this run belongs (optional).
 
       The user must own the simulation.
   """
-  simulationId: uuid!
+  projectId: String
 
-  """ The name of the run """
-  name: String!
+  """ The id of the run (optional), will be generated if not provided """
+  dryRunId: String
 
-  """ An optional list of environment variables to set for the steps of the run container """
-  environmentVariables: [StepEnvironmentVariable!]
+  """ The raw Argo workflow document.
 
-  """ An optional list of timeouts to set for the steps of the run container """
-  timeouts: [StepTimeout!]
-}
-
-input CreateSimulationInput {
-  """ The name of the simulation """
-  name: String!
-  """ The description of the simulation pipeline.
-
-  It is a JSON document but it must be sent as a string,
-  because not all GraphQL clients support sending JSON documents
-  in input variables.
+  It's project id and and name will be overwritten if provided.
   """
-  pipelineDescription: json!
+  argoWorkflow: ArgoWorkflow!
 }
 
 type Mutation @auth {
@@ -162,19 +135,36 @@ type Mutation @auth {
   createProject(project: CreateProjectInput!): Project!
 
   """ Rename a project """
-  renameProject(id: String!, name: String!): Project!
+  renameProject(projectId: String!, name: String!): Project!
 
   """ Delete a project """
-  deleteProject(id: String!): Boolean!
+  deleteProject(projectId: String!): Boolean!
 
-  """ Create a run, but does not start it """
-  createDryRun(run: CreateDryRunInput!): DryRun!
+  """ Create a run.
 
-  """ Start a run, if other runs are running this run will wait in the queue """
-  startDryRun(runId:uuid!): DryRun
+  projectId and id are optional and will be generated.
+  If provided in the createDryRun arguments, they will overwrite the
+  values in the argoWorkflow document.
+  """
+  createDryRun(argoWorkflow: ArgoWorkflow!, projectId: String, dryRunId: String): DryRun!
 
-  """ Cancel a run, if the run is running it will be stopped """
-  cancelDryRun(runId:uuid!): DryRun
+  """ Suspend a run. """
+  suspendDryRun(dryRunId:String!): DryRun
+
+  """ Resume a run. """
+  resumeDryRun(dryRunId:String!): DryRun
+
+  """ Retry a run. """
+  retryDryRun(dryRunId:String!): DryRun
+
+  """ Resubmit a run. """
+  resubmitDryRun(dryRunId:String!): DryRun
+
+  """ Stop a run. """
+  stopDryRun(dryRunId:String!, terminate: Boolean): DryRun
+
+  """ Delete a run. """
+  deleteDryRun(dryRunId:String!): Boolean!
 
   """ Create a docker registry credential """
   createDockerRegistryCredential(credential: DockerRegistryCredentialInput!): DockerRegistryCredential!
