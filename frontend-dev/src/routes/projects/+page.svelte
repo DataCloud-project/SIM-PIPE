@@ -46,16 +46,16 @@
 </script>
 
 
-<div class="flex-row ">
+<div class="flex-row p-5">
 
-    <h1 class="flex justify-left p-5">Projects</h1>
+    <h1 >Projects</h1>
 
     <div class="flex justify-end">
         <div class="flex-row justify-content-end">	
             <button type="button" class="btn btn-sm variant-filled" on:click={() => (modalStore.trigger(modal))}>
                 <span>Create</span>
             </button>			
-            <button type="button" class="btn btn-sm variant-filled" on:click={onDeleteSelected}>
+            <button type="button" class="btn btn-sm variant-filled-warning" on:click={onDeleteSelected}>
                 <span>Delete</span>
             </button>
         </div>		
@@ -79,7 +79,7 @@
                 {#each projects as project}
                     <tr id="clickable_row" class="clickable table-row-checked"  onclick="window.location=`/projects/[project_id]/{project.project_id}`">
                         <td >
-                            <input type="checkbox" class="checkbox"  bind:checked={checkboxes[project.name]} on:click={(event) => handleCheckboxClick(event)} />
+                            <input type="checkbox" class="checkbox variant-filled"  bind:checked={checkboxes[project.name]} on:click={(event) => handleCheckboxClick(event)} />
                         </td>
                         <td>{project.name}</td>
                         <td>{project.created_date}</td>

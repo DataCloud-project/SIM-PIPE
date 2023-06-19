@@ -28,7 +28,7 @@
 					<h1>PIPE</h1>
 				</div>
 			</svelte:fragment>
-			<svelte:fragment>
+			<!-- <svelte:fragment>
 				<div class="flex-row grid grid-cols-4 gap-2">
 					<div class="flex-col justify-items-center">
 						<div><a href="/projects"><BookOpenIcon size="20" /></a></div>
@@ -45,9 +45,9 @@
 					<div>
 						<a href="/projects"><BookOpenIcon size="20" /></a>
 						<p class="text-xs">Projects</p>
-					</div>
+					</div> 
 				</div>
-			</svelte:fragment>
+			</svelte:fragment> -->
 			<svelte:fragment slot="trail"><LightSwitch /></svelte:fragment>
 		</AppBar>
 	</svelte:fragment>

@@ -62,14 +62,14 @@
 			<button type="button" class="btn btn-sm variant-filled" on:click={() => (modalStore.trigger(modal))}>
 				<span>Create</span>
 			</button>			
-			<button type="button" class="btn btn-sm variant-filled" on:click={onDeleteSelected}>
+			<button type="button" class="btn btn-sm variant-filled-warning" on:click={onDeleteSelected}>
 				<span>Delete</span>
 			</button>
 		</div>		
 	</div>
 	
 	<!-- Responsive Container (recommended) -->
-	<div class="table-container pt-5">
+	<div class="table-container p-5">
 		<!-- Native Table Element -->
 		<!-- TODO: add margin/padding for table elements -->
 		<table class="table table-interactive">
@@ -86,7 +86,7 @@
 			<tbody>
 				{#each dry_runs.data as run}
 					<tr class="table-row-checked">
-						<td><input type="checkbox" bind:checked={checkboxes[run.name]} class="checkbox" /></td>
+						<td><input type="checkbox" bind:checked={checkboxes[run.name]} class="checkbox variant-filled" /></td>
 						<td>{run.name}</td>
 						<td><SymbolForRunResult run_result={run.run_result} /></td>
 						<td>{transformSecondsToHoursMinutesSeconds(run.duration_seconds)}</td>
