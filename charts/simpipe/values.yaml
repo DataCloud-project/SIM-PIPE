@@ -253,7 +253,10 @@ cadvisor:
       #- --docker_only
       - --event_storage_event_limit=default=0
       - --event_storage_age_limit=default=0
-      - --enable_metrics=memory,cpu,diskIO,disk,process
+      - --enable_metrics=memory,cpu,process,network
+      # Replace with the following line to enable disk metrics,
+      # at the cost of a significant performance hit.
+      #- --enable_metrics=memory,cpu,process,network,diskIO,disk
     hostPaths:
       - name: rootfs
         path: "/"
