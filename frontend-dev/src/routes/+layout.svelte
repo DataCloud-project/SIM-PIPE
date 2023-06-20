@@ -56,7 +56,8 @@
 	<svelte:fragment slot="sidebarLeft">
 		<AppRail>
 			<AppRailTile label="Projects" href="/projects"><BookOpenIcon size="1.5x" /></AppRailTile>
-			<AppRailTile label="Kubernetes Secrets" href="/secrets"><LockIcon size="1.5x" /></AppRailTile>
+			<!-- <AppRailTile label="Kubernetes Secrets" href="/secrets"><LockIcon size="1.5x" /></AppRailTile> -->
+			<AppRailTile label="Registry Key Vault" href="/secrets"><LockIcon size="1.5x" /></AppRailTile>
 			<!-- <AppRailTile label="Dry Runs" href="/projects/1234/dry-run">
 				<ApertureIcon size="1.5x" />
 			</AppRailTile> -->
@@ -70,5 +71,5 @@
 	<slot />
 
 	<!-- (pageFooter) -->
-	<svelte:fragment slot="footer">this is the footer</svelte:fragment>
+	<svelte:fragment slot="footer"></svelte:fragment>
 </AppShell>
