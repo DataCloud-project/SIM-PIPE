@@ -108,6 +108,14 @@ kube-prometheus-stack:
   prometheus:
     prometheusSpec:
       retention: 10y
+      storageSpec:
+        volumeClaimTemplate:
+          spec:
+            #storageClassName: ""
+            accessModes: ["ReadWriteOnce"]
+            resources:
+              requests:
+                storage: 8Gi
       additionalRemoteWrite:
         []
         # - url: "http://simpipe-promscale.default.svc.cluster.local:9201/write"
@@ -150,6 +158,13 @@ argo-workflows:
     workflowDefaults:
       spec:
         parallelism: 1
+        templateDefaults:
+          metadata:
+            labels:
+              simpipe: "true"
+      metadata:
+        labels:
+          simpipe: "true"
     workflowWorkers: 1
     persistence:
       archive: true
@@ -238,6 +253,7 @@ cadvisor:
       #- --docker_only
       - --event_storage_event_limit=default=0
       - --event_storage_age_limit=default=0
+      - --enable_metrics=memory,cpu,diskIO,disk,process
     hostPaths:
       - name: rootfs
         path: "/"
@@ -253,79 +269,3 @@ cadvisor:
 
   #nodeSelector:
   #  node-role.kubernetes.io/worker: worker
-
-prometheus:
-  enabled: false
-  kube-state-metrics:
-    enabled: false
-  alertmanager:
-    enabled: false
-  prometheus-node-exporter:
-    enabled: false
-  prometheus-pushgateway:
-    enabled: true
-
-  serverFiles:
-    prometheus.yml:
-      scrape_configs:
-        - job_name: cadvisor
-          kubernetes_sd_configs:
-            - role: pod
-          relabel_configs:
-            - source_labels: [__meta_kubernetes_pod_label_app]
-              action: keep
-              regex: simpipe-cadvisor
-            # - action: labelmap
-            #   regex: __meta_kubernetes_pod_label_(.+)
-            # - source_labels: [__meta_kubernetes_namespace]
-            #   action: replace
-            #   target_label: namespace
-            # - source_labels: [__meta_kubernetes_pod_name]
-            #   action: replace
-            #   target_label: pod
-          metric_relabel_configs:
-            # - action: replace
-            #   replacement: wololo-${1}
-            #   source_labels: [__meta_kubernetes_pod_label_id, id]
-            #   target_label: fuckyou
-            - source_labels: [id]
-              regex: "^/kubepods/(guaranteed|burstable|besteffort)/([^/]+)/([^/]+)$"
-              target_label: pod
-              replacement: "$2"
-              action: replace
-            - source_labels: [id]
-              regex: "^/kubepods/(guaranteed|burstable|besteffort)/([^/]+)/([^/]+)$"
-              target_label: container
-              replacement: "$3"
-              action: replace
-            # remove label id
-            - regex: "id"
-              action: labeldrop
-
-          # Scrape faster
-          scrape_interval: 2s
-        - job_name: "simpipe-prometheus-pushgateway"
-          honor_labels: true
-
-          kubernetes_sd_configs:
-            - role: service
-
-          relabel_configs:
-            - source_labels:
-                [__meta_kubernetes_service_annotation_prometheus_io_probe]
-              action: keep
-              regex: pushgateway
-        - job_name: kubernetes-pods
-          honor_labels: true
-          kubernetes_sd_configs:
-            - role: pod
-
-  # # See https://github.com/timescale/timescaledb-kubernetes/issues/394
-  # # and https://github.com/timescale/timescaledb-kubernetes/issues/278#issuecomment-1104895032
-  # service:
-  #   primary:
-  #     spec:
-  #       selector:
-  #         app: sandbox-toys-timescaledb
-  #         cluster-name: simpipe
-  #         role: master
