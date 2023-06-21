@@ -270,5 +270,23 @@ cadvisor:
       - name: disk
         path: "/dev/disk"
 
+  extraContainers:
+    - name: simpipe-cadvisor-bridge
+      image: ghcr.io/datacloud-project/simpipe-cadvisor-bridge:pr-92
+      imagePullPolicy: IfNotPresent
+      args:
+        - http://localhost:8080/metrics
+      ports:
+        - name: bridge
+          containerPort: 2112
+          protocol: TCP
+
+  service:
+    extraPorts:
+      - name: bridge
+        targetPort: bridge
+        port: 2112
+        protocol: TCP
+
   #nodeSelector:
   #  node-role.kubernetes.io/worker: worker

@@ -14,6 +14,9 @@ spec:
     port: {{ .Values.container.port }}
     targetPort: {{ .Values.container.port }}
     protocol: TCP
+  {{- if .Values.service.extraPorts }}
+  {{- toYaml .Values.service.extraPorts | nindent 2 }}
+  {{- end }}
   selector:
     app: {{ template "cadvisor.name" . }}
   type: ClusterIP
