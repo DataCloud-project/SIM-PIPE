@@ -2,8 +2,8 @@ package main
 
 import (
 	"fmt"
-	"io"
 	"net/http"
+	_ "net/http/pprof"
 	"os"
 	"strings"
 
@@ -32,24 +32,15 @@ var SIMPIPE_LABELS = []string{
 	"full_name",      // name
 }
 
-func fetchMetrics(endpoint string) ([]byte, error) {
+func fetchMetrics(endpoint string) (map[string]*dto.MetricFamily, error) {
 	resp, err := http.Get(endpoint)
 	if err != nil {
 		return nil, err
 	}
 	defer resp.Body.Close()
 
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
-
-	return body, nil
-}
-
-func parseMetrics(metrics []byte) (map[string]*dto.MetricFamily, error) {
 	var parser expfmt.TextParser
-	parsed, err := parser.TextToMetricFamilies(strings.NewReader(string(metrics)))
+	parsed, err := parser.TextToMetricFamilies(resp.Body)
 	if err != nil {
 		return nil, err
 	}
@@ -58,6 +49,7 @@ func parseMetrics(metrics []byte) (map[string]*dto.MetricFamily, error) {
 }
 
 func main() {
+
 	// Getting the endpoint from command-line arguments
 	if len(os.Args) < 2 {
 		fmt.Println("Please provide an endpoint")
@@ -77,16 +69,9 @@ func main() {
 			return
 		}
 
-		parsed, err := parseMetrics(metrics)
-		if err != nil {
-			http.Error(w, "Error parsing and exposing metrics", http.StatusInternalServerError)
-			return
-		}
-
 		collectors := make([]prometheus.Collector, 0)
 
-		// Print parsed labels
-		for _, metric := range parsed {
+		for _, metric := range metrics {
 
 			metricName := metric.GetName()
 
