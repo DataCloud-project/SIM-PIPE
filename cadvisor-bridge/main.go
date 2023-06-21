@@ -81,6 +81,14 @@ func main() {
 	metricMetadataMap := make(map[string]metricMetadata)
 	mapIsInitialized := false
 
+	// General information
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+
+		// Sends a HTPT 200 OK
+		fmt.Fprintf(w, "simpipe-cadvisor-bridge\n")
+	})
+
 	// Expose the metrics
 	http.HandleFunc("/metrics", func(w http.ResponseWriter, r *http.Request) {
 		// prometheus.DefaultRegisterer.UnregisterAll() // Clear all the old metrics
@@ -141,7 +149,7 @@ func main() {
 					// check if it's a simpipe followed metric by checking the label container_label_simpipe
 					isSimpipe := false
 					for _, label := range serie.Tags {
-						if label.Key == SIMPIPE_LABEL && label.Value == "true" {
+						if label.Key == SIMPIPE_LABEL && (label.Value == "true" || label.Value == "1" || label.Value == "yes") {
 							isSimpipe = true
 							hasAtLeastOneSimpipe = true
 							break

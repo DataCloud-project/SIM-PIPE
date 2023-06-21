@@ -1,0 +1,46 @@
+name: Create and publish cadvisor-bridge image
+
+on:
+  push:
+    branches:
+      - main
+      - dev
+  pull_request:
+    paths:
+      - "cadvisor-bridge/**"
+
+env:
+  REGISTRY: ghcr.io
+  CADVISOR_BRIDGE_IMAGE_NAME: datacloud-project/sim-pipe-cadvisor-bridge
+
+jobs:
+  build-and-push-cadvisor-bridge:
+    name: Build and push cadvisor-bridge image
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata (tags, labels) for simpipe-cadvisor-bridge main image
+        id: meta-main
+        uses: docker/metadata-action@v4
+        with:
+          images: ${{ env.REGISTRY }}/datacloud-project/simpipe-cadvisor-bridge
+
+      - name: Build and push Docker cadvisor-bridge image
+        uses: docker/build-push-action@v4
+        with:
+          context: ./cadvisor-bridge/
+          push: true
+          tags: ${{ steps.meta-main.outputs.tags }}
+          labels: ${{ steps.meta-main.outputs.labels }}
