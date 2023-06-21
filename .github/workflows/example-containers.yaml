@@ -1,6 +1,14 @@
 name: Create and publish example software containers
 
-on: {}
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "example/**"
+  pull_request:
+    paths:
+      - "example/**"
 
 env:
   REGISTRY: ghcr.io
@@ -36,7 +44,7 @@ jobs:
             type=raw,value=latest
 
       - name: Build and push Docker pre process image
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@v4
         with:
           context: ./example/pre-process/
           push: true
@@ -52,7 +60,7 @@ jobs:
             type=raw,value=latest
 
       - name: Build and push Docker process image
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@v4
         with:
           context: ./example/process/
           push: true
@@ -68,7 +76,7 @@ jobs:
             type=raw,value=latest
 
       - name: Build and push Docker analyse image
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@v4
         with:
           context: ./example/analyse/
           push: true
@@ -84,7 +92,7 @@ jobs:
             type=raw,value=latest
 
       - name: Build and push Docker fail image
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@v4
         with:
           context: ./example/fail/
           push: true
