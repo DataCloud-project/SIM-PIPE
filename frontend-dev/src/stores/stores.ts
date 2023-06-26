@@ -1,7 +1,12 @@
 import { writable } from 'svelte/store';
 import type { GraphQLClient } from 'graphql-request';
+import type Keycloak from 'keycloak-js';
+import type { Project } from '../types.js';
 
 export const graphQlClient = writable<GraphQLClient>();
+
+export const keycloakHandler = writable<Keycloak>();;
+export const projectsList = writable<Project[]|undefined>();
 
 // TODO: remove; temporary list to keep dry runs [samples used in frontend until api is ready]
 export const dry_runs = {
