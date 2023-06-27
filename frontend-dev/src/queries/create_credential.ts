@@ -1,0 +1,9 @@
+import { gql } from 'graphql-request';
+
+const createCredentialMutation = gql`
+  mutation createDockerRegistryCredential($credential: DockerRegistryCredentialInput) {
+    createDockerRegistryCredential(credential: $credential)
+  }
+`;
+
+export default createCredentialMutation;
