@@ -4,7 +4,7 @@ import {
 import { DryRunNodeType, DryRunPhase } from '../server/schema.js';
 import getPodName from './get-pod-name.js';
 import type {
-  DryRun, DryRunLogEntry, DryRunNode, DryRunNodePod,
+  DryRun, DryRunLogEntry, DryRunNode, DryRunNodeArtifact, DryRunNodePod,
 } from '../server/schema.js';
 import type { ArgoClientActionNames, ArgoNode, ArgoWorkflow } from './argo-client.js';
 import type ArgoWorkflowClient from './argo-client.js';
@@ -83,8 +83,9 @@ function convertNodeDuration(node: ArgoNode): number | undefined {
     - new Date(node.startedAt).getTime()) / 1000);
 }
 
-export type InternalExtendedDryRunNode = DryRunNode & DryRunNodePod & {
+type InternalExtendedDryRunNode = DryRunNode & Omit<DryRunNodePod, 'podName' | 'metrics' | 'resourcesDuration'> & {
   workflow: ArgoWorkflow;
+  podName: string | undefined;
 };
 
 export function assertDryRunNodeHasWorkflow(
@@ -100,9 +101,19 @@ export function convertArgoWorkflowNode(node: ArgoNode, argoWorkflow: ArgoWorkfl
   const type = convertArgoNodeType(node.type);
 
   let podName: string | undefined;
+  let inputArtifacts: DryRunNodeArtifact[] | undefined;
+  let outputArtifacts: DryRunNodeArtifact[] | undefined;
 
   if (type === DryRunNodeType.Pod) {
     podName = getPodName(node, argoWorkflow);
+    inputArtifacts = node.inputs?.artifacts?.map(({ name, s3 }) => ({
+      name,
+      key: s3?.key,
+    }));
+    outputArtifacts = node.outputs?.artifacts?.map(({ name, s3 }) => ({
+      name,
+      key: s3?.key,
+    }));
   }
 
   return {
@@ -121,6 +132,8 @@ export function convertArgoWorkflowNode(node: ArgoNode, argoWorkflow: ArgoWorkfl
     duration: convertNodeDuration(node),
     workflow: argoWorkflow,
     podName,
+    inputArtifacts,
+    outputArtifacts,
   };
 }
 

@@ -135,6 +135,16 @@ export type DryRunNode = {
   type: DryRunNodeType;
 };
 
+export type DryRunNodeArtifact = {
+  __typename?: 'DryRunNodeArtifact';
+  /**  The artifact path  */
+  key?: Maybe<Scalars['String']['output']>;
+  /**  The artifact name  */
+  name: Scalars['String']['output'];
+  /**  URL to download the artifact using an HTTP GET. */
+  url?: Maybe<Scalars['String']['output']>;
+};
+
 /**  Prometheus metrics for the node.  */
 export type DryRunNodeMetrics = {
   __typename?: 'DryRunNodeMetrics';
@@ -533,11 +543,15 @@ export type DryRunNodePod = DryRunNode & {
   exitCode?: Maybe<Scalars['String']['output']>;
   finishedAt?: Maybe<Scalars['String']['output']>;
   id: Scalars['String']['output'];
+  /**  Input artifacts of the node.  */
+  inputArtifacts?: Maybe<Array<DryRunNodeArtifact>>;
   /**  The logs of the node.  */
   log?: Maybe<Array<Scalars['String']['output']>>;
   /**  The name of the pod.  */
   metrics: DryRunNodeMetrics;
   name: Scalars['String']['output'];
+  /**  Output artifacts of the node.  */
+  outputArtifacts?: Maybe<Array<DryRunNodeArtifact>>;
   phase: DryRunPhase;
   /**  The name of the pod.  */
   podName: Scalars['String']['output'];
@@ -625,6 +639,8 @@ export type Mutation = {
   __typename?: 'Mutation';
   /**  Assign a dry run to a project  */
   assignDryRunToProject: DryRun;
+  /**  Compute a presigned URL for uploading a file using a HTTP PUT.  */
+  computeUploadPresignedUrl: Scalars['String']['output'];
   /**  Create a docker registry credential  */
   createDockerRegistryCredential: DockerRegistryCredential;
   /**
@@ -663,6 +679,11 @@ export type Mutation = {
 export type MutationAssignDryRunToProjectArgs = {
   dryRunId: Scalars['String']['input'];
   projectId: Scalars['String']['input'];
+};
+
+
+export type MutationComputeUploadPresignedUrlArgs = {
+  key?: InputMaybe<Scalars['String']['input']>;
 };
 
 
@@ -754,8 +775,6 @@ export type PrometheusSample = {
 
 export type Query = {
   __typename?: 'Query';
-  /**  Compute a presigned URL for uploading a file using a HTTP PUT.  */
-  computeUploadPresignedUrl: Scalars['String']['output'];
   /**  List of docker registry credentials.  */
   dockerRegistryCredentials: Array<DockerRegistryCredential>;
   /**  Get a dry run by id  */
@@ -864,6 +883,7 @@ export type ResolversTypes = {
   DryRun: ResolverTypeWrapper<DryRun>;
   DryRunLogEntry: ResolverTypeWrapper<DryRunLogEntry>;
   DryRunNode: ResolverTypeWrapper<ResolversInterfaceTypes<ResolversTypes>['DryRunNode']>;
+  DryRunNodeArtifact: ResolverTypeWrapper<DryRunNodeArtifact>;
   DryRunNodeMetrics: ResolverTypeWrapper<DryRunNodeMetrics>;
   DryRunNodeMisc: ResolverTypeWrapper<DryRunNodeMisc>;
   DryRunNodePod: ResolverTypeWrapper<DryRunNodePod>;
@@ -892,6 +912,7 @@ export type ResolversParentTypes = {
   DryRun: DryRun;
   DryRunLogEntry: DryRunLogEntry;
   DryRunNode: ResolversInterfaceTypes<ResolversParentTypes>['DryRunNode'];
+  DryRunNodeArtifact: DryRunNodeArtifact;
   DryRunNodeMetrics: DryRunNodeMetrics;
   DryRunNodeMisc: DryRunNodeMisc;
   DryRunNodePod: DryRunNodePod;
@@ -949,6 +970,13 @@ export type DryRunNodeResolvers<ContextType = any, ParentType extends ResolversP
   startedAt?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   templateName?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   type?: Resolver<ResolversTypes['DryRunNodeType'], ParentType, ContextType>;
+};
+
+export type DryRunNodeArtifactResolvers<ContextType = any, ParentType extends ResolversParentTypes['DryRunNodeArtifact'] = ResolversParentTypes['DryRunNodeArtifact']> = {
+  key?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  url?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
 export type DryRunNodeMetricsResolvers<ContextType = any, ParentType extends ResolversParentTypes['DryRunNodeMetrics'] = ResolversParentTypes['DryRunNodeMetrics']> = {
@@ -1018,9 +1046,11 @@ export type DryRunNodePodResolvers<ContextType = any, ParentType extends Resolve
   exitCode?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   finishedAt?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   id?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  inputArtifacts?: Resolver<Maybe<Array<ResolversTypes['DryRunNodeArtifact']>>, ParentType, ContextType>;
   log?: Resolver<Maybe<Array<ResolversTypes['String']>>, ParentType, ContextType, Partial<DryRunNodePodLogArgs>>;
   metrics?: Resolver<ResolversTypes['DryRunNodeMetrics'], ParentType, ContextType>;
   name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  outputArtifacts?: Resolver<Maybe<Array<ResolversTypes['DryRunNodeArtifact']>>, ParentType, ContextType>;
   phase?: Resolver<ResolversTypes['DryRunPhase'], ParentType, ContextType>;
   podName?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   progress?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
@@ -1050,6 +1080,7 @@ export type DryRunStatusResolvers<ContextType = any, ParentType extends Resolver
 
 export type MutationResolvers<ContextType = any, ParentType extends ResolversParentTypes['Mutation'] = ResolversParentTypes['Mutation']> = {
   assignDryRunToProject?: Resolver<ResolversTypes['DryRun'], ParentType, ContextType, RequireFields<MutationAssignDryRunToProjectArgs, 'dryRunId' | 'projectId'>>;
+  computeUploadPresignedUrl?: Resolver<ResolversTypes['String'], ParentType, ContextType, Partial<MutationComputeUploadPresignedUrlArgs>>;
   createDockerRegistryCredential?: Resolver<ResolversTypes['DockerRegistryCredential'], ParentType, ContextType, RequireFields<MutationCreateDockerRegistryCredentialArgs, 'credential'>>;
   createDryRun?: Resolver<ResolversTypes['DryRun'], ParentType, ContextType, RequireFields<MutationCreateDryRunArgs, 'argoWorkflow'>>;
   createProject?: Resolver<ResolversTypes['Project'], ParentType, ContextType, RequireFields<MutationCreateProjectArgs, 'project'>>;
@@ -1084,7 +1115,6 @@ export interface PrometheusStringNumberScalarConfig extends GraphQLScalarTypeCon
 }
 
 export type QueryResolvers<ContextType = any, ParentType extends ResolversParentTypes['Query'] = ResolversParentTypes['Query']> = {
-  computeUploadPresignedUrl?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   dockerRegistryCredentials?: Resolver<Array<ResolversTypes['DockerRegistryCredential']>, ParentType, ContextType>;
   dryRun?: Resolver<ResolversTypes['DryRun'], ParentType, ContextType, RequireFields<QueryDryRunArgs, 'dryRunId'>>;
   ping?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
@@ -1103,6 +1133,7 @@ export type Resolvers<ContextType = any> = {
   DryRun?: DryRunResolvers<ContextType>;
   DryRunLogEntry?: DryRunLogEntryResolvers<ContextType>;
   DryRunNode?: DryRunNodeResolvers<ContextType>;
+  DryRunNodeArtifact?: DryRunNodeArtifactResolvers<ContextType>;
   DryRunNodeMetrics?: DryRunNodeMetricsResolvers<ContextType>;
   DryRunNodeMisc?: DryRunNodeMiscResolvers<ContextType>;
   DryRunNodePod?: DryRunNodePodResolvers<ContextType>;

@@ -13,8 +13,6 @@ scalar PrometheusStringNumber
 type Query {
   """ Fetch the current username. """
   username: String! @auth
-  """ Compute a presigned URL for uploading a file using a HTTP PUT. """
-  computeUploadPresignedUrl: String! @auth
   """ Returns pong if the server is up and running. """
   ping: String!
   """ List of docker registry credentials. """
@@ -198,6 +196,12 @@ type DryRunNodePod implements DryRunNode {
 
   """ The logs of the node. """
   log(maxLines: Int, grep: String): [String!]
+
+  """ Input artifacts of the node. """
+  inputArtifacts: [DryRunNodeArtifact!]
+
+  """ Output artifacts of the node. """
+  outputArtifacts: [DryRunNodeArtifact!]
 }
 
 type DryRunNodeMisc implements DryRunNode {
@@ -263,6 +267,15 @@ type DryRunNodeMetrics {
   threads(start: TimeStamp, end: TimeStamp, step: Int): [PrometheusSample!]
   threadsMax(start: TimeStamp, end: TimeStamp, step: Int): [PrometheusSample!]
   ulimitsSoft(start: TimeStamp, end: TimeStamp, step: Int): [PrometheusSample!]
+}
+
+type DryRunNodeArtifact {
+  """ The artifact name """
+  name: String!
+  """ The artifact path """
+  key: String
+  """ URL to download the artifact using an HTTP GET."""
+  url: String
 }
 
 """
@@ -369,4 +382,7 @@ type Mutation @auth {
 
   """ Update a docker registry credential """
   updateDockerRegistryCredential(credential: DockerRegistryCredentialInput!): DockerRegistryCredential!
+
+  """ Compute a presigned URL for uploading a file using a HTTP PUT. """
+  computeUploadPresignedUrl(key: String): String!
 }

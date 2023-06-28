@@ -18,7 +18,7 @@ export const minioEndpoint = process.env.MINIO_ENDPOINT ?? 'localhost';
 export const minioPort = process.env.MINIO_PORT
   ? Number.parseInt(process.env.MINIO_PORT, 10) : undefined;
 export const minioUseSSL = !!process.env.MINIO_USE_SSL;
-export const minioBucketName = process.env.MINIO_BUCKET_NAME ?? 'simpipe2';
+export const minioBucketName = process.env.MINIO_BUCKET_NAME ?? 'artifacts';
 export const minioRegion = process.env.MINIO_REGION ?? 'no-region';
 
 // Argo client

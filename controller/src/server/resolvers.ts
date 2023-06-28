@@ -18,7 +18,7 @@ import {
 import {
   createProject, deleteProject, getProject, projects, renameProject,
 } from '../k8s/projects.js';
-import { computePresignedPutUrl } from '../minio/minio.js';
+import { computePresignedGetUrl, computePresignedPutUrl } from '../minio/minio.js';
 import queryPrometheusResolver from '../prometheus/query-prometheus-resolver.js';
 import { PingError } from './apollo-errors.js';
 import type { ArgoWorkflow } from '../argo/argo-client.js';
@@ -29,11 +29,13 @@ import type {
   DryRunLogArgs as DryRunLogArguments,
   DryRunNode,
   DryRunNodeArgs as DryRunNodeArguments,
+  DryRunNodeArtifact,
   DryRunNodeMetrics,
   DryRunNodeMetricsCpuSystemSecondsTotalArgs as DryRunNodeMetricsCpuSystemSecondsTotalArguments,
   DryRunNodePod, DryRunNodePodLogArgs as DryRunNodePodLogArguments,
   Mutation,
   MutationAssignDryRunToProjectArgs as MutationAssignDryRunToProjectArguments,
+  MutationComputeUploadPresignedUrlArgs as MutationComputeUploadPresignedUrlArguments,
   MutationCreateDockerRegistryCredentialArgs as MutationCreateDockerRegistryCredentialArguments,
   MutationCreateDryRunArgs as MutationCreateDryRunArguments,
   MutationCreateProjectArgs as MutationCreateProjectArguments,
@@ -103,19 +105,6 @@ const resolvers = {
       }
 
       return 'pong';
-    },
-    async computeUploadPresignedUrl(
-      _p: EmptyParent, _a: EmptyArguments, context: AuthenticatedContext,
-    ): Promise<Query['computeUploadPresignedUrl']> {
-      const { sub } = context.user;
-      // Make sure the user is a filesystem safe string
-      if (!/^[\w-]+$/i.test(sub)) {
-        throw new Error('User identifier (sub) is unsupported for files');
-      }
-      const uuid = randomUUID();
-      const objectName = `${sub}/${uuid}`;
-      const url = await computePresignedPutUrl(objectName);
-      return url;
     },
     async dockerRegistryCredentials(
       _p: EmptyParent, _a: EmptyArguments, context: AuthenticatedContext,
@@ -288,6 +277,29 @@ const resolvers = {
       const { k8sClient, k8sNamespace } = context;
       return await deleteProject(projectId, k8sClient, k8sNamespace);
     },
+    async computeUploadPresignedUrl(
+      _p: EmptyParent,
+      _arguments: MutationComputeUploadPresignedUrlArguments,
+      context: AuthenticatedContext,
+    ): Promise<Mutation['computeUploadPresignedUrl']> {
+      const { sub } = context.user;
+      // Make sure the user is a filesystem safe string
+      if (!/^[\w-]+$/i.test(sub)) {
+        throw new Error('User identifier (sub) is unsupported for files');
+      }
+
+      let { key } = _arguments;
+      if (key) {
+        if (!/^[\w.-]+$/i.test(key)) {
+          throw new Error('Key is unsupported for files');
+        }
+      } else {
+        key = randomUUID();
+      }
+
+      const objectName = `${sub}/${key}`;
+      return await computePresignedPutUrl(objectName);
+    },
   } as Required<MutationResolvers<AuthenticatedContext, EmptyParent>>,
   Project: {
     async dryRuns(
@@ -441,6 +453,17 @@ const resolvers = {
     threads: queryPrometheusResolver.bind(undefined, 'simpipe_threads'),
     threadsMax: queryPrometheusResolver.bind(undefined, 'simpipe_threads_max'),
     ulimitsSoft: queryPrometheusResolver.bind(undefined, 'simpipe_ulimits_soft'),
+  },
+  DryRunNodeArtifact: {
+    async url(
+      dryRunNodeArtifact: DryRunNodeArtifact,
+    ): Promise<DryRunNodeArtifact['url']> {
+      const { key } = dryRunNodeArtifact;
+      if (!key) {
+        return undefined;
+      }
+      return await computePresignedGetUrl(key);
+    },
   },
 };
 

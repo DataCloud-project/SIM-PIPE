@@ -3,7 +3,7 @@ import { createInterface } from 'node:readline';
 import type { Got } from 'got';
 /// <reference path="./argo-schema.d.ts" />
 
-export type ArgoTemplate = WorkflowsArgoprojIo.WorkflowsJson.Definitions
+/* export */ type ArgoTemplate = WorkflowsArgoprojIo.WorkflowsJson.Definitions
   .IoArgoprojWorkflowV1alpha1Template;
 
 export type ArgoWorkflow = WorkflowsArgoprojIo.WorkflowsJson.Definitions
