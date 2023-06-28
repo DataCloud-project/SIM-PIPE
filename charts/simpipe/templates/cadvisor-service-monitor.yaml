@@ -20,3 +20,20 @@ spec:
     path: /metrics
     interval: 3s
     scrapeTimeout: 2s
+    relabelings:
+      - regex: "condition"
+        action: labeldrop
+      - regex: "container"
+        action: labeldrop
+      - regex: "endpoint"
+        action: labeldrop
+      - regex: "instance"
+        action: labeldrop
+      - regex: "job"
+        action: labeldrop
+      - regex: "pod"
+        action: labeldrop
+      - regex: "service"
+        action: labeldrop
+      - regex: "uid"
+        action: labeldrop
