@@ -13,3 +13,5 @@ generates:
         uuid: string
         json: string
         ArgoWorkflow: unknown
+        TimeStamp: number
+        PrometheusStringNumber: string

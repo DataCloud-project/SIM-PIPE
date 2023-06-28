@@ -15,6 +15,16 @@ export type Scalars = {
   Int: { input: number; output: number; }
   Float: { input: number; output: number; }
   ArgoWorkflow: { input: unknown; output: unknown; }
+  /**
+   * Prometheus represents number as strings in JSON, because
+   * the numbers in JSON are not accurate enough and doesn't support very large numbers.
+   * This is because they are represented as  IEE 754 floating point numbers,
+   * which are not accurate and do not represents numbers above 2^53 accurately.
+   * The overhead is minimal as the numbers are represented as strings in JSON anyway.
+   * You will need to parse the string to a number in your application.
+   */
+  PrometheusStringNumber: { input: string; output: string; }
+  TimeStamp: { input: number; output: number; }
 };
 
 /**  The input data to create a run  */
@@ -72,7 +82,11 @@ export type DryRun = {
   /**  The identifier of the run  */
   id: Scalars['String']['output'];
   /**  The logs of the run  */
-  log?: Maybe<Array<Scalars['String']['output']>>;
+  log?: Maybe<Array<DryRunLogEntry>>;
+  /**  A node of the run, by id  */
+  node?: Maybe<DryRunNode>;
+  /**  The nodes of the run  */
+  nodes?: Maybe<Array<DryRunNode>>;
   /**  The project to which the run belongs  */
   project?: Maybe<Project>;
   /**  Status of the run  */
@@ -85,12 +99,523 @@ export type DryRunLogArgs = {
   maxLines?: InputMaybe<Scalars['Int']['input']>;
 };
 
+
+export type DryRunNodeArgs = {
+  id: Scalars['String']['input'];
+};
+
+export type DryRunLogEntry = {
+  __typename?: 'DryRunLogEntry';
+  content: Scalars['String']['output'];
+  podName?: Maybe<Scalars['String']['output']>;
+};
+
+export type DryRunNode = {
+  /**  The children of the node  */
+  children?: Maybe<Array<DryRunNode>>;
+  /**  Display name of the node  */
+  displayName?: Maybe<Scalars['String']['output']>;
+  /**  The duration of the node in seconds  */
+  duration?: Maybe<Scalars['Int']['output']>;
+  /**  The time at which the node finished  */
+  finishedAt?: Maybe<Scalars['String']['output']>;
+  /**  ID of the node  */
+  id: Scalars['String']['output'];
+  /**  The name of the node  */
+  name: Scalars['String']['output'];
+  /**  The phase of the node  */
+  phase: DryRunPhase;
+  /**  The progress of the node  */
+  progress?: Maybe<Scalars['String']['output']>;
+  /**  The time at which the node started  */
+  startedAt?: Maybe<Scalars['String']['output']>;
+  /**  The template name of the node  */
+  templateName?: Maybe<Scalars['String']['output']>;
+  /**  The type of the node  */
+  type: DryRunNodeType;
+};
+
+/**  Prometheus metrics for the node.  */
+export type DryRunNodeMetrics = {
+  __typename?: 'DryRunNodeMetrics';
+  cpuSystemSecondsTotal?: Maybe<Array<PrometheusSample>>;
+  cpuUsageSecondsTotal?: Maybe<Array<PrometheusSample>>;
+  cpuUserSecondsTotal?: Maybe<Array<PrometheusSample>>;
+  fileDescriptors?: Maybe<Array<PrometheusSample>>;
+  fsInodesFree?: Maybe<Array<PrometheusSample>>;
+  fsInodesTotal?: Maybe<Array<PrometheusSample>>;
+  fsIoCurrent?: Maybe<Array<PrometheusSample>>;
+  fsIoTimeSecondsTotal?: Maybe<Array<PrometheusSample>>;
+  fsIoTimeWeightedSecondsTotal?: Maybe<Array<PrometheusSample>>;
+  fsLimitBytes?: Maybe<Array<PrometheusSample>>;
+  fsReadSecondsTotal?: Maybe<Array<PrometheusSample>>;
+  fsReadsMergedTotal?: Maybe<Array<PrometheusSample>>;
+  fsReadsTotal?: Maybe<Array<PrometheusSample>>;
+  fsSectorReadsTotal?: Maybe<Array<PrometheusSample>>;
+  fsSectorWritesTotal?: Maybe<Array<PrometheusSample>>;
+  fsUsageBytes?: Maybe<Array<PrometheusSample>>;
+  fsWriteSecondsTotal?: Maybe<Array<PrometheusSample>>;
+  fsWritesMergedTotal?: Maybe<Array<PrometheusSample>>;
+  fsWritesTotal?: Maybe<Array<PrometheusSample>>;
+  memoryCache?: Maybe<Array<PrometheusSample>>;
+  memoryFailcnt?: Maybe<Array<PrometheusSample>>;
+  memoryFailuresTotal?: Maybe<Array<PrometheusSample>>;
+  memoryMappedFile?: Maybe<Array<PrometheusSample>>;
+  memoryMaxUsageBytes?: Maybe<Array<PrometheusSample>>;
+  memoryRss?: Maybe<Array<PrometheusSample>>;
+  memorySwap?: Maybe<Array<PrometheusSample>>;
+  memoryUsageBytes?: Maybe<Array<PrometheusSample>>;
+  memoryWorkingSetBytes?: Maybe<Array<PrometheusSample>>;
+  networkReceiveBytesTotal?: Maybe<Array<PrometheusSample>>;
+  networkReceiveErrorsTotal?: Maybe<Array<PrometheusSample>>;
+  networkReceivePacketsDroppedTotal?: Maybe<Array<PrometheusSample>>;
+  networkReceivePacketsTotal?: Maybe<Array<PrometheusSample>>;
+  networkTransmitBytesTotal?: Maybe<Array<PrometheusSample>>;
+  networkTransmitErrorsTotal?: Maybe<Array<PrometheusSample>>;
+  networkTransmitPacketsDroppedTotal?: Maybe<Array<PrometheusSample>>;
+  networkTransmitPacketsTotal?: Maybe<Array<PrometheusSample>>;
+  processes?: Maybe<Array<PrometheusSample>>;
+  sockets?: Maybe<Array<PrometheusSample>>;
+  specCpuPeriod?: Maybe<Array<PrometheusSample>>;
+  specCpuShares?: Maybe<Array<PrometheusSample>>;
+  threads?: Maybe<Array<PrometheusSample>>;
+  threadsMax?: Maybe<Array<PrometheusSample>>;
+  ulimitsSoft?: Maybe<Array<PrometheusSample>>;
+};
+
+
+/**  Prometheus metrics for the node.  */
+export type DryRunNodeMetricsCpuSystemSecondsTotalArgs = {
+  end?: InputMaybe<Scalars['TimeStamp']['input']>;
+  start?: InputMaybe<Scalars['TimeStamp']['input']>;
+  step?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+/**  Prometheus metrics for the node.  */
+export type DryRunNodeMetricsCpuUsageSecondsTotalArgs = {
+  end?: InputMaybe<Scalars['TimeStamp']['input']>;
+  start?: InputMaybe<Scalars['TimeStamp']['input']>;
+  step?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+/**  Prometheus metrics for the node.  */
+export type DryRunNodeMetricsCpuUserSecondsTotalArgs = {
+  end?: InputMaybe<Scalars['TimeStamp']['input']>;
+  start?: InputMaybe<Scalars['TimeStamp']['input']>;
+  step?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+/**  Prometheus metrics for the node.  */
+export type DryRunNodeMetricsFileDescriptorsArgs = {
+  end?: InputMaybe<Scalars['TimeStamp']['input']>;
+  start?: InputMaybe<Scalars['TimeStamp']['input']>;
+  step?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+/**  Prometheus metrics for the node.  */
+export type DryRunNodeMetricsFsInodesFreeArgs = {
+  end?: InputMaybe<Scalars['TimeStamp']['input']>;
+  start?: InputMaybe<Scalars['TimeStamp']['input']>;
+  step?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+/**  Prometheus metrics for the node.  */
+export type DryRunNodeMetricsFsInodesTotalArgs = {
+  end?: InputMaybe<Scalars['TimeStamp']['input']>;
+  start?: InputMaybe<Scalars['TimeStamp']['input']>;
+  step?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+/**  Prometheus metrics for the node.  */
+export type DryRunNodeMetricsFsIoCurrentArgs = {
+  end?: InputMaybe<Scalars['TimeStamp']['input']>;
+  start?: InputMaybe<Scalars['TimeStamp']['input']>;
+  step?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+/**  Prometheus metrics for the node.  */
+export type DryRunNodeMetricsFsIoTimeSecondsTotalArgs = {
+  end?: InputMaybe<Scalars['TimeStamp']['input']>;
+  start?: InputMaybe<Scalars['TimeStamp']['input']>;
+  step?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+/**  Prometheus metrics for the node.  */
+export type DryRunNodeMetricsFsIoTimeWeightedSecondsTotalArgs = {
+  end?: InputMaybe<Scalars['TimeStamp']['input']>;
+  start?: InputMaybe<Scalars['TimeStamp']['input']>;
+  step?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+/**  Prometheus metrics for the node.  */
+export type DryRunNodeMetricsFsLimitBytesArgs = {
+  end?: InputMaybe<Scalars['TimeStamp']['input']>;
+  start?: InputMaybe<Scalars['TimeStamp']['input']>;
+  step?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+/**  Prometheus metrics for the node.  */
+export type DryRunNodeMetricsFsReadSecondsTotalArgs = {
+  end?: InputMaybe<Scalars['TimeStamp']['input']>;
+  start?: InputMaybe<Scalars['TimeStamp']['input']>;
+  step?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+/**  Prometheus metrics for the node.  */
+export type DryRunNodeMetricsFsReadsMergedTotalArgs = {
+  end?: InputMaybe<Scalars['TimeStamp']['input']>;
+  start?: InputMaybe<Scalars['TimeStamp']['input']>;
+  step?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+/**  Prometheus metrics for the node.  */
+export type DryRunNodeMetricsFsReadsTotalArgs = {
+  end?: InputMaybe<Scalars['TimeStamp']['input']>;
+  start?: InputMaybe<Scalars['TimeStamp']['input']>;
+  step?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+/**  Prometheus metrics for the node.  */
+export type DryRunNodeMetricsFsSectorReadsTotalArgs = {
+  end?: InputMaybe<Scalars['TimeStamp']['input']>;
+  start?: InputMaybe<Scalars['TimeStamp']['input']>;
+  step?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+/**  Prometheus metrics for the node.  */
+export type DryRunNodeMetricsFsSectorWritesTotalArgs = {
+  end?: InputMaybe<Scalars['TimeStamp']['input']>;
+  start?: InputMaybe<Scalars['TimeStamp']['input']>;
+  step?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+/**  Prometheus metrics for the node.  */
+export type DryRunNodeMetricsFsUsageBytesArgs = {
+  end?: InputMaybe<Scalars['TimeStamp']['input']>;
+  start?: InputMaybe<Scalars['TimeStamp']['input']>;
+  step?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+/**  Prometheus metrics for the node.  */
+export type DryRunNodeMetricsFsWriteSecondsTotalArgs = {
+  end?: InputMaybe<Scalars['TimeStamp']['input']>;
+  start?: InputMaybe<Scalars['TimeStamp']['input']>;
+  step?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+/**  Prometheus metrics for the node.  */
+export type DryRunNodeMetricsFsWritesMergedTotalArgs = {
+  end?: InputMaybe<Scalars['TimeStamp']['input']>;
+  start?: InputMaybe<Scalars['TimeStamp']['input']>;
+  step?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+/**  Prometheus metrics for the node.  */
+export type DryRunNodeMetricsFsWritesTotalArgs = {
+  end?: InputMaybe<Scalars['TimeStamp']['input']>;
+  start?: InputMaybe<Scalars['TimeStamp']['input']>;
+  step?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+/**  Prometheus metrics for the node.  */
+export type DryRunNodeMetricsMemoryCacheArgs = {
+  end?: InputMaybe<Scalars['TimeStamp']['input']>;
+  start?: InputMaybe<Scalars['TimeStamp']['input']>;
+  step?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+/**  Prometheus metrics for the node.  */
+export type DryRunNodeMetricsMemoryFailcntArgs = {
+  end?: InputMaybe<Scalars['TimeStamp']['input']>;
+  start?: InputMaybe<Scalars['TimeStamp']['input']>;
+  step?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+/**  Prometheus metrics for the node.  */
+export type DryRunNodeMetricsMemoryFailuresTotalArgs = {
+  end?: InputMaybe<Scalars['TimeStamp']['input']>;
+  start?: InputMaybe<Scalars['TimeStamp']['input']>;
+  step?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+/**  Prometheus metrics for the node.  */
+export type DryRunNodeMetricsMemoryMappedFileArgs = {
+  end?: InputMaybe<Scalars['TimeStamp']['input']>;
+  start?: InputMaybe<Scalars['TimeStamp']['input']>;
+  step?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+/**  Prometheus metrics for the node.  */
+export type DryRunNodeMetricsMemoryMaxUsageBytesArgs = {
+  end?: InputMaybe<Scalars['TimeStamp']['input']>;
+  start?: InputMaybe<Scalars['TimeStamp']['input']>;
+  step?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+/**  Prometheus metrics for the node.  */
+export type DryRunNodeMetricsMemoryRssArgs = {
+  end?: InputMaybe<Scalars['TimeStamp']['input']>;
+  start?: InputMaybe<Scalars['TimeStamp']['input']>;
+  step?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+/**  Prometheus metrics for the node.  */
+export type DryRunNodeMetricsMemorySwapArgs = {
+  end?: InputMaybe<Scalars['TimeStamp']['input']>;
+  start?: InputMaybe<Scalars['TimeStamp']['input']>;
+  step?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+/**  Prometheus metrics for the node.  */
+export type DryRunNodeMetricsMemoryUsageBytesArgs = {
+  end?: InputMaybe<Scalars['TimeStamp']['input']>;
+  start?: InputMaybe<Scalars['TimeStamp']['input']>;
+  step?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+/**  Prometheus metrics for the node.  */
+export type DryRunNodeMetricsMemoryWorkingSetBytesArgs = {
+  end?: InputMaybe<Scalars['TimeStamp']['input']>;
+  start?: InputMaybe<Scalars['TimeStamp']['input']>;
+  step?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+/**  Prometheus metrics for the node.  */
+export type DryRunNodeMetricsNetworkReceiveBytesTotalArgs = {
+  end?: InputMaybe<Scalars['TimeStamp']['input']>;
+  start?: InputMaybe<Scalars['TimeStamp']['input']>;
+  step?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+/**  Prometheus metrics for the node.  */
+export type DryRunNodeMetricsNetworkReceiveErrorsTotalArgs = {
+  end?: InputMaybe<Scalars['TimeStamp']['input']>;
+  start?: InputMaybe<Scalars['TimeStamp']['input']>;
+  step?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+/**  Prometheus metrics for the node.  */
+export type DryRunNodeMetricsNetworkReceivePacketsDroppedTotalArgs = {
+  end?: InputMaybe<Scalars['TimeStamp']['input']>;
+  start?: InputMaybe<Scalars['TimeStamp']['input']>;
+  step?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+/**  Prometheus metrics for the node.  */
+export type DryRunNodeMetricsNetworkReceivePacketsTotalArgs = {
+  end?: InputMaybe<Scalars['TimeStamp']['input']>;
+  start?: InputMaybe<Scalars['TimeStamp']['input']>;
+  step?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+/**  Prometheus metrics for the node.  */
+export type DryRunNodeMetricsNetworkTransmitBytesTotalArgs = {
+  end?: InputMaybe<Scalars['TimeStamp']['input']>;
+  start?: InputMaybe<Scalars['TimeStamp']['input']>;
+  step?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+/**  Prometheus metrics for the node.  */
+export type DryRunNodeMetricsNetworkTransmitErrorsTotalArgs = {
+  end?: InputMaybe<Scalars['TimeStamp']['input']>;
+  start?: InputMaybe<Scalars['TimeStamp']['input']>;
+  step?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+/**  Prometheus metrics for the node.  */
+export type DryRunNodeMetricsNetworkTransmitPacketsDroppedTotalArgs = {
+  end?: InputMaybe<Scalars['TimeStamp']['input']>;
+  start?: InputMaybe<Scalars['TimeStamp']['input']>;
+  step?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+/**  Prometheus metrics for the node.  */
+export type DryRunNodeMetricsNetworkTransmitPacketsTotalArgs = {
+  end?: InputMaybe<Scalars['TimeStamp']['input']>;
+  start?: InputMaybe<Scalars['TimeStamp']['input']>;
+  step?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+/**  Prometheus metrics for the node.  */
+export type DryRunNodeMetricsProcessesArgs = {
+  end?: InputMaybe<Scalars['TimeStamp']['input']>;
+  start?: InputMaybe<Scalars['TimeStamp']['input']>;
+  step?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+/**  Prometheus metrics for the node.  */
+export type DryRunNodeMetricsSocketsArgs = {
+  end?: InputMaybe<Scalars['TimeStamp']['input']>;
+  start?: InputMaybe<Scalars['TimeStamp']['input']>;
+  step?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+/**  Prometheus metrics for the node.  */
+export type DryRunNodeMetricsSpecCpuPeriodArgs = {
+  end?: InputMaybe<Scalars['TimeStamp']['input']>;
+  start?: InputMaybe<Scalars['TimeStamp']['input']>;
+  step?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+/**  Prometheus metrics for the node.  */
+export type DryRunNodeMetricsSpecCpuSharesArgs = {
+  end?: InputMaybe<Scalars['TimeStamp']['input']>;
+  start?: InputMaybe<Scalars['TimeStamp']['input']>;
+  step?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+/**  Prometheus metrics for the node.  */
+export type DryRunNodeMetricsThreadsArgs = {
+  end?: InputMaybe<Scalars['TimeStamp']['input']>;
+  start?: InputMaybe<Scalars['TimeStamp']['input']>;
+  step?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+/**  Prometheus metrics for the node.  */
+export type DryRunNodeMetricsThreadsMaxArgs = {
+  end?: InputMaybe<Scalars['TimeStamp']['input']>;
+  start?: InputMaybe<Scalars['TimeStamp']['input']>;
+  step?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+/**  Prometheus metrics for the node.  */
+export type DryRunNodeMetricsUlimitsSoftArgs = {
+  end?: InputMaybe<Scalars['TimeStamp']['input']>;
+  start?: InputMaybe<Scalars['TimeStamp']['input']>;
+  step?: InputMaybe<Scalars['Int']['input']>;
+};
+
+export type DryRunNodeMisc = DryRunNode & {
+  __typename?: 'DryRunNodeMisc';
+  children?: Maybe<Array<DryRunNode>>;
+  displayName?: Maybe<Scalars['String']['output']>;
+  duration?: Maybe<Scalars['Int']['output']>;
+  finishedAt?: Maybe<Scalars['String']['output']>;
+  id: Scalars['String']['output'];
+  name: Scalars['String']['output'];
+  phase: DryRunPhase;
+  progress?: Maybe<Scalars['String']['output']>;
+  startedAt?: Maybe<Scalars['String']['output']>;
+  templateName?: Maybe<Scalars['String']['output']>;
+  type: DryRunNodeType;
+};
+
+export type DryRunNodePod = DryRunNode & {
+  __typename?: 'DryRunNodePod';
+  children?: Maybe<Array<DryRunNode>>;
+  displayName?: Maybe<Scalars['String']['output']>;
+  duration?: Maybe<Scalars['Int']['output']>;
+  /**  The exit code of the node, if exited  */
+  exitCode?: Maybe<Scalars['String']['output']>;
+  finishedAt?: Maybe<Scalars['String']['output']>;
+  id: Scalars['String']['output'];
+  /**  The logs of the node.  */
+  log?: Maybe<Array<Scalars['String']['output']>>;
+  /**  The name of the pod.  */
+  metrics: DryRunNodeMetrics;
+  name: Scalars['String']['output'];
+  phase: DryRunPhase;
+  /**  The name of the pod.  */
+  podName: Scalars['String']['output'];
+  progress?: Maybe<Scalars['String']['output']>;
+  /**  Resources durations. Estimation from Argo, usually pretty not accurate  */
+  resourcesDuration: DryRunNodeResourceDuration;
+  startedAt?: Maybe<Scalars['String']['output']>;
+  templateName?: Maybe<Scalars['String']['output']>;
+  type: DryRunNodeType;
+};
+
+
+export type DryRunNodePodLogArgs = {
+  grep?: InputMaybe<Scalars['String']['input']>;
+  maxLines?: InputMaybe<Scalars['Int']['input']>;
+};
+
+/**
+ * Resources durations. Estimation from Argo, usually pretty not accurate.
+ * See https://argoproj.github.io/argo-workflows/resource-duration/
+ */
+export type DryRunNodeResourceDuration = {
+  __typename?: 'DryRunNodeResourceDuration';
+  cpu?: Maybe<Scalars['String']['output']>;
+  gpu?: Maybe<Scalars['String']['output']>;
+  memory?: Maybe<Scalars['String']['output']>;
+};
+
+/**  The type of a dry run node  */
+export enum DryRunNodeType {
+  Container = 'Container',
+  Dag = 'DAG',
+  Http = 'HTTP',
+  Plugin = 'Plugin',
+  Pod = 'Pod',
+  Retry = 'Retry',
+  Skipped = 'Skipped',
+  StepGroup = 'StepGroup',
+  Steps = 'Steps',
+  Suspend = 'Suspend',
+  TaskGroup = 'TaskGroup'
+}
+
+/**  The phase of a dry run or its nodes  */
 export enum DryRunPhase {
+  /**  Node had an error other than a non 0 exit code  */
   Error = 'Error',
+  /**  Node or child node exicited with non-0 exit code  */
   Failed = 'Failed',
+  /**  Node was omitted because its depends condition was not met  */
+  Omitted = 'Omitted',
+  /**  Node is waiting to run  */
   Pending = 'Pending',
+  /**  Node is running  */
   Running = 'Running',
+  /**  Node was skipped  */
+  Skipped = 'Skipped',
+  /**  Node finished successfully  */
   Succeeded = 'Succeeded',
+  /**  Unknown phase. Shouldn't happen.  */
   Unknown = 'Unknown'
 }
 
@@ -138,11 +663,11 @@ export type Mutation = {
   deleteProject: Scalars['Boolean']['output'];
   /**  Rename a project  */
   renameProject: Project;
-  /**  Resubmit a run.  */
+  /**  Resubmit a run. Create a copy of the current run and starts it. */
   resubmitDryRun: DryRun;
   /**  Resume a run.  */
   resumeDryRun: DryRun;
-  /**  Retry a run.  */
+  /**  Retry a run. Restart the current run. */
   retryDryRun: DryRun;
   /**  Stop a run.  */
   stopDryRun: DryRun;
@@ -237,6 +762,12 @@ export type Project = {
   id: Scalars['String']['output'];
   /**  The name of the project  */
   name: Scalars['String']['output'];
+};
+
+export type PrometheusSample = {
+  __typename?: 'PrometheusSample';
+  timestamp: Scalars['TimeStamp']['output'];
+  value: Scalars['PrometheusStringNumber']['output'];
 };
 
 export type Query = {
@@ -335,6 +866,10 @@ export type DirectiveResolverFn<TResult = {}, TParent = {}, TContext = {}, TArgs
 ) => TResult | Promise<TResult>;
 
 
+/** Mapping of interface types */
+export type ResolversInterfaceTypes<RefType extends Record<string, unknown>> = {
+  DryRunNode: ( DryRunNodeMisc ) | ( DryRunNodePod );
+};
 
 /** Mapping between all available schema types and the resolvers types */
 export type ResolversTypes = {
@@ -345,13 +880,23 @@ export type ResolversTypes = {
   DockerRegistryCredential: ResolverTypeWrapper<DockerRegistryCredential>;
   DockerRegistryCredentialInput: DockerRegistryCredentialInput;
   DryRun: ResolverTypeWrapper<DryRun>;
+  DryRunLogEntry: ResolverTypeWrapper<DryRunLogEntry>;
+  DryRunNode: ResolverTypeWrapper<ResolversInterfaceTypes<ResolversTypes>['DryRunNode']>;
+  DryRunNodeMetrics: ResolverTypeWrapper<DryRunNodeMetrics>;
+  DryRunNodeMisc: ResolverTypeWrapper<DryRunNodeMisc>;
+  DryRunNodePod: ResolverTypeWrapper<DryRunNodePod>;
+  DryRunNodeResourceDuration: ResolverTypeWrapper<DryRunNodeResourceDuration>;
+  DryRunNodeType: DryRunNodeType;
   DryRunPhase: DryRunPhase;
   DryRunStatus: ResolverTypeWrapper<DryRunStatus>;
   Int: ResolverTypeWrapper<Scalars['Int']['output']>;
   Mutation: ResolverTypeWrapper<{}>;
   Project: ResolverTypeWrapper<Project>;
+  PrometheusSample: ResolverTypeWrapper<PrometheusSample>;
+  PrometheusStringNumber: ResolverTypeWrapper<Scalars['PrometheusStringNumber']['output']>;
   Query: ResolverTypeWrapper<{}>;
   String: ResolverTypeWrapper<Scalars['String']['output']>;
+  TimeStamp: ResolverTypeWrapper<Scalars['TimeStamp']['output']>;
 };
 
 /** Mapping between all available schema types and the resolvers parents */
@@ -363,12 +908,21 @@ export type ResolversParentTypes = {
   DockerRegistryCredential: DockerRegistryCredential;
   DockerRegistryCredentialInput: DockerRegistryCredentialInput;
   DryRun: DryRun;
+  DryRunLogEntry: DryRunLogEntry;
+  DryRunNode: ResolversInterfaceTypes<ResolversParentTypes>['DryRunNode'];
+  DryRunNodeMetrics: DryRunNodeMetrics;
+  DryRunNodeMisc: DryRunNodeMisc;
+  DryRunNodePod: DryRunNodePod;
+  DryRunNodeResourceDuration: DryRunNodeResourceDuration;
   DryRunStatus: DryRunStatus;
   Int: Scalars['Int']['output'];
   Mutation: {};
   Project: Project;
+  PrometheusSample: PrometheusSample;
+  PrometheusStringNumber: Scalars['PrometheusStringNumber']['output'];
   Query: {};
   String: Scalars['String']['output'];
+  TimeStamp: Scalars['TimeStamp']['output'];
 };
 
 export interface ArgoWorkflowScalarConfig extends GraphQLScalarTypeConfig<ResolversTypes['ArgoWorkflow'], any> {
@@ -386,9 +940,121 @@ export type DryRunResolvers<ContextType = any, ParentType extends ResolversParen
   argoWorkflow?: Resolver<ResolversTypes['ArgoWorkflow'], ParentType, ContextType>;
   createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  log?: Resolver<Maybe<Array<ResolversTypes['String']>>, ParentType, ContextType, Partial<DryRunLogArgs>>;
+  log?: Resolver<Maybe<Array<ResolversTypes['DryRunLogEntry']>>, ParentType, ContextType, Partial<DryRunLogArgs>>;
+  node?: Resolver<Maybe<ResolversTypes['DryRunNode']>, ParentType, ContextType, RequireFields<DryRunNodeArgs, 'id'>>;
+  nodes?: Resolver<Maybe<Array<ResolversTypes['DryRunNode']>>, ParentType, ContextType>;
   project?: Resolver<Maybe<ResolversTypes['Project']>, ParentType, ContextType>;
   status?: Resolver<ResolversTypes['DryRunStatus'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type DryRunLogEntryResolvers<ContextType = any, ParentType extends ResolversParentTypes['DryRunLogEntry'] = ResolversParentTypes['DryRunLogEntry']> = {
+  content?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  podName?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type DryRunNodeResolvers<ContextType = any, ParentType extends ResolversParentTypes['DryRunNode'] = ResolversParentTypes['DryRunNode']> = {
+  __resolveType: TypeResolveFn<'DryRunNodeMisc' | 'DryRunNodePod', ParentType, ContextType>;
+  children?: Resolver<Maybe<Array<ResolversTypes['DryRunNode']>>, ParentType, ContextType>;
+  displayName?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  duration?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
+  finishedAt?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  id?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  phase?: Resolver<ResolversTypes['DryRunPhase'], ParentType, ContextType>;
+  progress?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  startedAt?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  templateName?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  type?: Resolver<ResolversTypes['DryRunNodeType'], ParentType, ContextType>;
+};
+
+export type DryRunNodeMetricsResolvers<ContextType = any, ParentType extends ResolversParentTypes['DryRunNodeMetrics'] = ResolversParentTypes['DryRunNodeMetrics']> = {
+  cpuSystemSecondsTotal?: Resolver<Maybe<Array<ResolversTypes['PrometheusSample']>>, ParentType, ContextType, Partial<DryRunNodeMetricsCpuSystemSecondsTotalArgs>>;
+  cpuUsageSecondsTotal?: Resolver<Maybe<Array<ResolversTypes['PrometheusSample']>>, ParentType, ContextType, Partial<DryRunNodeMetricsCpuUsageSecondsTotalArgs>>;
+  cpuUserSecondsTotal?: Resolver<Maybe<Array<ResolversTypes['PrometheusSample']>>, ParentType, ContextType, Partial<DryRunNodeMetricsCpuUserSecondsTotalArgs>>;
+  fileDescriptors?: Resolver<Maybe<Array<ResolversTypes['PrometheusSample']>>, ParentType, ContextType, Partial<DryRunNodeMetricsFileDescriptorsArgs>>;
+  fsInodesFree?: Resolver<Maybe<Array<ResolversTypes['PrometheusSample']>>, ParentType, ContextType, Partial<DryRunNodeMetricsFsInodesFreeArgs>>;
+  fsInodesTotal?: Resolver<Maybe<Array<ResolversTypes['PrometheusSample']>>, ParentType, ContextType, Partial<DryRunNodeMetricsFsInodesTotalArgs>>;
+  fsIoCurrent?: Resolver<Maybe<Array<ResolversTypes['PrometheusSample']>>, ParentType, ContextType, Partial<DryRunNodeMetricsFsIoCurrentArgs>>;
+  fsIoTimeSecondsTotal?: Resolver<Maybe<Array<ResolversTypes['PrometheusSample']>>, ParentType, ContextType, Partial<DryRunNodeMetricsFsIoTimeSecondsTotalArgs>>;
+  fsIoTimeWeightedSecondsTotal?: Resolver<Maybe<Array<ResolversTypes['PrometheusSample']>>, ParentType, ContextType, Partial<DryRunNodeMetricsFsIoTimeWeightedSecondsTotalArgs>>;
+  fsLimitBytes?: Resolver<Maybe<Array<ResolversTypes['PrometheusSample']>>, ParentType, ContextType, Partial<DryRunNodeMetricsFsLimitBytesArgs>>;
+  fsReadSecondsTotal?: Resolver<Maybe<Array<ResolversTypes['PrometheusSample']>>, ParentType, ContextType, Partial<DryRunNodeMetricsFsReadSecondsTotalArgs>>;
+  fsReadsMergedTotal?: Resolver<Maybe<Array<ResolversTypes['PrometheusSample']>>, ParentType, ContextType, Partial<DryRunNodeMetricsFsReadsMergedTotalArgs>>;
+  fsReadsTotal?: Resolver<Maybe<Array<ResolversTypes['PrometheusSample']>>, ParentType, ContextType, Partial<DryRunNodeMetricsFsReadsTotalArgs>>;
+  fsSectorReadsTotal?: Resolver<Maybe<Array<ResolversTypes['PrometheusSample']>>, ParentType, ContextType, Partial<DryRunNodeMetricsFsSectorReadsTotalArgs>>;
+  fsSectorWritesTotal?: Resolver<Maybe<Array<ResolversTypes['PrometheusSample']>>, ParentType, ContextType, Partial<DryRunNodeMetricsFsSectorWritesTotalArgs>>;
+  fsUsageBytes?: Resolver<Maybe<Array<ResolversTypes['PrometheusSample']>>, ParentType, ContextType, Partial<DryRunNodeMetricsFsUsageBytesArgs>>;
+  fsWriteSecondsTotal?: Resolver<Maybe<Array<ResolversTypes['PrometheusSample']>>, ParentType, ContextType, Partial<DryRunNodeMetricsFsWriteSecondsTotalArgs>>;
+  fsWritesMergedTotal?: Resolver<Maybe<Array<ResolversTypes['PrometheusSample']>>, ParentType, ContextType, Partial<DryRunNodeMetricsFsWritesMergedTotalArgs>>;
+  fsWritesTotal?: Resolver<Maybe<Array<ResolversTypes['PrometheusSample']>>, ParentType, ContextType, Partial<DryRunNodeMetricsFsWritesTotalArgs>>;
+  memoryCache?: Resolver<Maybe<Array<ResolversTypes['PrometheusSample']>>, ParentType, ContextType, Partial<DryRunNodeMetricsMemoryCacheArgs>>;
+  memoryFailcnt?: Resolver<Maybe<Array<ResolversTypes['PrometheusSample']>>, ParentType, ContextType, Partial<DryRunNodeMetricsMemoryFailcntArgs>>;
+  memoryFailuresTotal?: Resolver<Maybe<Array<ResolversTypes['PrometheusSample']>>, ParentType, ContextType, Partial<DryRunNodeMetricsMemoryFailuresTotalArgs>>;
+  memoryMappedFile?: Resolver<Maybe<Array<ResolversTypes['PrometheusSample']>>, ParentType, ContextType, Partial<DryRunNodeMetricsMemoryMappedFileArgs>>;
+  memoryMaxUsageBytes?: Resolver<Maybe<Array<ResolversTypes['PrometheusSample']>>, ParentType, ContextType, Partial<DryRunNodeMetricsMemoryMaxUsageBytesArgs>>;
+  memoryRss?: Resolver<Maybe<Array<ResolversTypes['PrometheusSample']>>, ParentType, ContextType, Partial<DryRunNodeMetricsMemoryRssArgs>>;
+  memorySwap?: Resolver<Maybe<Array<ResolversTypes['PrometheusSample']>>, ParentType, ContextType, Partial<DryRunNodeMetricsMemorySwapArgs>>;
+  memoryUsageBytes?: Resolver<Maybe<Array<ResolversTypes['PrometheusSample']>>, ParentType, ContextType, Partial<DryRunNodeMetricsMemoryUsageBytesArgs>>;
+  memoryWorkingSetBytes?: Resolver<Maybe<Array<ResolversTypes['PrometheusSample']>>, ParentType, ContextType, Partial<DryRunNodeMetricsMemoryWorkingSetBytesArgs>>;
+  networkReceiveBytesTotal?: Resolver<Maybe<Array<ResolversTypes['PrometheusSample']>>, ParentType, ContextType, Partial<DryRunNodeMetricsNetworkReceiveBytesTotalArgs>>;
+  networkReceiveErrorsTotal?: Resolver<Maybe<Array<ResolversTypes['PrometheusSample']>>, ParentType, ContextType, Partial<DryRunNodeMetricsNetworkReceiveErrorsTotalArgs>>;
+  networkReceivePacketsDroppedTotal?: Resolver<Maybe<Array<ResolversTypes['PrometheusSample']>>, ParentType, ContextType, Partial<DryRunNodeMetricsNetworkReceivePacketsDroppedTotalArgs>>;
+  networkReceivePacketsTotal?: Resolver<Maybe<Array<ResolversTypes['PrometheusSample']>>, ParentType, ContextType, Partial<DryRunNodeMetricsNetworkReceivePacketsTotalArgs>>;
+  networkTransmitBytesTotal?: Resolver<Maybe<Array<ResolversTypes['PrometheusSample']>>, ParentType, ContextType, Partial<DryRunNodeMetricsNetworkTransmitBytesTotalArgs>>;
+  networkTransmitErrorsTotal?: Resolver<Maybe<Array<ResolversTypes['PrometheusSample']>>, ParentType, ContextType, Partial<DryRunNodeMetricsNetworkTransmitErrorsTotalArgs>>;
+  networkTransmitPacketsDroppedTotal?: Resolver<Maybe<Array<ResolversTypes['PrometheusSample']>>, ParentType, ContextType, Partial<DryRunNodeMetricsNetworkTransmitPacketsDroppedTotalArgs>>;
+  networkTransmitPacketsTotal?: Resolver<Maybe<Array<ResolversTypes['PrometheusSample']>>, ParentType, ContextType, Partial<DryRunNodeMetricsNetworkTransmitPacketsTotalArgs>>;
+  processes?: Resolver<Maybe<Array<ResolversTypes['PrometheusSample']>>, ParentType, ContextType, Partial<DryRunNodeMetricsProcessesArgs>>;
+  sockets?: Resolver<Maybe<Array<ResolversTypes['PrometheusSample']>>, ParentType, ContextType, Partial<DryRunNodeMetricsSocketsArgs>>;
+  specCpuPeriod?: Resolver<Maybe<Array<ResolversTypes['PrometheusSample']>>, ParentType, ContextType, Partial<DryRunNodeMetricsSpecCpuPeriodArgs>>;
+  specCpuShares?: Resolver<Maybe<Array<ResolversTypes['PrometheusSample']>>, ParentType, ContextType, Partial<DryRunNodeMetricsSpecCpuSharesArgs>>;
+  threads?: Resolver<Maybe<Array<ResolversTypes['PrometheusSample']>>, ParentType, ContextType, Partial<DryRunNodeMetricsThreadsArgs>>;
+  threadsMax?: Resolver<Maybe<Array<ResolversTypes['PrometheusSample']>>, ParentType, ContextType, Partial<DryRunNodeMetricsThreadsMaxArgs>>;
+  ulimitsSoft?: Resolver<Maybe<Array<ResolversTypes['PrometheusSample']>>, ParentType, ContextType, Partial<DryRunNodeMetricsUlimitsSoftArgs>>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type DryRunNodeMiscResolvers<ContextType = any, ParentType extends ResolversParentTypes['DryRunNodeMisc'] = ResolversParentTypes['DryRunNodeMisc']> = {
+  children?: Resolver<Maybe<Array<ResolversTypes['DryRunNode']>>, ParentType, ContextType>;
+  displayName?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  duration?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
+  finishedAt?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  id?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  phase?: Resolver<ResolversTypes['DryRunPhase'], ParentType, ContextType>;
+  progress?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  startedAt?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  templateName?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  type?: Resolver<ResolversTypes['DryRunNodeType'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type DryRunNodePodResolvers<ContextType = any, ParentType extends ResolversParentTypes['DryRunNodePod'] = ResolversParentTypes['DryRunNodePod']> = {
+  children?: Resolver<Maybe<Array<ResolversTypes['DryRunNode']>>, ParentType, ContextType>;
+  displayName?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  duration?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
+  exitCode?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  finishedAt?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  id?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  log?: Resolver<Maybe<Array<ResolversTypes['String']>>, ParentType, ContextType, Partial<DryRunNodePodLogArgs>>;
+  metrics?: Resolver<ResolversTypes['DryRunNodeMetrics'], ParentType, ContextType>;
+  name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  phase?: Resolver<ResolversTypes['DryRunPhase'], ParentType, ContextType>;
+  podName?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  progress?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  resourcesDuration?: Resolver<ResolversTypes['DryRunNodeResourceDuration'], ParentType, ContextType>;
+  startedAt?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  templateName?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  type?: Resolver<ResolversTypes['DryRunNodeType'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type DryRunNodeResourceDurationResolvers<ContextType = any, ParentType extends ResolversParentTypes['DryRunNodeResourceDuration'] = ResolversParentTypes['DryRunNodeResourceDuration']> = {
+  cpu?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  gpu?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  memory?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -427,6 +1093,16 @@ export type ProjectResolvers<ContextType = any, ParentType extends ResolversPare
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
+export type PrometheusSampleResolvers<ContextType = any, ParentType extends ResolversParentTypes['PrometheusSample'] = ResolversParentTypes['PrometheusSample']> = {
+  timestamp?: Resolver<ResolversTypes['TimeStamp'], ParentType, ContextType>;
+  value?: Resolver<ResolversTypes['PrometheusStringNumber'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export interface PrometheusStringNumberScalarConfig extends GraphQLScalarTypeConfig<ResolversTypes['PrometheusStringNumber'], any> {
+  name: 'PrometheusStringNumber';
+}
+
 export type QueryResolvers<ContextType = any, ParentType extends ResolversParentTypes['Query'] = ResolversParentTypes['Query']> = {
   computeUploadPresignedUrl?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   dockerRegistryCredentials?: Resolver<Array<ResolversTypes['DockerRegistryCredential']>, ParentType, ContextType>;
@@ -437,13 +1113,26 @@ export type QueryResolvers<ContextType = any, ParentType extends ResolversParent
   username?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
 };
 
+export interface TimeStampScalarConfig extends GraphQLScalarTypeConfig<ResolversTypes['TimeStamp'], any> {
+  name: 'TimeStamp';
+}
+
 export type Resolvers<ContextType = any> = {
   ArgoWorkflow?: GraphQLScalarType;
   DockerRegistryCredential?: DockerRegistryCredentialResolvers<ContextType>;
   DryRun?: DryRunResolvers<ContextType>;
+  DryRunLogEntry?: DryRunLogEntryResolvers<ContextType>;
+  DryRunNode?: DryRunNodeResolvers<ContextType>;
+  DryRunNodeMetrics?: DryRunNodeMetricsResolvers<ContextType>;
+  DryRunNodeMisc?: DryRunNodeMiscResolvers<ContextType>;
+  DryRunNodePod?: DryRunNodePodResolvers<ContextType>;
+  DryRunNodeResourceDuration?: DryRunNodeResourceDurationResolvers<ContextType>;
   DryRunStatus?: DryRunStatusResolvers<ContextType>;
   Mutation?: MutationResolvers<ContextType>;
   Project?: ProjectResolvers<ContextType>;
+  PrometheusSample?: PrometheusSampleResolvers<ContextType>;
+  PrometheusStringNumber?: GraphQLScalarType;
   Query?: QueryResolvers<ContextType>;
+  TimeStamp?: GraphQLScalarType;
 };
 

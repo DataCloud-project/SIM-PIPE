@@ -1,9 +1,12 @@
 import {
   ConflictError, InvalidArgoWorkflowError, NotFoundError, WrongRequestError,
 } from '../server/apollo-errors.js';
-import { DryRunPhase } from '../server/schema.js';
-import type { DryRun } from '../server/schema.js';
-import type { ArgoClientActionNames, ArgoWorkflow } from './argo-client.js';
+import { DryRunNodeType, DryRunPhase } from '../server/schema.js';
+import getPodName from './get-pod-name.js';
+import type {
+  DryRun, DryRunLogEntry, DryRunNode, DryRunNodePod,
+} from '../server/schema.js';
+import type { ArgoClientActionNames, ArgoNode, ArgoWorkflow } from './argo-client.js';
 import type ArgoWorkflowClient from './argo-client.js';
 
 export const SIMPIPE_PROJECT_LABEL = 'simpipe.sct.sintef.no/project';
@@ -15,8 +18,10 @@ function convertArgoStatusPhaseToDryRunStatusPhase(
     case 'Pending':
     case 'Running':
     case 'Succeeded':
+    case 'Skipped':
     case 'Failed':
     case 'Error':
+    case 'Omitted':
     case 'Unknown': {
       return argoStatusPhase as DryRunPhase;
     }
@@ -26,6 +31,29 @@ function convertArgoStatusPhaseToDryRunStatusPhase(
 
     default: {
       throw new Error(`Unknown Argo status phase: ${argoStatusPhase}`);
+    }
+  }
+}
+
+function convertArgoNodeType(
+  argoNodeType: string,
+): DryRunNodeType {
+  switch (argoNodeType) {
+    case 'Pod':
+    case 'Container':
+    case 'Steps':
+    case 'StepGroup':
+    case 'DAG':
+    case 'TaskGroup':
+    case 'Retry':
+    case 'Skipped':
+    case 'Suspend':
+    case 'HTTP':
+    case 'Plugin': {
+      return argoNodeType as DryRunNodeType;
+    }
+    default: {
+      throw new Error(`Unknown Argo node type: ${argoNodeType}`);
     }
   }
 }
@@ -40,6 +68,59 @@ export function convertArgoWorkflowToDryRun(argoWorkflow: ArgoWorkflow): DryRun 
       phase: convertArgoStatusPhaseToDryRunStatusPhase(status?.phase),
       message: status?.message,
     },
+  };
+}
+
+function convertNodeDuration(node: ArgoNode): number | undefined {
+  if (!node.finishedAt) {
+    return node.estimatedDuration;
+  }
+  if (!node.startedAt) {
+    return undefined;
+  }
+  // return the duration in seconds between startedAt and finishedAt
+  return Math.floor((new Date(node.finishedAt).getTime()
+    - new Date(node.startedAt).getTime()) / 1000);
+}
+
+export type InternalExtendedDryRunNode = DryRunNode & DryRunNodePod & {
+  workflow: ArgoWorkflow;
+};
+
+export function assertDryRunNodeHasWorkflow(
+  node: DryRunNode,
+): asserts node is InternalExtendedDryRunNode {
+  if (!('workflow' in node)) {
+    throw new Error('Node does not have a workflow');
+  }
+}
+
+export function convertArgoWorkflowNode(node: ArgoNode, argoWorkflow: ArgoWorkflow)
+  : InternalExtendedDryRunNode {
+  const type = convertArgoNodeType(node.type);
+
+  let podName: string | undefined;
+
+  if (type === DryRunNodeType.Pod) {
+    podName = getPodName(node, argoWorkflow);
+  }
+
+  return {
+    ...node,
+    type,
+    // Will be handled in the resolvers
+    children: node.children?.map((id) => {
+      const childNode = argoWorkflow.status?.nodes?.[id];
+      if (!childNode) {
+        throw new Error(`Child node ${id} not found`);
+      }
+      return convertArgoWorkflowNode(childNode, argoWorkflow);
+    }),
+    phase: convertArgoStatusPhaseToDryRunStatusPhase(node.phase),
+    exitCode: node.outputs?.exitCode,
+    duration: convertNodeDuration(node),
+    workflow: argoWorkflow,
+    podName,
   };
 }
 
@@ -224,13 +305,50 @@ export async function getDryRunLog({
   maxLines?: number,
   grep?: string,
   argoClient: ArgoWorkflowClient,
-}): Promise<string[]> {
+}): Promise<DryRunLogEntry[]> {
   try {
     return await argoClient.getWorkflowLog({
       workflowName: dryRunId,
       tailLines: maxLines,
       grep,
     });
+  } catch (error) {
+    handleArgoException(error);
+  }
+  throw new Error('Unreachable');
+}
+
+export async function getDryRunNodeLog({
+  dryRunNode,
+  workflow,
+  maxLines,
+  grep,
+  argoClient,
+}: {
+  dryRunNode: DryRunNodePod,
+  workflow: ArgoWorkflow,
+  maxLines?: number,
+  grep?: string,
+  argoClient: ArgoWorkflowClient,
+}): Promise<string[]> {
+  const { podName } = dryRunNode;
+  if (!podName) {
+    throw new Error('Pod name is missing');
+  }
+
+  const workflowName = workflow.metadata.name;
+  if (!workflowName) {
+    throw new Error('Workflow name is missing');
+  }
+
+  try {
+    const entries = await argoClient.getWorkflowLog({
+      workflowName,
+      podName,
+      tailLines: maxLines,
+      grep,
+    });
+    return entries.map((logEntry) => logEntry.content);
   } catch (error) {
     handleArgoException(error);
   }

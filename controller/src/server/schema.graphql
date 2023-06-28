@@ -1,4 +1,14 @@
 scalar ArgoWorkflow
+scalar TimeStamp
+"""
+Prometheus represents number as strings in JSON, because
+the numbers in JSON are not accurate enough and doesn't support very large numbers.
+This is because they are represented as  IEE 754 floating point numbers,
+which are not accurate and do not represents numbers above 2^53 accurately.
+The overhead is minimal as the numbers are represented as strings in JSON anyway.
+You will need to parse the string to a number in your application.
+"""
+scalar PrometheusStringNumber
 
 type Query {
   """ Fetch the current username. """
@@ -52,7 +62,18 @@ type DryRun {
   project: Project
 
   """ The logs of the run """
-  log(maxLines: Int, grep: String): [String!]
+  log(maxLines: Int, grep: String): [DryRunLogEntry!]
+
+  """ The nodes of the run """
+  nodes: [DryRunNode!]
+
+  """ A node of the run, by id """
+  node(id: String!): DryRunNode
+}
+
+type DryRunLogEntry {
+  content: String!
+  podName: String
 }
 
 type DryRunStatus {
@@ -77,13 +98,183 @@ type DryRunStatus {
   estimatedDuration: Int
 }
 
+""" The phase of a dry run or its nodes """
 enum DryRunPhase {
-  Unknown
+  """ Node is waiting to run """
   Pending
+  """ Node is running """
   Running
+  """ Node finished successfully """
   Succeeded
+  """ Node was skipped """
+  Skipped
+  """ Node or child node exicited with non-0 exit code """
   Failed
+  """ Node had an error other than a non 0 exit code """
   Error
+  """ Node was omitted because its depends condition was not met """
+  Omitted
+  """ Unknown phase. Shouldn't happen. """
+  Unknown
+}
+
+""" The type of a dry run node """
+enum DryRunNodeType {
+  Pod
+  Container
+  Steps
+  StepGroup
+  DAG
+  TaskGroup
+  Retry
+  Skipped
+  Suspend
+  HTTP
+  Plugin
+}
+
+interface DryRunNode {
+  """ ID of the node """
+  id: String!
+
+  """ The type of the node """
+  type: DryRunNodeType!
+
+  """ The name of the node """
+  name: String!
+
+  """ Display name of the node """
+  displayName: String
+
+
+  """ The template name of the node """
+  templateName: String
+
+
+  """ The phase of the node """
+  phase: DryRunPhase!
+
+  """ The time at which the node started """
+  startedAt: String
+
+  """ The time at which the node finished """
+  finishedAt: String
+
+  """ The duration of the node in seconds """
+  duration: Int
+
+  """ The progress of the node """
+  progress: String
+
+  """ The children of the node """
+  children: [DryRunNode!]
+}
+
+type DryRunNodePod implements DryRunNode {
+  id: String!
+  type: DryRunNodeType!
+  name: String!
+  displayName: String
+  templateName: String
+  phase: DryRunPhase!
+  startedAt: String
+  finishedAt: String
+  duration: Int
+  progress: String
+  children: [DryRunNode!]
+
+
+  """ The exit code of the node, if exited """
+  exitCode: String
+
+  """ Resources durations. Estimation from Argo, usually pretty not accurate """
+  resourcesDuration: DryRunNodeResourceDuration!
+
+  """ The name of the pod. """
+  metrics: DryRunNodeMetrics!
+
+  """ The name of the pod. """
+  podName: String!
+
+  """ The logs of the node. """
+  log(maxLines: Int, grep: String): [String!]
+}
+
+type DryRunNodeMisc implements DryRunNode {
+  id: String!
+  type: DryRunNodeType!
+  name: String!
+  displayName: String
+  templateName: String
+  phase: DryRunPhase!
+  startedAt: String
+  finishedAt: String
+  duration: Int
+  progress: String
+  children: [DryRunNode!]
+}
+
+
+type PrometheusSample {
+  timestamp: TimeStamp!
+  value: PrometheusStringNumber!
+}
+
+""" Prometheus metrics for the node. """
+type DryRunNodeMetrics {
+  cpuSystemSecondsTotal(start: TimeStamp, end: TimeStamp, step: Int): [PrometheusSample!]
+  cpuUsageSecondsTotal(start: TimeStamp, end: TimeStamp, step: Int): [PrometheusSample!]
+  cpuUserSecondsTotal(start: TimeStamp, end: TimeStamp, step: Int): [PrometheusSample!]
+  fileDescriptors(start: TimeStamp, end: TimeStamp, step: Int): [PrometheusSample!]
+  fsInodesFree(start: TimeStamp, end: TimeStamp, step: Int): [PrometheusSample!]
+  fsInodesTotal(start: TimeStamp, end: TimeStamp, step: Int): [PrometheusSample!]
+  fsIoCurrent(start: TimeStamp, end: TimeStamp, step: Int): [PrometheusSample!]
+  fsIoTimeSecondsTotal(start: TimeStamp, end: TimeStamp, step: Int): [PrometheusSample!]
+  fsIoTimeWeightedSecondsTotal(start: TimeStamp, end: TimeStamp, step: Int): [PrometheusSample!]
+  fsLimitBytes(start: TimeStamp, end: TimeStamp, step: Int): [PrometheusSample!]
+  fsReadSecondsTotal(start: TimeStamp, end: TimeStamp, step: Int): [PrometheusSample!]
+  fsReadsMergedTotal(start: TimeStamp, end: TimeStamp, step: Int): [PrometheusSample!]
+  fsReadsTotal(start: TimeStamp, end: TimeStamp, step: Int): [PrometheusSample!]
+  fsSectorReadsTotal(start: TimeStamp, end: TimeStamp, step: Int): [PrometheusSample!]
+  fsSectorWritesTotal(start: TimeStamp, end: TimeStamp, step: Int): [PrometheusSample!]
+  fsUsageBytes(start: TimeStamp, end: TimeStamp, step: Int): [PrometheusSample!]
+  fsWriteSecondsTotal(start: TimeStamp, end: TimeStamp, step: Int): [PrometheusSample!]
+  fsWritesMergedTotal(start: TimeStamp, end: TimeStamp, step: Int): [PrometheusSample!]
+  fsWritesTotal(start: TimeStamp, end: TimeStamp, step: Int): [PrometheusSample!]
+  memoryCache(start: TimeStamp, end: TimeStamp, step: Int): [PrometheusSample!]
+  memoryFailcnt(start: TimeStamp, end: TimeStamp, step: Int): [PrometheusSample!]
+  memoryFailuresTotal(start: TimeStamp, end: TimeStamp, step: Int): [PrometheusSample!]
+  memoryMappedFile(start: TimeStamp, end: TimeStamp, step: Int): [PrometheusSample!]
+  memoryMaxUsageBytes(start: TimeStamp, end: TimeStamp, step: Int): [PrometheusSample!]
+  memoryRss(start: TimeStamp, end: TimeStamp, step: Int): [PrometheusSample!]
+  memorySwap(start: TimeStamp, end: TimeStamp, step: Int): [PrometheusSample!]
+  memoryUsageBytes(start: TimeStamp, end: TimeStamp, step: Int): [PrometheusSample!]
+  memoryWorkingSetBytes(start: TimeStamp, end: TimeStamp, step: Int): [PrometheusSample!]
+  networkReceiveBytesTotal(start: TimeStamp, end: TimeStamp, step: Int): [PrometheusSample!]
+  networkReceiveErrorsTotal(start: TimeStamp, end: TimeStamp, step: Int): [PrometheusSample!]
+  networkReceivePacketsDroppedTotal(start: TimeStamp, end: TimeStamp, step: Int): [PrometheusSample!]
+  networkReceivePacketsTotal(start: TimeStamp, end: TimeStamp, step: Int): [PrometheusSample!]
+  networkTransmitBytesTotal(start: TimeStamp, end: TimeStamp, step: Int): [PrometheusSample!]
+  networkTransmitErrorsTotal(start: TimeStamp, end: TimeStamp, step: Int): [PrometheusSample!]
+  networkTransmitPacketsDroppedTotal(start: TimeStamp, end: TimeStamp, step: Int): [PrometheusSample!]
+  networkTransmitPacketsTotal(start: TimeStamp, end: TimeStamp, step: Int): [PrometheusSample!]
+  processes(start: TimeStamp, end: TimeStamp, step: Int): [PrometheusSample!]
+  sockets(start: TimeStamp, end: TimeStamp, step: Int): [PrometheusSample!]
+  specCpuPeriod(start: TimeStamp, end: TimeStamp, step: Int): [PrometheusSample!]
+  specCpuShares(start: TimeStamp, end: TimeStamp, step: Int): [PrometheusSample!]
+  threads(start: TimeStamp, end: TimeStamp, step: Int): [PrometheusSample!]
+  threadsMax(start: TimeStamp, end: TimeStamp, step: Int): [PrometheusSample!]
+  ulimitsSoft(start: TimeStamp, end: TimeStamp, step: Int): [PrometheusSample!]
+}
+
+"""
+  Resources durations. Estimation from Argo, usually pretty not accurate.
+  See https://argoproj.github.io/argo-workflows/resource-duration/
+"""
+type DryRunNodeResourceDuration {
+  cpu: String
+  memory: String
+  gpu: String
 }
 
 type DockerRegistryCredential {
@@ -157,10 +348,10 @@ type Mutation @auth {
   """ Resume a run. """
   resumeDryRun(dryRunId:String!): DryRun!
 
-  """ Retry a run. """
+  """ Retry a run. Restart the current run."""
   retryDryRun(dryRunId:String!): DryRun!
 
-  """ Resubmit a run. """
+  """ Resubmit a run. Create a copy of the current run and starts it."""
   resubmitDryRun(dryRunId:String!): DryRun!
 
   """ Stop a run. """

@@ -1,9 +1,11 @@
 import { randomUUID } from 'node:crypto';
 
 import {
+  assertDryRunNodeHasWorkflow,
+  convertArgoWorkflowNode,
   convertArgoWorkflowToDryRun,
   createDryRun, deleteDryRun, dryRunsForProject,
-  getDryRun, getDryRunLog, resubmitDryRun, resumeDryRun,
+  getDryRun, getDryRunLog, getDryRunNodeLog, resubmitDryRun, resumeDryRun,
   retryDryRun, SIMPIPE_PROJECT_LABEL, stopDryRun, suspendDryRun,
 } from '../argo/dry-runs.js';
 import assignArgoWorkflowToProject from '../k8s/assign-argoworkflow-to-project.js';
@@ -17,6 +19,7 @@ import {
   createProject, deleteProject, getProject, projects, renameProject,
 } from '../k8s/projects.js';
 import { computePresignedPutUrl } from '../minio/minio.js';
+import queryPrometheus from '../prometheus/prometheus.js';
 import { PingError } from './apollo-errors.js';
 import type { ArgoWorkflow } from '../argo/argo-client.js';
 import type ArgoWorkflowClient from '../argo/argo-client.js';
@@ -24,6 +27,11 @@ import type K8sClient from '../k8s/k8s-client.js';
 import type {
   DryRun,
   DryRunLogArgs as DryRunLogArguments,
+  DryRunNode,
+  DryRunNodeArgs as DryRunNodeArguments,
+  DryRunNodeMetrics,
+  DryRunNodeMetricsCpuSystemSecondsTotalArgs as DryRunNodeMetricsCpuSystemSecondsTotalArguments,
+  DryRunNodePod, DryRunNodePodLogArgs as DryRunNodePodLogArguments,
   Mutation,
   MutationAssignDryRunToProjectArgs as MutationAssignDryRunToProjectArguments,
   MutationCreateDockerRegistryCredentialArgs as MutationCreateDockerRegistryCredentialArguments,
@@ -110,14 +118,12 @@ const resolvers = {
       return url;
     },
     async dockerRegistryCredentials(
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       _p: EmptyParent, _a: EmptyArguments, context: AuthenticatedContext,
     ): Promise<Query['dockerRegistryCredentials']> {
       const { k8sClient, k8sNamespace } = context;
       return await dockerRegistryCredentials(k8sClient, k8sNamespace);
     },
     async projects(
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       _p: EmptyParent, _a: EmptyArguments, context: AuthenticatedContext,
     ): Promise<Query['projects']> {
       const { k8sClient, k8sNamespace } = context;
@@ -322,6 +328,103 @@ const resolvers = {
         grep: grep ?? undefined,
         argoClient,
       });
+    },
+    nodes(
+      parent: DryRun,
+    ): DryRun['nodes'] {
+      const { argoWorkflow } = parent as { argoWorkflow?: ArgoWorkflow };
+      if (!argoWorkflow?.status?.nodes) {
+        return undefined;
+      }
+      return Object.values(argoWorkflow.status.nodes)
+        .map((node) => convertArgoWorkflowNode(node, argoWorkflow));
+    },
+    node(
+      parent: DryRun,
+      arguments_: DryRunNodeArguments,
+    ): DryRun['node'] {
+      const { argoWorkflow } = parent as { argoWorkflow?: ArgoWorkflow };
+      if (!argoWorkflow) {
+        return undefined;
+      }
+      const node = argoWorkflow?.status?.nodes?.[arguments_.id];
+      if (!node) {
+        return undefined;
+      }
+      return convertArgoWorkflowNode(node, argoWorkflow);
+    },
+  },
+  DryRunNode: {
+    // eslint-disable-next-line no-underscore-dangle
+    __resolveType(dryRunNode: DryRunNode): string {
+      // We use a switch to be future proof of course.
+      switch (dryRunNode.type) {
+        case 'Pod': {
+          return 'DryRunNodePod';
+        }
+        default: {
+          return 'DryRunNodeMisc';
+        }
+      }
+    },
+  },
+  DryRunNodePod: {
+    async log(
+      dryRunNode: DryRunNodePod,
+      _arguments: DryRunNodePodLogArguments,
+      context: AuthenticatedContext,
+    ): Promise<DryRunNodePod['log']> {
+      assertDryRunNodeHasWorkflow(dryRunNode);
+      const { workflow } = dryRunNode;
+      const { maxLines, grep } = _arguments;
+      const { argoClient } = context;
+      return await getDryRunNodeLog({
+        dryRunNode,
+        workflow,
+        maxLines: maxLines ?? undefined,
+        grep: grep ?? undefined,
+        argoClient,
+      });
+    },
+    metrics(
+      dryRunNode: DryRunNodePod,
+    ): DryRunNodePod['metrics'] & { dryRunNode: DryRunNodePod } {
+      return { dryRunNode };
+    },
+  },
+  DryRunNodeMetrics: {
+    async cpuSystemSecondsTotal(
+      dryRunNodeMetrics: DryRunNodeMetrics & { dryRunNode: DryRunNodePod },
+      _arguments: DryRunNodeMetricsCpuSystemSecondsTotalArguments,
+    ): Promise<DryRunNodeMetrics['cpuSystemSecondsTotal']> {
+      const { dryRunNode } = dryRunNodeMetrics;
+      let { step } = _arguments;
+      const { startedAt, finishedAt, podName } = dryRunNode;
+      if (!startedAt) {
+        return [];
+      }
+
+      // We have a 10s offset to avoid most clock drifts.
+      const startTimestamp = new Date(startedAt).getTime() / 1000 - 10;
+
+      const endTimestamp = finishedAt
+        ? new Date(finishedAt).getTime() / 1000 + 10
+        : Date.now() / 1000 + 10;
+
+      if (!step) {
+        step = Math.ceil((endTimestamp - startTimestamp) / 1000);
+      }
+
+      const data = await queryPrometheus('simpipe_cpu_system_seconds_total', {
+        container_name: 'main',
+        pod_name: podName,
+      }, startTimestamp, endTimestamp, step);
+
+      return data.flatMap(({ values }) => values)
+        .map(([timestamp, value]) => ({
+          timestamp,
+          value,
+        }));
     },
   },
 };

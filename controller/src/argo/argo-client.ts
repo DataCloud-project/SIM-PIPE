@@ -1,4 +1,5 @@
 import got from 'got';
+import { createInterface } from 'node:readline';
 import type { Got } from 'got';
 /// <reference path="./argo-schema.d.ts" />
 
@@ -7,6 +8,9 @@ export type ArgoTemplate = WorkflowsArgoprojIo.WorkflowsJson.Definitions
 
 export type ArgoWorkflow = WorkflowsArgoprojIo.WorkflowsJson.Definitions
   .IoArgoprojWorkflowV1alpha1Workflow;
+
+export type ArgoNode = WorkflowsArgoprojIo.WorkflowsJson.Definitions
+  .IoArgoprojWorkflowV1alpha1NodeStatus;
 
 interface ArgoApiListAnswer<T> {
   items: T[] | null;
@@ -153,7 +157,7 @@ export default class ArgoWorkflowClient {
     sinceSeconds?: number;
     grep?: string;
     tailLines?: number;
-  }): Promise<string[]> {
+  }): Promise<{ content: string; podName?: string }[]> {
     const stream = this.client.stream(
       `api/v1/workflows/${encodeURIComponent(this.namespace)}/${encodeURIComponent(workflowName)}/log`,
       {
@@ -170,9 +174,27 @@ export default class ArgoWorkflowClient {
       },
     );
 
+    const readlineInterface = createInterface({
+      input: stream,
+      crlfDelay: Number.POSITIVE_INFINITY,
+    });
+
     const entries = [];
-    for await (const entry of stream) {
-      entries.push((entry as Buffer).toString());
+    for await (const content of readlineInterface) {
+      try {
+        const jsonEntry = JSON.parse(content) as {
+          result: {
+            content: string;
+            podName: string;
+          };
+        };
+        entries.push({
+          content: jsonEntry.result.content,
+          podName: jsonEntry.result.podName,
+        });
+      } catch {
+        entries.push({ content, podName });
+      }
     }
 
     return entries;
