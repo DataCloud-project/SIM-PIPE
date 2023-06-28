@@ -260,8 +260,6 @@ type DryRunNodeMetrics {
   networkTransmitPacketsTotal(start: TimeStamp, end: TimeStamp, step: Int): [PrometheusSample!]
   processes(start: TimeStamp, end: TimeStamp, step: Int): [PrometheusSample!]
   sockets(start: TimeStamp, end: TimeStamp, step: Int): [PrometheusSample!]
-  specCpuPeriod(start: TimeStamp, end: TimeStamp, step: Int): [PrometheusSample!]
-  specCpuShares(start: TimeStamp, end: TimeStamp, step: Int): [PrometheusSample!]
   threads(start: TimeStamp, end: TimeStamp, step: Int): [PrometheusSample!]
   threadsMax(start: TimeStamp, end: TimeStamp, step: Int): [PrometheusSample!]
   ulimitsSoft(start: TimeStamp, end: TimeStamp, step: Int): [PrometheusSample!]

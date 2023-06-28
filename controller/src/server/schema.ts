@@ -176,8 +176,6 @@ export type DryRunNodeMetrics = {
   networkTransmitPacketsTotal?: Maybe<Array<PrometheusSample>>;
   processes?: Maybe<Array<PrometheusSample>>;
   sockets?: Maybe<Array<PrometheusSample>>;
-  specCpuPeriod?: Maybe<Array<PrometheusSample>>;
-  specCpuShares?: Maybe<Array<PrometheusSample>>;
   threads?: Maybe<Array<PrometheusSample>>;
   threadsMax?: Maybe<Array<PrometheusSample>>;
   ulimitsSoft?: Maybe<Array<PrometheusSample>>;
@@ -482,22 +480,6 @@ export type DryRunNodeMetricsProcessesArgs = {
 
 /**  Prometheus metrics for the node.  */
 export type DryRunNodeMetricsSocketsArgs = {
-  end?: InputMaybe<Scalars['TimeStamp']['input']>;
-  start?: InputMaybe<Scalars['TimeStamp']['input']>;
-  step?: InputMaybe<Scalars['Int']['input']>;
-};
-
-
-/**  Prometheus metrics for the node.  */
-export type DryRunNodeMetricsSpecCpuPeriodArgs = {
-  end?: InputMaybe<Scalars['TimeStamp']['input']>;
-  start?: InputMaybe<Scalars['TimeStamp']['input']>;
-  step?: InputMaybe<Scalars['Int']['input']>;
-};
-
-
-/**  Prometheus metrics for the node.  */
-export type DryRunNodeMetricsSpecCpuSharesArgs = {
   end?: InputMaybe<Scalars['TimeStamp']['input']>;
   start?: InputMaybe<Scalars['TimeStamp']['input']>;
   step?: InputMaybe<Scalars['Int']['input']>;
@@ -1008,8 +990,6 @@ export type DryRunNodeMetricsResolvers<ContextType = any, ParentType extends Res
   networkTransmitPacketsTotal?: Resolver<Maybe<Array<ResolversTypes['PrometheusSample']>>, ParentType, ContextType, Partial<DryRunNodeMetricsNetworkTransmitPacketsTotalArgs>>;
   processes?: Resolver<Maybe<Array<ResolversTypes['PrometheusSample']>>, ParentType, ContextType, Partial<DryRunNodeMetricsProcessesArgs>>;
   sockets?: Resolver<Maybe<Array<ResolversTypes['PrometheusSample']>>, ParentType, ContextType, Partial<DryRunNodeMetricsSocketsArgs>>;
-  specCpuPeriod?: Resolver<Maybe<Array<ResolversTypes['PrometheusSample']>>, ParentType, ContextType, Partial<DryRunNodeMetricsSpecCpuPeriodArgs>>;
-  specCpuShares?: Resolver<Maybe<Array<ResolversTypes['PrometheusSample']>>, ParentType, ContextType, Partial<DryRunNodeMetricsSpecCpuSharesArgs>>;
   threads?: Resolver<Maybe<Array<ResolversTypes['PrometheusSample']>>, ParentType, ContextType, Partial<DryRunNodeMetricsThreadsArgs>>;
   threadsMax?: Resolver<Maybe<Array<ResolversTypes['PrometheusSample']>>, ParentType, ContextType, Partial<DryRunNodeMetricsThreadsMaxArgs>>;
   ulimitsSoft?: Resolver<Maybe<Array<ResolversTypes['PrometheusSample']>>, ParentType, ContextType, Partial<DryRunNodeMetricsUlimitsSoftArgs>>;

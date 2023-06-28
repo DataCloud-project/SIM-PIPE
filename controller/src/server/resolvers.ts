@@ -19,7 +19,7 @@ import {
   createProject, deleteProject, getProject, projects, renameProject,
 } from '../k8s/projects.js';
 import { computePresignedPutUrl } from '../minio/minio.js';
-import queryPrometheus from '../prometheus/prometheus.js';
+import queryPrometheusResolver from '../prometheus/query-prometheus-resolver.js';
 import { PingError } from './apollo-errors.js';
 import type { ArgoWorkflow } from '../argo/argo-client.js';
 import type ArgoWorkflowClient from '../argo/argo-client.js';
@@ -393,39 +393,54 @@ const resolvers = {
     },
   },
   DryRunNodeMetrics: {
+    /* Verbose way of doing the resolver. */
     async cpuSystemSecondsTotal(
       dryRunNodeMetrics: DryRunNodeMetrics & { dryRunNode: DryRunNodePod },
       _arguments: DryRunNodeMetricsCpuSystemSecondsTotalArguments,
     ): Promise<DryRunNodeMetrics['cpuSystemSecondsTotal']> {
-      const { dryRunNode } = dryRunNodeMetrics;
-      let { step } = _arguments;
-      const { startedAt, finishedAt, podName } = dryRunNode;
-      if (!startedAt) {
-        return [];
-      }
-
-      // We have a 10s offset to avoid most clock drifts.
-      const startTimestamp = new Date(startedAt).getTime() / 1000 - 10;
-
-      const endTimestamp = finishedAt
-        ? new Date(finishedAt).getTime() / 1000 + 10
-        : Date.now() / 1000 + 10;
-
-      if (!step) {
-        step = Math.ceil((endTimestamp - startTimestamp) / 1000);
-      }
-
-      const data = await queryPrometheus('simpipe_cpu_system_seconds_total', {
-        container_name: 'main',
-        pod_name: podName,
-      }, startTimestamp, endTimestamp, step);
-
-      return data.flatMap(({ values }) => values)
-        .map(([timestamp, value]) => ({
-          timestamp,
-          value,
-        }));
+      return await queryPrometheusResolver<'cpuSystemSecondsTotal'>('simpipe_cpu_system_seconds_total', dryRunNodeMetrics, _arguments);
     },
+    /* More concise way. The previous way is to explain what we are doing. */
+    cpuUsageSecondsTotal: queryPrometheusResolver.bind(undefined, 'simpipe_cpu_usage_seconds_total'),
+    cpuUserSecondsTotal: queryPrometheusResolver.bind(undefined, 'simpipe_cpu_user_seconds_total'),
+    fileDescriptors: queryPrometheusResolver.bind(undefined, 'simpipe_file_descriptors'),
+    fsInodesFree: queryPrometheusResolver.bind(undefined, 'simpipe_fs_inodes_free'),
+    fsInodesTotal: queryPrometheusResolver.bind(undefined, 'simpipe_fs_inodes_total'),
+    fsIoCurrent: queryPrometheusResolver.bind(undefined, 'simpipe_fs_io_current'),
+    fsIoTimeSecondsTotal: queryPrometheusResolver.bind(undefined, 'simpipe_fs_io_time_seconds_total'),
+    fsIoTimeWeightedSecondsTotal: queryPrometheusResolver.bind(undefined, 'simpipe_fs_io_time_weighted_seconds_total'),
+    fsLimitBytes: queryPrometheusResolver.bind(undefined, 'simpipe_fs_limit_bytes'),
+    fsReadSecondsTotal: queryPrometheusResolver.bind(undefined, 'simpipe_fs_read_seconds_total'),
+    fsReadsMergedTotal: queryPrometheusResolver.bind(undefined, 'simpipe_fs_reads_merged_total'),
+    fsReadsTotal: queryPrometheusResolver.bind(undefined, 'simpipe_fs_reads_total'),
+    fsSectorReadsTotal: queryPrometheusResolver.bind(undefined, 'simpipe_fs_sector_reads_total'),
+    fsSectorWritesTotal: queryPrometheusResolver.bind(undefined, 'simpipe_fs_sector_writes_total'),
+    fsUsageBytes: queryPrometheusResolver.bind(undefined, 'simpipe_fs_usage_bytes'),
+    fsWriteSecondsTotal: queryPrometheusResolver.bind(undefined, 'simpipe_fs_write_seconds_total'),
+    fsWritesMergedTotal: queryPrometheusResolver.bind(undefined, 'simpipe_fs_writes_merged_total'),
+    fsWritesTotal: queryPrometheusResolver.bind(undefined, 'simpipe_fs_writes_total'),
+    memoryCache: queryPrometheusResolver.bind(undefined, 'simpipe_memory_cache'),
+    memoryFailcnt: queryPrometheusResolver.bind(undefined, 'simpipe_memory_failcnt'),
+    memoryFailuresTotal: queryPrometheusResolver.bind(undefined, 'simpipe_memory_failures_total'),
+    memoryMappedFile: queryPrometheusResolver.bind(undefined, 'simpipe_memory_mapped_file'),
+    memoryMaxUsageBytes: queryPrometheusResolver.bind(undefined, 'simpipe_memory_max_usage_bytes'),
+    memoryRss: queryPrometheusResolver.bind(undefined, 'simpipe_memory_rss'),
+    memorySwap: queryPrometheusResolver.bind(undefined, 'simpipe_memory_swap'),
+    memoryUsageBytes: queryPrometheusResolver.bind(undefined, 'simpipe_memory_usage_bytes'),
+    memoryWorkingSetBytes: queryPrometheusResolver.bind(undefined, 'simpipe_memory_working_set_bytes'),
+    networkReceiveBytesTotal: queryPrometheusResolver.bind(undefined, 'simpipe_network_receive_bytes_total'),
+    networkReceiveErrorsTotal: queryPrometheusResolver.bind(undefined, 'simpipe_network_receive_errors_total'),
+    networkReceivePacketsDroppedTotal: queryPrometheusResolver.bind(undefined, 'simpipe_network_receive_packets_dropped_total'),
+    networkReceivePacketsTotal: queryPrometheusResolver.bind(undefined, 'simpipe_network_receive_packets_total'),
+    networkTransmitBytesTotal: queryPrometheusResolver.bind(undefined, 'simpipe_network_transmit_bytes_total'),
+    networkTransmitErrorsTotal: queryPrometheusResolver.bind(undefined, 'simpipe_network_transmit_errors_total'),
+    networkTransmitPacketsDroppedTotal: queryPrometheusResolver.bind(undefined, 'simpipe_network_transmit_packets_dropped_total'),
+    networkTransmitPacketsTotal: queryPrometheusResolver.bind(undefined, 'simpipe_network_transmit_packets_total'),
+    processes: queryPrometheusResolver.bind(undefined, 'simpipe_processes'),
+    sockets: queryPrometheusResolver.bind(undefined, 'simpipe_sockets'),
+    threads: queryPrometheusResolver.bind(undefined, 'simpipe_threads'),
+    threadsMax: queryPrometheusResolver.bind(undefined, 'simpipe_threads_max'),
+    ulimitsSoft: queryPrometheusResolver.bind(undefined, 'simpipe_ulimits_soft'),
   },
 };
 
