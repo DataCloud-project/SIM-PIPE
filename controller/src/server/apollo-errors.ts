@@ -52,6 +52,16 @@ export class InvalidArgoWorkflowError extends GraphQLError {
   }
 }
 
+export class InvalidArgoWorkflowTemplateError extends GraphQLError {
+  constructor(message: string) {
+    super(message, {
+      extensions: {
+        code: 'INVALID_ARGO_WORKFLOW_TEMPLATE_ERROR',
+      },
+    });
+  }
+}
+
 export class WrongRequestError extends GraphQLError {
   constructor(message: string) {
     super(message, {

@@ -6,8 +6,16 @@ import {
   convertArgoWorkflowToDryRun,
   createDryRun, deleteDryRun, dryRunsForProject,
   getDryRun, getDryRunLog, getDryRunNodeLog, resubmitDryRun, resumeDryRun,
-  retryDryRun, SIMPIPE_PROJECT_LABEL, stopDryRun, suspendDryRun,
+  retryDryRun, stopDryRun, suspendDryRun,
 } from '../argo/dry-runs.js';
+import { SIMPIPE_PROJECT_LABEL } from '../argo/project-label.js';
+import {
+  createWorkflowTemplate,
+  deleteWorkflowTemplate,
+  getWorkflowTemplate,
+  updateWorkflowTemplate,
+  workflowTemplatesForProject,
+} from '../argo/workflow-template.js';
 import assignArgoWorkflowToProject from '../k8s/assign-argoworkflow-to-project.js';
 import {
   createDockerRegistryCredential,
@@ -21,7 +29,7 @@ import {
 import { computePresignedGetUrl, computePresignedPutUrl } from '../minio/minio.js';
 import queryPrometheusResolver from '../prometheus/query-prometheus-resolver.js';
 import { PingError } from './apollo-errors.js';
-import type { ArgoWorkflow } from '../argo/argo-client.js';
+import type { ArgoWorkflow, ArgoWorkflowTemplate } from '../argo/argo-client.js';
 import type ArgoWorkflowClient from '../argo/argo-client.js';
 import type K8sClient from '../k8s/k8s-client.js';
 import type {
@@ -39,9 +47,11 @@ import type {
   MutationCreateDockerRegistryCredentialArgs as MutationCreateDockerRegistryCredentialArguments,
   MutationCreateDryRunArgs as MutationCreateDryRunArguments,
   MutationCreateProjectArgs as MutationCreateProjectArguments,
+  MutationCreateWorkflowTemplateArgs as MutationCreateWorkflowTemplateArguments,
   MutationDeleteDockerRegistryCredentialArgs as MutationDeleteDockerRegistryCredentialArguments,
   MutationDeleteDryRunArgs as MutationDeleteDryRunArguments,
   MutationDeleteProjectArgs as MutationDeleteProjectArguments,
+  MutationDeleteWorkflowTemplateArgs as MutationDeleteWorkflowTemplateArguments,
   MutationRenameProjectArgs as MutationRenameProjectArguments,
   MutationResolvers,
   MutationResubmitDryRunArgs as MutationResubmitDryRunArguments,
@@ -50,11 +60,14 @@ import type {
   MutationStopDryRunArgs as MutationStopDryRunArguments,
   MutationSuspendDryRunArgs as MutationSuspendDryRunArguments,
   MutationUpdateDockerRegistryCredentialArgs as MutationUpdateDockerRegistryCredentialArguments,
+  MutationUpdateWorkflowTemplateArgs as MutationUpdateWorkflowTemplateArguments,
   Project,
   Query,
   QueryDryRunArgs as QueryDryRunArguments,
   QueryProjectArgs as QueryProjectArguments,
   QueryResolvers,
+  QueryWorkflowTemplateArgs as QueryWorkflowTemplateArguments,
+  WorkflowTemplate,
 } from './schema.js';
 
 interface ContextUser {
@@ -132,6 +145,13 @@ const resolvers = {
       const { argoClient } = context;
       return await getDryRun(dryRunId, argoClient);
     },
+    async workflowTemplate(
+      _p: EmptyParent, arguments_: QueryWorkflowTemplateArguments, context: AuthenticatedContext,
+    ): Promise<Query['workflowTemplate']> {
+      const { name } = arguments_;
+      const { argoClient } = context;
+      return await getWorkflowTemplate(name, argoClient);
+    },
   } as Required<QueryResolvers<AuthenticatedContext, EmptyParent>>,
   Mutation: {
     async createDryRun(
@@ -139,10 +159,11 @@ const resolvers = {
       arguments_: MutationCreateDryRunArguments,
       context: AuthenticatedContext,
     ): Promise<Mutation['createDryRun']> {
-      const { argoWorkflow, dryRunId, projectId } = arguments_;
+      const { input } = arguments_;
+      const { argoWorkflow, dryRunId, projectId } = input;
       const { argoClient } = context;
       return await createDryRun({
-        argoWorkflow: (argoWorkflow as ArgoWorkflow),
+        argoWorkflow: argoWorkflow as ArgoWorkflow,
         projectId: projectId ?? undefined,
         dryRunId: dryRunId ?? undefined,
         argoClient,
@@ -300,6 +321,46 @@ const resolvers = {
       const objectName = `${sub}/${key}`;
       return await computePresignedPutUrl(objectName);
     },
+    async createWorkflowTemplate(
+      _p: EmptyParent,
+      arguments_: MutationCreateWorkflowTemplateArguments,
+      context: AuthenticatedContext,
+    ): Promise<Mutation['createWorkflowTemplate']> {
+      const { input } = arguments_;
+      const { name, projectId, argoWorkflowTemplate } = input;
+      const { argoClient } = context;
+      return await createWorkflowTemplate({
+        name: name ?? undefined,
+        projectId: projectId ?? undefined,
+        argoWorkflowTemplate: argoWorkflowTemplate as ArgoWorkflowTemplate,
+        argoClient,
+      });
+    },
+    async updateWorkflowTemplate(
+      _p: EmptyParent,
+      arguments_: MutationUpdateWorkflowTemplateArguments,
+      context: AuthenticatedContext,
+    ): Promise<Mutation['updateWorkflowTemplate']> {
+      const { update } = arguments_;
+      const { name, projectId, argoWorkflowTemplate } = update;
+      const { argoClient } = context;
+      return await updateWorkflowTemplate({
+        name,
+        projectId: projectId ?? undefined,
+        argoWorkflowTemplate: argoWorkflowTemplate as ArgoWorkflowTemplate,
+        argoClient,
+      });
+    },
+    async deleteWorkflowTemplate(
+      _p: EmptyParent,
+      arguments_: MutationDeleteWorkflowTemplateArguments,
+      context: AuthenticatedContext,
+    ): Promise<Mutation['deleteWorkflowTemplate']> {
+      const { name } = arguments_;
+      const { argoClient } = context;
+      await deleteWorkflowTemplate(name, argoClient);
+      return true;
+    },
   } as Required<MutationResolvers<AuthenticatedContext, EmptyParent>>,
   Project: {
     async dryRuns(
@@ -310,6 +371,15 @@ const resolvers = {
       const { id } = parent;
       const { argoClient } = context;
       return await dryRunsForProject(id, argoClient);
+    },
+    async workflowTemplates(
+      parent: Project,
+      _a: EmptyArguments,
+      context: AuthenticatedContext,
+    ): Promise<Project['workflowTemplates']> {
+      const { id } = parent;
+      const { argoClient } = context;
+      return await workflowTemplatesForProject(id, argoClient);
     },
   },
   DryRun: {
@@ -463,6 +533,21 @@ const resolvers = {
         return undefined;
       }
       return await computePresignedGetUrl(key);
+    },
+  },
+  WorkflowTemplate: {
+    async project(
+      parent: WorkflowTemplate,
+      _a: EmptyArguments,
+      context: AuthenticatedContext,
+    ): Promise<WorkflowTemplate['project']> {
+      const projectId = (parent.argoWorkflowTemplate as (ArgoWorkflowTemplate | undefined))
+        ?.metadata?.labels?.[SIMPIPE_PROJECT_LABEL];
+      if (!projectId) {
+        return undefined;
+      }
+      const { k8sClient, k8sNamespace } = context;
+      return await getProject(projectId, k8sClient, k8sNamespace);
     },
   },
 };

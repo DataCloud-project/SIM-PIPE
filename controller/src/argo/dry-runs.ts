@@ -3,13 +3,12 @@ import {
 } from '../server/apollo-errors.js';
 import { DryRunNodeType, DryRunPhase } from '../server/schema.js';
 import getPodName from './get-pod-name.js';
+import { SIMPIPE_PROJECT_LABEL } from './project-label.js';
 import type {
   DryRun, DryRunLogEntry, DryRunNode, DryRunNodeArtifact, DryRunNodePod,
 } from '../server/schema.js';
 import type { ArgoClientActionNames, ArgoNode, ArgoWorkflow } from './argo-client.js';
 import type ArgoWorkflowClient from './argo-client.js';
-
-export const SIMPIPE_PROJECT_LABEL = 'simpipe.sct.sintef.no/project';
 
 function convertArgoStatusPhaseToDryRunStatusPhase(
   argoStatusPhase: string | undefined,

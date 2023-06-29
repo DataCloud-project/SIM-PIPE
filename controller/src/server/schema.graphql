@@ -1,4 +1,5 @@
 scalar ArgoWorkflow
+scalar ArgoWorkflowTemplate
 scalar TimeStamp
 """
 Prometheus represents number as strings in JSON, because
@@ -26,6 +27,9 @@ type Query {
 
   """ Get a dry run by id """
   dryRun(dryRunId: String!): DryRun! @auth
+
+  """ Get a workflow template by name """
+  workflowTemplate(name: String!): WorkflowTemplate @auth
 }
 
 type Project {
@@ -40,6 +44,9 @@ type Project {
 
   """ The dry runs in the project """
   dryRuns: [DryRun!]
+
+  """ The workflow templates in the project """
+  workflowTemplates: [WorkflowTemplate!]
 }
 
 
@@ -297,6 +304,17 @@ type DockerRegistryCredential {
   server: String!
 }
 
+type WorkflowTemplate {
+  """ The name of the workflow template """
+  name: String!
+
+  """ The project to which the workflow template belongs """
+  project: Project
+
+  """ The raw Argo workflow document """
+  argoWorkflowTemplate: ArgoWorkflowTemplate!
+}
+
 input DockerRegistryCredentialInput {
   """ The name of the docker registry """
   name: String!
@@ -335,6 +353,30 @@ input CreateDryRunInput {
   argoWorkflow: ArgoWorkflow!
 }
 
+""" The input data to create a workflow template """
+input CreateWorkflowTemplateInput {
+  """ The name of the workflow template, will be generated if not provided """
+  name: String
+
+  """ The project to which this workflow template belongs """
+  projectId: String
+
+  """ The raw Argo workflow document """
+  argoWorkflowTemplate: ArgoWorkflowTemplate!
+}
+
+""" The input data to update a workflow template """
+input UpdateWorkflowTemplateInput {
+  """ The name of the workflow template """
+  name: String!
+
+  """ The project to which this workflow template belongs """
+  projectId: String
+
+  """ The raw Argo workflow document """
+  argoWorkflowTemplate: ArgoWorkflowTemplate!
+}
+
 type Mutation @auth {
   """ Create a project """
   createProject(project: CreateProjectInput!): Project!
@@ -351,7 +393,7 @@ type Mutation @auth {
   If provided in the createDryRun arguments, they will overwrite the
   values in the argoWorkflow document.
   """
-  createDryRun(argoWorkflow: ArgoWorkflow!, projectId: String, dryRunId: String): DryRun!
+  createDryRun(input: CreateDryRunInput!): DryRun!
 
   """ Suspend a run. """
   suspendDryRun(dryRunId:String!): DryRun!
@@ -385,4 +427,13 @@ type Mutation @auth {
 
   """ Compute a presigned URL for uploading a file using a HTTP PUT. """
   computeUploadPresignedUrl(key: String): String!
+
+  """ Create a workflow template """
+  createWorkflowTemplate(input: CreateWorkflowTemplateInput!): WorkflowTemplate!
+
+  """ Update a workflow template """
+  updateWorkflowTemplate(update: UpdateWorkflowTemplateInput!): WorkflowTemplate!
+
+  """ Delete a workflow template """
+  deleteWorkflowTemplate(name: String!): Boolean!
 }

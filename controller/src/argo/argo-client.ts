@@ -3,8 +3,8 @@ import { createInterface } from 'node:readline';
 import type { Got } from 'got';
 /// <reference path="./argo-schema.d.ts" />
 
-/* export */ type ArgoTemplate = WorkflowsArgoprojIo.WorkflowsJson.Definitions
-  .IoArgoprojWorkflowV1alpha1Template;
+export type ArgoWorkflowTemplate = WorkflowsArgoprojIo.WorkflowsJson.Definitions
+  .IoArgoprojWorkflowV1alpha1WorkflowTemplate;
 
 export type ArgoWorkflow = WorkflowsArgoprojIo.WorkflowsJson.Definitions
   .IoArgoprojWorkflowV1alpha1Workflow;
@@ -59,9 +59,17 @@ export default class ArgoWorkflowClient {
     await this.client.get('api/v1/version');
   }
 
-  async listTemplates(): Promise<ArgoTemplate[]> {
-    const response = await this.client.get<ArgoApiListAnswer<ArgoTemplate>>(
+  async listWorkflowTemplates(
+    labelSelector?: { [key: string]: string },
+  ): Promise<ArgoWorkflowTemplate[]> {
+    const response = await this.client.get<ArgoApiListAnswer<ArgoWorkflowTemplate>>(
       `api/v1/workflow-templates/${encodeURIComponent(this.namespace)}`,
+      {
+        searchParams: {
+          'listOptions.labelSelector':
+            ArgoWorkflowClient.buildK8sSelector(labelSelector),
+        },
+      },
     );
     return response.body.items ?? [];
   }
@@ -81,9 +89,13 @@ export default class ArgoWorkflowClient {
     return response.body.items ?? [];
   }
 
+  workflowUrl(name: string, prepend?: string): string {
+    return `api/v1/workflows/${encodeURIComponent(this.namespace)}/${encodeURIComponent(name)}${prepend ? `/${prepend}` : ''}`;
+  }
+
   async getWorkflow(name: string): Promise<ArgoWorkflow> {
     const response = await this.client.get<ArgoWorkflow>(
-      `api/v1/workflows/${encodeURIComponent(this.namespace)}/${encodeURIComponent(name)}`,
+      this.workflowUrl(name),
     );
     return response.body;
   }
@@ -95,10 +107,6 @@ export default class ArgoWorkflowClient {
         json: workflowDefinition,
       });
     return response.body;
-  }
-
-  workflowUrl(name: string, prepend?: string): string {
-    return `api/v1/workflows/${encodeURIComponent(this.namespace)}/${encodeURIComponent(name)}${prepend ? `/${prepend}` : ''}`;
   }
 
   async deleteWorkflow(name: string): Promise<void> {
@@ -198,6 +206,47 @@ export default class ArgoWorkflowClient {
     }
 
     return entries;
+  }
+
+  async createWorkflowTemplate(
+    workflowTemplate: ArgoWorkflowTemplate,
+  ): Promise<ArgoWorkflowTemplate> {
+    const response = await this.client.post<ArgoWorkflowTemplate>(
+      `api/v1/workflow-templates/${encodeURIComponent(this.namespace)}`,
+      {
+        json: {
+          template: workflowTemplate,
+        },
+      });
+    return response.body;
+  }
+
+  workflowTemplateUrl(name: string): string {
+    return `api/v1/workflow-templates/${encodeURIComponent(this.namespace)}/${encodeURIComponent(name)}`;
+  }
+
+  async getWorkflowTemplate(name: string): Promise<ArgoWorkflowTemplate> {
+    const response = await this.client.get<ArgoWorkflowTemplate>(
+      this.workflowTemplateUrl(name),
+    );
+    return response.body;
+  }
+
+  async updateWorkflowTemplate(
+    name: string, workflowTemplate: ArgoWorkflowTemplate,
+  ): Promise<ArgoWorkflowTemplate> {
+    const response = await this.client.put<ArgoWorkflowTemplate>(
+      this.workflowTemplateUrl(name),
+      {
+        json: {
+          template: workflowTemplate,
+        },
+      });
+    return response.body;
+  }
+
+  async deleteWorkflowTemplate(name: string): Promise<void> {
+    await this.client.delete(this.workflowTemplateUrl(name));
   }
 }
 

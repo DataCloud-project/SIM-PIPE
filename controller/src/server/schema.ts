@@ -15,6 +15,7 @@ export type Scalars = {
   Int: { input: number; output: number; }
   Float: { input: number; output: number; }
   ArgoWorkflow: { input: unknown; output: unknown; }
+  ArgoWorkflowTemplate: { input: unknown; output: unknown; }
   /**
    * Prometheus represents number as strings in JSON, because
    * the numbers in JSON are not accurate enough and doesn't support very large numbers.
@@ -50,6 +51,16 @@ export type CreateProjectInput = {
   id?: InputMaybe<Scalars['String']['input']>;
   /**  The name of the project  */
   name: Scalars['String']['input'];
+};
+
+/**  The input data to create a workflow template  */
+export type CreateWorkflowTemplateInput = {
+  /**  The raw Argo workflow document  */
+  argoWorkflowTemplate: Scalars['ArgoWorkflowTemplate']['input'];
+  /**  The name of the workflow template, will be generated if not provided  */
+  name?: InputMaybe<Scalars['String']['input']>;
+  /**  The project to which this workflow template belongs  */
+  projectId?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type DockerRegistryCredential = {
@@ -653,12 +664,16 @@ export type Mutation = {
   createDryRun: DryRun;
   /**  Create a project  */
   createProject: Project;
+  /**  Create a workflow template  */
+  createWorkflowTemplate: WorkflowTemplate;
   /**  Delete a docker registry credential  */
   deleteDockerRegistryCredential: Scalars['Boolean']['output'];
   /**  Delete a run.  */
   deleteDryRun: Scalars['Boolean']['output'];
   /**  Delete a project  */
   deleteProject: Scalars['Boolean']['output'];
+  /**  Delete a workflow template  */
+  deleteWorkflowTemplate: Scalars['Boolean']['output'];
   /**  Rename a project  */
   renameProject: Project;
   /**  Resubmit a run. Create a copy of the current run and starts it. */
@@ -673,6 +688,8 @@ export type Mutation = {
   suspendDryRun: DryRun;
   /**  Update a docker registry credential  */
   updateDockerRegistryCredential: DockerRegistryCredential;
+  /**  Update a workflow template  */
+  updateWorkflowTemplate: WorkflowTemplate;
 };
 
 
@@ -693,14 +710,17 @@ export type MutationCreateDockerRegistryCredentialArgs = {
 
 
 export type MutationCreateDryRunArgs = {
-  argoWorkflow: Scalars['ArgoWorkflow']['input'];
-  dryRunId?: InputMaybe<Scalars['String']['input']>;
-  projectId?: InputMaybe<Scalars['String']['input']>;
+  input: CreateDryRunInput;
 };
 
 
 export type MutationCreateProjectArgs = {
   project: CreateProjectInput;
+};
+
+
+export type MutationCreateWorkflowTemplateArgs = {
+  input: CreateWorkflowTemplateInput;
 };
 
 
@@ -716,6 +736,11 @@ export type MutationDeleteDryRunArgs = {
 
 export type MutationDeleteProjectArgs = {
   projectId: Scalars['String']['input'];
+};
+
+
+export type MutationDeleteWorkflowTemplateArgs = {
+  name: Scalars['String']['input'];
 };
 
 
@@ -755,6 +780,11 @@ export type MutationUpdateDockerRegistryCredentialArgs = {
   credential: DockerRegistryCredentialInput;
 };
 
+
+export type MutationUpdateWorkflowTemplateArgs = {
+  update: UpdateWorkflowTemplateInput;
+};
+
 export type Project = {
   __typename?: 'Project';
   /**  Date of creation  */
@@ -765,6 +795,8 @@ export type Project = {
   id: Scalars['String']['output'];
   /**  The name of the project  */
   name: Scalars['String']['output'];
+  /**  The workflow templates in the project  */
+  workflowTemplates?: Maybe<Array<WorkflowTemplate>>;
 };
 
 export type PrometheusSample = {
@@ -787,6 +819,8 @@ export type Query = {
   projects: Array<Project>;
   /**  Fetch the current username.  */
   username: Scalars['String']['output'];
+  /**  Get a workflow template by name  */
+  workflowTemplate?: Maybe<WorkflowTemplate>;
 };
 
 
@@ -797,6 +831,31 @@ export type QueryDryRunArgs = {
 
 export type QueryProjectArgs = {
   projectId: Scalars['String']['input'];
+};
+
+
+export type QueryWorkflowTemplateArgs = {
+  name: Scalars['String']['input'];
+};
+
+/**  The input data to update a workflow template  */
+export type UpdateWorkflowTemplateInput = {
+  /**  The raw Argo workflow document  */
+  argoWorkflowTemplate: Scalars['ArgoWorkflowTemplate']['input'];
+  /**  The name of the workflow template  */
+  name: Scalars['String']['input'];
+  /**  The project to which this workflow template belongs  */
+  projectId?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type WorkflowTemplate = {
+  __typename?: 'WorkflowTemplate';
+  /**  The raw Argo workflow document  */
+  argoWorkflowTemplate: Scalars['ArgoWorkflowTemplate']['output'];
+  /**  The name of the workflow template  */
+  name: Scalars['String']['output'];
+  /**  The project to which the workflow template belongs  */
+  project?: Maybe<Project>;
 };
 
 
@@ -875,9 +934,11 @@ export type ResolversInterfaceTypes<RefType extends Record<string, unknown>> = {
 /** Mapping between all available schema types and the resolvers types */
 export type ResolversTypes = {
   ArgoWorkflow: ResolverTypeWrapper<Scalars['ArgoWorkflow']['output']>;
+  ArgoWorkflowTemplate: ResolverTypeWrapper<Scalars['ArgoWorkflowTemplate']['output']>;
   Boolean: ResolverTypeWrapper<Scalars['Boolean']['output']>;
   CreateDryRunInput: CreateDryRunInput;
   CreateProjectInput: CreateProjectInput;
+  CreateWorkflowTemplateInput: CreateWorkflowTemplateInput;
   DockerRegistryCredential: ResolverTypeWrapper<DockerRegistryCredential>;
   DockerRegistryCredentialInput: DockerRegistryCredentialInput;
   DryRun: ResolverTypeWrapper<DryRun>;
@@ -899,14 +960,18 @@ export type ResolversTypes = {
   Query: ResolverTypeWrapper<{}>;
   String: ResolverTypeWrapper<Scalars['String']['output']>;
   TimeStamp: ResolverTypeWrapper<Scalars['TimeStamp']['output']>;
+  UpdateWorkflowTemplateInput: UpdateWorkflowTemplateInput;
+  WorkflowTemplate: ResolverTypeWrapper<WorkflowTemplate>;
 };
 
 /** Mapping between all available schema types and the resolvers parents */
 export type ResolversParentTypes = {
   ArgoWorkflow: Scalars['ArgoWorkflow']['output'];
+  ArgoWorkflowTemplate: Scalars['ArgoWorkflowTemplate']['output'];
   Boolean: Scalars['Boolean']['output'];
   CreateDryRunInput: CreateDryRunInput;
   CreateProjectInput: CreateProjectInput;
+  CreateWorkflowTemplateInput: CreateWorkflowTemplateInput;
   DockerRegistryCredential: DockerRegistryCredential;
   DockerRegistryCredentialInput: DockerRegistryCredentialInput;
   DryRun: DryRun;
@@ -926,10 +991,16 @@ export type ResolversParentTypes = {
   Query: {};
   String: Scalars['String']['output'];
   TimeStamp: Scalars['TimeStamp']['output'];
+  UpdateWorkflowTemplateInput: UpdateWorkflowTemplateInput;
+  WorkflowTemplate: WorkflowTemplate;
 };
 
 export interface ArgoWorkflowScalarConfig extends GraphQLScalarTypeConfig<ResolversTypes['ArgoWorkflow'], any> {
   name: 'ArgoWorkflow';
+}
+
+export interface ArgoWorkflowTemplateScalarConfig extends GraphQLScalarTypeConfig<ResolversTypes['ArgoWorkflowTemplate'], any> {
+  name: 'ArgoWorkflowTemplate';
 }
 
 export type DockerRegistryCredentialResolvers<ContextType = any, ParentType extends ResolversParentTypes['DockerRegistryCredential'] = ResolversParentTypes['DockerRegistryCredential']> = {
@@ -1082,11 +1153,13 @@ export type MutationResolvers<ContextType = any, ParentType extends ResolversPar
   assignDryRunToProject?: Resolver<ResolversTypes['DryRun'], ParentType, ContextType, RequireFields<MutationAssignDryRunToProjectArgs, 'dryRunId' | 'projectId'>>;
   computeUploadPresignedUrl?: Resolver<ResolversTypes['String'], ParentType, ContextType, Partial<MutationComputeUploadPresignedUrlArgs>>;
   createDockerRegistryCredential?: Resolver<ResolversTypes['DockerRegistryCredential'], ParentType, ContextType, RequireFields<MutationCreateDockerRegistryCredentialArgs, 'credential'>>;
-  createDryRun?: Resolver<ResolversTypes['DryRun'], ParentType, ContextType, RequireFields<MutationCreateDryRunArgs, 'argoWorkflow'>>;
+  createDryRun?: Resolver<ResolversTypes['DryRun'], ParentType, ContextType, RequireFields<MutationCreateDryRunArgs, 'input'>>;
   createProject?: Resolver<ResolversTypes['Project'], ParentType, ContextType, RequireFields<MutationCreateProjectArgs, 'project'>>;
+  createWorkflowTemplate?: Resolver<ResolversTypes['WorkflowTemplate'], ParentType, ContextType, RequireFields<MutationCreateWorkflowTemplateArgs, 'input'>>;
   deleteDockerRegistryCredential?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationDeleteDockerRegistryCredentialArgs, 'name'>>;
   deleteDryRun?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationDeleteDryRunArgs, 'dryRunId'>>;
   deleteProject?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationDeleteProjectArgs, 'projectId'>>;
+  deleteWorkflowTemplate?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationDeleteWorkflowTemplateArgs, 'name'>>;
   renameProject?: Resolver<ResolversTypes['Project'], ParentType, ContextType, RequireFields<MutationRenameProjectArgs, 'name' | 'projectId'>>;
   resubmitDryRun?: Resolver<ResolversTypes['DryRun'], ParentType, ContextType, RequireFields<MutationResubmitDryRunArgs, 'dryRunId'>>;
   resumeDryRun?: Resolver<ResolversTypes['DryRun'], ParentType, ContextType, RequireFields<MutationResumeDryRunArgs, 'dryRunId'>>;
@@ -1094,6 +1167,7 @@ export type MutationResolvers<ContextType = any, ParentType extends ResolversPar
   stopDryRun?: Resolver<ResolversTypes['DryRun'], ParentType, ContextType, RequireFields<MutationStopDryRunArgs, 'dryRunId'>>;
   suspendDryRun?: Resolver<ResolversTypes['DryRun'], ParentType, ContextType, RequireFields<MutationSuspendDryRunArgs, 'dryRunId'>>;
   updateDockerRegistryCredential?: Resolver<ResolversTypes['DockerRegistryCredential'], ParentType, ContextType, RequireFields<MutationUpdateDockerRegistryCredentialArgs, 'credential'>>;
+  updateWorkflowTemplate?: Resolver<ResolversTypes['WorkflowTemplate'], ParentType, ContextType, RequireFields<MutationUpdateWorkflowTemplateArgs, 'update'>>;
 };
 
 export type ProjectResolvers<ContextType = any, ParentType extends ResolversParentTypes['Project'] = ResolversParentTypes['Project']> = {
@@ -1101,6 +1175,7 @@ export type ProjectResolvers<ContextType = any, ParentType extends ResolversPare
   dryRuns?: Resolver<Maybe<Array<ResolversTypes['DryRun']>>, ParentType, ContextType>;
   id?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  workflowTemplates?: Resolver<Maybe<Array<ResolversTypes['WorkflowTemplate']>>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -1121,14 +1196,23 @@ export type QueryResolvers<ContextType = any, ParentType extends ResolversParent
   project?: Resolver<ResolversTypes['Project'], ParentType, ContextType, RequireFields<QueryProjectArgs, 'projectId'>>;
   projects?: Resolver<Array<ResolversTypes['Project']>, ParentType, ContextType>;
   username?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  workflowTemplate?: Resolver<Maybe<ResolversTypes['WorkflowTemplate']>, ParentType, ContextType, RequireFields<QueryWorkflowTemplateArgs, 'name'>>;
 };
 
 export interface TimeStampScalarConfig extends GraphQLScalarTypeConfig<ResolversTypes['TimeStamp'], any> {
   name: 'TimeStamp';
 }
 
+export type WorkflowTemplateResolvers<ContextType = any, ParentType extends ResolversParentTypes['WorkflowTemplate'] = ResolversParentTypes['WorkflowTemplate']> = {
+  argoWorkflowTemplate?: Resolver<ResolversTypes['ArgoWorkflowTemplate'], ParentType, ContextType>;
+  name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  project?: Resolver<Maybe<ResolversTypes['Project']>, ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
 export type Resolvers<ContextType = any> = {
   ArgoWorkflow?: GraphQLScalarType;
+  ArgoWorkflowTemplate?: GraphQLScalarType;
   DockerRegistryCredential?: DockerRegistryCredentialResolvers<ContextType>;
   DryRun?: DryRunResolvers<ContextType>;
   DryRunLogEntry?: DryRunLogEntryResolvers<ContextType>;
@@ -1145,5 +1229,6 @@ export type Resolvers<ContextType = any> = {
   PrometheusStringNumber?: GraphQLScalarType;
   Query?: QueryResolvers<ContextType>;
   TimeStamp?: GraphQLScalarType;
+  WorkflowTemplate?: WorkflowTemplateResolvers<ContextType>;
 };
 
