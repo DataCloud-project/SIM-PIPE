@@ -5,7 +5,7 @@ import {
   convertArgoWorkflowNode,
   convertArgoWorkflowToDryRun,
   createDryRun, deleteDryRun, dryRunsForProject,
-  getDryRun, getDryRunLog, getDryRunNodeLog, resubmitDryRun, resumeDryRun,
+  getDryRun, getDryRunNodeLog, resubmitDryRun, resumeDryRun,
   retryDryRun, stopDryRun, suspendDryRun,
 } from '../argo/dry-runs.js';
 import { SIMPIPE_PROJECT_LABEL } from '../argo/project-label.js';
@@ -34,7 +34,6 @@ import type ArgoWorkflowClient from '../argo/argo-client.js';
 import type K8sClient from '../k8s/k8s-client.js';
 import type {
   DryRun,
-  DryRunLogArgs as DryRunLogArguments,
   DryRunNode,
   DryRunNodeArgs as DryRunNodeArguments,
   DryRunNodeArtifact,
@@ -396,21 +395,6 @@ const resolvers = {
       const { k8sClient, k8sNamespace } = context;
       return await getProject(projectId, k8sClient, k8sNamespace);
     },
-    async log(
-      parent: DryRun,
-      _arguments: DryRunLogArguments,
-      context: AuthenticatedContext,
-    ): Promise<DryRun['log']> {
-      const { id } = parent;
-      const { maxLines, grep } = _arguments;
-      const { argoClient } = context;
-      return await getDryRunLog({
-        dryRunId: id,
-        maxLines: maxLines ?? undefined,
-        grep: grep ?? undefined,
-        argoClient,
-      });
-    },
     nodes(
       parent: DryRun,
     ): DryRun['nodes'] {
@@ -458,13 +442,17 @@ const resolvers = {
     ): Promise<DryRunNodePod['log']> {
       assertDryRunNodeHasWorkflow(dryRunNode);
       const { workflow } = dryRunNode;
-      const { maxLines, grep } = _arguments;
+      const {
+        maxLines, grep, sinceSeconds, sinceTime,
+      } = _arguments;
       const { argoClient } = context;
       return await getDryRunNodeLog({
         dryRunNode,
         workflow,
         maxLines: maxLines ?? undefined,
         grep: grep ?? undefined,
+        sinceSeconds: sinceSeconds ?? undefined,
+        sinceTime: sinceTime ?? undefined,
         argoClient,
       });
     },

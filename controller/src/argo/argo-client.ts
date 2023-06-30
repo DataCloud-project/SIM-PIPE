@@ -148,14 +148,71 @@ export default class ArgoWorkflowClient {
     return await this.putWorkflow(name, 'stop');
   }
 
-  // This is not working because it returns an event stream only.
-  // Also it needs the pod to not be deleted.
-  // It may be better to get the logs from the artifact.
-  async getWorkflowLog({
+  static isWorkflowNodePendingOrRunning(workflow: ArgoWorkflow, nodeId: string): boolean {
+    const node = workflow.status?.nodes?.[nodeId];
+    if (!node) {
+      return !workflow.status || workflow.status.phase === 'Pending' || workflow.status.phase === 'Running';
+    }
+    return node.phase === 'Pending' || node.phase === 'Running';
+  }
+
+  static nodeHasArtifactsLogs(workflow: ArgoWorkflow, nodeId: string, container = 'main'): boolean {
+    const logName = `${container}-logs`;
+    return workflow.status?.nodes?.[nodeId]?.outputs?.artifacts?.some(
+      ({ name }) => name === logName,
+    ) ?? false;
+  }
+
+  async getWorkflowLogFromArtifact({
+    workflow,
+    nodeId,
+    container = 'main',
+    grep,
+    tailLines = 1000,
+  }: {
+    workflow: ArgoWorkflow;
+    nodeId: string;
+    container: string;
+    grep?: string;
+    tailLines?: number;
+  }): Promise<string[]> {
+    const { name } = workflow.metadata;
+    if (!name) {
+      throw new Error('Workflow name is missing');
+    }
+    if (!ArgoWorkflowClient.nodeHasArtifactsLogs(workflow, nodeId, container)) {
+      throw new Error('No logs found');
+    }
+    const path = `artifact-files/${encodeURIComponent(this.namespace)}/workflows/${encodeURIComponent(name)}/${encodeURIComponent(nodeId)}/outputs/${container}-logs`;
+
+    const stream = this.client.stream(path);
+
+    const readlineInterface = createInterface({
+      input: stream,
+      crlfDelay: Number.POSITIVE_INFINITY,
+    });
+
+    const entries = [];
+    for await (const line of readlineInterface) {
+      // We don't use a RegExp to not be vulnerable to DoS attacks
+      if (!grep || line.includes(grep)) {
+        entries.push(line);
+      }
+    }
+
+    if (tailLines > 0) {
+      return entries.slice(-tailLines);
+    }
+
+    return entries;
+  }
+
+  async getWorkflowLogFromKubernetes({
     workflowName,
     podName,
     containerName = 'main',
     sinceSeconds,
+    sinceTime,
     grep,
     tailLines = 1000,
   }: {
@@ -163,9 +220,10 @@ export default class ArgoWorkflowClient {
     podName?: string;
     containerName?: string;
     sinceSeconds?: number;
+    sinceTime?: number;
     grep?: string;
     tailLines?: number;
-  }): Promise<{ content: string; podName?: string }[]> {
+  }): Promise<string[]> {
     const stream = this.client.stream(
       `api/v1/workflows/${encodeURIComponent(this.namespace)}/${encodeURIComponent(workflowName)}/log`,
       {
@@ -174,6 +232,7 @@ export default class ArgoWorkflowClient {
           grep,
           'logOptions.container': containerName,
           'logOptions.sinceSeconds': sinceSeconds,
+          'logOptions.sinceTime': sinceTime,
           'logOptions.tailLines': tailLines,
           'logOptions.limitBytes': '16777216', // 16MB max
           // 'logOptions.previous': 'true',
@@ -196,16 +255,57 @@ export default class ArgoWorkflowClient {
             podName: string;
           };
         };
-        entries.push({
-          content: jsonEntry.result.content,
-          podName: jsonEntry.result.podName,
-        });
+        entries.push(jsonEntry.result.content);
       } catch {
-        entries.push({ content, podName });
+        entries.push(content);
       }
     }
 
     return entries;
+  }
+
+  async getWorkflowLog({
+    workflow,
+    nodeId,
+    podName,
+    container = 'main',
+    sinceSeconds,
+    sinceTime,
+    grep,
+    tailLines = 1000,
+  }: {
+    workflow: ArgoWorkflow;
+    nodeId: string;
+    podName?: string;
+    container?: string;
+    sinceSeconds?: number;
+    sinceTime?: number;
+    grep?: string;
+    tailLines?: number;
+  }): Promise<string[]> {
+    if (ArgoWorkflowClient.isWorkflowNodePendingOrRunning(workflow, nodeId)) {
+      const workflowName = workflow.metadata.name;
+      if (!workflowName) {
+        throw new Error('Workflow name is missing');
+      }
+      return await this.getWorkflowLogFromKubernetes({
+        workflowName,
+        podName,
+        containerName: container,
+        sinceSeconds,
+        sinceTime,
+        grep,
+        tailLines,
+      });
+    }
+
+    return await this.getWorkflowLogFromArtifact({
+      workflow,
+      nodeId,
+      container,
+      grep,
+      tailLines,
+    });
   }
 
   async createWorkflowTemplate(

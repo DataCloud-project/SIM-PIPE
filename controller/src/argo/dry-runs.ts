@@ -5,7 +5,7 @@ import { DryRunNodeType, DryRunPhase } from '../server/schema.js';
 import getPodName from './get-pod-name.js';
 import { SIMPIPE_PROJECT_LABEL } from './project-label.js';
 import type {
-  DryRun, DryRunLogEntry, DryRunNode, DryRunNodeArtifact, DryRunNodePod,
+  DryRun, DryRunNode, DryRunNodeArtifact, DryRunNodePod,
 } from '../server/schema.js';
 import type { ArgoClientActionNames, ArgoNode, ArgoWorkflow } from './argo-client.js';
 import type ArgoWorkflowClient from './argo-client.js';
@@ -307,43 +307,24 @@ export async function deleteDryRun(
   }
 }
 
-export async function getDryRunLog({
-  dryRunId,
-  maxLines,
-  grep,
-  argoClient,
-}: {
-  dryRunId: string,
-  maxLines?: number,
-  grep?: string,
-  argoClient: ArgoWorkflowClient,
-}): Promise<DryRunLogEntry[]> {
-  try {
-    return await argoClient.getWorkflowLog({
-      workflowName: dryRunId,
-      tailLines: maxLines,
-      grep,
-    });
-  } catch (error) {
-    handleArgoException(error);
-  }
-  throw new Error('Unreachable');
-}
-
 export async function getDryRunNodeLog({
   dryRunNode,
   workflow,
   maxLines,
   grep,
+  sinceSeconds,
+  sinceTime,
   argoClient,
 }: {
   dryRunNode: DryRunNodePod,
   workflow: ArgoWorkflow,
   maxLines?: number,
   grep?: string,
+  sinceSeconds?: number,
+  sinceTime?: number,
   argoClient: ArgoWorkflowClient,
 }): Promise<string[]> {
-  const { podName } = dryRunNode;
+  const { podName, id: nodeId } = dryRunNode;
   if (!podName) {
     throw new Error('Pod name is missing');
   }
@@ -355,12 +336,15 @@ export async function getDryRunNodeLog({
 
   try {
     const entries = await argoClient.getWorkflowLog({
-      workflowName,
+      workflow,
+      nodeId,
       podName,
       tailLines: maxLines,
       grep,
+      sinceSeconds,
+      sinceTime,
     });
-    return entries.map((logEntry) => logEntry.content);
+    return entries;
   } catch (error) {
     handleArgoException(error);
   }

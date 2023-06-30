@@ -92,8 +92,6 @@ export type DryRun = {
   createdAt: Scalars['String']['output'];
   /**  The identifier of the run  */
   id: Scalars['String']['output'];
-  /**  The logs of the run  */
-  log?: Maybe<Array<DryRunLogEntry>>;
   /**  A node of the run, by id  */
   node?: Maybe<DryRunNode>;
   /**  The nodes of the run  */
@@ -102,12 +100,6 @@ export type DryRun = {
   project?: Maybe<Project>;
   /**  Status of the run  */
   status: DryRunStatus;
-};
-
-
-export type DryRunLogArgs = {
-  grep?: InputMaybe<Scalars['String']['input']>;
-  maxLines?: InputMaybe<Scalars['Int']['input']>;
 };
 
 
@@ -578,6 +570,8 @@ export type DryRunNodePod = DryRunNode & {
 export type DryRunNodePodLogArgs = {
   grep?: InputMaybe<Scalars['String']['input']>;
   maxLines?: InputMaybe<Scalars['Int']['input']>;
+  sinceSeconds?: InputMaybe<Scalars['Int']['input']>;
+  sinceTime?: InputMaybe<Scalars['Int']['input']>;
 };
 
 /**
@@ -1014,7 +1008,6 @@ export type DryRunResolvers<ContextType = any, ParentType extends ResolversParen
   argoWorkflow?: Resolver<ResolversTypes['ArgoWorkflow'], ParentType, ContextType>;
   createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  log?: Resolver<Maybe<Array<ResolversTypes['DryRunLogEntry']>>, ParentType, ContextType, Partial<DryRunLogArgs>>;
   node?: Resolver<Maybe<ResolversTypes['DryRunNode']>, ParentType, ContextType, RequireFields<DryRunNodeArgs, 'id'>>;
   nodes?: Resolver<Maybe<Array<ResolversTypes['DryRunNode']>>, ParentType, ContextType>;
   project?: Resolver<Maybe<ResolversTypes['Project']>, ParentType, ContextType>;

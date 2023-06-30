@@ -66,19 +66,11 @@ type DryRun {
   """ The project to which the run belongs """
   project: Project
 
-  """ The logs of the run """
-  log(maxLines: Int, grep: String): [DryRunLogEntry!]
-
   """ The nodes of the run """
   nodes: [DryRunNode!]
 
   """ A node of the run, by id """
   node(id: String!): DryRunNode
-}
-
-type DryRunLogEntry {
-  content: String!
-  podName: String
 }
 
 type DryRunStatus {
@@ -202,7 +194,7 @@ type DryRunNodePod implements DryRunNode {
   podName: String!
 
   """ The logs of the node. """
-  log(maxLines: Int, grep: String): [String!]
+  log(maxLines: Int, grep: String, sinceSeconds: Int, sinceTime: Int): [String!]
 
   """ Input artifacts of the node. """
   inputArtifacts: [DryRunNodeArtifact!]
