@@ -7,9 +7,9 @@ import threading
 import time
 
 services = [
-    {"name": "cadvisor", "ports": [8081, 8080]},
-    {"name": "grafana", "ports": [8082, 80]},
-    {"name": "sftpgo", "ports": [8083, 80]},
+    {"name": "cadvisor", "ports": [8081, 8080], "enabled": False},
+    {"name": "grafana", "ports": [8082, 80], "enabled": False},
+    {"name": "sftpgo", "ports": [8083, 80], "enabled": False},
     {"name": "argo", "ports": [8084, 2746], "fullname": "argo-workflows-server"},
     {"name": "minio", "ports": [8085, 9000]},
     {
@@ -18,6 +18,7 @@ services = [
         "prefix": "",
         "fullname": "prometheus-operated",
     },
+    {"name": "controller", "ports": [8087, 9000]},
 ]
 
 
@@ -55,7 +56,16 @@ def handle_exit(signal, frame):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Start kubernetes port forwardings")
     parser.add_argument(
-        "--disable", type=str, nargs="*", help="list of services to disable"
+        "--disable",
+        type=str,
+        nargs="*",
+        help="list of enabled by default services to disable",
+    )
+    parser.add_argument(
+        "--enable",
+        type=str,
+        nargs="*",
+        help="list of disabled by default services to enable",
     )
     parser.add_argument(
         "--prefix", type=str, default="simpipe-", help="prefix for service name"
@@ -63,6 +73,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     disabled = args.disable if args.disable is not None else []
+    enabled = args.enable if args.enable is not None else []
     prefix = args.prefix
 
     signal.signal(signal.SIGINT, handle_exit)
@@ -70,7 +81,9 @@ if __name__ == "__main__":
 
     threads = []
     for service in services:
-        if service["name"] not in disabled:
+        if service["name"] not in disabled and (
+            service.get("enabled", True) or service["name"] in enabled
+        ):
             print(f"{service['name']}: http://localhost:{service['ports'][0]}")
             thread = threading.Thread(target=port_forward, args=(service, prefix, 1))
             thread.start()
