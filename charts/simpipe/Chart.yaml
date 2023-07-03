@@ -3,26 +3,26 @@ name: simpipe
 description: SIMPIPE on Kubernetes
 type: application
 version: 3.0.0
-appVersion: "3.0.0"
+appVersion: "pr-92"
 dependencies:
   - name: cadvisor
     version: "2.2.4"
     repository: https://ckotzbauer.github.io/helm-charts
     condition: cadvisor.enabled
   - name: kube-prometheus-stack
-    version: "46.8.0"
+    version: "47.1.0"
     repository: https://prometheus-community.github.io/helm-charts
     condition: kube-prometheus-stack.enabled
   - name: argo-workflows
-    version: "0.29.2"
+    version: "0.30.0"
     repository: https://argoproj.github.io/argo-helm
     condition: argo-workflows.enabled
   - name: argo-events
-    version: "2.3.3"
+    version: "2.4.0"
     repository: https://argoproj.github.io/argo-helm
     condition: argo-events.enabled
   - name: minio
-    version: "12.6.4"
+    version: "12.6.5"
     repository: https://charts.bitnami.com/bitnami
     condition: minio.enabled
   - name: docker-registry
@@ -30,10 +30,10 @@ dependencies:
     repository: https://helm.twun.io
     condition: docker-registry.enabled
   - name: sftpgo
-    version: "0.16.0"
+    version: "0.17.0"
     repository: https://charts.sagikazarmark.dev
     condition: sftpgo.enabled
   - name: postgresql
-    version: "12.5.8"
+    version: "12.6.0"
     repository: https://charts.bitnami.com/bitnami
     condition: postgresql.enabled
