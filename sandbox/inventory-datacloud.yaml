@@ -1,9 +1,0 @@
-datacloud:
-  hosts:
-    # Sandbox VM is running Ubuntu 20.04 LTS
-    sandbox-vm:
-      # Change the host and the port accordingly
-      ansible_host: localhost
-      ansible_port: 22
-      ansible_user: ubuntu
-      ansible_become: true

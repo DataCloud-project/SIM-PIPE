@@ -1,4 +1,4 @@
-<p align="center"><img width=50% src="https://raw.githubusercontent.com/DataCloud-project/SIM-PIPE/main/docs/logo/sim-pipe_logo.png"></p>
+<p align="center"><img width=50% src="./docs/logo/sim-pipe_logo.png"></p>
 
 [![GitHub Issues](https://img.shields.io/github/issues/DataCloud-project/SIM-PIPE.svg)](https://github.com/DataCloud-project/SIM-PIPE/issues)
 [![License](https://img.shields.io/badge/license-Apache2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
@@ -89,7 +89,7 @@ You may have to run the following instructions to make Docker work: https://gith
 
 ## Architecture
 
-Please consult the [ARCHITECTURE.md](ARCHITECTURE.md) document for more details on the SIM-PIPE architecture.
+Please consult the [`ARCHITECTURE.md`](ARCHITECTURE.md) document for more details on the SIM-PIPE architecture.
 
 ## Security
 
