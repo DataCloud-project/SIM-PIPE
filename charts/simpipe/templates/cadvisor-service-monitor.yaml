@@ -1,16 +1,16 @@
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
-  name: {{ template "simpipe.name" . }}-cadvisor
+  name: {{ template "simpipeUtils.name" . }}-cadvisor
   labels:
-    {{- include "simpipe.labels" . | nindent 4 }}
+    {{- include "simpipeUtils.labels" . | nindent 4 }}
     # This one is important as prometheus-operator will look
     # for this label to know which service monitor to use
     release: {{ .Release.Name }}
 spec:
   selector:
     matchLabels:
-      app: {{ template "simpipe.name" . }}-cadvisor
+      app: {{ .Release.Name }}-cadvisor
       release: {{ .Release.Name }}
   namespaceSelector:
     matchNames:

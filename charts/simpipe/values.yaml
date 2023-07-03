@@ -2,95 +2,181 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
-replicaCount: 1
+utils:
+  nameOverride: ""
+  fullnameOverride: ""
 
-image:
-  repository: nginx
-  pullPolicy: IfNotPresent
-  # Overrides the image tag whose default is the chart appVersion.
-  tag: "1.23.3"
+controller:
+  replicaCount: 1
 
-imagePullSecrets: []
-nameOverride: ""
-fullnameOverride: ""
+  image:
+    repository: ghcr.io/datacloud-project/sim-pipe-controller
+    pullPolicy: IfNotPresent
+    # Overrides the image tag whose default is the chart appVersion.
+    # tag: "1.23.3"
 
-serviceAccount:
-  # Specifies whether a service account should be created
-  create: true
-  # Annotations to add to the service account
-  annotations: {}
-  # The name of the service account to use.
-  # If not set and create is true, a name is generated using the fullname template
-  name: ""
+  imagePullSecrets: []
+  nameOverride: ""
+  fullnameOverride: ""
 
-podAnnotations: {}
+  minio:
+    port: 9000
+    endpoint: simpipe-minio.default.svc.cluster.local
+    accessKey: simpipe
+    secretKey: simpipe1234
+    useSSL: ""
+    bucketName: artifacts
+    region: "no-region"
+  argo:
+    endpoint: http://simpipe-argo-workflows-server:2746/
+  prometheus:
+    serverUrl: http://prometheus-operated:9090
 
-podSecurityContext:
-  {}
-  # fsGroup: 2000
+  serviceAccount:
+    # Annotations to add to the service account
+    annotations: {}
+    # The name of the service account to use.
+    # If not set and create is true, a name is generated using the fullname template
+    name: ""
 
-securityContext:
-  {}
-  # capabilities:
-  #   drop:
-  #   - ALL
-  # readOnlyRootFilesystem: true
-  # runAsNonRoot: true
-  # runAsUser: 1000
+  podAnnotations: {}
 
-service:
-  type: ClusterIP
-  port: 80
-
-ingress:
-  enabled: false
-  className: ""
-  annotations:
+  podSecurityContext:
     {}
-    # kubernetes.io/ingress.class: nginx
-    # kubernetes.io/tls-acme: "true"
-  hosts:
-    - host: chart-example.local
-      paths:
-        - path: /
-          pathType: ImplementationSpecific
-  tls: []
-  #  - secretName: chart-example-tls
-  #    hosts:
-  #      - chart-example.local
+    # fsGroup: 2000
 
-resources:
-  {}
-  # We usually recommend not to specify default resources and to leave this as a conscious
-  # choice for the user. This also increases chances charts run on environments with little
-  # resources, such as Minikube. If you do want to specify resources, uncomment the following
-  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
-  # limits:
-  #   cpu: 100m
-  #   memory: 128Mi
-  # requests:
-  #   cpu: 100m
-  #   memory: 128Mi
+  securityContext:
+    {}
+    # capabilities:
+    #   drop:
+    #   - ALL
+    # readOnlyRootFilesystem: true
+    # runAsNonRoot: true
+    # runAsUser: 1000
 
-autoscaling:
-  enabled: false
-  minReplicas: 1
-  maxReplicas: 100
-  targetCPUUtilizationPercentage: 80
-  # targetMemoryUtilizationPercentage: 80
+  service:
+    type: ClusterIP
+    port: 9000
 
-nodeSelector: {}
+  ingress:
+    enabled: false
+    className: ""
+    annotations:
+      {}
+      # kubernetes.io/ingress.class: nginx
+      # kubernetes.io/tls-acme: "true"
+    hosts:
+      - host: chart-example.local
+        paths:
+          - path: /
+            pathType: ImplementationSpecific
+    tls: []
+    #  - secretName: chart-example-tls
+    #    hosts:
+    #      - chart-example.local
 
-tolerations: []
+  resources:
+    {}
+    # We usually recommend not to specify default resources and to leave this as a conscious
+    # choice for the user. This also increases chances charts run on environments with little
+    # resources, such as Minikube. If you do want to specify resources, uncomment the following
+    # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+    # limits:
+    #   cpu: 100m
+    #   memory: 128Mi
+    # requests:
+    #   cpu: 100m
+    #   memory: 128Mi
 
-affinity: {}
+  nodeSelector: {}
+
+  tolerations: []
+
+  affinity: {}
+
+frontend:
+  replicaCount: 1
+
+  image:
+    repository: nginx
+    pullPolicy: IfNotPresent
+    # Overrides the image tag whose default is the chart appVersion.
+    tag: "1.23.3"
+
+  imagePullSecrets: []
+  nameOverride: ""
+  fullnameOverride: ""
+
+  serviceAccount:
+    # Specifies whether a service account should be created
+    create: true
+    # Annotations to add to the service account
+    annotations: {}
+    # The name of the service account to use.
+    # If not set and create is true, a name is generated using the fullname template
+    name: ""
+
+  podAnnotations: {}
+
+  podSecurityContext:
+    {}
+    # fsGroup: 2000
+
+  securityContext:
+    {}
+    # capabilities:
+    #   drop:
+    #   - ALL
+    # readOnlyRootFilesystem: true
+    # runAsNonRoot: true
+    # runAsUser: 1000
+
+  service:
+    type: ClusterIP
+    port: 80
+
+  ingress:
+    enabled: false
+    className: ""
+    annotations:
+      {}
+      # kubernetes.io/ingress.class: nginx
+      # kubernetes.io/tls-acme: "true"
+    hosts:
+      - host: chart-example.local
+        paths:
+          - path: /
+            pathType: ImplementationSpecific
+    tls: []
+    #  - secretName: chart-example-tls
+    #    hosts:
+    #      - chart-example.local
+
+  resources:
+    {}
+    # We usually recommend not to specify default resources and to leave this as a conscious
+    # choice for the user. This also increases chances charts run on environments with little
+    # resources, such as Minikube. If you do want to specify resources, uncomment the following
+    # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+    # limits:
+    #   cpu: 100m
+    #   memory: 128Mi
+    # requests:
+    #   cpu: 100m
+    #   memory: 128Mi
+
+  nodeSelector: {}
+
+  tolerations: []
+
+  affinity: {}
 
 kube-prometheus-stack:
   enabled: true
   kubeEtcd:
     enabled: false
   grafana:
-    enabled: true
+    enabled: false
     # Actually never used
     adminPassword: simpipe
     grafana.ini:
@@ -175,10 +261,10 @@ argo-workflows:
         database: postgres
         tableName: simpipe
         userNameSecret:
-          name: simpipe-database-credentials
+          name: simpipe-utils-database-credentials
           key: username
         passwordSecret:
-          name: simpipe-database-credentials
+          name: simpipe-utils-database-credentials
           key: password
         sslMode: disable
 
@@ -212,7 +298,7 @@ docker-registry:
     regionEndpoint: http://simpipe-minio.default.svc.cluster.local:9000/
 
 sftpgo:
-  enabled: true
+  enabled: false
   # The following configuration will load the data from the secret
   # generated by the sftp-config-secret.yaml and sftpgo.json files.
   # It contains hardcoded credentials for the user simpipe/simpipe1234.
@@ -222,7 +308,7 @@ sftpgo:
   volumes:
     - name: simpipe-config
       secret:
-        secretName: simpipe-sftpgo-config
+        secretName: simpipe-utils-sftpgo-config
   volumeMounts:
     - name: simpipe-config
       mountPath: /etc/simpipe-sftpgo.json

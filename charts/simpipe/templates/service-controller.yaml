@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "simpipeController.fullname" . }}
+  labels:
+    {{- include "simpipeController.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.controller.service.type }}
+  ports:
+    - port: {{ .Values.controller.service.port }}
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "simpipeController.selectorLabels" . | nindent 4 }}

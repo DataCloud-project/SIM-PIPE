@@ -1,0 +1,16 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: {{ include "simpipeController.serviceAccountName" . }}
+  labels:
+    {{- include "simpipeController.labels" . | nindent 4 }}
+rules:
+- apiGroups: ["simpipe.sct.sintef.no"]
+  resources: ["projects"]
+  verbs: ["get", "list", "create", "update", "delete"]
+- apiGroups: [""]
+  resources: ["secrets"]
+  verbs: ["get", "list", "create", "update", "delete"]
+- apiGroups: ["argoproj.io"]
+  resources: ["workflows", "workflowtemplates", "cronworkflows"]
+  verbs: ["get", "list", "create", "update", "delete"]
