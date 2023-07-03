@@ -1,12 +1,14 @@
+import bodyParser from 'body-parser';
+import cors from 'cors';
 import express from 'express';
 import helmet from 'helmet';
 import morgan from 'morgan';
-import type K8sClient from 'k8s/k8s-client.js';
 
 import createApolloGraphqlServer from './apollo-graphql.js';
 import authJwtMiddleware from './auth-jwt-middleware.js';
 import createRouter from './routes.js';
 import type ArgoWorkflowClient from '../argo/argo-client.js';
+import type K8sClient from '../k8s/k8s-client.js';
 
 /**
  * Create and start the Express server.
@@ -33,13 +35,16 @@ export default async function startSecureServer({
   app.use(createRouter());
 
   // Start the Apollo GraphQL server and apply it to the Express app
-  const graphqlServer = await createApolloGraphqlServer({
+  const {
+    server: graphqlServer,
+    requestHandler: graphqlRequestHandler,
+  } = await createApolloGraphqlServer({
     argoClient,
     k8sClient,
   });
   await graphqlServer.start();
   app.use(authJwtMiddleware);
-  graphqlServer.applyMiddleware({ app, path: '/graphql' });
+  app.use('/graphql', cors<cors.CorsRequest>(), bodyParser.json(), graphqlRequestHandler());
 
   // Start the Express server
   app.listen({ port: 9000 },
