@@ -33,3 +33,15 @@ export async function computePresignedGetUrl(objectName: string): Promise<string
   const expire = 3600;
   return await minioClient.presignedGetObject(minioBucketName, objectName, expire);
 }
+
+export async function assertMinioIsHealthy(): Promise<void> {
+  let exists: boolean;
+  try {
+    exists = await minioClient.bucketExists(minioBucketName);
+  } catch (error) {
+    throw new Error(`Minio is not healthy: ${(error as Error).message}`);
+  }
+  if (!exists) {
+    throw new Error(`Minio bucket ${minioBucketName} does not exist`);
+  }
+}

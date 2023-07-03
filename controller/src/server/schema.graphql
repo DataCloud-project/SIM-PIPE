@@ -185,7 +185,7 @@ type DryRunNodePod implements DryRunNode {
   exitCode: String
 
   """ Resources durations. Estimation from Argo, usually pretty not accurate """
-  resourcesDuration: DryRunNodeResourceDuration!
+  resourcesDuration: DryRunNodeResourceDuration
 
   """ The name of the pod. """
   metrics: DryRunNodeMetrics!

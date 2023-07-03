@@ -98,3 +98,14 @@ export default async function queryPrometheus(
     throw new Error(`Failed to query Prometheus: ${(error as Error).message}`);
   }
 }
+
+export async function assertPrometheusIsHealthy(): Promise<void> {
+  try {
+    await got({
+      prefixUrl: prometheusServerUrl,
+      url: '-/healthy',
+    });
+  } catch (error) {
+    throw new Error(`Prometheus is not healthy: ${(error as Error).message}`);
+  }
+}

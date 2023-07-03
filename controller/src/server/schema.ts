@@ -107,12 +107,6 @@ export type DryRunNodeArgs = {
   id: Scalars['String']['input'];
 };
 
-export type DryRunLogEntry = {
-  __typename?: 'DryRunLogEntry';
-  content: Scalars['String']['output'];
-  podName?: Maybe<Scalars['String']['output']>;
-};
-
 export type DryRunNode = {
   /**  The children of the node  */
   children?: Maybe<Array<DryRunNode>>;
@@ -560,7 +554,7 @@ export type DryRunNodePod = DryRunNode & {
   podName: Scalars['String']['output'];
   progress?: Maybe<Scalars['String']['output']>;
   /**  Resources durations. Estimation from Argo, usually pretty not accurate  */
-  resourcesDuration: DryRunNodeResourceDuration;
+  resourcesDuration?: Maybe<DryRunNodeResourceDuration>;
   startedAt?: Maybe<Scalars['String']['output']>;
   templateName?: Maybe<Scalars['String']['output']>;
   type: DryRunNodeType;
@@ -936,7 +930,6 @@ export type ResolversTypes = {
   DockerRegistryCredential: ResolverTypeWrapper<DockerRegistryCredential>;
   DockerRegistryCredentialInput: DockerRegistryCredentialInput;
   DryRun: ResolverTypeWrapper<DryRun>;
-  DryRunLogEntry: ResolverTypeWrapper<DryRunLogEntry>;
   DryRunNode: ResolverTypeWrapper<ResolversInterfaceTypes<ResolversTypes>['DryRunNode']>;
   DryRunNodeArtifact: ResolverTypeWrapper<DryRunNodeArtifact>;
   DryRunNodeMetrics: ResolverTypeWrapper<DryRunNodeMetrics>;
@@ -969,7 +962,6 @@ export type ResolversParentTypes = {
   DockerRegistryCredential: DockerRegistryCredential;
   DockerRegistryCredentialInput: DockerRegistryCredentialInput;
   DryRun: DryRun;
-  DryRunLogEntry: DryRunLogEntry;
   DryRunNode: ResolversInterfaceTypes<ResolversParentTypes>['DryRunNode'];
   DryRunNodeArtifact: DryRunNodeArtifact;
   DryRunNodeMetrics: DryRunNodeMetrics;
@@ -1012,12 +1004,6 @@ export type DryRunResolvers<ContextType = any, ParentType extends ResolversParen
   nodes?: Resolver<Maybe<Array<ResolversTypes['DryRunNode']>>, ParentType, ContextType>;
   project?: Resolver<Maybe<ResolversTypes['Project']>, ParentType, ContextType>;
   status?: Resolver<ResolversTypes['DryRunStatus'], ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type DryRunLogEntryResolvers<ContextType = any, ParentType extends ResolversParentTypes['DryRunLogEntry'] = ResolversParentTypes['DryRunLogEntry']> = {
-  content?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  podName?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -1118,7 +1104,7 @@ export type DryRunNodePodResolvers<ContextType = any, ParentType extends Resolve
   phase?: Resolver<ResolversTypes['DryRunPhase'], ParentType, ContextType>;
   podName?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   progress?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  resourcesDuration?: Resolver<ResolversTypes['DryRunNodeResourceDuration'], ParentType, ContextType>;
+  resourcesDuration?: Resolver<Maybe<ResolversTypes['DryRunNodeResourceDuration']>, ParentType, ContextType>;
   startedAt?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   templateName?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   type?: Resolver<ResolversTypes['DryRunNodeType'], ParentType, ContextType>;
@@ -1208,7 +1194,6 @@ export type Resolvers<ContextType = any> = {
   ArgoWorkflowTemplate?: GraphQLScalarType;
   DockerRegistryCredential?: DockerRegistryCredentialResolvers<ContextType>;
   DryRun?: DryRunResolvers<ContextType>;
-  DryRunLogEntry?: DryRunLogEntryResolvers<ContextType>;
   DryRunNode?: DryRunNodeResolvers<ContextType>;
   DryRunNodeArtifact?: DryRunNodeArtifactResolvers<ContextType>;
   DryRunNodeMetrics?: DryRunNodeMetricsResolvers<ContextType>;

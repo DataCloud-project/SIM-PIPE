@@ -26,7 +26,8 @@ import {
 import {
   createProject, deleteProject, getProject, projects, renameProject,
 } from '../k8s/projects.js';
-import { computePresignedGetUrl, computePresignedPutUrl } from '../minio/minio.js';
+import { assertMinioIsHealthy, computePresignedGetUrl, computePresignedPutUrl } from '../minio/minio.js';
+import { assertPrometheusIsHealthy } from '../prometheus/prometheus.js';
 import queryPrometheusResolver from '../prometheus/query-prometheus-resolver.js';
 import { PingError } from './apollo-errors.js';
 import type { ArgoWorkflow, ArgoWorkflowTemplate } from '../argo/argo-client.js';
@@ -105,14 +106,21 @@ const resolvers = {
     async ping(
       _p: EmptyParent, _a: EmptyArguments, context: AuthenticatedContext,
     ): Promise<Query['ping']> {
-      const { argoClient, k8sClient } = context;
+      const { argoClient, k8sClient, k8sNamespace } = context;
       try {
         await Promise.all([
+          // Argo
           argoClient.ping(),
-          k8sClient.core.listNode(),
-          // Ping argo, kubernetes, prometheus, and minio
+          // K8S (through the Custom Resource Definition)
+          projects(k8sClient, k8sNamespace),
+          // Prometheus
+          assertPrometheusIsHealthy(),
+          // Minio
+          assertMinioIsHealthy(),
         ]);
       } catch (error) {
+        // eslint-disable-next-line no-console
+        console.error(error);
         throw new PingError(error as Error);
       }
 
