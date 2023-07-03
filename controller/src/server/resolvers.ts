@@ -26,10 +26,10 @@ import {
 import {
   createProject, deleteProject, getProject, projects, renameProject,
 } from '../k8s/projects.js';
-import { assertMinioIsHealthy, computePresignedGetUrl, computePresignedPutUrl } from '../minio/minio.js';
+import { computePresignedGetUrl, computePresignedPutUrl } from '../minio/minio.js';
 import { assertPrometheusIsHealthy } from '../prometheus/prometheus.js';
 import queryPrometheusResolver from '../prometheus/query-prometheus-resolver.js';
-import { PingError } from './apollo-errors.js';
+import { NotFoundError, PingError } from './apollo-errors.js';
 import type { ArgoWorkflow, ArgoWorkflowTemplate } from '../argo/argo-client.js';
 import type ArgoWorkflowClient from '../argo/argo-client.js';
 import type K8sClient from '../k8s/k8s-client.js';
@@ -115,8 +115,6 @@ const resolvers = {
           projects(k8sClient, k8sNamespace),
           // Prometheus
           assertPrometheusIsHealthy(),
-          // Minio
-          assertMinioIsHealthy(),
         ]);
       } catch (error) {
         // eslint-disable-next-line no-console
@@ -401,7 +399,14 @@ const resolvers = {
         return undefined;
       }
       const { k8sClient, k8sNamespace } = context;
-      return await getProject(projectId, k8sClient, k8sNamespace);
+      try {
+        return await getProject(projectId, k8sClient, k8sNamespace);
+      } catch (error) {
+        if (error instanceof NotFoundError) {
+          return undefined;
+        }
+        throw error;
+      }
     },
     nodes(
       parent: DryRun,

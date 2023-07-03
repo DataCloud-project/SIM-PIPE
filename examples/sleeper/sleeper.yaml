@@ -1,0 +1,28 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  generateName: sleeper-
+  labels:
+    simpipe.sct.sintef.no/project: sleeper
+  annotations:
+    workflows.argoproj.io/description: |
+      This pipeline will sleep until it reaches its deadline.
+spec:
+  entrypoint: ash-sleeper
+  templates:
+    - name: asm-sleeper
+      activeDeadlineSeconds: 60
+      container:
+        # We do not pull as we use a local image
+        imagePullPolicy: Never
+        # Alternatively if you have a registry
+        # image: mycluster-registry:54397/sleeper:latest
+        # imagePullPolicy: IfNotPresent
+        image: sleeper:latest
+        command: ["/sleeper"]
+    - name: ash-sleeper
+      activeDeadlineSeconds: 60
+      container:
+        image: alpine:latest
+        command: ["/bin/sh"]
+        args: ["-c", "sleep 1200"]

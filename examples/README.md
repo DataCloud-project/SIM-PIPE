@@ -13,3 +13,6 @@ Select the "Sample Simulation":
 Click the "Create new run" button. Specify the name of the run, the name of the DSL model defining the pipeline and select an input file for the pipeline.
 
 ![alt text](https://raw.githubusercontent.com/DataCloud-project/SIM-PIPE/main/docs/example/sim-pipe_frontend_create_a_new_run.png)
+
+
+https://github.com/argoproj/argo-workflows/tree/master/examples

@@ -10,4 +10,4 @@ RUN strip /tmp/hello_world
 FROM scratch
 COPY --from=hello-world-build --chmod=0755 --chown=1000:1000 /tmp/hello_world /hello_world
 USER 1000
-ENTRYPOINT [ "/hello_world" ]
+CMD ["/hello_world"]
