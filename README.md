@@ -12,13 +12,20 @@ SIM-PIPE generates and simulates a deployment configuration for the final deploy
 -	Identification of resource requirements for pipeline by calculating step performance per resource used
 
 
-## Installation
+## Quick installation
 
-Run the following command to install and start SIM-PIPE:
+If you use MacOS or Debian based Linux, run the following command to install and start SIM-PIPE:
 
 ```bash
 python start.py
 ```
+
+Use the following command to easily expose the various services of SIM-PIPE:
+```bash
+python forwarding.py
+```
+
+*You can check the advanced installation section for more details on the installation process.*
 
 ## Quick Start
 
@@ -26,6 +33,8 @@ Build the hello-world software container image locally:
 
 ```bash
 # Example using Docker
+docker buildx build -t hello-world images/hello-world
+# or
 docker-buildx build -t hello-world images/hello-world
 ```
 
@@ -41,53 +50,63 @@ Check the logs of the hello-world pipeline:
 argo logs @latest
 ```
 
+## Advanced installation
+
+### MacOS Installation
+
+The MacOS installation is automated using `brew` and the `python install.py` script. You need to install [brew](https://brew.sh/) first.
+Note that the `python start.py` script will automatically install the dependencies first.
+
+The MacOS installation uses a Linux virtual machine using `colima` named `simpipe`. When starting simpipe, the default Kubernetes context will be set to the `simpipe` kubernetes cluster.
+
+### Linux Debian(like) Installation
+
+The Linux installation is also automated using the `python install.py` script. We only focus on Debian based Linux distributions for now. We tested on Debian and Ubuntu, but it may work with little efforts on other distributions.
+
+If you don't with to use the Python installation script, you can use the Ansible playbooks directly.
+```bash
+ansible-playbook -i playbooks/install-simpipe.yaml
+```
+
+If you are already running a Kubernetes cluster on your machine, it may be easier to install SIM-PIPE on it directly or to install SIM-PIPE inside a virtual machine.
+
+### Kubernetes Installation
+
+You can install SIM-PIPE on any Kubernetes cluster using the Helm chart in the `charts/simpipe` folder.
+
+Please note that it is recommended to use a clean Kubernetes cluster for the installation.
+
+SIM-PIPE is been developed and tested on kubernetes `1.27` with the K3S distribution. The default configuration
+uses the `default` namespace and has opiniated settings for Argo Workflow and the various secrets and role bindings.
+
+You may want to change the configuration of the Helm chart to match your needs.
+
+### Windows Installation
+
+SIM-PIPE runs everywhere as long as it runs Linux. If you are using Windows, you can install SIM-PIPE using the Windows Subsystem for Linux (WSL) in its second version (WSL2). Then you can select a Debian based Linux distribution and proceed as normal.
+
+You may have to run the following instructions to make Docker work: https://github.com/microsoft/WSL/issues/6655#issuecomment-1142933322
+
 ## Architecture
 
-The architecture of the SIM-PIPE consists of three main components:
+Please consult the [ARCHITECTURE.md](ARCHITECTURE.md) document for more details on the SIM-PIPE architecture.
 
-1. [SIM-PIPE User Interface](https://github.com/DataCloud-project/SIM-PIPE/tree/main/simpipe-frontend) that provides a user interface for starting, stopping and retrieiving information to a simulation run. SIM-PIPE tool performs simulations and analytics related to a specific simulation job or run and exposes REST APIs for the front-end and other services:
+## Security
 
-2. [SIM-PIPE Simulation Controller](https://github.com/DataCloud-project/SIM-PIPE/tree/main/controller) that performs simulations and analytics related to a specific simulation job or run and exposes REST APIs for the front-end and other services. It provides the following functionality:
+SIM-PIPE is designed to only allow trusted users to deploy pipelines.
 
-    - It provides dispatcher service that dispatches requests and jobs to other sub-components of the back-end, including the sandbox.
-    - It stores intermediate files that are produced by each step that takes part in the simulation on disk to feed further steps of the pipeline. The files can be provided to the user of the simulator to analyse the performance/function of the steps.
-    - It executes simulation runs in an asynchronous manner. The simulation API will provide a controllable queue of pending simulations (allowing adding/removing items by the user as well as starting and ending a "run").
-    - It provides a simulation analytics service that gathers metrics for each run and performs statistical analysis. The results of these analyses will be provided through the REST API and can be displayed to the user during or after a simulation run.
+**DO NOT** expose the SIM-PIPE API to the public Internet without authorising and authentifying your users.
 
-3. [SIM-PIPE Sandbox](https://github.com/DataCloud-project/SIM-PIPE/tree/main/sandbox) that implements the actual simulation runs. The sandbox provides metrics to a monitoring service. These metrics will be stored and associated with a simulation and particular run in a database.
+The default installation of SIM-PIPE **IS NOT** secure.
+You need to configure the authentication and authorisation mechanisms yourself.
 
-The figure below shows a logical architecture of SIM-PIPE where the components are grouped together as a front-end and a back-end (consisting of the simulation controller and the sandbox).
-
-![alt text](https://raw.githubusercontent.com/DataCloud-project/SIM-PIPE/main/docs/sim-pipe_architecture.png)
-
-## Deployment
-
-The SIM-PIPE tool is deployed on two hosts as shown in the figure below. The SIM-PIPE Simulation Controller and SIM-PIPE Sandbox runs on two separate hosts. The sandbox is an isolated environment where execution of the simulations takes place.
-
-![alt text](https://raw.githubusercontent.com/DataCloud-project/SIM-PIPE/main/docs/sim-pipe_deployment.png)
-
-As the request comes in from the UI with a pipeline description, the controller will run each step of the pipeline in the sandbox. The controller uses Dockerode remote docker library and serves the following purposes:
-
-* Transfer the input file from to Sandbox using SFTP
-* Start a container on Sandbox attaching volume on its's local storage with binds to 3 directories: in, out, and work. The containers follow the template to take input from /in, put intermedaiate files to /work and store output in /output.
-* Resume/pause/stop a container if a request comes from UI
-* Get the output and work files from the local storage of the Sandbox and store it in persistent database.
-* For each container started, controller will retrieve the resource usage statistics (time series of CPU, memory and network usage) and logs of the execution.
-* The execution input, output, logs and usage statistics will be stored in the following folder structure:
-
-        ├── SimulationID                # The simulation ID of the current simulation
-            ├── runID                # The run ID of the simulation corresponding to the current run
-                ├── stepID           # step number of the pipeline which is currently run
-                    ├── input        # input file to the pipeline step
-                    ├── output       # output file from the pipeline step
-                    ├── logs         # logs generated from stdout and stderr
-                    └── statistics   # CPU, memory, and network usage of the execution
-
-* Once the simulation is completed and all relevant files have been retreived, the simulation controller then cleans out the /in, /work and /out folders in Sandbox local storage to prepare for the next run.
+In practice, SIM-PIPE is better to run on your local machine. When port forwarding,
+make sure you do not expose the SIM-PIPE API to an untrusted network.
+The defaults are set to localhost only.
 
 ## Contributing
 
-Before raising a pull request, please read our contributing guide.
+Before raising a pull request, please read our [contributing guide](CONTRIBUTING.md).
 
 ## Core development team
 
@@ -95,6 +114,7 @@ Before raising a pull request, please read our contributing guide.
 * [Antoine Pultier](https://github.com/fungiboletus)
 * [Aleena Thomas](https://github.com/AleenaThomas-gh)
 * [Brian Elvesæter](https://github.com/elvesater)
+* [Gøran Brekke Svaland](https://github.com/goranbs)
 
 ## License
 
