@@ -6,15 +6,19 @@
 	import { projectsList } from '../../stores/stores.js';
 	import initKeycloak from '../../lib/keycloak.js';
 	import type { Project } from '../../types.js';
+    import { graphQLClient } from '../../stores/stores.js';
+    import allProjectsQuery from '../../queries/get_all_projects.js';
+    import { get } from 'svelte/store';
 
 	const getProjectsList = async (): Promise<Project[]> => {
 		await initKeycloak();
-		// const response = await get(graphQLClient).request<{
-		// All_Projects: {
-		// 	projects: Project[];
-		// };
-		// }>(all_projects_query);
-		// return response.projects;
+		const response = await get(graphQLClient).request<{
+		All_Projects: {
+		 	projects: Project[];
+		};
+		}>(allProjectsQuery);
+        //console.log(response.projects);
+		return response.projects;
         // TODO:replace with graphql call
         return projects;
 	};
@@ -96,9 +100,10 @@
                                 <input type="checkbox" class="checkbox variant-filled"  bind:checked={checkboxes[project.name]} on:click={(event) => handleCheckboxClick(event)} />
                             </td>
                             <td>{project.name}</td>
-                            <td>{project.created}</td>
-                            <td>{project.dry_run_count}</td> 
-                            <td>{project.simulations_count}</td> 
+                            <td>{project.createdAt}</td>
+                            <!-- TODO: Aleena add number of dry runs and number of simulation runs-->
+                            <td>"NaN"</td> 
+                            <td>"NaN"</td> 
                         </tr>
                     {/each}
                 </tbody>

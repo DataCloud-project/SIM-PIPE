@@ -2,7 +2,11 @@ import { gql } from 'graphql-request';
 
 const allProjectsQuery = gql`
   query projects {
-    projects
+    projects {
+      name
+      id
+      createdAt
+    }
   }
 `;
 
