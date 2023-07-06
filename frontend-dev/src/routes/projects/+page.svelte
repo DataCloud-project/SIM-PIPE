@@ -21,6 +21,7 @@
     // TODO: move to lib or utils
 	projectsPromise.then((value) => {
 		    $projectsList = value;
+            reactiveProjectsList = value;
             $projectsList.forEach((element) => {
 			    checkboxes[element.id] = false;
 		    });
@@ -48,6 +49,8 @@
             console.log(element)
 		    const response = await get(graphQLClient).request(deleteProjectMutation, variables);
         });
+        const responseAllProjects: { projects: Project[] } = await get(graphQLClient).request(allProjectsQuery);
+		$projectsList = responseAllProjects.projects;
     }
     
     // to disable onclick propogation for checkbox input
@@ -60,6 +63,7 @@
         goto(`/projects/[project_id]/${id}`);
     }
 
+	$: reactiveProjectsList = $projectsList;
 </script>
 
 
@@ -97,8 +101,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {#each projectsList as project}
-                        <!-- <tr id="clickable_row" class="clickable table-row-checked"  onclick="window.location=`/projects/[project_id]/{project.id}`"> -->
+                    {#each reactiveProjectsList || [] as project}
                         <tr id="clickable_row" class="clickable table-row-checked"  on:click={() => gotodryruns(project.id)}>
                             <td >
                                 <input 

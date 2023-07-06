@@ -17,18 +17,20 @@
 
 	let projectName = '';
 
-	const getDryRunsList = async (): Promise<{ project: Project }> => {
+	// const getDryRunsList = async (): Promise<{ project: Project }> => {
+	const getDryRunsList = async (): Promise<DryRun[]> => {
 		const variables = {projectId: get(clickedProjectId)};
 		const response: { project: Project } = await get(graphQLClient).request(allDryRunsQuery, variables);
-		return response;
+		return response.project.dryRuns;
 	};
 	const dryRunsPromise = getDryRunsList();
 
     // TODO: move to lib or utils
 	dryRunsPromise.then((value) => {
-			projectName = value.project.name;
+			// projectName = value.project.name;
 
-		    $dryRunsList = value.project.dryRuns;
+		    $dryRunsList = value;
+			reactiveDryRunsList = value;
             $dryRunsList.forEach((element) => {
 			    checkboxes[element.id] = false;
 		    });
@@ -86,6 +88,8 @@
 		return 'rerun';
 	}
 
+	$: reactiveDryRunsList = $dryRunsList;
+
 </script>
 <!-- Page Header -->
 <div class="flex-row p-5">
@@ -108,7 +112,7 @@
 		<!-- TODO: add margin/padding for table elements -->
         {#await dryRunsPromise}
 			<p style="font-size:20px;">Loading dry runs...</p>
-            {:then dryRunsList}
+            {:then $dryRunsList}
 			<table class="table table-interactive">
 				<thead>
 					<tr>
@@ -121,7 +125,7 @@
 					</tr>
 				</thead>
 				<tbody>
-					{#each dryRunsList as run}
+					{#each reactiveDryRunsList || [] as run}
 						<tr class="table-row-checked">
 							<td><input type="checkbox" bind:checked={checkboxes[run.id]} class="checkbox variant-filled" /></td>
 							<td>{run.id}</td>
