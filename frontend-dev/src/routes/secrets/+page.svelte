@@ -1,11 +1,14 @@
 <script lang="ts">
-	import secrets from '../../stores/secrets.json';
+	//import secrets from '../../stores/secrets.json';
 	// import KubernetesSecret from './kubernetes-secret.svelte';
 	import { Modal, modalStore } from '@skeletonlabs/skeleton';
 	import type { ModalSettings, ModalComponent } from '@skeletonlabs/skeleton';
 	import ModalSubmitNewSecret from './modal-submit-new-secret.svelte';
-
-	let password_values = new Array(secrets.length).fill('show');
+	import allCredentialsQuery from '../../queries/get_all_credentials.js';
+	import type { DockerRegistryCredential } from '../../types.js'
+	import { get } from 'svelte/store';
+	import { graphQLClient } from '../../stores/stores.js';
+	import { credentialsList } from '../../stores/stores.js';
 
 	const modalComponent: ModalComponent = {
 		ref: ModalSubmitNewSecret
@@ -17,45 +20,33 @@
 		title: 'Add new secret',
 		body: 'Provide a name and username for the new secret at given host.\nSecret will be automatically generated.',
 		//response: (r: string) => console.log('response:', r),
-		response: (r) => updateSecret(r.name, r.username, r.host)
+		//response: (r) => updateSecret(r.name, r.username, r.host)
 	};
 
-	// Create a new secret in the database
-	let passwordLength: number = 10;
-	// write a function that updates the values of the secret object and stores it in a json file
-	function updateSecret(newName: string, newUserName: string, newHostName: string) {
-		// update the secret object
-		const secret = {
-			name: newName,
-			username: newUserName,
-			host: newHostName,
-			password: generateRandomString(passwordLength)
-		};
-		secrets.concat(secret);
-		console.log(secrets);
-		// TODO: write the secret object to json file or database
-	}
+	const getCredentialsList = async (): Promise<DockerRegistryCredential[]> => {
+		console.log(get(graphQLClient))
+		const response = await get(graphQLClient).request<{
+			All_Credentials: {
+				dockerRegistryCredentials: DockerRegistryCredential[];
+			}
+		}>(allCredentialsQuery);
+		console.log(response);
+		return response.dockerRegistryCredentials;
+	};	
 
-	function generateRandomString(length: number) {
-		let result = '';
-		let characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-		let charactersLength = characters.length;
-		for (let i = 0; i < length; i++) {
-			result += characters.charAt(Math.floor(Math.random() * charactersLength));
-		}
-		return result;
-	}
+	const credentialsPromise = getCredentialsList();
 
-	// // function redirect to add new secret page
-	// function redirectToAddNewSecretPage() {
-	// 	window.location.href = "/new_secret"
-	// }
-	function onmousedown(password: string, i: number) {
-		password_values[i] = password;
-	}
-	function onmouseup(i: number) {
-		password_values[i] = 'show';
-	}
+	credentialsPromise
+		.then((value) => {
+		$credentialsList = value;
+        $credentialsList.forEach((element) => {
+            console.log(element)
+		});
+		})
+		.catch(() => {
+		$credentialsList = undefined;
+		});
+	
 </script>
 
 <!-- Page Header -->
@@ -63,6 +54,9 @@
 	<h1>Secrets</h1>
 	<div class="flex-col">
 		<div class="table-container table-fixed p-5 pr-40">
+			{#await credentialsPromise}
+            <p style="font-size:20px;">Loading credentials...</p>
+            {:then credentialsPromise}
 			<!-- Native Table Element -->
 			<!-- TODO: add margin/padding for table elements -->
 			<table class="w-half table table-interactive">
@@ -71,26 +65,21 @@
 						<th />
 						<th>Name</th>
 						<th>Username</th>
-						<th>Host</th>
-						<!-- to keep column width same when password is shown, TODO: make it proper -->
-						<th width="20%">Password</th>
+						<th>Server</th>
 					</tr>
 				</thead>
 				<tbody>
-					{#each secrets as secret, i}
+					{#each credentialsList as secret}
 						<tr class="table-row-checked">
 							<td><input type="checkbox" class="checkbox variant-filled" /></td>
 							<td>{secret.name}</td>
 							<td>{secret.username}</td>
-							<td>{secret.host}</td>
-							<td
-								on:mousedown={() => onmousedown(secret.password, i)}
-								on:mouseup={() => onmouseup(i)}><i>{password_values[i]}</i></td
-							>
+							<td>{secret.server}</td>
 						</tr>
 					{/each}
 				</tbody>
 			</table>
+			{/await}
 		</div>
 		<div class="p-2">
 			<div class="p-2">

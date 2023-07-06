@@ -1,20 +1,26 @@
 <script lang="ts">
 	import {cBase, cHeader, cForm} from '../../styles/styles.js';
+	import { graphQLClient } from '../../stores/stores.js';
+	import createProjectMutation from '../../queries/create_project.js';
+	import { get } from 'svelte/store';
+
 	export let parent: any;
 
 	// Stores
 	import { modalStore } from '@skeletonlabs/skeleton';
 
-	// Form Data
+	// TODO: Add all required user inputs (id (? create automatically) and argo workflow template)
 	const formData = {
 		name: '',		
 	};
 
-	// TODO: replace with actual api call
-	function onCreateProjectSubmit(): void {
-		console.log('to be implemented');
+	async function onCreateProjectSubmit(): Promise<void>{
+		const variables = {
+			project: {name: formData.name}
+		};
+		const response = await get(graphQLClient).request(createProjectMutation, variables);
 		modalStore.close();
-	}	
+	}
 
 </script>
 

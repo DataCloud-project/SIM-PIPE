@@ -23,7 +23,8 @@
 </script>
 
 <!-- @component This example creates a simple form modal. -->
-
+<!-- TODO: Aleena; help users provide correct kubernetes name (pattern on the HTML5 input tag perhaps may be used to only allow valid kubernetes names)-->
+<!-- TODO: Aleena; Gøran has come up with suggestion for pattern in inputs for secret name, username and hostname. Check that this works as expected. -->
 {#if $modalStore[0]}
 	<div class="modal-example-form {cBase}">
 		<header class={cHeader}>{$modalStore[0].title ?? '(title missing)'}</header>
@@ -32,15 +33,15 @@
 		<form class="modal-form {cForm}">
 			<label class="label">
 				<span>Secret name</span>
-				<input class="input" type="text" bind:value={formData.name} placeholder="Enter name..." />
+				<input class="input" type="text" bind:value={formData.name} placeholder="Enter name..." pattern="^[a-z0-9.,_,-]+$"/>
 			</label>
 			<label class="label">
 				<span>Username</span>
-				<input class="input" type="text" bind:value={formData.username} placeholder="Enter username..." />
+				<input class="input" type="text" bind:value={formData.username} placeholder="Enter username..." pattern="^[a-z0-9.,_,-]+$"/>
 			</label>
 			<label class="label">
 				<span>Hostname</span>
-				<input class="input" type="text" bind:value={formData.host} placeholder="Enter hostname..." />
+				<input class="input" type="text" bind:value={formData.host} placeholder="Enter hostname..." pattern="^[a-z0-9.,\/,:_,-]+$"/>
 			</label>
 		</form>
 		<!-- prettier-ignore -->

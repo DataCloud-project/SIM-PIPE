@@ -1,7 +1,7 @@
 import { gql } from 'graphql-request';
 
 const deleteProjectMutation = gql`
-  mutation deleteProject($projectId: String) {
+  mutation deleteProject($projectId: String!) {
     deleteProject(projectId: $projectId)
   }
 `;

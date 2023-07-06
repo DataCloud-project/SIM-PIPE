@@ -9,6 +9,7 @@
     import { graphQLClient } from '../../stores/stores.js';
     import allProjectsQuery from '../../queries/get_all_projects.js';
     import { get } from 'svelte/store';
+    import deleteProjectMutation from '../../queries/delete_project.js';
 
 	const getProjectsList = async (): Promise<Project[]> => {
 		await initKeycloak();
@@ -17,10 +18,7 @@
 		 	projects: Project[];
 		};
 		}>(allProjectsQuery);
-        //console.log(response.projects);
 		return response.projects;
-        // TODO:replace with graphql call
-        return projects;
 	};
 	const projectsPromise = getProjectsList();
     let checkboxes: Record<string, boolean> = {};
@@ -30,7 +28,8 @@
 		.then((value) => {
 		$projectsList = value;
         $projectsList.forEach((element) => {
-			checkboxes[element.name] = false;
+            console.log(element)
+			checkboxes[element.id] = false;
 		});
 		})
 		.catch(() => {
@@ -49,10 +48,15 @@
 		body: 'Enter details of project',
 	};
 
-    // TODO: replace with actual api call
-    function onDeleteSelected() {
+    async function onDeleteSelected() {
         console.log('Deleting ', Object.keys(checkboxes).filter((item) => checkboxes[item]));
-        console.log('To be implemented');
+        Object.keys(checkboxes).filter((item) => checkboxes[item]).forEach(async (element) => {
+            const variables = {
+			    projectId: element
+		    }
+            console.log(element)
+		    const response = await get(graphQLClient).request(deleteProjectMutation, variables);
+        });
     }
     
     // to disable onclick propogation for checkbox input
@@ -97,7 +101,7 @@
                     {#each projectsList as project}
                         <tr id="clickable_row" class="clickable table-row-checked"  onclick="window.location=`/projects/[project_id]/{project.project_id}`">
                             <td >
-                                <input type="checkbox" class="checkbox variant-filled"  bind:checked={checkboxes[project.name]} on:click={(event) => handleCheckboxClick(event)} />
+                                <input type="checkbox" class="checkbox variant-filled"  bind:checked={checkboxes[project.id]} on:click={(event) => handleCheckboxClick(event)} />
                             </td>
                             <td>{project.name}</td>
                             <td>{project.createdAt}</td>
