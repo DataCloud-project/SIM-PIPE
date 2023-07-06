@@ -19,6 +19,19 @@
 		passord: ''
 	};
 
+	// write a function that generates a random password
+	let detfault_password_length = 30;
+	function generateRandomPassword(length: number) {
+		let result = '';
+		const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+		const charactersLength = characters.length;
+		let counter = 0;
+		while (counter < length) {
+			result += characters.charAt(Math.floor(Math.random() * charactersLength));
+			counter += 1;
+		}
+		return result;
+	}
 	// We've created a custom submit function to pass the response and close the modal.
 	async function onFormSubmit(): Promise<void> {
 		const variables = {
@@ -26,8 +39,7 @@
 				name: formData.name,
 				server: formData.server,
 				username: formData.username,
-				password: formData.password
-
+				password: generateRandomPassword(detfault_password_length)
 			}
 		};
 		const response = await get(graphQLClient).request(createCredentialMutation, variables);	
@@ -48,7 +60,7 @@
 			<label class="label">
 				<span>Secret name</span>
 				<input class="input" type="text" bind:value={formData.name} 
-						placeholder="Enter name..." pattern="[a-z0-9.,_,-]+$" 
+						placeholder="Enter name..." pattern="[a-z0-9]+" 
 						title="lowercase alpha numeric words separated by .-_"/>
 			</label>
 			<label class="label">

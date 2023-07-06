@@ -101,7 +101,11 @@
                     {#each projectsList as project}
                         <tr id="clickable_row" class="clickable table-row-checked"  onclick="window.location=`/projects/[project_id]/{project.project_id}`">
                             <td >
-                                <input type="checkbox" class="checkbox variant-filled"  bind:checked={checkboxes[project.id]} on:click={(event) => handleCheckboxClick(event)} />
+                                <input 
+                                    type="checkbox" 
+                                    class="checkbox variant-filled"  
+                                    bind:checked={checkboxes[project.id]} 
+                                    on:click={(event) => handleCheckboxClick(event)} />
                             </td>
                             <td>{project.name}</td>
                             <td>{project.createdAt}</td>
