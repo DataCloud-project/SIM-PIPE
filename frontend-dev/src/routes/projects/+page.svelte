@@ -68,8 +68,11 @@
     <h1 >Projects</h1>
 
     <div class="flex justify-end">
-        <div class="flex-row justify-content-end">	
-            <button type="button" class="btn btn-sm variant-filled" on:click={() => (modalStore.trigger(modal))}>
+        <div class="flex-row justify-content-end">
+            <button 
+                type="button" 
+                class="btn btn-sm variant-filled" 
+                on:click={() => (modalStore.trigger(modal))}>
                 <span>Create</span>
             </button>			
             <button type="button" class="btn btn-sm variant-filled-warning" on:click={onDeleteSelected}>
@@ -79,7 +82,7 @@
     </div>
 
     <div class="p-5 table-container">
-        <!-- TODO add margin/padding for table elements -->
+        <!-- TODO: add margin/padding for table elements -->
         {#await projectsPromise}
             <p style="font-size:20px;">Loading projects...</p>
             {:then projectsList}
@@ -98,7 +101,11 @@
                         <!-- <tr id="clickable_row" class="clickable table-row-checked"  onclick="window.location=`/projects/[project_id]/{project.id}`"> -->
                         <tr id="clickable_row" class="clickable table-row-checked"  on:click={() => gotodryruns(project.id)}>
                             <td >
-                                <input type="checkbox" class="checkbox variant-filled"  bind:checked={checkboxes[project.id]} on:click={(event) => handleCheckboxClick(event)} />
+                                <input 
+                                    type="checkbox" 
+                                    class="checkbox variant-filled"  
+                                    bind:checked={checkboxes[project.id]} 
+                                    on:click={(event) => handleCheckboxClick(event)} />
                             </td>
                             <td>{project.name}</td>
                             <td>{project.createdAt}</td>
