@@ -90,7 +90,7 @@
 	<div class="p-5 table-container">
 		{#await credentialsPromise}
 			<p style="font-size:20px;">Loading credentials...</p>
-			{:then credentialsList}
+			{:then credentials}
 			<!-- Native Table Element -->
 			<!-- TODO: add margin/padding for table elements -->
 			<table class="w-half table table-interactive">
@@ -103,7 +103,7 @@
 					</tr>
 				</thead>
 				<tbody>
-					{#each credentialsList as secret}
+					{#each credentials as secret}
 						<tr id="clickable_row" class="table-row-checked">
 							<td>
 								<input 
