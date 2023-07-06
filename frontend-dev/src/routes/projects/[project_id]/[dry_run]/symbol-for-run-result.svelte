@@ -4,13 +4,13 @@
 	export let run_result: string;
 </script>
 
-{#if run_result == 'success'}
+{#if run_result == 'Succeeded'}
 	<CheckIcon size="20" />
-{:else if run_result == 'failed'}
+{:else if run_result == 'Failed'}
 	<XIcon size="20" />
-{:else if run_result == 'pending'}
+{:else if run_result == 'Pending'}
 	<ClockIcon size="20" />
-{:else if run_result == 'running'}
+{:else if run_result == 'Running'}
 	<RefreshCwIcon size="20" />
 {:else}
 	<HelpCircleIcon size="20" />

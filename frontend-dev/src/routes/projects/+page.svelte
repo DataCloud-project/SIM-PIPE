@@ -1,24 +1,18 @@
 <script lang='ts'>
-    import projects from '../../stores/projects.json';
     import { Modal, modalStore } from '@skeletonlabs/skeleton';
 	import type { ModalSettings, ModalComponent } from '@skeletonlabs/skeleton';
 	import ModalSubmitNewProject from './modal-submit-new-project.svelte';
-	import { projectsList } from '../../stores/stores.js';
+	import { projectsList, clickedProjectId, graphQLClient } from '../../stores/stores.js';
 	import initKeycloak from '../../lib/keycloak.js';
 	import type { Project } from '../../types.js';
-    import { graphQLClient } from '../../stores/stores.js';
     import allProjectsQuery from '../../queries/get_all_projects.js';
     import { get } from 'svelte/store';
     import deleteProjectMutation from '../../queries/delete_project.js';
+	import { goto } from '$app/navigation';
 
 	const getProjectsList = async (): Promise<Project[]> => {
 		await initKeycloak();
-		const response = await get(graphQLClient).request<{
-		All_Projects: {
-		 	projects: Project[];
-		};
-		}>(allProjectsQuery);
-        //console.log(response.projects)
+		const response: {projects: Project[]} = await get(graphQLClient).request(allProjectsQuery);
 		return response.projects;
 	};
 	const projectsPromise = getProjectsList();
@@ -61,6 +55,11 @@
         event.stopPropagation(); 
     };
 
+    function gotodryruns(id:string) {
+        clickedProjectId.set(id);
+        goto(`/projects/[project_id]/${id}`);
+    }
+
 </script>
 
 
@@ -96,7 +95,8 @@
                 </thead>
                 <tbody>
                     {#each projectsList as project}
-                        <tr id="clickable_row" class="clickable table-row-checked"  onclick="window.location=`/projects/[project_id]/{project.project_id}`">
+                        <!-- <tr id="clickable_row" class="clickable table-row-checked"  onclick="window.location=`/projects/[project_id]/{project.id}`"> -->
+                        <tr id="clickable_row" class="clickable table-row-checked"  on:click={() => gotodryruns(project.id)}>
                             <td >
                                 <input type="checkbox" class="checkbox variant-filled"  bind:checked={checkboxes[project.id]} on:click={(event) => handleCheckboxClick(event)} />
                             </td>

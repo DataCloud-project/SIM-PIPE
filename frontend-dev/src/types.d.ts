@@ -1,4 +1,4 @@
-export type Project = {
+export type _Project = {
   project_id: string;
   name: string;
   created: string;
@@ -11,7 +11,7 @@ export type Project = {
 
 // WIP argo data types
 
-export type _Project = {
+export type Project = {
   name: string;
   id: string;
   createdAt: string;

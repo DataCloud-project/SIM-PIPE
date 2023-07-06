@@ -1,11 +1,40 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { dry_runs } from '../../../../stores/stores.js';
+	import { dryRunsList, graphQLClient, clickedProjectId } from '../../../../stores/stores.js';
 	import SymbolForRunResult from './symbol-for-run-result.svelte';
 	import SymbolForAction from './symbol-for-action.svelte';
 	import { Modal, modalStore } from '@skeletonlabs/skeleton';
 	import type { ModalSettings, ModalComponent } from '@skeletonlabs/skeleton';
 	import ModalSubmitNewDryRun from './modal-submit-new-dry-run.svelte';
+	import type { DryRun, Project } from '../../../../types.js';
+	import allDryRunsQuery from '../../../../queries/get_all_dryruns.js'
+    import { get } from 'svelte/store';
+
+	// TODO: Aleena extract project id from params
+	// export async function load({ params }: { params: { project_id: string } }) {
+	// 	let { project_id } = params;
+	// }
+
+	let projectName = '';
+
+	const getDryRunsList = async (): Promise<{ project: Project }> => {
+		const variables = {projectId: get(clickedProjectId)};
+		const response: { project: Project } = await get(graphQLClient).request(allDryRunsQuery, variables);
+		return response;
+	};
+	const dryRunsPromise = getDryRunsList();
+
+    // TODO: move to lib or utils
+	dryRunsPromise.then((value) => {
+			projectName = value.project.name;
+
+		    $dryRunsList = value.project.dryRuns;
+            $dryRunsList.forEach((element) => {
+			    checkboxes[element.id] = false;
+		    });
+		}).catch(() => {
+		    $dryRunsList = undefined;
+		});
 
 	const modalSubmitNewDryRun: ModalComponent = {
 		ref: ModalSubmitNewDryRun,
@@ -22,14 +51,10 @@
 
 	// onMount add dry_run.names to checkboxes
 	onMount(() => {
-		dry_runs.data.forEach((element) => {
-			checkboxes[element.name] = false;
+		$dryRunsList?.forEach((element) => {
+			checkboxes[element.id] = false;
 		});
-	});
-
-	export async function load({ params }: { params: { project_id: string } }) {
-		let { project_id } = params;
-	}
+	});	
 
 	function transformSecondsToHoursMinutesSeconds(seconds_string: string) {
 		let seconds = Number(seconds_string);
@@ -47,16 +72,27 @@
 	// TODO: replace with actual api call; just a temporary delete function to mimic deletion
 	function onDeleteSelected() {
 		let selected_runs = Object.keys(checkboxes).filter((run_name) => checkboxes[run_name]);
-		dry_runs["data"] = dry_runs["data"].filter(item => !(selected_runs.includes(item.name)));
+	}
+
+	// TODO: fill all possible phase values
+	function getDryRunAction(status:string):string {
+		// status = status.toString();
+		if(status == 'Succeeded')
+			return 'rerun';
+		else if(status == 'Pending')
+			return 'run';
+		else if(status == 'Failed' || status == 'Error')
+			return 'retry';
+		return 'rerun';
 	}
 
 </script>
 <!-- Page Header -->
 <div class="flex-row p-5">
-	<h1>Projecs <span STYLE="font-size:14px">/ </span>{dry_runs.name}</h1>
+	<h1>Projects <span STYLE="font-size:14px">/ </span>{projectName}</h1>
 	<div class="flex justify-between">
 		<div>
-			<p class="text-xs">dry runs: {dry_runs.dry_run_count}</p>
+			<p class="text-xs">dry runs: {$dryRunsList?.length}</p>
 		</div>
 		<div class="flex-row justify-content-end">	
 			<button type="button" class="btn btn-sm variant-filled" on:click={() => (modalStore.trigger(modal))}>
@@ -68,38 +104,42 @@
 		</div>		
 	</div>
 	
-	<!-- Responsive Container (recommended) -->
 	<div class="table-container p-5">
-		<!-- Native Table Element -->
 		<!-- TODO: add margin/padding for table elements -->
-		<table class="table table-interactive">
-			<thead>
-				<tr>
-					<th />
-					<th>Name</th>
-					<th>Result</th>
-					<th>Run duration</th>
-					<th>Action</th>
-					<th>Created at</th>
-				</tr>
-			</thead>
-			<tbody>
-				{#each dry_runs.data as run}
-					<tr class="table-row-checked">
-						<td><input type="checkbox" bind:checked={checkboxes[run.name]} class="checkbox variant-filled" /></td>
-						<td>{run.name}</td>
-						<td><SymbolForRunResult run_result={run.run_result} /></td>
-						<td>{transformSecondsToHoursMinutesSeconds(run.duration_seconds)}</td>
-						<td>
-							<button type="button" class="btn-icon btn-icon-sm variant-soft">
-								<SymbolForAction action={run.action} />
-							</button>
-						</td>
-						<td>{run.created_at}</td>
+        {#await dryRunsPromise}
+			<p style="font-size:20px;">Loading dry runs...</p>
+            {:then dryRunsList}
+			<table class="table table-interactive">
+				<thead>
+					<tr>
+						<th />
+						<th>Name</th>
+						<th>Result</th>
+						<th>Run duration</th>
+						<th>Action</th>
+						<th>Created</th>
 					</tr>
-				{/each}
-			</tbody>
-		</table>
+				</thead>
+				<tbody>
+					{#each dryRunsList as run}
+						<tr class="table-row-checked">
+							<td><input type="checkbox" bind:checked={checkboxes[run.id]} class="checkbox variant-filled" /></td>
+							<td>{run.id}</td>
+							<td><SymbolForRunResult run_result={(run.status.phase).toString()} /></td>
+							<!-- <td>{transformSecondsToHoursMinutesSeconds(run.status.estimatedDuration)}</td> -->
+							<!-- TODO: calculate from started and finished -->
+							<td>{run.status.estimatedDuration}</td>
+							<td>
+								<button type="button" class="btn-icon btn-icon-sm variant-soft">
+									<SymbolForAction action="{getDryRunAction((run.status.phase).toString())}" />
+								</button>
+							</td>
+							<td>{run.createdAt}</td>
+						</tr>
+					{/each}
+				</tbody>
+			</table>
+		{/await}
 	</div>
 </div>
 
