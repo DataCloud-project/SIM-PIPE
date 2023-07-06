@@ -18,24 +18,21 @@
 		 	projects: Project[];
 		};
 		}>(allProjectsQuery);
+        //console.log(response.projects)
 		return response.projects;
 	};
 	const projectsPromise = getProjectsList();
     let checkboxes: Record<string, boolean> = {};
 
     // TODO: move to lib or utils
-	projectsPromise
-		.then((value) => {
-		$projectsList = value;
-        $projectsList.forEach((element) => {
-            console.log(element)
-			checkboxes[element.id] = false;
+	projectsPromise.then((value) => {
+		    $projectsList = value;
+            $projectsList.forEach((element) => {
+			    checkboxes[element.id] = false;
+		    });
+		}).catch(() => {
+		    $projectsList = undefined;
 		});
-		})
-		.catch(() => {
-		$projectsList = undefined;
-		});
-
 
 	const modalSubmitNewProject: ModalComponent = {
 		ref: ModalSubmitNewProject,

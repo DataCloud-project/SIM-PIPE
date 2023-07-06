@@ -23,28 +23,23 @@
 		//response: (r) => updateSecret(r.name, r.username, r.host)
 	};
 
+
 	const getCredentialsList = async (): Promise<DockerRegistryCredential[]> => {
-		console.log(get(graphQLClient))
 		const response = await get(graphQLClient).request<{
 			All_Credentials: {
 				dockerRegistryCredentials: DockerRegistryCredential[];
 			}
 		}>(allCredentialsQuery);
-		console.log(response);
+		//console.log(response.dockerRegistryCredentials)
 		return response.dockerRegistryCredentials;
 	};	
 
 	const credentialsPromise = getCredentialsList();
 
-	credentialsPromise
-		.then((value) => {
-		$credentialsList = value;
-        $credentialsList.forEach((element) => {
-            console.log(element)
-		});
-		})
-		.catch(() => {
-		$credentialsList = undefined;
+	credentialsPromise.then((value) => {
+			$credentialsList = value;
+		}).catch(() => {
+			$credentialsList = undefined;
 		});
 	
 </script>
@@ -55,30 +50,30 @@
 	<div class="flex-col">
 		<div class="table-container table-fixed p-5 pr-40">
 			{#await credentialsPromise}
-            <p style="font-size:20px;">Loading credentials...</p>
-            {:then credentialsPromise}
-			<!-- Native Table Element -->
-			<!-- TODO: add margin/padding for table elements -->
-			<table class="w-half table table-interactive">
-				<thead>
-					<tr>
-						<th />
-						<th>Name</th>
-						<th>Username</th>
-						<th>Server</th>
-					</tr>
-				</thead>
-				<tbody>
-					{#each credentialsList as secret}
-						<tr class="table-row-checked">
-							<td><input type="checkbox" class="checkbox variant-filled" /></td>
-							<td>{secret.name}</td>
-							<td>{secret.username}</td>
-							<td>{secret.server}</td>
+				<p style="font-size:20px;">Loading credentials...</p>
+				{:then credentialsList}
+				<!-- Native Table Element -->
+				<!-- TODO: add margin/padding for table elements -->
+				<table class="w-half table table-interactive">
+					<thead>
+						<tr>
+							<th />
+							<th>Name</th>
+							<th>Username</th>
+							<th>Server</th>
 						</tr>
-					{/each}
-				</tbody>
-			</table>
+					</thead>
+					<tbody>
+						{#each credentialsList as secret}
+							<tr class="table-row-checked">
+								<td><input type="checkbox" class="checkbox variant-filled" /></td>
+								<td>{secret.name}</td>
+								<td>{secret.username}</td>
+								<td>{secret.server}</td>
+							</tr>
+						{/each}
+					</tbody>
+				</table>
 			{/await}
 		</div>
 		<div class="p-2">

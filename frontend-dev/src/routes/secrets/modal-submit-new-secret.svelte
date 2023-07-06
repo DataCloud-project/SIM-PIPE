@@ -33,15 +33,21 @@
 		<form class="modal-form {cForm}">
 			<label class="label">
 				<span>Secret name</span>
-				<input class="input" type="text" bind:value={formData.name} placeholder="Enter name..." pattern="^[a-z0-9.,_,-]+$"/>
+				<input class="input" type="text" bind:value={formData.name} 
+						placeholder="Enter name..." pattern="^[a-z0-9.,_,-]+$" 
+						title="lowercase alpha numeric words separated by .-_"/>
 			</label>
 			<label class="label">
 				<span>Username</span>
-				<input class="input" type="text" bind:value={formData.username} placeholder="Enter username..." pattern="^[a-z0-9.,_,-]+$"/>
+				<input class="input" type="text" bind:value={formData.username} 
+						placeholder="Enter username..." pattern="^[a-z0-9.,_,-]+$"
+						title="lowercase alpha numeric words separated by .-_"/>
 			</label>
 			<label class="label">
 				<span>Hostname</span>
-				<input class="input" type="text" bind:value={formData.host} placeholder="Enter hostname..." pattern="^[a-z0-9.,\/,:_,-]+$"/>
+				<input class="input" type="text" bind:value={formData.host} 
+						placeholder="Enter hostname..." pattern="^[a-z0-9.,\/,:_,-]+$"
+						title="lowercase alpha numeric words separated by .-_:/"/>
 			</label>
 		</form>
 		<!-- prettier-ignore -->
