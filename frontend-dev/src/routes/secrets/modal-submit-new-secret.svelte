@@ -1,5 +1,9 @@
 <script lang="ts">
+	import { get } from 'svelte/store';
 	import {cBase, cHeader, cForm} from '../../styles/styles.js';
+	import { graphQLClient } from '../../stores/stores.js';
+	import createCredentialMutation from '../../queries/create_credential.js';
+
 	// Props
 	/** Exposes parent props to this component. */
 	export let parent: any;
@@ -10,13 +14,23 @@
 	// Form Data
 	const formData = {
 		name: '',
+		server: '',
 		username: '',
-		host: ''
+		passord: ''
 	};
 
 	// We've created a custom submit function to pass the response and close the modal.
-	function onFormSubmit(): void {
-		if ($modalStore[0].response) $modalStore[0].response(formData);
+	async function onFormSubmit(): Promise<void> {
+		const variables = {
+			credential: {
+				name: formData.name,
+				server: formData.server,
+				username: formData.username,
+				password: formData.password
+
+			}
+		};
+		const response = await get(graphQLClient).request(createCredentialMutation, variables);	
 		modalStore.close();
 	}
 
@@ -34,19 +48,19 @@
 			<label class="label">
 				<span>Secret name</span>
 				<input class="input" type="text" bind:value={formData.name} 
-						placeholder="Enter name..." pattern="^[a-z0-9.,_,-]+$" 
+						placeholder="Enter name..." pattern="[a-z0-9.,_,-]+$" 
 						title="lowercase alpha numeric words separated by .-_"/>
 			</label>
 			<label class="label">
 				<span>Username</span>
 				<input class="input" type="text" bind:value={formData.username} 
-						placeholder="Enter username..." pattern="^[a-z0-9.,_,-]+$"
+						placeholder="Enter username..." pattern="[a-z0-9.,_,-]+$"
 						title="lowercase alpha numeric words separated by .-_"/>
 			</label>
 			<label class="label">
-				<span>Hostname</span>
-				<input class="input" type="text" bind:value={formData.host} 
-						placeholder="Enter hostname..." pattern="^[a-z0-9.,\/,:_,-]+$"
+				<span>Servername</span>
+				<input class="input" type="text" bind:value={formData.server} 
+						placeholder="Enter hostname for server..." pattern="[a-z0-9.,\/,:_,-]+$"
 						title="lowercase alpha numeric words separated by .-_:/"/>
 			</label>
 		</form>

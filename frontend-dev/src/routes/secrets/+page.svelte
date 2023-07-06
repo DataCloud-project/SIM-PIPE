@@ -47,58 +47,50 @@
 <!-- Page Header -->
 <div class="flex-col p-5">
 	<h1>Secrets</h1>
-	<div class="flex-col">
-		<div class="table-container table-fixed p-5 pr-40">
-			{#await credentialsPromise}
-				<p style="font-size:20px;">Loading credentials...</p>
-				{:then credentialsList}
-				<!-- Native Table Element -->
-				<!-- TODO: add margin/padding for table elements -->
-				<table class="w-half table table-interactive">
-					<thead>
-						<tr>
-							<th />
-							<th>Name</th>
-							<th>Username</th>
-							<th>Server</th>
+
+    <div class="flex justify-end">
+        <div class="flex-row justify-content-end">
+			<button
+				type="button"
+				class="btn btn-sm variant-filled"
+				on:click={() => modalStore.trigger(modal)}>
+				<span>Create</span>
+			</button>
+			<button 
+				type="button" 
+				class="btn btn-sm variant-filled-warning">
+				<span>Delete</span>
+			</button>
+		</div>
+	</div>
+
+	<div class="p-5 table-container">
+		{#await credentialsPromise}
+			<p style="font-size:20px;">Loading credentials...</p>
+			{:then credentialsList}
+			<!-- Native Table Element -->
+			<!-- TODO: add margin/padding for table elements -->
+			<table class="w-half table table-interactive">
+				<thead>
+					<tr>
+						<th />
+						<th>Name</th>
+						<th>Username</th>
+						<th>Server</th>
+					</tr>
+				</thead>
+				<tbody>
+					{#each credentialsList as secret}
+						<tr class="table-row-checked">
+							<td><input type="checkbox" class="checkbox variant-filled" /></td>
+							<td>{secret.name}</td>
+							<td>{secret.username}</td>
+							<td>{secret.server}</td>
 						</tr>
-					</thead>
-					<tbody>
-						{#each credentialsList as secret}
-							<tr class="table-row-checked">
-								<td><input type="checkbox" class="checkbox variant-filled" /></td>
-								<td>{secret.name}</td>
-								<td>{secret.username}</td>
-								<td>{secret.server}</td>
-							</tr>
-						{/each}
-					</tbody>
-				</table>
-			{/await}
-		</div>
-		<div class="p-2">
-			<div class="p-2">
-				<!-- <button type="button" class="btn btn-sm variant-filled" on:click={() => redirectToAddNewSecretPage()}> -->
-				<button
-					type="button"
-					class="btn btn-sm variant-filled"
-					on:click={() => modalStore.trigger(modal)}
-				>
-					<span>Add new secret</span>
-				</button>
-			</div>
-			<div class="p-2">
-				<button type="button" class="btn btn-sm variant-filled-warning">
-					<span>Delete selected secrets</span>
-				</button>
-			</div>
-		</div>
-		<!-- {#each secrets as secret}
-		<tr>
-			<td><KubernetesSecret secret={secret} /></td>
-		</tr>
-		{/each} -->
-		
+					{/each}
+				</tbody>
+			</table>
+		{/await}
 	</div>
 </div>
 
