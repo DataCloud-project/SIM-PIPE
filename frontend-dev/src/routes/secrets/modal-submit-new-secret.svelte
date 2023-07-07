@@ -5,7 +5,7 @@
 	import createCredentialMutation from '../../queries/create_credential.js';
 	import { credentialsList } from '../../stores/stores.js';
 	import allCredentialsQuery from '../../queries/get_all_credentials.js';
-
+	import type { DockerRegistryCredential } from '../../types.js'
 
 	// Props
 	/** Exposes parent props to this component. */
@@ -47,8 +47,9 @@
 		};
 		const response = await get(graphQLClient).request(createCredentialMutation, variables);	
 		modalStore.close();
-		const allCredentials = await get(graphQLClient).request(allCredentialsQuery);
-		credentialsList.set(allCredentials.dockerRegistryCredentials)
+		// refresh credentials list
+		const newcredentialsPromise: {dockerRegistryCredentials: DockerRegistryCredential[]} = await get(graphQLClient).request(allCredentialsQuery);
+		$credentialsList = newcredentialsPromise.dockerRegistryCredentials;
 	}
 
 </script>

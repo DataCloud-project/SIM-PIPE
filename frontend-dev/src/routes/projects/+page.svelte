@@ -50,7 +50,8 @@
         });
         // update the project list after deletion
         const responseAllProjects: { projects: Project[] } = await get(graphQLClient).request(allProjectsQuery);
-		$projectsList = responseAllProjects.projects;
+		projectsList.set(responseAllProjects.projects);
+        reactiveProjectsList = $projectsList;
     }
     
     // to disable onclick propogation for checkbox input
