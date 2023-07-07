@@ -20,7 +20,7 @@
 			project: {name: formData.name},
 		};
 		const responseCreateProject : {createProject: Project}= await get(graphQLClient).request(createProjectMutation, variables1);
-		if (formData.template == '') {
+		if (formData.template != '') {
 			const variables2 = {
 				input: {
 					argoWorkflowTemplate: formData.template,
@@ -31,6 +31,7 @@
 			await get(graphQLClient).request(createWorkflowTemplateMutation, variables2);
 		}
 		modalStore.close();
+        // update the project list after addition
 		const responseAllProjects: { projects: Project[] } = await get(graphQLClient).request(allProjectsQuery);
 		$projectsList = responseAllProjects.projects;
 	}

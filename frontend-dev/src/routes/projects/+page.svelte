@@ -46,9 +46,9 @@
             const variables = {
 			    projectId: element
 		    }
-            console.log(element)
 		    const response = await get(graphQLClient).request(deleteProjectMutation, variables);
         });
+        // update the project list after deletion
         const responseAllProjects: { projects: Project[] } = await get(graphQLClient).request(allProjectsQuery);
 		$projectsList = responseAllProjects.projects;
     }

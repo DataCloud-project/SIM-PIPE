@@ -1,9 +1,12 @@
 import { gql } from 'graphql-request';
 
-const allDryRunssQuery = gql`
+const allDryRunsQuery = gql`
   query($projectId: String!)  {
     project(projectId: $projectId) {
     name
+    workflowTemplates {
+      argoWorkflowTemplate
+    }
     dryRuns {
         id
         createdAt
@@ -20,4 +23,4 @@ const allDryRunssQuery = gql`
   }
 `;
 
-export default allDryRunssQuery;
+export default allDryRunsQuery;

@@ -7,6 +7,7 @@ export const graphQLClient = writable<GraphQLClient>();
 
 export const keycloakHandler = writable<Keycloak>();;
 export const projectsList = writable<Project[]|undefined>();
+export const selectedProject = writable<Project|undefined>();
 export const dryRunsList = writable<DryRun[]|undefined>();
 export const credentialsList = writable<DockerRegistryCredential[]|undefined>();
 export const clickedProjectId = writable<string>('');
