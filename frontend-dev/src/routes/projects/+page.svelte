@@ -39,19 +39,23 @@
 		title: 'Add new project',
 		body: 'Enter details of project',
 	};
-
     async function onDeleteSelected() {
-        console.log('Deleting ', Object.keys(checkboxes).filter((item) => checkboxes[item]));
         Object.keys(checkboxes).filter((item) => checkboxes[item]).forEach(async (element) => {
             const variables = {
-			    projectId: element
+                projectId: element
 		    }
 		    const response = await get(graphQLClient).request(deleteProjectMutation, variables);
         });
+        // reset checkboxes
+        $projectsList?.forEach((element) => {
+            checkboxes[element.id] = false;
+		});
+        // inserting a small delay because sometimes delete mutation returns true, but all projects query returns the deleted project as well
+        await new Promise(resolve => setTimeout(resolve, 100));
+
         // update the project list after deletion
-        const responseAllProjects: { projects: Project[] } = await get(graphQLClient).request(allProjectsQuery);
-		projectsList.set(responseAllProjects.projects);
-        reactiveProjectsList = $projectsList;
+        let responseAllProjects: { projects: Project[] } = await get(graphQLClient).request(allProjectsQuery);
+        projectsList.set(responseAllProjects.projects);
     }
     
     // to disable onclick propogation for checkbox input
