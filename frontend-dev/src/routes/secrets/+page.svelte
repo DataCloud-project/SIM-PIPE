@@ -55,6 +55,7 @@
 		    const response = await get(graphQLClient).request(deleteCredentialMutation, variables);
         });
 		const newcredentialsPromise: {dockerRegistryCredentials: DockerRegistryCredential[]} = await get(graphQLClient).request(allCredentialsQuery);
+		// Update credentialsList
 		credentialsList.set(newcredentialsPromise.dockerRegistryCredentials);
 		reactiveCredentialsList = $credentialsList;
     }
