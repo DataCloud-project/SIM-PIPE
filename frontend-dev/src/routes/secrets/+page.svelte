@@ -26,11 +26,7 @@
 
 
 	const getCredentialsList = async (): Promise<DockerRegistryCredential[]> => {
-		const response = await get(graphQLClient).request<{
-			All_Credentials: {
-				dockerRegistryCredentials: DockerRegistryCredential[];
-			}
-		}>(allCredentialsQuery);
+		const response: {dockerRegistryCredentials: DockerRegistryCredential[]} = await get(graphQLClient).request(allCredentialsQuery);
 		//console.log(response.dockerRegistryCredentials)
 		return response.dockerRegistryCredentials;
 	};	
@@ -41,6 +37,7 @@
 	// TODO: why do credentials not have an id? That is quite stupid!
 	credentialsPromise.then((value) => {
 			$credentialsList = value;
+			reactiveCredentialsList = value;
             $credentialsList.forEach((element) => {
 			    checkboxes[element.name] = false;
 			});			
@@ -57,12 +54,17 @@
             console.log(element)
 		    const response = await get(graphQLClient).request(deleteCredentialMutation, variables);
         });
+		const newcredentialsPromise: {dockerRegistryCredentials: DockerRegistryCredential[]} = await get(graphQLClient).request(allCredentialsQuery);
+		credentialsList.set(newcredentialsPromise.dockerRegistryCredentials);
+		reactiveCredentialsList = $credentialsList;
     }
 	
 	// to disable onclick propogation for checkbox input
 	const handleCheckboxClick = (event:any) => {
         event.stopPropagation(); 
     };
+
+	$: reactiveCredentialsList = $credentialsList;
 	
 </script>
 
@@ -90,7 +92,7 @@
 	<div class="p-5 table-container">
 		{#await credentialsPromise}
 			<p style="font-size:20px;">Loading credentials...</p>
-			{:then credentials}
+			{:then credentialsList}
 			<!-- Native Table Element -->
 			<!-- TODO: add margin/padding for table elements -->
 			<table class="w-half table table-interactive">
@@ -103,7 +105,7 @@
 					</tr>
 				</thead>
 				<tbody>
-					{#each credentials as secret}
+					{#each reactiveCredentialsList || [] as secret}
 						<tr id="clickable_row" class="table-row-checked">
 							<td>
 								<input 

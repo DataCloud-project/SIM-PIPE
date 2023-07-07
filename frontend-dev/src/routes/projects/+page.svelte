@@ -50,7 +50,8 @@
 		    const response = await get(graphQLClient).request(deleteProjectMutation, variables);
         });
         const responseAllProjects: { projects: Project[] } = await get(graphQLClient).request(allProjectsQuery);
-		$projectsList = responseAllProjects.projects;
+		projectsList.set(responseAllProjects.projects);
+        reactiveProjectsList = $projectsList;
     }
     
     // to disable onclick propogation for checkbox input
