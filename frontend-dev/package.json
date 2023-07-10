@@ -41,6 +41,7 @@
 	},
 	"type": "module",
 	"dependencies": {
+		"@aknakos/sveltekit-plotly": "^0.0.9",
 		"@fontsource/ibm-plex-sans": "^5.0.3",
 		"graphql-request": "^6.1.0",
 		"keycloak-js": "^21.1.1",
