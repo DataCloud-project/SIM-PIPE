@@ -46,14 +46,16 @@
 		});
 
 	async function onDeleteSelected() {
-        console.log('Deleting ', Object.keys(checkboxes).filter((item) => checkboxes[item]));
         Object.keys(checkboxes).filter((item) => checkboxes[item]).forEach(async (element) => {
             const variables = {
 			    name: element
 		    }
-            console.log(element)
 		    const response = await get(graphQLClient).request(deleteCredentialMutation, variables);
         });
+		// reset checkboxes
+		$credentialsList?.forEach((element) => {
+			    checkboxes[element.name] = false;
+			});
 		const newcredentialsPromise: {dockerRegistryCredentials: DockerRegistryCredential[]} = await get(graphQLClient).request(allCredentialsQuery);
 		// Update credentialsList
 		credentialsList.set(newcredentialsPromise.dockerRegistryCredentials);

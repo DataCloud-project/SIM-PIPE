@@ -16,6 +16,13 @@ export type Project = {
   id: string;
   createdAt: string;
   dryRuns: [DryRun];
+  workflowTemplates: [WorkflowTemplate];
+}
+
+export type WorkflowTemplate = {
+  name: string;
+  project: Project;
+  argoWorkflowTemplate: ArgoWorkflowTemplate;
 }
 
 export type DryRun = {

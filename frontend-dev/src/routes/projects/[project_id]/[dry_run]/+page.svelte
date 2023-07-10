@@ -1,6 +1,5 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
-	import { dryRunsList, graphQLClient, clickedProjectId } from '../../../../stores/stores.js';
+	import { selectedProject, graphQLClient, clickedProjectId } from '../../../../stores/stores.js';
 	import SymbolForRunResult from './symbol-for-run-result.svelte';
 	import SymbolForAction from './symbol-for-action.svelte';
 	import { Modal, modalStore } from '@skeletonlabs/skeleton';
@@ -15,27 +14,23 @@
 	// 	let { project_id } = params;
 	// }
 
-	let projectName = '';
 
-	// const getDryRunsList = async (): Promise<{ project: Project }> => {
-	const getDryRunsList = async (): Promise<DryRun[]> => {
+	const getProjectDetails = async (): Promise<Project> => {
 		const variables = {projectId: get(clickedProjectId)};
 		const response: { project: Project } = await get(graphQLClient).request(allDryRunsQuery, variables);
-		return response.project.dryRuns;
+		return response.project;
 	};
-	const dryRunsPromise = getDryRunsList();
+	const projectDetailsPromise = getProjectDetails();
 
     // TODO: move to lib or utils
-	dryRunsPromise.then((value) => {
-			// projectName = value.project.name;
-
-		    $dryRunsList = value;
-			reactiveDryRunsList = value;
-            $dryRunsList.forEach((element) => {
+	projectDetailsPromise.then((value) => {
+		    $selectedProject = value;
+			reactiveProjectDetails = value;
+            reactiveProjectDetails.dryRuns.forEach((element:DryRun) => {
 			    checkboxes[element.id] = false;
 		    });
 		}).catch(() => {
-		    $dryRunsList = undefined;
+		    reactiveProjectDetails = undefined;
 		});
 
 	const modalSubmitNewDryRun: ModalComponent = {
@@ -49,14 +44,7 @@
 		body: 'Enter details of dry run',
 	};
 	
-	let checkboxes: Record<string, boolean> = {};
-
-	// onMount add dry_run.names to checkboxes
-	onMount(() => {
-		$dryRunsList?.forEach((element) => {
-			checkboxes[element.id] = false;
-		});
-	});	
+	let checkboxes: Record<string, boolean> = {};	
 
 	function transformSecondsToHoursMinutesSeconds(seconds_string: string) {
 		let seconds = Number(seconds_string);
@@ -71,14 +59,13 @@
 		return `${formattedHours}:${formattedMinutes}:${formattedSeconds}`;
 	}		
 
-	// TODO: replace with actual api call; just a temporary delete function to mimic deletion
 	function onDeleteSelected() {
 		let selected_runs = Object.keys(checkboxes).filter((run_name) => checkboxes[run_name]);
+		// TODO:to be implemented
 	}
 
 	// TODO: fill all possible phase values
 	function getDryRunAction(status:string):string {
-		// status = status.toString();
 		if(status == 'Succeeded')
 			return 'rerun';
 		else if(status == 'Pending')
@@ -88,15 +75,19 @@
 		return 'rerun';
 	}
 
-	$: reactiveDryRunsList = $dryRunsList;
+	$: reactiveProjectDetails = $selectedProject;
 
 </script>
 <!-- Page Header -->
 <div class="flex-row p-5">
-	<h1>Projects <span STYLE="font-size:14px">/ </span>{projectName}</h1>
+	{#await projectDetailsPromise}
+		<h1>Loading all dry runs .... </h1>
+	{:then response}
+	<h1>Projects 
+		<span STYLE="font-size:14px">/ </span>{reactiveProjectDetails?.name}</h1>
 	<div class="flex justify-between">
 		<div>
-			<p class="text-xs">dry runs: {$dryRunsList?.length}</p>
+			<p class="text-xs">dry runs: {reactiveProjectDetails?.dryRuns.length}</p>
 		</div>
 		<div class="flex-row justify-content-end">	
 			<button type="button" class="btn btn-sm variant-filled" on:click={() => (modalStore.trigger(modal))}>
@@ -109,10 +100,6 @@
 	</div>
 	
 	<div class="table-container p-5">
-		<!-- TODO: add margin/padding for table elements -->
-        {#await dryRunsPromise}
-			<p style="font-size:20px;">Loading dry runs...</p>
-            {:then $dryRunsList}
 			<table class="table table-interactive">
 				<thead>
 					<tr>
@@ -125,7 +112,7 @@
 					</tr>
 				</thead>
 				<tbody>
-					{#each reactiveDryRunsList || [] as run}
+					{#each reactiveProjectDetails?.dryRuns || [] as run}
 						<tr class="table-row-checked">
 							<td><input type="checkbox" bind:checked={checkboxes[run.id]} class="checkbox variant-filled" /></td>
 							<td>{run.id}</td>
@@ -143,8 +130,8 @@
 					{/each}
 				</tbody>
 			</table>
-		{/await}
-	</div>
+		</div>
+{/await}
 </div>
 
 <Modal />
