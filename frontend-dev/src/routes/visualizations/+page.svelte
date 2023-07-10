@@ -72,14 +72,15 @@
 <!-- Page Header -->
 <div class="container">
 	<h1>Visualizations</h1>
-    <p>Hello world</p>
-    <div class="placeholder" />
+    <div class="placeholder">
+        <p> Here we can place the DAG </p>
+    </div>
     <div class="flex flex-row">
         <div class="card p-4 basis-1/2">
             <div id="plot1"></div>
         </div>
         <div class="card p-4 basis-1/2">
             <div id="plot2"></div>
-        </div>        
+        </div>
     </div>
 </div>
