@@ -8,6 +8,7 @@
 	import type { DryRun, Project } from '../../../../types.js';
 	import allDryRunsQuery from '../../../../queries/get_all_dryruns.js'
     import { get } from 'svelte/store';
+	import deleteDryRunMutation from '../../../../queries/delete_dry_run.js';
 
 	// TODO: Aleena extract project id from params
 	// export async function load({ params }: { params: { project_id: string } }) {
@@ -59,15 +60,28 @@
 		return `${formattedHours}:${formattedMinutes}:${formattedSeconds}`;
 	}		
 
-	function onDeleteSelected() {
-		let selected_runs = Object.keys(checkboxes).filter((run_name) => checkboxes[run_name]);
-		// TODO:to be implemented
-	}
+	async function onDeleteSelected() {
+		Object.keys(checkboxes).filter((item) => checkboxes[item]).forEach(async (element) => {
+		    const response = await get(graphQLClient).request(deleteDryRunMutation, { dryRunId: element });
+        });
+        // reset checkboxes
+        $selectedProject?.dryRuns.forEach((element) => {
+            checkboxes[element.id] = false;
+		});
+        // inserting a small delay because sometimes delete mutation returns true, but the deleted dry run is also returned in the query
+        await new Promise(resolve => setTimeout(resolve, 100));
 
+        // update the project list after deletion
+        let responseProjectDetails: { project: Project } = await get(graphQLClient).request(allDryRunsQuery, { projectId: $clickedProjectId });
+        $selectedProject = responseProjectDetails.project;
+	}
+	
 	// TODO: fill all possible phase values
 	function getDryRunAction(status:string):string {
 		if(status == 'Succeeded')
 			return 'rerun';
+		else if(status == 'Running')
+			return 'stop';
 		else if(status == 'Pending')
 			return 'run';
 		else if(status == 'Failed' || status == 'Error')
