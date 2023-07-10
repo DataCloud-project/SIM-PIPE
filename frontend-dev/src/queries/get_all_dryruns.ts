@@ -4,6 +4,7 @@ const allDryRunsQuery = gql`
   query($projectId: String!)  {
     project(projectId: $projectId) {
     name
+    id
     workflowTemplates {
       argoWorkflowTemplate
     }

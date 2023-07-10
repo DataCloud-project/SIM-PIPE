@@ -19,11 +19,12 @@
 		const variables1 = {
 			project: {name: formData.name},
 		};
+
 		const responseCreateProject : {createProject: Project}= await get(graphQLClient).request(createProjectMutation, variables1);
 		if (formData.template != '') {
 			const variables2 = {
 				input: {
-					argoWorkflowTemplate: formData.template,
+					argoWorkflowTemplate: JSON.parse(formData.template),
 					name: formData.name,
 					projectId: responseCreateProject.createProject.id,
 				}

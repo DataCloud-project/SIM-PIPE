@@ -3,7 +3,8 @@
 	import { modalStore } from '@skeletonlabs/skeleton';
 	import { selectedProject, graphQLClient } from '../../../../stores/stores.js';
 	import createDryRunMutation from '../../../../queries/create_dry_run.js';
-	import createWorkflowTemplateMutation from '../../../../queries/create_workflow_template.js';
+	import allDryRunsQuery from '../../../../queries/get_all_dryruns.js';
+	import type { Project } from '../../../../types.js';
 
 	export let parent: any;
 	type Parameters = {
@@ -43,42 +44,33 @@
 	}
 	const taskList = parseTaskList();
 
-	async function onCreateDryRunSubmit(): Promise<void> {
-		// TODO: work in progress
-		modalStore.close();
-		const newName = (Math.random() + 1).toString(36).substring(7);
-		// create a new workflow template with the updated env values
+	// modify workflow template from project to create a valid argoWorkflow input for create new dryrun
+	function newWorkflowTemplate(template: { metadata: any; spec: any }) {
+		const newWorkflowTemplate = template;
+		newWorkflowTemplate.metadata =
+			formData.name == ''
+				? { generateName: newWorkflowTemplate.metadata.generateName }
+				: { name: formData.name };
+		return newWorkflowTemplate;
+	}
 
-		const variables1 = {
-			input: {
-				argoWorkflowTemplate: $selectedProject?.workflowTemplates[0].argoWorkflowTemplate,
-				name: newName,
-				projectId: $selectedProject?.id
-			}
-		};
-		const newWorkflowTemplateResponse = await $graphQLClient.request(
-			createWorkflowTemplateMutation,
-			variables1
-		);
-		// create a new argoworkflowtemplate with the updated env values
-		const newDryRun = {
-			metadata: {
-				generateName: $selectedProject?.name
-			},
-			spec: {
-				workflowTemplateRef: {
-					name: newName
-				},
-				entrypoint: $selectedProject?.workflowTemplates[0].argoWorkflowTemplate.metadata.enr
-			}
-		};
+	async function onCreateDryRunSubmit(): Promise<void> {
+		modalStore.close();
+
 		const variables = {
 			input: {
 				projectId: $selectedProject?.id,
-				argoWorkflow: newDryRun
+				argoWorkflow: newWorkflowTemplate(
+					$selectedProject?.workflowTemplates[0].argoWorkflowTemplate
+				)
 			}
 		};
 		const responseCreateDryRun = await $graphQLClient.request(createDryRunMutation, variables);
+		// refresh dry runs list
+		const response: { project: Project } = await $graphQLClient.request(allDryRunsQuery, {
+			projectId: $selectedProject?.id
+		});
+		$selectedProject = response.project;
 	}
 </script>
 
