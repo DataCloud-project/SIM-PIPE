@@ -1,10 +1,9 @@
 <svelte:head>
-  <script src="https://cdn.plot.ly/plotly-latest.min.js" type="text/javascript"></script>
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 </svelte:head>
 
+
 <script lang="ts">
-    //import { PlotlyLib } from '@aknakos/sveltekit-plotly/store';
-    //import { Plotly } from 'plotly.js-dist-min';
     import { afterUpdate, onMount } from 'svelte';
     import { modeCurrent } from '@skeletonlabs/skeleton';
 
@@ -45,7 +44,7 @@
         layout.xaxis = {title: 'time (s)'};
         layout.yaxis = {title: 'CPU'};
 		let p1 = new Plotly.newPlot(plot1, {"data": data, "layout": layout, "config": config});
-        console.log(plot1)
+        console.log(plot1.id)
     };
 
     const drawPlot2 = () => {
@@ -53,7 +52,7 @@
         layout.xaxis = {title: 'time (s)'};
         layout.yaxis = {title: 'Memory'};
 		let p2 = new Plotly.newPlot(plot2, {"data": [trace2], "layout": layout, "config": config});
-        console.log(plot2)
+        console.log(plot2.id)
     };    
 
     onMount(() => {
@@ -64,7 +63,7 @@
     afterUpdate(() => {
         drawPlot1();
         drawPlot2();
-        console.log(`changed textcolor to ${textcolor}`)
+        console.log(`changed plot textcolor to ${textcolor}`)
     });
 
 </script>
