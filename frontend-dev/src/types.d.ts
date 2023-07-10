@@ -36,6 +36,29 @@ export type DryRun = {
   // log(maxLines: number, grep: string): [string];
 }
 
+export type DryRunMetrics = {
+  displayName: string;
+  startedAt: string;
+  duration: number;
+  metrics: {
+    cpuUsageSecondsTotal: {
+      timestamp: string;
+      value: number;
+    };
+    memoryUsageBytes: {
+      timestamp: string;
+      value: number;
+    };
+    networkReceiveBytesTotal: {
+      timestamp: string;
+      value: number;
+    };
+    networkTransmitBytesTotal: {
+      timestamp: string;
+      value: number;
+    };
+}
+
 export type ArgoWorkflow = {
   input: unknown;
   output: unknown;

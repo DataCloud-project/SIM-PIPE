@@ -1,13 +1,32 @@
-<svelte:head>
-  <script src="https://cdn.plot.ly/plotly-latest.min.js" type="text/javascript"></script>
-</svelte:head>
-
 <script lang="ts">
-    //import { PlotlyLib } from '@aknakos/sveltekit-plotly/store';
-    //import { Plotly } from 'plotly.js-dist-min';
+    import Plotly from 'plotly.js-dist';
     import { afterUpdate, onMount } from 'svelte';
     import { modeCurrent } from '@skeletonlabs/skeleton';
+    import type { DryRunMetrics } from '../../types';
+    import { get } from 'svelte/store';
+    import { graphQLClient } from '../../stores/stores';
+    import getDryRunMetricsQuery from '../../queries/get_dry_run_metrics.js';
 
+    const dryRunName = 'forever-7mchz'
+
+    const getDryRunMetrics = async (): Promise<DryRunMetrics[]> => {
+        const variables = {
+            dryRunId: dryRunName
+        }
+		const response: {metrics: DryRunMetrics[]} = await get(graphQLClient).request(getDryRunMetricsQuery, variables);
+        console.log(response.dryRun.nodes)
+		return response.dryRun.nodes;
+	};
+	
+    const metricsPromise = getDryRunMetrics();
+    let metricsData = [];
+
+    // TODO: move to lib or utils
+	metricsPromise.then((value) => {
+            metricsData = value;
+		}).catch(() => {
+		    console.log(metricsPromise)
+		});
 
     var trace1 = {
         x: [1, 2, 3, 4],
@@ -31,8 +50,8 @@
         font: {size: 10, color:textcolor},
         paper_bgcolor: 'rgba(0,0,0,0)',
         plot_bgcolor: 'rgba(0,0,0,0)',
-        xaxis: {title: 'xaxis title'},
-        yaxis: {title: 'yaxis title'},
+        xaxis: {title: 'xaxis title', showgrid: true, gridwidth: 1},
+        yaxis: {title: 'yaxis title', showgrid: true, gridwidth: 1},
     };
 
     var config = {
@@ -42,21 +61,19 @@
 
     const drawPlot1 = () => {
         let plot1 = document.getElementById('plot1');
-        layout.xaxis = {title: 'time (s)'};
-        layout.yaxis = {title: 'CPU'};
+        layout.xaxis.title = 'time (s)';
+        layout.yaxis.title = 'CPU';
 		let p1 = new Plotly.newPlot(plot1, {"data": data, "layout": layout, "config": config});
-        console.log(plot1)
     };
 
     const drawPlot2 = () => {
         let plot2 = document.getElementById('plot2');
-        layout.xaxis = {title: 'time (s)'};
-        layout.yaxis = {title: 'Memory'};
+        layout.xaxis.title = 'time (s)';
+        layout.yaxis.title =  'Memory';
 		let p2 = new Plotly.newPlot(plot2, {"data": [trace2], "layout": layout, "config": config});
-        console.log(plot2)
     };    
 
-    onMount(() => {
+    onMount(async () => {
         drawPlot1();
         drawPlot2();
     });
@@ -64,7 +81,7 @@
     afterUpdate(() => {
         drawPlot1();
         drawPlot2();
-        console.log(`changed textcolor to ${textcolor}`)
+        console.log(`changed plot textcolor to ${textcolor}`)
     });
 
 </script>
@@ -83,4 +100,5 @@
             <div id="plot2"></div>
         </div>
     </div>
+    <div>{JSON.stringify(metricsData)}</div>
 </div>
