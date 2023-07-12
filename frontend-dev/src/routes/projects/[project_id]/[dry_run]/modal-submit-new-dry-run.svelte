@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { cBase, cHeader, cForm } from '../../../../styles/styles.js';
+	import { cBase, cHeader, cForm, optional } from '../../../../styles/styles.js';
 	import { modalStore } from '@skeletonlabs/skeleton';
 	import { selectedProject, graphQLClient } from '../../../../stores/stores.js';
 	import createDryRunMutation from '../../../../queries/create_dry_run.js';
@@ -25,22 +25,11 @@
 		files: undefined,
 		dagTemplate: {}
 	};
-	let newParams: { taskName: string; parameters: Parameters }[] = [];
 
 	function parseTaskList() {
-		const {
-			spec: { templates }
-		} = $selectedProject?.workflowTemplates[0].argoWorkflowTemplate;
+		const {	spec: { templates }	} = $selectedProject?.workflowTemplates[0].argoWorkflowTemplate;
 		formData.dagTemplate = templates.find((template: { dag: any }) => template.dag);
 		const tasks: Task[] = formData.dagTemplate ? formData.dagTemplate.dag.tasks : [];
-
-		tasks.forEach((task) => {
-			// variable to store the new environment parameters entered by the user
-			newParams.push({
-				taskName: task.name,
-				parameters: task.arguments.parameters
-			});
-		});
 		return tasks;
 	}
 	const taskList = parseTaskList();
@@ -66,13 +55,26 @@
 				)
 			}
 		};
-		const responseCreateDryRun = await $graphQLClient.request(createDryRunMutation, variables);
+		try {
+			const responseCreateDryRun = await $graphQLClient.request(createDryRunMutation, variables);			
+			// const createDryRunErrorModal: ModalSettings = {
+			// 	type: 'alert',
+			// 	title: 'Create failed!',
+			// 	// body: error?.toString(),
+			// 	body: 'body..',
+			// };
+			// modalStore.trigger(createDryRunErrorModal);
+			// await new Promise((resolve) => setTimeout(resolve, 10000));
+			// modalStore.close();
+		} catch (error) {			
+			console.log(error);
+		}
 		// refresh dry runs list
 		const response: { project: Project } = await $graphQLClient.request(allDryRunsQuery, {
 			projectId: $selectedProject?.id
 		});
 		$selectedProject = response.project;
-		refreshProjectDetails();
+		await refreshProjectDetails();
 	}
 </script>
 
@@ -82,12 +84,11 @@
 		<article>{$modalStore[0].body ?? '(body missing)'}</article>
 		<form class="modal-form {cForm}">
 			<label class="label">
-				<span>Dry run name</span>
-				<input class="input" type="text" bind:value={formData.name} placeholder="Enter name..." />
+				<span>Dry run name - <span style={optional}>Optional</span> </span>
+				<input class="input" type="text" bind:value={formData.name} placeholder="Enter name..." required/>
 			</label>
-			<!-- TODO: Fill the rest -->
 			<label class="label">
-				<span>Upload input files for the dry run</span>
+				<span>Upload input files for the dry run </span>
 				<input class="input" multiple type="file" bind:files={formData.files} />
 			</label>
 
@@ -133,3 +134,5 @@
 		</footer>
 	</div>
 {/if}
+
+<!-- <Modal/> -->

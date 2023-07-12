@@ -42,13 +42,9 @@
 			$projectsList = undefined;
 		});
 
-	const modalSubmitNewProject: ModalComponent = {
-		ref: ModalSubmitNewProject
-	};
-
 	const modal: ModalSettings = {
 		type: 'component',
-		component: modalSubmitNewProject,
+		component:  { ref: ModalSubmitNewProject },
 		title: 'Add new project',
 		body: 'Enter details of project'
 	};
