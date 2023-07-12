@@ -33,14 +33,10 @@
 		}).catch(() => {
 		    reactiveProjectDetails = undefined;
 		});
-
-	const modalSubmitNewDryRun: ModalComponent = {
-		ref: ModalSubmitNewDryRun,
-	};
-
+	
 	const modal: ModalSettings = {
 		type: 'component',
-		component: modalSubmitNewDryRun,
+		component: { ref: ModalSubmitNewDryRun	},
 		title: 'Add new dry run',
 		body: 'Enter details of dry run',
 	};
