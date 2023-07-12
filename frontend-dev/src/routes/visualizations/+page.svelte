@@ -9,7 +9,8 @@
     import { format } from 'date-fns';
 
     //const dryRunName = 'forever-7mchz'
-    const dryRunName = 'dag-task-8kfsj'
+    //const dryRunName = 'dag-task-8kfsj'
+    const dryRunName = 'artifact-passing-subpath-p4977'
     const datefmt = 'yyyy-MM-dd HH:mm:ss'
 
     const getDryRunMetrics = async (): Promise<DryRunMetrics[]> => {
