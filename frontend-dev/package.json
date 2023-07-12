@@ -42,6 +42,7 @@
 	"type": "module",
 	"dependencies": {
 		"@fontsource/ibm-plex-sans": "^5.0.3",
+		"date-fns": "^2.30.0",
 		"graphql-request": "^6.1.0",
 		"keycloak-js": "^21.1.1",
 		"plotly.js-dist": "^2.24.3",
