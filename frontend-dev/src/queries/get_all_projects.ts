@@ -6,6 +6,10 @@ const allProjectsQuery = gql`
       name
       id
       createdAt
+      # TODO: this is used to get dry run count, to be changed when dryRuns_aggregate is included in the api 
+      dryRuns {
+        id
+      }
     }
   }
 `;

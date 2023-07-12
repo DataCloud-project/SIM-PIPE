@@ -136,7 +136,8 @@
 							<td>{run.status.estimatedDuration}</td>
 							<td>
 								<button type="button" class="btn-icon btn-icon-sm variant-soft">
-									<SymbolForAction action="{getDryRunAction((run.status.phase).toString())}" />
+									<SymbolForAction action="{getDryRunAction((run.status.phase).toString())}" 
+									dryRunId={run.id} />
 								</button>
 							</td>
 							<td>{run.createdAt}</td>

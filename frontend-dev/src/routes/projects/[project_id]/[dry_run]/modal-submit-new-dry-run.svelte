@@ -5,6 +5,7 @@
 	import createDryRunMutation from '../../../../queries/create_dry_run.js';
 	import allDryRunsQuery from '../../../../queries/get_all_dryruns.js';
 	import type { Project } from '../../../../types.js';
+	import refreshProjectDetails from  '../../../../lib/refresh_runs.js';
 
 	export let parent: any;
 	type Parameters = {
@@ -71,6 +72,7 @@
 			projectId: $selectedProject?.id
 		});
 		$selectedProject = response.project;
+		refreshProjectDetails();
 	}
 </script>
 

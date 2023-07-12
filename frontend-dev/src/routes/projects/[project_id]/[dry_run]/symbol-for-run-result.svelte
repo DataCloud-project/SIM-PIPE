@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { XIcon, CheckIcon, ClockIcon, RefreshCwIcon, HelpCircleIcon } from 'svelte-feather-icons';
+	import { XIcon, CheckIcon, ClockIcon, HelpCircleIcon, CoffeeIcon } from 'svelte-feather-icons';
 
 	export let run_result: string;
 </script>
@@ -11,7 +11,7 @@
 {:else if run_result == 'Pending'}
 	<ClockIcon size="20" />
 {:else if run_result == 'Running'}
-	<RefreshCwIcon size="20" />
+	<CoffeeIcon size="20" />
 {:else}
 	<HelpCircleIcon size="20" />
 {/if}
