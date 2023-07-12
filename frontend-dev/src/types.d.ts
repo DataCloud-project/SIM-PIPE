@@ -41,23 +41,24 @@ export type DryRunMetrics = {
   startedAt: string;
   duration: number;
   metrics: {
-    cpuUsageSecondsTotal: {
-      timestamp: string;
+    cpuUsageSecondsTotal: Array<{
+      timestamp: number;
       value: number;
-    };
-    memoryUsageBytes: {
-      timestamp: string;
+    }>;
+    memoryUsageBytes: Array<{
+      timestamp: number;
       value: number;
-    };
-    networkReceiveBytesTotal: {
-      timestamp: string;
+    }>;
+    networkReceiveBytesTotal: Array<{
+      timestamp: number;
       value: number;
-    };
-    networkTransmitBytesTotal: {
-      timestamp: string;
+    }>;
+    networkTransmitBytesTotal: Array<{
+      timestamp: number;
       value: number;
-    };
-}
+    }>;
+  };
+};
 
 export type ArgoWorkflow = {
   input: unknown;
