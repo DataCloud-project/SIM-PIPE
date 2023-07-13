@@ -19,8 +19,11 @@
 		name: '',
 		server: '',
 		username: '',
-		passord: ''
+		password: ''
 	};
+
+	let checkedAutoGeneratePassword = false;
+	$: passwordInputText = checkedAutoGeneratePassword ? 'auto generate strong password' : 'Enter password...';
 
 	// write a function that generates a random password
 	let detfault_password_length = 30;
@@ -37,12 +40,13 @@
 	}
 	// We've created a custom submit function to pass the response and close the modal.
 	async function onFormSubmit(): Promise<void> {
+		const password = checkedAutoGeneratePassword ? generateRandomPassword(detfault_password_length) : formData.password;
 		const variables = {
 			credential: {
 				name: formData.name,
 				server: formData.server,
 				username: formData.username,
-				password: generateRandomPassword(detfault_password_length)
+				password: password
 			}
 		};
 		const response = await get(graphQLClient).request(createCredentialMutation, variables);	
@@ -81,6 +85,21 @@
 						placeholder="Enter hostname for server..." pattern="[a-z0-9.,\/,:_,-]+$"
 						title="lowercase alpha numeric words separated by .-_:/"/>
 			</label>
+			<div class="flex flex-row">
+				<div class="flex-initial w-8">
+					<input class="checkbox variant-filled" type="checkbox" bind:checked={checkedAutoGeneratePassword}>
+				</div>
+				<div class="justify-stretch">
+				<label class="label">
+					<span>Password</span>
+					<input class="input" type="text" bind:value={formData.password} 
+							placeholder={passwordInputText} pattern="[a-Z0-9.,_,-]+$"
+							title="lowercase alpha numeric words separated by .-_"
+							disabled={checkedAutoGeneratePassword}
+							/>
+				</label>
+				</div>
+			</div>
 		</form>
 		<!-- prettier-ignore -->
 		<footer class="modal-footer {parent.regionFooter}">
