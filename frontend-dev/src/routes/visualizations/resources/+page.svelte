@@ -2,10 +2,10 @@
     import Plotly from 'plotly.js-dist';
     import { afterUpdate, onMount } from 'svelte';
     import { modeCurrent } from '@skeletonlabs/skeleton';
-    import type { DryRunMetrics } from '../../types';
+    import type { DryRunMetrics } from '../../../types';
     import { get } from 'svelte/store';
-    import { graphQLClient } from '../../stores/stores';
-    import getDryRunMetricsQuery from '../../queries/get_dry_run_metrics.js';
+    import { graphQLClient } from '../../../stores/stores';
+    import getDryRunMetricsQuery from '../../../queries/get_dry_run_metrics.js';
     import { format } from 'date-fns';
 
     //const dryRunName = 'forever-7mchz'
