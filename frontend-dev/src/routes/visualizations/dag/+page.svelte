@@ -51,9 +51,9 @@
         </div>
         <div class="code">
             {#if language === 'json'}
-                <CodeBlock language={language} code={JSON.stringify(workflow, null, 2)} />
+                <CodeBlock language={language} code={JSON.stringify(workflow, null, 2)} text="text-xs" />
             {:else if language === 'yaml'}
-                <CodeBlock language={language} code={YAML.stringify(workflow, null, 2)} />
+                <CodeBlock language={language} code={YAML.stringify(workflow, null, 2)} text="text-xs" />
             {/if}
         </div>
     {/await}
