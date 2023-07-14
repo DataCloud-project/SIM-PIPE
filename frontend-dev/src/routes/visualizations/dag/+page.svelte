@@ -6,7 +6,8 @@
     import { CodeBlock } from '@skeletonlabs/skeleton';
     import YAML from 'json-to-pretty-yaml';
 
-    const workflowtemplatename = 'helloworld';
+    //const workflowtemplatename = 'helloworld';
+    const workflowtemplatename = 'dag-project';
     $: language = 'yaml';
 
     const getWorkflowTemplate = async (): Promise<{}> => {
