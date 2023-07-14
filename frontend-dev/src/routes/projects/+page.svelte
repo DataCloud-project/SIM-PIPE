@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Modal, modalStore } from '@skeletonlabs/skeleton';
+	import { Modal, modalStore, ProgressBar } from '@skeletonlabs/skeleton';
 	import type { ModalSettings, ModalComponent } from '@skeletonlabs/skeleton';
 	import ModalSubmitNewProject from './modal-submit-new-project.svelte';
 	import { projectsList, clickedProjectId, graphQLClient } from '../../stores/stores.js';
@@ -108,6 +108,7 @@
 		<!-- TODO: add margin/padding for table elements -->
 		{#await projectsPromise}
 			<p style="font-size:20px;">Loading projects...</p>
+			<ProgressBar />
 		{:then projectsList}
 			<table class="table table-interactive">
 				<thead>

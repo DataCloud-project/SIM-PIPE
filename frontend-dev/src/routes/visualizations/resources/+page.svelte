@@ -1,7 +1,7 @@
 <script lang="ts">
     import Plotly from 'plotly.js-dist';
     import { afterUpdate, onMount } from 'svelte';
-    import { modeCurrent } from '@skeletonlabs/skeleton';
+    import { modeCurrent, ProgressBar } from '@skeletonlabs/skeleton';
     import type { DryRunMetrics } from '../../../types';
     import { get } from 'svelte/store';
     import { graphQLClient } from '../../../stores/stores';
@@ -222,24 +222,25 @@
 <!-- Page Header -->
 <div class="container">
 	<h1>Visualizations</h1>
-    <div class="placeholder">
-        <p> Here we can place the DAG </p>
-    </div>
-    <div class="flex flex-row">
-        <div class="card p-4 basis-1/2">
-            <div id="cpuPlot"></div>
+    {#await metricsPromise}
+        <p>Loading metrics...</p>
+        <ProgressBar />
+    {:then metricsData}
+        <div class="flex flex-row">
+            <div class="card p-4 basis-1/2">
+                <div id="cpuPlot"></div>
+            </div>
+            <div class="card p-4 basis-1/2">
+                <div id="memoryPlot"></div>
+            </div>
         </div>
-        <div class="card p-4 basis-1/2">
-            <div id="memoryPlot"></div>
+        <div class="flex flex-row">
+            <div class="card p-4 basis-1/2">
+                <div id="networkReceivePlot"></div>
+            </div>
+            <div class="card p-4 basis-1/2">
+                <div id="networkTransmitPlot"></div>
+            </div>
         </div>
-    </div>
-    <div class="flex flex-row">
-        <div class="card p-4 basis-1/2">
-            <div id="networkReceivePlot"></div>
-        </div>
-        <div class="card p-4 basis-1/2">
-            <div id="networkTransmitPlot"></div>
-        </div>
-    </div>    
-    <!-- <div>{JSON.stringify(metricsData)}</div> -->
+    {/await}
 </div>
