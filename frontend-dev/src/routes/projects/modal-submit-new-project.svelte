@@ -7,6 +7,7 @@
 	import createWorkflowTemplateMutation from '../../queries/create_workflow_template.js'
 	import type { Project } from '../../types.js';
 	import { modalStore } from '@skeletonlabs/skeleton';
+	import yaml from 'js-yaml';
 
 	export let parent: any;
 
@@ -22,9 +23,16 @@
 
 		const responseCreateProject : {createProject: Project}= await get(graphQLClient).request(createProjectMutation, variables1);
 		if (formData.template != '') {
+			let template:JSON ;
+			// check if template is in JSON/YAML format, if YAML convert to JSON
+			try { 
+				template = JSON.parse(formData.template);
+			} catch {
+				template  = yaml.load(formData.template);
+			}
 			const variables2 = {
 				input: {
-					argoWorkflowTemplate: JSON.parse(formData.template),
+					argoWorkflowTemplate: template,
 					name: formData.name,
 					projectId: responseCreateProject.createProject.id,
 				}
@@ -49,10 +57,10 @@
 				<input class="input" type="text" bind:value={formData.name} placeholder="Enter name..." />
 			</label>
 			<label class="label">
-				<span>Project template</span>
-				<input class="input" type="text" bind:value={formData.template} placeholder="Enter argo workflow template (JSON)..." />
+				Project template
+				<br/>
+				<textarea rows="8" cols="50" bind:value={formData.template} placeholder="Enter argo workflow template (JSON/YAML)..." ></textarea>
 			</label>
-			<!-- TODO: Fill the rest -->
 		</form>
 		<footer class="modal-footer {parent.regionFooter}">
         <button class="btn {parent.buttonNeutral}" on:click={parent.onClose}>{parent.buttonTextCancel}</button>
