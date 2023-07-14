@@ -1,6 +1,5 @@
 <script lang="ts">
-    //import { afterUpdate, onMount } from 'svelte';
-    //import { modeCurrent } from '@skeletonlabs/skeleton';
+    import { ProgressBar } from '@skeletonlabs/skeleton';
     import { get } from 'svelte/store';
     import { graphQLClient } from '../../../stores/stores';
     import getWorkflowQuery from '../../../queries/get_workflow_template';
@@ -15,6 +14,7 @@
             name: workflowtemplatename,
         }
 		const response: {} = await get(graphQLClient).request(getWorkflowQuery, variables);
+        //console.log(response);
 		return response;
 	};
 	
@@ -23,7 +23,6 @@
 
     workflowPromise.then((data) => {
         workflow = data;
-        console.log(workflow)
     }).catch((error) => {
         console.log(error);
     });
@@ -42,7 +41,7 @@
 <div class="container p-5">
     <h1>DAG</h1>
     {#await workflowPromise}
-        <p>Awaiting DAG...</p>
+        <ProgressBar />
     {:then workflow}
         <div class="flex justify-end">
             <button type="button" class="btn btn-sm variant-filled" on:click={switchLanguage}>
