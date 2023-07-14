@@ -2,13 +2,15 @@
     import Plotly from 'plotly.js-dist';
     import { afterUpdate, onMount } from 'svelte';
     import { modeCurrent } from '@skeletonlabs/skeleton';
-    import type { DryRunMetrics } from '../../types';
+    import type { DryRunMetrics } from '../../../types';
     import { get } from 'svelte/store';
-    import { graphQLClient } from '../../stores/stores';
-    import getDryRunMetricsQuery from '../../queries/get_dry_run_metrics.js';
+    import { graphQLClient } from '../../../stores/stores';
+    import getDryRunMetricsQuery from '../../../queries/get_dry_run_metrics.js';
     import { format } from 'date-fns';
 
-    const dryRunName = 'forever-7mchz'
+    //const dryRunName = 'forever-7mchz'
+    //const dryRunName = 'dag-task-8kfsj'
+    const dryRunName = 'artifact-passing-subpath-p4977'
     const datefmt = 'yyyy-MM-dd HH:mm:ss'
 
     const getDryRunMetrics = async (): Promise<DryRunMetrics[]> => {
@@ -16,7 +18,6 @@
             dryRunId: dryRunName
         }
 		const response: {metrics: DryRunMetrics[]} = await get(graphQLClient).request(getDryRunMetricsQuery, variables);
-        //console.log(response.dryRun.nodes)
 		return response.dryRun.nodes;
 	};
 	
@@ -43,70 +44,77 @@
         return timeseries;
     };
 
+    function isEmpty(obj) {
+        return Object.keys(obj).length === 0;
+    }
+
     // TODO: move to lib or utils
 	metricsPromise.then((value) => {
             value.forEach((node) => {
                 // TODO: make more efficient if data missing?
-                let cpuTimestamps = timestampsToDatetime(node.startedAt, node.metrics.cpuUsageSecondsTotal.map((item) => item.timestamp))
-                let memTimestamps = timestampsToDatetime(node.startedAt, node.metrics.memoryUsageBytes.map((item) => item.timestamp))
-                let nrcTimestamps = timestampsToDatetime(node.startedAt, node.metrics.networkReceiveBytesTotal.map((item) => item.timestamp))
-                let ntrTimestamps = timestampsToDatetime(node.startedAt, node.metrics.networkTransmitBytesTotal.map((item) => item.timestamp))
-                let cpuValues = node.metrics.cpuUsageSecondsTotal.map((item) => Number(item.value))
-                let memValues = node.metrics.memoryUsageBytes.map((item) => Number(item.value))
-                let nrcValues = node.metrics.networkReceiveBytesTotal.map((item) => Number(item.value))
-                let ntrValues = node.metrics.networkTransmitBytesTotal.map((item) => Number(item.value))
-                var cpuUsage = {
-                    x: cpuTimestamps,
-                    y: cpuValues,
-                    type: 'scatter',
-                    name: node.displayName,
-                };           
-                var memoryUsage = {
-                    x: memTimestamps,
-                    y: memValues,
-                    type: 'scatter',
-                    name: node.displayName,
-                };
-                var networkReceiveBytesTotal = {
-                    x: nrcTimestamps,
-                    y: nrcValues,
-                    type: 'scatter',
-                    name: node.displayName,
-                };
-                var networkTransmitBytesTotal = {
-                    x: ntrTimestamps,
-                    y: ntrValues,
-                    type: 'scatter',
-                    name: node.displayName,
-                };
-                
-                if (cpuValues.length > 0) {
-                    cpuData.push(cpuUsage);
-                } else {
-                    console.log('no cpu data')
-                    console.log(cpuUsage)
-                };
+                if (isEmpty(node) === false) {
+                    let cpuTimestamps = timestampsToDatetime(node.startedAt, node.metrics.cpuUsageSecondsTotal.map((item) => item.timestamp))
+                    let memTimestamps = timestampsToDatetime(node.startedAt, node.metrics.memoryUsageBytes.map((item) => item.timestamp))
+                    let nrcTimestamps = timestampsToDatetime(node.startedAt, node.metrics.networkReceiveBytesTotal.map((item) => item.timestamp))
+                    let ntrTimestamps = timestampsToDatetime(node.startedAt, node.metrics.networkTransmitBytesTotal.map((item) => item.timestamp))
+                    let cpuValues = node.metrics.cpuUsageSecondsTotal.map((item) => Number(item.value))
+                    let memValues = node.metrics.memoryUsageBytes.map((item) => Number(item.value))
+                    let nrcValues = node.metrics.networkReceiveBytesTotal.map((item) => Number(item.value))
+                    let ntrValues = node.metrics.networkTransmitBytesTotal.map((item) => Number(item.value))
+            
+                    var cpuUsage = {
+                        x: cpuTimestamps,
+                        y: cpuValues,
+                        type: 'scatter',
+                        name: node.displayName,
+                    };           
+                    var memoryUsage = {
+                        x: memTimestamps,
+                        y: memValues,
+                        type: 'scatter',
+                        name: node.displayName,
+                    };
+                    var networkReceiveBytesTotal = {
+                        x: nrcTimestamps,
+                        y: nrcValues,
+                        type: 'scatter',
+                        name: node.displayName,
+                    };
+                    var networkTransmitBytesTotal = {
+                        x: ntrTimestamps,
+                        y: ntrValues,
+                        type: 'scatter',
+                        name: node.displayName,
+                    };
+                    
+                    if (cpuValues.length > 0) {
+                        cpuData.push(cpuUsage);
+                    } else {
+                        console.log('no cpu data:')
+                        console.log(cpuUsage)
+                    };
 
-                if (memValues.length > 0) {
-                    memoryData.push(memoryUsage);
-                } else {
-                    console.log('no memory data')
-                    console.log(cpuUsage)
-                };
+                    if (memValues.length > 0) {
+                        memoryData.push(memoryUsage);
+                    } else {
+                        console.log('no memory data:')
+                        console.log(cpuUsage)
+                    };
 
-                if (nrcValues.length > 0) {
-                    networkReceiveData.push(networkReceiveBytesTotal);
-                } else {
-                    console.log('no network receive data')
-                    console.log(networkReceiveBytesTotal)
-                };
-                
-                if (ntrValues.length > 0) {
-                    networkTransmitData.push(networkTransmitBytesTotal);
-                } else {
-                    console.log('no memory data')
-                    console.log(networkReceiveBytesTotal)
-                };
+                    if (nrcValues.length > 0) {
+                        networkReceiveData.push(networkReceiveBytesTotal);
+                    } else {
+                        console.log('no network receive data:')
+                        console.log(networkReceiveBytesTotal)
+                    };
+                    
+                    if (ntrValues.length > 0) {
+                        networkTransmitData.push(networkTransmitBytesTotal);
+                    } else {
+                        console.log('no network transmit data:')
+                        console.log(networkReceiveBytesTotal)
+                    };
+                }
             });
 		}).catch(() => {
             console.log('error')
@@ -154,7 +162,7 @@
         layout.title = 'CPU';
         layout.xaxis.title = 'time';
         layout.yaxis.title = 'CPU usage seconds';
-        //console.log(cpuData)
+        console.log(cpuData)
 		let p1 = new Plotly.newPlot(plot1, {"data": cpuData, "layout": layout, "config": config});
     };
 
@@ -163,7 +171,7 @@
         layout.title = 'Memory';
         layout.xaxis.title = 'time';
         layout.yaxis.title =  'bytes';
-        //console.log(memoryData)
+        console.log(memoryData)
 		let p2 = new Plotly.newPlot(plot2, {"data": memoryData, "layout": layout, "config": config});
     };
     const drawNetworkReceivePlot = () => {

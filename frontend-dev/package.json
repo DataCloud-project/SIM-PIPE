@@ -42,10 +42,14 @@
 	"type": "module",
 	"dependencies": {
 		"@fontsource/ibm-plex-sans": "^5.0.3",
+		"babel-plugin-prismjs": "^2.1.0",
 		"date-fns": "^2.30.0",
 		"graphql-request": "^6.1.0",
+		"highlight.js": "^11.8.0",
+		"json-to-pretty-yaml": "^1.2.2",
 		"keycloak-js": "^21.1.1",
 		"plotly.js-dist": "^2.24.3",
+		"prismjs": "^1.29.0",
 		"svelte-feather-icons": "^4.0.1"
 	}
 }
