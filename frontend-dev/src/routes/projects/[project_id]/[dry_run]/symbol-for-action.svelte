@@ -2,11 +2,26 @@
 	import { HelpCircleIcon, PlayCircleIcon, StopCircleIcon, PlusIcon } from 'svelte-feather-icons';
 	import stopDryRunMutation from '../../../../queries/stop_dry_run.js';
 	import { graphQLClient } from '../../../../stores/stores.js';
+	import { modalStore, type ModalSettings } from '@skeletonlabs/skeleton';
 
 	export let action: string, dryRunId: string;
 
 	async function stopRun() {
-		const response = await $graphQLClient.request(stopDryRunMutation, { dryRunId: dryRunId, terminate: false });
+		try {
+			await $graphQLClient.request(stopDryRunMutation, { dryRunId: dryRunId, terminate: false });
+			const createDryRunErrorModal: ModalSettings = {
+				type: 'alert',
+				title: 'Stopping dry run..',
+				body: `ID: ${dryRunId}`,
+			};
+			modalStore.trigger(createDryRunErrorModal);
+			await new Promise((resolve) => setTimeout(resolve, 1000));
+			modalStore.close();
+			modalStore.clear();
+		} catch {
+			// TODO: handle error
+			console.log('Error! to be handled')
+		}
 	}
 </script>
 

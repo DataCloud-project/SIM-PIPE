@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { cBase, cHeader, cForm, optional } from '../../../../styles/styles.js';
-	import { modalStore } from '@skeletonlabs/skeleton';
+	import { Modal, modalStore, type ModalSettings } from '@skeletonlabs/skeleton';
 	import { selectedProject, graphQLClient } from '../../../../stores/stores.js';
 	import createDryRunMutation from '../../../../queries/create_dry_run.js';
 	import allDryRunsQuery from '../../../../queries/get_all_dryruns.js';
@@ -33,6 +33,8 @@
 		return tasks;
 	}
 	const taskList = parseTaskList();
+	let hideModal = false;
+	let alertModal = false;
 
 	// modify workflow template from project to create a valid argoWorkflow input for create new dryrun
 	function newWorkflowTemplate(template: { metadata: any; spec: any }) {
@@ -46,6 +48,7 @@
 
 	async function onCreateDryRunSubmit(): Promise<void> {
 		modalStore.close();
+		hideModal = true;
 
 		const variables = {
 			input: {
@@ -56,29 +59,32 @@
 			}
 		};
 		try {
-			const responseCreateDryRun = await $graphQLClient.request(createDryRunMutation, variables);			
-			// const createDryRunErrorModal: ModalSettings = {
-			// 	type: 'alert',
-			// 	title: 'Create failed!',
-			// 	// body: error?.toString(),
-			// 	body: 'body..',
-			// };
-			// modalStore.trigger(createDryRunErrorModal);
-			// await new Promise((resolve) => setTimeout(resolve, 10000));
-			// modalStore.close();
-		} catch (error) {			
+			const responseCreateDryRun: {createDryRun : {id: string}} = await $graphQLClient.request(createDryRunMutation, variables);
+			// refresh dry runs list
+			const response: { project: Project } = await $graphQLClient.request(allDryRunsQuery, {
+				projectId: $selectedProject?.id
+			});
+			$selectedProject = response.project;
+			const createDryRunErrorModal: ModalSettings = {
+				type: 'alert',
+				title: 'New dry run created&#10024;!',
+				body: `New dry run ID: ${responseCreateDryRun?.createDryRun?.id}`,
+			};
+			modalStore.trigger(createDryRunErrorModal);
+			alertModal = true;
+			await new Promise((resolve) => setTimeout(resolve, 2000));
+			modalStore.close();
+			await refreshProjectDetails();			
+			modalStore.clear();
+		} catch (error) {	
+			// TODO: handle error 
 			console.log(error);
 		}
-		// refresh dry runs list
-		const response: { project: Project } = await $graphQLClient.request(allDryRunsQuery, {
-			projectId: $selectedProject?.id
-		});
-		$selectedProject = response.project;
-		await refreshProjectDetails();
+		
 	}
 </script>
 
-{#if $modalStore[0]}
+{#if !hideModal}
 	<div class="modal-example-form {cBase}">
 		<header class={cHeader}>{$modalStore[0].title ?? '(title missing)'}</header>
 		<article>{$modalStore[0].body ?? '(body missing)'}</article>
@@ -115,7 +121,7 @@
 						{/if}
 						{#each taskList[i].arguments.parameters as param, j}
 							<label>Enviroment parameters:</label>
-							<label
+							<label class="ml-5"
 								>{param.name}:
 								<span>
 									<input type="text" bind:value={taskList[i].arguments.parameters[j].value} />
@@ -135,4 +141,6 @@
 	</div>
 {/if}
 
-<!-- <Modal/> -->
+{#if alertModal}
+	<Modal/>
+{/if}

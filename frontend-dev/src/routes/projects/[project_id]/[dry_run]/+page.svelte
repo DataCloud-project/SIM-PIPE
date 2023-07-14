@@ -15,7 +15,6 @@
 	// 	let { project_id } = params;
 	// }
 
-
 	const getProjectDetails = async (): Promise<Project> => {
 		const variables = {projectId: get(clickedProjectId)};
 		const response: { project: Project } = await get(graphQLClient).request(allDryRunsQuery, variables);
@@ -34,14 +33,7 @@
 		    reactiveProjectDetails = undefined;
 		});
 	
-	const modal: ModalSettings = {
-		type: 'component',
-		component: { ref: ModalSubmitNewDryRun	},
-		title: 'Add new dry run',
-		body: 'Enter details of dry run',
-	};
-	
-	let checkboxes: Record<string, boolean> = {};	
+	let checkboxes: Record<string, boolean> = {};
 
 	function transformSecondsToHoursMinutesSeconds(seconds_string: string) {
 		let seconds = Number(seconds_string);
@@ -70,6 +62,15 @@
         // update the project list after deletion
         let responseProjectDetails: { project: Project } = await get(graphQLClient).request(allDryRunsQuery, { projectId: $clickedProjectId });
         $selectedProject = responseProjectDetails.project;
+	}
+	async function onCreateSelected() {
+		const modal: ModalSettings = {
+			type: 'component',
+			component: { ref: ModalSubmitNewDryRun	},
+			title: 'Add new dry run',
+			body: 'Enter details of dry run',
+		};
+		modalStore.trigger(modal);
 	}
 	
 	// TODO: fill all possible phase values
@@ -100,7 +101,7 @@
 			<p class="text-xs">dry runs: {reactiveProjectDetails?.dryRuns.length}</p>
 		</div>
 		<div class="flex-row justify-content-end">	
-			<button type="button" class="btn btn-sm variant-filled" on:click={() => (modalStore.trigger(modal))}>
+			<button type="button" class="btn btn-sm variant-filled" on:click={onCreateSelected}>
 				<span>Create</span>
 			</button>			
 			<button type="button" class="btn btn-sm variant-filled-warning" on:click={onDeleteSelected}>
@@ -145,4 +146,6 @@
 {/await}
 </div>
 
-<Modal />
+{#if $modalStore[0]}
+	<Modal />
+{/if}
