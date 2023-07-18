@@ -9,11 +9,7 @@
 	import allDryRunsQuery from '../../../../queries/get_all_dryruns.js'
     import { get } from 'svelte/store';
 	import deleteDryRunMutation from '../../../../queries/delete_dry_run.js';
-
-	// TODO: Aleena extract project id from params
-	// export async function load({ params }: { params: { project_id: string } }) {
-	// 	let { project_id } = params;
-	// }
+	import { goto } from '$app/navigation';
 
 	const getProjectDetails = async (): Promise<Project> => {
 		const variables = {projectId: get(clickedProjectId)};
@@ -86,6 +82,11 @@
 		return 'rerun';
 	}
 
+	function dryRunOnClick(dryRunId:string) {
+		const resource = dryRunId;
+		goto(`/projects/[project_id]/${dryRunId}/${resource}`);
+	}
+
 	$: reactiveProjectDetails = $selectedProject;
 
 </script>
@@ -94,8 +95,10 @@
 	{#await projectDetailsPromise}
 		<h1>Loading all dry runs .... </h1>
 	{:then response}
-	<h1>Projects 
-		<span STYLE="font-size:14px">/ </span>{reactiveProjectDetails?.name}</h1>
+	<h1><a href="/projects" >Projects</a>
+		<span STYLE="font-size:14px">/ </span>
+        <button on:click={() => goto(`/projects/[project_id]/${reactiveProjectDetails?.id}`)} >{reactiveProjectDetails?.name} </button>
+	</h1>
 	<div class="flex justify-between">
 		<div>
 			<p class="text-xs">dry runs: {reactiveProjectDetails?.dryRuns.length}</p>
@@ -126,7 +129,7 @@
 					{#each reactiveProjectDetails?.dryRuns || [] as run}
 						<tr class="table-row-checked">
 							<td><input type="checkbox" bind:checked={checkboxes[run.id]} class="checkbox variant-filled" /></td>
-							<td>{run.id}</td>
+							<td on:click={() => dryRunOnClick(run.id)}>{run.id}</td>
 							<td><SymbolForRunResult run_result={(run.status.phase).toString()} /></td>
 							<!-- <td>{transformSecondsToHoursMinutesSeconds(run.status.estimatedDuration)}</td> -->
 							<!-- TODO: calculate from started and finished -->

@@ -2,24 +2,23 @@
     import Plotly from 'plotly.js-dist';
     import { afterUpdate, onMount } from 'svelte';
     import { modeCurrent, ProgressBar } from '@skeletonlabs/skeleton';
-    import type { DryRunMetrics } from '../../../types';
+    import type { DryRunMetrics } from '../../../../../types';
     import { get } from 'svelte/store';
-    import { graphQLClient } from '../../../stores/stores';
-    import getDryRunMetricsQuery from '../../../queries/get_dry_run_metrics.js';
+    import { graphQLClient, selectedProject } from '../../../../../stores/stores';
+    import getDryRunMetricsQuery from '../../../../../queries/get_dry_run_metrics.js';
     import { format } from 'date-fns';
 	import { GraphQLClient } from 'graphql-request';
 	import { GraphQL_API_URL } from '$lib/config.js';
 	import initKeycloak from '$lib/keycloak.js';
+	import { goto } from '$app/navigation';
 
-    //const dryRunName = 'forever-7mchz'
-    //const dryRunName = 'dag-task-8kfsj'
-    // const dryRunName = 'artifact-passing-subpath-p4977'
+    export let data;
     const dryRunName = 'forever-argo-s2m9w'
     const datefmt = 'yyyy-MM-dd HH:mm:ss'
 
     const getDryRunMetrics = async (): Promise<DryRunMetrics[]> => {
         const variables = {
-            dryRunId: dryRunName
+            dryRunId: data.resource
         }
         if (!$graphQLClient) {
 			try {
@@ -29,15 +28,15 @@
 				await initKeycloak();
 			}
 		}
-		const response: {metrics: DryRunMetrics[]} = await get(graphQLClient).request(getDryRunMetricsQuery, variables);
-		return response.dryRun.nodes;
+		const response: {dryRun: { nodes: [] }} = await get(graphQLClient).request(getDryRunMetricsQuery, variables);
+        return response?.dryRun?.nodes;
 	};
 	
     const metricsPromise = getDryRunMetrics();
-    var cpuData = [];
-    var memoryData = [];
-    var networkReceiveData = [];
-    var networkTransmitData = [];
+    var cpuData: { x: string[]; y: number[]; type: string; name: string; }[] = [];
+    var memoryData: { x: string[]; y: number[]; type: string; name: string; }[] = [];
+    var networkReceiveData: { x: string[]; y: number[]; type: string; name: string; }[] = [];
+    var networkTransmitData: { x: string[]; y: number[]; type: string; name: string; }[] = [];
 
     function addSeconds(date: Date, seconds: number) {
         date.setSeconds(date.getSeconds() + seconds);
@@ -56,7 +55,7 @@
         return timeseries;
     };
 
-    function isEmpty(obj) {
+    function isEmpty(obj: any) {
         return Object.keys(obj).length === 0;
     }
 
@@ -73,7 +72,6 @@
                     let memValues = node.metrics.memoryUsageBytes.map((item) => Number(item.value))
                     let nrcValues = node.metrics.networkReceiveBytesTotal.map((item) => Number(item.value))
                     let ntrValues = node.metrics.networkTransmitBytesTotal.map((item) => Number(item.value))
-            
                     var cpuUsage = {
                         x: cpuTimestamps,
                         y: cpuValues,
@@ -129,8 +127,7 @@
                 }
             });
 		}).catch(() => {
-            console.log('error')
-		    console.log(metricsPromise)
+            console.log('Error')
 		});
     
 
@@ -174,7 +171,6 @@
         layout.title = 'CPU';
         layout.xaxis.title = 'time';
         layout.yaxis.title = 'CPU usage seconds';
-        console.log(cpuData)
 		let p1 = new Plotly.newPlot(plot1, {"data": cpuData, "layout": layout, "config": config});
     };
 
@@ -183,7 +179,6 @@
         layout.title = 'Memory';
         layout.xaxis.title = 'time';
         layout.yaxis.title =  'bytes';
-        console.log(memoryData)
 		let p2 = new Plotly.newPlot(plot2, {"data": memoryData, "layout": layout, "config": config});
     };
     const drawNetworkReceivePlot = () => {
@@ -191,7 +186,6 @@
         layout.title = 'Network receive';
         layout.xaxis.title = 'time';
         layout.yaxis.title = 'bytes';
-        //console.log(networkReceiveData)
         if (networkReceiveData.length === 0) {
             noDataLayout.title = 'No network receive data';
             let p3 = new Plotly.newPlot(plot3, {"data": networkReceiveData, "layout": noDataLayout, "config": config});
@@ -204,7 +198,6 @@
         layout.title = 'Network transmit';
         layout.xaxis.title = 'time';
         layout.yaxis.title =  'bytes';
-        //console.log(networkTransmitData)
         if (networkTransmitData.length === 0) {
             noDataLayout.title = 'No network transmit data';
             let p3 = new Plotly.newPlot(plot4, {"data": networkTransmitData, "layout": noDataLayout, "config": config});
@@ -226,33 +219,38 @@
         drawMemoryPlot();
         drawNetworkReceivePlot();
         drawNetworkTransmitPlot();
-        console.log(`changed plot textcolor to ${textcolor}`)
     });
 
 </script>
 
 <!-- Page Header -->
-<div class="container">
-	<h1>Visualizations</h1>
-    {#await metricsPromise}
-        <p>Loading metrics...</p>
-        <ProgressBar />
-    {:then metricsData}
-        <div class="flex flex-row">
-            <div class="card p-4 basis-1/2">
-                <div id="cpuPlot"></div>
+<div class="container p-5">
+    <h1><a href="/projects" >Projects</a> 
+		<span STYLE="font-size:14px">/ </span>
+        <button on:click={() => goto(`/projects/[project_id]/${$selectedProject?.id}`)} >{$selectedProject?.name} </button>
+		<span STYLE="font-size:14px">/ </span>{data.resource}
+    </h1>
+	<div class="table-container p-5">
+        {#await metricsPromise}
+            <p>Loading metrics...</p>
+            <ProgressBar />
+        {:then metricsData}
+            <div class="flex flex-row">
+                <div class="card p-4 basis-1/2">
+                    <div id="cpuPlot"></div>
+                </div>
+                <div class="card p-4 basis-1/2">
+                    <div id="memoryPlot"></div>
+                </div>
             </div>
-            <div class="card p-4 basis-1/2">
-                <div id="memoryPlot"></div>
+            <div class="flex flex-row">
+                <div class="card p-4 basis-1/2">
+                    <div id="networkReceivePlot"></div>
+                </div>
+                <div class="card p-4 basis-1/2">
+                    <div id="networkTransmitPlot"></div>
+                </div>
             </div>
-        </div>
-        <div class="flex flex-row">
-            <div class="card p-4 basis-1/2">
-                <div id="networkReceivePlot"></div>
-            </div>
-            <div class="card p-4 basis-1/2">
-                <div id="networkTransmitPlot"></div>
-            </div>
-        </div>
-    {/await}
+        {/await}
+    </div>
 </div>

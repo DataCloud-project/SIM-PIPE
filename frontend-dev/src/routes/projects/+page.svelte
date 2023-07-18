@@ -76,9 +76,9 @@
 		event.stopPropagation();
 	};
 
-	function gotodryruns(id: string) {
-		clickedProjectId.set(id);
-		goto(`/projects/[project_id]/${id}`);
+	function gotodryruns(dry_run: string) {
+		clickedProjectId.set(dry_run);
+		goto(`/projects/[project_id]/${dry_run}`);
 	}
 
 	$: reactiveProjectsList = $projectsList;
