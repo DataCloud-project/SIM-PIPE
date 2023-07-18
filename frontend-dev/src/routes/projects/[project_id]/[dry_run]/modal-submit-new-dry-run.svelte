@@ -72,7 +72,7 @@
 			};
 			modalStore.trigger(createDryRunErrorModal);
 			alertModal = true;
-			await new Promise((resolve) => setTimeout(resolve, 2000));
+			await new Promise((resolve) => setTimeout(resolve, 1500));
 			modalStore.close();
 			await refreshProjectDetails();			
 			modalStore.clear();

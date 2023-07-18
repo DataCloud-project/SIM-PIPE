@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { Modal, modalStore, ProgressBar } from '@skeletonlabs/skeleton';
-	import type { ModalSettings, ModalComponent } from '@skeletonlabs/skeleton';
+	import type { ModalSettings } from '@skeletonlabs/skeleton';
 	import ModalSubmitNewProject from './modal-submit-new-project.svelte';
 	import { projectsList, clickedProjectId, graphQLClient } from '../../stores/stores.js';
 	import initKeycloak from '../../lib/keycloak.js';
