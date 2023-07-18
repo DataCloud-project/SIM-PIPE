@@ -1,5 +1,6 @@
 import { GraphQLClient } from 'graphql-request';
 import { graphQLClient, username } from '../stores/stores.js';
+import { GraphQL_API_URL } from '../lib/config.js';
 import Keycloak from 'keycloak-js';
 import { keycloakHandler } from '../stores/stores.js';
 import { browser } from '$app/environment';
@@ -36,9 +37,6 @@ async function internalInitKeycloak(): Promise<void> {
     // TODO: Aleena initialize graphqlclient and save in store
     // username.set((keycloakHandler as unknown as Keycloak).idTokenParsed.preferred_username);
     username.set("testuser");
-    
-    const graphqlUrl = "http://localhost:8087/graphql"; // TODO
-
     //   if (config.SIM_PIPE_CONTROLLER_URL) {
     //     graphqlUrl = config.SIM_PIPE_CONTROLLER_URL;
     //   } else if (/^localhost(:\d+)?$/.test(window.location.host)) {
@@ -46,9 +44,7 @@ async function internalInitKeycloak(): Promise<void> {
     //   } else {
     //     graphqlUrl = '/graphql';
     //   }
-    graphQLClient.set(
-      new GraphQLClient(graphqlUrl, {}),
-      );
+    graphQLClient.set(new GraphQLClient(GraphQL_API_URL, {}));
 }
 
 export default async function initKeycloak(): Promise<void> {

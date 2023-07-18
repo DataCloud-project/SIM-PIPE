@@ -8,8 +8,10 @@
 	import deleteCredentialMutation from '../../queries/delete_credential.js';
 	import type { DockerRegistryCredential } from '../../types.js'
 	import { get } from 'svelte/store';
-	import { graphQLClient } from '../../stores/stores.js';
-	import { credentialsList } from '../../stores/stores.js';
+	import { graphQLClient, credentialsList } from '../../stores/stores.js';
+	import { GraphQL_API_URL } from '../../lib/config.js';
+	import { GraphQLClient } from 'graphql-request';
+	import initKeycloak from '../../lib/keycloak.js';
 
 	const modalComponent: ModalComponent = {
 		ref: ModalSubmitNewSecret
@@ -26,6 +28,14 @@
 
 
 	const getCredentialsList = async (): Promise<DockerRegistryCredential[]> => {
+		if (!$graphQLClient) {
+			try {
+				$graphQLClient = new GraphQLClient(GraphQL_API_URL, {});
+			} catch {
+				// redirect to keycloak authentication
+				await initKeycloak();
+			}
+		}
 		const response: {dockerRegistryCredentials: DockerRegistryCredential[]} = await get(graphQLClient).request(allCredentialsQuery);
 		//console.log(response.dockerRegistryCredentials)
 		return response.dockerRegistryCredentials;
