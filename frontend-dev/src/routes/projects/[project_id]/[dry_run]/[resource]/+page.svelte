@@ -13,7 +13,6 @@
 	import { goto } from '$app/navigation';
 
     export let data;
-    const dryRunName = 'forever-argo-s2m9w'
     const datefmt = 'yyyy-MM-dd HH:mm:ss'
 
     const getDryRunMetrics = async (): Promise<DryRunMetrics[]> => {
@@ -45,7 +44,7 @@
     }
 
     function timestampsToDatetime(startedAt: string, input_array: number[]) {
-        let date = new Date(startedAt)
+        let date = new Date(startedAt);
         let timeseries = [addSeconds(date, 0)];
         for (let i=0; i<(input_array.length - 1); i++) {
             let v = input_array[i+1] - input_array[i]
@@ -59,11 +58,14 @@
         return Object.keys(obj).length === 0;
     }
 
+    let logs = {};
+
     // TODO: move to lib or utils
 	metricsPromise.then((value) => {
             value.forEach((node) => {
                 // TODO: make more efficient if data missing?
                 if (isEmpty(node) === false) {
+                    logs[node.startedAt] = node.log[0];
                     let cpuTimestamps = timestampsToDatetime(node.startedAt, node.metrics.cpuUsageSecondsTotal.map((item) => item.timestamp))
                     let memTimestamps = timestampsToDatetime(node.startedAt, node.metrics.memoryUsageBytes.map((item) => item.timestamp))
                     let nrcTimestamps = timestampsToDatetime(node.startedAt, node.metrics.networkReceiveBytesTotal.map((item) => item.timestamp))
@@ -126,8 +128,8 @@
                     };
                 }
             });
-		}).catch(() => {
-            console.log('Error')
+		}).catch((error) => {
+            console.log(error);
 		});
     
 
@@ -236,10 +238,21 @@
             <ProgressBar />
         {:then metricsData}
             <div class="flex flex-row">
-                <div class="card p-4 basis-1/2">
+                <!-- TODO: adjust scroll https://tailwindcss.com/docs/overflow -->
+                <div class="overflow-y-auto card p-10 basis-1/5">
+                    <div>
+                        <h1>Logs</h1>
+                        <br/>
+                        {#each Object.keys(logs).sort() as key}
+                        <pre class="bg-surface-50-900-token ml-6 mr-6 p-3">{logs[key]}</pre>
+                        <br/>
+                        {/each}
+                    </div>
+                </div>
+                <div class="card p-4 basis-2/5">
                     <div id="cpuPlot"></div>
                 </div>
-                <div class="card p-4 basis-1/2">
+                <div class="card p-4 basis-2/5">
                     <div id="memoryPlot"></div>
                 </div>
             </div>

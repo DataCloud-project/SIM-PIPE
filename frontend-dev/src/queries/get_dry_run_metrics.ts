@@ -8,6 +8,7 @@ query getDryRunMetrics($dryRunId: String!) {
         displayName
         startedAt
         duration
+        log
         metrics {
           cpuUsageSecondsTotal {
             timestamp

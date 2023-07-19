@@ -26,6 +26,7 @@ export type WorkflowTemplate = {
 }
 
 export type DryRun = {
+	nodes: [DryRunMetrics];
   id: string;
   createdAt: string;
   argoWorkflow: ArgoWorkflow;
@@ -41,6 +42,7 @@ export type DryRunMetrics = {
   startedAt: string;
   duration: number;
   dryRun: DryRun;
+  log: string[];
   metrics: {
     cpuUsageSecondsTotal: Array<{
       timestamp: number;

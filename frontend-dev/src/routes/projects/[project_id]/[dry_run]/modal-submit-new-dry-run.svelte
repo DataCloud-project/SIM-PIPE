@@ -27,6 +27,7 @@
 	};
 
 	function parseTaskList() {
+		// only valid for dag format https://argoproj.github.io/argo-workflows/walk-through/dag/
 		const {	spec: { templates }	} = $selectedProject?.workflowTemplates[0].argoWorkflowTemplate;
 		formData.dagTemplate = templates.find((template: { dag: any }) => template.dag);
 		const tasks: Task[] = formData.dagTemplate ? formData.dagTemplate.dag.tasks : [];
