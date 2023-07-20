@@ -61,7 +61,6 @@
 		<AppRail>
 			<AppRailTile label="Projects" href="/projects"><BookOpenIcon size="1.5x" /></AppRailTile>
 			<AppRailTile label="Registry Key Vault" href="/secrets"><LockIcon size="1.5x" /></AppRailTile>
-			<AppRailTile label="Visualizations" href="/visualizations/resources"><BarChart2Icon size="1.5x" /></AppRailTile>
 			<AppRailTile label="DAG" href="/visualizations/dag"><Share2Icon size="1.5x" /></AppRailTile>
 			<AppRailTile label="dDAG" href="/visualizations/ddag"><Share2Icon size="1.5x" /></AppRailTile>
 		</AppRail>

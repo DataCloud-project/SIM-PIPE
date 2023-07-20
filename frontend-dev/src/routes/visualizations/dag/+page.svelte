@@ -5,6 +5,9 @@
     import getWorkflowQuery from '../../../queries/get_workflow_template';
     import { CodeBlock } from '@skeletonlabs/skeleton';
     import YAML from 'json-to-pretty-yaml';
+	import initKeycloak from '$lib/keycloak.js';
+	import { GraphQL_API_URL } from '$lib/config.js';
+	import { GraphQLClient } from 'graphql-request';
 
     //const workflowtemplatename = 'helloworld';
     const workflowtemplatename = 'dag-project';
@@ -14,6 +17,14 @@
         const variables = {
             name: workflowtemplatename,
         }
+        if (!$graphQLClient) {
+			try {
+				$graphQLClient = new GraphQLClient(GraphQL_API_URL, {});
+			} catch {
+				// redirect to keycloak authentication
+				await initKeycloak();
+			}
+		}
 		const response: {} = await get(graphQLClient).request(getWorkflowQuery, variables);
         //console.log(response);
 		return response;
