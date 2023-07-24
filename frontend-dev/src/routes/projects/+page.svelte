@@ -81,6 +81,12 @@
 		goto(`/projects/[project_id]/${dry_run}`);
 	}
 
+	function showTemplate(event:any, project:Project) {
+		$clickedProjectId = project.id;
+		event.stopPropagation();
+		const template = project.workflowTemplates[0].argoWorkflowTemplate?.metadata.name;
+		goto(`/templates/${template}`);
+	}
 	$: reactiveProjectsList = $projectsList;
 	$: dryRunCounts = getDryRunCounts(reactiveProjectsList);
 </script>
@@ -117,7 +123,8 @@
 						<th>Name</th>
 						<th>Created date</th>
 						<th>Dry runs</th>
-						<th>Simulation runs</th>
+						<!-- <th>Simulation runs</th> -->
+						<th>Template</th>
 					</tr>
 				</thead>
 				<tbody>
@@ -139,7 +146,10 @@
 							<td>{project.createdAt}</td>
 							<td>{dryRunCounts[project.id]}</td>
 							<!-- TODO: Aleena add number of dry runs and number of simulation runs-->
-							<td>NaN</td>
+							<!-- <td>NaN</td> -->
+							<td on:click={(event) => showTemplate(event, project)}>
+								<p class="no-underline hover:underline">show</p>
+							</td>
 						</tr>
 					{/each}
 				</tbody>

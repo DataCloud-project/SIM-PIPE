@@ -10,6 +10,9 @@ const allProjectsQuery = gql`
       dryRuns {
         id
       }
+      workflowTemplates {
+        argoWorkflowTemplate 
+      }
     }
   }
 `;

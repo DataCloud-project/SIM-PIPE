@@ -1,21 +1,22 @@
 <script lang="ts">
     import { ProgressBar } from '@skeletonlabs/skeleton';
     import { get } from 'svelte/store';
-    import { graphQLClient } from '../../../stores/stores';
+    import { graphQLClient, clickedProjectId } from '../../../stores/stores';
     import getWorkflowQuery from '../../../queries/get_workflow_template';
     import { CodeBlock } from '@skeletonlabs/skeleton';
     import YAML from 'json-to-pretty-yaml';
 	import initKeycloak from '$lib/keycloak.js';
 	import { GraphQL_API_URL } from '$lib/config.js';
 	import { GraphQLClient } from 'graphql-request';
+	import { goto } from '$app/navigation';
 
-    //const workflowtemplatename = 'helloworld';
-    const workflowtemplatename = 'dag-project';
+    export let data;
+
     $: language = 'yaml';
 
     const getWorkflowTemplate = async (): Promise<{}> => {
         const variables = {
-            name: workflowtemplatename,
+            name: data.template,
         }
         if (!$graphQLClient) {
 			try {
@@ -26,7 +27,6 @@
 			}
 		}
 		const response: {} = await get(graphQLClient).request(getWorkflowQuery, variables);
-        //console.log(response);
 		return response;
 	};
 	
@@ -49,9 +49,19 @@
 
 </script>
 
-<!-- Page Header -->
 <div class="container p-5">
-    <h1>DAG</h1>
+    <h1><a href="/projects" >Projects</a> 
+		<span STYLE="font-size:14px">/ </span>{data.template}
+		<!-- <span STYLE="font-size:14px">/ </span> -->
+    </h1>
+    <br/>
+    <h1>
+        <!-- TODO: adjust position and style -->
+        <button class="btn variant-filled" on:click={() => goto(`/projects/[project_id]/${$clickedProjectId}`)} >
+            Dry Runs ->
+        </button>
+    </h1>
+	<div class="table-container p-5">
     {#await workflowPromise}
         <ProgressBar />
     {:then workflow}
@@ -60,7 +70,8 @@
                 <span>Switch to {language === 'yaml' ? 'JSON' : 'YAML'}</span>
             </button>
         </div>
-        <div class="code">
+        <br/>
+        <div class="code overflow-y-auto h-96">
             {#if language === 'json'}
                 <CodeBlock language={language} code={JSON.stringify(workflow, null, 2)} text="text-xs" />
             {:else if language === 'yaml'}
@@ -68,4 +79,5 @@
             {/if}
         </div>
     {/await}
+</div>
 </div>
