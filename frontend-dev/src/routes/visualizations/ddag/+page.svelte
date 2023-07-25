@@ -9,11 +9,15 @@
     import initKeycloak from '$lib/keycloak.js';
 	import { GraphQLClient } from 'graphql-request';
     import getWorkflowQuery from '../../../queries/get_workflow_template';
-	import { LogInIcon } from 'svelte-feather-icons';
+    import getDryRunPhaseResultsQuery from '../../../queries/get_dry_run_phase_results';
     
+
     const template_name = "diamondsimple";
 
-    export const getWorkflowTemplate = async (): Promise<{}> => {
+    const dryrun_name = "dag-diamond-hx2kr"
+
+
+    const getWorkflowTemplate = async (): Promise<{}> => {
         const variables = {
             name: template_name,
         }
@@ -29,6 +33,24 @@
 		return response;
 	};
 
+    const getDryRunPhaseResults = async (): Promise<{}> => {
+        const variables = {
+            dryRunId: dryrun_name,
+        }
+        if (!$graphQLClient) {
+			try {
+				$graphQLClient = new GraphQLClient(GraphQL_API_URL, {});
+			} catch {
+				await initKeycloak();
+			}
+		}
+		const response: {} = await get(graphQLClient).request(getDryRunPhaseResultsQuery, variables);
+		return response;
+	};
+
+    const getDryRunPhaseResultsPromise = getDryRunPhaseResults();
+    $: dryrun_results = {};    
+
     const workflowPromise = getWorkflowTemplate();
     $: workflow = {};
 
@@ -39,6 +61,13 @@
     }).catch((error) => {
         console.log(error);
     });
+
+    getDryRunPhaseResultsPromise.then((data) => {
+        dryrun_results = data;
+    }).catch((error) => {
+        console.log(error);
+    });
+
 
     let graphOrientation = 'LR';
 
