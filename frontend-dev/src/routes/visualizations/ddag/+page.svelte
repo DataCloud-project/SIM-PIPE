@@ -17,9 +17,12 @@
     const dryrun_name = "dag-diamond-hx2kr"
 
 
-    const getWorkflowTemplate = async (): Promise<{}> => {
-        const variables = {
+    const getData = async (): Promise<{}> => {
+        const workflow_variables = {
             name: template_name,
+        }
+        const dryrun_variables = {
+            dryRunId: dryrun_name,
         }
         if (!$graphQLClient) {
 			try {
@@ -29,45 +32,27 @@
 				await initKeycloak();
 			}
 		}
-		const response: {} = await get(graphQLClient).request(getWorkflowQuery, variables);
-		return response;
-	};
-
-    const getDryRunPhaseResults = async (): Promise<{}> => {
-        const variables = {
-            dryRunId: dryrun_name,
+		const workflow_response: {} = await get(graphQLClient).request(getWorkflowQuery, workflow_variables);
+        const dryrun_response: {} = await get(graphQLClient).request(getDryRunPhaseResultsQuery, dryrun_variables);
+        const responses = {
+            workflow: workflow_response,
+            dryrun: dryrun_response,
         }
-        if (!$graphQLClient) {
-			try {
-				$graphQLClient = new GraphQLClient(GraphQL_API_URL, {});
-			} catch {
-				await initKeycloak();
-			}
-		}
-		const response: {} = await get(graphQLClient).request(getDryRunPhaseResultsQuery, variables);
-		return response;
+        return responses;
 	};
 
-    const getDryRunPhaseResultsPromise = getDryRunPhaseResults();
+    const Promise = getData();
+    $: workflow = {};
     $: dryrun_results = {};    
 
-    const workflowPromise = getWorkflowTemplate();
-    $: workflow = {};
-
-    workflowPromise.then((data) => {
-        workflow = data;
+    Promise.then((data) => {
+        workflow = data.workflow;
+        dryrun_results = data.dryrun;
         buildDiagram();
         renderDiagram();
     }).catch((error) => {
         console.log(error);
     });
-
-    getDryRunPhaseResultsPromise.then((data) => {
-        dryrun_results = data;
-    }).catch((error) => {
-        console.log(error);
-    });
-
 
     let graphOrientation = 'LR';
 
@@ -256,7 +241,7 @@
 </script>
 
 <div class="container p-5">
-    {#await workflowPromise}
+    {#await Promise}
         <p style="font-size:20px;">Loading...</p>
             <ProgressBar />    
     {:then}
