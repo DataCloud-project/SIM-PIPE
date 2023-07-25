@@ -200,6 +200,9 @@
 
     function buildDiagram () {
         mermaidCode = []; // clear mermaidCode
+        let node0 = dryrun_results.dryRun.nodes[0];
+        let dryrun_name = node0.displayName;
+        mermaidCode.push(`---\ntitle: ${dryrun_name}\n---`);
         mermaidCode.push(`graph ${graphOrientation};`);
         //workflow.spec.templates.forEach((template) => {
         workflow.workflowTemplate.argoWorkflowTemplate.spec.templates.forEach((template) => {
@@ -217,7 +220,7 @@
             };
         });
         diagram = mermaidCode.join("\n");
-        //console.log(diagram);
+        console.log(diagram);
     }
 
     const renderDiagram = async () => {
