@@ -125,7 +125,7 @@
 							<label class="ml-5"
 								>{param.name}:
 								<span>
-									<input type="text" bind:value={taskList[i].arguments.parameters[j].value} />
+									<input class="input variant-form-material" type="text" bind:value={taskList[i].arguments.parameters[j].value} />
 								</span></label
 							>
 						{/each}

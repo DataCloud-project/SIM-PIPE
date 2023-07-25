@@ -59,7 +59,7 @@
 			<label class="label">
 				Project template
 				<br/>
-				<textarea rows="8" cols="50" bind:value={formData.template} placeholder="Enter argo workflow template (JSON/YAML)..." ></textarea>
+				<textarea class="textarea" rows="8" cols="50" bind:value={formData.template} placeholder="Enter argo workflow template (JSON/YAML)..." ></textarea>
 			</label>
 		</form>
 		<footer class="modal-footer {parent.regionFooter}">
