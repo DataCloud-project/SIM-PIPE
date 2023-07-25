@@ -231,7 +231,9 @@
         <p style="font-size:20px;">Loading...</p>
             <ProgressBar />    
     {:then}
-        <span class="mermaid" bind:this={container}></span>
+        <span class="mermaid">
+            <div class="flex justify-center" bind:this={container}></div>
+        </span>
         <div class="code">
             <CodeBlock language='json' code={JSON.stringify(workflow, null, 2)} text="text-xs" />
         </div>
