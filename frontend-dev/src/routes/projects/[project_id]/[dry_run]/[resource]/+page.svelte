@@ -44,7 +44,7 @@
             curve: 'basis',
         },
         };
-        const getData = async (): Promise<{workflow: any; dryrun:any }> => {
+    const getData = async (): Promise<{workflow: any; dryrun:any }> => {
         const workflow_variables = {
             name: $selectedProject?.name,
         }
@@ -165,12 +165,7 @@
     }
 
     const renderDiagram = async () => {
-        // container = document.getElementById("mermaidId");
-        console.log('container')
-        console.log(container)
         let {svg} = await mermaid.render('mermaid', diagram, container);
-        console.log('container')
-        console.log(container)
         container.innerHTML=svg;
         container.addEventListener('click', function (e:any) {
             if (e.target.attributes.getNamedItem('class').value === 'nodeLabel') {
@@ -377,6 +372,8 @@
 
     onMount(async () => {
         await metricsPromise;
+        await getDataPromise;
+        renderDiagram();
         drawCPUPlot();
         drawMemoryPlot();
         drawNetworkReceivePlot();
@@ -412,8 +409,7 @@
                         <ProgressBar />
                     {:then}
                         <span class="mermaid">
-                            <!-- <div id="mermaid" class="flex justify-center" bind:this={container} /> -->
-                            <div id="mermaidId" class="flex justify-center" bind:this={container}/>
+                            <div class="flex justify-center" bind:this={container}/>
                         </span>
                     {/await}
                 </div>
