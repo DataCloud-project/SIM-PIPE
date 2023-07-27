@@ -2,7 +2,7 @@
     import Plotly from 'plotly.js-dist';
     import { afterUpdate, onMount } from 'svelte';
     import { modeCurrent, ProgressBar } from '@skeletonlabs/skeleton';
-    import type { DryRunMetrics } from '../../../../../types';
+    import type { DryRunMetrics, DryRun } from '../../../../../types';
     import { get } from 'svelte/store';
     import { graphQLClient, selectedProject } from '../../../../../stores/stores';
     import getDryRunMetricsQuery from '../../../../../queries/get_dry_run_metrics.js';
@@ -11,8 +11,175 @@
 	import { GraphQL_API_URL } from '$lib/config.js';
 	import initKeycloak from '$lib/keycloak.js';
 	import { goto } from '$app/navigation';
+    import mermaid from 'mermaid';
+    import getWorkflowQuery from '../../../../../queries/get_workflow_template';
+    import getDryRunPhaseResultsQuery from '../../../../../queries/get_dry_run_phase_results';
 
     export let data;
+    let workflow: { workflowTemplate: { argoWorkflowTemplate: { spec: { templates: any[]; }; }; }; };
+    let dryrun_results: { dryRun: { nodes: any[]; }; };
+    let dryRunPhases: { [x: string]: string ; } = {};
+    const graphOrientation = 'LR';
+    const colors = {
+        "Succeeded": "#34d399",
+        "Running": "#6ee7b7",
+        "Failed": "#ef4444",
+        "Error": "#b91c1c",
+        "Pending": "#f1f5f9",
+        "Skipped": "#e2e8f0",
+        "Omitted": "#cbd5e1",
+        "Unknown": "#f9fafb",
+    }
+    let mermaidCode = [];
+    let diagram: string;
+    let container;
+    const mermaidConfig = {
+        securityLevel: 'loose',
+        theme: 'neutral',
+        startOnLoad: true,
+        logLevel: 4,
+        flowchart: {
+            useMaxWidth: true,
+            htmlLabels: true,
+            curve: 'basis',
+        },
+        };
+        const getData = async (): Promise<{workflow: any; dryrun:any }> => {
+        const workflow_variables = {
+            name: $selectedProject?.name,
+        }
+        const dryrun_variables = {
+            dryRunId: data.resource,
+        }
+        if (!$graphQLClient) {
+			try {
+				$graphQLClient = new GraphQLClient(GraphQL_API_URL, {});
+			} catch {
+				// redirect to keycloak authentication
+				await initKeycloak();
+			}
+		}
+		const workflow_response = await get(graphQLClient).request(getWorkflowQuery, workflow_variables);
+        const dryrun_response: {dryRun : DryRun}  = await get(graphQLClient).request(getDryRunPhaseResultsQuery, dryrun_variables);
+        dryrun_response.dryRun.nodes.forEach((node: DryRunMetrics) => {
+            dryRunPhases[node.displayName] = node.phase;
+        });         
+        const responses = {
+            workflow: workflow_response,
+            dryrun: dryrun_response,
+        }
+        return responses;
+	};
+    const getDataPromise = getData();
+    getDataPromise.then((data: {workflow: any; dryrun:any }) => {
+        workflow = data.workflow;
+        dryrun_results = data.dryrun;
+        buildDiagram();
+        renderDiagram();
+    }).catch((error) => {
+        console.log(error);
+    });
+    mermaid.initialize(mermaidConfig);
+    
+
+    function argoStepsToMermaid(argoWorkflow: any) {
+        let previousStep = "";
+        for (const stepList of argoWorkflow) {
+
+            for (const parallellStep of stepList) {
+                const stepName = parallellStep.name;
+                mermaidCode.push(`  ${stepName}["${stepName}"];`);
+                // TODO: replace with actual step click
+                mermaidCode.push(`  click ${stepName} href "javascript:console.log('task ${stepName}');"`)
+                mermaidCode.push(`  style ${stepName} fill:${colors[dryRunPhases[stepName] as keyof typeof colors]}`);
+                
+            }
+            if (previousStep !== "") {
+                if (stepList.length > 1) {
+                    let subraphName = 'nested';
+                    mermaidCode.push(`  subgraph ${subraphName}`);
+                    for (const step of stepList) {
+                        const stepName = step.name;
+                        mermaidCode.push(`    ${stepName};`);
+                    };
+                    mermaidCode.push(`  end`);
+                    mermaidCode.push(`  ${previousStep} --> ${subraphName};`);
+                    previousStep = subraphName;
+                }
+                else {
+                    for (const step of stepList) {
+                        const stepName = step.name;
+                        if (previousStep !== "") {
+                            mermaidCode.push(`    ${previousStep} --> ${stepName};`);
+                        };
+                        previousStep = stepName;
+                    };              
+                };
+            }
+            else {
+                const stepName = stepList[0].name;
+                previousStep = stepName;
+            }
+        };
+    }
+
+    function argoDAGtoMermaid(argoWorkflow: { tasks: any[]; }) {
+        argoWorkflow.tasks.forEach((task) => {
+            const taskName = task.name;
+            const dependencies = task.dependencies || [];
+            const depends = task.depends || "";
+
+            mermaidCode.push(`  ${taskName}["${taskName}"];`);
+            // TODO: replace with actual step click
+            mermaidCode.push(`  click ${taskName} href "javascript:console.log('task ${taskName}');"`)
+            mermaidCode.push(`  style ${taskName} fill:${colors[dryRunPhases[taskName] as keyof typeof colors]}`);
+            for (const depTask of dependencies) {
+                mermaidCode.push(`  ${depTask} --> ${taskName};`);
+            };
+            if (depends) {
+                depends.split(" ").forEach((dep: string) => {
+                    if (!["&&", "||", "!"].includes(dep)) {
+                        mermaidCode.push(`  ${dep} --> ${taskName};`);
+                    }
+                    else {
+                    };
+                });
+            };
+      });
+    };
+
+    function buildDiagram () {
+        mermaidCode = []; // clear mermaidCode
+        mermaidCode.push(`graph ${graphOrientation};`);
+        workflow.workflowTemplate.argoWorkflowTemplate.spec.templates.forEach((template) => {
+            try {
+                if(template.dag) 
+                    argoDAGtoMermaid(template.dag)
+                else if (template.steps)
+                    argoStepsToMermaid(template.steps)
+            } catch (error) {
+                console.log(error)
+            };
+        });
+        diagram = mermaidCode.join("\n");
+    }
+
+    const renderDiagram = async () => {
+        // container = document.getElementById("mermaidId");
+        console.log('container')
+        console.log(container)
+        let {svg} = await mermaid.render('mermaid', diagram, container);
+        console.log('container')
+        console.log(container)
+        container.innerHTML=svg;
+        container.addEventListener('click', function (e:any) {
+            if (e.target.attributes.getNamedItem('class').value === 'nodeLabel') {
+                buildDiagram();
+            };
+        });
+        return container;
+    };
+
     const datefmt = 'yyyy-MM-dd HH:mm:ss'
 
     const getDryRunMetrics = async (): Promise<DryRunMetrics[]> => {
@@ -102,29 +269,29 @@
                     if (cpuValues.length > 0) {
                         cpuData.push(cpuUsage);
                     } else {
-                        console.log('no cpu data:')
-                        console.log(cpuUsage)
+                        // console.log('no cpu data:')
+                        // console.log(cpuUsage)
                     };
 
                     if (memValues.length > 0) {
                         memoryData.push(memoryUsage);
                     } else {
-                        console.log('no memory data:')
-                        console.log(cpuUsage)
+                        // console.log('no memory data:')
+                        // console.log(cpuUsage)
                     };
 
                     if (nrcValues.length > 0) {
                         networkReceiveData.push(networkReceiveBytesTotal);
                     } else {
-                        console.log('no network receive data:')
-                        console.log(networkReceiveBytesTotal)
+                        // console.log('no network receive data:')
+                        // console.log(networkReceiveBytesTotal)
                     };
                     
                     if (ntrValues.length > 0) {
                         networkTransmitData.push(networkTransmitBytesTotal);
                     } else {
-                        console.log('no network transmit data:')
-                        console.log(networkReceiveBytesTotal)
+                        // console.log('no network transmit data:')
+                        // console.log(networkReceiveBytesTotal)
                     };
                 }
             });
@@ -215,7 +382,7 @@
         drawNetworkReceivePlot();
         drawNetworkTransmitPlot();
     });
-
+    
     afterUpdate(() => {
         drawCPUPlot();
         drawMemoryPlot();
@@ -238,8 +405,21 @@
             <ProgressBar />
         {:then metricsData}
             <div class="flex flex-row">
+                <!-- mermaid diagram -->
+                <div class="container card pt-20 basis-1/3">
+                    {#await getDataPromise}
+                        <p style="font-size:20px;">Loading...</p>
+                        <ProgressBar />
+                    {:then}
+                        <span class="mermaid">
+                            <!-- <div id="mermaid" class="flex justify-center" bind:this={container} /> -->
+                            <div id="mermaidId" class="flex justify-center" bind:this={container}/>
+                        </span>
+                    {/await}
+                </div>
+                
                 <!-- TODO: adjust scroll https://tailwindcss.com/docs/overflow -->
-                <div class="overflow-y-auto card p-10 basis-1/5">
+                <div class="overflow-y-auto card p-5 basis-1/3">
                     <div>
                         <h1>Logs</h1>
                         <br/>
@@ -249,18 +429,18 @@
                         {/each}
                     </div>
                 </div>
-                <div class="card p-4 basis-2/5">
+                <div class="card p-4 basis-1/3">
                     <div id="cpuPlot"></div>
-                </div>
-                <div class="card p-4 basis-2/5">
-                    <div id="memoryPlot"></div>
                 </div>
             </div>
             <div class="flex flex-row">
-                <div class="card p-4 basis-1/2">
+                <div class="card p-4 basis-1/3">
+                    <div id="memoryPlot"></div>
+                </div>
+                <div class="card p-4 basis-1/3">
                     <div id="networkReceivePlot"></div>
                 </div>
-                <div class="card p-4 basis-1/2">
+                <div class="card p-4 basis-1/3">
                     <div id="networkTransmitPlot"></div>
                 </div>
             </div>
