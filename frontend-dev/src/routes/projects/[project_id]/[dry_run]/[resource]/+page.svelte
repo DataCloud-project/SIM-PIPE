@@ -6,6 +6,7 @@
     import { get } from 'svelte/store';
     import { graphQLClient, selectedProject } from '../../../../../stores/stores';
     import getDryRunMetricsQuery from '../../../../../queries/get_dry_run_metrics.js';
+    import getDryRunNoLogsMetricsQuery from '../../../../../queries/get_dry_run_metrics_no_logs.js';
     import { format } from 'date-fns';
 	import { GraphQLClient } from 'graphql-request';
 	import { GraphQL_API_URL } from '$lib/config.js';
@@ -176,6 +177,7 @@
     };
 
     const datefmt = 'yyyy-MM-dd HH:mm:ss'
+    let showLogs = true;
 
     const getDryRunMetrics = async (): Promise<DryRunMetrics[]> => {
         const variables = {
@@ -189,8 +191,17 @@
 				await initKeycloak();
 			}
 		}
-		const response: {dryRun: { nodes: [] }} = await get(graphQLClient).request(getDryRunMetricsQuery, variables);
-        return response?.dryRun?.nodes;
+        try {
+            const response: {dryRun: { nodes: [] }} = await get(graphQLClient).request(getDryRunMetricsQuery, variables);
+            return response?.dryRun?.nodes;
+        } catch (error) { 
+            // internal server error from graphql API when requesting logs for dry runs which has no logs
+            if((error.message as string).includes("No logs found:")) {
+                showLogs = false;
+                const response: {dryRun: { nodes: [] }} = await get(graphQLClient).request(getDryRunNoLogsMetricsQuery, variables);
+                return response?.dryRun?.nodes;
+            }
+        }
 	};
 	
     const metricsPromise = getDryRunMetrics();
@@ -419,10 +430,15 @@
                     <div>
                         <h1>Logs</h1>
                         <br/>
-                        {#each Object.keys(logs).sort() as key}
-                        <pre class="bg-surface-50-900-token ml-6 mr-6 p-3">{logs[key]}</pre>
-                        <br/>
-                        {/each}
+                        {#if showLogs}
+                            {#each Object.keys(logs).sort() as key}
+                            <pre class="bg-surface-50-900-token ml-6 mr-6 p-3">{logs[key]}</pre>
+                            <br/>
+                            {/each}
+                        {:else}
+                            <p>No data</p>
+                        {/if}
+
                     </div>
                 </div>
                 <div class="card p-4 basis-1/3">
