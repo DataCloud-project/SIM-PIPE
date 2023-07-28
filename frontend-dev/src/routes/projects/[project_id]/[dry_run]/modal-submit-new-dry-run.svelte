@@ -86,7 +86,7 @@
 </script>
 
 {#if !hideModal}
-	<div class="modal-example-form {cBase}">
+	<div class="modal-example-form {cBase} overflow-y-auto max-h-full">
 		<header class={cHeader}>{$modalStore[0].title ?? '(title missing)'}</header>
 		<article>{$modalStore[0].body ?? '(body missing)'}</article>
 		<form class="modal-form {cForm}">

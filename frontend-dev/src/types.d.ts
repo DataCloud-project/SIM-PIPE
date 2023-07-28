@@ -43,7 +43,7 @@ export type DryRunMetrics = {
   startedAt: string;
   duration: number;
   dryRun: DryRun;
-  log: string[];
+  log: string[]?;
   metrics: {
     cpuUsageSecondsTotal: Array<{
       timestamp: number;

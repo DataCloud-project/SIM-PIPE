@@ -179,7 +179,7 @@
     const datefmt = 'yyyy-MM-dd HH:mm:ss'
     let showLogs = true;
 
-    const getDryRunMetrics = async (): Promise<DryRunMetrics[]> => {
+    const getDryRunMetrics = async (): Promise<DryRunMetrics[] | undefined> => {
         const variables = {
             dryRunId: data.resource
         }
@@ -196,7 +196,7 @@
             return response?.dryRun?.nodes;
         } catch (error) { 
             // internal server error from graphql API when requesting logs for dry runs which has no logs
-            if((error.message as string).includes("No logs found:")) {
+            if((error as Error).message.includes("No logs found:")) {
                 showLogs = false;
                 const response: {dryRun: { nodes: [] }} = await get(graphQLClient).request(getDryRunNoLogsMetricsQuery, variables);
                 return response?.dryRun?.nodes;
@@ -397,10 +397,8 @@
         drawNetworkReceivePlot();
         drawNetworkTransmitPlot();
     });
-
 </script>
 
-<!-- Page Header -->
 <div class="container p-5">
     <h1><a href="/projects" >Projects</a> 
 		<span STYLE="font-size:14px">/ </span>
@@ -432,7 +430,9 @@
                         <br/>
                         {#if showLogs}
                             {#each Object.keys(logs).sort() as key}
-                            <pre class="bg-surface-50-900-token ml-6 mr-6 p-3">{logs[key]}</pre>
+                            <div class="overflow-y-auto max-h-20">
+                                <pre class="bg-surface-50-900-token ml-6 mr-6 p-3">{logs[key]}</pre>
+                            </div>
                             <br/>
                             {/each}
                         {:else}
