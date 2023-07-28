@@ -406,7 +406,6 @@
                     {/await}
                 </div>
                 
-                <!-- TODO: adjust scroll https://tailwindcss.com/docs/overflow -->
                 <div class="overflow-y-auto card p-5 basis-1/3">
                     <div>
                         <h1>Logs</h1>

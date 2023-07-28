@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { HelpCircleIcon, StopCircleIcon, PauseIcon, PlayIcon, 
-		RepeatIcon } from 'svelte-feather-icons';
+		RepeatIcon, 
+		AlertCircleIcon} from 'svelte-feather-icons';
 	import stopDryRunMutation from '../../../../queries/stop_dry_run.js';
 	import suspendDryRunMutation from '../../../../queries/suspend_dry_run.js';
 	import resumeDryRunMutation from '../../../../queries/resume_dry_run.js';
@@ -62,7 +63,7 @@
 {#if action == 'rerun'}
 	<div class="relative">
 		<div class="absolute left-5 bottom-2 font-bold">+</div>
-		<PlayIcon size="20" />
+		<RepeatIcon size="20" />
 	</div>
 {:else if action == 'run'}
 	<PlayIcon size="20" />
@@ -74,7 +75,11 @@
 	{/if}
 	<button on:click="{stopRun}"><StopCircleIcon size="20" /></button>
 {:else if action == 'retry'}
-	<RepeatIcon size="20" />
+	<PlayIcon size="20" />
+{:else if action == 'alert'}
+	<AlertCircleIcon size="20" />
+{:else if action == 'unknown'}
+	<AlertCircleIcon size="20" />
 {:else}
 	<HelpCircleIcon size="20" />
 {/if}

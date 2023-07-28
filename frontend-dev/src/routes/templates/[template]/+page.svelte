@@ -41,7 +41,6 @@
 <div class="container p-5">
     <h1><a href="/projects" >Projects</a> 
 		<span STYLE="font-size:14px">/ </span>{data.template}
-		<!-- <span STYLE="font-size:14px">/ </span> -->
     </h1>
     <br/>
     <h1>

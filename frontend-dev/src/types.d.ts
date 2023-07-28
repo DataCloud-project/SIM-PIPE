@@ -85,6 +85,8 @@ enum DryRunPhase {
   Succeeded,
   Failed,
   Error,
+  Skipped,
+  Omitted
 }
 
 export type DockerRegistryCredential = {

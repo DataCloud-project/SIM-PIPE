@@ -5,7 +5,6 @@ import type { Project, DockerRegistryCredential, DryRun } from '../types.js';
 
 export const graphQLClient = writable<GraphQLClient>();
 
-export const keycloakHandler = writable<Keycloak>();;
 export const projectsList = writable<Project[]|undefined>();
 export const selectedProject = writable<Project|undefined>();
 export const dryRunsList = writable<DryRun[]|undefined>();

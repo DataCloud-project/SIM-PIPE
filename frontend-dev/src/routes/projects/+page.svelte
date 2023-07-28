@@ -110,7 +110,6 @@
 	</div>
 
 	<div class="p-5 table-container overflow-y-auto max-h-3/4">
-		<!-- TODO: add margin/padding for table elements -->
 		{#await projectsPromise}
 			<p style="font-size:20px;">Loading projects...</p>
 			<ProgressBar />

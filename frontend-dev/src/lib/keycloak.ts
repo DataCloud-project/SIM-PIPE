@@ -2,23 +2,21 @@ import { GraphQLClient } from 'graphql-request';
 import { graphQLClient, username } from '../stores/stores.js';
 import { GraphQL_API_URL } from '../lib/config.js';
 import Keycloak from 'keycloak-js';
-import { keycloakHandler } from '../stores/stores.js';
 import { browser } from '$app/environment';
-import { get } from 'svelte/store';
 
 let initKeycloakPromise: Promise<void> | undefined;
 
 async function internalInitKeycloak(): Promise<void> {
     // TODO: call keycloak only if there is no token or current token is expired
-    keycloakHandler.set(new Keycloak({
+    const keyCloak = new Keycloak({
         url: 'https://datacloud-auth.euprojects.net/auth', // TODO - add env var
         realm: 'user-authentication',
         clientId: 'sim-pipe-web', // TODO - add env var
         // 'enable-cors': 'true', // TODO it seems to be ignored
-    }));
-    await get(keycloakHandler).init({ onLoad: 'login-required', flow: 'implicit' }); //  Implicit flow.
+    });
+    await keyCloak.init({ onLoad: 'login-required', flow: 'implicit' }); //  Implicit flow.
     
-    if (!get(keycloakHandler).token) {
+    if (keyCloak.token) {
         throw new Error("Keycloak didn't return a valid token");
     }
     console.log('User is authenticated');
@@ -27,16 +25,12 @@ async function internalInitKeycloak(): Promise<void> {
     //     authorization: `Bearer ${get(keycloakHandler).token}`,
     //     mode: 'cors',
     // };
-    if (!get(keycloakHandler).idTokenParsed) {
+    if (!keyCloak.idTokenParsed) {
         throw new Error("Keycloak didn't return a valid idTokenParsed");
     }
-    // TODO: Aleena check uncaught (in promise) cannot read properties of endefined (reading 'preferred_username')
-    // if (typeof get(keycloakHandler)?.idTokenParsed.preferred_username !== 'string') {
-    //     throw new TypeError("Keycloak didn't return a valid preferred_username");
-    //}
-    // TODO: Aleena initialize graphqlclient and save in store
-    // username.set((keycloakHandler as unknown as Keycloak).idTokenParsed.preferred_username);
-    username.set("testuser");
+    // TODO: Aleena change to authenticated when api is ready
+    
+    username.set(keyCloak.idTokenParsed.preferred_username);
     //   if (config.SIM_PIPE_CONTROLLER_URL) {
     //     graphqlUrl = config.SIM_PIPE_CONTROLLER_URL;
     //   } else if (/^localhost(:\d+)?$/.test(window.location.host)) {

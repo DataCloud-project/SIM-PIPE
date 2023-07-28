@@ -90,8 +90,6 @@
 		{#await credentialsPromise}
 			<p style="font-size:20px;">Loading credentials...</p>
 			{:then credentialsList}
-			<!-- Native Table Element -->
-			<!-- TODO: add margin/padding for table elements -->
 			<table class="w-half table table-interactive">
 				<thead>
 					<tr>

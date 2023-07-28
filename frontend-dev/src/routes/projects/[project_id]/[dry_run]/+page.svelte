@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { selectedProject, graphQLClient, clickedProjectId } from '../../../../stores/stores.js';
+	import { selectedProject, clickedProjectId } from '../../../../stores/stores.js';
 	import SymbolForRunResult from './symbol-for-run-result.svelte';
 	import SymbolForAction from './symbol-for-action.svelte';
 	import { Modal, modalStore } from '@skeletonlabs/skeleton';
@@ -7,14 +7,15 @@
 	import ModalSubmitNewDryRun from './modal-submit-new-dry-run.svelte';
 	import type { DryRun, Project } from '../../../../types.js';
 	import allDryRunsQuery from '../../../../queries/get_all_dryruns.js'
-    import { get } from 'svelte/store';
 	import deleteDryRunMutation from '../../../../queries/delete_dry_run.js';
 	import { goto } from '$app/navigation';
 	import Timestamp from './timestamp.svelte';
 	import { requestGraphQLClient } from '$lib/graphqlUtils.js';
 
+	export let data;
+
 	const getProjectDetails = async (): Promise<Project> => {
-		const variables = {projectId: get(clickedProjectId)};
+		const variables = {projectId: data.dry_run};
 		const response: { project: Project } = await requestGraphQLClient(allDryRunsQuery, variables);
 		return response.project;
 	};
@@ -77,11 +78,11 @@
 			return 'rerun';
 		else if(status == 'Running')
 			return 'stop';
-		else if(status == 'Pending')
+		else if(status == 'Pending'|| status == 'Skipped' || status == 'Omitted')
 			return 'run';
-		else if(status == 'Failed' || status == 'Error')
-			return 'retry';
-		return 'rerun';
+		else if(status == 'Failed' || status == 'Error' )
+			return 'alert';
+		return 'unknown';
 	}
 
 	function dryRunOnClick(dryRunId:string) {
