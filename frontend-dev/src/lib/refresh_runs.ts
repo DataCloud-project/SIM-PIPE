@@ -1,7 +1,8 @@
 import { get } from "svelte/store";
 import allDryRunsQuery from "../queries/get_all_dryruns.js";
-import { graphQLClient, clickedProjectId, selectedProject } from "../stores/stores.js";
+import { clickedProjectId, selectedProject } from "../stores/stores.js";
 import type { Project } from "../types.js";
+import { requestGraphQLClient } from "./graphqlUtils.js";
 
 let refreshActiveRunsPromise: Promise<void> | undefined;
 
@@ -14,7 +15,7 @@ export default async function refreshProjectDetails():Promise<void> {
     refreshActiveRunsPromise = (async function waitForCompletion(): Promise<void> {
         let activeDryRuns:boolean|undefined = false;
         do {
-            const responseProjectDetails: { project: Project } = await get(graphQLClient).request(allDryRunsQuery, 
+            const responseProjectDetails: { project: Project } = await requestGraphQLClient(allDryRunsQuery, 
             { projectId: get(clickedProjectId) });
             selectedProject.set(responseProjectDetails.project);
             // check if updating can be stopped
