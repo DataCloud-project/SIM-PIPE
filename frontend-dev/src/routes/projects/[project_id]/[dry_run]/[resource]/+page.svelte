@@ -21,15 +21,16 @@
     let dryrun_results: { dryRun: { nodes: any[]; }; };
     let dryRunPhases: { [x: string]: string ; } = {};
     const graphOrientation = 'LR';
+ 
     const colors = {
-        "Succeeded": "#34d399",
-        "Running": "#6ee7b7",
-        "Failed": "#ef4444",
-        "Error": "#b91c1c",
-        "Pending": "#f1f5f9",
-        "Skipped": "#e2e8f0",
-        "Omitted": "#cbd5e1",
-        "Unknown": "#f9fafb",
+        "Succeeded": "#34D399",   // (Green)
+        "Running": "#6EE7B7",     // (Light Green)
+        "Failed": "#F97316",      // (Orange)
+        "Error": "#ef4444",       // (Red)
+        "Pending": "#F1F5F9",     // (Light Gray) 
+        "Skipped": "#FCD34D",     // (Yellow)
+        "Omitted": "#CBD5E1",     // (Dark Gray) 
+        "Unknown":  "#718096",     // (Slate Gray) 
     }
     let mermaidCode = [];
     let diagram: string;

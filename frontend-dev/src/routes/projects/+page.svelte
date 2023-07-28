@@ -9,6 +9,7 @@
 	import { get } from 'svelte/store';
 	import deleteProjectMutation from '../../queries/delete_project.js';
 	import { goto } from '$app/navigation';
+	import Timestamp from './[project_id]/[dry_run]/timestamp.svelte';
 
 	const getProjectsList = async (): Promise<Project[]> => {
 		await initKeycloak();
@@ -110,7 +111,7 @@
 		</div>
 	</div>
 
-	<div class="p-5 table-container">
+	<div class="p-5 table-container overflow-y-auto max-h-3/4">
 		<!-- TODO: add margin/padding for table elements -->
 		{#await projectsPromise}
 			<p style="font-size:20px;">Loading projects...</p>
@@ -121,7 +122,7 @@
 					<tr>
 						<th />
 						<th>Name</th>
-						<th>Created date</th>
+						<th>Created</th>
 						<th>Dry runs</th>
 						<!-- <th>Simulation runs</th> -->
 						<th>Template</th>
@@ -130,8 +131,7 @@
 				<tbody>
 					{#each reactiveProjectsList || [] as project}
 						<tr
-							id="clickable_row"
-							class="clickable table-row-checked"
+							class=""
 							on:click={() => gotodryruns(project.id)}
 						>
 							<td>
@@ -142,8 +142,9 @@
 									on:click={(event) => handleCheckboxClick(event)}
 								/>
 							</td>
-							<td>{project.name}</td>
-							<td>{project.createdAt}</td>
+							<td >{project.name}</td>
+							<!-- <td>{project.createdAt}</td> -->
+							<td><Timestamp timestamp={project.createdAt} />
 							<td>{dryRunCounts[project.id]}</td>
 							<!-- TODO: Aleena add number of dry runs and number of simulation runs-->
 							<!-- <td>NaN</td> -->

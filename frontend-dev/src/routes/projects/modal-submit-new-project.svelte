@@ -42,6 +42,7 @@
 		modalStore.close();
         // update the project list after addition
 		const responseAllProjects: { projects: Project[] } = await get(graphQLClient).request(allProjectsQuery);
+		$projectsList = [];
 		$projectsList = responseAllProjects.projects;
 	}
 

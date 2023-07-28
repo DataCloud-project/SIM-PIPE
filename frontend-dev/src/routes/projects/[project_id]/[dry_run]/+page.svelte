@@ -10,6 +10,7 @@
     import { get } from 'svelte/store';
 	import deleteDryRunMutation from '../../../../queries/delete_dry_run.js';
 	import { goto } from '$app/navigation';
+	import Timestamp from './timestamp.svelte';
 
 	const getProjectDetails = async (): Promise<Project> => {
 		const variables = {projectId: get(clickedProjectId)};
@@ -127,7 +128,7 @@
 				</thead>
 				<tbody>
 					{#each reactiveProjectDetails?.dryRuns || [] as run}
-						<tr class="table-row-checked">
+						<tr>
 							<td><input type="checkbox" bind:checked={checkboxes[run.id]} class="checkbox variant-filled" /></td>
 							<td on:click={() => dryRunOnClick(run.id)}>{run.id}</td>
 							<td><SymbolForRunResult run_result={(run.status.phase).toString()} /></td>
@@ -140,7 +141,9 @@
 									dryRunId={run.id} />
 								</button>
 							</td>
-							<td>{run.createdAt}</td>
+							<!-- <td>{run.createdAt}</td> -->
+							<td><Timestamp timestamp={run.createdAt} />
+							</td>
 						</tr>
 					{/each}
 				</tbody>
