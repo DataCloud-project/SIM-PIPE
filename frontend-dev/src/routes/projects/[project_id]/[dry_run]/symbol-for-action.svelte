@@ -4,8 +4,9 @@
 	import stopDryRunMutation from '../../../../queries/stop_dry_run.js';
 	import suspendDryRunMutation from '../../../../queries/suspend_dry_run.js';
 	import resumeDryRunMutation from '../../../../queries/resume_dry_run.js';
-	import { graphQLClient, pausedDryRuns } from '../../../../stores/stores.js';
+	import { pausedDryRuns } from '../../../../stores/stores.js';
 	import { modalStore, type ModalSettings } from '@skeletonlabs/skeleton';
+	import { requestGraphQLClient } from '$lib/graphqlUtils.js';
 
 	export let action: string, dryRunId: string;
 	$: paused = $pausedDryRuns?.includes(dryRunId);
@@ -24,7 +25,7 @@
 
 	async function stopRun() {
 		try {
-			await $graphQLClient.request(stopDryRunMutation, { dryRunId: dryRunId, terminate: false });
+			await requestGraphQLClient(stopDryRunMutation, { dryRunId: dryRunId, terminate: false });
 			displayAlert('Stopping dry run..', `ID: ${dryRunId}`);
 		} catch (error) {
 			// TODO: handle error
@@ -34,7 +35,7 @@
 	}
 	async function pauseRun() {
 		try {
-			await $graphQLClient.request(suspendDryRunMutation, { dryRunId: dryRunId, terminate: false });
+			await requestGraphQLClient(suspendDryRunMutation, { dryRunId: dryRunId, terminate: false });
 			paused = true;
 			$pausedDryRuns.push(dryRunId);
 			displayAlert('Pausing dry run..', `ID: ${dryRunId}`);
@@ -46,7 +47,7 @@
 	}
 	async function resumeRun() {
 		try {
-			await $graphQLClient.request(resumeDryRunMutation, { dryRunId: dryRunId, terminate: false });
+			await requestGraphQLClient(resumeDryRunMutation, { dryRunId: dryRunId, terminate: false });
 			paused = false;
 			$pausedDryRuns.filter((item)  => item !== dryRunId );
 			displayAlert('Resuming dry run..', `ID: ${dryRunId}`);

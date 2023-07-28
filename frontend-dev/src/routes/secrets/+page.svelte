@@ -1,17 +1,12 @@
 <script lang="ts">
-	//import secrets from '../../stores/secrets.json';
-	// import KubernetesSecret from './kubernetes-secret.svelte';
 	import { Modal, modalStore } from '@skeletonlabs/skeleton';
 	import type { ModalSettings, ModalComponent } from '@skeletonlabs/skeleton';
 	import ModalSubmitNewSecret from './modal-submit-new-secret.svelte';
 	import allCredentialsQuery from '../../queries/get_all_credentials.js';
 	import deleteCredentialMutation from '../../queries/delete_credential.js';
 	import type { DockerRegistryCredential } from '../../types.js'
-	import { get } from 'svelte/store';
-	import { graphQLClient, credentialsList } from '../../stores/stores.js';
-	import { GraphQL_API_URL } from '../../lib/config.js';
-	import { GraphQLClient } from 'graphql-request';
-	import initKeycloak from '../../lib/keycloak.js';
+	import { credentialsList } from '../../stores/stores.js';
+	import { requestGraphQLClient } from '$lib/graphqlUtils';
 
 	const modalComponent: ModalComponent = {
 		ref: ModalSubmitNewSecret
@@ -22,22 +17,11 @@
 		component: modalComponent,
 		title: 'Add new secret',
 		body: 'Provide a name and username for the new secret at given host.\nSecret will be automatically generated.',
-		//response: (r: string) => console.log('response:', r),
-		//response: (r) => updateSecret(r.name, r.username, r.host)
 	};
 
 
 	const getCredentialsList = async (): Promise<DockerRegistryCredential[]> => {
-		if (!$graphQLClient) {
-			try {
-				$graphQLClient = new GraphQLClient(GraphQL_API_URL, {});
-			} catch {
-				// redirect to keycloak authentication
-				await initKeycloak();
-			}
-		}
-		const response: {dockerRegistryCredentials: DockerRegistryCredential[]} = await get(graphQLClient).request(allCredentialsQuery);
-		//console.log(response.dockerRegistryCredentials)
+		const response: {dockerRegistryCredentials: DockerRegistryCredential[]} = await requestGraphQLClient(allCredentialsQuery);
 		return response.dockerRegistryCredentials;
 	};	
 
@@ -60,13 +44,13 @@
             const variables = {
 			    name: element
 		    }
-		    const response = await get(graphQLClient).request(deleteCredentialMutation, variables);
+		    const response = await requestGraphQLClient(deleteCredentialMutation, variables);
         });
 		// reset checkboxes
 		$credentialsList?.forEach((element) => {
 			    checkboxes[element.name] = false;
 			});
-		const newcredentialsPromise: {dockerRegistryCredentials: DockerRegistryCredential[]} = await get(graphQLClient).request(allCredentialsQuery);
+		const newcredentialsPromise: {dockerRegistryCredentials: DockerRegistryCredential[]} = await requestGraphQLClient(allCredentialsQuery);
 		// Update credentialsList
 		credentialsList.set(newcredentialsPromise.dockerRegistryCredentials);
 		reactiveCredentialsList = $credentialsList;

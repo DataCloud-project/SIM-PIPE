@@ -1,14 +1,11 @@
 <script lang="ts">
     import { ProgressBar } from '@skeletonlabs/skeleton';
-    import { get } from 'svelte/store';
-    import { graphQLClient, clickedProjectId } from '../../../stores/stores';
+    import { clickedProjectId } from '../../../stores/stores';
     import getWorkflowQuery from '../../../queries/get_workflow_template';
     import { CodeBlock } from '@skeletonlabs/skeleton';
     import YAML from 'json-to-pretty-yaml';
-	import initKeycloak from '$lib/keycloak.js';
-	import { GraphQL_API_URL } from '$lib/config.js';
-	import { GraphQLClient } from 'graphql-request';
 	import { goto } from '$app/navigation';
+	import { requestGraphQLClient } from '$lib/graphqlUtils';
 
     export let data;
 
@@ -18,15 +15,7 @@
         const variables = {
             name: data.template,
         }
-        if (!$graphQLClient) {
-			try {
-				$graphQLClient = new GraphQLClient(GraphQL_API_URL, {});
-			} catch {
-				// redirect to keycloak authentication
-				await initKeycloak();
-			}
-		}
-		const response: {} = await get(graphQLClient).request(getWorkflowQuery, variables);
+		const response: {} = await requestGraphQLClient(getWorkflowQuery, variables);
 		return response;
 	};
 	

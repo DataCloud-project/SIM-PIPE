@@ -2,18 +2,16 @@
 	import { Modal, modalStore, ProgressBar } from '@skeletonlabs/skeleton';
 	import type { ModalSettings } from '@skeletonlabs/skeleton';
 	import ModalSubmitNewProject from './modal-submit-new-project.svelte';
-	import { projectsList, clickedProjectId, graphQLClient } from '../../stores/stores.js';
-	import initKeycloak from '../../lib/keycloak.js';
+	import { projectsList, clickedProjectId } from '../../stores/stores.js';
 	import type { Project } from '../../types.js';
 	import allProjectsQuery from '../../queries/get_all_projects.js';
-	import { get } from 'svelte/store';
 	import deleteProjectMutation from '../../queries/delete_project.js';
 	import { goto } from '$app/navigation';
 	import Timestamp from './[project_id]/[dry_run]/timestamp.svelte';
+	import { requestGraphQLClient } from '$lib/graphqlUtils';
 
 	const getProjectsList = async (): Promise<Project[]> => {
-		await initKeycloak();
-		const response: { projects: Project[] } = await $graphQLClient.request(allProjectsQuery);
+		const response: { projects: Project[] } = await requestGraphQLClient(allProjectsQuery);
 		return response.projects;
 	};
 
@@ -56,17 +54,17 @@
 				const variables = {
 					projectId: element
 				};
-				const response = await get(graphQLClient).request(deleteProjectMutation, variables);
+				const response = await requestGraphQLClient(deleteProjectMutation, variables);
 			});
 		// reset checkboxes
 		$projectsList?.forEach((element) => {
 			checkboxes[element.id] = false;
 		});
 		// inserting a small delay because sometimes delete mutation returns true, but all projects query returns the deleted project as well
-		await new Promise((resolve) => setTimeout(resolve, 100));
+		await new Promise((resolve) => setTimeout(resolve, 150));
 
 		// update the project list after deletion
-		let responseAllProjects: { projects: Project[] } = await get(graphQLClient).request(
+		let responseAllProjects: { projects: Project[] } = await requestGraphQLClient(
 			allProjectsQuery
 		);
 		projectsList.set(responseAllProjects.projects);

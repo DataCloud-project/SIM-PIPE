@@ -1,18 +1,12 @@
 <script lang="ts">
-	import { get } from 'svelte/store';
 	import {cBase, cHeader, cForm} from '../../styles/styles.js';
-	import { graphQLClient } from '../../stores/stores.js';
 	import createCredentialMutation from '../../queries/create_credential.js';
 	import { credentialsList } from '../../stores/stores.js';
 	import allCredentialsQuery from '../../queries/get_all_credentials.js';
 	import type { DockerRegistryCredential } from '../../types.js'
-
-	// Props
-	/** Exposes parent props to this component. */
 	export let parent: any;
-
-	// Stores
 	import { modalStore } from '@skeletonlabs/skeleton';
+	import { requestGraphQLClient } from '$lib/graphqlUtils.js';
 
 	// Form Data
 	const formData = {
@@ -49,10 +43,10 @@
 				password: password
 			}
 		};
-		const response = await get(graphQLClient).request(createCredentialMutation, variables);	
+		const response = await requestGraphQLClient(createCredentialMutation, variables);	
 		modalStore.close();
 		// refresh credentials list
-		const newcredentialsPromise: {dockerRegistryCredentials: DockerRegistryCredential[]} = await get(graphQLClient).request(allCredentialsQuery);
+		const newcredentialsPromise: {dockerRegistryCredentials: DockerRegistryCredential[]} = await requestGraphQLClient(allCredentialsQuery);
 		$credentialsList = newcredentialsPromise.dockerRegistryCredentials;
 	}
 

@@ -1,11 +1,12 @@
 <script lang="ts">
 	import { cBase, cHeader, cForm, optional } from '../../../../styles/styles.js';
 	import { Modal, modalStore, type ModalSettings } from '@skeletonlabs/skeleton';
-	import { selectedProject, graphQLClient } from '../../../../stores/stores.js';
+	import { selectedProject } from '../../../../stores/stores.js';
 	import createDryRunMutation from '../../../../queries/create_dry_run.js';
 	import allDryRunsQuery from '../../../../queries/get_all_dryruns.js';
 	import type { Project } from '../../../../types.js';
 	import refreshProjectDetails from  '../../../../lib/refresh_runs.js';
+	import { requestGraphQLClient } from '$lib/graphqlUtils.js';
 
 	export let parent: any;
 	type Parameters = {
@@ -60,9 +61,9 @@
 			}
 		};
 		try {
-			const responseCreateDryRun: {createDryRun : {id: string}} = await $graphQLClient.request(createDryRunMutation, variables);
+			const responseCreateDryRun: {createDryRun : {id: string}} = await requestGraphQLClient(createDryRunMutation, variables);
 			// refresh dry runs list
-			const response: { project: Project } = await $graphQLClient.request(allDryRunsQuery, {
+			const response: { project: Project } = await requestGraphQLClient(allDryRunsQuery, {
 				projectId: $selectedProject?.id
 			});
 			$selectedProject = response.project;

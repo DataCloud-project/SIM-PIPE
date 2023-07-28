@@ -3,7 +3,7 @@
 	import SymbolForRunResult from './symbol-for-run-result.svelte';
 	import SymbolForAction from './symbol-for-action.svelte';
 	import { Modal, modalStore } from '@skeletonlabs/skeleton';
-	import type { ModalSettings, ModalComponent } from '@skeletonlabs/skeleton';
+	import type { ModalSettings } from '@skeletonlabs/skeleton';
 	import ModalSubmitNewDryRun from './modal-submit-new-dry-run.svelte';
 	import type { DryRun, Project } from '../../../../types.js';
 	import allDryRunsQuery from '../../../../queries/get_all_dryruns.js'
@@ -11,10 +11,11 @@
 	import deleteDryRunMutation from '../../../../queries/delete_dry_run.js';
 	import { goto } from '$app/navigation';
 	import Timestamp from './timestamp.svelte';
+	import { requestGraphQLClient } from '$lib/graphqlUtils.js';
 
 	const getProjectDetails = async (): Promise<Project> => {
 		const variables = {projectId: get(clickedProjectId)};
-		const response: { project: Project } = await get(graphQLClient).request(allDryRunsQuery, variables);
+		const response: { project: Project } = await requestGraphQLClient(allDryRunsQuery, variables);
 		return response.project;
 	};
 	const projectDetailsPromise = getProjectDetails();
@@ -47,7 +48,7 @@
 
 	async function onDeleteSelected() {
 		Object.keys(checkboxes).filter((item) => checkboxes[item]).forEach(async (element) => {
-		    const response = await get(graphQLClient).request(deleteDryRunMutation, { dryRunId: element });
+		    const response = await requestGraphQLClient(deleteDryRunMutation, { dryRunId: element });
         });
         // reset checkboxes
         $selectedProject?.dryRuns.forEach((element) => {
@@ -57,7 +58,7 @@
         await new Promise(resolve => setTimeout(resolve, 100));
 
         // update the project list after deletion
-        let responseProjectDetails: { project: Project } = await get(graphQLClient).request(allDryRunsQuery, { projectId: $clickedProjectId });
+        let responseProjectDetails: { project: Project } = await requestGraphQLClient(allDryRunsQuery, { projectId: $clickedProjectId });
         $selectedProject = responseProjectDetails.project;
 	}
 	async function onCreateSelected() {

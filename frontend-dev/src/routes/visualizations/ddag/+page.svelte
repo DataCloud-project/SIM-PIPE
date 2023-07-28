@@ -1,21 +1,14 @@
 <script lang="ts">
     // https://mermaid.js.org/intro/
     import mermaid from 'mermaid';
-    //import * as workflow from './hhh.json'; // for testing; import some local json file for the workflow
     import { CodeBlock, ProgressBar } from '@skeletonlabs/skeleton';
-	import { GraphQL_API_URL } from '$lib/config.js';
-	import { graphQLClient } from '../../../stores/stores';
-    import { get } from 'svelte/store';
-    import initKeycloak from '$lib/keycloak.js';
-	import { GraphQLClient } from 'graphql-request';
     import getWorkflowQuery from '../../../queries/get_workflow_template';
     import getDryRunPhaseResultsQuery from '../../../queries/get_dry_run_phase_results';
+	import { requestGraphQLClient } from '$lib/graphqlUtils';
     
 
     const template_name = "diamondsimple";
-
     const dryrun_name = "dag-diamond-hx2kr"
-
 
     const getData = async (): Promise<{}> => {
         const workflow_variables = {
@@ -24,16 +17,8 @@
         const dryrun_variables = {
             dryRunId: dryrun_name,
         }
-        if (!$graphQLClient) {
-			try {
-				$graphQLClient = new GraphQLClient(GraphQL_API_URL, {});
-			} catch {
-				// redirect to keycloak authentication
-				await initKeycloak();
-			}
-		}
-		const workflow_response: {} = await get(graphQLClient).request(getWorkflowQuery, workflow_variables);
-        const dryrun_response: {} = await get(graphQLClient).request(getDryRunPhaseResultsQuery, dryrun_variables);
+		const workflow_response: {} = await requestGraphQLClient(getWorkflowQuery, workflow_variables);
+        const dryrun_response: {} = await requestGraphQLClient(getDryRunPhaseResultsQuery, dryrun_variables);
         const responses = {
             workflow: workflow_response,
             dryrun: dryrun_response,

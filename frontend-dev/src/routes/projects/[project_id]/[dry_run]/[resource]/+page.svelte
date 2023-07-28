@@ -3,18 +3,15 @@
     import { afterUpdate, onMount } from 'svelte';
     import { modeCurrent, ProgressBar } from '@skeletonlabs/skeleton';
     import type { DryRunMetrics, DryRun } from '../../../../../types';
-    import { get } from 'svelte/store';
-    import { graphQLClient, selectedProject } from '../../../../../stores/stores';
+    import { selectedProject } from '../../../../../stores/stores';
     import getDryRunMetricsQuery from '../../../../../queries/get_dry_run_metrics.js';
     import getDryRunNoLogsMetricsQuery from '../../../../../queries/get_dry_run_metrics_no_logs.js';
     import { format } from 'date-fns';
-	import { GraphQLClient } from 'graphql-request';
-	import { GraphQL_API_URL } from '$lib/config.js';
-	import initKeycloak from '$lib/keycloak.js';
-	import { goto } from '$app/navigation';
     import mermaid from 'mermaid';
     import getWorkflowQuery from '../../../../../queries/get_workflow_template';
     import getDryRunPhaseResultsQuery from '../../../../../queries/get_dry_run_phase_results';
+	import { requestGraphQLClient } from '$lib/graphqlUtils';
+	import { goto } from '$app/navigation';
 
     export let data;
     let workflow: { workflowTemplate: { argoWorkflowTemplate: { spec: { templates: any[]; }; }; }; };
@@ -53,16 +50,8 @@
         const dryrun_variables = {
             dryRunId: data.resource,
         }
-        if (!$graphQLClient) {
-			try {
-				$graphQLClient = new GraphQLClient(GraphQL_API_URL, {});
-			} catch {
-				// redirect to keycloak authentication
-				await initKeycloak();
-			}
-		}
-		const workflow_response = await get(graphQLClient).request(getWorkflowQuery, workflow_variables);
-        const dryrun_response: {dryRun : DryRun}  = await get(graphQLClient).request(getDryRunPhaseResultsQuery, dryrun_variables);
+		const workflow_response = await requestGraphQLClient(getWorkflowQuery, workflow_variables);
+        const dryrun_response: {dryRun : DryRun}  = await requestGraphQLClient(getDryRunPhaseResultsQuery, dryrun_variables);
         dryrun_response.dryRun.nodes.forEach((node: DryRunMetrics) => {
             dryRunPhases[node.displayName] = node.phase;
         });         
@@ -184,22 +173,15 @@
         const variables = {
             dryRunId: data.resource
         }
-        if (!$graphQLClient) {
-			try {
-				$graphQLClient = new GraphQLClient(GraphQL_API_URL, {});
-			} catch {
-				// redirect to keycloak authentication
-				await initKeycloak();
-			}
-		}
+
         try {
-            const response: {dryRun: { nodes: [] }} = await get(graphQLClient).request(getDryRunMetricsQuery, variables);
+            const response: {dryRun: { nodes: [] }} = await requestGraphQLClient(getDryRunMetricsQuery, variables);
             return response?.dryRun?.nodes;
         } catch (error) { 
             // internal server error from graphql API when requesting logs for dry runs which has no logs
             if((error as Error).message.includes("No logs found:")) {
                 showLogs = false;
-                const response: {dryRun: { nodes: [] }} = await get(graphQLClient).request(getDryRunNoLogsMetricsQuery, variables);
+                const response: {dryRun: { nodes: [] }} = await requestGraphQLClient(getDryRunNoLogsMetricsQuery, variables);
                 return response?.dryRun?.nodes;
             }
         }

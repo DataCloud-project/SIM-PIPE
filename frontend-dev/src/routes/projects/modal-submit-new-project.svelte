@@ -1,13 +1,13 @@
 <script lang="ts">
 	import {cBase, cHeader, cForm} from '../../styles/styles.js';
-	import { graphQLClient, projectsList } from '../../stores/stores.js';
+	import { projectsList } from '../../stores/stores.js';
 	import createProjectMutation from '../../queries/create_project.js';
-	import { get } from 'svelte/store';
 	import allProjectsQuery from '../../queries/get_all_projects.js'
 	import createWorkflowTemplateMutation from '../../queries/create_workflow_template.js'
 	import type { Project } from '../../types.js';
 	import { modalStore } from '@skeletonlabs/skeleton';
 	import yaml from 'js-yaml';
+	import { requestGraphQLClient } from '$lib/graphqlUtils.js';
 
 	export let parent: any;
 
@@ -21,7 +21,7 @@
 			project: {name: formData.name},
 		};
 
-		const responseCreateProject : {createProject: Project}= await get(graphQLClient).request(createProjectMutation, variables1);
+		const responseCreateProject : {createProject: Project} = await requestGraphQLClient(createProjectMutation, variables1);
 		if (formData.template != '') {
 			let template:JSON ;
 			// check if template is in JSON/YAML format, if YAML convert to JSON
@@ -37,11 +37,11 @@
 					projectId: responseCreateProject.createProject.id,
 				}
 			};
-			await get(graphQLClient).request(createWorkflowTemplateMutation, variables2);
+			await requestGraphQLClient(createWorkflowTemplateMutation, variables2);
 		}
 		modalStore.close();
         // update the project list after addition
-		const responseAllProjects: { projects: Project[] } = await get(graphQLClient).request(allProjectsQuery);
+		const responseAllProjects: { projects: Project[] } = await requestGraphQLClient(allProjectsQuery);
 		$projectsList = [];
 		$projectsList = responseAllProjects.projects;
 	}
