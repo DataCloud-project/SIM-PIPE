@@ -90,21 +90,19 @@ You may have to run the following instructions to make Docker work: https://gith
 
 ## How to start the frontend
 
-SIM-PIPE frontend needs to be started separately. To run the frontend of this project locally, you'll need Node.js and npm (Node Package Manager) installed on your machine. If you haven't installed them yet, you can download the latest LTS version of Node.js from the official website: https://nodejs.org/en/download/.
+SIM-PIPE frontend needs to be started separately. To run the frontend of this project locally, you'll need Docker installed on your machine. 
 
-### Install Dependencies and Start Frontend
+### Build and Start Frontend
 Navigate to the project's root directory in your terminal or command prompt and run the following sequence of commands to install and start the frontend:
 
 ```bash
 cd frontend/
-npm install
-npm run build
-# This command will generate the production-ready assets in the .svelte-kit/output directory.
+docker build -t simpipe-frontend .
+docker run -p docker run -p 3000:3000 simpipe-frontend
 
-npm run preview
 ```
 
-The server will be available at http://localhost:4173. You can access the app in your browser.
+The server will be available at http://localhost:3000. You can access the app in your browser.
 
 ## Architecture
 
