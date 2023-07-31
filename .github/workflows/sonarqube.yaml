@@ -56,5 +56,5 @@ jobs:
         timeout-minutes: 5
         env:
           SONAR_TOKEN: ${{ secrets.FRONTEND_SONAR_TOKEN }}
-        with:
-          scanMetadataReportFile: ./frontend/.scannerwork/report-task.txt
+#         with:
+#           scanMetadataReportFile: ./frontend/.scannerwork/report-task.txt
