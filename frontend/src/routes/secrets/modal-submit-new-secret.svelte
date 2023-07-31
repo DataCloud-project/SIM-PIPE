@@ -1,9 +1,9 @@
 <script lang="ts">
-	import {cBase, cHeader, cForm} from '../../styles/styles.js';
+	import { cBase, cHeader, cForm } from '../../styles/styles.js';
 	import createCredentialMutation from '../../queries/create_credential.js';
 	import { credentialsList } from '../../stores/stores.js';
 	import allCredentialsQuery from '../../queries/get_all_credentials.js';
-	import type { DockerRegistryCredential } from '../../types.js'
+	import type { DockerRegistryCredential } from '../../types.js';
 	export let parent: any;
 	import { modalStore } from '@skeletonlabs/skeleton';
 	import { requestGraphQLClient } from '$lib/graphqlUtils.js';
@@ -17,7 +17,9 @@
 	};
 
 	let checkedAutoGeneratePassword = false;
-	$: passwordInputText = checkedAutoGeneratePassword ? 'auto generate strong password' : 'Enter password...';
+	$: passwordInputText = checkedAutoGeneratePassword
+		? 'auto generate strong password'
+		: 'Enter password...';
 
 	// write a function that generates a random password
 	let detfault_password_length = 30;
@@ -34,7 +36,9 @@
 	}
 	// We've created a custom submit function to pass the response and close the modal.
 	async function onFormSubmit(): Promise<void> {
-		const password = checkedAutoGeneratePassword ? generateRandomPassword(detfault_password_length) : formData.password;
+		const password = checkedAutoGeneratePassword
+			? generateRandomPassword(detfault_password_length)
+			: formData.password;
 		const variables = {
 			credential: {
 				name: formData.name,
@@ -43,13 +47,13 @@
 				password: password
 			}
 		};
-		const response = await requestGraphQLClient(createCredentialMutation, variables);	
+		const response = await requestGraphQLClient(createCredentialMutation, variables);
 		modalStore.close();
 		// refresh credentials list
-		const newcredentialsPromise: {dockerRegistryCredentials: DockerRegistryCredential[]} = await requestGraphQLClient(allCredentialsQuery);
+		const newcredentialsPromise: { dockerRegistryCredentials: DockerRegistryCredential[] } =
+			await requestGraphQLClient(allCredentialsQuery);
 		$credentialsList = newcredentialsPromise.dockerRegistryCredentials;
 	}
-
 </script>
 
 <!-- @component This example creates a simple form modal. -->
@@ -63,35 +67,58 @@
 		<form class="modal-form {cForm}">
 			<label class="label">
 				<span>Secret name</span>
-				<input class="input" type="text" bind:value={formData.name} 
-						placeholder="Enter name..." pattern="[a-z0-9]+" 
-						title="lowercase alpha numeric words separated by .-_"/>
+				<input
+					class="input"
+					type="text"
+					bind:value={formData.name}
+					placeholder="Enter name..."
+					pattern="[a-z0-9]+"
+					title="lowercase alpha numeric words separated by .-_"
+				/>
 			</label>
 			<label class="label">
 				<span>Username</span>
-				<input class="input" type="text" bind:value={formData.username} 
-						placeholder="Enter username..." pattern="[a-z0-9.,_,-]+$"
-						title="lowercase alpha numeric words separated by .-_"/>
+				<input
+					class="input"
+					type="text"
+					bind:value={formData.username}
+					placeholder="Enter username..."
+					pattern="[a-z0-9.,_,-]+$"
+					title="lowercase alpha numeric words separated by .-_"
+				/>
 			</label>
 			<label class="label">
 				<span>Servername</span>
-				<input class="input" type="text" bind:value={formData.server} 
-						placeholder="Enter hostname for server..." pattern="[a-z0-9.,\/,:_,-]+$"
-						title="lowercase alpha numeric words separated by .-_:/"/>
+				<input
+					class="input"
+					type="text"
+					bind:value={formData.server}
+					placeholder="Enter hostname for server..."
+					pattern="[a-z0-9.,\/,:_,-]+$"
+					title="lowercase alpha numeric words separated by .-_:/"
+				/>
 			</label>
 			<div class="flex flex-row">
 				<div class="flex-initial w-8">
-					<input class="checkbox variant-filled" type="checkbox" bind:checked={checkedAutoGeneratePassword}>
+					<input
+						class="checkbox variant-filled"
+						type="checkbox"
+						bind:checked={checkedAutoGeneratePassword}
+					/>
 				</div>
 				<div class="justify-stretch">
-				<label class="label">
-					<span>Password</span>
-					<input class="input" type="text" bind:value={formData.password} 
-							placeholder={passwordInputText} pattern="[a-Z0-9.,_,-]+$"
+					<label class="label">
+						<span>Password</span>
+						<input
+							class="input"
+							type="text"
+							bind:value={formData.password}
+							placeholder={passwordInputText}
+							pattern="[a-Z0-9.,_,-]+$"
 							title="lowercase alpha numeric words separated by .-_"
 							disabled={checkedAutoGeneratePassword}
-							/>
-				</label>
+						/>
+					</label>
 				</div>
 			</div>
 		</form>
@@ -102,4 +129,3 @@
     </footer>
 	</div>
 {/if}
-  

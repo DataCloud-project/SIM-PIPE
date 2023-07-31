@@ -5,7 +5,7 @@
 	import createDryRunMutation from '../../../../queries/create_dry_run.js';
 	import allDryRunsQuery from '../../../../queries/get_all_dryruns.js';
 	import type { Project } from '../../../../types.js';
-	import refreshProjectDetails from  '../../../../lib/refresh_runs.js';
+	import refreshProjectDetails from '../../../../lib/refresh_runs.js';
 	import { requestGraphQLClient } from '$lib/graphqlUtils.js';
 
 	export let parent: any;
@@ -28,16 +28,26 @@
 	let formData = {
 		name: '',
 		files: undefined,
-		dagTemplate: {dag: {tasks: []}}
+		dagTemplate: { dag: { tasks: [] } }
 	};
-
 
 	function parseTaskList() {
 		// only valid for dag format https://argoproj.github.io/argo-workflows/walk-through/dag/
-		const {	spec: { templates }	} = $selectedProject?.workflowTemplates[0].argoWorkflowTemplate;
-		formData.dagTemplate = templates.find((template: Template) => template.dag);
-		const tasks: Task[] = formData.dagTemplate ? formData.dagTemplate.dag?.tasks : [];
-		return tasks;
+		if (
+			$selectedProject &&
+			$selectedProject.workflowTemplates &&
+			$selectedProject.workflowTemplates[0]?.argoWorkflowTemplate
+		) {
+			// disabling; could not resolve eslint error  Unsafe usage of optional chaining. If it short-circuits with 'undefined' the evaluation will throw TypeError  55:53  warning  Unexpected any. Specify a different type
+			/* eslint-disable */
+			const {
+				spec: { templates }
+			} = $selectedProject?.workflowTemplates[0]?.argoWorkflowTemplate;
+			/* eslint-disable */
+			formData.dagTemplate = templates.find((template: Template) => template.dag);
+			const tasks: Task[] = formData.dagTemplate ? formData.dagTemplate.dag?.tasks : [];
+			return tasks;
+		}
 	}
 	const taskList = parseTaskList();
 	let hideModal = false;
@@ -66,7 +76,10 @@
 			}
 		};
 		try {
-			const responseCreateDryRun: {createDryRun : {id: string}} = await requestGraphQLClient(createDryRunMutation, variables);
+			const responseCreateDryRun: { createDryRun: { id: string } } = await requestGraphQLClient(
+				createDryRunMutation,
+				variables
+			);
 			// refresh dry runs list
 			const response: { project: Project } = await requestGraphQLClient(allDryRunsQuery, {
 				projectId: $selectedProject?.id
@@ -75,19 +88,18 @@
 			const createDryRunMessageModal: ModalSettings = {
 				type: 'alert',
 				title: 'New dry run created&#10024;!',
-				body: `New dry run ID: ${responseCreateDryRun?.createDryRun?.id}`,
+				body: `New dry run ID: ${responseCreateDryRun?.createDryRun?.id}`
 			};
 			modalStore.trigger(createDryRunMessageModal);
 			alertModal = true;
 			await new Promise((resolve) => setTimeout(resolve, 1500));
 			modalStore.close();
-			await refreshProjectDetails();			
+			await refreshProjectDetails();
 			modalStore.clear();
-		} catch (error) {	
-			// TODO: handle error 
+		} catch (error) {
+			// TODO: handle error
 			console.log(error);
 		}
-		
 	}
 </script>
 
@@ -98,7 +110,13 @@
 		<form class="modal-form {cForm}">
 			<label class="label">
 				<span>Dry run name - <span style={optional}>Optional</span> </span>
-				<input class="input" type="text" bind:value={formData.name} placeholder="Enter name..." required/>
+				<input
+					class="input"
+					type="text"
+					bind:value={formData.name}
+					placeholder="Enter name..."
+					required
+				/>
 			</label>
 			<label class="label">
 				<span>Upload input files for the dry run </span>
@@ -133,7 +151,11 @@
 							<label class="ml-5"
 								>{param.name}:
 								<span>
-									<input class="input variant-form-material" type="text" bind:value={taskList[i].arguments.parameters[j].value} />
+									<input
+										class="input variant-form-material"
+										type="text"
+										bind:value={taskList[i].arguments.parameters[j].value}
+									/>
 								</span></label
 							>
 						{/each}
@@ -151,5 +173,5 @@
 {/if}
 
 {#if alertModal}
-	<Modal/>
+	<Modal />
 {/if}

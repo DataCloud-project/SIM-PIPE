@@ -15,8 +15,8 @@
 		return response.projects;
 	};
 
-    // TODO: replace this when dryRuns_aggregate is ready in the api
-    // get dry run counts for each project, and reset checkboxes  
+	// TODO: replace this when dryRuns_aggregate is ready in the api
+	// get dry run counts for each project, and reset checkboxes
 	function getDryRunCounts(projectList: Project[] | undefined): Record<string, number> {
 		dryRunCounts = {};
 		projectList?.forEach((project) => {
@@ -43,7 +43,7 @@
 
 	const modal: ModalSettings = {
 		type: 'component',
-		component:  { ref: ModalSubmitNewProject },
+		component: { ref: ModalSubmitNewProject },
 		title: 'Add new project',
 		body: 'Enter details of project'
 	};
@@ -59,7 +59,7 @@
 		const projectDeletedMessageModal: ModalSettings = {
 			type: 'alert',
 			title: 'Project deleted🗑️!',
-			body: `Deleted projects: ${Object.keys(checkboxes).filter((item) => checkboxes[item])}`,
+			body: `Deleted projects: ${Object.keys(checkboxes).filter((item) => checkboxes[item])}`
 		};
 		modalStore.trigger(projectDeletedMessageModal);
 		await new Promise((resolve) => setTimeout(resolve, 1500));
@@ -72,9 +72,7 @@
 		await new Promise((resolve) => setTimeout(resolve, 150));
 
 		// update the project list after deletion
-		let responseAllProjects: { projects: Project[] } = await requestGraphQLClient(
-			allProjectsQuery
-		);
+		let responseAllProjects: { projects: Project[] } = await requestGraphQLClient(allProjectsQuery);
 		projectsList.set(responseAllProjects.projects);
 	}
 
@@ -88,7 +86,7 @@
 		goto(`/projects/[project_id]/${dry_run}`);
 	}
 
-	function showTemplate(event:any, project:Project) {
+	function showTemplate(event: any, project: Project) {
 		$clickedProjectId = project.id;
 		event.stopPropagation();
 		const template = project.workflowTemplates[0].argoWorkflowTemplate?.metadata.name;
@@ -135,10 +133,7 @@
 				</thead>
 				<tbody>
 					{#each reactiveProjectsList || [] as project}
-						<tr
-							class=""
-							on:click={() => gotodryruns(project.id)}
-						>
+						<tr class="" on:click={() => gotodryruns(project.id)}>
 							<td>
 								<input
 									type="checkbox"
@@ -147,10 +142,11 @@
 									on:click={(event) => handleCheckboxClick(event)}
 								/>
 							</td>
-							<td >{project.name}</td>
+							<td>{project.name}</td>
 							<!-- <td>{project.createdAt}</td> -->
-							<td><Timestamp timestamp={project.createdAt} />
-							<td>{dryRunCounts[project.id]}</td>
+							<td><Timestamp timestamp={project.createdAt} /> </td><td
+								>{dryRunCounts[project.id]}</td
+							>
 							<!-- svelte-ignore a11y-click-events-have-key-events -->
 							<td on:click={(event) => showTemplate(event, project)}>
 								<p class="no-underline hover:underline">show</p>

@@ -1,4 +1,4 @@
 export async function load({ params }) {
-    let { template } = params;
-    return { template };
+	let { template } = params;
+	return { template };
 }
