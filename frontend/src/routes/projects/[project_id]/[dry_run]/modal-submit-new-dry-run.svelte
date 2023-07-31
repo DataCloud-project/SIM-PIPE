@@ -49,7 +49,7 @@
 			return tasks;
 		}
 	}
-	const taskList = parseTaskList();
+	const taskList = parseTaskList() || [];
 	let hideModal = false;
 	let alertModal = false;
 
