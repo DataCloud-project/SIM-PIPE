@@ -87,6 +87,25 @@ SIM-PIPE runs everywhere as long as it runs Linux. If you are using Windows, you
 
 You may have to run the following instructions to make Docker work: https://github.com/microsoft/WSL/issues/6655#issuecomment-1142933322
 
+
+## How to start the frontend
+
+SIM-PIPE frontend needs to be started separately. To run the frontend of this project locally, you'll need Node.js and npm (Node Package Manager) installed on your machine. If you haven't installed them yet, you can download the latest LTS version of Node.js from the official website: https://nodejs.org/en/download/.
+
+### Install Dependencies and Start Frontend
+Navigate to the project's root directory in your terminal or command prompt and run the following sequence of commands to install and start the frontend:
+
+```bash
+cd frontend/
+npm install
+npm run build
+# This command will generate the production-ready assets in the .svelte-kit/output directory.
+
+npm run preview
+```
+
+The server will be available at http://localhost:4173. You can access the app in your browser.
+
 ## Architecture
 
 Please consult the [`ARCHITECTURE.md`](ARCHITECTURE.md) document for more details on the SIM-PIPE architecture.
