@@ -1,48 +1,53 @@
 <script lang="ts">
-  import '../styles/global.css';
+	// The ordering of these imports is critical to your app working properly
+	import '@skeletonlabs/skeleton/themes/theme-skeleton.css';
+	// If you have source.organizeImports set to true in VSCode, then it will auto change this ordering
+	import '@skeletonlabs/skeleton/styles/skeleton.css';
+	import '@fontsource/ibm-plex-sans/400.css';
+	import '@fontsource/ibm-plex-sans/600.css';
+	// Most of your app wide CSS should be put in this file
+	import '../app.postcss';
+	// More stuff
+	import { AppShell, AppBar, AppRail, AppRailTile } from '@skeletonlabs/skeleton';
+	import { LightSwitch } from '@skeletonlabs/skeleton';
 
-  import { username } from '../stores/stores.js';
+	import { page } from '$app/stores';
+	import { derived } from 'svelte/store';
+	import { LockIcon, BookOpenIcon, BarChart2Icon, Share2Icon } from 'svelte-feather-icons';
+	import hljs from 'highlight.js';
+	import 'highlight.js/styles/github-dark.css'; // highlight.js theme
+	import { storeHighlightJs } from '@skeletonlabs/skeleton';
+
+	storeHighlightJs.set(hljs);
+	const selected = derived(page, ($page) => $page.url.pathname);
 </script>
 
-<svelte:head>
-  <title>SIM-PIPE UI</title>
-</svelte:head>
+<AppShell>
+	<!-- (header) -->
+	<svelte:fragment slot="header">
+		<AppBar gridColumns="grid-cols-3" slotDefault="place-self-center" slotTrail="place-content-end">
+			<svelte:fragment slot="lead">
+				<div class="flex justify-start">
+					<h1 class="text-blue-500">SIM</h1>
+					<h1>PIPE</h1>
+				</div>
+			</svelte:fragment>
+			<svelte:fragment slot="trail"><LightSwitch /></svelte:fragment>
+		</AppBar>
+	</svelte:fragment>
 
-<header>
-  <h1 style="text-align:center;">
-    SIM-PIPE UI
-    <span style="float:right; font-size:20px; padding:15px; ">👩‍🎓 {$username}</span>
-  </h1>
-  <!-- <div style="text-align:right; ">Log out*</div> -->
-  <!-- <h5>
-		{#if $username != ''}
-			{$username} logged in
-		{/if}
-	</h5> -->
-</header>
+	<!-- (sidebarLeft) -->
+	<svelte:fragment slot="sidebarLeft">
+		<AppRail>
+			<AppRailTile label="Projects" href="/projects"><BookOpenIcon size="1.5x" /></AppRailTile>
+			<AppRailTile label="Registry Key Vault" href="/secrets"><LockIcon size="1.5x" /></AppRailTile>
+			<!-- <AppRailTile label="dDAG" href="/visualizations/ddag"><Share2Icon size="1.5x" /></AppRailTile> -->
+		</AppRail>
+	</svelte:fragment>
 
-<main>
-  <!-- content comes here -->
-  <slot />
-</main>
+	<!-- Router Slot -->
+	<slot />
 
-<footer></footer>
-
-<style>
-  header {
-    /* justify-content: center; */
-    /* display: flex; */
-    padding: 0.2px;
-    background-color: rgb(249, 163, 97);
-  }
-  h1 {
-    color: black;
-    font-size: 40px;
-  }
-  main {
-    margin: 10px auto;
-  }
-  footer {
-    text-align: center;
-  }
-</style>
+	<!-- (pageFooter) -->
+	<svelte:fragment slot="footer"></svelte:fragment>
+</AppShell>
