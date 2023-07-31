@@ -41,7 +41,7 @@
 		<AppRail>
 			<AppRailTile label="Projects" href="/projects"><BookOpenIcon size="1.5x" /></AppRailTile>
 			<AppRailTile label="Registry Key Vault" href="/secrets"><LockIcon size="1.5x" /></AppRailTile>
-			<AppRailTile label="dDAG" href="/visualizations/ddag"><Share2Icon size="1.5x" /></AppRailTile>
+			<!-- <AppRailTile label="dDAG" href="/visualizations/ddag"><Share2Icon size="1.5x" /></AppRailTile> -->
 		</AppRail>
 	</svelte:fragment>
 
