@@ -176,7 +176,6 @@ cython_debug/
 # Antoine's crap, remove if you see this
 cli
 examples
-frontend
 old-migrations
 sandbox
 *.dump
