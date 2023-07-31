@@ -67,12 +67,12 @@
 				projectId: $selectedProject?.id
 			});
 			$selectedProject = response.project;
-			const createDryRunErrorModal: ModalSettings = {
+			const createDryRunMessageModal: ModalSettings = {
 				type: 'alert',
 				title: 'New dry run created&#10024;!',
 				body: `New dry run ID: ${responseCreateDryRun?.createDryRun?.id}`,
 			};
-			modalStore.trigger(createDryRunErrorModal);
+			modalStore.trigger(createDryRunMessageModal);
 			alertModal = true;
 			await new Promise((resolve) => setTimeout(resolve, 1500));
 			modalStore.close();

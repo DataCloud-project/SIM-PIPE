@@ -56,6 +56,14 @@
 				};
 				const response = await requestGraphQLClient(deleteProjectMutation, variables);
 			});
+		const projectDeletedMessageModal: ModalSettings = {
+			type: 'alert',
+			title: 'Project deleted🗑️!',
+			body: `Deleted projects: ${Object.keys(checkboxes).filter((item) => checkboxes[item])}`,
+		};
+		modalStore.trigger(projectDeletedMessageModal);
+		await new Promise((resolve) => setTimeout(resolve, 1500));
+		modalStore.close();
 		// reset checkboxes
 		$projectsList?.forEach((element) => {
 			checkboxes[element.id] = false;
@@ -156,4 +164,6 @@
 	</div>
 </div>
 
-<Modal />
+{#if $modalStore[0]}
+	<Modal />
+{/if}
