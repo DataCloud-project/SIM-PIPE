@@ -1,17 +1,18 @@
 <script lang="ts">
-    import Plotly from 'plotly.js-dist';
     import { afterUpdate, onMount } from 'svelte';
     import { modeCurrent, ProgressBar } from '@skeletonlabs/skeleton';
     import type { DryRunMetrics, DryRun } from '../../../../../types';
-    import { selectedProject } from '../../../../../stores/stores';
     import getDryRunMetricsQuery from '../../../../../queries/get_dry_run_metrics.js';
     import getDryRunNoLogsMetricsQuery from '../../../../../queries/get_dry_run_metrics_no_logs.js';
     import { format } from 'date-fns';
     import mermaid from 'mermaid';
     import getWorkflowQuery from '../../../../../queries/get_workflow_template';
     import getDryRunPhaseResultsQuery from '../../../../../queries/get_dry_run_phase_results';
+    import getDryRunQuery from '../../../../../queries/get_selected_project';
 	import { requestGraphQLClient } from '$lib/graphqlUtils';
 	import { goto } from '$app/navigation';
+    
+    let Plotly: { newPlot: new (arg0: HTMLElement | null, arg1: { data: { x: string[]; y: number[]; type: string; name: string; }[] | { x: string[]; y: number[]; type: string; name: string; }[] | { x: string[]; y: number[]; type: string; name: string; }[] | { x: string[]; y: number[]; type: string; name: string; }[]; layout: { font: { size: number; color: string; }; paper_bgcolor: string; plot_bgcolor: string; xaxis: { title: string; showgrid: boolean; gridwidth: number; }; yaxis: { title: string; showgrid: boolean; gridwidth: number; }; title: string; } | { xaxis: { visible: boolean; }; yaxis: { visible: boolean; }; paper_bgcolor: string; plot_bgcolor: string; title: string; annotations: { text: string; xref: string; yref: string; showarrow: boolean; font: { size: number; }; }[]; }; config: { responsive: boolean; scrollZoom: boolean; }; }) => any; };
 
     export let data;
     let workflow: { workflowTemplate: { argoWorkflowTemplate: { spec: { templates: any[]; }; }; }; };
@@ -32,6 +33,7 @@
     let mermaidCode = [];
     let diagram: string;
     let container;
+    let selectedProject: { name: any; id: any; };
     const mermaidConfig = {
         securityLevel: 'loose',
         theme: 'neutral',
@@ -44,8 +46,10 @@
         },
         };
     const getData = async (): Promise<{workflow: any; dryrun:any }> => {
+        const selectedProjectResponse = await requestGraphQLClient(getDryRunQuery, { "dryRunId" : data.resource });
+        selectedProject = selectedProjectResponse.dryRun?.project;
         const workflow_variables = {
-            name: $selectedProject?.name,
+            name: selectedProject?.name,
         }
         const dryrun_variables = {
             dryRunId: data.resource,
@@ -221,7 +225,8 @@
             value.forEach((node) => {
                 // TODO: make more efficient if data missing?
                 if (isEmpty(node) === false) {
-                    logs[node.startedAt] = node.log[0];
+                    if(node.log)
+                        logs[node.startedAt] = node.log[0];
                     let cpuTimestamps = timestampsToDatetime(node.startedAt, node.metrics.cpuUsageSecondsTotal.map((item) => item.timestamp))
                     let memTimestamps = timestampsToDatetime(node.startedAt, node.metrics.memoryUsageBytes.map((item) => item.timestamp))
                     let nrcTimestamps = timestampsToDatetime(node.startedAt, node.metrics.networkReceiveBytesTotal.map((item) => item.timestamp))
@@ -364,7 +369,8 @@
         }
     };    
 
-    onMount(async () => {
+    onMount(async () => {  
+        Plotly = (await import('plotly.js-dist')).default;   
         await metricsPromise;
         await getDataPromise;
         renderDiagram();
@@ -385,7 +391,7 @@
 <div class="container p-5">
     <h1><a href="/projects" >Projects</a> 
 		<span STYLE="font-size:14px">/ </span>
-        <button on:click={() => goto(`/projects/[project_id]/${$selectedProject?.id}`)} >{$selectedProject?.name} </button>
+        <button on:click={() => goto(`/projects/[project_id]/${selectedProject?.id}`)} >{selectedProject?.name} </button>
 		<span STYLE="font-size:14px">/ </span>{data.resource}
     </h1>
 	<div class="table-container p-5">
