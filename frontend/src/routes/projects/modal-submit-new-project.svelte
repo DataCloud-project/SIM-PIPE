@@ -42,7 +42,7 @@
 			try { 
 				template = JSON.parse(formData.template);
 			} catch {
-				template  = yaml.load(formData.template);
+				template  = yaml.load(formData.template) as JSON;
 			}
 			const variables2 = {
 				input: {

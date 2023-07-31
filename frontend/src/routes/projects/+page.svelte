@@ -151,8 +151,7 @@
 							<!-- <td>{project.createdAt}</td> -->
 							<td><Timestamp timestamp={project.createdAt} />
 							<td>{dryRunCounts[project.id]}</td>
-							<!-- TODO: Aleena add number of dry runs and number of simulation runs-->
-							<!-- <td>NaN</td> -->
+							<!-- svelte-ignore a11y-click-events-have-key-events -->
 							<td on:click={(event) => showTemplate(event, project)}>
 								<p class="no-underline hover:underline">show</p>
 							</td>

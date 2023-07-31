@@ -21,17 +21,22 @@
 		dependencies?: string[];
 	};
 
+	interface Template {
+		dag?: any;
+	}
+
 	let formData = {
 		name: '',
 		files: undefined,
-		dagTemplate: {}
+		dagTemplate: {dag: {tasks: []}}
 	};
+
 
 	function parseTaskList() {
 		// only valid for dag format https://argoproj.github.io/argo-workflows/walk-through/dag/
 		const {	spec: { templates }	} = $selectedProject?.workflowTemplates[0].argoWorkflowTemplate;
-		formData.dagTemplate = templates.find((template: { dag: any }) => template.dag);
-		const tasks: Task[] = formData.dagTemplate ? formData.dagTemplate.dag.tasks : [];
+		formData.dagTemplate = templates.find((template: Template) => template.dag);
+		const tasks: Task[] = formData.dagTemplate ? formData.dagTemplate.dag?.tasks : [];
 		return tasks;
 	}
 	const taskList = parseTaskList();
@@ -103,6 +108,7 @@
 			{#if taskList.length > 0}
 				{#each taskList as task, i}
 					<div class="ml-5">
+						<!-- svelte-ignore a11y-label-has-associated-control -->
 						<label><b>{task.name}</b></label>
 						<label
 							>Template: <span>
@@ -122,6 +128,7 @@
 							>
 						{/if}
 						{#each taskList[i].arguments.parameters as param, j}
+							<!-- svelte-ignore a11y-label-has-associated-control -->
 							<label>Enviroment parameters:</label>
 							<label class="ml-5"
 								>{param.name}:

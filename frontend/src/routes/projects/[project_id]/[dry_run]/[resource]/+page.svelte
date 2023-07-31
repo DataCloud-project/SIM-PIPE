@@ -32,7 +32,7 @@
     }
     let mermaidCode = [];
     let diagram: string;
-    let container;
+    let container: Element;
     let selectedProject: { name: any; id: any; };
     const mermaidConfig = {
         securityLevel: 'loose',
@@ -218,11 +218,11 @@
         return Object.keys(obj).length === 0;
     }
 
-    let logs = {};
+    let logs: { [x: string]: string ; } = {};
 
     // TODO: move to lib or utils
 	metricsPromise.then((value) => {
-            value.forEach((node) => {
+            value?.forEach((node) => {
                 // TODO: make more efficient if data missing?
                 if (isEmpty(node) === false) {
                     if(node.log)

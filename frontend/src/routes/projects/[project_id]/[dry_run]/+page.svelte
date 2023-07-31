@@ -132,6 +132,7 @@
 					{#each reactiveProjectDetails?.dryRuns || [] as run}
 						<tr>
 							<td><input type="checkbox" bind:checked={checkboxes[run.id]} class="checkbox variant-filled" /></td>
+							<!-- svelte-ignore a11y-click-events-have-key-events -->
 							<td on:click={() => dryRunOnClick(run.id)}>{run.id}</td>
 							<td><SymbolForRunResult run_result={(run.status.phase).toString()} /></td>
 							<!-- <td>{transformSecondsToHoursMinutesSeconds(run.status.estimatedDuration)}</td> -->
