@@ -9,6 +9,8 @@
 	import { goto } from '$app/navigation';
 	import Timestamp from './[project_id]/[dry_run]/timestamp.svelte';
 	import { requestGraphQLClient } from '$lib/graphqlUtils';
+	import { EditIcon } from 'svelte-feather-icons';
+	import ModalRenameProject from './modal-rename-project.svelte';
 
 	const getProjectsList = async (): Promise<Project[]> => {
 		const response: { projects: Project[] } = await requestGraphQLClient(allProjectsQuery);
@@ -86,6 +88,20 @@
 		goto(`/projects/[project_id]/${dry_run}`);
 	}
 
+	function renameProject(event:any, project:Project) {
+		event.stopPropagation();
+		
+		const modal: ModalSettings = {
+			type: 'component',
+			component: { ref: ModalRenameProject },
+			title: 'Rename project',
+			body: 'Enter the new name',
+			valueAttr: { projectId: project.id, projectName:project.name }
+		};
+		
+		modalStore.trigger(modal);
+	}
+
 	function showTemplate(event: any, project: Project) {
 		$clickedProjectId = project.id;
 		event.stopPropagation();
@@ -129,6 +145,7 @@
 						<th>Dry runs</th>
 						<!-- <th>Simulation runs</th> -->
 						<th>Template</th>
+						<th />
 					</tr>
 				</thead>
 				<tbody>
@@ -143,13 +160,21 @@
 								/>
 							</td>
 							<td>{project.name}</td>
-							<!-- <td>{project.createdAt}</td> -->
 							<td><Timestamp timestamp={project.createdAt} /> </td><td
 								>{dryRunCounts[project.id]}</td
 							>
 							<!-- svelte-ignore a11y-click-events-have-key-events -->
 							<td on:click={(event) => showTemplate(event, project)}>
 								<p class="no-underline hover:underline">show</p>
+							</td>
+							<td>
+								<button on:click={() => renameProject(event, project)} type="button" class="btn-icon btn-icon-sm variant-soft">
+									<!-- <SymbolForRenameProject
+										projectId={project.id}
+										event=event
+									/> -->
+									<EditIcon size="20" />
+								</button>
 							</td>
 						</tr>
 					{/each}
