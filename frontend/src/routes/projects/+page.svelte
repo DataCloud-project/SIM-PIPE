@@ -133,7 +133,7 @@
 				</thead>
 				<tbody>
 					{#each reactiveProjectsList || [] as project}
-						<tr class="" on:click={() => gotodryruns(project.id)}>
+						<tr on:click={() => gotodryruns(project.id)}>
 							<td>
 								<input
 									type="checkbox"
