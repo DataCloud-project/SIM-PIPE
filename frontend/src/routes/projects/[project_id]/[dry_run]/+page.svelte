@@ -143,10 +143,8 @@
 									class="checkbox variant-filled"
 								/></td
 							>
-							<!-- svelte-ignore a11y-click-events-have-key-events -->
 							<td>{run.id}</td>
 							<td><SymbolForRunResult run_result={run.status.phase.toString()} /></td>
-							<!-- <td>{transformSecondsToHoursMinutesSeconds(run.status.estimatedDuration)}</td> -->
 							<!-- TODO: calculate from started and finished -->
 							<td>{run.status.estimatedDuration}</td>
 							<td>

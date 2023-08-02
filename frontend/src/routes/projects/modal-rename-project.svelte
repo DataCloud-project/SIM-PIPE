@@ -8,9 +8,12 @@
 	import renameProjectMutation from '../../queries/rename_project.js';
 
 	export let parent: any;
-	const project:{projectId: string; projectName: string;} = $modalStore[0]?.valueAttr as {projectId: string; projectName: string;};
+	const project: { projectId: string; projectName: string } = $modalStore[0]?.valueAttr as {
+		projectId: string;
+		projectName: string;
+	};
 	const formData = {
-		name: '',
+		name: ''
 	};
 	let hideModal = false;
 	let alertModal = false;
@@ -19,17 +22,14 @@
 		hideModal = true;
 		const variables1 = {
 			projectId: project.projectId,
-			name: formData.name 
+			name: formData.name
 		};
 		modalStore.close();
 
-		await requestGraphQLClient(
-			renameProjectMutation,
-			variables1
-		);
+		await requestGraphQLClient(renameProjectMutation, variables1);
 		const projectRenamedMessageModal: ModalSettings = {
 			type: 'alert',
-			title: 'Project renamed &#10024;!', 
+			title: 'Project renamed &#10024;!',
 			body: `New name: ${formData.name}`
 		};
 		alertModal = true;
@@ -37,7 +37,7 @@
 		await new Promise((resolve) => setTimeout(resolve, 1500));
 		modalStore.close();
 		modalStore.clear();
-		
+
 		// update the project list after addition
 		const responseAllProjects: { projects: Project[] } = await requestGraphQLClient(
 			allProjectsQuery
@@ -54,11 +54,16 @@
 		<form class="modal-form {cForm}">
 			<label class="label">
 				<span>Project name</span>
-				<input class="input" type="text" readonly value={project.projectName}>
+				<input class="input" type="text" readonly value={project.projectName} />
 			</label>
 			<label class="label">
 				<span>New name</span>
-				<input class="input" type="text" bind:value={formData.name} placeholder="Enter new name..." />
+				<input
+					class="input"
+					type="text"
+					bind:value={formData.name}
+					placeholder="Enter new name..."
+				/>
 			</label>
 		</form>
 		<footer class="modal-footer {parent.regionFooter}">

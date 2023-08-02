@@ -88,17 +88,17 @@
 		goto(`/projects/[project_id]/${dry_run}`);
 	}
 
-	function renameProject(event:any, project:Project) {
+	function renameProject(event: any, project: Project) {
 		event.stopPropagation();
-		
+
 		const modal: ModalSettings = {
 			type: 'component',
 			component: { ref: ModalRenameProject },
 			title: 'Rename project',
 			body: 'Enter the new name',
-			valueAttr: { projectId: project.id, projectName:project.name }
+			valueAttr: { projectId: project.id, projectName: project.name }
 		};
-		
+
 		modalStore.trigger(modal);
 	}
 
@@ -168,7 +168,11 @@
 								<p class="no-underline hover:underline">show</p>
 							</td>
 							<td>
-								<button on:click={() => renameProject(event, project)} type="button" class="btn-icon btn-icon-sm variant-soft">
+								<button
+									on:click={() => renameProject(event, project)}
+									type="button"
+									class="btn-icon btn-icon-sm variant-soft"
+								>
 									<!-- <SymbolForRenameProject
 										projectId={project.id}
 										event=event
