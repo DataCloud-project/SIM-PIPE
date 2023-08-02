@@ -56,6 +56,7 @@
 		"mermaid": "^10.2.4",
 		"plotly.js-dist": "^2.24.3",
 		"prismjs": "^1.29.0",
-		"svelte-feather-icons": "^4.0.1"
+		"svelte-feather-icons": "^4.0.1",
+		"svelte-plotly.js": "^0.3.2"
 	}
 }
