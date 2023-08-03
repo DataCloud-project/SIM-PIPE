@@ -14,6 +14,7 @@
 	import Mermaid from './Mermaid.svelte';
 	import { colors } from './Config.js'
 
+
 	export let data;
 	let workflow: { workflowTemplate: { argoWorkflowTemplate: { spec: { templates: any[] } } } };
 	let dryrun_results: { dryRun: { nodes: any[] } };
@@ -94,7 +95,10 @@
 			data.metrics?.forEach((node) => {
 				// TODO: make more efficient if data missing?
 				if (isEmpty(node) === false) {
-					if (node.log) logs[node.startedAt] = node.log[0];
+					if (node.log) {
+						//console.log(node.log)
+						logs[node.displayName] = node.log;
+					}
 					let cpuTimestamps = timestampsToDatetime(
 						node.startedAt,
 						node.metrics.cpuUsageSecondsTotal.map((item) => item.timestamp)
@@ -169,7 +173,6 @@
 					}
 				}
 			});
-
 		})
 		.catch((error) => {
 			console.log(error);
@@ -297,12 +300,12 @@
 		</button>
 		<span STYLE="font-size:14px">/ </span>{data.resource}
 	</h1>
-	<div class="table-container p-5">
+	<div class="container p-5">
 		{#await getDataPromise}
 			<p>Loading metrics...</p>
 			<ProgressBar />
 		{:then}
-			<div class="grid grid-rows-3 grid-cols-2 gap-4">
+			<div class="grid grid-rows-3 grid-cols-2 gap-4 max-h-screen">
 				<div class="card">
 					<Mermaid diagram={diagram} />
 				</div>
@@ -314,24 +317,33 @@
 						yaxis_title="cpu usage"
 					/>
 				</div>				
-				<div class="card row-span-2">
-					<div class="overflow-y-auto card p-5 basis-1/3">
-						<div>
-							<h1>Logs</h1>
-							<br />
+				<div class="card logcard row-span-2 p-5">
+					<header class="card-header"><h1>Logs</h1></header>
+					<section class="p-2">
+						<br />
+						<ul class="list">
 							{#if showLogs}
 								{#each Object.keys(logs).sort() as key}
-									<div class="overflow-y-auto max-h-20">
-										<pre class="bg-surface-50-900-token ml-6 mr-6 p-3">{logs[key]}</pre>
-									</div>
+									<li>
+										<h2>{key}</h2>
+									</li>
+									<li>
+										<pre class="pre">
+											<code class="code-example-body prettyprint">
+												{#each Object.values(logs[key]) as line}
+													{line}<br />
+												{/each}
+											</code>
+									</pre>
+									</li>
 									<br />
-								{/each}
-							{:else}
-								<p>No data</p>
-							{/if}
-						</div>
-					</div>
-				</div>		
+							{/each}
+						{:else}
+							<p>No data</p>
+						{/if}
+						</ul>
+					</section>
+				</div>
 				<div class="card">
 					<Plot
 						data={memoryData}
@@ -352,3 +364,25 @@
 		{/await}
 	</div>
 </div>
+
+
+<style>
+	.card.logcard {
+		overflow-y: scroll;
+		max-height: fit-content;
+	}
+	ul {
+		max-height: 50vh;
+		max-height: fit-content;
+	}
+	pre {
+		padding: 0 6px;
+		border: 1px solid rgb(255, 0, 0);
+		box-sizing: border-box;
+		overflow-x: hidden;
+		overflow-y: scroll;
+		max-height: 50vh;
+		max-width: 98%;
+		white-space: pre-wrap;
+	}
+</style>
