@@ -136,18 +136,18 @@
 				<tbody>
 					{#each reactiveProjectDetails?.dryRuns || [] as run}
 						<tr on:click={() => dryRunOnClick(run.id)}>
-							<td
-								><input
+							<td style="width:10px">
+								<input
 									type="checkbox"
 									bind:checked={checkboxes[run.id]}
 									class="checkbox variant-filled"
-								/></td
-							>
-							<td>{run.id}</td>
-							<td><SymbolForRunResult run_result={run.status.phase.toString()} /></td>
+								/>
+							</td>
+							<td style="width:100%">{run.id}</td>
+							<td style="width:100%"><SymbolForRunResult run_result={run.status.phase.toString()} /></td>
 							<!-- TODO: calculate from started and finished -->
-							<td>{run.status.estimatedDuration}</td>
-							<td>
+							<td style="width:100%">{run.status.estimatedDuration}</td>
+							<td style="width:100%">
 								<button type="button" class="btn-icon btn-icon-sm variant-soft">
 									<SymbolForAction
 										action={getDryRunAction(run.status.phase.toString())}
@@ -156,7 +156,7 @@
 								</button>
 							</td>
 							<!-- <td>{run.createdAt}</td> -->
-							<td><Timestamp timestamp={run.createdAt} /> </td>
+							<td style="width:100%"><Timestamp timestamp={run.createdAt} /> </td>
 						</tr>
 					{/each}
 				</tbody>
@@ -168,3 +168,22 @@
 {#if $modalStore[0]}
 	<Modal />
 {/if}
+
+
+<style>
+	.table.table {
+		max-height: 80vh;
+		overflow-y: auto;
+		overflow-x: scroll;
+		display: block;
+		border-collapse: collapse;
+		margin-left: auto;
+		margin-right: auto;
+		table-layout: auto;
+		width: 90%;
+	}
+	thead {
+		position: sticky;
+		top: 0;
+	}
+  </style>

@@ -131,12 +131,12 @@
 		</div>
 	</div>
 
-	<div class="p-5 table-container overflow-y-auto max-h-3/4">
 		{#await projectsPromise}
 			<p style="font-size:20px;">Loading projects...</p>
 			<ProgressBar />
 		{:then projectsList}
-			<table class="table table-interactive">
+		<div class="table-container p-5">
+			<table class="table table-interactive">			
 				<thead>
 					<tr>
 						<th />
@@ -151,7 +151,7 @@
 				<tbody>
 					{#each reactiveProjectsList || [] as project}
 						<tr on:click={() => gotodryruns(project.id)}>
-							<td>
+							<td style="width:10px">
 								<input
 									type="checkbox"
 									class="checkbox variant-filled"
@@ -159,15 +159,15 @@
 									on:click={(event) => handleCheckboxClick(event)}
 								/>
 							</td>
-							<td>{project.name}</td>
-							<td><Timestamp timestamp={project.createdAt} /> </td><td
+							<td style="width:100%">{project.name}</td>
+							<td style="width:100%"><Timestamp timestamp={project.createdAt} /> </td><td
 								>{dryRunCounts[project.id]}</td
 							>
 							<!-- svelte-ignore a11y-click-events-have-key-events -->
 							<td on:click={(event) => showTemplate(event, project)}>
 								<p class="no-underline hover:underline">show</p>
 							</td>
-							<td>
+							<td style="width:100%">
 								<button
 									on:click={() => renameProject(event, project)}
 									type="button"
@@ -184,10 +184,28 @@
 					{/each}
 				</tbody>
 			</table>
+		</div>			
 		{/await}
-	</div>
 </div>
 
 {#if $modalStore[0]}
 	<Modal />
 {/if}
+
+<style>
+	.table.table {
+		max-height: 80vh;
+		overflow-y: auto;
+		overflow-x: scroll;
+		display: block;
+		border-collapse: collapse;
+		margin-left: auto;
+		margin-right: auto;
+		table-layout: auto;
+		width: 90%;
+	}
+	thead {
+		position: sticky;
+		top: 0;
+	}
+  </style>
