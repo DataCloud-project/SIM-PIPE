@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Modal, modalStore } from '@skeletonlabs/skeleton';
+	import { Modal, modalStore, ProgressBar } from '@skeletonlabs/skeleton';
 	import type { ModalSettings, ModalComponent } from '@skeletonlabs/skeleton';
 	import ModalSubmitNewSecret from './modal-submit-new-secret.svelte';
 	import allCredentialsQuery from '../../queries/get_all_credentials.js';
@@ -92,11 +92,12 @@
 		</div>
 	</div>
 
-	<div class="p-5 table-container">
-		{#await credentialsPromise}
-			<p style="font-size:20px;">Loading credentials...</p>
-		{:then credentialsList}
-			<table class="w-half table table-interactive">
+	{#await credentialsPromise}
+		<p style="font-size:20px;">Loading credentials...</p>
+		<ProgressBar />
+	{:then credentialsList}
+		<div class="table-container p-5">		
+			<table class="table table-interactive">
 				<thead>
 					<tr>
 						<th />
@@ -107,24 +108,42 @@
 				</thead>
 				<tbody>
 					{#each reactiveCredentialsList || [] as secret}
-						<tr id="clickable_row" class="table-row-checked">
-							<td>
+						<tr id="clickable_row">
+							<td  style="width:10px">
 								<input
 									type="checkbox"
-									class="checkbox variant-filled"
+									class="checkbox"
 									bind:checked={checkboxes[secret.name]}
 									on:click={(event) => handleCheckboxClick(event)}
 								/>
 							</td>
-							<td>{secret.name}</td>
-							<td>{secret.username}</td>
-							<td>{secret.server}</td>
+							<td style="width:100%">{secret.name}</td>
+							<td style="width:100%">{secret.username}</td>
+							<td style="width:100%">{secret.server}</td>
 						</tr>
 					{/each}
 				</tbody>
 			</table>
-		{/await}
-	</div>
+		</div>
+	{/await}
 </div>
 
 <Modal />
+
+<style>
+	.table.table {
+		max-height: 80vh;
+		overflow-y: auto;
+		overflow-x: scroll;
+		display: block;
+		border-collapse: collapse;
+		margin-left: auto;
+		margin-right: auto;
+		table-layout: auto;
+		width: 90%;
+	}
+	thead {
+		position: sticky;
+		top: 0;
+	}
+  </style>
