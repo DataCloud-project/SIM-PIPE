@@ -28,8 +28,8 @@
 		<AppBar gridColumns="grid-cols-3" slotDefault="place-self-center" slotTrail="place-content-end">
 			<svelte:fragment slot="lead">
 				<div class="flex justify-start">
-					<h1 class="text-blue-500">SIM</h1>
-					<h1>PIPE</h1>
+					<h1 class="text-blue-500"><a href="/">SIM</a></h1>
+					<h1><a href="/">PIPE</a></h1>
 				</div>
 			</svelte:fragment>
 			<svelte:fragment slot="trail"><LightSwitch /></svelte:fragment>
