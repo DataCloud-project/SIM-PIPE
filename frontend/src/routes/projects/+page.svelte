@@ -154,7 +154,7 @@
 							<td style="width:10px">
 								<input
 									type="checkbox"
-									class="checkbox variant-filled"
+									class="checkbox"
 									bind:checked={checkboxes[project.id]}
 									on:click={(event) => handleCheckboxClick(event)}
 								/>

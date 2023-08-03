@@ -92,6 +92,11 @@
 		goto(`/projects/[project_id]/${dryRunId}/${resource}`);
 	}
 
+		// to disable onclick propogation for checkbox input
+	const handleCheckboxClick = (event: any) => {
+		event.stopPropagation();
+	};
+
 	$: reactiveProjectDetails = $selectedProject;
 </script>
 
@@ -140,7 +145,8 @@
 								<input
 									type="checkbox"
 									bind:checked={checkboxes[run.id]}
-									class="checkbox variant-filled"
+									class="checkbox"
+									on:click={(event) => handleCheckboxClick(event)}
 								/>
 							</td>
 							<td style="width:100%">{run.id}</td>
