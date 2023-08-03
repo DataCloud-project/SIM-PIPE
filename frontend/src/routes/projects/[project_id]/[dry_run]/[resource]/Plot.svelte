@@ -24,6 +24,7 @@
 		yaxis: { visible: false },
 		paper_bgcolor: 'rgba(0,0,0,0)',
 		plot_bgcolor: 'rgba(0,0,0,0)',
+		title: plot_title,
 		annotations: [
 			{
 				text: 'No data',
