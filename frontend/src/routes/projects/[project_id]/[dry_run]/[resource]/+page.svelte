@@ -4,7 +4,7 @@
 	import type { DryRunMetrics, DryRun } from '../../../../../types';
 	import getDryRunMetricsQuery from '../../../../../queries/get_dry_run_metrics.js';
 	import getDryRunNoLogsMetricsQuery from '../../../../../queries/get_dry_run_metrics_no_logs.js';
-	import { format } from 'date-fns';
+	import { format, sub } from 'date-fns';
 	import getWorkflowQuery from '../../../../../queries/get_workflow_template';
 	import getDryRunPhaseResultsQuery from '../../../../../queries/get_dry_run_phase_results';
 	import getDryRunQuery from '../../../../../queries/get_selected_project';
@@ -13,7 +13,6 @@
 	import Plot from './Plot.svelte';
 	import Mermaid from './Mermaid.svelte';
 	import { colors } from './Config.js'
-
 
 	export let data;
 	let workflow: { workflowTemplate: { argoWorkflowTemplate: { spec: { templates: any[] } } } };
@@ -173,13 +172,23 @@
 					}
 				}
 			});
-		})
-		.catch((error) => {
+		}).catch((error) => {
 			console.log(error);
-		});
+	});
 
+	function generateRandomString() {
+		let result = '';
+		const characters = 'abcdefghijklmnopqrstuvwxyz0123456789';
+		const charactersLength = characters.length;
+		let counter = 0;
+		while (counter < 6) {
+			result += characters.charAt(Math.floor(Math.random() * charactersLength));
+			counter += 1;
+		}
+		return result;
+	}
 
-	export function buildDiagram() {
+	function buildDiagram() {
 		mermaidCode = []; // clear mermaidCode
 		mermaidCode.push(`graph ${graphOrientation};`);
 		workflow.workflowTemplate.argoWorkflowTemplate.spec.templates.forEach((template) => {
@@ -191,6 +200,7 @@
 			}
 		});
 		diagram = mermaidCode.join('\n');
+		//console.log(diagram);
 	}
 
 
@@ -229,15 +239,15 @@
 			}
 			if (previousStep !== '') {
 				if (stepList.length > 1) {
-					let subraphName = 'nested';
-					mermaidCode.push(`  subgraph ${subraphName}`);
+					let subgraphName = `parallel-${generateRandomString()}`;
+					mermaidCode.push(`  subgraph ${subgraphName}`);
 					for (const step of stepList) {
 						const stepName = step.name;
 						mermaidCode.push(`    ${stepName};`);
 					}
 					mermaidCode.push(`  end`);
-					mermaidCode.push(`  ${previousStep} --> ${subraphName};`);
-					previousStep = subraphName;
+					mermaidCode.push(`  ${previousStep} --> ${subgraphName};`);
+					previousStep = subgraphName;
 				} else {
 					for (const step of stepList) {
 						const stepName = step.name;
@@ -284,11 +294,6 @@
 		buildDiagram();
 	});
 
-	afterUpdate(async () => {
-		await getDataPromise;
-		buildDiagram();
-	});
-
 </script>
 
 <div class="container p-5">
@@ -305,19 +310,11 @@
 			<p>Loading metrics...</p>
 			<ProgressBar />
 		{:then}
+			<div class="flex justify-center p-5">
+				<Mermaid diagram={diagram} />
+			</div>
 			<div class="grid grid-rows-3 grid-cols-2 gap-4 max-h-screen">
-				<div class="card">
-					<Mermaid diagram={diagram} />
-				</div>
-				<div class="card">
-					<Plot
-						data={cpuData}
-						plot_title="CPU Usage"
-						xaxis_title="time"
-						yaxis_title="cpu usage"
-					/>
-				</div>				
-				<div class="card logcard row-span-2 p-5">
+				<div class="card logcard row-span-3 p-5">
 					<header class="card-header"><h1>Logs</h1></header>
 					<section class="p-2">
 						<br />
@@ -344,6 +341,14 @@
 						</ul>
 					</section>
 				</div>
+				<div class="card">
+					<Plot
+						data={cpuData}
+						plot_title="CPU Usage"
+						xaxis_title="time"
+						yaxis_title="cpu usage"
+					/>
+				</div>				
 				<div class="card">
 					<Plot
 						data={memoryData}
