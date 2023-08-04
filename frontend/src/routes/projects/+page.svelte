@@ -136,7 +136,8 @@
 			<ProgressBar />
 		{:then projectsList}
 		<div class="table-container p-5">
-			<table class="table table-interactive">			
+			<table class="table table-interactive">
+				<caption hidden>Projects</caption>
 				<thead>
 					<tr>
 						<th />

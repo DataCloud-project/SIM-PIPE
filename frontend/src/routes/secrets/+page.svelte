@@ -98,6 +98,7 @@
 	{:then credentialsList}
 		<div class="table-container p-5">		
 			<table class="table table-interactive">
+				<caption hidden>Secrets</caption>
 				<thead>
 					<tr>
 						<th />

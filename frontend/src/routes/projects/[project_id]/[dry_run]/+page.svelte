@@ -128,6 +128,7 @@
 
 		<div class="table-container p-5">
 			<table class="table table-interactive">
+				<caption hidden>Dry runs</caption>
 				<thead>
 					<tr>
 						<th />
