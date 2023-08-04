@@ -1,6 +1,5 @@
 <script lang="ts">
     import mermaid from 'mermaid';
-    import { afterUpdate, onMount } from 'svelte';
 
     export let diagram: string;
 
@@ -16,7 +15,7 @@
 		flowchart: {
 			useMaxWidth: true,
 			htmlLabels: true,
-			curve: 'basis'
+			curve: 'basis',
 		}
 	};
 	mermaid.initialize(mermaidConfig);
