@@ -1,10 +1,10 @@
 export const colors = { 
 		Succeeded: '#34D399', // (Green)
-		Running: '#6EE7B7', // (Light Green)
+		Running: '#0EA5E9', // (Light Blue)
 		Failed: '#F97316', // (Orange)
-		Error: '#ef4444', // (Red)
-		Pending: '#F1F5F9', // (Light Gray)
+		Error: '#EF4444', // (Red)
+		Pending: '#CBD5E1', // (Light Gray)
 		Skipped: '#FCD34D', // (Yellow)
-		Omitted: '#CBD5E1', // (Dark Gray)
-		Unknown: '#718096' // (Slate Gray)
+		Omitted: '#718096', // (Dark Gray)
+		Unknown: '#DDFFC7' // (White with yellow tint)
 	};
