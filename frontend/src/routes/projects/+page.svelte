@@ -113,29 +113,28 @@
 </script>
 
 <!-- svelte-ignore missing-declaration -->
-<div class="flex-row p-5">
+<div class="container p-5">
 	<h1>Projects</h1>
-
-	<div class="flex justify-end">
-		<div class="flex-row justify-content-end">
-			<button
-				type="button"
-				class="btn btn-sm variant-filled"
-				on:click={() => modalStore.trigger(modal)}
-			>
-				<span>Create</span>
-			</button>
-			<button type="button" class="btn btn-sm variant-filled-warning" on:click={onDeleteSelected}>
-				<span>Delete</span>
-			</button>
-		</div>
-	</div>
-
+	<div class="table-container">
 		{#await projectsPromise}
 			<p style="font-size:20px;">Loading projects...</p>
 			<ProgressBar />
 		{:then projectsList}
-		<div class="table-container p-5">
+			<div class="flex flex-row justify-end p-5 space-x-1">
+				<div>
+					<button
+						type="button"
+						class="btn btn-sm variant-filled"
+						on:click={() => modalStore.trigger(modal)}>
+						<span>Create</span>
+					</button>
+				</div>
+				<div>
+					<button type="button" class="btn btn-sm variant-filled-warning" on:click={onDeleteSelected}>
+						<span>Delete</span>
+					</button>
+				</div>
+			</div>
 			<table class="table table-interactive">
 				<caption hidden>Projects</caption>
 				<thead>
@@ -185,9 +184,9 @@
 						</tr>
 					{/each}
 				</tbody>
-			</table>
-		</div>			
+			</table>		
 		{/await}
+	</div>
 </div>
 
 {#if $modalStore[0]}

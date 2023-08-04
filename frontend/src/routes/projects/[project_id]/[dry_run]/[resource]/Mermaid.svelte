@@ -11,6 +11,8 @@
 		theme: 'neutral',
 		startOnLoad: true,
 		logLevel: 4,
+        fontFamily: 'sans-serif',
+        fontSize: 20,
 		flowchart: {
 			useMaxWidth: true,
 			htmlLabels: true,

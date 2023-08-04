@@ -47,6 +47,7 @@
 	</h1>
 	<div class="table-container p-5">
 		{#await workflowPromise}
+			<p style="font-size:20px;">Loading...</p>
 			<ProgressBar />
 		{:then workflow}
 			<div class="flex flex-row justify-end p-5 space-x-1">

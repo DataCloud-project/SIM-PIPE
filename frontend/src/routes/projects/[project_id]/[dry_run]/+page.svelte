@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { ProgressBar } from '@skeletonlabs/skeleton';
 	import { selectedProject, clickedProjectId } from '../../../../stores/stores.js';
 	import SymbolForRunResult from './symbol-for-run-result.svelte';
 	import SymbolForAction from './symbol-for-action.svelte';
@@ -101,9 +102,10 @@
 </script>
 
 <!-- Page Header -->
-<div class="flex-row p-5">
+<div class="container p-5">
 	{#await projectDetailsPromise}
-		<h1>Loading all dry runs ....</h1>
+		<p style="font-size:20px;">Loading all dry runs ....</p>
+		<ProgressBar />
 	{:then response}
 		<h1>
 			<a href="/projects">Projects</a>
@@ -116,17 +118,21 @@
 			<div>
 				<p class="text-xs">dry runs: {reactiveProjectDetails?.dryRuns.length}</p>
 			</div>
-			<div class="flex-row justify-content-end">
-				<button type="button" class="btn btn-sm variant-filled" on:click={onCreateSelected}>
-					<span>Create</span>
-				</button>
-				<button type="button" class="btn btn-sm variant-filled-warning" on:click={onDeleteSelected}>
-					<span>Delete</span>
-				</button>
+			<div class="flex flex-row justify-end p-5 space-x-1">
+				<div>
+					<button type="button" class="btn btn-sm variant-filled" on:click={onCreateSelected}>
+						<span>Create</span>
+					</button>
+				</div>
+				<div>
+					<button type="button" class="btn btn-sm variant-filled-warning" on:click={onDeleteSelected}>
+						<span>Delete</span>
+					</button>
+				</div>
 			</div>
 		</div>
 
-		<div class="table-container p-5">
+		<div class="table-container">
 			<table class="table table-interactive">
 				<caption hidden>Dry runs</caption>
 				<thead>
