@@ -115,7 +115,7 @@
 <!-- svelte-ignore missing-declaration -->
 <div class="container p-5">
 	<h1>Projects</h1>
-	<div class="table-container">
+	<div class="table-container p-5">
 		{#await projectsPromise}
 			<p style="font-size:20px;">Loading projects...</p>
 			<ProgressBar />
@@ -184,7 +184,7 @@
 						</tr>
 					{/each}
 				</tbody>
-			</table>		
+			</table>
 		{/await}
 	</div>
 </div>
@@ -203,7 +203,7 @@
 		margin-left: auto;
 		margin-right: auto;
 		table-layout: auto;
-		width: 90%;
+		width: 100%;
 	}
 	thead {
 		position: sticky;

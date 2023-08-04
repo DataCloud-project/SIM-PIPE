@@ -70,33 +70,32 @@
 </script>
 
 <!-- Page Header -->
-<div class="flex-col p-5">
+<div class="container p-5">
 	<h1>Secrets</h1>
-
-	<div class="flex justify-end">
-		<div class="flex-row justify-content-end">
-			<button
-				type="button"
-				class="btn btn-sm variant-filled"
-				on:click={() => modalStore.trigger(modal)}
-			>
-				<span>Create</span>
-			</button>
-			<button
-				type="button"
-				class="btn btn-sm variant-filled-warning"
-				on:click={() => onDeleteSelected()}
-			>
-				<span>Delete</span>
-			</button>
-		</div>
-	</div>
-
 	{#await credentialsPromise}
 		<p style="font-size:20px;">Loading credentials...</p>
 		<ProgressBar />
 	{:then credentialsList}
-		<div class="table-container p-5">		
+		<div class="flex flex-row justify-end p-5 space-x-1">
+			<div>
+				<button
+					type="button"
+					class="btn btn-sm variant-filled"
+					on:click={() => modalStore.trigger(modal)}>
+					<span>Create</span>
+				</button>
+			</div>
+			<div>
+				<button
+					type="button"
+					class="btn btn-sm variant-filled-warning"
+					on:click={() => onDeleteSelected()}>
+					<span>Delete</span>
+				</button>
+			</div>
+		</div>
+
+		<div class="table-container">
 			<table class="table table-interactive">
 				<caption hidden>Secrets</caption>
 				<thead>
@@ -118,9 +117,9 @@
 									on:click={(event) => handleCheckboxClick(event)}
 								/>
 							</td>
-							<td style="width:100%">{secret.name}</td>
-							<td style="width:100%">{secret.username}</td>
-							<td style="width:100%">{secret.server}</td>
+							<td style="width:60%">{secret.name}</td>
+							<td style="width:20%">{secret.username}</td>
+							<td style="width:20%">{secret.server}</td>
 						</tr>
 					{/each}
 				</tbody>
@@ -141,7 +140,7 @@
 		margin-left: auto;
 		margin-right: auto;
 		table-layout: auto;
-		width: 90%;
+		width: 100%;
 	}
 	thead {
 		position: sticky;

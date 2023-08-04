@@ -205,7 +205,7 @@
 		margin-left: auto;
 		margin-right: auto;
 		table-layout: auto;
-		width: 90%;
+		width: 100%;
 	}
 	thead {
 		position: sticky;
