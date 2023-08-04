@@ -133,7 +133,7 @@
 					<tr>
 						<th />
 						<th>Name</th>
-						<th>Result</th>
+						<th><div class="flex justify-center"><div>Result</div></div></th>
 						<th>Run duration</th>
 						<th>Action</th>
 						<th>Created</th>
@@ -150,20 +150,32 @@
 									on:click={(event) => handleCheckboxClick(event)}
 								/>
 							</td>
-							<td style="width:100%">{run.id}</td>
-							<td style="width:100%"><SymbolForRunResult run_result={run.status.phase.toString()} /></td>
-							<!-- TODO: calculate from started and finished -->
-							<td style="width:100%">{run.status.estimatedDuration}</td>
+							<td style="width:80%">{run.id}</td>
 							<td style="width:100%">
-								<button type="button" class="btn-icon btn-icon-sm variant-soft">
-									<SymbolForAction
-										action={getDryRunAction(run.status.phase.toString())}
-										dryRunId={run.id}
-									/>
-								</button>
+								<div class="flex justify-center">
+									<div><SymbolForRunResult run_result={run.status.phase.toString()} /></div>
+								</div>
+							</td>
+							<!-- TODO: calculate from started and finished -->
+							<td style="width:100%">
+								<div class="flex justify-end">
+									<div>{run.status.estimatedDuration}</div>
+								</div>
+							</td>
+							<td style="width:100%">
+								<div class="flex justify-center">
+									<div>
+										<button type="button" class="btn-icon btn-icon-sm variant-soft">
+											<SymbolForAction
+												action={getDryRunAction(run.status.phase.toString())}
+												dryRunId={run.id}
+											/>
+										</button>
+									</div>
+								</div>
 							</td>
 							<!-- <td>{run.createdAt}</td> -->
-							<td style="width:100%"><Timestamp timestamp={run.createdAt} /> </td>
+							<td style="width:20%"><Timestamp timestamp={run.createdAt} /> </td>
 						</tr>
 					{/each}
 				</tbody>

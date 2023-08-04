@@ -9,7 +9,7 @@
 	import { goto } from '$app/navigation';
 	import Timestamp from './[project_id]/[dry_run]/timestamp.svelte';
 	import { requestGraphQLClient } from '$lib/graphqlUtils';
-	import { EditIcon } from 'svelte-feather-icons';
+	import { EditIcon, FileTextIcon } from 'svelte-feather-icons';
 	import ModalRenameProject from './modal-rename-project.svelte';
 
 	const getProjectsList = async (): Promise<Project[]> => {
@@ -142,7 +142,7 @@
 					<tr>
 						<th />
 						<th>Name</th>
-						<th>Created</th>
+						<th><div class="flex justify-start"><div>Created</div></div></th>
 						<th>Dry runs</th>
 						<!-- <th>Simulation runs</th> -->
 						<th>Template</th>
@@ -160,24 +160,25 @@
 									on:click={(event) => handleCheckboxClick(event)}
 								/>
 							</td>
-							<td style="width:100%">{project.name}</td>
-							<td style="width:100%"><Timestamp timestamp={project.createdAt} /> </td><td
-								>{dryRunCounts[project.id]}</td
-							>
-							<!-- svelte-ignore a11y-click-events-have-key-events -->
-							<td on:click={(event) => showTemplate(event, project)}>
-								<p class="no-underline hover:underline">show</p>
+							<td style="width:80%">{project.name}</td>
+							<td style="width:20%">
+								<div class="flex justify-start">
+									<div><Timestamp timestamp={project.createdAt} /></div>
+								</div>
 							</td>
 							<td style="width:100%">
-								<button
-									on:click={() => renameProject(event, project)}
-									type="button"
-									class="btn-icon btn-icon-sm variant-soft"
-								>
-									<!-- <SymbolForRenameProject
-										projectId={project.id}
-										event=event
-									/> -->
+								<div class="flex justify-end">{dryRunCounts[project.id]}</div>
+							</td>
+							<!-- svelte-ignore a11y-click-events-have-key-events -->
+							<td on:click={(event) => showTemplate(event, project)}>
+								<div class="column-1">
+									<div class="flex justify-center"><FileTextIcon size="1x"/></div>
+									<div class="flex justify-center"><p class="no-underline hover:underline">show</p><div>
+								</div>
+							</td>
+							<td style="width:100%">
+								<button type="button" class="btn-icon btn-icon-sm variant-soft"
+									on:click={() => renameProject(event, project)}>
 									<EditIcon size="20" />
 								</button>
 							</td>

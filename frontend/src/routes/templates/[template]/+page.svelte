@@ -6,6 +6,7 @@
 	import YAML from 'json-to-pretty-yaml';
 	import { goto } from '$app/navigation';
 	import { requestGraphQLClient } from '$lib/graphqlUtils';
+	import { ArrowRightIcon } from 'svelte-feather-icons'
 
 	export let data;
 
@@ -44,27 +45,24 @@
 		<a href="/projects">Projects</a>
 		<span STYLE="font-size:14px">/ </span>{data.template}
 	</h1>
-	<br />
-	<h1>
-		<!-- TODO: adjust position and style -->
-		<button
-			class="btn variant-filled"
-			on:click={() => goto(`/projects/[project_id]/${$clickedProjectId}`)}
-		>
-			Dry Runs ->
-		</button>
-	</h1>
 	<div class="table-container p-5">
 		{#await workflowPromise}
 			<ProgressBar />
 		{:then workflow}
-			<div class="flex justify-end">
-				<button type="button" class="btn btn-sm variant-filled" on:click={switchLanguage}>
-					<span>Switch to {language === 'yaml' ? 'JSON' : 'YAML'}</span>
-				</button>
+			<div class="flex flex-row justify-end p-5 space-x-1">
+				<div>
+					<button type="button" class="btn btn-sm variant-filled" on:click={switchLanguage}>
+						<span>Switch to {language === 'yaml' ? 'JSON' : 'YAML'}</span>
+					</button>
+				</div>
+				<div>
+					<button type="button" class="btn btn-sm variant-filled"
+						on:click={() => goto(`/projects/[project_id]/${$clickedProjectId}`)}>
+						Go to dry runs <ArrowRightIcon size="1x"/>
+					</button>
+				</div>
 			</div>
-			<br />
-			<div class="code overflow-y-auto h-96">
+			<div class="code overflow-y-scroll">
 				{#if language === 'json'}
 					<CodeBlock {language} code={JSON.stringify(workflow, null, 2)} text="text-xs" />
 				{:else if language === 'yaml'}
@@ -74,3 +72,9 @@
 		{/await}
 	</div>
 </div>
+
+<style>
+	.code {
+		max-height: 80vh;
+	}
+</style>
