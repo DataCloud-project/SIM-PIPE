@@ -9,6 +9,13 @@ export type _Project = {
 	// pipeline_description?: PipelineDescription;
 };
 
+export type SampleFile = {
+	id: string;
+	name: string;
+	created: string;
+	size: number;
+};
+
 // WIP argo data types
 
 export type Project = {
