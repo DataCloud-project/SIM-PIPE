@@ -12,7 +12,7 @@
 	import { goto } from '$app/navigation';
 	import Plot from './Plot.svelte';
 	import Mermaid from './Mermaid.svelte';
-	import { colors } from './Config.js'
+	import { colors } from './Config.js';
 
 	export let data;
 	let workflow: { workflowTemplate: { argoWorkflowTemplate: { spec: { templates: any[] } } } };
@@ -32,7 +32,7 @@
 	var memoryData: { x: string[]; y: number[]; type: string; name: string }[] = [];
 	var networkData: { x: string[]; y: number[]; type: string; name: string }[] = [];
 
-	const getMetricsResponse = async() => {
+	const getMetricsResponse = async () => {
 		const dryrun_variables = {
 			dryRunId: data.resource
 		};
@@ -53,7 +53,7 @@
 				return metrics_response?.dryRun?.nodes;
 			}
 		}
-	}
+	};
 
 	const getData = async (): Promise<{ workflow: any; dryrun: any; metrics: any }> => {
 		const selectedProjectResponse = await requestGraphQLClient(getDryRunQuery, {
@@ -85,96 +85,108 @@
 		return responses;
 	};
 
-
 	const getDataPromise = getData();
 	getDataPromise
-		.then((data: { workflow: any; dryrun: any , metrics: any}) => {
+		.then((data: { workflow: any; dryrun: any; metrics: any }) => {
 			workflow = data.workflow;
 			dryrun_results = data.dryrun;
-			data.metrics?.forEach((node) => {
-				// TODO: make more efficient if data missing?
-				if (isEmpty(node) === false) {
-					if (node.log) {
-						//console.log(node.log)
-						logs[node.displayName] = node.log;
-					}
-					let cpuTimestamps = timestampsToDatetime(
-						node.startedAt,
-						node.metrics.cpuUsageSecondsTotal.map((item) => item.timestamp)
-					);
-					let memTimestamps = timestampsToDatetime(
-						node.startedAt,
-						node.metrics.memoryUsageBytes.map((item) => item.timestamp)
-					);
-					let nrcTimestamps = timestampsToDatetime(
-						node.startedAt,
-						node.metrics.networkReceiveBytesTotal.map((item) => item.timestamp)
-					);
-					let ntrTimestamps = timestampsToDatetime(
-						node.startedAt,
-						node.metrics.networkTransmitBytesTotal.map((item) => item.timestamp)
-					);
-					let cpuValues = node.metrics.cpuUsageSecondsTotal.map((item) => Number(item.value));
-					let memValues = node.metrics.memoryUsageBytes.map((item) => Number(item.value));
-					let nrcValues = node.metrics.networkReceiveBytesTotal.map((item) => Number(item.value));
-					let ntrValues = node.metrics.networkTransmitBytesTotal.map((item) => Number(item.value));
-					var cpuUsage = {
-						x: cpuTimestamps,
-						y: cpuValues,
-						type: 'scatter',
-						name: node.displayName
+			data.metrics?.forEach(
+				(node: {
+					log: string;
+					displayName: string | number;
+					startedAt: string;
+					metrics: {
+						cpuUsageSecondsTotal: any[];
+						memoryUsageBytes: any[];
+						networkReceiveBytesTotal: any[];
+						networkTransmitBytesTotal: any[];
 					};
-					var memoryUsage = {
-						x: memTimestamps,
-						y: memValues,
-						type: 'scatter',
-						name: node.displayName
-					};
-					var networkReceiveBytesTotal = {
-						x: nrcTimestamps,
-						y: nrcValues,
-						type: 'scatter',
-						name: `receive ${node.displayName}`
-					};
-					var networkTransmitBytesTotal = {
-						x: ntrTimestamps,
-						y: ntrValues,
-						type: 'scatter',
-						name: `transmit ${node.displayName}`
-					};							
+				}) => {
+					// TODO: make more efficient if data missing?
+					if (isEmpty(node) === false) {
+						if (node.log) {
+							//console.log(node.log)
+							logs[node.displayName] = node.log;
+						}
+						let cpuTimestamps = timestampsToDatetime(
+							node.startedAt,
+							node.metrics.cpuUsageSecondsTotal.map((item: { timestamp: any }) => item.timestamp)
+						);
+						let memTimestamps = timestampsToDatetime(
+							node.startedAt,
+							node.metrics.memoryUsageBytes.map((item: { timestamp: any }) => item.timestamp)
+						);
+						let nrcTimestamps = timestampsToDatetime(
+							node.startedAt,
+							node.metrics.networkReceiveBytesTotal.map(
+								(item: { timestamp: any }) => item.timestamp
+							)
+						);
+						let ntrTimestamps = timestampsToDatetime(
+							node.startedAt,
+							node.metrics.networkTransmitBytesTotal.map(
+								(item: { timestamp: any }) => item.timestamp
+							)
+						);
+						let cpuValues = node.metrics.cpuUsageSecondsTotal.map((item: { value: string }) =>
+							Number(item.value)
+						);
+						let memValues = node.metrics.memoryUsageBytes.map((item: { value: string }) =>
+							Number(item.value)
+						);
+						let nrcValues = node.metrics.networkReceiveBytesTotal.map((item: { value: string }) =>
+							Number(item.value)
+						);
+						let ntrValues = node.metrics.networkTransmitBytesTotal.map((item: { value: string }) =>
+							Number(item.value)
+						);
+						var cpuUsage = {
+							x: cpuTimestamps,
+							y: cpuValues,
+							type: 'scatter',
+							name: node.displayName as string
+						};
+						var memoryUsage = {
+							x: memTimestamps,
+							y: memValues,
+							type: 'scatter',
+							name: node.displayName as string
+						};
+						var networkReceiveBytesTotal = {
+							x: nrcTimestamps,
+							y: nrcValues,
+							type: 'scatter',
+							name: `receive ${node.displayName}`
+						};
+						var networkTransmitBytesTotal = {
+							x: ntrTimestamps,
+							y: ntrValues,
+							type: 'scatter',
+							name: `transmit ${node.displayName}`
+						};
 
-					if (cpuValues.length > 0) {
-						cpuData.push(cpuUsage);
-					} else {
-						// console.log('no cpu data:')
-						// console.log(cpuUsage)
-					}
+						if (cpuValues.length > 0) {
+							cpuData.push(cpuUsage);
+						}
 
-					if (memValues.length > 0) {
-						memoryData.push(memoryUsage);
-					} else {
-						// console.log('no memory data:')
-						// console.log(cpuUsage)
-					}
+						if (memValues.length > 0) {
+							memoryData.push(memoryUsage);
+						}
 
-					if (nrcValues.length > 0) {
-						networkData.push(networkReceiveBytesTotal);
-					} else {
-						// console.log('no network receive data:')
-						// console.log(networkReceiveBytesTotal)
-					}
+						if (nrcValues.length > 0) {
+							networkData.push(networkReceiveBytesTotal);
+						}
 
-					if (ntrValues.length > 0) {
-						networkData.push(networkTransmitBytesTotal);
-					} else {
-						// console.log('no network transmit data:')
-						// console.log(networkReceiveBytesTotal)
+						if (ntrValues.length > 0) {
+							networkData.push(networkTransmitBytesTotal);
+						}
 					}
 				}
-			});
-		}).catch((error) => {
+			);
+		})
+		.catch((error) => {
 			console.log(error);
-	});
+		});
 
 	function generateRandomString() {
 		let result = '';
@@ -202,7 +214,6 @@
 		diagram = mermaidCode.join('\n');
 		//console.log(diagram);
 	}
-
 
 	function addSeconds(date: Date, seconds: number) {
 		date.setSeconds(date.getSeconds() + seconds);
@@ -293,7 +304,6 @@
 		await getDataPromise;
 		buildDiagram();
 	});
-
 </script>
 
 <div class="container p-5">
@@ -311,7 +321,7 @@
 			<ProgressBar />
 		{:then}
 			<div class="flex justify-center p-5">
-				<Mermaid diagram={diagram} />
+				<Mermaid {diagram} />
 			</div>
 			<div class="grid grid-rows-3 grid-cols-2 gap-4 max-h-screen">
 				<div class="card logcard row-span-3 p-5">
@@ -331,24 +341,19 @@
 													{line}<br />
 												{/each}
 											</code>
-									</pre>
+										</pre>
 									</li>
 									<br />
-							{/each}
-						{:else}
-							<p>No data</p>
-						{/if}
+								{/each}
+							{:else}
+								<p>No data</p>
+							{/if}
 						</ul>
 					</section>
 				</div>
 				<div class="card">
-					<Plot
-						data={cpuData}
-						plot_title="CPU Usage"
-						xaxis_title="time"
-						yaxis_title="cpu usage"
-					/>
-				</div>				
+					<Plot data={cpuData} plot_title="CPU Usage" xaxis_title="time" yaxis_title="cpu usage" />
+				</div>
 				<div class="card">
 					<Plot
 						data={memoryData}
@@ -359,17 +364,16 @@
 				</div>
 				<div class="card">
 					<Plot
-					data={networkData}
-					plot_title="Network Usage"
-					xaxis_title="time"
-					yaxis_title="bytes"
-				/>
+						data={networkData}
+						plot_title="Network Usage"
+						xaxis_title="time"
+						yaxis_title="bytes"
+					/>
 				</div>
 			</div>
 		{/await}
 	</div>
 </div>
-
 
 <style>
 	.card.logcard {

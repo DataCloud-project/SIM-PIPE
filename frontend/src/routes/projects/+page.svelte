@@ -125,12 +125,17 @@
 					<button
 						type="button"
 						class="btn btn-sm variant-filled"
-						on:click={() => modalStore.trigger(modal)}>
+						on:click={() => modalStore.trigger(modal)}
+					>
 						<span>Create</span>
 					</button>
 				</div>
 				<div>
-					<button type="button" class="btn btn-sm variant-filled-warning" on:click={onDeleteSelected}>
+					<button
+						type="button"
+						class="btn btn-sm variant-filled-warning"
+						on:click={onDeleteSelected}
+					>
 						<span>Delete</span>
 					</button>
 				</div>
@@ -141,9 +146,8 @@
 					<tr>
 						<th />
 						<th>Name</th>
-						<th><div class="flex justify-start"><div>Created</div></div></th>
+						<th>Created</th>
 						<th>Dry runs</th>
-						<!-- <th>Simulation runs</th> -->
 						<th>Template</th>
 						<th />
 					</tr>
@@ -151,7 +155,7 @@
 				<tbody>
 					{#each reactiveProjectsList || [] as project}
 						<tr on:click={() => gotodryruns(project.id)}>
-							<td style="width:10px">
+							<td style="width:25px;">
 								<input
 									type="checkbox"
 									class="checkbox"
@@ -159,25 +163,30 @@
 									on:click={(event) => handleCheckboxClick(event)}
 								/>
 							</td>
-							<td style="width:80%">{project.name}</td>
-							<td style="width:20%">
-								<div class="flex justify-start">
-									<div><Timestamp timestamp={project.createdAt} /></div>
-								</div>
+							<td style="width:25%">{project.name}</td>
+							<td style="width:25%">
+								<div><Timestamp timestamp={project.createdAt} /></div>
 							</td>
-							<td style="width:100%">
-								<div class="flex justify-end">{dryRunCounts[project.id]}</div>
+							<td style="width:25%">
+								{dryRunCounts[project.id]}
 							</td>
 							<!-- svelte-ignore a11y-click-events-have-key-events -->
-							<td on:click={(event) => showTemplate(event, project)}>
-								<div class="column-1">
-									<div class="flex justify-center"><FileTextIcon size="1x"/></div>
-									<div class="flex justify-center"><p class="no-underline hover:underline">show</p><div>
-								</div>
-							</td>
-							<td style="width:100%">
-								<button type="button" class="btn-icon btn-icon-sm variant-soft"
-									on:click={() => renameProject(event, project)}>
+							<td style="width:15%" on:click={(event) => showTemplate(event, project)}>
+								<div>
+									<div><FileTextIcon size="1x" /></div>
+									<div>
+										<p class="no-underline hover:underline">show</p>
+										<div />
+									</div>
+								</div></td
+							>
+							<td style="width:10%">
+								<button
+									type="button"
+									title="Rename project"
+									class="btn-icon btn-icon-sm variant-soft"
+									on:click={() => renameProject(event, project)}
+								>
 									<EditIcon size="20" />
 								</button>
 							</td>
@@ -209,4 +218,4 @@
 		position: sticky;
 		top: 0;
 	}
-  </style>
+</style>

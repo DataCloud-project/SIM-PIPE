@@ -47,10 +47,10 @@
 				password: password
 			}
 		};
-		
+
 		// TODO: Fix bug where request fails for different reasons (secret name already exists...)
 		const response = await requestGraphQLClient(createCredentialMutation, variables);
-		
+
 		modalStore.close();
 		// refresh credentials list
 		const newcredentialsPromise: { dockerRegistryCredentials: DockerRegistryCredential[] } =

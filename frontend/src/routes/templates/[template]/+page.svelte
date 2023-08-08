@@ -6,7 +6,7 @@
 	import YAML from 'json-to-pretty-yaml';
 	import { goto } from '$app/navigation';
 	import { requestGraphQLClient } from '$lib/graphqlUtils';
-	import { ArrowRightIcon } from 'svelte-feather-icons'
+	import { ArrowRightIcon } from 'svelte-feather-icons';
 
 	export let data;
 
@@ -57,9 +57,12 @@
 					</button>
 				</div>
 				<div>
-					<button type="button" class="btn btn-sm variant-filled"
-						on:click={() => goto(`/projects/[project_id]/${$clickedProjectId}`)}>
-						Go to dry runs <ArrowRightIcon size="1x"/>
+					<button
+						type="button"
+						class="btn btn-sm variant-filled"
+						on:click={() => goto(`/projects/[project_id]/${$clickedProjectId}`)}
+					>
+						Go to dry runs <ArrowRightIcon size="1x" />
 					</button>
 				</div>
 			</div>

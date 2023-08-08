@@ -81,7 +81,8 @@
 				<button
 					type="button"
 					class="btn btn-sm variant-filled"
-					on:click={() => modalStore.trigger(modal)}>
+					on:click={() => modalStore.trigger(modal)}
+				>
 					<span>Create</span>
 				</button>
 			</div>
@@ -89,7 +90,8 @@
 				<button
 					type="button"
 					class="btn btn-sm variant-filled-warning"
-					on:click={() => onDeleteSelected()}>
+					on:click={() => onDeleteSelected()}
+				>
 					<span>Delete</span>
 				</button>
 			</div>
@@ -109,7 +111,7 @@
 				<tbody>
 					{#each reactiveCredentialsList || [] as secret}
 						<tr id="clickable_row">
-							<td  style="width:10px">
+							<td style="width:10px">
 								<input
 									type="checkbox"
 									class="checkbox"
@@ -146,4 +148,4 @@
 		position: sticky;
 		top: 0;
 	}
-  </style>
+</style>

@@ -1,41 +1,40 @@
 <script lang="ts">
-    import mermaid from 'mermaid';
+	import mermaid from 'mermaid';
 
-    export let diagram: string;
+	export let diagram: string;
 
-    let container: Element;
+	let container: Element;
 
-    const mermaidConfig = {
+	const mermaidConfig = {
 		securityLevel: 'loose',
 		theme: 'neutral',
 		startOnLoad: true,
 		logLevel: 4,
-        fontFamily: 'sans-serif',
-        fontSize: 20,
+		fontFamily: 'sans-serif',
+		fontSize: 20,
 		flowchart: {
 			useMaxWidth: true,
 			htmlLabels: true,
-			curve: 'basis',
+			curve: 'basis'
 		}
 	};
 	mermaid.initialize(mermaidConfig);
 
-    async function renderDiagram() {
-            let { svg } = await mermaid.render('mermaid', diagram, container);
-            container.innerHTML = svg;
-            container.addEventListener('click', function (e: any) {
-                if (e.target.attributes.getNamedItem('class').value === 'nodeLabel') {
-                    //buildDiagram();
-                    //console.log(diagram);
-                }
-            });
-            return svg;
-    };
-    
-    $: diagram && renderDiagram();
+	async function renderDiagram() {
+		let { svg } = await mermaid.render('mermaid', diagram, container);
+		container.innerHTML = svg;
+		container.addEventListener('click', function (e: any) {
+			if (e.target.attributes.getNamedItem('class').value === 'nodeLabel') {
+				//buildDiagram();
+				//console.log(diagram);
+			}
+		});
+		return svg;
+	}
 
+	$: diagram && renderDiagram();
 </script>
 
 <div class="flex place-content-center">
-    <span class="mermaid" bind:this={container}></span>
+	<span class="mermaid" bind:this={container} />
 </div>

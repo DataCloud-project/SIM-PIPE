@@ -93,7 +93,7 @@
 		goto(`/projects/[project_id]/${dryRunId}/${resource}`);
 	}
 
-		// to disable onclick propogation for checkbox input
+	// to disable onclick propogation for checkbox input
 	const handleCheckboxClick = (event: any) => {
 		event.stopPropagation();
 	};
@@ -125,7 +125,11 @@
 					</button>
 				</div>
 				<div>
-					<button type="button" class="btn btn-sm variant-filled-warning" on:click={onDeleteSelected}>
+					<button
+						type="button"
+						class="btn btn-sm variant-filled-warning"
+						on:click={onDeleteSelected}
+					>
 						<span>Delete</span>
 					</button>
 				</div>
@@ -139,7 +143,7 @@
 					<tr>
 						<th />
 						<th>Name</th>
-						<th><div class="flex justify-center"><div>Result</div></div></th>
+						<th>Result</th>
 						<th>Run duration</th>
 						<th>Action</th>
 						<th>Created</th>
@@ -148,7 +152,7 @@
 				<tbody>
 					{#each reactiveProjectDetails?.dryRuns || [] as run}
 						<tr on:click={() => dryRunOnClick(run.id)}>
-							<td style="width:10px">
+							<td style="width:25px">
 								<input
 									type="checkbox"
 									bind:checked={checkboxes[run.id]}
@@ -156,31 +160,22 @@
 									on:click={(event) => handleCheckboxClick(event)}
 								/>
 							</td>
-							<td style="width:80%">{run.id}</td>
-							<td style="width:100%">
-								<div class="flex justify-center">
-									<div><SymbolForRunResult run_result={run.status.phase.toString()} /></div>
-								</div>
+							<td style="width:20%">{run.id}</td>
+							<td style="width:20%">
+								<div><SymbolForRunResult run_result={run.status.phase.toString()} /></div>
 							</td>
 							<!-- TODO: calculate from started and finished -->
-							<td style="width:100%">
-								<div class="flex justify-end">
-									<div>{run.status.estimatedDuration}</div>
-								</div>
+							<td style="width:20%">
+								<div>{run.status.estimatedDuration}</div>
 							</td>
-							<td style="width:100%">
-								<div class="flex justify-center">
-									<div>
-										<button type="button" class="btn-icon btn-icon-sm variant-soft">
-											<SymbolForAction
-												action={getDryRunAction(run.status.phase.toString())}
-												dryRunId={run.id}
-											/>
-										</button>
-									</div>
-								</div>
+							<td style="width:20%">
+								<button type="button" class="btn-icon btn-icon-sm variant-soft">
+									<SymbolForAction
+										action={getDryRunAction(run.status.phase.toString())}
+										dryRunId={run.id}
+									/>
+								</button>
 							</td>
-							<!-- <td>{run.createdAt}</td> -->
 							<td style="width:20%"><Timestamp timestamp={run.createdAt} /> </td>
 						</tr>
 					{/each}
@@ -193,7 +188,6 @@
 {#if $modalStore[0]}
 	<Modal />
 {/if}
-
 
 <style>
 	.table.table {
@@ -211,4 +205,4 @@
 		position: sticky;
 		top: 0;
 	}
-  </style>
+</style>

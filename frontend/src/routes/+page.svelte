@@ -1,14 +1,11 @@
 <script lang="ts">
-	import { goto } from "$app/navigation";
-	import { onMount } from "svelte";
+	import { goto } from '$app/navigation';
+	import { onMount } from 'svelte';
 
 	onMount(() => {
-		goto("/projects");
+		goto('/projects');
 	});
-
 </script>
-
-
 
 <div class="flex justify-center p-5">
 	<div class="card variant-glass-tertiary p-4">
@@ -21,10 +18,14 @@
 		<section class="p-4">
 			<div class="columns-2">
 				<div class="flex justify-left">
-					Lorem ipsum dolor sit amet consectetur adipisicing elit. Ipsa voluptas exercitationem quae eius hic consequatur reprehenderit sunt repellendus, eum dolor dolore nemo sint sit magni quis earum tempora nobis fugiat!
+					Lorem ipsum dolor sit amet consectetur adipisicing elit. Ipsa voluptas exercitationem quae
+					eius hic consequatur reprehenderit sunt repellendus, eum dolor dolore nemo sint sit magni
+					quis earum tempora nobis fugiat!
 				</div>
 				<div class="flex justify-left">
-					Lorem ipsum dolor sit amet consectetur adipisicing elit. Ipsa voluptas exercitationem quae eius hic consequatur reprehenderit sunt repellendus, eum dolor dolore nemo sint sit magni quis earum tempora nobis fugiat!
+					Lorem ipsum dolor sit amet consectetur adipisicing elit. Ipsa voluptas exercitationem quae
+					eius hic consequatur reprehenderit sunt repellendus, eum dolor dolore nemo sint sit magni
+					quis earum tempora nobis fugiat!
 				</div>
 			</div>
 		</section>
