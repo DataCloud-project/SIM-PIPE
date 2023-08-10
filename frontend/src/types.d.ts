@@ -48,9 +48,11 @@ export type DryRunMetrics = {
 	phase: string;
 	displayName: string;
 	startedAt: string;
+	finishedAt: string;
 	duration: number;
 	dryRun: DryRun;
 	log: string[]?;
+	type: string;
 	metrics: {
 		cpuUsageSecondsTotal: Array<{
 			timestamp: number;
@@ -69,6 +71,11 @@ export type DryRunMetrics = {
 			value: number;
 		}>;
 	};
+	outputArtifacts: {
+		key: string;
+		name: string;
+		url: string;
+	}[];
 };
 
 export type ArgoWorkflow = {

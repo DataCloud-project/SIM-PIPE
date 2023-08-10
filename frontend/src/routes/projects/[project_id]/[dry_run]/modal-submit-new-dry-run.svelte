@@ -145,7 +145,7 @@
 								</span></label
 							>
 						{/if}
-						{#each taskList[i].arguments.parameters as param, j}
+						{#each taskList[i].arguments?.parameters || [] as param, j}
 							<!-- svelte-ignore a11y-label-has-associated-control -->
 							<label>Enviroment parameters:</label>
 							<label class="ml-5"

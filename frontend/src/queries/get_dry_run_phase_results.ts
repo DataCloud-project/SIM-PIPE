@@ -6,6 +6,19 @@ const getDryRunPhaseResultsQuery = gql`
 			nodes {
 				displayName
 				phase
+				type
+				... on DryRunNodePod {
+					displayName
+					startedAt
+					finishedAt
+					duration
+					phase  
+					outputArtifacts {
+						key
+						name
+						url
+					}
+				}
 			}
 		}
 	}
