@@ -170,10 +170,12 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
 
+# vite config
+.vite
+
 # Antoine's crap, remove if you see this
 cli
 examples
-frontend
 old-migrations
 sandbox
 *.dump
