@@ -4,8 +4,8 @@
 	import type { DryRunMetrics, DryRun } from '../../../../../types';
 	import getDryRunMetricsQuery from '../../../../../queries/get_dry_run_metrics.js';
 	import getDryRunNoLogsMetricsQuery from '../../../../../queries/get_dry_run_metrics_no_logs.js';
-	import { format, sub } from 'date-fns';
-	import getWorkflowQuery from '../../../../../queries/get_workflow_template';
+	import { format } from 'date-fns';
+	import getProjectQuery from '../../../../../queries/get_project';
 	import getDryRunPhaseResultsQuery from '../../../../../queries/get_dry_run_phase_results';
 	import getDryRunQuery from '../../../../../queries/get_selected_project';
 	import { requestGraphQLClient } from '$lib/graphqlUtils';
@@ -17,7 +17,7 @@
 	import Legend from './Legend.svelte';
 
 	export let data;
-	let workflow: { workflowTemplate: { argoWorkflowTemplate: { spec: { templates: any[] } } } };
+	let workflow: { workflowTemplates: { argoWorkflowTemplate: { spec: { templates: any[] } } }[] };
 	let dryrun_results: { dryRun: { nodes: any[] } };
 	let selectStepName = '';
 	let selectStepType = '';
@@ -65,12 +65,14 @@
 		});
 		selectedProject = selectedProjectResponse.dryRun?.project;
 		const workflow_variables = {
-			name: selectedProject?.name
+			// name: selectedProject?.name
+			projectId: selectedProject?.id
 		};
 		const dryrun_variables = {
 			dryRunId: data.resource
 		};
-		const workflow_response = await requestGraphQLClient(getWorkflowQuery, workflow_variables);
+		const workflow_response = (await requestGraphQLClient(getProjectQuery, workflow_variables))
+			.project;
 		const dryrun_response: { dryRun: DryRun } = await requestGraphQLClient(
 			getDryRunPhaseResultsQuery,
 			dryrun_variables
@@ -208,7 +210,7 @@
 	function buildDiagram() {
 		mermaidCode = []; // clear mermaidCode
 		mermaidCode.push(`graph ${graphOrientation};`);
-		workflow.workflowTemplate.argoWorkflowTemplate.spec.templates.forEach((template) => {
+		workflow.workflowTemplates[0]?.argoWorkflowTemplate.spec.templates.forEach((template) => {
 			try {
 				if (template.dag) argoDAGtoMermaid(template.dag);
 				else if (template.steps) argoStepsToMermaid(template.steps);
@@ -385,7 +387,6 @@
 				<div class="grid grid-rows-2 grid-cols-2 gap-8 max-h-screen">
 					<div class="card logcard row-span-2 p-5">
 						<header class="card-header"><h1>Logs</h1></header>
-						<!-- <section class=""> -->
 						<br />
 						<ul class="list">
 							{#if showLogs}
