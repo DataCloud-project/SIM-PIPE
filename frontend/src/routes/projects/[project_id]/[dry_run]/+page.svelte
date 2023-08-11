@@ -12,6 +12,7 @@
 	import { goto } from '$app/navigation';
 	import Timestamp from './timestamp.svelte';
 	import { requestGraphQLClient } from '$lib/graphqlUtils.js';
+	import { time_difference } from '$lib/time_difference.js';
 
 	export let data;
 
@@ -101,6 +102,11 @@
 		goto(`/projects/[project_id]/${dryRunId}/${resource}`);
 	}
 
+	function displayDryRunDuration(status: string, started: string, finished: string) {
+		if (status == 'Succeeded' || status == 'Failed' || status == 'Error')
+			return time_difference(started, finished);
+		return '-';
+	}
 	// to disable onclick propogation for checkbox input
 	const handleCheckboxClick = (event: any) => {
 		event.stopPropagation();
@@ -171,9 +177,14 @@
 								<td style="width:20%">
 									<div><SymbolForRunResult run_result={run.status.phase.toString()} /></div>
 								</td>
-								<!-- TODO: calculate from started and finished -->
 								<td style="width:20%">
-									<div>{run.status.estimatedDuration}</div>
+									<div>
+										{displayDryRunDuration(
+											run.status.phase.toString(),
+											run.nodes[0]?.startedAt,
+											run.nodes[0]?.finishedAt
+										)}
+									</div>
 								</td>
 								<td style="width:20%">
 									<button type="button" class="btn-icon btn-icon-sm variant-soft">

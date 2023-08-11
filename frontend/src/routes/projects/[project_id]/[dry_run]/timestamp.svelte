@@ -11,7 +11,7 @@
 	 */
 	let interval;
 
-	function getTimeDifference() {
+	function getRelativeTimeDifference() {
 		const currentTime = Date.now();
 		const parsedTimestamp = Date.parse(timestamp);
 		const timeDifference = currentTime - parsedTimestamp;
@@ -37,12 +37,12 @@
 		}
 	}
 
-	$: relativeTime = getTimeDifference();
+	$: relativeTime = getRelativeTimeDifference();
 
 	// Update relativeTime every minute to keep it updated
 	onMount(() => {
 		interval = setInterval(() => {
-			relativeTime = getTimeDifference();
+			relativeTime = getRelativeTimeDifference();
 		}, 60000); // 60,000 milliseconds = 1 minute
 	});
 

@@ -3,9 +3,6 @@
 	type Status = keyof typeof colors;
 
 	const statusLabels: Status[] = Object.keys(colors) as Status[];
-	console.log('status');
-	console.log(statusLabels);
-	console.log(colors['Succeeded']);
 </script>
 
 <div class="legend">

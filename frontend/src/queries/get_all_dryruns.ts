@@ -12,12 +12,23 @@ const allDryRunsQuery = gql`
 				id
 				createdAt
 				status {
-					progress
-					startedAt
-					estimatedDuration
-					finishedAt
-					message
 					phase
+				}
+				nodes {
+					startedAt
+					finishedAt
+					... on DryRunNodePod {
+						displayName
+						startedAt
+						finishedAt
+						duration
+						phase
+						outputArtifacts {
+							key
+							name
+							url
+						}
+					}
 				}
 			}
 		}
