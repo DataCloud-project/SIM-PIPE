@@ -29,8 +29,9 @@
 		modalStore.clear();
 	}
 
-	async function stopRun() {
+	async function stopRun(event: any) {
 		try {
+			event.stopPropagation();
 			await requestGraphQLClient(stopDryRunMutation, { dryRunId: dryRunId, terminate: false });
 			displayAlert('Stopping dry run..', `ID: ${dryRunId}`);
 		} catch (error) {
@@ -39,8 +40,9 @@
 			console.log(error);
 		}
 	}
-	async function pauseRun() {
+	async function pauseRun(event: any) {
 		try {
+			event.stopPropagation();
 			await requestGraphQLClient(suspendDryRunMutation, { dryRunId: dryRunId, terminate: false });
 			paused = true;
 			$pausedDryRuns.push(dryRunId);
@@ -51,8 +53,9 @@
 			console.log(error);
 		}
 	}
-	async function resumeRun() {
+	async function resumeRun(event: any) {
 		try {
+			event.stopPropagation();
 			await requestGraphQLClient(resumeDryRunMutation, { dryRunId: dryRunId, terminate: false });
 			paused = false;
 			$pausedDryRuns.filter((item) => item !== dryRunId);
@@ -74,11 +77,11 @@
 	<PlayIcon size="20" />
 {:else if action == 'stop'}
 	{#if !paused}
-		<button on:click={pauseRun}><PauseIcon size="20" /></button>
+		<button on:click={(event) => pauseRun(event)}><PauseIcon size="20" /></button>
 	{:else}
-		<button on:click={resumeRun}><PlayIcon size="20" /></button>
+		<button on:click={(event) => resumeRun(event)}><PlayIcon size="20" /></button>
 	{/if}
-	<button on:click={stopRun}><StopCircleIcon size="20" /></button>
+	<button on:click={(event) => stopRun(event)}><StopCircleIcon size="20" /></button>
 {:else if action == 'retry'}
 	<PlayIcon size="20" />
 {:else if action == 'alert'}

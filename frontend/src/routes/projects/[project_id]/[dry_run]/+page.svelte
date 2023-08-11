@@ -56,6 +56,14 @@
 			.forEach(async (element) => {
 				const response = await requestGraphQLClient(deleteDryRunMutation, { dryRunId: element });
 			});
+		const dryRunDeletedMessageModal: ModalSettings = {
+			type: 'alert',
+			title: 'Dry run deleted🗑️!',
+			body: `Deleted dry runs: ${Object.keys(checkboxes).filter((item) => checkboxes[item])}`
+		};
+		modalStore.trigger(dryRunDeletedMessageModal);
+		await new Promise((resolve) => setTimeout(resolve, 1500));
+		modalStore.close();
 		// reset checkboxes
 		$selectedProject?.dryRuns.forEach((element) => {
 			checkboxes[element.id] = false;
@@ -97,7 +105,6 @@
 	const handleCheckboxClick = (event: any) => {
 		event.stopPropagation();
 	};
-
 	$: reactiveProjectDetails = $selectedProject;
 </script>
 
@@ -135,53 +142,54 @@
 				</div>
 			</div>
 		</div>
-
-		<div class="table-container">
-			<table class="table table-interactive">
-				<caption hidden>Dry runs</caption>
-				<thead>
-					<tr>
-						<th />
-						<th>Name</th>
-						<th>Result</th>
-						<th>Run duration</th>
-						<th>Action</th>
-						<th>Created</th>
-					</tr>
-				</thead>
-				<tbody>
-					{#each reactiveProjectDetails?.dryRuns || [] as run}
-						<tr on:click={() => dryRunOnClick(run.id)}>
-							<td style="width:25px">
-								<input
-									type="checkbox"
-									bind:checked={checkboxes[run.id]}
-									class="checkbox"
-									on:click={(event) => handleCheckboxClick(event)}
-								/>
-							</td>
-							<td style="width:20%">{run.id}</td>
-							<td style="width:20%">
-								<div><SymbolForRunResult run_result={run.status.phase.toString()} /></div>
-							</td>
-							<!-- TODO: calculate from started and finished -->
-							<td style="width:20%">
-								<div>{run.status.estimatedDuration}</div>
-							</td>
-							<td style="width:20%">
-								<button type="button" class="btn-icon btn-icon-sm variant-soft">
-									<SymbolForAction
-										action={getDryRunAction(run.status.phase.toString())}
-										dryRunId={run.id}
-									/>
-								</button>
-							</td>
-							<td style="width:20%"><Timestamp timestamp={run.createdAt} /> </td>
+		{#if reactiveProjectDetails?.dryRuns?.length || 0 > 0}
+			<div class="table-container">
+				<table class="table table-interactive">
+					<caption hidden>Dry runs</caption>
+					<thead>
+						<tr>
+							<th />
+							<th>Name</th>
+							<th>Result</th>
+							<th>Run duration</th>
+							<th>Action</th>
+							<th>Created</th>
 						</tr>
-					{/each}
-				</tbody>
-			</table>
-		</div>
+					</thead>
+					<tbody>
+						{#each reactiveProjectDetails?.dryRuns || [] as run}
+							<tr on:click={() => dryRunOnClick(run.id)}>
+								<td style="width:25px">
+									<input
+										type="checkbox"
+										bind:checked={checkboxes[run.id]}
+										class="checkbox"
+										on:click={(event) => handleCheckboxClick(event)}
+									/>
+								</td>
+								<td style="width:20%">{run.id}</td>
+								<td style="width:20%">
+									<div><SymbolForRunResult run_result={run.status.phase.toString()} /></div>
+								</td>
+								<!-- TODO: calculate from started and finished -->
+								<td style="width:20%">
+									<div>{run.status.estimatedDuration}</div>
+								</td>
+								<td style="width:20%">
+									<button type="button" class="btn-icon btn-icon-sm variant-soft">
+										<SymbolForAction
+											action={getDryRunAction(run.status.phase.toString())}
+											dryRunId={run.id}
+										/>
+									</button>
+								</td>
+								<td style="width:20%"><Timestamp timestamp={run.createdAt} /> </td>
+							</tr>
+						{/each}
+					</tbody>
+				</table>
+			</div>
+		{/if}
 	{/await}
 </div>
 

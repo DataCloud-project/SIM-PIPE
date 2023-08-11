@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { afterUpdate, onMount } from 'svelte';
-	import { modeCurrent, ProgressBar } from '@skeletonlabs/skeleton';
+	import { onMount } from 'svelte';
+	import { ProgressBar } from '@skeletonlabs/skeleton';
 	import type { DryRunMetrics, DryRun } from '../../../../../types';
 	import getDryRunMetricsQuery from '../../../../../queries/get_dry_run_metrics.js';
 	import getDryRunNoLogsMetricsQuery from '../../../../../queries/get_dry_run_metrics_no_logs.js';
@@ -13,10 +13,14 @@
 	import Plot from './Plot.svelte';
 	import Mermaid from './Mermaid.svelte';
 	import { colors } from './Config.js';
+	import { stepsList } from '../../../../../stores/stores';
+	import Legend from './Legend.svelte';
 
 	export let data;
 	let workflow: { workflowTemplate: { argoWorkflowTemplate: { spec: { templates: any[] } } } };
 	let dryrun_results: { dryRun: { nodes: any[] } };
+	let selectStepName = '';
+	let selectStepType = '';
 	let dryRunPhases: { [x: string]: string } = {};
 	const graphOrientation = 'LR';
 
@@ -28,9 +32,9 @@
 	let showLogs = true;
 	let logs: { [x: string]: string } = {};
 
-	var cpuData: { x: string[]; y: number[]; type: string; name: string }[] = [];
-	var memoryData: { x: string[]; y: number[]; type: string; name: string }[] = [];
-	var networkData: { x: string[]; y: number[]; type: string; name: string }[] = [];
+	var cpuData: { [key: string]: { x: string[]; y: number[]; type: string; name: string } } = {};
+	var memoryData: { [key: string]: { x: string[]; y: number[]; type: string; name: string } } = {};
+	var networkData: { [key: string]: { x: string[]; y: number[]; type: string; name: string } } = {};
 
 	const getMetricsResponse = async () => {
 		const dryrun_variables = {
@@ -71,6 +75,8 @@
 			getDryRunPhaseResultsQuery,
 			dryrun_variables
 		);
+		// set stepsList as nodes
+		$stepsList = dryrun_response.dryRun.nodes;
 		dryrun_response.dryRun.nodes.forEach((node: DryRunMetrics) => {
 			dryRunPhases[node.displayName] = node.phase;
 		});
@@ -105,7 +111,6 @@
 					// TODO: make more efficient if data missing?
 					if (isEmpty(node) === false) {
 						if (node.log) {
-							//console.log(node.log)
 							logs[node.displayName] = node.log;
 						}
 						let cpuTimestamps = timestampsToDatetime(
@@ -166,20 +171,20 @@
 						};
 
 						if (cpuValues.length > 0) {
-							cpuData.push(cpuUsage);
+							cpuData[node.displayName as string] = cpuUsage;
 						}
 
 						if (memValues.length > 0) {
-							memoryData.push(memoryUsage);
+							memoryData[node.displayName as string] = memoryUsage;
 						}
 
 						if (nrcValues.length > 0) {
-							networkData.push(networkReceiveBytesTotal);
+							networkData[node.displayName as string] = networkReceiveBytesTotal;
 						}
-
-						if (ntrValues.length > 0) {
-							networkData.push(networkTransmitBytesTotal);
-						}
+						// TODO: update when api call returns network values
+						// if (ntrValues.length > 0) {
+						// 	networkData.push(networkTransmitBytesTotal);
+						// }
 					}
 				}
 			);
@@ -212,7 +217,6 @@
 			}
 		});
 		diagram = mermaidCode.join('\n');
-		//console.log(diagram);
 	}
 
 	function addSeconds(date: Date, seconds: number) {
@@ -284,6 +288,7 @@
 			mermaidCode.push(`  ${taskName}["${taskName}"];`);
 			// TODO: replace with actual step click
 			mermaidCode.push(`  click ${taskName} href "javascript:console.log('task ${taskName}');"`);
+
 			mermaidCode.push(
 				`  style ${taskName} fill:${colors[dryRunPhases[taskName] as keyof typeof colors]}`
 			);
@@ -300,10 +305,18 @@
 		});
 	}
 
+	function stepOnClick(stepName: string, stepType: string) {
+		selectStepName = stepName;
+		selectStepType = stepType;
+	}
+
 	onMount(async () => {
 		await getDataPromise;
 		buildDiagram();
 	});
+	$: selectedStep = selectStepName;
+	$: selectedStepType = selectStepType;
+	$: reactiveStepsList = $stepsList;
 </script>
 
 <div class="container p-5">
@@ -320,57 +333,115 @@
 			<p>Loading metrics...</p>
 			<ProgressBar />
 		{:then}
-			<div class="flex justify-center p-5">
-				<Mermaid {diagram} />
+			<div class="grid-cols-2 flex">
+				<div class="w-1/2 pt-20 pl-2">
+					<Mermaid {diagram} />
+					<Legend />
+				</div>
+				<div class=" w-1/2 p-5">
+					<table class="table table-interactive">
+						<caption hidden>Projects</caption>
+						<thead>
+							<tr>
+								<th>Name</th>
+								<th>Started</th>
+								<th>Finished</th>
+								<th>Status</th>
+								<th>Output</th>
+							</tr>
+						</thead>
+						<tbody>
+							{#each reactiveStepsList?.slice(1) || [] as step}
+								<tr on:click={() => stepOnClick(step.displayName, step.type)}>
+									<td style="width:15%">{step.displayName}</td>
+									<td style="width:35%">
+										{step.startedAt ? step.startedAt : '-'}
+									</td>
+									<td style="width:35%">
+										{step.finishedAt ? step.finishedAt : '-'}
+									</td>
+									<td style="width:15%">{step.phase}</td>
+									<td style="width:10%">
+										<!-- will work only after the url fix is done in the backend -->
+										{#if step.type == 'Pod' && step.outputArtifacts?.length >= 1}
+											{#each step.outputArtifacts as artifact}
+												{#if artifact.name != 'main-logs'}
+													<a href={step.outputArtifacts[0].url}>{step.outputArtifacts[0].name}* </a>
+												{:else}
+													<p>-</p>
+												{/if}
+											{/each}
+										{:else}
+											<p>-</p>
+										{/if}
+									</td>
+								</tr>
+							{/each}
+						</tbody>
+					</table>
+				</div>
 			</div>
-			<div class="grid grid-rows-3 grid-cols-2 gap-4 max-h-screen">
-				<div class="card logcard row-span-3 p-5">
-					<header class="card-header"><h1>Logs</h1></header>
-					<section class="p-2">
+			{#if selectedStepType == 'Pod'}
+				<div class="grid grid-rows-2 grid-cols-2 gap-8 max-h-screen">
+					<div class="card logcard row-span-2 p-5">
+						<header class="card-header"><h1>Logs</h1></header>
+						<!-- <section class=""> -->
 						<br />
 						<ul class="list">
 							{#if showLogs}
-								{#each Object.keys(logs).sort() as key}
-									<li>
-										<h2>{key}</h2>
-									</li>
-									<li>
-										<pre class="pre">
-											<code class="code-example-body prettyprint">
-												{#each Object.values(logs[key]) as line}
-													{line}<br />
-												{/each}
-											</code>
-										</pre>
-									</li>
-									<br />
-								{/each}
+								<h2>{selectedStep}</h2>
+								<div class="pre">
+									<code>
+										{logs[selectedStep]}
+									</code>
+								</div>
+								<br />
 							{:else}
 								<p>No data</p>
 							{/if}
 						</ul>
-					</section>
+						<!-- </section> -->
+					</div>
+					{#if cpuData[selectedStep]}
+						<div class="card">
+							<Plot
+								data={[cpuData[selectedStep]]}
+								plot_title={`CPU Usage ${selectedStep}`}
+								xaxis_title="time"
+								yaxis_title="cpu usage"
+							/>
+						</div>
+					{:else}
+						<p>No CPU Usage data</p>
+					{/if}
+					{#if memoryData[selectedStep]}
+						<div class="card">
+							<Plot
+								data={[memoryData[selectedStep]]}
+								plot_title={`Memory Usage ${selectedStep}`}
+								xaxis_title="time"
+								yaxis_title="bytes"
+							/>
+						</div>
+					{:else}
+						<p>No Memory Usage data</p>
+					{/if}
+
+					<!-- TODO: uncomment when network data is sorted -->
+					<!-- {#if networkData1[selectedStep]}
+						<div class="card">
+							<Plot
+								data={[networkData1[selectedStep]]}
+								plot_title={`Network Usage ${selectedStep}`}
+								xaxis_title="time"
+								yaxis_title="bytes"
+							/>
+						</div>
+					{:else}
+						<p>No Network Usage data</p>
+					{/if}					 -->
 				</div>
-				<div class="card">
-					<Plot data={cpuData} plot_title="CPU Usage" xaxis_title="time" yaxis_title="cpu usage" />
-				</div>
-				<div class="card">
-					<Plot
-						data={memoryData}
-						plot_title="Memory Usage"
-						xaxis_title="time"
-						yaxis_title="bytes"
-					/>
-				</div>
-				<div class="card">
-					<Plot
-						data={networkData}
-						plot_title="Network Usage"
-						xaxis_title="time"
-						yaxis_title="bytes"
-					/>
-				</div>
-			</div>
+			{/if}
 		{/await}
 	</div>
 </div>
@@ -378,20 +449,22 @@
 <style>
 	.card.logcard {
 		overflow-y: scroll;
-		max-height: fit-content;
+		/* max-height: fit-content; */
 	}
 	ul {
 		max-height: 50vh;
-		max-height: fit-content;
+		/* max-height: fit-content; */
 	}
-	pre {
+	.pre {
 		padding: 0 6px;
-		border: 1px solid rgb(255, 0, 0);
-		box-sizing: border-box;
-		overflow-x: hidden;
+		/* border: 1px solid rgb(177, 107, 107); */
+		/* box-sizing: border-box; */
+		/* text-align: left; */
+		/* overflow-x: hidden; */
 		overflow-y: scroll;
-		max-height: 50vh;
-		max-width: 98%;
-		white-space: pre-wrap;
+		/* max-height: 50vh; */
+		width: 100%;
+		/* max-width: 98%; */
+		/* white-space: pre-wrap; */
 	}
 </style>

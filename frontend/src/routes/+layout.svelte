@@ -13,7 +13,7 @@
 
 	import { page } from '$app/stores';
 	import { derived } from 'svelte/store';
-	import { LockIcon, BookOpenIcon, BarChart2Icon, Share2Icon } from 'svelte-feather-icons';
+	import { LockIcon, BookOpenIcon, FileIcon } from 'svelte-feather-icons';
 	import hljs from 'highlight.js';
 	import 'highlight.js/styles/github-dark.css'; // highlight.js theme
 	import { storeHighlightJs } from '@skeletonlabs/skeleton';
@@ -41,6 +41,7 @@
 		<AppRail>
 			<AppRailTile label="Projects" href="/projects"><BookOpenIcon size="1.5x" /></AppRailTile>
 			<AppRailTile label="Registry Key Vault" href="/secrets"><LockIcon size="1.5x" /></AppRailTile>
+			<AppRailTile label="Sample Files" href="/files"><FileIcon size="1.5x" /></AppRailTile>
 		</AppRail>
 	</svelte:fragment>
 
