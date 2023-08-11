@@ -121,7 +121,7 @@ export type DryRunNode = {
   /**  The name of the node  */
   name: Scalars['String']['output'];
   /**  The phase of the node  */
-  phase: DryRunPhase;
+  phase: DryRunNodePhase;
   /**  The progress of the node  */
   progress?: Maybe<Scalars['String']['output']>;
   /**  The time at which the node started  */
@@ -524,12 +524,32 @@ export type DryRunNodeMisc = DryRunNode & {
   finishedAt?: Maybe<Scalars['String']['output']>;
   id: Scalars['String']['output'];
   name: Scalars['String']['output'];
-  phase: DryRunPhase;
+  phase: DryRunNodePhase;
   progress?: Maybe<Scalars['String']['output']>;
   startedAt?: Maybe<Scalars['String']['output']>;
   templateName?: Maybe<Scalars['String']['output']>;
   type: DryRunNodeType;
 };
+
+/**  The phase of a dry run node  */
+export enum DryRunNodePhase {
+  /**  Node had an error other than a non 0 exit code  */
+  Error = 'Error',
+  /**  Node or child node exicited with non-0 exit code  */
+  Failed = 'Failed',
+  /**  Node was omitted because its depends condition was not met  */
+  Omitted = 'Omitted',
+  /**  Node is waiting to run  */
+  Pending = 'Pending',
+  /**  Node is running  */
+  Running = 'Running',
+  /**  Node was skipped  */
+  Skipped = 'Skipped',
+  /**  Node finished successfully  */
+  Succeeded = 'Succeeded',
+  /**  Unknown phase. Shouldn't happen.  */
+  Unknown = 'Unknown'
+}
 
 export type DryRunNodePod = DryRunNode & {
   __typename?: 'DryRunNodePod';
@@ -549,7 +569,7 @@ export type DryRunNodePod = DryRunNode & {
   name: Scalars['String']['output'];
   /**  Output artifacts of the node.  */
   outputArtifacts?: Maybe<Array<DryRunNodeArtifact>>;
-  phase: DryRunPhase;
+  phase: DryRunNodePhase;
   /**  The name of the pod.  */
   podName: Scalars['String']['output'];
   progress?: Maybe<Scalars['String']['output']>;
@@ -594,23 +614,21 @@ export enum DryRunNodeType {
   TaskGroup = 'TaskGroup'
 }
 
-/**  The phase of a dry run or its nodes  */
+/**  The phase of a dry run  */
 export enum DryRunPhase {
-  /**  Node had an error other than a non 0 exit code  */
+  /**  Dry run had an error other than a non 0 exit code  */
   Error = 'Error',
-  /**  Node or child node exicited with non-0 exit code  */
+  /**  Dry run was skipped  */
   Failed = 'Failed',
-  /**  Node was omitted because its depends condition was not met  */
-  Omitted = 'Omitted',
-  /**  Node is waiting to run  */
+  /**  Dry run is waiting to run  */
   Pending = 'Pending',
-  /**  Node is running  */
+  /**  Dry run is running  */
   Running = 'Running',
-  /**  Node was skipped  */
-  Skipped = 'Skipped',
-  /**  Node finished successfully  */
+  /**  Dry run finished successfully  */
   Succeeded = 'Succeeded',
-  /**  Unknown phase. Shouldn't happen.  */
+  /**  Dry run is running but suspended  */
+  Suspended = 'Suspended',
+  /**  Dry run was omitted because its depends condition was not met  */
   Unknown = 'Unknown'
 }
 
@@ -934,6 +952,7 @@ export type ResolversTypes = {
   DryRunNodeArtifact: ResolverTypeWrapper<DryRunNodeArtifact>;
   DryRunNodeMetrics: ResolverTypeWrapper<DryRunNodeMetrics>;
   DryRunNodeMisc: ResolverTypeWrapper<DryRunNodeMisc>;
+  DryRunNodePhase: DryRunNodePhase;
   DryRunNodePod: ResolverTypeWrapper<DryRunNodePod>;
   DryRunNodeResourceDuration: ResolverTypeWrapper<DryRunNodeResourceDuration>;
   DryRunNodeType: DryRunNodeType;
@@ -1015,7 +1034,7 @@ export type DryRunNodeResolvers<ContextType = any, ParentType extends ResolversP
   finishedAt?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   id?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  phase?: Resolver<ResolversTypes['DryRunPhase'], ParentType, ContextType>;
+  phase?: Resolver<ResolversTypes['DryRunNodePhase'], ParentType, ContextType>;
   progress?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   startedAt?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   templateName?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
@@ -1081,7 +1100,7 @@ export type DryRunNodeMiscResolvers<ContextType = any, ParentType extends Resolv
   finishedAt?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   id?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  phase?: Resolver<ResolversTypes['DryRunPhase'], ParentType, ContextType>;
+  phase?: Resolver<ResolversTypes['DryRunNodePhase'], ParentType, ContextType>;
   progress?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   startedAt?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   templateName?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
@@ -1101,7 +1120,7 @@ export type DryRunNodePodResolvers<ContextType = any, ParentType extends Resolve
   metrics?: Resolver<ResolversTypes['DryRunNodeMetrics'], ParentType, ContextType>;
   name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   outputArtifacts?: Resolver<Maybe<Array<ResolversTypes['DryRunNodeArtifact']>>, ParentType, ContextType>;
-  phase?: Resolver<ResolversTypes['DryRunPhase'], ParentType, ContextType>;
+  phase?: Resolver<ResolversTypes['DryRunNodePhase'], ParentType, ContextType>;
   podName?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   progress?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   resourcesDuration?: Resolver<Maybe<ResolversTypes['DryRunNodeResourceDuration']>, ParentType, ContextType>;

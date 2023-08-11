@@ -95,8 +95,26 @@ type DryRunStatus {
   estimatedDuration: Int
 }
 
-""" The phase of a dry run or its nodes """
+""" The phase of a dry run """
 enum DryRunPhase {
+  """ Dry run is waiting to run """
+  Pending
+  """ Dry run is running """
+  Running
+  """ Dry run is running but suspended """
+  Suspended
+  """ Dry run finished successfully """
+  Succeeded
+  """ Dry run was skipped """
+  Failed
+  """ Dry run had an error other than a non 0 exit code """
+  Error
+  """ Dry run was omitted because its depends condition was not met """
+  Unknown
+}
+
+""" The phase of a dry run node """
+enum DryRunNodePhase {
   """ Node is waiting to run """
   Pending
   """ Node is running """
@@ -149,7 +167,7 @@ interface DryRunNode {
 
 
   """ The phase of the node """
-  phase: DryRunPhase!
+  phase: DryRunNodePhase!
 
   """ The time at which the node started """
   startedAt: String
@@ -173,7 +191,7 @@ type DryRunNodePod implements DryRunNode {
   name: String!
   displayName: String
   templateName: String
-  phase: DryRunPhase!
+  phase: DryRunNodePhase!
   startedAt: String
   finishedAt: String
   duration: Int
@@ -209,7 +227,7 @@ type DryRunNodeMisc implements DryRunNode {
   name: String!
   displayName: String
   templateName: String
-  phase: DryRunPhase!
+  phase: DryRunNodePhase!
   startedAt: String
   finishedAt: String
   duration: Int

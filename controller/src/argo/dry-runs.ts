@@ -1,7 +1,7 @@
 import {
   ConflictError, InvalidArgoWorkflowError, NotFoundError, WrongRequestError,
 } from '../server/apollo-errors.js';
-import { DryRunNodeType, DryRunPhase } from '../server/schema.js';
+import { DryRunNodePhase, DryRunNodeType, DryRunPhase } from '../server/schema.js';
 import getPodName from './get-pod-name.js';
 import { SIMPIPE_PROJECT_LABEL } from './project-label.js';
 import type {
@@ -10,10 +10,35 @@ import type {
 import type { ArgoClientActionNames, ArgoNode, ArgoWorkflow } from './argo-client.js';
 import type ArgoWorkflowClient from './argo-client.js';
 
-function convertArgoStatusPhaseToDryRunStatusPhase(
-  argoStatusPhase: string | undefined,
+function convertArgoWorkflowPhaseToDryRunPhase(
+  argoWorkflowPhase: string | undefined,
+  suspended: boolean | undefined,
 ): DryRunPhase {
-  switch (argoStatusPhase) {
+  switch (argoWorkflowPhase) {
+    case 'Running': {
+      return suspended ? DryRunPhase.Suspended : DryRunPhase.Running;
+    }
+    case 'Pending':
+    case 'Succeeded':
+    case 'Failed':
+    case 'Error':
+    case 'Unknown': {
+      return argoWorkflowPhase as DryRunPhase;
+    }
+    case undefined: {
+      return DryRunPhase.Unknown;
+    }
+
+    default: {
+      throw new Error(`Unknown Argo status phase: ${argoWorkflowPhase}`);
+    }
+  }
+}
+
+function convertArgoNodePhaseToDryRunNodePhase(
+  argoNodePhase: string | undefined,
+): DryRunNodePhase {
+  switch (argoNodePhase) {
     case 'Pending':
     case 'Running':
     case 'Succeeded':
@@ -22,14 +47,13 @@ function convertArgoStatusPhaseToDryRunStatusPhase(
     case 'Error':
     case 'Omitted':
     case 'Unknown': {
-      return argoStatusPhase as DryRunPhase;
+      return argoNodePhase as DryRunNodePhase;
     }
     case undefined: {
-      return DryRunPhase.Unknown;
+      return DryRunNodePhase.Unknown;
     }
-
     default: {
-      throw new Error(`Unknown Argo status phase: ${argoStatusPhase}`);
+      throw new Error(`Unknown Argo node phase: ${argoNodePhase}`);
     }
   }
 }
@@ -58,14 +82,15 @@ function convertArgoNodeType(
 }
 
 export function convertArgoWorkflowToDryRun(argoWorkflow: ArgoWorkflow): DryRun {
-  const { metadata, status } = argoWorkflow;
+  const { metadata, status, spec } = argoWorkflow;
+  const { suspend } = spec;
   return {
     id: metadata.name ?? '',
     createdAt: (new Date(metadata.creationTimestamp ?? '') ?? new Date()).toISOString(),
     argoWorkflow,
     status: {
       ...status,
-      phase: convertArgoStatusPhaseToDryRunStatusPhase(status?.phase),
+      phase: convertArgoWorkflowPhaseToDryRunPhase(status?.phase, suspend),
     },
   };
 }
@@ -126,7 +151,7 @@ export function convertArgoWorkflowNode(node: ArgoNode, argoWorkflow: ArgoWorkfl
       }
       return convertArgoWorkflowNode(childNode, argoWorkflow);
     }),
-    phase: convertArgoStatusPhaseToDryRunStatusPhase(node.phase),
+    phase: convertArgoNodePhaseToDryRunNodePhase(node.phase),
     exitCode: node.outputs?.exitCode,
     duration: convertNodeDuration(node),
     workflow: argoWorkflow,
