@@ -416,7 +416,23 @@ const resolvers = {
         return undefined;
       }
       return Object.values(argoWorkflow.status.nodes)
-        .map((node) => convertArgoWorkflowNode(node, argoWorkflow));
+        .map((node) => convertArgoWorkflowNode(node, argoWorkflow))
+        .sort((a, b) => {
+          if (a.startedAt && b.startedAt) {
+            const startedAtDiff = a.startedAt.localeCompare(b.startedAt);
+            if (startedAtDiff !== 0) {
+              return startedAtDiff;
+            }
+            return a.name.localeCompare(b.name);
+          }
+          if (a.startedAt) {
+            return -1;
+          }
+          if (b.startedAt) {
+            return 1;
+          }
+          return a.name.localeCompare(b.name);
+        });
     },
     node(
       parent: DryRun,
