@@ -18,8 +18,8 @@ spec:
   endpoints:
   - port: bridge
     path: /metrics
-    interval: 3s
-    scrapeTimeout: 2s
+    interval: {{ .Values.cadvisor.simpipeRefreshInterval }}
+    scrapeTimeout: {{ .Values.cadvisor.simpipeScrapeTimeout }}
     relabelings:
       - regex: "condition"
         action: labeldrop

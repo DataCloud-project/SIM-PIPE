@@ -333,10 +333,13 @@ cadvisor:
   enabled: true
   nameOverride: simpipe-cadvisor
 
+  simpipeRefreshInterval: 3s
+  simpipeScrapeTimeout: 2s
+
   container:
     additionalArgs:
-      - --housekeeping_interval=1s
-      - --max_housekeeping_interval=2s
+      - --housekeeping_interval=3s
+      - --max_housekeeping_interval=6s
       #- --docker_only
       - --event_storage_event_limit=default=0
       - --event_storage_age_limit=default=0
