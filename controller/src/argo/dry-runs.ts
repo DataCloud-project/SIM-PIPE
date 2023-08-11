@@ -323,7 +323,7 @@ export async function getDryRunNodeLog({
   sinceSeconds?: number,
   sinceTime?: number,
   argoClient: ArgoWorkflowClient,
-}): Promise<string[]> {
+}): Promise<string[] | undefined> {
   const { podName, id: nodeId } = dryRunNode;
   if (!podName) {
     throw new Error('Pod name is missing');

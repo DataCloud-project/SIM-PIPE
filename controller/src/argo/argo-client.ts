@@ -282,9 +282,9 @@ export default class ArgoWorkflowClient {
     sinceTime?: number;
     grep?: string;
     tailLines?: number;
-  }): Promise<string[]> {
+  }): Promise<string[] | undefined> {
+    const workflowName = workflow.metadata.name;
     if (ArgoWorkflowClient.isWorkflowNodePendingOrRunning(workflow, nodeId)) {
-      const workflowName = workflow.metadata.name;
       if (!workflowName) {
         throw new Error('Workflow name is missing');
       }
@@ -299,13 +299,31 @@ export default class ArgoWorkflowClient {
       });
     }
 
-    return await this.getWorkflowLogFromArtifact({
-      workflow,
-      nodeId,
-      container,
-      grep,
-      tailLines,
-    });
+    try {
+      return await this.getWorkflowLogFromArtifact({
+        workflow,
+        nodeId,
+        container,
+        grep,
+        tailLines,
+      });
+    } catch (error) {
+      if ((error as Error).message === 'No logs found') {
+        if (!workflowName) {
+          return undefined;
+        }
+        return await this.getWorkflowLogFromKubernetes({
+          workflowName,
+          podName,
+          containerName: container,
+          sinceSeconds,
+          sinceTime,
+          grep,
+          tailLines,
+        });
+      }
+      throw error;
+    }
   }
 
   async createWorkflowTemplate(
