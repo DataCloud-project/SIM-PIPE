@@ -12,6 +12,7 @@ export default async function queryPrometheusResolver<
   M extends keyof DryRunNodeMetricsWithoutTypeName,
 >(
   metric: string,
+  containerName: string,
   dryRunNodeMetrics: DryRunNodeMetrics & { dryRunNode: DryRunNodePod },
   _arguments: QueryPrometheusArguments,
 ): Promise<DryRunNodeMetrics[M]> {
@@ -34,7 +35,7 @@ export default async function queryPrometheusResolver<
   }
 
   const data = await queryPrometheus(metric, {
-    container_name: 'main',
+    container_name: containerName,
     pod_name: podName,
   }, startTimestamp, endTimestamp, step);
 
