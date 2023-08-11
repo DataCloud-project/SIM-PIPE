@@ -64,8 +64,8 @@ export function convertArgoWorkflowToDryRun(argoWorkflow: ArgoWorkflow): DryRun 
     createdAt: (new Date(metadata.creationTimestamp ?? '') ?? new Date()).toISOString(),
     argoWorkflow,
     status: {
+      ...status,
       phase: convertArgoStatusPhaseToDryRunStatusPhase(status?.phase),
-      message: status?.message,
     },
   };
 }
