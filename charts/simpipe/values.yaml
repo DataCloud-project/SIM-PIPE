@@ -21,11 +21,9 @@ controller:
 
   minio:
     # Configured by default for the localhost port forwarding in forwarding.py
-    port: 8085
-    endpoint: localhost
+    url: http://localhost:8085
     accessKey: simpipe
     secretKey: simpipe1234
-    useSSL: ""
     bucketName: artifacts
     region: "no-region"
   argo:

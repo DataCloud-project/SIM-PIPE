@@ -1,10 +1,12 @@
 import { Client as MinioClient } from 'minio';
+import { URL } from 'node:url';
 
 import {
   minioAccessKey,
   minioBucketName,
-  minioEndpoint,
-  minioPort, minioRegion, minioSecretKey, minioUseSSL,
+  minioRegion,
+  minioSecretKey,
+  minioUrl,
 } from '../config.js';
 
 if (!minioAccessKey) {
@@ -14,10 +16,11 @@ if (!minioSecretKey) {
   throw new Error('MINIO_SECRET_KEY is not set');
 }
 
+const parsedUrl = new URL(minioUrl);
 const minioClient = new MinioClient({
-  endPoint: minioEndpoint,
-  port: minioPort,
-  useSSL: minioUseSSL,
+  endPoint: parsedUrl.hostname,
+  port: Number.parseInt(parsedUrl.port, 10) ?? (parsedUrl.protocol === 'https:' ? 443 : 80),
+  useSSL: parsedUrl.protocol === 'https:',
   accessKey: minioAccessKey,
   secretKey: minioSecretKey,
   region: minioRegion,

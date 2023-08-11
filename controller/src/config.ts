@@ -14,12 +14,9 @@ export const authenticationExpiryTimeout = process.env.AUTHENTICATION_EXPIRY_TIM
 // Minio
 export const minioAccessKey = process.env.MINIO_ACCESS_KEY;
 export const minioSecretKey = process.env.MINIO_SECRET_KEY;
-export const minioEndpoint = process.env.MINIO_ENDPOINT ?? 'localhost';
-export const minioPort = process.env.MINIO_PORT
-  ? Number.parseInt(process.env.MINIO_PORT, 10) : undefined;
-export const minioUseSSL = !!process.env.MINIO_USE_SSL;
 export const minioBucketName = process.env.MINIO_BUCKET_NAME ?? 'artifacts';
 export const minioRegion = process.env.MINIO_REGION ?? 'no-region';
+export const minioUrl = process.env.MINIO_URL ?? 'http://localhost:8085';
 
 // Argo client
 export const argoClientEndpoint = process.env.ARGO_CLIENT_ENDPOINT ?? 'http://localhost:8084/';

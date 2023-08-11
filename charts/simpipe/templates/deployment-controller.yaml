@@ -44,12 +44,8 @@ spec:
                   key: minioSecretKey
             - name: JWT_DEV_MODE
               value: "true"
-            - name: MINIO_ENDPOINT
-              value: {{ .Values.controller.minio.endpoint | quote }}
-            - name: MINIO_PORT
-              value: {{ .Values.controller.minio.port | quote }}
-            - name: MINIO_USE_SSL
-              value: {{ .Values.controller.minio.useSSL | quote }}
+            - name: MINIO_URL
+              value: {{ .Values.controller.minio.url | quote }}
             - name: MINIO_BUCKET_NAME
               value: {{ .Values.controller.minio.bucketName | quote }}
             - name: MINIO_REGION
