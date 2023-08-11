@@ -19,6 +19,7 @@ services = [
         "fullname": "prometheus-operated",
     },
     {"name": "controller", "ports": [8087, 9000]},
+    {"name": "frontend", "ports": [8088, 3000]},
 ]
 
 
