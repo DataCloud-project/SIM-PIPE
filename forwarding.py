@@ -9,7 +9,7 @@ import time
 services = [
     {"name": "cadvisor", "ports": [8081, 8080], "enabled": False},
     {"name": "grafana", "ports": [8082, 80], "enabled": False},
-    {"name": "sftpgo", "ports": [8083, 80], "enabled": False},
+    {"name": "sftpgo", "ports": [8083, 80], "enabled": True},
     {"name": "argo", "ports": [8084, 2746], "fullname": "argo-workflows-server"},
     {"name": "minio", "ports": [8085, 9000]},
     {
@@ -85,7 +85,7 @@ if __name__ == "__main__":
             service.get("enabled", True) or service["name"] in enabled
         ):
             print(f"{service['name']}: http://localhost:{service['ports'][0]}")
-            thread = threading.Thread(target=port_forward, args=(service, prefix, 1))
+            thread = threading.Thread(target=port_forward, args=(service, prefix, 3))
             thread.start()
             threads.append(thread)
 

@@ -5,10 +5,10 @@ on:
     branches:
       - main
     paths:
-      - "example/**"
+      - "examples/fake-file-process/**"
   pull_request:
     paths:
-      - "example/**"
+      - "examples/fake-file-process/**"
 
 env:
   REGISTRY: ghcr.io
@@ -46,7 +46,7 @@ jobs:
       - name: Build and push Docker pre process image
         uses: docker/build-push-action@v4
         with:
-          context: ./example/pre-process/
+          context: ./examples/fake-file-process/pre-process/
           push: true
           tags: ${{ steps.meta-pre-process.outputs.tags }}
           labels: ${{ steps.meta-pre-process.outputs.labels }}
@@ -62,7 +62,7 @@ jobs:
       - name: Build and push Docker process image
         uses: docker/build-push-action@v4
         with:
-          context: ./example/process/
+          context: ./examples/fake-file-process/process/
           push: true
           tags: ${{ steps.meta-process.outputs.tags }}
           labels: ${{ steps.meta-process.outputs.labels }}
@@ -78,7 +78,7 @@ jobs:
       - name: Build and push Docker analyse image
         uses: docker/build-push-action@v4
         with:
-          context: ./example/analyse/
+          context: ./examples/fake-file-process/analyse/
           push: true
           tags: ${{ steps.meta-analyse.outputs.tags }}
           labels: ${{ steps.meta-analyse.outputs.labels }}
@@ -94,7 +94,7 @@ jobs:
       - name: Build and push Docker fail image
         uses: docker/build-push-action@v4
         with:
-          context: ./example/fail/
+          context: ./examples/fake-file-process/fail/
           push: true
           tags: ${{ steps.meta-fail.outputs.tags }}
           labels: ${{ steps.meta-fail.outputs.labels }}
