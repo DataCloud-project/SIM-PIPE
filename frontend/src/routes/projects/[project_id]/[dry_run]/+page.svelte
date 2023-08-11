@@ -63,7 +63,7 @@
 		};
 		modalStore.trigger(dryRunDeletedMessageModal);
 		await new Promise((resolve) => setTimeout(resolve, 1500));
-		modalStore.close();		
+		modalStore.close();
 		// reset checkboxes
 		$selectedProject?.dryRuns.forEach((element) => {
 			checkboxes[element.id] = false;

@@ -12,7 +12,7 @@ const getDryRunPhaseResultsQuery = gql`
 					startedAt
 					finishedAt
 					duration
-					phase  
+					phase
 					outputArtifacts {
 						key
 						name

@@ -29,7 +29,7 @@
 		modalStore.clear();
 	}
 
-	async function stopRun(event:any) {
+	async function stopRun(event: any) {
 		try {
 			event.stopPropagation();
 			await requestGraphQLClient(stopDryRunMutation, { dryRunId: dryRunId, terminate: false });
@@ -40,7 +40,7 @@
 			console.log(error);
 		}
 	}
-	async function pauseRun(event:any) {
+	async function pauseRun(event: any) {
 		try {
 			event.stopPropagation();
 			await requestGraphQLClient(suspendDryRunMutation, { dryRunId: dryRunId, terminate: false });
@@ -53,7 +53,7 @@
 			console.log(error);
 		}
 	}
-	async function resumeRun(event:any) {
+	async function resumeRun(event: any) {
 		try {
 			event.stopPropagation();
 			await requestGraphQLClient(resumeDryRunMutation, { dryRunId: dryRunId, terminate: false });

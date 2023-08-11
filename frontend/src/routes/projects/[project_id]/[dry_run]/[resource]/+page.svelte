@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { afterUpdate, onMount } from 'svelte';
-	import { modeCurrent, ProgressBar } from '@skeletonlabs/skeleton';
+	import { onMount } from 'svelte';
+	import { ProgressBar } from '@skeletonlabs/skeleton';
 	import type { DryRunMetrics, DryRun } from '../../../../../types';
 	import getDryRunMetricsQuery from '../../../../../queries/get_dry_run_metrics.js';
 	import getDryRunNoLogsMetricsQuery from '../../../../../queries/get_dry_run_metrics_no_logs.js';
@@ -14,6 +14,7 @@
 	import Mermaid from './Mermaid.svelte';
 	import { colors } from './Config.js';
 	import { stepsList } from '../../../../../stores/stores';
+	import Legend from './Legend.svelte';
 
 	export let data;
 	let workflow: { workflowTemplate: { argoWorkflowTemplate: { spec: { templates: any[] } } } };
@@ -31,9 +32,9 @@
 	let showLogs = true;
 	let logs: { [x: string]: string } = {};
 
-	var cpuData: {[key: string]: { x: string[]; y: number[]; type: string; name: string }} = {};
-	var memoryData: {[key: string]: { x: string[]; y: number[]; type: string; name: string }} = {};
-	var networkData: {[key: string]: { x: string[]; y: number[]; type: string; name: string }} = {};
+	var cpuData: { [key: string]: { x: string[]; y: number[]; type: string; name: string } } = {};
+	var memoryData: { [key: string]: { x: string[]; y: number[]; type: string; name: string } } = {};
+	var networkData: { [key: string]: { x: string[]; y: number[]; type: string; name: string } } = {};
 
 	const getMetricsResponse = async () => {
 		const dryrun_variables = {
@@ -74,7 +75,7 @@
 			getDryRunPhaseResultsQuery,
 			dryrun_variables
 		);
-		// set stepsList as nodes 
+		// set stepsList as nodes
 		$stepsList = dryrun_response.dryRun.nodes;
 		dryrun_response.dryRun.nodes.forEach((node: DryRunMetrics) => {
 			dryRunPhases[node.displayName] = node.phase;
@@ -215,7 +216,7 @@
 				console.log(error);
 			}
 		});
-		diagram = mermaidCode.join('\n');		
+		diagram = mermaidCode.join('\n');
 	}
 
 	function addSeconds(date: Date, seconds: number) {
@@ -287,7 +288,7 @@
 			mermaidCode.push(`  ${taskName}["${taskName}"];`);
 			// TODO: replace with actual step click
 			mermaidCode.push(`  click ${taskName} href "javascript:console.log('task ${taskName}');"`);
-			
+
 			mermaidCode.push(
 				`  style ${taskName} fill:${colors[dryRunPhases[taskName] as keyof typeof colors]}`
 			);
@@ -304,7 +305,7 @@
 		});
 	}
 
-	function stepOnClick(stepName:string, stepType:string) {
+	function stepOnClick(stepName: string, stepType: string) {
 		selectStepName = stepName;
 		selectStepType = stepType;
 	}
@@ -331,92 +332,84 @@
 		{#await getDataPromise}
 			<p>Loading metrics...</p>
 			<ProgressBar />
-		{:then}			
-			<div class="grid-cols-2 flex p-5">
-				<div class="w-1/2">
-					<Mermaid {diagram} />	
-					<div class="text-center pl-32">
-						<p class="bg-black max-w-max">
-							<span class={`text-[${colors.Succeeded}]`}>Succeeded</span>
-							<span class={`text-[${colors.Running}]`}>Running</span>
-							<!-- <span class={`text-[#FCD34D]`}>Running</span> -->
-							<span class={`text-[${colors.Pending}]`}>Pending</span>
-							<span class={`text-[${colors.Skipped}]`}>Skipped</span>
-							<span class={`text-[${colors.Error}]`}>Error</span>
-						</p>
-					</div>				
+		{:then}
+			<div class="grid-cols-2 flex">
+				<div class="w-1/2 pt-20 pl-2">
+					<Mermaid {diagram} />
+					<Legend />
 				</div>
-				<div class=" w-1/2 ">
-
-				<table class="table table-interactive">
-					<caption hidden>Projects</caption>
-					<thead>
-						<tr>
-							<th>Name</th>
-							<th>Started</th>
-							<th>Finished</th>
-							<th>Status</th>
-							<th>Output</th>
-						</tr>
-					</thead>
-					<tbody>
-						{#each reactiveStepsList?.slice(1) || [] as step}
-							<tr on:click={() => stepOnClick(step.displayName, step.type)}>								
-								<td style="width:15%">{step.displayName}</td>
-								<td style="width:35%">
-									{step.startedAt ? step.startedAt : '-'}
-									
-								</td>
-								<td style="width:35%">
-									{step.finishedAt ? step.finishedAt : '-'}
-									
-								</td>
-								<td style="width:15%">{step.phase}</td>								
-								<td style="width:10%">
-									<!-- will work only after the url fix is done in the backend -->
-									{#if (step.type == 'Pod' && step.outputArtifacts?.length >= 1) }
-										{#each step.outputArtifacts as artifact}
-											{#if artifact.name != 'main-logs'}
-												<a href = {step.outputArtifacts[0].url}>{step.outputArtifacts[0].name}* </a>
-											{:else}
-												<p> - </p>									
-											{/if}
-										{/each}
-									{:else}
-										<p> - </p>
-									{/if}
-								</td>								
+				<div class=" w-1/2 p-5">
+					<table class="table table-interactive">
+						<caption hidden>Projects</caption>
+						<thead>
+							<tr>
+								<th>Name</th>
+								<th>Started</th>
+								<th>Finished</th>
+								<th>Status</th>
+								<th>Output</th>
 							</tr>
-						{/each}
-					</tbody>
-				</table>
+						</thead>
+						<tbody>
+							{#each reactiveStepsList?.slice(1) || [] as step}
+								<tr on:click={() => stepOnClick(step.displayName, step.type)}>
+									<td style="width:15%">{step.displayName}</td>
+									<td style="width:35%">
+										{step.startedAt ? step.startedAt : '-'}
+									</td>
+									<td style="width:35%">
+										{step.finishedAt ? step.finishedAt : '-'}
+									</td>
+									<td style="width:15%">{step.phase}</td>
+									<td style="width:10%">
+										<!-- will work only after the url fix is done in the backend -->
+										{#if step.type == 'Pod' && step.outputArtifacts?.length >= 1}
+											{#each step.outputArtifacts as artifact}
+												{#if artifact.name != 'main-logs'}
+													<a href={step.outputArtifacts[0].url}>{step.outputArtifacts[0].name}* </a>
+												{:else}
+													<p>-</p>
+												{/if}
+											{/each}
+										{:else}
+											<p>-</p>
+										{/if}
+									</td>
+								</tr>
+							{/each}
+						</tbody>
+					</table>
 				</div>
-
 			</div>
 			{#if selectedStepType == 'Pod'}
 				<div class="grid grid-rows-2 grid-cols-2 gap-8 max-h-screen">
 					<div class="card logcard row-span-2 p-5">
 						<header class="card-header"><h1>Logs</h1></header>
 						<!-- <section class=""> -->
-							<br />
-							<ul class="list">
-								{#if showLogs}
-									<h2>{selectedStep}</h2>
-										<div class="pre">
-											<code >											
-												{logs[selectedStep]}
-											</code>
-										</div>
-									<br />
-								{:else}
-									<p>No data</p>
-								{/if}
-							</ul>
+						<br />
+						<ul class="list">
+							{#if showLogs}
+								<h2>{selectedStep}</h2>
+								<div class="pre">
+									<code>
+										{logs[selectedStep]}
+									</code>
+								</div>
+								<br />
+							{:else}
+								<p>No data</p>
+							{/if}
+						</ul>
 						<!-- </section> -->
 					</div>
 					{#if cpuData[selectedStep]}
 						<div class="card">
-							<Plot data={[cpuData[selectedStep]]} plot_title={`CPU Usage ${selectedStep}`} xaxis_title="time" yaxis_title="cpu usage" />
+							<Plot
+								data={[cpuData[selectedStep]]}
+								plot_title={`CPU Usage ${selectedStep}`}
+								xaxis_title="time"
+								yaxis_title="cpu usage"
+							/>
 						</div>
 					{:else}
 						<p>No CPU Usage data</p>
@@ -433,7 +426,7 @@
 					{:else}
 						<p>No Memory Usage data</p>
 					{/if}
-					
+
 					<!-- TODO: uncomment when network data is sorted -->
 					<!-- {#if networkData1[selectedStep]}
 						<div class="card">
@@ -451,7 +444,6 @@
 			{/if}
 		{/await}
 	</div>
-	
 </div>
 
 <style>
@@ -463,7 +455,7 @@
 		max-height: 50vh;
 		/* max-height: fit-content; */
 	}
-	pre {
+	.pre {
 		padding: 0 6px;
 		/* border: 1px solid rgb(177, 107, 107); */
 		/* box-sizing: border-box; */
