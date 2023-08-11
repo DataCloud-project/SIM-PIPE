@@ -1,0 +1,25 @@
+- name: Copy SIMPIPE to root's home directory
+  hosts: all
+  tasks:
+    - name: Copy forwarding.py to root's home directory
+      ansible.builtin.copy:
+        src: ../forwarding.py
+        dest: /root/forwarding.py
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: Copy ./charts/simpipe directory to root's home directory
+      ansible.builtin.copy:
+        src: ../charts/simpipe/
+        dest: /root/simpipe/
+        owner: root
+        group: root
+        mode: '0644'
+        directory_mode: '0755'
+
+    - name: Install Helm chart
+      ansible.builtin.command: helm install simpipe --wait .
+      args:
+        chdir: /root/simpipe
+

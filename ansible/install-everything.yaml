@@ -1,0 +1,6 @@
+- ansible.builtin.import_playbook: install-docker.yaml
+- ansible.builtin.import_playbook: fix-iptables-wsl2.yaml
+- ansible.builtin.import_playbook: install-k3s.yaml
+- ansible.builtin.import_playbook: install-helm.yaml
+- ansible.builtin.import_playbook: install-python.yaml
+- ansible.builtin.import_playbook: install-simpipe.yaml

@@ -1,0 +1,6 @@
+- name: Install Helm
+  hosts: all
+  vars:
+    helm_version: 'v3.12.3'
+  roles:
+    - geerlingguy.helm
