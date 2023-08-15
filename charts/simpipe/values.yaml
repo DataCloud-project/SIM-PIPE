@@ -11,7 +11,8 @@ controller:
 
   image:
     repository: ghcr.io/datacloud-project/sim-pipe-controller
-    pullPolicy: IfNotPresent
+    #pullPolicy: IfNotPresent
+    pullPolicy: Always
     # Overrides the image tag whose default is the chart appVersion.
     # tag: "1.23.3"
 
@@ -98,7 +99,8 @@ frontend:
 
   image:
     repository: ghcr.io/datacloud-project/sim-pipe-frontend
-    pullPolicy: IfNotPresent
+    #pullPolicy: IfNotPresent
+    pullPolicy: Always
     # Overrides the image tag whose default is the chart appVersion.
     # tag: "1.23.3"
 
