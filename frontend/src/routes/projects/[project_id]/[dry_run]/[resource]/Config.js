@@ -8,3 +8,10 @@ export const colors = {
 	Omitted: '#bae6fd',
 	Unknown: '#701a75'
 };
+
+export const maxValuesFormat = {
+	CPU: { value: -1, unit: '%' },
+	Memory: { value: -1, unit: 'B' },
+	'Network received': { value: -1, unit: 'B' },
+	'Network transferred': { value: -1, unit: 'B' }
+};

@@ -12,7 +12,7 @@
 	import { goto } from '$app/navigation';
 	import Plot from './Plot.svelte';
 	import Mermaid from './Mermaid.svelte';
-	import { colors } from './Config.js';
+	import { colors, maxValuesFormat } from './Config.js';
 	import { stepsList } from '../../../../../stores/stores';
 	import Legend from './Legend.svelte';
 
@@ -40,6 +40,8 @@
 	var networkDataTransferred: {
 		[key: string]: { x: string[]; y: number[]; type: string; name: string };
 	} = {};
+	const maxValues: { [key: string]: { value: number; unit: string } } = maxValuesFormat;
+	let showMax = false;
 
 	const getMetricsResponse = async () => {
 		const dryrun_variables = {
@@ -143,6 +145,7 @@
 						let cpuValues = node.metrics.cpuUsageSecondsTotal.map((item: { value: string }) =>
 							Number(item.value)
 						);
+
 						let memValues = node.metrics.memoryUsageBytes.map((item: { value: string }) =>
 							Number(item.value)
 						);
@@ -178,17 +181,37 @@
 						};
 
 						if (cpuValues.length > 0) {
+							const temp = Math.max(...cpuValues);
+							if (temp > maxValues['CPU'].value) {
+								maxValues['CPU'].value = temp;
+								showMax = true;
+							}
 							cpuData[node.displayName as string] = cpuUsage;
 						}
 
 						if (memValues.length > 0) {
+							const temp = Math.max(...memValues);
+							if (temp > maxValues['Memory'].value) {
+								maxValues['Memory'].value = temp;
+								showMax = true;
+							}
 							memoryData[node.displayName as string] = memoryUsage;
 						}
 
 						if (nrcValues.length > 0) {
+							const temp = Math.max(...nrcValues);
+							if (temp > maxValues['Network received'].value) {
+								maxValues['Network received'].value = temp;
+								showMax = true;
+							}
 							networkDataReceived[node.displayName as string] = networkReceiveBytesTotal;
 						}
 						if (ntrValues.length > 0) {
+							const temp = Math.max(...ntrValues);
+							if (temp > maxValues['Network transferred'].value) {
+								maxValues['Network transferred'].value = temp;
+								showMax = true;
+							}
 							networkDataTransferred[node.displayName as string] = networkTransmitBytesTotal;
 						}
 					}
@@ -368,7 +391,6 @@
 									</td>
 									<td style="width:15%">{step.phase}</td>
 									<td style="width:10%">
-										<!-- will work only after the url fix is done in the backend -->
 										{#if step.type == 'Pod' && step.outputArtifacts?.length >= 1}
 											{#each step.outputArtifacts as artifact}
 												{#if artifact.name != 'main-logs'}
@@ -388,28 +410,49 @@
 				</div>
 			</div>
 			{#if selectedStepType == 'Pod'}
-				<div class="grid grid-rows-2 grid-cols-2 gap-8 max-h-screen">
-					<div class="card logcard row-span-2 p-5">
-						<!-- <header class="card-header"><h1>Logs</h1></header> -->
+				<div class="grid grid-rows-3 grid-cols-3 gap-8 max-h-screen">
+					<div class="card logcard row-span-1 p-5 pr-3">
 						<br />
-						<h1>Logs</h1>
-						<br />
-						<ul class="list">
-							{#if showLogs}
-								<h2>{selectedStep}</h2>
-								<br />
+						{#if showLogs}
+							<h1>Logs - {selectedStep}</h1>
+							<br />
+							<ul class="list">
 								<div class="pre">
 									<code>
 										{logs[selectedStep]}
 									</code>
 								</div>
 								<br />
-							{:else}
-								<p>No data</p>
-							{/if}
-						</ul>
-						<!-- </section> -->
+							</ul>
+						{:else}
+							<p>No data</p>
+						{/if}
 					</div>
+					{#if showMax}
+						<div class="card">
+							<table class="table table-interactive">
+								<thead>
+									<tr>
+										<th>Resource</th>
+										<th>Maximum usage</th>
+									</tr>
+								</thead>
+								<tbody>
+									{#each Object.keys(maxValues) as key}
+										<tr>
+											<td>{key}</td>
+											{#if maxValues[key].value != -1}
+												<td>{maxValues[key].value.toFixed(2)}{maxValues[key].unit}</td>
+											{:else}
+												<td>-</td>
+											{/if}
+										</tr>
+									{/each}
+								</tbody>
+							</table>
+						</div>
+					{/if}
+
 					{#if cpuData[selectedStep]}
 						<div class="card">
 							<Plot
@@ -435,7 +478,6 @@
 						<p>No Memory Usage data</p>
 					{/if}
 
-					<!-- TODO: uncomment when network data is sorted -->
 					{#if networkDataReceived[selectedStep]}
 						<div class="card">
 							<Plot
