@@ -184,8 +184,8 @@
 							const temp = Math.max(...cpuValues);
 							if (temp > maxValues['CPU'].value) {
 								maxValues['CPU'].value = temp;
-								showMax = true;
 							}
+							showMax = true;
 							cpuData[node.displayName as string] = cpuUsage;
 						}
 
@@ -193,8 +193,8 @@
 							const temp = Math.max(...memValues);
 							if (temp > maxValues['Memory'].value) {
 								maxValues['Memory'].value = temp;
-								showMax = true;
 							}
+							showMax = true;
 							memoryData[node.displayName as string] = memoryUsage;
 						}
 
@@ -202,16 +202,16 @@
 							const temp = Math.max(...nrcValues);
 							if (temp > maxValues['Network received'].value) {
 								maxValues['Network received'].value = temp;
-								showMax = true;
 							}
+							showMax = true;
 							networkDataReceived[node.displayName as string] = networkReceiveBytesTotal;
 						}
 						if (ntrValues.length > 0) {
 							const temp = Math.max(...ntrValues);
 							if (temp > maxValues['Network transferred'].value) {
 								maxValues['Network transferred'].value = temp;
-								showMax = true;
 							}
+							showMax = true;
 							networkDataTransferred[node.displayName as string] = networkTransmitBytesTotal;
 						}
 					}
@@ -345,7 +345,8 @@
 	});
 	$: selectedStep = selectStepName;
 	$: selectedStepType = selectStepType;
-	$: reactiveStepsList = $stepsList;
+	$: reactiveStepsList = $stepsList?.slice(1);
+	$: reactiveMaxValues = maxValues;
 </script>
 
 <div class="container p-5">
@@ -365,11 +366,12 @@
 			<div class="grid-cols-2 flex">
 				<div class="w-1/2 pt-20 pl-2 pb-2">
 					<Mermaid {diagram} />
-					<Legend />
+					<div class="pl-10 pb-2">
+						<Legend />
+					</div>
 				</div>
 				<div class=" w-1/2 p-5">
 					<table class="table table-interactive">
-						<caption hidden>Projects</caption>
 						<thead>
 							<tr>
 								<th>Name</th>
@@ -380,7 +382,7 @@
 							</tr>
 						</thead>
 						<tbody>
-							{#each reactiveStepsList?.slice(1) || [] as step}
+							{#each reactiveStepsList || [] as step}
 								<tr on:click={() => stepOnClick(step.displayName, step.type)}>
 									<td style="width:15%">{step.displayName}</td>
 									<td style="width:35%">
@@ -391,7 +393,7 @@
 									</td>
 									<td style="width:15%">{step.phase}</td>
 									<td style="width:10%">
-										{#if step.type == 'Pod' && step.outputArtifacts?.length >= 1}
+										{#if step.type == 'Pod' && step.outputArtifacts?.length > 1}
 											{#each step.outputArtifacts as artifact}
 												{#if artifact.name != 'main-logs'}
 													<a href={step.outputArtifacts[0].url}>{step.outputArtifacts[0].name}* </a>
@@ -409,6 +411,7 @@
 					</table>
 				</div>
 			</div>
+			<br />
 			{#if selectedStepType == 'Pod'}
 				<div class="grid grid-rows-3 grid-cols-3 gap-8 max-h-screen">
 					<div class="card logcard row-span-1 p-5 pr-3">
@@ -438,7 +441,7 @@
 									</tr>
 								</thead>
 								<tbody>
-									{#each Object.keys(maxValues) as key}
+									{#each Object.keys(reactiveMaxValues) as key}
 										<tr>
 											<td>{key}</td>
 											{#if maxValues[key].value != -1}
@@ -482,7 +485,7 @@
 						<div class="card">
 							<Plot
 								data={[networkDataReceived[selectedStep]]}
-								plot_title={`Network Usage ${selectedStep}`}
+								plot_title={`Network Received ${selectedStep}`}
 								xaxis_title="time"
 								yaxis_title="bytes"
 							/>
@@ -490,7 +493,7 @@
 						<div class="card">
 							<Plot
 								data={[networkDataTransferred[selectedStep]]}
-								plot_title={`Network Usage ${selectedStep}`}
+								plot_title={`Network Transferred ${selectedStep}`}
 								xaxis_title="time"
 								yaxis_title="bytes"
 							/>

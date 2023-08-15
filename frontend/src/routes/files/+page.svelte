@@ -99,7 +99,6 @@
 				</thead>
 				<tbody>
 					{#each reactiveFilesList || [] as file}
-						<!-- <tr on:click={() => gotodryruns(file.id)}> -->
 						<tr>
 							<td style="width:25px;">
 								<input
