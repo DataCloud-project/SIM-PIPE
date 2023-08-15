@@ -5,21 +5,16 @@
 	import '@skeletonlabs/skeleton/styles/skeleton.css';
 	import '@fontsource/ibm-plex-sans/400.css';
 	import '@fontsource/ibm-plex-sans/600.css';
-	// Most of your app wide CSS should be put in this file
 	import '../app.postcss';
-	// More stuff
 	import { AppShell, AppBar, AppRail, AppRailTile } from '@skeletonlabs/skeleton';
 	import { LightSwitch } from '@skeletonlabs/skeleton';
 
-	import { page } from '$app/stores';
-	import { derived } from 'svelte/store';
 	import { LockIcon, BookOpenIcon, FileIcon } from 'svelte-feather-icons';
 	import hljs from 'highlight.js';
 	import 'highlight.js/styles/github-dark.css'; // highlight.js theme
 	import { storeHighlightJs } from '@skeletonlabs/skeleton';
 
 	storeHighlightJs.set(hljs);
-	const selected = derived(page, ($page) => $page.url.pathname);
 </script>
 
 <AppShell>
@@ -41,7 +36,10 @@
 		<AppRail>
 			<AppRailTile label="Projects" href="/projects"><BookOpenIcon size="1.5x" /></AppRailTile>
 			<AppRailTile label="Registry Key Vault" href="/secrets"><LockIcon size="1.5x" /></AppRailTile>
-			<AppRailTile label="Sample Files" href="/files"><FileIcon size="1.5x" /></AppRailTile>
+			<!-- TODO: temporary redirect to sftp go web interface; will be replaced by files manager when api is ready -->
+			<AppRailTile label="Sample Files" href="http://localhost:8083"
+				><FileIcon size="1.5x" /></AppRailTile
+			>
 		</AppRail>
 	</svelte:fragment>
 

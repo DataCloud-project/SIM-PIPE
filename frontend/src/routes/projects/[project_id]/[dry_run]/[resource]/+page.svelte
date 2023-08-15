@@ -34,7 +34,12 @@
 
 	var cpuData: { [key: string]: { x: string[]; y: number[]; type: string; name: string } } = {};
 	var memoryData: { [key: string]: { x: string[]; y: number[]; type: string; name: string } } = {};
-	var networkData: { [key: string]: { x: string[]; y: number[]; type: string; name: string } } = {};
+	var networkDataReceived: {
+		[key: string]: { x: string[]; y: number[]; type: string; name: string };
+	} = {};
+	var networkDataTransferred: {
+		[key: string]: { x: string[]; y: number[]; type: string; name: string };
+	} = {};
 
 	const getMetricsResponse = async () => {
 		const dryrun_variables = {
@@ -181,12 +186,11 @@
 						}
 
 						if (nrcValues.length > 0) {
-							networkData[node.displayName as string] = networkReceiveBytesTotal;
+							networkDataReceived[node.displayName as string] = networkReceiveBytesTotal;
 						}
-						// TODO: update when api call returns network values
-						// if (ntrValues.length > 0) {
-						// 	networkData.push(networkTransmitBytesTotal);
-						// }
+						if (ntrValues.length > 0) {
+							networkDataTransferred[node.displayName as string] = networkTransmitBytesTotal;
+						}
 					}
 				}
 			);
@@ -336,7 +340,7 @@
 			<ProgressBar />
 		{:then}
 			<div class="grid-cols-2 flex">
-				<div class="w-1/2 pt-20 pl-2">
+				<div class="w-1/2 pt-20 pl-2 pb-2">
 					<Mermaid {diagram} />
 					<Legend />
 				</div>
@@ -369,8 +373,8 @@
 											{#each step.outputArtifacts as artifact}
 												{#if artifact.name != 'main-logs'}
 													<a href={step.outputArtifacts[0].url}>{step.outputArtifacts[0].name}* </a>
-												{:else}
-													<p>-</p>
+													<!-- {:else}
+													<p>-</p> -->
 												{/if}
 											{/each}
 										{:else}
@@ -386,11 +390,14 @@
 			{#if selectedStepType == 'Pod'}
 				<div class="grid grid-rows-2 grid-cols-2 gap-8 max-h-screen">
 					<div class="card logcard row-span-2 p-5">
-						<header class="card-header"><h1>Logs</h1></header>
+						<!-- <header class="card-header"><h1>Logs</h1></header> -->
+						<br />
+						<h1>Logs</h1>
 						<br />
 						<ul class="list">
 							{#if showLogs}
 								<h2>{selectedStep}</h2>
+								<br />
 								<div class="pre">
 									<code>
 										{logs[selectedStep]}
@@ -429,10 +436,18 @@
 					{/if}
 
 					<!-- TODO: uncomment when network data is sorted -->
-					<!-- {#if networkData1[selectedStep]}
+					{#if networkDataReceived[selectedStep]}
 						<div class="card">
 							<Plot
-								data={[networkData1[selectedStep]]}
+								data={[networkDataReceived[selectedStep]]}
+								plot_title={`Network Usage ${selectedStep}`}
+								xaxis_title="time"
+								yaxis_title="bytes"
+							/>
+						</div>
+						<div class="card">
+							<Plot
+								data={[networkDataTransferred[selectedStep]]}
 								plot_title={`Network Usage ${selectedStep}`}
 								xaxis_title="time"
 								yaxis_title="bytes"
@@ -440,7 +455,7 @@
 						</div>
 					{:else}
 						<p>No Network Usage data</p>
-					{/if}					 -->
+					{/if}
 				</div>
 			{/if}
 		{/await}
@@ -457,11 +472,11 @@
 		/* max-height: fit-content; */
 	}
 	.pre {
-		padding: 0 6px;
+		/* padding: 0 6px; */
 		/* border: 1px solid rgb(177, 107, 107); */
 		/* box-sizing: border-box; */
-		/* text-align: left; */
-		/* overflow-x: hidden; */
+		text-align: left;
+		overflow-x: hidden;
 		overflow-y: scroll;
 		/* max-height: 50vh; */
 		width: 100%;
