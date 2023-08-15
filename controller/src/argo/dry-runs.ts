@@ -144,13 +144,13 @@ export function convertArgoWorkflowNode(node: ArgoNode, argoWorkflow: ArgoWorkfl
     ...node,
     type,
     // Will be handled in the resolvers
-    children: node.children?.map((id) => {
-      const childNode = argoWorkflow.status?.nodes?.[id];
-      if (!childNode) {
-        throw new Error(`Child node ${id} not found`);
-      }
-      return convertArgoWorkflowNode(childNode, argoWorkflow);
-    }),
+    children: node.children
+      // fetch the nodes from the status section
+      ?.map((id) => argoWorkflow.status?.nodes?.[id])
+      // Ignore the nodes that do not have a status (yet)
+      .filter((childNode): childNode is ArgoNode => !!childNode)
+      // And convert
+      .map((childNode) => convertArgoWorkflowNode(childNode, argoWorkflow)),
     phase: convertArgoNodePhaseToDryRunNodePhase(node.phase),
     exitCode: node.outputs?.exitCode,
     duration: convertNodeDuration(node),
