@@ -13,4 +13,4 @@ name: cadvisor
 sources:
 - https://github.com/google/cadvisor
 - https://github.com/ckotzbauer/helm-charts
-version: 2.2.4
+version: 2.3.0
