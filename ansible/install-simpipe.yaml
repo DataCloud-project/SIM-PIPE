@@ -18,8 +18,10 @@
         mode: '0644'
         directory_mode: '0755'
 
-    - name: Install Helm chart
+    - name: Install SIM-PIPE Helm chart
       ansible.builtin.command: helm install simpipe --wait .
       args:
         chdir: /root/simpipe
+      environment:
+        KUBECONFIG: /etc/rancher/k3s/k3s.yaml
 
