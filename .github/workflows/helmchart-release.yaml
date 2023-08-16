@@ -1,4 +1,4 @@
-name: Create and publish the docker image for the controller
+name: Build Helm chart and publish OCI image
 
 on:
   push:
@@ -13,9 +13,37 @@ jobs:
   build-helm-chart-and-publish-oci:
     name: Build Helm chart and publish OCI image
     runs-on: ubuntu-latest
+    outputs:
+      semver: ${{ steps.determine_semver.outputs.semver }}
     steps:
       - name: Checkout
         uses: actions/checkout@v3
+        with:
+          # fetch all history for all tags
+          fetch-depth: 0
+      - name: Determine Semver
+        id: determine_semver
+        run: |
+          # Determine if it's a tag, branch or PR
+          REF_TYPE=$(echo $GITHUB_REF | cut -d'/' -f2)
+
+          if [[ "$GITHUB_REF_TYPE" == "tag" ]]; then
+            # If it's a tag, just echo the tag name
+            SEMVER=${GITHUB_REF##*/}
+          else
+            # If it's not a tag, get the latest tag
+            LATEST_TAG=$(git describe --tags --abbrev=0)
+
+            if [[ "$REF_TYPE" == "heads" ]]; then
+              # If it's a branch, append branch name to the latest tag
+              SEMVER="$LATEST_TAG+${GITHUB_REF##*/}"
+            elif [[ "$REF_TYPE" == "pull" ]]; then
+              # If it's a PR, append PR number to the latest tag
+              SEMVER="$LATEST_TAG+PR${GITHUB_REF##*/}"
+            fi
+          fi
+
+          echo "::set-output name=semver::$SEMVER"
       - name: Setup Helm
         uses: azure/setup-helm@v3
         with:
@@ -25,7 +53,7 @@ jobs:
         with:
           name: simpipe
           repository: datacloud-project
-          tag: ${{ github.ref_name }}
+          tag: ${{ steps.determine_semver.outputs.semver }}
           registry: ghcr.io
           registry_username: ${{ github.actor }}
           registry_password: ${{ secrets.GITHUB_TOKEN }}
