@@ -20,6 +20,8 @@ If you use MacOS or Debian based Linux, run the following command to install and
 python start.py
 ```
 
+*Please note that this is an opiniated installation script. You may want to install it manually instead.*
+
 Use the following command to easily expose the various services of SIM-PIPE:
 ```bash
 python forwarding.py
@@ -27,14 +29,18 @@ python forwarding.py
 
 *You can check the advanced installation section for more details on the installation process.*
 
-## Quick Start
+## Quick Start using the GUI
+
+After starting SIM-PIPE and while running the `python forwarding.py` script, browse to http://localhost:8088/ to access the SIM-PIPE GUI.
+
+## Quick Start in command line
 
 Build the hello-world software container image locally:
 
 ```bash
 # Example using Docker
 docker buildx build -t hello-world examples/hello-world
-# or
+# or (if the previous command fails)
 docker-buildx build -t hello-world examples/hello-world
 ```
 
@@ -61,31 +67,41 @@ The MacOS installation uses a Linux virtual machine using `colima` named `simpip
 
 ### Linux Debian(like) Installation
 
-The Linux installation is also automated using the `python install.py` script. We only focus on Debian based Linux distributions for now. We tested on Debian and Ubuntu, but it may work with little efforts on other distributions.
+The Linux installation is also automated using the `python install.py` script. We only focus on Debian based Linux distributions for now. We tested on Debian and Ubuntu, but it may work with little efforts on other distributions with little modifications.
 
-If you don't with to use the Python installation script, you can use the Ansible playbooks directly.
+The installation will first install Ansible and then Ansible to install everything.
+
+If you don't with to use the Python installation script, you can also use the Ansible playbooks directly.
 ```bash
-ansible-playbook -i playbooks/install-simpipe.yaml
+sudo ansible-galaxy install -r ./ansible/requirements.yaml
+sudo ansible-playbook -i localhost, -c local ./ansible/install-everything.yaml
 ```
 
-If you are already running a Kubernetes cluster on your machine, it may be easier to install SIM-PIPE on it directly or to install SIM-PIPE inside a virtual machine.
+*If you are already running a Kubernetes cluster on your machine, it may be easier to install SIM-PIPE on it directly using Helm as explained in the following section.*
 
 ### Kubernetes Installation
 
-You can install SIM-PIPE on any Kubernetes cluster using the Helm chart in the `charts/simpipe` folder.
+You can install SIM-PIPE on any [Kubernetes](https://kubernetes.io) cluster using the [Helm](https://helm.sh) chart in the `charts/simpipe` folder or a released helm chart using the [oci registry](https://helm.sh/docs/topics/registries/) at `oci://ghcr.io/datacloud-project/sim-pipe`.
 
 Please note that it is recommended to use a clean Kubernetes cluster for the installation.
 
-SIM-PIPE is been developed and tested on kubernetes `1.27` with the K3S distribution. The default configuration
-uses the `default` namespace and has opiniated settings for Argo Workflow and the various secrets and role bindings.
+SIM-PIPE is been developed and tested on kubernetes `1.27` with the [K3S distribution](http://k3s.io). The default configuration
+uses the `default` namespace and has opiniated settings for [Argo Workflow](https://argoproj.github.io/workflows/) and the various secrets and role bindings.
 
 You may want to change the configuration of the Helm chart to match your needs.
 
+```bash
+# Using the latest release
+helm install simpipe oci://ghcr.io/datacloud-project/sim-pipe
+# or using the local folder
+helm install simpipe ./charts/simpipe
+```
+
 ### Windows Installation
 
-SIM-PIPE runs everywhere as long as it runs Linux. If you are using Windows, you can install SIM-PIPE using the Windows Subsystem for Linux (WSL) in its second version (WSL2). Then you can select a Debian based Linux distribution and proceed as normal.
+SIM-PIPE runs everywhere as long as it runs [Linux](https://kernel.org). If you are using Windows, you can install SIM-PIPE using the [Windows Subsystem for Linux (WSL)](https://learn.microsoft.com/en-gb/windows/wsl/) in its second version ([WSL2](https://learn.microsoft.com/en-gb/windows/wsl/compare-versions)). Then you can select a [Debian](https://www.debian.org) based Linux distribution and proceed as normal.
 
-You may have to run the following instructions to make Docker work: https://github.com/microsoft/WSL/issues/6655#issuecomment-1142933322
+You may have to run the following instructions to make Docker work: https://github.com/microsoft/WSL/issues/6655#issuecomment-1142933322 The installation script attempts to fix it for you.
 
 ## Architecture
 

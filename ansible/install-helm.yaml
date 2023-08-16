@@ -1,6 +1,11 @@
 - name: Install Helm
   hosts: all
-  vars:
-    helm_version: 'v3.12.3'
   roles:
-    - geerlingguy.helm
+    - andrewrothstein.kubernetes-helm
+- name: Install Helm Diff plugin
+  hosts: all
+  tasks:
+    - name: Install Helm Diff plugin
+      kubernetes.core.helm_plugin:
+        plugin_path: https://github.com/databus23/helm-diff
+        state: present

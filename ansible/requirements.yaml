@@ -1,5 +1,8 @@
 - src: xanmanning.k3s
   version: v3.4.2
 - src: geerlingguy.docker
-  version: 6.1.0
-- src: geerlingguy.helm
+  version: 6.2.0
+- src: andrewrothstein.kubernetes-helm
+  version: v2.0.31
+- src: andrewrothstein.argo
+  version: 0.2.5

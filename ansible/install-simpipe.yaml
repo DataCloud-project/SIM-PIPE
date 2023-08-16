@@ -9,19 +9,13 @@
         group: root
         mode: '0644'
 
-    - name: Copy ./charts/simpipe directory to root's home directory
-      ansible.builtin.copy:
-        src: ../charts/simpipe/
-        dest: /root/simpipe/
-        owner: root
-        group: root
-        mode: '0644'
-        directory_mode: '0755'
-
     - name: Install SIM-PIPE Helm chart
-      ansible.builtin.command: helm install simpipe --wait .
-      args:
-        chdir: /root/simpipe
+      kubernetes.core.helm:
+        name: simpipe
+        release_namespace: default
+        chart_ref: oci://ghcr.io/datacloud-project/simpipe
+        wait: true
+        state: present
       environment:
         KUBECONFIG: /etc/rancher/k3s/k3s.yaml
 
