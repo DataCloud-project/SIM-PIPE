@@ -1,0 +1,31 @@
+name: Create and publish the docker image for the controller
+
+on:
+  push:
+    branches:
+      - main
+      - dev
+  pull_request:
+    paths:
+      - "charts/**"
+
+jobs:
+  build-helm-chart-and-publish-oci:
+    name: Build Helm chart and publish OCI image
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Setup Helm
+        uses: azure/setup-helm@v3
+        with:
+          version: v3.12.3
+      - name: Push
+        uses: appany/helm-oci-chart-releaser@v0.4.1
+        with:
+          name: simpipe
+          repository: datacloud-project
+          tag: ${{ github.ref_name }}
+          registry: ghcr.io
+          registry_username: ${{ github.actor }}
+          registry_password: ${{ secrets.GITHUB_TOKEN }}
