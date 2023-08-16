@@ -4,7 +4,7 @@
     - name: Copy forwarding.py to root's home directory
       ansible.builtin.copy:
         src: ../forwarding.py
-        dest: /root/forwarding.py
+        dest: /root/simpipe-forwarding.py
         owner: root
         group: root
         mode: '0644'

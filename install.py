@@ -74,12 +74,16 @@ def install_or_upgrade_simpipe():
     # chart = os.path.join(os.path.dirname(__file__), "charts", "simpipe")
     chart = "oci://ghcr.io/datacloud-project/simpipe"
 
+    should_use_sudo = check_debian_or_ubuntu()
+    command_prefix = ["sudo"] if should_use_sudo else []
+
     if is_deployed:
 
         # check whether the chart needs to be updated using helm diff
         try:
             result = subprocess.run(
-                [
+                command_prefix
+                + [
                     "helm",
                     "diff",
                     "upgrade",
@@ -103,7 +107,8 @@ def install_or_upgrade_simpipe():
             try:
                 print("⬆️ upgrading simpipe")
                 subprocess.check_call(
-                    ["helm", "upgrade", "simpipe", "--wait", chart, "--no-hooks"]
+                    command_prefix
+                    + ["helm", "upgrade", "simpipe", "--wait", chart, "--no-hooks"]
                 )
             except subprocess.CalledProcessError as e:
                 print(f"❌ Error while upgrading simpipe: {e}")
@@ -111,7 +116,9 @@ def install_or_upgrade_simpipe():
     else:
         try:
             print("🌈 installing simpipe")
-            subprocess.check_call(["helm", "install", "simpipe", "--wait", chart])
+            subprocess.check_call(
+                command_prefix + ["helm", "install", "simpipe", "--wait", chart]
+            )
         except subprocess.CalledProcessError as e:
             print(f"❌ Error while installing simpipe: {e}")
 
@@ -119,8 +126,11 @@ def install_or_upgrade_simpipe():
 def install_helm_diff_plugin():
     try:
         print("⏳ Installing helm-diff plugin...")
+        should_use_sudo = check_debian_or_ubuntu()
+        command_prefix = ["sudo"] if should_use_sudo else []
         subprocess.run(
-            ["helm", "plugin", "install", "https://github.com/databus23/helm-diff"],
+            command_prefix
+            + ["helm", "plugin", "install", "https://github.com/databus23/helm-diff"],
             check=True,
         )
         print("🎉 helm-diff plugin installed successfully.")

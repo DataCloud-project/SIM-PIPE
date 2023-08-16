@@ -42,8 +42,11 @@ def check_kubectl_installed(silent=False):
 
 def check_cluster_status(silent=False):
 
+    should_use_sudo = check_debian_or_ubuntu()
+    command_prefix = ["sudo"] if should_use_sudo else []
+
     result = subprocess.run(
-        ["kubectl", "cluster-info"],
+        command_prefix + ["kubectl", "cluster-info"],
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
     )
@@ -71,7 +74,7 @@ def check_cluster_status(silent=False):
         return False
 
     result = subprocess.run(
-        ["kubectl", "get", "nodes", "--no-headers", "-o", "json"],
+        command_prefix + ["kubectl", "get", "nodes", "--no-headers", "-o", "json"],
         stdout=subprocess.PIPE,
         stderr=subprocess.DEVNULL,
     )
@@ -130,8 +133,12 @@ def check_helm_diff_installed(silent=False):
         return False
 
     try:
+        command = ["helm", "plugin", "list"]
+        if check_debian_or_ubuntu():
+            command = ["sudo"] + command
+
         result = subprocess.run(
-            ["helm", "plugin", "list"],
+            command,
             stdout=subprocess.PIPE,
             stderr=subprocess.DEVNULL,
             check=True,
@@ -235,8 +242,10 @@ def check_tools_installed(silent=False):
 
 def check_simpipe_deployment_presence():
     try:
+        should_use_sudo = check_debian_or_ubuntu()
+        command_prefix = ["sudo"] if should_use_sudo else []
         output = subprocess.check_output(
-            ["helm", "list", "--deployed", "--output", "json"]
+            command_prefix + ["helm", "list", "--deployed", "--output", "json"]
         )
         deployments = json.loads(output)
         for deployment in deployments:
@@ -249,8 +258,12 @@ def check_simpipe_deployment_presence():
 
 
 def check_simpipe_pods_health(silent=False):
+    should_use_sudo = check_debian_or_ubuntu()
+    command_prefix = ["sudo"] if should_use_sudo else []
+
     result = subprocess.run(
-        [
+        command_prefix
+        + [
             "kubectl",
             "get",
             "pods",

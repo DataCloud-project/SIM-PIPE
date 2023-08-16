@@ -18,6 +18,8 @@ If you use MacOS or Debian based Linux, run the following command to install and
 
 ```bash
 python start.py
+# or
+python3 start.py
 ```
 
 *Please note that this is an opiniated installation script. You may want to install it manually instead.*
@@ -25,6 +27,8 @@ python start.py
 Use the following command to easily expose the various services of SIM-PIPE:
 ```bash
 python forwarding.py
+# or
+sudo python forwarding.py
 ```
 
 *You can check the advanced installation section for more details on the installation process.*
