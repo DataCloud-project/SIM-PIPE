@@ -75,7 +75,7 @@ def install_or_upgrade_simpipe():
     chart = "oci://ghcr.io/datacloud-project/simpipe"
 
     should_use_sudo = check_debian_or_ubuntu()
-    command_prefix = ["sudo"] if should_use_sudo else []
+    command_prefix = ["sudo", "-E"] if should_use_sudo else []
 
     if is_deployed:
 
@@ -127,7 +127,7 @@ def install_helm_diff_plugin():
     try:
         print("⏳ Installing helm-diff plugin...")
         should_use_sudo = check_debian_or_ubuntu()
-        command_prefix = ["sudo"] if should_use_sudo else []
+        command_prefix = ["sudo", "-E"] if should_use_sudo else []
         subprocess.run(
             command_prefix
             + ["helm", "plugin", "install", "https://github.com/databus23/helm-diff"],

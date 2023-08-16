@@ -43,7 +43,7 @@ def check_kubectl_installed(silent=False):
 def check_cluster_status(silent=False):
 
     should_use_sudo = check_debian_or_ubuntu()
-    command_prefix = ["sudo"] if should_use_sudo else []
+    command_prefix = ["sudo", "-E"] if should_use_sudo else []
 
     result = subprocess.run(
         command_prefix + ["kubectl", "cluster-info"],
@@ -135,7 +135,7 @@ def check_helm_diff_installed(silent=False):
     try:
         command = ["helm", "plugin", "list"]
         if check_debian_or_ubuntu():
-            command = ["sudo"] + command
+            command = ["sudo", "-E"] + command
 
         result = subprocess.run(
             command,
@@ -243,7 +243,7 @@ def check_tools_installed(silent=False):
 def check_simpipe_deployment_presence():
     try:
         should_use_sudo = check_debian_or_ubuntu()
-        command_prefix = ["sudo"] if should_use_sudo else []
+        command_prefix = ["sudo", "-E"] if should_use_sudo else []
         output = subprocess.check_output(
             command_prefix + ["helm", "list", "--deployed", "--output", "json"]
         )
@@ -259,7 +259,7 @@ def check_simpipe_deployment_presence():
 
 def check_simpipe_pods_health(silent=False):
     should_use_sudo = check_debian_or_ubuntu()
-    command_prefix = ["sudo"] if should_use_sudo else []
+    command_prefix = ["sudo", "-E"] if should_use_sudo else []
 
     result = subprocess.run(
         command_prefix
