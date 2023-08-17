@@ -403,6 +403,9 @@
 			>{selectedProject?.name}
 		</button>
 		<span STYLE="font-size:14px">/ </span>{data.resource}
+		{#if selectStepName != ''}
+			<span STYLE="font-size:14px">/ </span>{selectStepName}
+		{/if}
 	</h1>
 	<div class="container p-5">
 		{#await getDataPromise}
