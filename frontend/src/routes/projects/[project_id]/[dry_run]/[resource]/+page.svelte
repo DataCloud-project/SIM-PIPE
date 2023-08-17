@@ -34,7 +34,7 @@
 
 	var cpuData: { [key: string]: { x: string[]; y: number[]; type: string; name: string } } = {};
 	var memoryData: { [key: string]: { x: string[]; y: number[]; type: string; name: string } } = {};
-	var networkDataReceived: {
+	var networkDataCombined: {
 		[key: string]: { x: string[]; y: number[]; type: string; name: string }[];
 	} = {};
 	
@@ -99,6 +99,7 @@
 	};
 
 	const getDataPromise = getData();
+	let allStepNames: string[] = [];
 	getDataPromise
 		.then((data: { workflow: any; dryrun: any; metrics: any }) => {
 			workflow = data.workflow;
@@ -117,6 +118,7 @@
 				}) => {
 					// TODO: make more efficient if data missing?
 					if (isEmpty(node) === false) {
+						allStepNames.push(node.displayName as string);
 						if (node.log) {
 							logs[node.displayName] = node.log;
 						}
@@ -202,9 +204,9 @@
 								maxValues['Network received'].value = temp;
 							}
 							showMax = true;
-							if(!networkDataReceived[node.displayName as string])
-								networkDataReceived[node.displayName as string] = []
-							networkDataReceived[node.displayName as string].push(networkReceiveBytesTotal);
+							if(!networkDataCombined[node.displayName as string])
+								networkDataCombined[node.displayName as string] = []
+							networkDataCombined[node.displayName as string].push(networkReceiveBytesTotal);
 						}
 						if (ntrValues.length > 0) {
 							const temp = Math.max(...ntrValues);
@@ -212,9 +214,9 @@
 								maxValues['Network transferred'].value = temp;
 							}
 							showMax = true;
-							if(!networkDataReceived[node.displayName as string])
-								networkDataReceived[node.displayName as string] = []
-							networkDataReceived[node.displayName as string].push(networkTransmitBytesTotal);
+							if(!networkDataCombined[node.displayName as string])
+								networkDataCombined[node.displayName as string] = []
+							networkDataCombined[node.displayName as string].push(networkTransmitBytesTotal);
 						}
 					}
 				}
@@ -341,6 +343,39 @@
 		selectStepType = stepType;
 	}
 
+	$: getLogs = () => {
+		if(selectedStep != '') {
+			return { title: `- ${selectedStep}`, data: [logs[selectedStep]]};
+		} 
+		return { title: `- entire dry run`, data: allStepNames.map(step => logs[step])};
+	}	
+
+	$: getResource = (resource:string) => {	
+		let resourceData;
+		let wholeData: { x: string[]; y: number[]; type: string; name: string; }[];
+		if(resource == 'cpu') {
+			resourceData = cpuData;
+			wholeData = allStepNames.map(step => cpuData[step]);
+		} else if(resource == 'memory') {
+			resourceData = memoryData;
+			wholeData = allStepNames.map(step => memoryData[step])
+		} else {
+			resourceData = networkDataCombined;
+			wholeData = [];
+			allStepNames.forEach(step => {
+				networkDataCombined[step].forEach(elem => {
+					wholeData.push(elem)
+				});
+			});
+		}
+		if(selectedStep != '') {
+			if(resource == 'network') 
+				return { title: `${selectedStep}`, data: resourceData[selectedStep]};
+			return { title: `${selectedStep}`, data: [resourceData[selectedStep]]};
+		} 
+		return { title: `- entire dry run`, data: wholeData};
+	}
+
 	onMount(async () => {
 		await getDataPromise;
 		buildDiagram();
@@ -414,21 +449,23 @@
 				</div>
 			</div>
 			<br />
-			{#if selectedStepType == 'Pod'}
+			<!-- {#if selectedStepType == 'Pod'} -->
 				<div class="grid grid-rows-3 grid-cols-3 gap-8 max-h-screen">
 					<div class="card logcard row-span-2 p-5 pr-3">
 						<br />
 						{#if showLogs}
-							<h1>Logs - {selectedStep}</h1>
+							<h1>Logs {getLogs().title}</h1>
 							<br />
-							<ul class="list">
-								<div class="pre">
-									<code>
-										{logs[selectedStep]}
-									</code>
-								</div>
-								<br />
-							</ul>
+							{#each getLogs().data as log}
+								<ul class="list">
+									<div class="pre">
+										<code>
+											{log}										
+										</code>
+									</div>
+									<br />
+								</ul>
+							{/each}
 						{:else}
 							<p>No data</p>
 						{/if}
@@ -458,11 +495,11 @@
 						</div>
 					{/if}
 
-					{#if cpuData[selectedStep]}
+					{#if Object.keys(cpuData).length > 0 }
 						<div class="card">
 							<Plot
-								data={[cpuData[selectedStep]]}
-								plot_title={`CPU Usage ${selectedStep}`}
+								data={getResource('cpu').data}
+								plot_title={`CPU Usage ${getResource('cpu').title}`}
 								xaxis_title="time"
 								yaxis_title="cpu usage"
 							/>
@@ -470,11 +507,11 @@
 					{:else}
 						<p>No CPU Usage data</p>
 					{/if}
-					{#if memoryData[selectedStep]}
+					{#if Object.keys(memoryData).length > 0}
 						<div class="card">
 							<Plot
-								data={[memoryData[selectedStep]]}
-								plot_title={`Memory Usage ${selectedStep}`}
+								data={getResource('memory').data}
+								plot_title={`Memory Usage ${getResource('memory').title}`}
 								xaxis_title="time"
 								yaxis_title="bytes"
 							/>
@@ -483,11 +520,11 @@
 						<p>No Memory Usage data</p>
 					{/if}
 
-					{#if networkDataReceived[selectedStep]}
+					{#if  Object.keys(networkDataCombined).length > 0}
 						<div class="card">
 							<Plot
-								data={networkDataReceived[selectedStep]}
-								plot_title={`Network Received ${selectedStep}`}
+								data={getResource('network').data}
+								plot_title={`Network ${getResource('network').title}`}
 								xaxis_title="time"
 								yaxis_title="bytes"
 							/>
@@ -496,7 +533,7 @@
 						<p>No Network Usage data</p>
 					{/if}
 				</div>
-			{/if}
+			<!-- {/if} -->
 		{/await}
 	</div>
 </div>

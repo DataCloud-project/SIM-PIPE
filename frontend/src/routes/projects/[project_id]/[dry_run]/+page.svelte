@@ -6,7 +6,7 @@
 	import { Modal, modalStore } from '@skeletonlabs/skeleton';
 	import type { ModalSettings } from '@skeletonlabs/skeleton';
 	import ModalSubmitNewDryRun from './modal-submit-new-dry-run.svelte';
-	import type { DryRun, Project } from '../../../../types.js';
+	import type { DryRun, DryRunMetrics, Project } from '../../../../types.js';
 	import allDryRunsQuery from '../../../../queries/get_all_dryruns.js';
 	import deleteDryRunMutation from '../../../../queries/delete_dry_run.js';
 	import { goto } from '$app/navigation';
@@ -102,9 +102,10 @@
 		goto(`/projects/[project_id]/${dryRunId}/${resource}`);
 	}
 
-	function displayDryRunDuration(status: string, started: string, finished: string) {
-		if (status == 'Succeeded' || status == 'Failed' || status == 'Error')
-			return time_difference(started, finished);
+	function displayDryRunDuration(status: string, nodes: DryRunMetrics[]) {
+		const firstNode = nodes ? nodes[0] : undefined;
+		if (firstNode && (status == 'Succeeded' || status == 'Failed' || status == 'Error'))
+			return time_difference(firstNode.startedAt, firstNode.finishedAt);
 		return '-';
 	}
 	// to disable onclick propogation for checkbox input
@@ -181,8 +182,7 @@
 									<div>
 										{displayDryRunDuration(
 											run.status.phase.toString(),
-											run.nodes[0]?.startedAt,
-											run.nodes[0]?.finishedAt
+											run.nodes
 										)}
 									</div>
 								</td>

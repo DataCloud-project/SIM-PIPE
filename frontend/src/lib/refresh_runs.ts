@@ -17,7 +17,7 @@ export default async function refreshProjectDetails(): Promise<void> {
 		do {
 			const responseProjectDetails: { project: Project } = await requestGraphQLClient(
 				allDryRunsQuery,
-				{ projectId: get(clickedProjectId) }
+				{ projectId: get(selectedProject)?.id }
 			);
 			selectedProject.set(responseProjectDetails.project);
 			// check if updating can be stopped
