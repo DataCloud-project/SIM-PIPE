@@ -35,11 +35,9 @@
 	var cpuData: { [key: string]: { x: string[]; y: number[]; type: string; name: string } } = {};
 	var memoryData: { [key: string]: { x: string[]; y: number[]; type: string; name: string } } = {};
 	var networkDataReceived: {
-		[key: string]: { x: string[]; y: number[]; type: string; name: string };
+		[key: string]: { x: string[]; y: number[]; type: string; name: string }[];
 	} = {};
-	var networkDataTransferred: {
-		[key: string]: { x: string[]; y: number[]; type: string; name: string };
-	} = {};
+	
 	const maxValues: { [key: string]: { value: number; unit: string } } = maxValuesFormat;
 	let showMax = false;
 
@@ -171,13 +169,13 @@
 							x: nrcTimestamps,
 							y: nrcValues,
 							type: 'scatter',
-							name: `receive ${node.displayName}`
+							name: `Received ${node.displayName}`
 						};
 						var networkTransmitBytesTotal = {
 							x: ntrTimestamps,
 							y: ntrValues,
 							type: 'scatter',
-							name: `transmit ${node.displayName}`
+							name: `Transmitted ${node.displayName}`
 						};
 
 						if (cpuValues.length > 0) {
@@ -204,7 +202,9 @@
 								maxValues['Network received'].value = temp;
 							}
 							showMax = true;
-							networkDataReceived[node.displayName as string] = networkReceiveBytesTotal;
+							if(!networkDataReceived[node.displayName as string])
+								networkDataReceived[node.displayName as string] = []
+							networkDataReceived[node.displayName as string].push(networkReceiveBytesTotal);
 						}
 						if (ntrValues.length > 0) {
 							const temp = Math.max(...ntrValues);
@@ -212,7 +212,9 @@
 								maxValues['Network transferred'].value = temp;
 							}
 							showMax = true;
-							networkDataTransferred[node.displayName as string] = networkTransmitBytesTotal;
+							if(!networkDataReceived[node.displayName as string])
+								networkDataReceived[node.displayName as string] = []
+							networkDataReceived[node.displayName as string].push(networkTransmitBytesTotal);
 						}
 					}
 				}
@@ -414,7 +416,7 @@
 			<br />
 			{#if selectedStepType == 'Pod'}
 				<div class="grid grid-rows-3 grid-cols-3 gap-8 max-h-screen">
-					<div class="card logcard row-span-1 p-5 pr-3">
+					<div class="card logcard row-span-2 p-5 pr-3">
 						<br />
 						{#if showLogs}
 							<h1>Logs - {selectedStep}</h1>
@@ -476,7 +478,7 @@
 								xaxis_title="time"
 								yaxis_title="bytes"
 							/>
-						</div>
+						</div>						
 					{:else}
 						<p>No Memory Usage data</p>
 					{/if}
@@ -484,16 +486,8 @@
 					{#if networkDataReceived[selectedStep]}
 						<div class="card">
 							<Plot
-								data={[networkDataReceived[selectedStep]]}
+								data={networkDataReceived[selectedStep]}
 								plot_title={`Network Received ${selectedStep}`}
-								xaxis_title="time"
-								yaxis_title="bytes"
-							/>
-						</div>
-						<div class="card">
-							<Plot
-								data={[networkDataTransferred[selectedStep]]}
-								plot_title={`Network Transferred ${selectedStep}`}
 								xaxis_title="time"
 								yaxis_title="bytes"
 							/>
