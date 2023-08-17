@@ -20,7 +20,6 @@
 	let workflow: { workflowTemplates: { argoWorkflowTemplate: { spec: { templates: any[] } } }[] };
 	let dryrun_results: { dryRun: { nodes: any[] } };
 	let selectStepName = '';
-	let selectStepType = '';
 	let dryRunPhases: { [x: string]: string } = {};
 	const graphOrientation = 'LR';
 
@@ -37,7 +36,7 @@
 	var networkDataCombined: {
 		[key: string]: { x: string[]; y: number[]; type: string; name: string }[];
 	} = {};
-	
+
 	const maxValues: { [key: string]: { value: number; unit: string } } = maxValuesFormat;
 	let showMax = false;
 
@@ -204,8 +203,8 @@
 								maxValues['Network received'].value = temp;
 							}
 							showMax = true;
-							if(!networkDataCombined[node.displayName as string])
-								networkDataCombined[node.displayName as string] = []
+							if (!networkDataCombined[node.displayName as string])
+								networkDataCombined[node.displayName as string] = [];
 							networkDataCombined[node.displayName as string].push(networkReceiveBytesTotal);
 						}
 						if (ntrValues.length > 0) {
@@ -214,8 +213,8 @@
 								maxValues['Network transferred'].value = temp;
 							}
 							showMax = true;
-							if(!networkDataCombined[node.displayName as string])
-								networkDataCombined[node.displayName as string] = []
+							if (!networkDataCombined[node.displayName as string])
+								networkDataCombined[node.displayName as string] = [];
 							networkDataCombined[node.displayName as string].push(networkTransmitBytesTotal);
 						}
 					}
@@ -340,48 +339,58 @@
 
 	function stepOnClick(stepName: string, stepType: string) {
 		selectStepName = stepName;
-		selectStepType = stepType;
 	}
 
 	$: getLogs = () => {
-		if(selectedStep != '') {
-			return { title: `- ${selectedStep}`, data: [logs[selectedStep]]};
-		} 
-		return { title: `- entire dry run`, data: allStepNames.map(step => logs[step])};
-	}	
+		if (selectedStep != '') {
+			return [selectedStep];
+		}
+		return allStepNames;
+	};
 
-	$: getResource = (resource:string) => {	
+	$: getResource = (resource: string) => {
 		let resourceData;
-		let wholeData: { x: string[]; y: number[]; type: string; name: string; }[];
-		if(resource == 'cpu') {
+		let wholeData: { x: string[]; y: number[]; type: string; name: string }[] = [];
+		if (resource == 'cpu') {
 			resourceData = cpuData;
-			wholeData = allStepNames.map(step => cpuData[step]);
-		} else if(resource == 'memory') {
+			if (Object.keys(cpuData).length > 0)
+				allStepNames.forEach((step) => {
+					if (cpuData[step]) wholeData.push(cpuData[step]);
+				});
+		} else if (resource == 'memory') {
 			resourceData = memoryData;
-			wholeData = allStepNames.map(step => memoryData[step])
+			if (Object.keys(memoryData).length > 0)
+				allStepNames.forEach((step) => {
+					if (memoryData[step]) wholeData.push(cpuData[step]);
+				});
 		} else {
 			resourceData = networkDataCombined;
 			wholeData = [];
-			allStepNames.forEach(step => {
-				networkDataCombined[step].forEach(elem => {
-					wholeData.push(elem)
+			allStepNames.forEach((step) => {
+				networkDataCombined[step]?.forEach((elem) => {
+					wholeData.push(elem);
 				});
 			});
 		}
-		if(selectedStep != '') {
-			if(resource == 'network') 
-				return { title: `${selectedStep}`, data: resourceData[selectedStep]};
-			return { title: `${selectedStep}`, data: [resourceData[selectedStep]]};
-		} 
-		return { title: `- entire dry run`, data: wholeData};
-	}
+		if (selectedStep != '') {
+			if (resource == 'network')
+				return {
+					title: `${selectedStep}`,
+					data: resourceData[selectedStep] ? resourceData[selectedStep] : []
+				};
+			return {
+				title: `${selectedStep}`,
+				data: resourceData[selectedStep] ? [resourceData[selectedStep]] : []
+			};
+		}
+		return { title: `- entire dry run`, data: wholeData };
+	};
 
 	onMount(async () => {
 		await getDataPromise;
 		buildDiagram();
 	});
 	$: selectedStep = selectStepName;
-	$: selectedStepType = selectStepType;
 	$: reactiveStepsList = $stepsList?.slice(1);
 	$: reactiveMaxValues = maxValues;
 </script>
@@ -449,91 +458,86 @@
 				</div>
 			</div>
 			<br />
-			<!-- {#if selectedStepType == 'Pod'} -->
-				<div class="grid grid-rows-3 grid-cols-3 gap-8 max-h-screen">
-					<div class="card logcard row-span-2 p-5 pr-3">
+			<div class="grid grid-rows-3 grid-cols-3 gap-8 max-h-screen">
+				<div class="card logcard row-span-2 p-5">
+					<header class="card-header"><h1>Logs</h1></header>
+					<section class="p-2">
 						<br />
-						{#if showLogs}
-							<h1>Logs {getLogs().title}</h1>
-							<br />
-							{#each getLogs().data as log}
-								<ul class="list">
-									<div class="pre">
-										<code>
-											{log}										
-										</code>
-									</div>
+						<ul class="list">
+							{#if showLogs}
+								{#each getLogs() as key}
+									<li>
+										<h2>{key}</h2>
+									</li>
+									<li>
+										<pre class="pre">
+											<code class="code-example-body prettyprint">
+												{#each Object.values(logs[key]) || [] as line}
+													{line}<br />
+												{/each}
+											</code>
+										</pre>
+									</li>
 									<br />
-								</ul>
-							{/each}
-						{:else}
-							<p>No data</p>
-						{/if}
-					</div>
-					{#if showMax}
-						<div class="card">
-							<table class="table table-interactive">
-								<thead>
-									<tr>
-										<th>Resource</th>
-										<th>Maximum usage</th>
-									</tr>
-								</thead>
-								<tbody>
-									{#each Object.keys(reactiveMaxValues) as key}
-										<tr>
-											<td>{key}</td>
-											{#if maxValues[key].value != -1}
-												<td>{maxValues[key].value.toFixed(2)}{maxValues[key].unit}</td>
-											{:else}
-												<td>-</td>
-											{/if}
-										</tr>
-									{/each}
-								</tbody>
-							</table>
-						</div>
-					{/if}
-
-					{#if Object.keys(cpuData).length > 0 }
-						<div class="card">
-							<Plot
-								data={getResource('cpu').data}
-								plot_title={`CPU Usage ${getResource('cpu').title}`}
-								xaxis_title="time"
-								yaxis_title="cpu usage"
-							/>
-						</div>
-					{:else}
-						<p>No CPU Usage data</p>
-					{/if}
-					{#if Object.keys(memoryData).length > 0}
-						<div class="card">
-							<Plot
-								data={getResource('memory').data}
-								plot_title={`Memory Usage ${getResource('memory').title}`}
-								xaxis_title="time"
-								yaxis_title="bytes"
-							/>
-						</div>						
-					{:else}
-						<p>No Memory Usage data</p>
-					{/if}
-
-					{#if  Object.keys(networkDataCombined).length > 0}
-						<div class="card">
-							<Plot
-								data={getResource('network').data}
-								plot_title={`Network ${getResource('network').title}`}
-								xaxis_title="time"
-								yaxis_title="bytes"
-							/>
-						</div>
-					{:else}
-						<p>No Network Usage data</p>
-					{/if}
+								{/each}
+							{:else}
+								<p>No data</p>
+							{/if}
+						</ul>
+					</section>
 				</div>
-			<!-- {/if} -->
+
+				{#if showMax}
+					<div class="card">
+						<table class="table table-interactive">
+							<thead>
+								<tr>
+									<th>Resource</th>
+									<th>Maximum usage</th>
+								</tr>
+							</thead>
+							<tbody>
+								{#each Object.keys(reactiveMaxValues) as key}
+									<tr>
+										<td>{key}</td>
+										{#if maxValues[key].value != -1}
+											<td>{maxValues[key].value.toFixed(2)}{maxValues[key].unit}</td>
+										{:else}
+											<td>-</td>
+										{/if}
+									</tr>
+								{/each}
+							</tbody>
+						</table>
+					</div>
+				{/if}
+
+				<div class="card">
+					<Plot
+						data={getResource('cpu').data}
+						plot_title={`CPU Usage ${getResource('cpu').title}`}
+						xaxis_title="time"
+						yaxis_title="cpu usage"
+					/>
+				</div>
+				<div class="card">
+					<Plot
+						data={getResource('memory').data}
+						plot_title={`Memory Usage ${getResource('memory').title}`}
+						xaxis_title="time"
+						yaxis_title="bytes"
+					/>
+				</div>
+
+				<div class="card">
+					<Plot
+						data={getResource('network').data}
+						plot_title={`Network ${getResource('network').title}`}
+						xaxis_title="time"
+						yaxis_title="bytes"
+					/>
+				</div>
+			</div>
 		{/await}
 	</div>
 </div>
@@ -541,22 +545,20 @@
 <style>
 	.card.logcard {
 		overflow-y: scroll;
-		/* max-height: fit-content; */
+		max-height: fit-content;
 	}
 	ul {
 		max-height: 50vh;
-		/* max-height: fit-content; */
+		max-height: fit-content;
 	}
-	.pre {
-		/* padding: 0 6px; */
-		/* border: 1px solid rgb(177, 107, 107); */
-		/* box-sizing: border-box; */
-		text-align: left;
+	pre {
+		padding: 0 6px;
+		/* border: 1px solid rgb(255, 0, 0); */
+		box-sizing: border-box;
 		overflow-x: hidden;
 		overflow-y: scroll;
-		/* max-height: 50vh; */
-		width: 100%;
-		/* max-width: 98%; */
-		/* white-space: pre-wrap; */
+		max-height: 50vh;
+		max-width: 98%;
+		white-space: pre-wrap;
 	}
 </style>

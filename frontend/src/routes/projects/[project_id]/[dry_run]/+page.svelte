@@ -180,10 +180,7 @@
 								</td>
 								<td style="width:20%">
 									<div>
-										{displayDryRunDuration(
-											run.status.phase.toString(),
-											run.nodes
-										)}
+										{displayDryRunDuration(run.status.phase.toString(), run.nodes)}
 									</div>
 								</td>
 								<td style="width:20%">
