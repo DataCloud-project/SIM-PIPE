@@ -11,21 +11,42 @@ def check_if_installed(command):
     return shutil.which(command) is not None
 
 
-def check_kubectl_installed():
+def check_debian_or_ubuntu():
+    """
+    Check if the operating system is Debian or Ubuntu.
+    """
+    try:
+        with open("/etc/os-release", "r") as file:
+            content = file.read()
+            if "ID=debian" in content or "ID=ubuntu" in content:
+                return True
+    except FileNotFoundError:
+        pass
+    except Exception:
+        print(e)
+
+    return False
+
+
+def check_kubectl_installed(silent=False):
     if not check_if_installed("kubectl"):
-        print("❌ kubectl is not installed.")
-        print("Check https://kubernetes.io/docs/tasks/tools/")
-        if sys.platform == "darwin":
-            print("\nYou can also install kubectl using brew:")
-            print("brew install kubernetes-cli")
+        if not silent:
+            print("❌ kubectl is not installed.")
+            print("Check https://kubernetes.io/docs/tasks/tools/")
+            if sys.platform == "darwin":
+                print("\nYou can also install kubectl using brew:")
+                print("brew install kubernetes-cli")
         return False
     return True
 
 
 def check_cluster_status(silent=False):
 
+    should_use_sudo = check_debian_or_ubuntu()
+    command_prefix = ["sudo", "-E"] if should_use_sudo else []
+
     result = subprocess.run(
-        ["kubectl", "cluster-info"],
+        command_prefix + ["kubectl", "cluster-info"],
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
     )
@@ -53,7 +74,7 @@ def check_cluster_status(silent=False):
         return False
 
     result = subprocess.run(
-        ["kubectl", "get", "nodes", "--no-headers", "-o", "json"],
+        command_prefix + ["kubectl", "get", "nodes", "--no-headers", "-o", "json"],
         stdout=subprocess.PIPE,
         stderr=subprocess.DEVNULL,
     )
@@ -80,13 +101,14 @@ def check_cluster_status(silent=False):
     return True
 
 
-def check_helm_installed():
+def check_helm_installed(silent=False):
     if not check_if_installed("helm"):
-        print("❌ helm is not installed")
-        print("Check https://helm.sh/docs/intro/install/")
-        if sys.platform == "darwin":
-            print("\nYou can also install helm using brew:")
-            print("brew install helm")
+        if not silent:
+            print("❌ helm is not installed")
+            print("Check https://helm.sh/docs/intro/install/")
+            if sys.platform == "darwin":
+                print("\nYou can also install helm using brew:")
+                print("brew install helm")
         return False
     # Check helm version > 3
     result = subprocess.run(
@@ -99,8 +121,9 @@ def check_helm_installed():
     match = version_re.match(version)
 
     if not match or int(match.group("major")) < 3 or int(match.group("minor")) < 7:
-        print("❌ helm version is not 3.7 or higher")
-        print("Check https://helm.sh/docs/intro/install/ to upgrade helm")
+        if not silent:
+            print("❌ helm version is not 3.7 or higher")
+            print("Check https://helm.sh/docs/intro/install/ to upgrade helm")
         return False
     return True
 
@@ -110,8 +133,12 @@ def check_helm_diff_installed(silent=False):
         return False
 
     try:
+        command = ["helm", "plugin", "list"]
+        if check_debian_or_ubuntu():
+            command = ["sudo", "-E"] + command
+
         result = subprocess.run(
-            ["helm", "plugin", "list"],
+            command,
             stdout=subprocess.PIPE,
             stderr=subprocess.DEVNULL,
             check=True,
@@ -145,57 +172,80 @@ def check_helm_diff_installed(silent=False):
     return True
 
 
-def check_argo_installed():
+def check_argo_installed(silent=False):
     if not check_if_installed("argo"):
-        print("❌ argo is not installed")
-        print(
-            "Download the argo CLI from https://github.com/argoproj/argo-workflows/releases"
-        )
-        print("and add it to your PATH.")
-        if sys.platform == "darwin":
-            print("\nYou can also install argo using brew:")
-            print("brew install argo")
-
+        if not silent:
+            print("❌ argo is not installed")
+            print(
+                "Download the argo CLI from https://github.com/argoproj/argo-workflows/releases"
+            )
+            print("and add it to your PATH.")
+            if sys.platform == "darwin":
+                print("\nYou can also install argo using brew:")
+                print("brew install argo")
         return False
     return True
 
 
-def check_docker_installed():
+def check_docker_installed(silent=False):
     if not check_if_installed("docker"):
-        print("❌ docker is not installed")
-        print("Check https://docs.docker.com/get-docker/ for installation instructions")
-        if sys.platform == "darwin":
-            print("\nYou can also install docker using brew:")
-            print("brew install docker")
+        if not silent:
+            print("❌ docker is not installed")
+            print(
+                "Check https://docs.docker.com/get-docker/ for installation instructions"
+            )
+            if sys.platform == "darwin":
+                print("\nYou can also install docker using brew:")
+                print("brew install docker")
         return False
     if not check_if_installed("docker-buildx"):
-        print("❌ docker-buildx is not installed")
-        print(
-            "Check https://docs.docker.com/buildx/working-with-buildx/ for installation instructions"
+        # Check if the command "docker buildx version" returns a non-zero exit code
+        result = subprocess.run(
+            ["docker", "buildx", "version"],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
         )
-        if sys.platform == "darwin":
-            print("\nYou can also install docker-buildx using brew:")
-            print("brew install docker-buildx")
-        return False
+        if result.returncode != 0:
+            if not silent:
+                print("❌ docker-buildx is not installed")
+                print(
+                    "Check https://docs.docker.com/buildx/working-with-buildx/ for installation instructions"
+                )
+                if sys.platform == "darwin":
+                    print("\nYou can also install docker-buildx using brew:")
+                    print("brew install docker-buildx")
+            return False
     return True
 
 
-def check_tools_installed():
+def check_ansible_installed():
     return all(
         [
-            check_kubectl_installed(),
-            check_docker_installed(),
-            check_helm_installed(),
-            check_helm_diff_installed(),
-            check_argo_installed(),
+            check_if_installed("ansible"),
+            check_if_installed("ansible-playbook"),
+            check_if_installed("ansible-galaxy"),
+        ]
+    )
+
+
+def check_tools_installed(silent=False):
+    return all(
+        [
+            check_kubectl_installed(silent),
+            check_docker_installed(silent),
+            check_helm_installed(silent),
+            check_helm_diff_installed(silent),
+            check_argo_installed(silent),
         ]
     )
 
 
 def check_simpipe_deployment_presence():
     try:
+        should_use_sudo = check_debian_or_ubuntu()
+        command_prefix = ["sudo", "-E"] if should_use_sudo else []
         output = subprocess.check_output(
-            ["helm", "list", "--deployed", "--output", "json"]
+            command_prefix + ["helm", "list", "--deployed", "--output", "json"]
         )
         deployments = json.loads(output)
         for deployment in deployments:
@@ -208,8 +258,12 @@ def check_simpipe_deployment_presence():
 
 
 def check_simpipe_pods_health(silent=False):
+    should_use_sudo = check_debian_or_ubuntu()
+    command_prefix = ["sudo", "-E"] if should_use_sudo else []
+
     result = subprocess.run(
-        [
+        command_prefix
+        + [
             "kubectl",
             "get",
             "pods",
