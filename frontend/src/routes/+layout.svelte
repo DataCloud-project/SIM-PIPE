@@ -36,7 +36,7 @@
 		<AppRail>
 			<AppRailTile label="Projects" href="/projects"><BookOpenIcon size="1.5x" /></AppRailTile>
 			<AppRailTile label="Registry Key Vault" href="/secrets"><LockIcon size="1.5x" /></AppRailTile>
-			<!-- TODO: temporary redirect to sftp go web interface; will be replaced by files manager when api is ready -->
+			<!-- TO DO: temporary redirect to sftp go web interface; will be replaced by files manager when api is ready -->
 			<AppRailTile label="Sample Files" href="http://localhost:8083"
 				><FileIcon size="1.5x" /></AppRailTile
 			>

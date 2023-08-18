@@ -452,8 +452,6 @@
 											{#each step.outputArtifacts as artifact}
 												{#if artifact.name != 'main-logs'}
 													<a href={step.outputArtifacts[0].url}>{step.outputArtifacts[0].name}* </a>
-													<!-- {:else}
-													<p>-</p> -->
 												{/if}
 											{/each}
 										{:else}
@@ -563,7 +561,6 @@
 	}
 	pre {
 		padding: 0 6px;
-		/* border: 1px solid rgb(255, 0, 0); */
 		box-sizing: border-box;
 		overflow-x: hidden;
 		overflow-y: scroll;

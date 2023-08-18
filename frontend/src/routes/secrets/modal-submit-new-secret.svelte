@@ -48,7 +48,7 @@
 			}
 		};
 
-		// TODO: Fix bug where request fails for different reasons (secret name already exists...)
+		// TO DO: Fix bug where request fails for different reasons (secret name already exists...)
 		const response = await requestGraphQLClient(createCredentialMutation, variables);
 
 		modalStore.close();
@@ -60,8 +60,8 @@
 </script>
 
 <!-- @component This example creates a simple form modal. -->
-<!-- TODO: Aleena; help users provide correct kubernetes name (pattern on the HTML5 input tag perhaps may be used to only allow valid kubernetes names)-->
-<!-- TODO: Aleena; Gøran has come up with suggestion for pattern in inputs for secret name, username and hostname. Check that this works as expected. -->
+<!-- TO DO: Aleena; help users provide correct kubernetes name (pattern on the HTML5 input tag perhaps may be used to only allow valid kubernetes names)-->
+<!-- TO DO: Aleena; Gøran has come up with suggestion for pattern in inputs for secret name, username and hostname. Check that this works as expected. -->
 {#if $modalStore[0]}
 	<div class="modal-example-form {cBase}">
 		<header class={cHeader}>{$modalStore[0].title ?? '(title missing)'}</header>
