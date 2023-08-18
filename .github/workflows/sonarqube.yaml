@@ -3,32 +3,33 @@ on:
   push:
     branches:
       - main
+      - dev
   pull_request:
 
 jobs:
-  sonarqube-controller:
-    name: SonarQube controller
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-      - name: Use Node.js 18
-        uses: actions/setup-node@v3
-        with:
-          node-version: 18
-      - uses: sonarsource/sonarqube-scan-action@master
-        env:
-          SONAR_TOKEN: ${{ secrets.CONTROLLER_SONAR_TOKEN }}
-          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
-        with:
-          projectBaseDir: ./controller
-      - uses: sonarsource/sonarqube-quality-gate-action@master
-        timeout-minutes: 5
-        env:
-          SONAR_TOKEN: ${{ secrets.CONTROLLER_SONAR_TOKEN }}
-        with:
-          scanMetadataReportFile: ./controller/.scannerwork/report-task.txt
+#   sonarqube-controller:
+#     name: SonarQube controller
+#     runs-on: ubuntu-latest
+#     steps:
+#       - uses: actions/checkout@v3
+#         with:
+#           fetch-depth: 0
+#       - name: Use Node.js 18
+#         uses: actions/setup-node@v3
+#         with:
+#           node-version: 18
+#       - uses: sonarsource/sonarqube-scan-action@master
+#         env:
+#           SONAR_TOKEN: ${{ secrets.CONTROLLER_SONAR_TOKEN }}
+#           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+#         with:
+#           projectBaseDir: ./controller
+#       - uses: sonarsource/sonarqube-quality-gate-action@master
+#         timeout-minutes: 5
+#         env:
+#           SONAR_TOKEN: ${{ secrets.CONTROLLER_SONAR_TOKEN }}
+#         with:
+#           scanMetadataReportFile: ./controller/.scannerwork/report-task.txt
   sonarqube-frontend:
     name: SonarQube frontend
     runs-on: ubuntu-latest

@@ -1,0 +1,28 @@
+- name: Install K3S
+  hosts: all
+  vars:
+    # 1.27.4 is broken with docker, wait for 1.27.5 and put it to false or remove the line
+    k3s_release_version: v1.27.3+k3s1
+    k3s_build_cluster: false
+    k3s_install_hard_links: true
+    k3s_become: true
+    k3s_server:
+      docker: true
+      disable:
+        - traefik
+      write-kubeconfig-mode: '0640'
+  roles:
+    - xanmanning.k3s
+  tasks:
+    - name: Setup KUBECONFIG globally
+      ansible.builtin.lineinfile:
+        path: /etc/environment
+        line: 'KUBECONFIG=/etc/rancher/k3s/k3s.yaml'
+        state: present
+        create: false
+    - name: Set docker group and permissions on the K3S kubeconfig
+      ansible.builtin.file:
+        path: /etc/rancher/k3s/k3s.yaml
+        owner: root
+        group: docker
+        mode: '0640'

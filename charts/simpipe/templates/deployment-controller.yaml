@@ -1,0 +1,88 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "simpipeController.fullname" . }}
+  labels:
+    {{- include "simpipeController.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.controller.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "simpipeController.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.controller.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "simpipeController.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.controller.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "simpipeController.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.controller.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.controller.securityContext | nindent 12 }}
+          image: "{{ .Values.controller.image.repository }}:{{ .Values.controller.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.controller.image.pullPolicy }}
+          env:
+            - name: MINIO_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "simpipeController.fullname" . }}
+                  key: minioAccessKey
+            - name: MINIO_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "simpipeController.fullname" . }}
+                  key: minioSecretKey
+            - name: JWT_DEV_MODE
+              value: "true"
+            - name: MINIO_URL
+              value: {{ .Values.controller.minio.url | quote }}
+            - name: MINIO_BUCKET_NAME
+              value: {{ .Values.controller.minio.bucketName | quote }}
+            - name: MINIO_REGION
+              value: {{ .Values.controller.minio.region | quote }}
+            - name: ARGO_CLIENT_ENDPOINT
+              value: {{ .Values.controller.argo.endpoint | quote }}
+            - name: KUBERNETES_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: PROMETHEUS_SERVER_URL
+              value: {{ .Values.controller.prometheus.serverUrl | quote }}
+            - name: NODE_ENV
+              value: development
+          ports:
+            - name: http
+              containerPort: {{ .Values.controller.service.port }}
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+          resources:
+            {{- toYaml .Values.controller.resources | nindent 12 }}
+      {{- with .Values.controller.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.controller.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.controller.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

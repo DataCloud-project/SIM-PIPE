@@ -1,0 +1,449 @@
+scalar ArgoWorkflow
+scalar ArgoWorkflowTemplate
+scalar TimeStamp
+"""
+Prometheus represents number as strings in JSON, because
+the numbers in JSON are not accurate enough and doesn't support very large numbers.
+This is because they are represented as  IEE 754 floating point numbers,
+which are not accurate and do not represents numbers above 2^53 accurately.
+The overhead is minimal as the numbers are represented as strings in JSON anyway.
+You will need to parse the string to a number in your application.
+"""
+scalar PrometheusStringNumber
+
+type Query {
+  """ Fetch the current username. """
+  username: String! @auth
+  """ Returns pong if the server is up and running. """
+  ping: String!
+  """ List of docker registry credentials. """
+  dockerRegistryCredentials: [DockerRegistryCredential!]! @auth
+
+  """ List of projects """
+  projects: [Project!]! @auth
+
+  """ Get a project by id """
+  project(projectId: String!): Project! @auth
+
+  """ Get a dry run by id """
+  dryRun(dryRunId: String!): DryRun! @auth
+
+  """ Get a workflow template by name """
+  workflowTemplate(name: String!): WorkflowTemplate @auth
+}
+
+type Project {
+  """ The name of the project """
+  name: String!
+
+  """ The identifier of the project """
+  id: String!
+
+  """ Date of creation """
+  createdAt: String!
+
+  """ The dry runs in the project """
+  dryRuns: [DryRun!]
+
+  """ The workflow templates in the project """
+  workflowTemplates: [WorkflowTemplate!]
+}
+
+
+type DryRun {
+  """ The identifier of the run """
+  id: String!
+
+  """ Date of creation """
+  createdAt: String!
+
+  """ The raw Argo workflow document"""
+  argoWorkflow: ArgoWorkflow!
+
+  """ Status of the run """
+  status: DryRunStatus!
+
+  """ The project to which the run belongs """
+  project: Project
+
+  """ The nodes of the run """
+  nodes: [DryRunNode!]
+
+  """ A node of the run, by id """
+  node(id: String!): DryRunNode
+}
+
+type DryRunStatus {
+  """ Phase a simple, high-level summary of where the workflow is in its lifecycle.
+  Will be "Unknown, "Pending", or "Running" before the workflow is completed,
+  and "Succeeded", "Failed" or "Error" once the workflow has completed. """
+  phase: DryRunPhase!
+
+  """ The current status of the run """
+  startedAt: String
+
+  """ Time at which this workflow completed """
+  finishedAt: String
+
+  """ Progress to completion """
+  progress: String
+
+  """ Human readable message indicating details about why the workflow is in this condition """
+  message: String
+
+  """ Estimated duration in seconds """
+  estimatedDuration: Int
+}
+
+""" The phase of a dry run """
+enum DryRunPhase {
+  """ Dry run is waiting to run """
+  Pending
+  """ Dry run is running """
+  Running
+  """ Dry run is running but suspended """
+  Suspended
+  """ Dry run finished successfully """
+  Succeeded
+  """ Dry run was skipped """
+  Failed
+  """ Dry run had an error other than a non 0 exit code """
+  Error
+  """ Dry run was omitted because its depends condition was not met """
+  Unknown
+}
+
+""" The phase of a dry run node """
+enum DryRunNodePhase {
+  """ Node is waiting to run """
+  Pending
+  """ Node is running """
+  Running
+  """ Node finished successfully """
+  Succeeded
+  """ Node was skipped """
+  Skipped
+  """ Node or child node exicited with non-0 exit code """
+  Failed
+  """ Node had an error other than a non 0 exit code """
+  Error
+  """ Node was omitted because its depends condition was not met """
+  Omitted
+  """ Unknown phase. Shouldn't happen. """
+  Unknown
+}
+
+""" The type of a dry run node """
+enum DryRunNodeType {
+  Pod
+  Container
+  Steps
+  StepGroup
+  DAG
+  TaskGroup
+  Retry
+  Skipped
+  Suspend
+  HTTP
+  Plugin
+}
+
+interface DryRunNode {
+  """ ID of the node """
+  id: String!
+
+  """ The type of the node """
+  type: DryRunNodeType!
+
+  """ The name of the node """
+  name: String!
+
+  """ Display name of the node """
+  displayName: String
+
+
+  """ The template name of the node """
+  templateName: String
+
+
+  """ The phase of the node """
+  phase: DryRunNodePhase!
+
+  """ The time at which the node started """
+  startedAt: String
+
+  """ The time at which the node finished """
+  finishedAt: String
+
+  """ The duration of the node in seconds """
+  duration: Int
+
+  """ The progress of the node """
+  progress: String
+
+  """ The children of the node """
+  children: [DryRunNode!]
+}
+
+type DryRunNodePod implements DryRunNode {
+  id: String!
+  type: DryRunNodeType!
+  name: String!
+  displayName: String
+  templateName: String
+  phase: DryRunNodePhase!
+  startedAt: String
+  finishedAt: String
+  duration: Int
+  progress: String
+  children: [DryRunNode!]
+
+
+  """ The exit code of the node, if exited """
+  exitCode: String
+
+  """ Resources durations. Estimation from Argo, usually pretty not accurate """
+  resourcesDuration: DryRunNodeResourceDuration
+
+  """ The name of the pod. """
+  metrics: DryRunNodeMetrics!
+
+  """ The name of the pod. """
+  podName: String!
+
+  """ The logs of the node. """
+  log(maxLines: Int, grep: String, sinceSeconds: Int, sinceTime: Int): [String!]
+
+  """ Input artifacts of the node. """
+  inputArtifacts: [DryRunNodeArtifact!]
+
+  """ Output artifacts of the node. """
+  outputArtifacts: [DryRunNodeArtifact!]
+}
+
+type DryRunNodeMisc implements DryRunNode {
+  id: String!
+  type: DryRunNodeType!
+  name: String!
+  displayName: String
+  templateName: String
+  phase: DryRunNodePhase!
+  startedAt: String
+  finishedAt: String
+  duration: Int
+  progress: String
+  children: [DryRunNode!]
+}
+
+
+type PrometheusSample {
+  timestamp: TimeStamp!
+  value: PrometheusStringNumber!
+}
+
+""" Prometheus metrics for the node. """
+type DryRunNodeMetrics {
+  cpuSystemSecondsTotal(start: TimeStamp, end: TimeStamp, step: Int): [PrometheusSample!]
+  cpuUsageSecondsTotal(start: TimeStamp, end: TimeStamp, step: Int): [PrometheusSample!]
+  cpuUserSecondsTotal(start: TimeStamp, end: TimeStamp, step: Int): [PrometheusSample!]
+  fileDescriptors(start: TimeStamp, end: TimeStamp, step: Int): [PrometheusSample!]
+  fsInodesFree(start: TimeStamp, end: TimeStamp, step: Int): [PrometheusSample!]
+  fsInodesTotal(start: TimeStamp, end: TimeStamp, step: Int): [PrometheusSample!]
+  fsIoCurrent(start: TimeStamp, end: TimeStamp, step: Int): [PrometheusSample!]
+  fsIoTimeSecondsTotal(start: TimeStamp, end: TimeStamp, step: Int): [PrometheusSample!]
+  fsIoTimeWeightedSecondsTotal(start: TimeStamp, end: TimeStamp, step: Int): [PrometheusSample!]
+  fsLimitBytes(start: TimeStamp, end: TimeStamp, step: Int): [PrometheusSample!]
+  fsReadSecondsTotal(start: TimeStamp, end: TimeStamp, step: Int): [PrometheusSample!]
+  fsReadsMergedTotal(start: TimeStamp, end: TimeStamp, step: Int): [PrometheusSample!]
+  fsReadsTotal(start: TimeStamp, end: TimeStamp, step: Int): [PrometheusSample!]
+  fsSectorReadsTotal(start: TimeStamp, end: TimeStamp, step: Int): [PrometheusSample!]
+  fsSectorWritesTotal(start: TimeStamp, end: TimeStamp, step: Int): [PrometheusSample!]
+  fsUsageBytes(start: TimeStamp, end: TimeStamp, step: Int): [PrometheusSample!]
+  fsWriteSecondsTotal(start: TimeStamp, end: TimeStamp, step: Int): [PrometheusSample!]
+  fsWritesMergedTotal(start: TimeStamp, end: TimeStamp, step: Int): [PrometheusSample!]
+  fsWritesTotal(start: TimeStamp, end: TimeStamp, step: Int): [PrometheusSample!]
+  memoryCache(start: TimeStamp, end: TimeStamp, step: Int): [PrometheusSample!]
+  memoryFailcnt(start: TimeStamp, end: TimeStamp, step: Int): [PrometheusSample!]
+  memoryFailuresTotal(start: TimeStamp, end: TimeStamp, step: Int): [PrometheusSample!]
+  memoryMappedFile(start: TimeStamp, end: TimeStamp, step: Int): [PrometheusSample!]
+  memoryMaxUsageBytes(start: TimeStamp, end: TimeStamp, step: Int): [PrometheusSample!]
+  memoryRss(start: TimeStamp, end: TimeStamp, step: Int): [PrometheusSample!]
+  memorySwap(start: TimeStamp, end: TimeStamp, step: Int): [PrometheusSample!]
+  memoryUsageBytes(start: TimeStamp, end: TimeStamp, step: Int): [PrometheusSample!]
+  memoryWorkingSetBytes(start: TimeStamp, end: TimeStamp, step: Int): [PrometheusSample!]
+  networkReceiveBytesTotal(start: TimeStamp, end: TimeStamp, step: Int): [PrometheusSample!]
+  networkReceiveErrorsTotal(start: TimeStamp, end: TimeStamp, step: Int): [PrometheusSample!]
+  networkReceivePacketsDroppedTotal(start: TimeStamp, end: TimeStamp, step: Int): [PrometheusSample!]
+  networkReceivePacketsTotal(start: TimeStamp, end: TimeStamp, step: Int): [PrometheusSample!]
+  networkTransmitBytesTotal(start: TimeStamp, end: TimeStamp, step: Int): [PrometheusSample!]
+  networkTransmitErrorsTotal(start: TimeStamp, end: TimeStamp, step: Int): [PrometheusSample!]
+  networkTransmitPacketsDroppedTotal(start: TimeStamp, end: TimeStamp, step: Int): [PrometheusSample!]
+  networkTransmitPacketsTotal(start: TimeStamp, end: TimeStamp, step: Int): [PrometheusSample!]
+  processes(start: TimeStamp, end: TimeStamp, step: Int): [PrometheusSample!]
+  sockets(start: TimeStamp, end: TimeStamp, step: Int): [PrometheusSample!]
+  threads(start: TimeStamp, end: TimeStamp, step: Int): [PrometheusSample!]
+  threadsMax(start: TimeStamp, end: TimeStamp, step: Int): [PrometheusSample!]
+  ulimitsSoft(start: TimeStamp, end: TimeStamp, step: Int): [PrometheusSample!]
+}
+
+type DryRunNodeArtifact {
+  """ The artifact name """
+  name: String!
+  """ The artifact path """
+  key: String
+  """ URL to download the artifact using an HTTP GET."""
+  url: String
+}
+
+"""
+  Resources durations. Estimation from Argo, usually pretty not accurate.
+  See https://argoproj.github.io/argo-workflows/resource-duration/
+"""
+type DryRunNodeResourceDuration {
+  cpu: String
+  memory: String
+  gpu: String
+}
+
+type DockerRegistryCredential {
+  """ The name of the docker registry """
+  name: String!
+  """ The username to use when authenticating with the docker registry """
+  username: String!
+  """ The docker registry endpoint """
+  server: String!
+}
+
+type WorkflowTemplate {
+  """ The name of the workflow template """
+  name: String!
+
+  """ The project to which the workflow template belongs """
+  project: Project
+
+  """ The raw Argo workflow document """
+  argoWorkflowTemplate: ArgoWorkflowTemplate!
+}
+
+input DockerRegistryCredentialInput {
+  """ The name of the docker registry """
+  name: String!
+  """ The username to use when authenticating with the docker registry """
+  username: String!
+  """ The password to use when authenticating with the docker registry """
+  password: String!
+  """ The docker registry endpoint """
+  server: String!
+}
+
+
+input CreateProjectInput {
+  """ The name of the project """
+  name: String!
+
+  """ The id name of the project (optional) """
+  id: String
+}
+
+""" The input data to create a run """
+input CreateDryRunInput {
+  """ The project to which this run belongs (optional).
+
+      The user must own the simulation.
+  """
+  projectId: String
+
+  """ The id of the run (optional), will be generated if not provided """
+  dryRunId: String
+
+  """ The raw Argo workflow document.
+
+  It's project id and and name will be overwritten if provided.
+  """
+  argoWorkflow: ArgoWorkflow!
+}
+
+""" The input data to create a workflow template """
+input CreateWorkflowTemplateInput {
+  """ The name of the workflow template, will be generated if not provided """
+  name: String
+
+  """ The project to which this workflow template belongs """
+  projectId: String
+
+  """ The raw Argo workflow document """
+  argoWorkflowTemplate: ArgoWorkflowTemplate!
+}
+
+""" The input data to update a workflow template """
+input UpdateWorkflowTemplateInput {
+  """ The name of the workflow template """
+  name: String!
+
+  """ The project to which this workflow template belongs """
+  projectId: String
+
+  """ The raw Argo workflow document """
+  argoWorkflowTemplate: ArgoWorkflowTemplate!
+}
+
+type Mutation @auth {
+  """ Create a project """
+  createProject(project: CreateProjectInput!): Project!
+
+  """ Rename a project """
+  renameProject(projectId: String!, name: String!): Project!
+
+  """ Delete a project """
+  deleteProject(projectId: String!): Boolean!
+
+  """ Create a run.
+
+  projectId and id are optional and will be generated.
+  If provided in the createDryRun arguments, they will overwrite the
+  values in the argoWorkflow document.
+  """
+  createDryRun(input: CreateDryRunInput!): DryRun!
+
+  """ Suspend a run. """
+  suspendDryRun(dryRunId:String!): DryRun!
+
+  """ Resume a run. """
+  resumeDryRun(dryRunId:String!): DryRun!
+
+  """ Retry a run. Restart the current run."""
+  retryDryRun(dryRunId:String!): DryRun!
+
+  """ Resubmit a run. Create a copy of the current run and starts it."""
+  resubmitDryRun(dryRunId:String!): DryRun!
+
+  """ Stop a run. """
+  stopDryRun(dryRunId:String!, terminate: Boolean): DryRun!
+
+  """ Delete a run. """
+  deleteDryRun(dryRunId:String!): Boolean!
+
+  """ Assign a dry run to a project """
+  assignDryRunToProject(dryRunId: String!, projectId: String!): DryRun!
+
+  """ Create a docker registry credential """
+  createDockerRegistryCredential(credential: DockerRegistryCredentialInput!): DockerRegistryCredential!
+
+  """ Delete a docker registry credential """
+  deleteDockerRegistryCredential(name: String!): Boolean!
+
+  """ Update a docker registry credential """
+  updateDockerRegistryCredential(credential: DockerRegistryCredentialInput!): DockerRegistryCredential!
+
+  """ Compute a presigned URL for uploading a file using a HTTP PUT. """
+  computeUploadPresignedUrl(key: String): String!
+
+  """ Create a workflow template """
+  createWorkflowTemplate(input: CreateWorkflowTemplateInput!): WorkflowTemplate!
+
+  """ Update a workflow template """
+  updateWorkflowTemplate(update: UpdateWorkflowTemplateInput!): WorkflowTemplate!
+
+  """ Delete a workflow template """
+  deleteWorkflowTemplate(name: String!): Boolean!
+}

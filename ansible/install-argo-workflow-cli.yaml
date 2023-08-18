@@ -1,0 +1,53 @@
+- name: Install Argo Workflow CLI
+  hosts: all
+  vars:
+    argo_version: v3.4.8
+    download_url: https://github.com/argoproj/argo-workflows/releases/download/{{ argo_version }}
+    architecture:
+      arm64: argo-linux-arm64.gz
+      aarch64: argo-linux-arm64.gz
+      amd64: argo-linux-amd64.gz
+    argo_binary: /usr/local/bin/argo
+
+  tasks:
+    - name: Check system architecture
+      ansible.builtin.command: uname -m
+      register: system_architecture
+      changed_when: false
+
+    - name: Set architecture variable
+      ansible.builtin.set_fact:
+        argo_architecture: "{{ architecture[system_architecture.stdout] }}"
+
+    - name: Install necessary packages
+      ansible.builtin.apt:
+        pkg:
+          - curl
+          - gzip
+          - unzip
+          - python-is-python3
+
+    - name: Download the binary
+      ansible.builtin.get_url:
+        url: "{{ download_url }}/{{ argo_architecture }}"
+        dest: "/tmp/{{ argo_architecture }}"
+        mode: "0600"
+
+    - name: Uncompress the binary
+      ansible.builtin.shell:
+        cmd: "gunzip -c /tmp/{{ argo_architecture }} > {{ argo_binary }}"
+        creates: "{{ argo_binary }}"
+
+    - name: Ensure the binary is executable
+      ansible.builtin.file:
+        path: "{{ argo_binary }}"
+        mode: "0755"
+
+    - name: Test installation
+      ansible.builtin.command: argo version
+      register: argo_version
+      changed_when: false
+
+    - name: Print Argo version
+      ansible.builtin.debug:
+        var: argo_version.stdout_lines

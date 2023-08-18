@@ -5,10 +5,10 @@ on:
     branches:
       - main
     paths:
-      - 'example/**'
+      - "examples/fake-file-process/**"
   pull_request:
     paths:
-      - 'example/**'
+      - "examples/fake-file-process/**"
 
 env:
   REGISTRY: ghcr.io
@@ -28,6 +28,12 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
       - name: Log in to the Container registry
         uses: docker/login-action@v2
         with:
@@ -44,12 +50,13 @@ jobs:
             type=raw,value=latest
 
       - name: Build and push Docker pre process image
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@v4
         with:
-          context: ./example/pre-process/
+          context: ./examples/fake-file-process/pre-process/
           push: true
           tags: ${{ steps.meta-pre-process.outputs.tags }}
           labels: ${{ steps.meta-pre-process.outputs.labels }}
+          platforms: linux/arm64,linux/amd64
 
       - name: Extract metadata (tags, labels) for process image
         id: meta-process
@@ -60,12 +67,13 @@ jobs:
             type=raw,value=latest
 
       - name: Build and push Docker process image
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@v4
         with:
-          context: ./example/process/
+          context: ./examples/fake-file-process/process/
           push: true
           tags: ${{ steps.meta-process.outputs.tags }}
           labels: ${{ steps.meta-process.outputs.labels }}
+          platforms: linux/arm64,linux/amd64
 
       - name: Extract metadata (tags, labels) for analyse image
         id: meta-analyse
@@ -76,12 +84,13 @@ jobs:
             type=raw,value=latest
 
       - name: Build and push Docker analyse image
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@v4
         with:
-          context: ./example/analyse/
+          context: ./examples/fake-file-process/analyse/
           push: true
           tags: ${{ steps.meta-analyse.outputs.tags }}
           labels: ${{ steps.meta-analyse.outputs.labels }}
+          platforms: linux/arm64,linux/amd64
 
       - name: Extract metadata (tags, labels) for fail image
         id: meta-fail
@@ -92,9 +101,10 @@ jobs:
             type=raw,value=latest
 
       - name: Build and push Docker fail image
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@v4
         with:
-          context: ./example/fail/
+          context: ./examples/fake-file-process/fail/
           push: true
           tags: ${{ steps.meta-fail.outputs.tags }}
           labels: ${{ steps.meta-fail.outputs.labels }}
+          platforms: linux/arm64,linux/amd64

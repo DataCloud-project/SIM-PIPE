@@ -1,0 +1,12 @@
+- name: Install Python
+  hosts: all
+  tasks:
+    - name: Update apt cache
+      ansible.builtin.apt:
+        update_cache: true
+        cache_valid_time: 3600  # 1 hour
+    - name: Install Python is Python3
+      ansible.builtin.apt:
+        pkg:
+          - python3
+          - python-is-python3

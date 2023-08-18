@@ -1,0 +1,21 @@
+- name: Copy SIMPIPE to root's home directory
+  hosts: all
+  tasks:
+    - name: Copy forwarding.py to root's home directory
+      ansible.builtin.copy:
+        src: ../forwarding.py
+        dest: /root/simpipe-forwarding.py
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: Install SIM-PIPE Helm chart
+      kubernetes.core.helm:
+        name: simpipe
+        release_namespace: default
+        chart_ref: oci://ghcr.io/datacloud-project/simpipe
+        wait: true
+        state: present
+      environment:
+        KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+

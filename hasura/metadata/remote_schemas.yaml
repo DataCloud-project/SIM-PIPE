@@ -1,8 +1,0 @@
-# - name: SIM-PIPE-backend
-#   definition:
-#     url: http://192.168.0.249:9000/graphql
-#     timeout_seconds: 60
-#     headers:
-#       - value: Bearer jwt-example
-#         name: authorization
-#   comment: ""

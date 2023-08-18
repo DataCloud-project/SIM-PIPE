@@ -1,2 +1,0 @@
-alter table "simpipe"."runs" drop constraint "ended started constraint";
-alter table "simpipe"."runs" add constraint "ended started constraint" check (status = 'waiting'::text AND started IS NULL AND ended IS NULL OR status = 'active'::text AND started IS NOT NULL AND ended IS NULL OR status = 'completed'::text AND started IS NOT NULL AND ended IS NOT NULL OR (status = 'failed'::text OR status = 'cancelled'::text) AND (ended IS NULL OR started IS NOT NULL) OR (started IS NULL and ended IS NULL));

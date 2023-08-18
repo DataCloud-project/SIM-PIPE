@@ -1,0 +1,45 @@
+{{- if .Values.controller.ingress.enabled -}}
+{{- $fullName := include "simpipeController.fullname" . -}}
+{{- $svcPort := .Values.controller.service.port -}}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ $fullName }}
+  labels:
+    {{- include "simpipeController.labels" . | nindent 4 }}
+  {{- with .Values.controller.ingress.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- if .Values.controller.ingress.className }}
+  ingressClassName: {{ .Values.controller.ingress.className }}
+  {{- end }}
+  {{- if .Values.controller.ingress.tls }}
+  tls:
+    {{- range .Values.controller.ingress.tls }}
+    - hosts:
+        {{- range .hosts }}
+        - {{ . | quote }}
+        {{- end }}
+      secretName: {{ .secretName }}
+    {{- end }}
+  {{- end }}
+  rules:
+    {{- range .Values.controller.ingress.hosts }}
+    - host: {{ .host | quote }}
+      http:
+        paths:
+          {{- range .paths }}
+          - path: {{ .path }}
+            {{- if .pathType }}
+            pathType: {{ .pathType }}
+            {{- end }}
+            backend:
+              service:
+                name: {{ $fullName }}
+                port:
+                  number: {{ $svcPort }}
+          {{- end }}
+    {{- end }}
+{{- end }}

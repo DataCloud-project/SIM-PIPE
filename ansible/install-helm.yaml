@@ -1,0 +1,11 @@
+- name: Install Helm
+  hosts: all
+  roles:
+    - andrewrothstein.kubernetes-helm
+- name: Install Helm Diff plugin
+  hosts: all
+  tasks:
+    - name: Install Helm Diff plugin
+      kubernetes.core.helm_plugin:
+        plugin_path: https://github.com/databus23/helm-diff
+        state: present

@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - dev
   pull_request:
 
 jobs:
@@ -25,6 +26,8 @@ jobs:
 
       - run: npm ci
       - run: npm run lint
+      - run: npm run check
+      - run: npm run find-deadcode
     # TODO enable when we have tests
     # - run: npm run build
     # - run: npm test

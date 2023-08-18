@@ -1,0 +1,101 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  generateName: fake-file-process-
+  labels:
+    simpipe.sct.sintef.no/project: fake-file-process
+spec:
+  entrypoint: main
+  volumes:
+    - name: out
+      emptyDir: {}
+  templates:
+    - name: main
+      steps:
+        - - name: pre-process
+            template: pre-process
+            arguments:
+              artifacts:
+                - name: input_file
+                  raw:
+                    data: |-
+                      Hello World!
+        - - name: process
+            template: process
+            arguments:
+              artifacts:
+                - name: pre_processed_file
+                  from: "{{steps.pre-process.outputs.artifacts.pre_processed_file}}"
+        - - name: analyse
+            template: analyse
+            arguments:
+              artifacts:
+                - name: processed_file
+                  from: "{{steps.process.outputs.artifacts.processed_file}}"
+
+    - name: pre-process
+      inputs:
+        artifacts:
+          - name: input_file
+            path: /app/in/input_file.txt
+            mode: 0644
+      outputs:
+        artifacts:
+          - name: pre_processed_file
+            path: /app/out/input_file.txt.base64.rot13
+            archive:
+              none: {}
+      container:
+        image: "ghcr.io/datacloud-project/example-pre-process:latest"
+        env:
+          - name: MEMORY_BOOST
+            value: "150"
+        volumeMounts:
+          - name: out
+            mountPath: /app/out
+
+    - name: process
+      inputs:
+        artifacts:
+          - name: pre_processed_file
+            path: /app/in/input_file.txt.base64.rot13
+            mode: 0644
+      outputs:
+        artifacts:
+          - name: processed_file
+            path: /app/out/input_file.txt.base64.rot13.processed
+            archive:
+              none: {}
+      container:
+        image: "ghcr.io/datacloud-project/example-process:latest"
+        env:
+          - name: MEMORY_BOOST
+            value: "5000"
+        volumeMounts:
+          - name: out
+            mountPath: /app/out
+
+    - name: analyse
+      inputs:
+        artifacts:
+          - name: processed_file
+            path: /app/in/input_file.txt.base64.rot13.processed
+            mode: 0644
+      outputs:
+        artifacts:
+          - name: analysed_file
+            path: /app/out/input_file.txt.base64.rot13.processed.anayse
+            # todo fix the typo
+            #path: /app/out/input_file.txt.base64.rot13.processed.analyse
+            s3:
+              key: fake-file-analyse.txt
+            archive:
+              none: {}
+      container:
+        image: "ghcr.io/datacloud-project/example-analyse:latest"
+        env:
+          - name: MEMORY_BOOST
+            value: "300"
+        volumeMounts:
+          - name: out
+            mountPath: /app/out

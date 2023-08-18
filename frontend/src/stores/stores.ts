@@ -1,29 +1,23 @@
 import { writable } from 'svelte/store';
 import type { GraphQLClient } from 'graphql-request';
-import type { ResourceUsage, Run, Simulation, Step } from 'src/types';
+import type {
+	Project,
+	DockerRegistryCredential,
+	DryRun,
+	SampleFile,
+	DryRunMetrics
+} from '../types.js';
 
-/**
- * username of the currently logged in user
- */
-export const username = writable('');
-/**
- * indicators to show if a run or step is clicked
- */
-export const showStepsList = writable(false);
-export const showUsages = writable(false);
-/**
- * clicked resource handlers
- */
-export const clickedSimulation = writable<Simulation | undefined>(undefined);
-export const clickedRun = writable<Run | undefined>(undefined);
-export const clickedStep = writable<Step | undefined>(undefined);
-/**
- * extracted resources of clicked items
- */
-export const simulationsList = writable<Simulation[] | undefined>(undefined);
-export const stepsList = writable<Step[]>([]);
-export const selectedResourceUsage = writable<ResourceUsage[]>([]);
-export const selectedLogs = writable('');
-
-// graphql client from graphql-request
 export const graphQLClient = writable<GraphQLClient>();
+
+export const projectsList = writable<Project[] | undefined>();
+export const filesList = writable<SampleFile[] | undefined>();
+export const stepsList = writable<DryRunMetrics[] | undefined>();
+export const selectedProject = writable<Project | undefined>();
+export const dryRunsList = writable<DryRun[] | undefined>();
+export const credentialsList = writable<DockerRegistryCredential[] | undefined>();
+export const clickedProjectId = writable<string>('');
+// need separate list in frontend as argo stores suspended runs in state 'Running'
+export const pausedDryRuns = writable<string[]>([]);
+
+export const username = writable<string>('username');
