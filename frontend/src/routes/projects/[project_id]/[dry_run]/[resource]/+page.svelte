@@ -98,6 +98,12 @@
 	};
 
 	const getDataPromise = getData();
+	function truncateString(word: string, maxLength: number) {
+		if (word.length > maxLength) {
+			return word.slice(0, maxLength) + '..';
+		}
+		return word;
+	}
 	let allStepNames: string[] = [];
 	getDataPromise
 		.then((data: { workflow: any; dryrun: any; metrics: any }) => {
@@ -158,25 +164,25 @@
 							x: cpuTimestamps,
 							y: cpuValues,
 							type: 'scatter',
-							name: node.displayName as string
+							name: truncateString(node.displayName as string, 15)
 						};
 						var memoryUsage = {
 							x: memTimestamps,
 							y: memValues,
 							type: 'scatter',
-							name: node.displayName as string
+							name: truncateString(node.displayName as string, 15)
 						};
 						var networkReceiveBytesTotal = {
 							x: nrcTimestamps,
 							y: nrcValues,
 							type: 'scatter',
-							name: `Received ${node.displayName}`
+							name: `Received ${truncateString(node.displayName as string, 15)}`
 						};
 						var networkTransmitBytesTotal = {
 							x: ntrTimestamps,
 							y: ntrValues,
 							type: 'scatter',
-							name: `Transmitted ${node.displayName}`
+							name: `Transmitted ${truncateString(node.displayName as string, 15)}`
 						};
 
 						if (cpuValues.length > 0) {
@@ -277,7 +283,7 @@
 		for (const stepList of argoWorkflow) {
 			for (const parallellStep of stepList) {
 				const stepName = parallellStep.name;
-				mermaidCode.push(`  ${stepName}["${stepName}"];`);
+				mermaidCode.push(`  ${stepName}["${truncateString(stepName, 12)}"];`);
 				// TODO: replace with actual step click
 				mermaidCode.push(`  click ${stepName} href "javascript:console.log('task ${stepName}');"`);
 				mermaidCode.push(
@@ -317,7 +323,7 @@
 			const dependencies = task.dependencies || [];
 			const depends = task.depends || '';
 
-			mermaidCode.push(`  ${taskName}["${taskName}"];`);
+			mermaidCode.push(`  ${taskName}["${truncateString(taskName, 12)}"];`);
 			// TODO: replace with actual step click
 			mermaidCode.push(`  click ${taskName} href "javascript:console.log('task ${taskName}');"`);
 
@@ -412,14 +418,14 @@
 			<p>Loading metrics...</p>
 			<ProgressBar />
 		{:then}
-			<div class="grid-cols-2 flex">
-				<div class="w-1/2 pt-20 pl-2 pb-2">
+			<div class="grid-cols-2 flex overflow-x-scroll">
+				<div class="w-1/2 pt-20">
 					<Mermaid {diagram} />
-					<div class="pl-10 pb-2">
+					<div class="pl-10">
 						<Legend />
 					</div>
 				</div>
-				<div class=" w-1/2 p-5">
+				<div class="w-1/2 p-1">
 					<table class="table table-interactive">
 						<thead>
 							<tr>
@@ -546,7 +552,8 @@
 </div>
 
 <style>
-	.card.logcard {
+	.card,
+	.logcard {
 		overflow-y: scroll;
 		max-height: fit-content;
 	}
