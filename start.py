@@ -56,6 +56,17 @@ def main():
     if platform.system() == "Darwin":
         start_colima(cpu=args.cpu, memory=args.memory)
     else:
+
+        # Check if we can read the Kubernetes config file
+        try:
+            subprocess.run(
+                ["kubectl", "config", "view"], check=True, capture_output=True
+            )
+        except subprocess.CalledProcessError:
+            print("❌ Unable to read Kubernetes config file.")
+            print("Consider logging out, logging in, and run this script again.")
+            sys.exit(1)
+
         kubernetes_has_started = check_cluster_status(silent=True)
         if not kubernetes_has_started:
             print(

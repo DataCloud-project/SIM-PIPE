@@ -17,8 +17,10 @@ SIM-PIPE generates and simulates a deployment configuration for the final deploy
 If you use MacOS or Debian based Linux, run the following command to install and start SIM-PIPE:
 
 ```bash
+python install.py
 python start.py
 # or
+python3 install.py
 python3 start.py
 ```
 
@@ -27,8 +29,6 @@ python3 start.py
 Use the following command to easily expose the various services of SIM-PIPE:
 ```bash
 python forwarding.py
-# or
-sudo python forwarding.py
 ```
 
 *You can check the advanced installation section for more details on the installation process.*
@@ -78,7 +78,7 @@ The installation will first install Ansible and then Ansible to install everythi
 If you don't with to use the Python installation script, you can also use the Ansible playbooks directly.
 ```bash
 sudo ansible-galaxy install -r ./ansible/requirements.yaml
-sudo ansible-playbook -i localhost, -c local ./ansible/install-everything.yaml
+echo sudo ansible-playbook -i localhost, -c local -e docker_users=[\'$(whoami)\']./ansible/install-everything.yaml
 ```
 
 *If you are already running a Kubernetes cluster on your machine, it may be easier to install SIM-PIPE on it directly using Helm as explained in the following section.*

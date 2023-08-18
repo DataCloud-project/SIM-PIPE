@@ -22,7 +22,7 @@ def check_debian_or_ubuntu():
                 return True
     except FileNotFoundError:
         pass
-    except Exception:
+    except Exception as e:
         print(e)
 
     return False
@@ -42,11 +42,8 @@ def check_kubectl_installed(silent=False):
 
 def check_cluster_status(silent=False):
 
-    should_use_sudo = check_debian_or_ubuntu()
-    command_prefix = ["sudo"] if should_use_sudo else []
-
     result = subprocess.run(
-        command_prefix + ["kubectl", "cluster-info"],
+        ["kubectl", "cluster-info"],
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
     )
@@ -74,7 +71,7 @@ def check_cluster_status(silent=False):
         return False
 
     result = subprocess.run(
-        command_prefix + ["kubectl", "get", "nodes", "--no-headers", "-o", "json"],
+        ["kubectl", "get", "nodes", "--no-headers", "-o", "json"],
         stdout=subprocess.PIPE,
         stderr=subprocess.DEVNULL,
     )
@@ -133,12 +130,8 @@ def check_helm_diff_installed(silent=False):
         return False
 
     try:
-        command = ["helm", "plugin", "list"]
-        if check_debian_or_ubuntu():
-            command = ["sudo"] + command
-
         result = subprocess.run(
-            command,
+            ["helm", "plugin", "list"],
             stdout=subprocess.PIPE,
             stderr=subprocess.DEVNULL,
             check=True,
@@ -242,10 +235,8 @@ def check_tools_installed(silent=False):
 
 def check_simpipe_deployment_presence():
     try:
-        should_use_sudo = check_debian_or_ubuntu()
-        command_prefix = ["sudo"] if should_use_sudo else []
         output = subprocess.check_output(
-            command_prefix + ["helm", "list", "--deployed", "--output", "json"]
+            ["helm", "list", "--deployed", "--output", "json"]
         )
         deployments = json.loads(output)
         for deployment in deployments:
@@ -258,12 +249,8 @@ def check_simpipe_deployment_presence():
 
 
 def check_simpipe_pods_health(silent=False):
-    should_use_sudo = check_debian_or_ubuntu()
-    command_prefix = ["sudo"] if should_use_sudo else []
-
     result = subprocess.run(
-        command_prefix
-        + [
+        [
             "kubectl",
             "get",
             "pods",

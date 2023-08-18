@@ -1,17 +1,16 @@
 #!/usr/bin/env python3
 
+import argparse
+import os
 import platform
+import re
 import subprocess
 import sys
 
-from checklist import (
-    check_ansible_installed,
-    check_debian_or_ubuntu,
-    check_helm_diff_installed,
-    check_if_installed,
-    check_simpipe_deployment_presence,
-    check_tools_installed,
-)
+from checklist import (check_ansible_installed, check_debian_or_ubuntu,
+                       check_helm_diff_installed, check_if_installed,
+                       check_simpipe_deployment_presence,
+                       check_tools_installed)
 
 
 def install_tools_debian():
@@ -26,6 +25,14 @@ def install_tools_debian():
         check=True,
     )
 
+    # Get current username
+    username = os.getlogin()
+    if re.match(r"^[a-zA-Z0-9_-]+$", username) is None:
+        print(
+            "❌ Your username contains invalid characters. Please use only alphanumeric characters and underscores."
+        )
+        sys.exit(1)
+
     # install simpipe using ansible
     print("⏳ Installing simpipe...")
     subprocess.run(
@@ -36,10 +43,17 @@ def install_tools_debian():
             "localhost,",
             "-c",
             "local",
+            "-e",
+            f"docker_users=['{username}']",
             "./ansible/install-everything.yaml",
         ],
         check=True,
     )
+
+    # Install helm diff for the current user
+    # (ansible will install it as well, but for root)
+    if not check_helm_diff_installed(silent=True):
+        install_helm_diff_plugin()
 
 
 def install_tools_mac():
@@ -74,16 +88,12 @@ def install_or_upgrade_simpipe():
     # chart = os.path.join(os.path.dirname(__file__), "charts", "simpipe")
     chart = "oci://ghcr.io/datacloud-project/simpipe"
 
-    should_use_sudo = check_debian_or_ubuntu()
-    command_prefix = ["sudo"] if should_use_sudo else []
-
     if is_deployed:
 
         # check whether the chart needs to be updated using helm diff
         try:
             result = subprocess.run(
-                command_prefix
-                + [
+                [
                     "helm",
                     "diff",
                     "upgrade",
@@ -107,8 +117,7 @@ def install_or_upgrade_simpipe():
             try:
                 print("⬆️ upgrading simpipe")
                 subprocess.check_call(
-                    command_prefix
-                    + ["helm", "upgrade", "simpipe", "--wait", chart, "--no-hooks"]
+                    ["helm", "upgrade", "simpipe", "--wait", chart, "--no-hooks"]
                 )
             except subprocess.CalledProcessError as e:
                 print(f"❌ Error while upgrading simpipe: {e}")
@@ -117,7 +126,7 @@ def install_or_upgrade_simpipe():
         try:
             print("🌈 installing simpipe")
             subprocess.check_call(
-                command_prefix + ["helm", "install", "simpipe", "--wait", chart]
+                ["helm", "install", "simpipe", "--wait", chart]
             )
         except subprocess.CalledProcessError as e:
             print(f"❌ Error while installing simpipe: {e}")
@@ -126,11 +135,8 @@ def install_or_upgrade_simpipe():
 def install_helm_diff_plugin():
     try:
         print("⏳ Installing helm-diff plugin...")
-        should_use_sudo = check_debian_or_ubuntu()
-        command_prefix = ["sudo"] if should_use_sudo else []
         subprocess.run(
-            command_prefix
-            + ["helm", "plugin", "install", "https://github.com/databus23/helm-diff"],
+            ["helm", "plugin", "install", "https://github.com/databus23/helm-diff"],
             check=True,
         )
         print("🎉 helm-diff plugin installed successfully.")
@@ -170,27 +176,46 @@ def install_ansible_via_pip():
         sys.exit(1)
 
 
-def main():
-    if check_tools_installed(silent=True):
-        print("✅ All tools are already installed.")
+def get_current_groups():
+    """Retrieve the group names a user is a member of by parsing /etc/group."""
+    groups = set()
+    username = os.getlogin()
+    with open('/etc/group', 'r') as f:
+        for line in f:
+            parts = line.strip().split(':')
+            if len(parts) < 4:
+                continue
+            group_name, _, _, members = parts
+            if username in members.split(','):
+                groups.add(group_name)
+    return groups
+
+
+def main(force=False):
+    if not force and check_tools_installed(silent=True):
+        print("✅ All tools are installed.")
         return
 
-    os = platform.system()
-    if os == "Linux":
+    system = platform.system()
+    if system == "Linux":
         if check_debian_or_ubuntu():
+            currentuser_groups_before_install = get_current_groups()
             install_tools_debian()
+            currentuser_groups_after_install = get_current_groups()
+            if currentuser_groups_before_install != currentuser_groups_after_install:
+                print("ℹ️ You may need to logout and login again to use SIM-PIPE, Docker, and Kubernetes.")
 
         else:
             print("🫤 Sorry, only Debian or Ubuntu are supported for now.")
             print("You can use the checklist.py script to check your environment,")
             print("and also adapt the Ansible playbooks.")
-    elif os == "Darwin":
+    elif system == "Darwin":
         install_tools_mac()
-    elif os == "Windows":
+    elif system == "Windows":
         print("🫤 Sorry, Windows is not supported. Consider using WSL2.")
     else:
         print(
-            f"🫤 Sorry, this installation script doesn't support your operating system: {os}"
+            f"🫤 Sorry, this installation script doesn't support your operating system: {system}"
         )
         print(
             "You can then run this script again to check whether the tools are installed correctly."
@@ -206,4 +231,13 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(
+        description="Install SIM-PIPE on your local machine."
+    )
+
+    parser.add_argument(
+        "--force", action="store_true", help="Force installation of tools."
+    )
+
+    args = parser.parse_args()
+    main(args.force)

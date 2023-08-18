@@ -10,6 +10,7 @@
       docker: true
       disable:
         - traefik
+      write-kubeconfig-mode: '0640'
   roles:
     - xanmanning.k3s
   tasks:
@@ -19,3 +20,9 @@
         line: 'KUBECONFIG=/etc/rancher/k3s/k3s.yaml'
         state: present
         create: false
+    - name: Set docker group and permissions on the K3S kubeconfig
+      ansible.builtin.file:
+        path: /etc/rancher/k3s/k3s.yaml
+        owner: root
+        group: docker
+        mode: '0640'
