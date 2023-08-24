@@ -409,13 +409,11 @@
 	<h1>
 		<a href="/projects">Projects</a>
 		<span STYLE="font-size:14px">/ </span>
-			<button on:click={() => goto(`/projects/[project_id]/${selectedProject?.id}`)}
-				>{selectedProject?.name}
-			</button>
+		<button on:click={() => goto(`/projects/[project_id]/${selectedProject?.id}`)}
+			>{selectedProject?.name}
+		</button>
 		<span STYLE="font-size:14px">/ </span>
-			<button on:click={() => gotoOverview()}
-				>{data.resource}
-			</button>
+		<button on:click={() => gotoOverview()}>{data.resource} </button>
 		{#if selectStepName != ''}
 			<span STYLE="font-size:14px">/ </span>{selectStepName}
 		{/if}
