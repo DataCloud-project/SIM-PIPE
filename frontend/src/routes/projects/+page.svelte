@@ -10,7 +10,7 @@
 	import { EditIcon, FileTextIcon } from 'svelte-feather-icons';
 	import ModalRenameProject from './modal-rename-project.svelte';
 	import allProjectsQuery from '../../queries/get_all_projects.js';
-	import deleteProjectMutation from '../../queries/delete_project.js';	
+	import deleteProjectMutation from '../../queries/delete_project.js';
 	import allDryRunsQuery from '../../queries/get_all_dryruns';
 	import deleteDryRunMutation from '../../queries/delete_dry_run.js';
 	import deleteWorkflowTemplateMutation from '../../queries/delete_workflow_template.js';
@@ -65,10 +65,16 @@
 						dryRunId: dry_run.id
 					});
 				});
-				const delete_workflow_template = await requestGraphQLClient(deleteWorkflowTemplateMutation, {
-					name: element
-				});
-				const delete_project_response = await requestGraphQLClient(deleteProjectMutation, project_variables);
+				const delete_workflow_template = await requestGraphQLClient(
+					deleteWorkflowTemplateMutation,
+					{
+						name: element
+					}
+				);
+				const delete_project_response = await requestGraphQLClient(
+					deleteProjectMutation,
+					project_variables
+				);
 			});
 		const projectDeletedMessageModal: ModalSettings = {
 			type: 'alert',
