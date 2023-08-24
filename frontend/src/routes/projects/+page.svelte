@@ -4,13 +4,16 @@
 	import ModalSubmitNewProject from './modal-submit-new-project.svelte';
 	import { projectsList, clickedProjectId } from '../../stores/stores.js';
 	import type { Project } from '../../types.js';
-	import allProjectsQuery from '../../queries/get_all_projects.js';
-	import deleteProjectMutation from '../../queries/delete_project.js';
 	import { goto } from '$app/navigation';
 	import Timestamp from './[project_id]/[dry_run]/timestamp.svelte';
 	import { requestGraphQLClient } from '$lib/graphqlUtils';
 	import { EditIcon, FileTextIcon } from 'svelte-feather-icons';
 	import ModalRenameProject from './modal-rename-project.svelte';
+	import allProjectsQuery from '../../queries/get_all_projects.js';
+	import deleteProjectMutation from '../../queries/delete_project.js';	
+	import allDryRunsQuery from '../../queries/get_all_dryruns';
+	import deleteDryRunMutation from '../../queries/delete_dry_run.js';
+	import deleteWorkflowTemplateMutation from '../../queries/delete_workflow_template.js';
 
 	const getProjectsList = async (): Promise<Project[]> => {
 		const response: { projects: Project[] } = await requestGraphQLClient(allProjectsQuery);
@@ -53,10 +56,19 @@
 		Object.keys(checkboxes)
 			.filter((item) => checkboxes[item])
 			.forEach(async (element) => {
-				const variables = {
+				const project_variables = {
 					projectId: element
 				};
-				const response = await requestGraphQLClient(deleteProjectMutation, variables);
+				const response_dry_runs = await requestGraphQLClient(allDryRunsQuery, project_variables);
+				response_dry_runs.project.dryRuns.forEach(async (dry_run) => {
+					const response_delete_dry_run = await requestGraphQLClient(deleteDryRunMutation, {
+						dryRunId: dry_run.id
+					});
+				});
+				const delete_workflow_template = await requestGraphQLClient(deleteWorkflowTemplateMutation, {
+					name: element
+				});
+				const delete_project_response = await requestGraphQLClient(deleteProjectMutation, project_variables);
 			});
 		const projectDeletedMessageModal: ModalSettings = {
 			type: 'alert',

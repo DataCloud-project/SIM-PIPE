@@ -16,7 +16,7 @@
 
 	export let data;
 
-	const getProjectDetails = async (): Promise<Project> => {
+	export const getProjectDetails = async (): Promise<Project> => {
 		const variables = { projectId: data.dry_run };
 		const response: { project: Project } = await requestGraphQLClient(allDryRunsQuery, variables);
 		return response.project;
