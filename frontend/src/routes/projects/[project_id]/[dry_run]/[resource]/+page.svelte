@@ -17,6 +17,7 @@
 	import Legend from './Legend.svelte';
 	import { ZoomInIcon } from 'svelte-feather-icons';
 	import { CodeBlock } from '@skeletonlabs/skeleton';
+	import { selectedProjectName, selectedDryRunName } from '../../../../../stores/stores';
 
 	export let data;
 	let workflow: { workflowTemplates: { argoWorkflowTemplate: { spec: { templates: any[] } } }[] };
@@ -70,6 +71,7 @@
 			dryRunId: data.resource
 		});
 		selectedProject = selectedProjectResponse.dryRun?.project;
+		selectedProjectName.set(selectedProject?.name)
 		const workflow_variables = {
 			// name: selectedProject?.name
 			projectId: selectedProject?.id
@@ -77,6 +79,7 @@
 		const dryrun_variables = {
 			dryRunId: data.resource
 		};
+		selectedDryRunName.set(data.resource)
 		const workflow_response = (await requestGraphQLClient(getProjectQuery, workflow_variables))
 			.project;
 		const dryrun_response: { dryRun: DryRun } = await requestGraphQLClient(
@@ -109,6 +112,7 @@
 	let allStepNames: string[] = [];
 	getDataPromise
 		.then((data: { workflow: any; dryrun: any; metrics: any }) => {
+			selectedProjectName.set
 			workflow = data.workflow;
 			dryrun_results = data.dryrun;
 			data.metrics?.forEach(
@@ -398,6 +402,8 @@
 	onMount(async () => {
 		await getDataPromise;
 		buildDiagram();
+		//console.log($selectedProjectName)
+		//console.log($selectedDryRunName)
 	});
 	$: selectedStep = selectStepName;
 	$: reactiveStepsList = $stepsList?.slice(1);
@@ -434,7 +440,7 @@
 		{#if selectStepName != ''}
 			<span STYLE="font-size:14px">/ </span>{selectStepName}
 		{/if}
-		<button type="button" class="btn-icon btn-icon-sm" on:click={() => goto(`/projects/[project_id]/${selectedProject?.id}/${selectedProject?.name}/metrics`)}><ZoomInIcon /></button>
+		<button type="button" class="btn-icon btn-icon-sm" on:click={() => goto(`/projects/[project_id]/${data.resource}/${data.resource}/cpu`)}><ZoomInIcon /></button>
 	</h1>
 		{#await getDataPromise}
 			<p>Loading metrics...</p>
