@@ -166,7 +166,7 @@
 						<th>Name</th>
 						<th>Created</th>
 						<th>Dry runs</th>
-						<th>Template</th>
+						<th style="text-align:center">Template</th>
 						<th />
 					</tr>
 				</thead>
@@ -190,11 +190,11 @@
 							</td>
 							<!-- svelte-ignore a11y-click-events-have-key-events -->
 							<td style="width:15%" on:click={(event) => showTemplate(event, project)}>
-								<div>
+								<div class="grid grid-rows-2 grid-cols-1 justify-items-center">
 									<div><FileTextIcon size="1x" /></div>
 									<div>
 										<p class="no-underline hover:underline">show</p>
-										<div />
+									<div />
 									</div>
 								</div></td
 							>
