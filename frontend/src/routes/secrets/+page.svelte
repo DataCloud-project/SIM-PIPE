@@ -70,64 +70,63 @@
 </script>
 
 <!-- Page Header -->
-<div class="container p-5">
-	<h1>Secrets</h1>
-	{#await credentialsPromise}
-		<p style="font-size:20px;">Loading credentials...</p>
-		<ProgressBar />
-	{:then credentialsList}
-		<div class="flex flex-row justify-end p-5 space-x-1">
-			<div>
-				<button
-					type="button"
-					class="btn btn-sm variant-filled"
-					on:click={() => modalStore.trigger(modal)}
-				>
-					<span>Create</span>
-				</button>
+<div class="flex w-full content-center p-10">
+	<div class="table-container">
+		{#await credentialsPromise}
+			<p style="font-size:20px;">Loading credentials...</p>
+			<ProgressBar />
+		{:then credentialsList}
+			<h1>Secrets</h1>
+			<div class="flex flex-row justify-end p-5 space-x-1">
+				<div>
+					<button
+						type="button"
+						class="btn btn-sm variant-filled"
+						on:click={() => modalStore.trigger(modal)}
+					>
+						<span>Create</span>
+					</button>
+				</div>
+				<div>
+					<button
+						type="button"
+						class="btn btn-sm variant-filled-warning"
+						on:click={() => onDeleteSelected()}
+					>
+						<span>Delete</span>
+					</button>
+				</div>
 			</div>
-			<div>
-				<button
-					type="button"
-					class="btn btn-sm variant-filled-warning"
-					on:click={() => onDeleteSelected()}
-				>
-					<span>Delete</span>
-				</button>
-			</div>
-		</div>
-
-		<div class="table-container">
-			<table class="table table-interactive">
-				<caption hidden>Secrets</caption>
-				<thead>
-					<tr>
-						<th />
-						<th>Name</th>
-						<th>Username</th>
-						<th>Server</th>
-					</tr>
-				</thead>
-				<tbody>
-					{#each reactiveCredentialsList || [] as secret}
-						<tr id="clickable_row">
-							<td style="width:10px">
-								<input
-									type="checkbox"
-									class="checkbox"
-									bind:checked={checkboxes[secret.name]}
-									on:click={(event) => handleCheckboxClick(event)}
-								/>
-							</td>
-							<td style="width:60%">{secret.name}</td>
-							<td style="width:20%">{secret.username}</td>
-							<td style="width:20%">{secret.server}</td>
+				<table class="table table-interactive">
+					<caption hidden>Secrets</caption>
+					<thead>
+						<tr>
+							<th />
+							<th>Name</th>
+							<th>Username</th>
+							<th>Server</th>
 						</tr>
-					{/each}
-				</tbody>
-			</table>
-		</div>
-	{/await}
+					</thead>
+					<tbody>
+						{#each reactiveCredentialsList || [] as secret}
+							<tr id="clickable_row">
+								<td style="width:10px">
+									<input
+										type="checkbox"
+										class="checkbox"
+										bind:checked={checkboxes[secret.name]}
+										on:click={(event) => handleCheckboxClick(event)}
+									/>
+								</td>
+								<td style="width:60%">{secret.name}</td>
+								<td style="width:20%">{secret.username}</td>
+								<td style="width:20%">{secret.server}</td>
+							</tr>
+						{/each}
+					</tbody>
+				</table>
+		{/await}
+	</div>
 </div>
 
 <Modal />

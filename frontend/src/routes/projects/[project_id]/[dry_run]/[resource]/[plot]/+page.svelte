@@ -1,17 +1,20 @@
 <script lang='ts'>
+	import { ProgressBar } from '@skeletonlabs/skeleton';	
     import { selectedProjectName, selectedDryRunName, selectedMetricsType } from '../../../../../../stores/stores';
     import { goto } from '$app/navigation'
 	import { format } from 'date-fns';    
-    import { requestGraphQLClient } from '../../../../../../utils/graphql-client';
+    import { requestGraphQLClient } from '$lib/graphqlUtils';
     import getDryRunAllMetrics from '../../../../../../queries/get_dry_run_all_metrics_no_logs';;
 
     
     selectedMetricsType.set('cpu') // TODO: when specifying specific metric?
 
+	const datefmt = 'yyyy-MM-dd HH:mm:ss';
+
 
 	const getMetricsResponse = async () => {
 		const dryrun_variables = {
-			dryRunId: selectedDryRunName
+			dryRunId: $selectedDryRunName
 		};
         const metrics_response: { dryRun: { nodes: [] } } = await requestGraphQLClient(
             getDryRunAllMetrics, 
@@ -104,39 +107,19 @@
 						};
 
 						if (cpuValues.length > 0) {
-							const temp = Math.max(...cpuValues);
-							if (temp > maxValues['CPU'].value) {
-								maxValues['CPU'].value = temp;
-							}
-							showMax = true;
 							cpuData[node.displayName as string] = cpuUsage;
 						}
 
 						if (memValues.length > 0) {
-							const temp = Math.max(...memValues);
-							if (temp > maxValues['Memory'].value) {
-								maxValues['Memory'].value = temp;
-							}
-							showMax = true;
 							memoryData[node.displayName as string] = memoryUsage;
 						}
 
 						if (nrcValues.length > 0) {
-							const temp = Math.max(...nrcValues);
-							if (temp > maxValues['Network received'].value) {
-								maxValues['Network received'].value = temp;
-							}
-							showMax = true;
 							if (!networkDataCombined[node.displayName as string])
 								networkDataCombined[node.displayName as string] = [];
 							networkDataCombined[node.displayName as string].push(networkReceiveBytesTotal);
 						}
 						if (ntrValues.length > 0) {
-							const temp = Math.max(...ntrValues);
-							if (temp > maxValues['Network transferred'].value) {
-								maxValues['Network transferred'].value = temp;
-							}
-							showMax = true;
 							if (!networkDataCombined[node.displayName as string])
 								networkDataCombined[node.displayName as string] = [];
 							networkDataCombined[node.displayName as string].push(networkTransmitBytesTotal);
@@ -182,17 +165,24 @@
 
 </script>
 
-<div class="container p-5">
-	<h1>
-		<a href="/projects">Projects</a>
-		<span STYLE="font-size:14px">/ </span>
-		<button on:click={() => goto(`/projects/[project_id]/${$selectedProjectName}`)}
-			>{$selectedProjectName}
-		</button>
-		<span STYLE="font-size:14px">/ </span>
-		<button on:click={() => goto(`/projects/[project_id]/${$selectedProjectName}/${$selectedDryRunName}`)} 
-            >{$selectedDryRunName}
-        </button>
-        <span STYLE="font-size:14px">/ {$selectedMetricsType}</span>
-	</h1>
+<div class="flex w-full content-center p-10">
+	<div class="table-container">
+		{#await getDataPromise}
+			<p>Loading metrics...</p>
+			<ProgressBar />
+		{:then}
+			<h1>
+				<a href="/projects">Projects</a>
+				<span STYLE="font-size:14px">/ </span>
+				<button on:click={() => goto(`/projects/[project_id]/${$selectedProjectName}`)}
+					>{$selectedProjectName}
+				</button>
+				<span STYLE="font-size:14px">/ </span>
+				<button on:click={() => goto(`/projects/[project_id]/${$selectedProjectName}/${$selectedDryRunName}`)} 
+					>{$selectedDryRunName}
+				</button>
+				<span STYLE="font-size:14px">/ {$selectedMetricsType}</span>
+			</h1>
+		{/await}		
+	</div>
 </div>

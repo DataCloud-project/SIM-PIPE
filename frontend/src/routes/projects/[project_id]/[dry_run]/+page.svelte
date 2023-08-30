@@ -116,7 +116,8 @@
 </script>
 
 <!-- Page Header -->
-<div class="container p-5">
+<div class="flex w-full content-center p-10">
+	<div class="table-container">
 	{#await projectDetailsPromise}
 		<p style="font-size:20px;">Loading all dry runs ....</p>
 		<ProgressBar />
@@ -150,7 +151,7 @@
 			</div>
 		</div>
 		{#if reactiveProjectDetails?.dryRuns?.length || 0 > 0}
-			<div class="table-container">
+			<!--<div class="table-container"> -->
 				<table class="table table-interactive">
 					<caption hidden>Dry runs</caption>
 					<thead>
@@ -196,9 +197,10 @@
 						{/each}
 					</tbody>
 				</table>
-			</div>
+			<!--</div> -->
 		{/if}
 	{/await}
+	</div>
 </div>
 
 {#if $modalStore[0]}

@@ -131,13 +131,13 @@
 </script>
 
 <!-- svelte-ignore missing-declaration -->
-<div class="container p-5">
-	<h1>Projects</h1>
-	<div class="table-container p-5">
+<div class="flex w-full content-center p-10">
+	<div class="table-container">
 		{#await projectsPromise}
 			<p style="font-size:20px;">Loading projects...</p>
 			<ProgressBar />
 		{:then projectsList}
+			<h1>Projects</h1>
 			<div class="flex flex-row justify-end p-5 space-x-1">
 				<div>
 					<button

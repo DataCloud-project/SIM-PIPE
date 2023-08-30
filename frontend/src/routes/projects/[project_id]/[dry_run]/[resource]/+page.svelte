@@ -428,24 +428,25 @@
 		
 </script>
 
-<div class="container p-5">
-	<h1>
-		<a href="/projects">Projects</a>
-		<span STYLE="font-size:14px">/ </span>
-		<button on:click={() => goto(`/projects/[project_id]/${selectedProject?.id}`)}
-			>{selectedProject?.name}
-		</button>
-		<span STYLE="font-size:14px">/ </span>
-		<button on:click={() => gotoOverview()}>{data.resource} </button>
-		{#if selectStepName != ''}
-			<span STYLE="font-size:14px">/ </span>{selectStepName}
-		{/if}
-		<button type="button" class="btn-icon btn-icon-sm" on:click={() => goto(`/projects/[project_id]/${data.resource}/${data.resource}/cpu`)}><ZoomInIcon /></button>
-	</h1>
+<div class="flex w-full content-center p-10">
+	<div class="table-container">
 		{#await getDataPromise}
 			<p>Loading metrics...</p>
 			<ProgressBar />
 		{:then}
+			<h1>
+				<a href="/projects">Projects</a>
+				<span STYLE="font-size:14px">/ </span>
+				<button on:click={() => goto(`/projects/[project_id]/${selectedProject?.id}`)}
+					>{selectedProject?.name}
+				</button>
+				<span STYLE="font-size:14px">/ </span>
+				<button on:click={() => gotoOverview()}>{data.resource} </button>
+				{#if selectStepName != ''}
+					<span STYLE="font-size:14px">/ </span>{selectStepName}
+				{/if}
+				<button type="button" class="btn-icon btn-icon-sm" on:click={() => goto(`/projects/[project_id]/${data.resource}/${data.resource}/cpu`)}><ZoomInIcon /></button>
+			</h1>		
 			<div class="grid grid-flow-rows grid-cols-1 items-center w-full p-5">
 					<div>
 					<Mermaid {diagram} />
@@ -596,6 +597,7 @@
 				</div>
 			</div>
 		{/await}
+	</div>
 </div>
 
 
