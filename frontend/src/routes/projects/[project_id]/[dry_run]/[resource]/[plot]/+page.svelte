@@ -4,20 +4,50 @@
     import { goto } from '$app/navigation'
 	import { format } from 'date-fns';    
     import { requestGraphQLClient } from '$lib/graphqlUtils';
-    import getDryRunAllMetrics from '../../../../../../queries/get_dry_run_all_metrics_no_logs';;
+    //import getDryRunAllMetrics from '../../../../../../queries/get_dry_run_all_metrics_no_logs';
+	import Plot from '../Plot.svelte';;
+	import { gql } from 'graphql-request';
 
-    
     selectedMetricsType.set('cpu') // TODO: when specifying specific metric?
 
 	const datefmt = 'yyyy-MM-dd HH:mm:ss';
 
+	function buildMetricQuery(metrics: string[]) {
+		let metric_string = ``;
+		for (let i=0; i< metrics.length; i++) {
+			metric_string += `${metrics[i]} {
+			timestamp
+			value
+			}
+		`
+		};
+		let metricq = `query getDryRunAllMetrics($dryRunId: String!) {
+		dryRun(dryRunId: $dryRunId) {
+			nodes {
+				... on DryRunNodePod {
+					displayName
+					startedAt
+					duration
+					metrics {
+						${metric_string}
+						}
+					}
+				}
+			}
+		}
+		`
+		return metricq;
+	}
 
 	const getMetricsResponse = async () => {
+		const queryString = buildMetricQuery(['cpuUsageSecondsTotal', 'memoryUsageBytes', 'networkReceiveBytesTotal', 'networkTransmitBytesTotal']);
+		console.log(queryString);
+		const metricsQuery = gql`${queryString}`;
 		const dryrun_variables = {
 			dryRunId: $selectedDryRunName
 		};
         const metrics_response: { dryRun: { nodes: [] } } = await requestGraphQLClient(
-            getDryRunAllMetrics, 
+            metricsQuery, 
             dryrun_variables
         )
         return metrics_response?.dryRun?.nodes;
@@ -25,18 +55,24 @@
 
 	const getDataPromise = getMetricsResponse();
 
-    // metrics types
-	var cpuData: { [key: string]: { x: string[]; y: number[]; type: string; name: string } } = {};
-	var memoryData: { [key: string]: { x: string[]; y: number[]; type: string; name: string } } = {};
-	var networkDataCombined: {
-		[key: string]: { x: string[]; y: number[]; type: string; name: string }[];
-	} = {};    
+    // metrics
+	interface metrics { x: string[]; y: number[]; type: string; name: string };
+	interface allMetrics { [metric: string] : metrics[] };
+
+	const metric_metadata = {
+		'cpu': {'ylabel': 'cpu usage'},
+		'memory': {'ylabel': 'bytes'},
+		'network': {'ylabel': 'bytes'}
+	}
+	var metricsData: allMetrics = {};
+	Object.keys(metric_metadata).forEach((metric) => {
+		metricsData[metric] = [];
+	});
 
 	getDataPromise
 		.then((data: any) => {
 			data?.forEach(
 				(node: {
-					log: string;
 					displayName: string | number;
 					startedAt: string;
 					metrics: {
@@ -44,9 +80,9 @@
 						memoryUsageBytes: any[];
 						networkReceiveBytesTotal: any[];
 						networkTransmitBytesTotal: any[];
+						cpuSystemUsageSecondsTotal: any[];
 					};
 				}) => {
-					// TODO: make more efficient if data missing?
 					if (isEmpty(node) === false) {
 						let cpuTimestamps = timestampsToDatetime(
 							node.startedAt,
@@ -71,7 +107,6 @@
 						let cpuValues = node.metrics.cpuUsageSecondsTotal.map((item: { value: string }) =>
 							Number(item.value)
 						);
-
 						let memValues = node.metrics.memoryUsageBytes.map((item: { value: string }) =>
 							Number(item.value)
 						);
@@ -105,24 +140,17 @@
 							type: 'scatter',
 							name: `Transmitted ${truncateString(node.displayName as string, 15)}`
 						};
-
 						if (cpuValues.length > 0) {
-							cpuData[node.displayName as string] = cpuUsage;
+							metricsData['cpu'].push(cpuUsage);
 						}
-
 						if (memValues.length > 0) {
-							memoryData[node.displayName as string] = memoryUsage;
+							metricsData['memory'].push(memoryUsage);
 						}
-
 						if (nrcValues.length > 0) {
-							if (!networkDataCombined[node.displayName as string])
-								networkDataCombined[node.displayName as string] = [];
-							networkDataCombined[node.displayName as string].push(networkReceiveBytesTotal);
+							metricsData['network'].push(networkReceiveBytesTotal);
 						}
-						if (ntrValues.length > 0) {
-							if (!networkDataCombined[node.displayName as string])
-								networkDataCombined[node.displayName as string] = [];
-							networkDataCombined[node.displayName as string].push(networkTransmitBytesTotal);
+						if (ntrValues.length > 0) {							
+							metricsData['network'].push(networkTransmitBytesTotal);
 						}
 					}
 				}
@@ -166,7 +194,7 @@
 </script>
 
 <div class="flex w-full content-center p-10">
-	<div class="table-container">
+	<div class="w-full h-screen">
 		{#await getDataPromise}
 			<p>Loading metrics...</p>
 			<ProgressBar />
@@ -183,6 +211,22 @@
 				</button>
 				<span STYLE="font-size:14px">/ {$selectedMetricsType}</span>
 			</h1>
+			<div class="grid grid-cols-2 gap-4 h-full w-full">
+				{#each Object.keys(metricsData) as metric}
+					<div class="flex card p-2">
+						<div class="place-self-center h-full w-full">
+							<Plot 
+								data={metricsData[metric]}
+								plot_title={metric}
+								xaxis_title='time'
+								yaxis_title={metric_metadata[metric].ylabel}
+							 />	
+						</div>
+					</div>
+				{/each}
+			</div>
 		{/await}		
 	</div>
 </div>
+
+

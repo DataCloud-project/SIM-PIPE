@@ -25,6 +25,10 @@ const getDryRunNoLogsMetricsQuery = gql`
 							timestamp
 							value
 						}
+						cpuSystemSecondsTotal {
+							timestamp
+							value
+						}
 					}
 				}
 			}
