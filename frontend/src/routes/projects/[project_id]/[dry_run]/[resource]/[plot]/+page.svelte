@@ -12,6 +12,18 @@
 
 	const datefmt = 'yyyy-MM-dd HH:mm:ss';
 
+    // metrics
+	interface metrics { x: string[]; y: number[]; type: string; name: string };
+	interface allMetrics { [metric: string] : metrics[] };
+
+	const metric_metadata = {
+		'cpu': {'metric_sources': ['cpuUsageSecondsTotal'], 'ylabel': 'cpu usage'},
+		'memory': {'metric_sources': ['memoryUsageBytes'], 'ylabel': 'bytes'},
+		'network': {'metric_sources': ['networkReceiveBytesTotal', 'networkTransmitBytesTotal'], 'ylabel': 'bytes'}
+	}
+	var metricsData: allMetrics = {};
+	var metricSources: string[] = [];
+
 	function buildMetricQuery(metrics: string[]) {
 		let metric_string = ``;
 		for (let i=0; i< metrics.length; i++) {
@@ -40,7 +52,14 @@
 	}
 
 	const getMetricsResponse = async () => {
-		const queryString = buildMetricQuery(['cpuUsageSecondsTotal', 'memoryUsageBytes', 'networkReceiveBytesTotal', 'networkTransmitBytesTotal']);
+		Object.keys(metric_metadata).forEach((metric) => {
+			metricsData[metric] = [];
+			metric_metadata[metric]['metric_sources'].forEach((metric_source) => {
+				metricSources.push(metric_source);
+			});
+		});
+		console.log(metricSources);
+		const queryString = buildMetricQuery(metricSources);
 		console.log(queryString);
 		const metricsQuery = gql`${queryString}`;
 		const dryrun_variables = {
@@ -54,20 +73,6 @@
     };
 
 	const getDataPromise = getMetricsResponse();
-
-    // metrics
-	interface metrics { x: string[]; y: number[]; type: string; name: string };
-	interface allMetrics { [metric: string] : metrics[] };
-
-	const metric_metadata = {
-		'cpu': {'ylabel': 'cpu usage'},
-		'memory': {'ylabel': 'bytes'},
-		'network': {'ylabel': 'bytes'}
-	}
-	var metricsData: allMetrics = {};
-	Object.keys(metric_metadata).forEach((metric) => {
-		metricsData[metric] = [];
-	});
 
 	getDataPromise
 		.then((data: any) => {
