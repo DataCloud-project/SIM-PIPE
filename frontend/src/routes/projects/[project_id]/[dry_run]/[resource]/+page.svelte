@@ -614,14 +614,4 @@
 		max-height: 50vh;
 		max-height: fit-content;
 	}
-	pre {
-		padding: 0 6px;
-		box-sizing: border-box;
-		overflow-x: hidden;
-		overflow-y: scroll;
-		max-height: 50vh;
-		min-width: 98%;
-		max-width: 98%;
-		white-space: pre-wrap;
-	}
 </style>
