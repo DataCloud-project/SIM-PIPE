@@ -17,9 +17,12 @@
 	interface allMetrics { [metric: string] : metrics[] };
 
 	const metric_metadata = {
-		'cpu': {'metric_sources': ['cpuUsageSecondsTotal'], 'ylabel': 'cpu usage'},
-		'memory': {'metric_sources': ['memoryUsageBytes'], 'ylabel': 'bytes'},
-		'network': {'metric_sources': ['networkReceiveBytesTotal', 'networkTransmitBytesTotal'], 'ylabel': 'bytes'}
+		'cpu': {'metric_sources': 
+			['cpuUsageSecondsTotal'], 'ylabel': 'cpu usage', 'type': 'scatter'},
+		'memory': {'metric_sources': 
+			['memoryUsageBytes'], 'ylabel': 'bytes', 'type': 'scatter'},
+		'network': {'metric_sources': 
+			['networkReceiveBytesTotal', 'networkTransmitBytesTotal'], 'ylabel': 'bytes', 'type': 'scatter'}
 	}
 	var metricsData: allMetrics = {};
 	var metricSources: string[] = [];
@@ -58,9 +61,9 @@
 				metricSources.push(metric_source);
 			});
 		});
-		console.log(metricSources);
+		//console.log(metricSources);
 		const queryString = buildMetricQuery(metricSources);
-		console.log(queryString);
+		//console.log(queryString);
 		const metricsQuery = gql`${queryString}`;
 		const dryrun_variables = {
 			dryRunId: $selectedDryRunName
@@ -80,84 +83,31 @@
 				(node: {
 					displayName: string | number;
 					startedAt: string;
-					metrics: {
-						cpuUsageSecondsTotal: any[];
-						memoryUsageBytes: any[];
-						networkReceiveBytesTotal: any[];
-						networkTransmitBytesTotal: any[];
-						cpuSystemUsageSecondsTotal: any[];
-					};
+					metrics: {};
 				}) => {
 					if (isEmpty(node) === false) {
-						let cpuTimestamps = timestampsToDatetime(
-							node.startedAt,
-							node.metrics.cpuUsageSecondsTotal.map((item: { timestamp: any }) => item.timestamp)
-						);
-						let memTimestamps = timestampsToDatetime(
-							node.startedAt,
-							node.metrics.memoryUsageBytes.map((item: { timestamp: any }) => item.timestamp)
-						);
-						let nrcTimestamps = timestampsToDatetime(
-							node.startedAt,
-							node.metrics.networkReceiveBytesTotal.map(
-								(item: { timestamp: any }) => item.timestamp
-							)
-						);
-						let ntrTimestamps = timestampsToDatetime(
-							node.startedAt,
-							node.metrics.networkTransmitBytesTotal.map(
-								(item: { timestamp: any }) => item.timestamp
-							)
-						);
-						let cpuValues = node.metrics.cpuUsageSecondsTotal.map((item: { value: string }) =>
-							Number(item.value)
-						);
-						let memValues = node.metrics.memoryUsageBytes.map((item: { value: string }) =>
-							Number(item.value)
-						);
-						let nrcValues = node.metrics.networkReceiveBytesTotal.map((item: { value: string }) =>
-							Number(item.value)
-						);
-						let ntrValues = node.metrics.networkTransmitBytesTotal.map((item: { value: string }) =>
-							Number(item.value)
-						);
-						var cpuUsage = {
-							x: cpuTimestamps,
-							y: cpuValues,
-							type: 'scatter',
-							name: truncateString(node.displayName as string, 15)
-						};
-						var memoryUsage = {
-							x: memTimestamps,
-							y: memValues,
-							type: 'scatter',
-							name: truncateString(node.displayName as string, 15)
-						};
-						var networkReceiveBytesTotal = {
-							x: nrcTimestamps,
-							y: nrcValues,
-							type: 'scatter',
-							name: `Received ${truncateString(node.displayName as string, 15)}`
-						};
-						var networkTransmitBytesTotal = {
-							x: ntrTimestamps,
-							y: ntrValues,
-							type: 'scatter',
-							name: `Transmitted ${truncateString(node.displayName as string, 15)}`
-						};
-						if (cpuValues.length > 0) {
-							metricsData['cpu'].push(cpuUsage);
-						}
-						if (memValues.length > 0) {
-							metricsData['memory'].push(memoryUsage);
-						}
-						if (nrcValues.length > 0) {
-							metricsData['network'].push(networkReceiveBytesTotal);
-						}
-						if (ntrValues.length > 0) {							
-							metricsData['network'].push(networkTransmitBytesTotal);
-						}
-					}
+						Object.keys(metric_metadata).forEach((metric) => {
+							let metric_sources = metric_metadata[metric]['metric_sources'];
+							metric_sources.forEach((metric_source) => {
+								let timestamps = timestampsToDatetime(
+									node.startedAt,
+									node.metrics[metric_source].map((item: { timestamp: any }) => item.timestamp)
+								);
+								let values = node.metrics[metric_source].map((item: { value: string }) =>
+									Number(item.value)
+								);
+								var metric_data = {
+									x: timestamps,
+									y: values,
+									type: metric_metadata[metric]['type'],
+									name: truncateString(node.displayName as string, 15)
+								};
+								if (values.length > 0) {
+									metricsData[metric].push(metric_data);
+								};
+							});
+						});
+					};
 				}
 			);
 		})
