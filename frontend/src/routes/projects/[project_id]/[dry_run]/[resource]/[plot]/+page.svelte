@@ -8,9 +8,9 @@
 	import Plot from '../Plot.svelte';;
 	import { gql } from 'graphql-request';
 
-    selectedMetricsType.set('cpu') // TODO: when specifying specific metric?
-
 	const datefmt = 'yyyy-MM-dd HH:mm:ss';
+	const defaultMetricsType = 'All';
+    selectedMetricsType.set(defaultMetricsType);
 
     // metrics
 	interface metrics { x: string[]; y: number[]; type: string; name: string };
@@ -19,6 +19,8 @@
 	const metric_metadata = {
 		'cpu': {'metric_sources': 
 			['cpuUsageSecondsTotal'], 'ylabel': 'cpu usage', 'type': 'scatter'},
+		'cpu-system': {'metric_sources': 
+			['cpuSystemSecondsTotal'], 'ylabel': 'cpu usage system', 'type': 'scatter'},			
 		'memory': {'metric_sources': 
 			['memoryUsageBytes'], 'ylabel': 'bytes', 'type': 'scatter'},
 		'network': {'metric_sources': 
@@ -166,20 +168,44 @@
 				</button>
 				<span STYLE="font-size:14px">/ {$selectedMetricsType}</span>
 			</h1>
-			<div class="grid grid-cols-2 gap-4 h-full w-full">
-				{#each Object.keys(metricsData) as metric}
-					<div class="flex card p-2">
-						<div class="place-self-center h-full w-full">
-							<Plot 
-								data={metricsData[metric]}
-								plot_title={metric}
-								xaxis_title='time'
-								yaxis_title={metric_metadata[metric].ylabel}
-							 />	
-						</div>
-					</div>
-				{/each}
+			<div class="flex flex-row justify-end p-5 space-x-1">
+				<div>
+					<label class="label">
+						<select class="select" bind:value={$selectedMetricsType}>
+							<option value={defaultMetricsType}>{defaultMetricsType}</option>
+							{#each Object.keys(metric_metadata) as metric}
+								<option value={metric}>{metric}</option>
+							{/each}
+					</label>
+				</div>
 			</div>
+			{#if $selectedMetricsType === 'All'}
+				<div class="grid grid-cols-2 gap-4 h-full w-full">
+					{#each Object.keys(metricsData) as metric}
+						<div class="flex card p-2">
+							<div class="place-self-center h-full w-full">
+								<Plot 
+									data={metricsData[metric]}
+									plot_title={metric}
+									xaxis_title='time'
+									yaxis_title={metric_metadata[metric].ylabel}
+								/>	
+							</div>
+						</div>
+					{/each}
+				</div>
+			{:else}
+				<div class="flex card p-2 h-5/6 w-full">
+					<div class="place-self-center h-full w-full">
+						<Plot 
+							data={metricsData[$selectedMetricsType]}
+							plot_title={$selectedMetricsType}
+							xaxis_title='time'
+							yaxis_title={metric_metadata[$selectedMetricsType].ylabel}
+						/>	
+					</div>
+				</div>
+			{/if}
 		{/await}		
 	</div>
 </div>
