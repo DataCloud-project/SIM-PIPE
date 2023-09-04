@@ -15,6 +15,9 @@
 	import { colors, maxValuesFormat } from './Config.js';
 	import { stepsList } from '../../../../../stores/stores';
 	import Legend from './Legend.svelte';
+	import { ZoomInIcon } from 'svelte-feather-icons';
+	import { CodeBlock } from '@skeletonlabs/skeleton';
+	import { selectedProjectName, selectedDryRunName } from '../../../../../stores/stores';
 
 	export let data;
 	let workflow: { workflowTemplates: { argoWorkflowTemplate: { spec: { templates: any[] } } }[] };
@@ -68,6 +71,7 @@
 			dryRunId: data.resource
 		});
 		selectedProject = selectedProjectResponse.dryRun?.project;
+		selectedProjectName.set(selectedProject?.name);
 		const workflow_variables = {
 			// name: selectedProject?.name
 			projectId: selectedProject?.id
@@ -75,6 +79,7 @@
 		const dryrun_variables = {
 			dryRunId: data.resource
 		};
+		selectedDryRunName.set(data.resource);
 		const workflow_response = (await requestGraphQLClient(getProjectQuery, workflow_variables))
 			.project;
 		const dryrun_response: { dryRun: DryRun } = await requestGraphQLClient(
@@ -107,6 +112,7 @@
 	let allStepNames: string[] = [];
 	getDataPromise
 		.then((data: { workflow: any; dryrun: any; metrics: any }) => {
+			selectedProjectName.set;
 			workflow = data.workflow;
 			dryrun_results = data.dryrun;
 			data.metrics?.forEach(
@@ -125,6 +131,7 @@
 					if (isEmpty(node) === false) {
 						allStepNames.push(node.displayName as string);
 						if (node.log) {
+							//logs[node.displayName] = node.log;
 							logs[node.displayName] = node.log;
 						}
 						let cpuTimestamps = timestampsToDatetime(
@@ -395,6 +402,8 @@
 	onMount(async () => {
 		await getDataPromise;
 		buildDiagram();
+		//console.log($selectedProjectName)
+		//console.log($selectedDryRunName)
 	});
 	$: selectedStep = selectStepName;
 	$: reactiveStepsList = $stepsList?.slice(1);
@@ -403,34 +412,52 @@
 	function gotoOverview() {
 		selectedStep = '';
 	}
+
+	function getPartLogs(stepName: string, nmaxlinelength: number) {
+		let steplogs = logs[stepName];
+		let result = [];
+		for (let i = 0; i < steplogs.length; i++) {
+			if (steplogs[i].length > nmaxlinelength)
+				result.push(steplogs[i].slice(0, nmaxlinelength) + '...');
+			else result.push(steplogs[i]);
+			result.push();
+		}
+		return result.join('\n');
+	}
 </script>
 
-<div class="container p-5">
-	<h1>
-		<a href="/projects">Projects</a>
-		<span STYLE="font-size:14px">/ </span>
-		<button on:click={() => goto(`/projects/[project_id]/${selectedProject?.id}`)}
-			>{selectedProject?.name}
-		</button>
-		<span STYLE="font-size:14px">/ </span>
-		<button on:click={() => gotoOverview()}>{data.resource} </button>
-		{#if selectStepName != ''}
-			<span STYLE="font-size:14px">/ </span>{selectStepName}
-		{/if}
-	</h1>
-	<div class="container p-5">
+<div class="flex w-full content-center p-10">
+	<div class="table-container">
 		{#await getDataPromise}
 			<p>Loading metrics...</p>
 			<ProgressBar />
 		{:then}
-			<div class="grid-cols-2 flex overflow-x-scroll">
-				<div class="w-1/2 pt-20">
+			<h1>
+				<a href="/projects">Projects</a>
+				<span STYLE="font-size:14px">/ </span>
+				<button on:click={() => goto(`/projects/[project_id]/${selectedProject?.id}`)}
+					>{selectedProject?.name}
+				</button>
+				<span STYLE="font-size:14px">/ </span>
+				<button on:click={() => gotoOverview()}>{data.resource} </button>
+				{#if selectStepName != ''}
+					<span STYLE="font-size:14px">/ </span>{selectStepName}
+				{/if}
+				<button
+					type="button"
+					class="btn-icon btn-icon-sm"
+					on:click={() => goto(`/projects/[project_id]/${data.resource}/${data.resource}/cpu`)}
+					><ZoomInIcon /></button
+				>
+			</h1>
+			<div class="grid grid-flow-rows grid-cols-1 items-center w-full p-5">
+				<div>
 					<Mermaid {diagram} />
-					<div class="pl-10">
-						<Legend />
-					</div>
 				</div>
-				<div class="w-1/2 p-1">
+				<div>
+					<Legend />
+				</div>
+				<div class="p-5">
 					<table class="table table-interactive">
 						<thead>
 							<tr>
@@ -469,11 +496,10 @@
 					</table>
 				</div>
 			</div>
-			<br />
-			<div class="grid grid-rows-3 grid-cols-3 gap-8 max-h-screen">
-				<div class="card logcard row-span-2 p-5">
+			<div class="grid grid-rows-4 grid-cols-2 gap-5 h-[80rem]">
+				<div class="card logcard row-span-4 p-5">
 					<header class="card-header"><h1>Logs</h1></header>
-					<section class="p-2">
+					<section class="p-1">
 						<br />
 						<ul class="list">
 							{#if showLogs}
@@ -482,13 +508,13 @@
 										<h2>{key}</h2>
 									</li>
 									<li>
-										<pre class="pre">
-											<code class="code-example-body prettyprint">
-												{#each Object.values(logs[key]) || [] as line}
-													{line}<br />
-												{/each}
-											</code>
-										</pre>
+										{#if logs[key] != null}
+											<div class="w-full">
+												<CodeBlock language="bash" code={getPartLogs(key, 200)} />
+											</div>
+										{:else}
+											<p>No logs</p>
+										{/if}
 									</li>
 									<br />
 								{/each}
@@ -500,7 +526,7 @@
 				</div>
 
 				{#if showMax}
-					<div class="card">
+					<div class="card p-2">
 						<table class="table table-interactive">
 							<thead>
 								<tr>
@@ -522,32 +548,52 @@
 							</tbody>
 						</table>
 					</div>
+				{:else}
+					<div class="placeholder">
+						<p>No data</p>
+						<ProgressBar />
+					</div>
 				{/if}
 
-				<div class="card">
-					<Plot
-						data={getResource('cpu').data}
-						plot_title={`CPU Usage ${getResource('cpu').title}`}
-						xaxis_title="time"
-						yaxis_title="cpu usage"
-					/>
+				<div class="flex card p-2">
+					<div class="flex container h-full w-full">
+						<div class="place-content-center h-full w-full">
+							<Plot
+								data={getResource('cpu').data}
+								plot_title={`CPU Usage ${getResource('cpu').title}`}
+								xaxis_title="time"
+								yaxis_title="cpu usage"
+							/>
+						</div>
+					</div>
 				</div>
-				<div class="card">
-					<Plot
-						data={getResource('memory').data}
-						plot_title={`Memory Usage ${getResource('memory').title}`}
-						xaxis_title="time"
-						yaxis_title="bytes"
-					/>
+				<div class="flex card p-2">
+					<div class="flex container h-full w-full">
+						<div class="place-content-center h-full w-full">
+							<Plot
+								data={getResource('memory').data}
+								plot_title={`Memory Usage ${getResource('memory').title}`}
+								xaxis_title="time"
+								yaxis_title="bytes"
+							/>
+						</div>
+					</div>
 				</div>
 
-				<div class="card">
-					<Plot
-						data={getResource('network').data}
-						plot_title={`Network ${getResource('network').title}`}
-						xaxis_title="time"
-						yaxis_title="bytes"
-					/>
+				<div class="flex card p-2">
+					<div class="flex container h-full w-full">
+						<!-- <div class="place-content-start">
+					<button type="button" class="btn-icon btn-icon-sm"><ZoomInIcon /></button>
+					</div> -->
+						<div class="place-content-center h-full w-full">
+							<Plot
+								data={getResource('network').data}
+								plot_title={`Network ${getResource('network').title}`}
+								xaxis_title="time"
+								yaxis_title="bytes"
+							/>
+						</div>
+					</div>
 				</div>
 			</div>
 		{/await}
@@ -555,7 +601,11 @@
 </div>
 
 <style>
-	.card,
+	.card {
+		min-height: 10rem;
+		max-height: 30rem;
+		min-width: 10rem;
+	}
 	.logcard {
 		overflow-y: scroll;
 		max-height: fit-content;
@@ -563,14 +613,5 @@
 	ul {
 		max-height: 50vh;
 		max-height: fit-content;
-	}
-	pre {
-		padding: 0 6px;
-		box-sizing: border-box;
-		overflow-x: hidden;
-		overflow-y: scroll;
-		max-height: 50vh;
-		max-width: 98%;
-		white-space: pre-wrap;
 	}
 </style>

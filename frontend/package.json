@@ -49,6 +49,7 @@
 		"babel-plugin-prismjs": "^2.1.0",
 		"date-fns": "^2.30.0",
 		"graphql-request": "^6.1.0",
+		"highlight": "^0.2.4",
 		"highlight.js": "^11.8.0",
 		"js-yaml": "^4.1.0",
 		"json-to-pretty-yaml": "^1.2.2",

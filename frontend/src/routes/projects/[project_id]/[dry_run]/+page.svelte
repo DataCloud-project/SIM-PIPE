@@ -116,41 +116,42 @@
 </script>
 
 <!-- Page Header -->
-<div class="container p-5">
-	{#await projectDetailsPromise}
-		<p style="font-size:20px;">Loading all dry runs ....</p>
-		<ProgressBar />
-	{:then response}
-		<h1>
-			<a href="/projects">Projects</a>
-			<span STYLE="font-size:14px">/ </span>
-			<button on:click={() => goto(`/projects/[project_id]/${reactiveProjectDetails?.id}`)}
-				>{reactiveProjectDetails?.name}
-			</button>
-		</h1>
-		<div class="flex justify-between">
-			<div>
-				<p class="text-xs">dry runs: {reactiveProjectDetails?.dryRuns.length}</p>
-			</div>
-			<div class="flex flex-row justify-end p-5 space-x-1">
+<div class="flex w-full content-center p-10">
+	<div class="table-container">
+		{#await projectDetailsPromise}
+			<p style="font-size:20px;">Loading all dry runs ....</p>
+			<ProgressBar />
+		{:then response}
+			<h1>
+				<a href="/projects">Projects</a>
+				<span STYLE="font-size:14px">/ </span>
+				<button on:click={() => goto(`/projects/[project_id]/${reactiveProjectDetails?.id}`)}
+					>{reactiveProjectDetails?.name}
+				</button>
+			</h1>
+			<div class="flex justify-between">
 				<div>
-					<button type="button" class="btn btn-sm variant-filled" on:click={onCreateSelected}>
-						<span>Create</span>
-					</button>
+					<p class="text-xs">dry runs: {reactiveProjectDetails?.dryRuns.length}</p>
 				</div>
-				<div>
-					<button
-						type="button"
-						class="btn btn-sm variant-filled-warning"
-						on:click={onDeleteSelected}
-					>
-						<span>Delete</span>
-					</button>
+				<div class="flex flex-row justify-end p-5 space-x-1">
+					<div>
+						<button type="button" class="btn btn-sm variant-filled" on:click={onCreateSelected}>
+							<span>Create</span>
+						</button>
+					</div>
+					<div>
+						<button
+							type="button"
+							class="btn btn-sm variant-filled-warning"
+							on:click={onDeleteSelected}
+						>
+							<span>Delete</span>
+						</button>
+					</div>
 				</div>
 			</div>
-		</div>
-		{#if reactiveProjectDetails?.dryRuns?.length || 0 > 0}
-			<div class="table-container">
+			{#if reactiveProjectDetails?.dryRuns?.length || 0 > 0}
+				<!--<div class="table-container"> -->
 				<table class="table table-interactive">
 					<caption hidden>Dry runs</caption>
 					<thead>
@@ -196,9 +197,10 @@
 						{/each}
 					</tbody>
 				</table>
-			</div>
-		{/if}
-	{/await}
+				<!--</div> -->
+			{/if}
+		{/await}
+	</div>
 </div>
 
 {#if $modalStore[0]}

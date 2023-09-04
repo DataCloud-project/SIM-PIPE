@@ -60,7 +60,7 @@
 					projectId: element
 				};
 				const response_dry_runs = await requestGraphQLClient(allDryRunsQuery, project_variables);
-				response_dry_runs.project.dryRuns.forEach(async (dry_run) => {
+				response_dry_runs.project.dryRuns.forEach(async (dry_run: Record<string, undefined>) => {
 					const response_delete_dry_run = await requestGraphQLClient(deleteDryRunMutation, {
 						dryRunId: dry_run.id
 					});
@@ -131,13 +131,13 @@
 </script>
 
 <!-- svelte-ignore missing-declaration -->
-<div class="container p-5">
-	<h1>Projects</h1>
-	<div class="table-container p-5">
+<div class="flex w-full content-center p-10">
+	<div class="table-container">
 		{#await projectsPromise}
 			<p style="font-size:20px;">Loading projects...</p>
 			<ProgressBar />
 		{:then projectsList}
+			<h1>Projects</h1>
 			<div class="flex flex-row justify-end p-5 space-x-1">
 				<div>
 					<button
@@ -166,7 +166,7 @@
 						<th>Name</th>
 						<th>Created</th>
 						<th>Dry runs</th>
-						<th>Template</th>
+						<th style="text-align:center">Template</th>
 						<th />
 					</tr>
 				</thead>
@@ -190,7 +190,7 @@
 							</td>
 							<!-- svelte-ignore a11y-click-events-have-key-events -->
 							<td style="width:15%" on:click={(event) => showTemplate(event, project)}>
-								<div>
+								<div class="grid grid-rows-2 grid-cols-1 justify-items-center">
 									<div><FileTextIcon size="1x" /></div>
 									<div>
 										<p class="no-underline hover:underline">show</p>
