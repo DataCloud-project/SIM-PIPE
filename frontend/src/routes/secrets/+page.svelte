@@ -97,34 +97,34 @@
 					</button>
 				</div>
 			</div>
-				<table class="table table-interactive">
-					<caption hidden>Secrets</caption>
-					<thead>
-						<tr>
-							<th />
-							<th>Name</th>
-							<th>Username</th>
-							<th>Server</th>
+			<table class="table table-interactive">
+				<caption hidden>Secrets</caption>
+				<thead>
+					<tr>
+						<th />
+						<th>Name</th>
+						<th>Username</th>
+						<th>Server</th>
+					</tr>
+				</thead>
+				<tbody>
+					{#each reactiveCredentialsList || [] as secret}
+						<tr id="clickable_row">
+							<td style="width:10px">
+								<input
+									type="checkbox"
+									class="checkbox"
+									bind:checked={checkboxes[secret.name]}
+									on:click={(event) => handleCheckboxClick(event)}
+								/>
+							</td>
+							<td style="width:60%">{secret.name}</td>
+							<td style="width:20%">{secret.username}</td>
+							<td style="width:20%">{secret.server}</td>
 						</tr>
-					</thead>
-					<tbody>
-						{#each reactiveCredentialsList || [] as secret}
-							<tr id="clickable_row">
-								<td style="width:10px">
-									<input
-										type="checkbox"
-										class="checkbox"
-										bind:checked={checkboxes[secret.name]}
-										on:click={(event) => handleCheckboxClick(event)}
-									/>
-								</td>
-								<td style="width:60%">{secret.name}</td>
-								<td style="width:20%">{secret.username}</td>
-								<td style="width:20%">{secret.server}</td>
-							</tr>
-						{/each}
-					</tbody>
-				</table>
+					{/each}
+				</tbody>
+			</table>
 		{/await}
 	</div>
 </div>

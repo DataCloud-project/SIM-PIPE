@@ -194,7 +194,7 @@
 									<div><FileTextIcon size="1x" /></div>
 									<div>
 										<p class="no-underline hover:underline">show</p>
-									<div />
+										<div />
 									</div>
 								</div></td
 							>

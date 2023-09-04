@@ -71,7 +71,7 @@
 			dryRunId: data.resource
 		});
 		selectedProject = selectedProjectResponse.dryRun?.project;
-		selectedProjectName.set(selectedProject?.name)
+		selectedProjectName.set(selectedProject?.name);
 		const workflow_variables = {
 			// name: selectedProject?.name
 			projectId: selectedProject?.id
@@ -79,7 +79,7 @@
 		const dryrun_variables = {
 			dryRunId: data.resource
 		};
-		selectedDryRunName.set(data.resource)
+		selectedDryRunName.set(data.resource);
 		const workflow_response = (await requestGraphQLClient(getProjectQuery, workflow_variables))
 			.project;
 		const dryrun_response: { dryRun: DryRun } = await requestGraphQLClient(
@@ -112,7 +112,7 @@
 	let allStepNames: string[] = [];
 	getDataPromise
 		.then((data: { workflow: any; dryrun: any; metrics: any }) => {
-			selectedProjectName.set
+			selectedProjectName.set;
 			workflow = data.workflow;
 			dryrun_results = data.dryrun;
 			data.metrics?.forEach(
@@ -416,16 +416,14 @@
 	function getPartLogs(stepName: string, nmaxlinelength: number) {
 		let steplogs = logs[stepName];
 		let result = [];
-		for (let i=0; i < steplogs.length; i++) {
+		for (let i = 0; i < steplogs.length; i++) {
 			if (steplogs[i].length > nmaxlinelength)
 				result.push(steplogs[i].slice(0, nmaxlinelength) + '...');
-			else
-				result.push(steplogs[i]);
-			result.push()
+			else result.push(steplogs[i]);
+			result.push();
 		}
 		return result.join('\n');
 	}
-		
 </script>
 
 <div class="flex w-full content-center p-10">
@@ -445,55 +443,58 @@
 				{#if selectStepName != ''}
 					<span STYLE="font-size:14px">/ </span>{selectStepName}
 				{/if}
-				<button type="button" class="btn-icon btn-icon-sm" on:click={() => goto(`/projects/[project_id]/${data.resource}/${data.resource}/cpu`)}><ZoomInIcon /></button>
-			</h1>		
+				<button
+					type="button"
+					class="btn-icon btn-icon-sm"
+					on:click={() => goto(`/projects/[project_id]/${data.resource}/${data.resource}/cpu`)}
+					><ZoomInIcon /></button
+				>
+			</h1>
 			<div class="grid grid-flow-rows grid-cols-1 items-center w-full p-5">
-					<div>
+				<div>
 					<Mermaid {diagram} />
-					</div>
-					<div>
-						<Legend />
-					</div>
-					<div class="p-5">
-						<table class="table table-interactive">
-							<thead>
-								<tr>
-									<th>Name</th>
-									<th>Started</th>
-									<th>Finished</th>
-									<th>Status</th>
-									<th>Output</th>
+				</div>
+				<div>
+					<Legend />
+				</div>
+				<div class="p-5">
+					<table class="table table-interactive">
+						<thead>
+							<tr>
+								<th>Name</th>
+								<th>Started</th>
+								<th>Finished</th>
+								<th>Status</th>
+								<th>Output</th>
+							</tr>
+						</thead>
+						<tbody>
+							{#each reactiveStepsList || [] as step}
+								<tr on:click={() => stepOnClick(step.displayName, step.type)}>
+									<td style="width:15%">{step.displayName}</td>
+									<td style="width:35%">
+										{step.startedAt ? step.startedAt : '-'}
+									</td>
+									<td style="width:35%">
+										{step.finishedAt ? step.finishedAt : '-'}
+									</td>
+									<td style="width:15%">{step.phase}</td>
+									<td style="width:10%">
+										{#if step.type == 'Pod' && step.outputArtifacts?.length > 1}
+											{#each step.outputArtifacts as artifact}
+												{#if artifact.name != 'main-logs'}
+													<a href={step.outputArtifacts[0].url}>{step.outputArtifacts[0].name}* </a>
+												{/if}
+											{/each}
+										{:else}
+											<p>-</p>
+										{/if}
+									</td>
 								</tr>
-							</thead>
-							<tbody>
-								{#each reactiveStepsList || [] as step}
-									<tr on:click={() => stepOnClick(step.displayName, step.type)}>
-										<td style="width:15%">{step.displayName}</td>
-										<td style="width:35%">
-											{step.startedAt ? step.startedAt : '-'}
-										</td>
-										<td style="width:35%">
-											{step.finishedAt ? step.finishedAt : '-'}
-										</td>
-										<td style="width:15%">{step.phase}</td>
-										<td style="width:10%">
-											{#if step.type == 'Pod' && step.outputArtifacts?.length > 1}
-												{#each step.outputArtifacts as artifact}
-													{#if artifact.name != 'main-logs'}
-														<a href={step.outputArtifacts[0].url}
-															>{step.outputArtifacts[0].name}*
-														</a>
-													{/if}
-												{/each}
-											{:else}
-												<p>-</p>
-											{/if}
-										</td>
-									</tr>
-								{/each}
-							</tbody>
-						</table>
-					</div>
+							{/each}
+						</tbody>
+					</table>
+				</div>
 			</div>
 			<div class="grid grid-rows-4 grid-cols-2 gap-5 h-[80rem]">
 				<div class="card logcard row-span-4 p-5">
@@ -509,7 +510,7 @@
 									<li>
 										{#if logs[key] != null}
 											<div class="w-full">
-											<CodeBlock language="bash" code={getPartLogs(key, 200)}></CodeBlock>
+												<CodeBlock language="bash" code={getPartLogs(key, 200)} />
 											</div>
 										{:else}
 											<p>No logs</p>
@@ -554,52 +555,50 @@
 					</div>
 				{/if}
 
-
 				<div class="flex card p-2">
 					<div class="flex container h-full w-full">
-					<div class="place-content-center h-full w-full">					
-					<Plot
-						data={getResource('cpu').data}
-						plot_title={`CPU Usage ${getResource('cpu').title}`}
-						xaxis_title="time"
-						yaxis_title="cpu usage"
-					/>
-					</div>
+						<div class="place-content-center h-full w-full">
+							<Plot
+								data={getResource('cpu').data}
+								plot_title={`CPU Usage ${getResource('cpu').title}`}
+								xaxis_title="time"
+								yaxis_title="cpu usage"
+							/>
+						</div>
 					</div>
 				</div>
 				<div class="flex card p-2">
 					<div class="flex container h-full w-full">
-					<div class="place-content-center h-full w-full">					
-					<Plot
-						data={getResource('memory').data}
-						plot_title={`Memory Usage ${getResource('memory').title}`}
-						xaxis_title="time"
-						yaxis_title="bytes"
-					/>
-					</div>
+						<div class="place-content-center h-full w-full">
+							<Plot
+								data={getResource('memory').data}
+								plot_title={`Memory Usage ${getResource('memory').title}`}
+								xaxis_title="time"
+								yaxis_title="bytes"
+							/>
+						</div>
 					</div>
 				</div>
 
 				<div class="flex card p-2">
 					<div class="flex container h-full w-full">
-					<!-- <div class="place-content-start">
+						<!-- <div class="place-content-start">
 					<button type="button" class="btn-icon btn-icon-sm"><ZoomInIcon /></button>
 					</div> -->
-					<div class="place-content-center h-full w-full">
-					<Plot
-						data={getResource('network').data}
-						plot_title={`Network ${getResource('network').title}`}
-						xaxis_title="time"
-						yaxis_title="bytes"
-					/>
-					</div>
+						<div class="place-content-center h-full w-full">
+							<Plot
+								data={getResource('network').data}
+								plot_title={`Network ${getResource('network').title}`}
+								xaxis_title="time"
+								yaxis_title="bytes"
+							/>
+						</div>
 					</div>
 				</div>
 			</div>
 		{/await}
 	</div>
 </div>
-
 
 <style>
 	.card {

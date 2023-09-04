@@ -1,79 +1,118 @@
-<script lang='ts'>
-	import { ProgressBar } from '@skeletonlabs/skeleton';	
-    import { selectedProjectName, selectedDryRunName, selectedMetricsType } from '../../../../../../stores/stores';
-    import { goto } from '$app/navigation'
-	import { format } from 'date-fns';    
-    import { requestGraphQLClient } from '$lib/graphqlUtils';
-	import Plot from '../Plot.svelte';;
+<script lang="ts">
+	import { ProgressBar } from '@skeletonlabs/skeleton';
+	import {
+		selectedProjectName,
+		selectedDryRunName,
+		selectedMetricsType
+	} from '../../../../../../stores/stores';
+	import { goto } from '$app/navigation';
+	import { format } from 'date-fns';
+	import { requestGraphQLClient } from '$lib/graphqlUtils';
+	import Plot from '../Plot.svelte';
 	import { gql } from 'graphql-request';
 
 	const datefmt = 'yyyy-MM-dd HH:mm:ss';
 	const defaultMetricsType = 'All';
-    selectedMetricsType.set(defaultMetricsType);
+	selectedMetricsType.set(defaultMetricsType);
 
-    // metrics
-	interface metrics { x: string[]; y: number[]; type: string; name: string };
-	interface allMetrics { [metric: string] : metrics[] };
-	interface metricMetadata { [metric: string] : { metric_sources: string[]; ylabel: string; type: string } };
+	// metrics
+	interface metrics {
+		x: string[];
+		y: number[];
+		type: string;
+		name: string;
+	}
+	interface allMetrics {
+		[metric: string]: metrics[];
+	}
+	interface metricMetadata {
+		[metric: string]: { metric_sources: string[]; ylabel: string; type: string };
+	}
 
 	const metric_metadata: metricMetadata = {
-		'cpu': {'metric_sources': 
-			['cpuUsageSecondsTotal'], 'ylabel': 'cpu usage', 'type': 'scatter'},
-		'cpu-system': {'metric_sources': 
-			['cpuSystemSecondsTotal'], 'ylabel': 'cpu usage system', 'type': 'scatter'},			
-		'cpu-user': {'metric_sources': 
-			['cpuUserSecondsTotal'], 'ylabel': 'cpu usage user', 'type': 'scatter'},						
-		'network': {'metric_sources': 
-			['networkReceiveBytesTotal', 'networkTransmitBytesTotal'], 'ylabel': 'bytes', 'type': 'scatter'},
-		'memory': {'metric_sources': 
-			['memoryUsageBytes'], 'ylabel': 'bytes', 'type': 'scatter'},
-		'memory-max-usage': {'metric_sources': 
-			['memoryMaxUsageBytes'], 'ylabel': 'bytes', 'type': 'scatter'},			
-		'memory-cache': {'metric_sources': 
-			['memoryCache'], 'ylabel': 'bytes', 'type': 'scatter'},			
-		'memory-fail-count': {'metric_sources': 
-			['memoryFailcnt'], 'ylabel': 'count', 'type': 'scatter'},						
-		'memory-failures-total': {'metric_sources': 
-			['memoryFailuresTotal'], 'ylabel': 'count', 'type': 'scatter'},
-		'memory-mapped-file': {'metric_sources': 
-			['memoryMappedFile'], 'ylabel': '<unit>', 'type': 'scatter'},																		
-		'memory-RSS': {'metric_sources': 
-			['memoryRss'], 'ylabel': 'bytes', 'type': 'scatter'},
-		'memory-swap': {'metric_sources': 
-			['memorySwap'], 'ylabel': 'bytes', 'type': 'scatter'},			
-		'memory-working-set-bytes': {'metric_sources': 
-			['memoryWorkingSetBytes'], 'ylabel': 'bytes', 'type': 'scatter'},						
-		'file-descriptors': {'metric_sources': 
-			['fileDescriptors'], 'ylabel': '<units>', 'type': 'scatter'},									
-		'fs-I-nodes-total': {'metric_sources': 
-			['fsInodesTotal'], 'ylabel': 'count', 'type': 'scatter'},
-		'fs-IO-current': {'metric_sources': 
-			['fsIoCurrent'], 'ylabel': 'count', 'type': 'scatter'},								
-		'fs-IO-time-seconds-total': {'metric_sources': 
-			['fsIoTimeSecondsTotal'], 'ylabel': 'seconds', 'type': 'scatter'},				
-		'fs-IO-time-weighted-seconds-total': {'metric_sources': 
-			['fsIoTimeWeightedSecondsTotal'], 'ylabel': 'seconds', 'type': 'scatter'},							
-		'fs-reads-merged-total': {'metric_sources': 
-			['fsReadsMergedTotal'], 'ylabel': '<unit>', 'type': 'scatter'},										
-		'fs-sector-reads-writes-total': {'metric_sources': 
-			['fsSectorReadsTotal', 'fsSectorWritesTotal'], 'ylabel': 'count', 'type': 'scatter'},
-		'fs-usage': {'metric_sources': 
-			['fsUsageBytes'], 'ylabel': 'bytes', 'type': 'scatter'},														
-		'fs-write-seconds-total': {'metric_sources': 
-			['fsWriteSecondsTotal'], 'ylabel': 'seconds', 'type': 'scatter'},																	
-	}
+		cpu: { metric_sources: ['cpuUsageSecondsTotal'], ylabel: 'cpu usage', type: 'scatter' },
+		'cpu-system': {
+			metric_sources: ['cpuSystemSecondsTotal'],
+			ylabel: 'cpu usage system',
+			type: 'scatter'
+		},
+		'cpu-user': {
+			metric_sources: ['cpuUserSecondsTotal'],
+			ylabel: 'cpu usage user',
+			type: 'scatter'
+		},
+		network: {
+			metric_sources: ['networkReceiveBytesTotal', 'networkTransmitBytesTotal'],
+			ylabel: 'bytes',
+			type: 'scatter'
+		},
+		memory: { metric_sources: ['memoryUsageBytes'], ylabel: 'bytes', type: 'scatter' },
+		'memory-max-usage': {
+			metric_sources: ['memoryMaxUsageBytes'],
+			ylabel: 'bytes',
+			type: 'scatter'
+		},
+		'memory-cache': { metric_sources: ['memoryCache'], ylabel: 'bytes', type: 'scatter' },
+		'memory-fail-count': { metric_sources: ['memoryFailcnt'], ylabel: 'count', type: 'scatter' },
+		'memory-failures-total': {
+			metric_sources: ['memoryFailuresTotal'],
+			ylabel: 'count',
+			type: 'scatter'
+		},
+		'memory-mapped-file': {
+			metric_sources: ['memoryMappedFile'],
+			ylabel: '<unit>',
+			type: 'scatter'
+		},
+		'memory-RSS': { metric_sources: ['memoryRss'], ylabel: 'bytes', type: 'scatter' },
+		'memory-swap': { metric_sources: ['memorySwap'], ylabel: 'bytes', type: 'scatter' },
+		'memory-working-set-bytes': {
+			metric_sources: ['memoryWorkingSetBytes'],
+			ylabel: 'bytes',
+			type: 'scatter'
+		},
+		'file-descriptors': { metric_sources: ['fileDescriptors'], ylabel: '<units>', type: 'scatter' },
+		'fs-I-nodes-total': { metric_sources: ['fsInodesTotal'], ylabel: 'count', type: 'scatter' },
+		'fs-IO-current': { metric_sources: ['fsIoCurrent'], ylabel: 'count', type: 'scatter' },
+		'fs-IO-time-seconds-total': {
+			metric_sources: ['fsIoTimeSecondsTotal'],
+			ylabel: 'seconds',
+			type: 'scatter'
+		},
+		'fs-IO-time-weighted-seconds-total': {
+			metric_sources: ['fsIoTimeWeightedSecondsTotal'],
+			ylabel: 'seconds',
+			type: 'scatter'
+		},
+		'fs-reads-merged-total': {
+			metric_sources: ['fsReadsMergedTotal'],
+			ylabel: '<unit>',
+			type: 'scatter'
+		},
+		'fs-sector-reads-writes-total': {
+			metric_sources: ['fsSectorReadsTotal', 'fsSectorWritesTotal'],
+			ylabel: 'count',
+			type: 'scatter'
+		},
+		'fs-usage': { metric_sources: ['fsUsageBytes'], ylabel: 'bytes', type: 'scatter' },
+		'fs-write-seconds-total': {
+			metric_sources: ['fsWriteSecondsTotal'],
+			ylabel: 'seconds',
+			type: 'scatter'
+		}
+	};
 	var metricsData: allMetrics = {};
 	var metricSources: string[] = [];
 
 	function buildMetricQuery(metrics: string[]) {
 		let metric_string = ``;
-		for (let i=0; i< metrics.length; i++) {
+		for (let i = 0; i < metrics.length; i++) {
 			metric_string += `${metrics[i]} {
 			timestamp
 			value
 			}
-		`
-		};
+		`;
+		}
 		let metricq = `query getDryRunAllMetrics($dryRunId: String!) {
 		dryRun(dryRunId: $dryRunId) {
 			nodes {
@@ -88,7 +127,7 @@
 				}
 			}
 		}
-		`
+		`;
 		return metricq;
 	}
 
@@ -102,16 +141,18 @@
 		//console.log(metricSources);
 		const queryString = buildMetricQuery(metricSources);
 		//console.log(queryString);
-		const metricsQuery = gql`${queryString}`;
+		const metricsQuery = gql`
+			${queryString}
+		`;
 		const dryrun_variables = {
 			dryRunId: $selectedDryRunName
 		};
-        const metrics_response: { dryRun: { nodes: [] } } = await requestGraphQLClient(
-            metricsQuery, 
-            dryrun_variables
-        )
-        return metrics_response?.dryRun?.nodes;
-    };
+		const metrics_response: { dryRun: { nodes: [] } } = await requestGraphQLClient(
+			metricsQuery,
+			dryrun_variables
+		);
+		return metrics_response?.dryRun?.nodes;
+	};
 
 	const getDataPromise = getMetricsResponse();
 
@@ -144,25 +185,25 @@
 								};
 								if (values.length > 0) {
 									metricsData[metric].push(metric_data);
-								};
+								}
 							});
 						});
-					};
+					}
 				}
 			);
 		})
 		.catch((error) => {
 			console.log(error);
 		});
-     
-    // TODO: These functions are the same as in [resource].svelte
-    // should be merged and moved into lib?
-    
-    function isEmpty(obj: any) {
+
+	// TODO: These functions are the same as in [resource].svelte
+	// should be merged and moved into lib?
+
+	function isEmpty(obj: any) {
 		return Object.keys(obj).length === 0;
 	}
 
-    function truncateString(word: string, maxLength: number) {
+	function truncateString(word: string, maxLength: number) {
 		if (word.length > maxLength) {
 			return word.slice(0, maxLength) + '..';
 		}
@@ -173,9 +214,9 @@
 		date.setSeconds(date.getSeconds() + seconds);
 		let dateStr = format(date, datefmt);
 		return dateStr;
-	}    
+	}
 
-    function timestampsToDatetime(startedAt: string, input_array: number[]) {
+	function timestampsToDatetime(startedAt: string, input_array: number[]) {
 		let date = new Date(startedAt);
 		let timeseries = [addSeconds(date, 0)];
 		for (let i = 0; i < input_array.length - 1; i++) {
@@ -185,7 +226,6 @@
 		}
 		return timeseries;
 	}
-
 </script>
 
 <div class="flex w-full content-center p-10">
@@ -201,7 +241,9 @@
 					>{$selectedProjectName}
 				</button>
 				<span STYLE="font-size:14px">/ </span>
-				<button on:click={() => goto(`/projects/[project_id]/${$selectedProjectName}/${$selectedDryRunName}`)} 
+				<button
+					on:click={() =>
+						goto(`/projects/[project_id]/${$selectedProjectName}/${$selectedDryRunName}`)}
 					>{$selectedDryRunName}
 				</button>
 				<span STYLE="font-size:14px">/ {$selectedMetricsType}</span>
@@ -214,7 +256,8 @@
 							{#each Object.keys(metric_metadata) as metric}
 								<option value={metric}>{metric}</option>
 							{/each}
-					</label>
+						</select></label
+					>
 				</div>
 			</div>
 			{#if $selectedMetricsType === 'All'}
@@ -222,12 +265,12 @@
 					{#each Object.keys(metricsData) as metric}
 						<div class="flex card p-2 h-80">
 							<div class="place-self-center h-full w-full">
-								<Plot 
+								<Plot
 									data={metricsData[metric]}
 									plot_title={metric}
-									xaxis_title='time'
+									xaxis_title="time"
 									yaxis_title={metric_metadata[metric].ylabel}
-								/>	
+								/>
 							</div>
 						</div>
 					{/each}
@@ -235,17 +278,15 @@
 			{:else}
 				<div class="flex card p-2 h-5/6 w-full">
 					<div class="place-self-center h-full w-full">
-						<Plot 
+						<Plot
 							data={metricsData[$selectedMetricsType]}
 							plot_title={$selectedMetricsType}
-							xaxis_title='time'
+							xaxis_title="time"
 							yaxis_title={metric_metadata[$selectedMetricsType].ylabel}
-						/>	
+						/>
 					</div>
 				</div>
 			{/if}
-		{/await}		
+		{/await}
 	</div>
 </div>
-
-
