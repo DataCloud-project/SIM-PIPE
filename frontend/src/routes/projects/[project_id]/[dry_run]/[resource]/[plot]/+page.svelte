@@ -4,7 +4,6 @@
     import { goto } from '$app/navigation'
 	import { format } from 'date-fns';    
     import { requestGraphQLClient } from '$lib/graphqlUtils';
-    //import getDryRunAllMetrics from '../../../../../../queries/get_dry_run_all_metrics_no_logs';
 	import Plot from '../Plot.svelte';;
 	import { gql } from 'graphql-request';
 
