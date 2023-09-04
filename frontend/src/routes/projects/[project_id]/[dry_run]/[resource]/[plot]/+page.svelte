@@ -14,8 +14,9 @@
     // metrics
 	interface metrics { x: string[]; y: number[]; type: string; name: string };
 	interface allMetrics { [metric: string] : metrics[] };
+	interface metricMetadata { [metric: string] : { metric_sources: string[]; ylabel: string; type: string } };
 
-	const metric_metadata = {
+	const metric_metadata: metricMetadata = {
 		'cpu': {'metric_sources': 
 			['cpuUsageSecondsTotal'], 'ylabel': 'cpu usage', 'type': 'scatter'},
 		'cpu-system': {'metric_sources': 
@@ -120,7 +121,9 @@
 				(node: {
 					displayName: string | number;
 					startedAt: string;
-					metrics: {};
+					metrics: {
+						[metric_source: string]: { timestamp: string; value: string }[];
+					};
 				}) => {
 					if (isEmpty(node) === false) {
 						Object.keys(metric_metadata).forEach((metric) => {
