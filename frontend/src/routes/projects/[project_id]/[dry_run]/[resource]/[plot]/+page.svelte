@@ -21,10 +21,46 @@
 			['cpuUsageSecondsTotal'], 'ylabel': 'cpu usage', 'type': 'scatter'},
 		'cpu-system': {'metric_sources': 
 			['cpuSystemSecondsTotal'], 'ylabel': 'cpu usage system', 'type': 'scatter'},			
+		'cpu-user': {'metric_sources': 
+			['cpuUserSecondsTotal'], 'ylabel': 'cpu usage user', 'type': 'scatter'},						
+		'network': {'metric_sources': 
+			['networkReceiveBytesTotal', 'networkTransmitBytesTotal'], 'ylabel': 'bytes', 'type': 'scatter'},
 		'memory': {'metric_sources': 
 			['memoryUsageBytes'], 'ylabel': 'bytes', 'type': 'scatter'},
-		'network': {'metric_sources': 
-			['networkReceiveBytesTotal', 'networkTransmitBytesTotal'], 'ylabel': 'bytes', 'type': 'scatter'}
+		'memory-max-usage': {'metric_sources': 
+			['memoryMaxUsageBytes'], 'ylabel': 'bytes', 'type': 'scatter'},			
+		'memory-cache': {'metric_sources': 
+			['memoryCache'], 'ylabel': 'bytes', 'type': 'scatter'},			
+		'memory-fail-count': {'metric_sources': 
+			['memoryFailcnt'], 'ylabel': 'count', 'type': 'scatter'},						
+		'memory-failures-total': {'metric_sources': 
+			['memoryFailuresTotal'], 'ylabel': 'count', 'type': 'scatter'},
+		'memory-mapped-file': {'metric_sources': 
+			['memoryMappedFile'], 'ylabel': '<unit>', 'type': 'scatter'},																		
+		'memory-RSS': {'metric_sources': 
+			['memoryRss'], 'ylabel': 'bytes', 'type': 'scatter'},
+		'memory-swap': {'metric_sources': 
+			['memorySwap'], 'ylabel': 'bytes', 'type': 'scatter'},			
+		'memory-working-set-bytes': {'metric_sources': 
+			['memoryWorkingSetBytes'], 'ylabel': 'bytes', 'type': 'scatter'},						
+		'file-descriptors': {'metric_sources': 
+			['fileDescriptors'], 'ylabel': '<units>', 'type': 'scatter'},									
+		'fs-I-nodes-total': {'metric_sources': 
+			['fsInodesTotal'], 'ylabel': 'count', 'type': 'scatter'},
+		'fs-IO-current': {'metric_sources': 
+			['fsIoCurrent'], 'ylabel': 'count', 'type': 'scatter'},								
+		'fs-IO-time-seconds-total': {'metric_sources': 
+			['fsIoTimeSecondsTotal'], 'ylabel': 'seconds', 'type': 'scatter'},				
+		'fs-IO-time-weighted-seconds-total': {'metric_sources': 
+			['fsIoTimeWeightedSecondsTotal'], 'ylabel': 'seconds', 'type': 'scatter'},							
+		'fs-reads-merged-total': {'metric_sources': 
+			['fsReadsMergedTotal'], 'ylabel': '<unit>', 'type': 'scatter'},										
+		'fs-sector-reads-writes-total': {'metric_sources': 
+			['fsSectorReadsTotal', 'fsSectorWritesTotal'], 'ylabel': 'count', 'type': 'scatter'},
+		'fs-usage': {'metric_sources': 
+			['fsUsageBytes'], 'ylabel': 'bytes', 'type': 'scatter'},														
+		'fs-write-seconds-total': {'metric_sources': 
+			['fsWriteSecondsTotal'], 'ylabel': 'seconds', 'type': 'scatter'},																	
 	}
 	var metricsData: allMetrics = {};
 	var metricSources: string[] = [];
@@ -180,9 +216,9 @@
 				</div>
 			</div>
 			{#if $selectedMetricsType === 'All'}
-				<div class="grid grid-cols-2 gap-4 h-full w-full">
+				<div class="grid grid-cols-2 gap-4 w-full">
 					{#each Object.keys(metricsData) as metric}
-						<div class="flex card p-2">
+						<div class="flex card p-2 h-80">
 							<div class="place-self-center h-full w-full">
 								<Plot 
 									data={metricsData[metric]}
