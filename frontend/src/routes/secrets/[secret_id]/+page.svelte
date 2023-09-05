@@ -34,14 +34,22 @@
     {#await getDataPromise}
         <div>Loading...</div>
     {:then}
-    <div>
-        <label class="label">
-            <select class="select" bind:value={$selectedProject}>
-                {#each projectsList as project}
-                    <option value={project}>{project.name}</option>
-                {/each}
-            </select></label
-        >
+    <div class="card p-5">
+        <h1 class="text-2xl">Add {$selectedCredential.name} to 
+            <div>
+                <label class="label">
+                    <select class="select" bind:value={$selectedProject}>
+                        {#each projectsList as project}
+                            <option value={project}>{project.name}</option>
+                        {/each}
+                    </select></label
+                >
+            </div>
+        </h1>
+        <button type="button" class="btn btn-sm variant-filled-warning" on:click={() => {
+            console.log($selectedProject);
+            console.log($selectedCredential);
+        }}>Submit</button>
     </div>
     {/await}
 </div>
