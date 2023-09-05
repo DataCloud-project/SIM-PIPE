@@ -5,8 +5,9 @@
 	import allCredentialsQuery from '../../queries/get_all_credentials.js';
 	import deleteCredentialMutation from '../../queries/delete_credential.js';
 	import type { DockerRegistryCredential } from '../../types.js';
-	import { credentialsList } from '../../stores/stores.js';
+	import { credentialsList, selectedCredential } from '../../stores/stores.js';
 	import { requestGraphQLClient } from '$lib/graphqlUtils';
+	import { goto } from '$app/navigation';
 
 	const modalComponent: ModalComponent = {
 		ref: ModalSubmitNewSecret
@@ -66,6 +67,11 @@
 		event.stopPropagation();
 	};
 
+	function gotosecret(secret: DockerRegistryCredential) {
+		selectedCredential.set(secret);
+		goto(`/secrets/${secret.name}`);
+	};
+
 	$: reactiveCredentialsList = $credentialsList;
 </script>
 
@@ -109,7 +115,7 @@
 				</thead>
 				<tbody>
 					{#each reactiveCredentialsList || [] as secret}
-						<tr id="clickable_row">
+						<tr id="clickable_row" on:click={() => gotosecret(secret)}>
 							<td style="width:10px">
 								<input
 									type="checkbox"
