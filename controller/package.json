@@ -44,6 +44,7 @@
     "eslint-plugin-node": "^11.1.0",
     "eslint-plugin-simple-import-sort": "^10.0.0",
     "eslint-plugin-unicorn": "^47.0.0",
+    "spectaql": "^1.5.3",
     "typescript": "^5.1.6"
   },
   "optionalDependencies": {
