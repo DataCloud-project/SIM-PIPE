@@ -374,7 +374,7 @@
 			resourceData = memoryData;
 			if (Object.keys(memoryData).length > 0)
 				allStepNames.forEach((step) => {
-					if (memoryData[step]) wholeData.push(cpuData[step]);
+					if (memoryData[step]) wholeData.push(memoryData[step]);
 				});
 		} else {
 			resourceData = networkDataCombined;
