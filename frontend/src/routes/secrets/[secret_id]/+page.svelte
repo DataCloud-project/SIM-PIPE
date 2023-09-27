@@ -88,13 +88,17 @@
 
 <!-- Page Header -->
 <div class="flex w-full content-center p-10">
-    {#await getDataPromise}
-        <p>Loading metrics...</p>
-        <ProgressBar />
-    {:then}
-    <div class="grid grid-cols-1 w-1/2">
-        <div class="card p-5">
-            <h1 class="text-2xl">Add {$selectedCredential.name} to project:
+    <div class="w-full h-screen">    
+        {#await getDataPromise}
+            <p>Loading metrics...</p>
+            <ProgressBar />
+        {:then}
+        <div class="flex flex-row justify-start space-x-5">
+            <h1>Secrets / {$selectedCredential.name}</h1>
+        </div>
+        <div class="grid grid-cols-1 w-1/2">
+            <div class="card p-5 w-full">
+                <h1 class="text-xl text-left ">Add secret <p class="text-sky-500 underline">{$selectedCredential.name}</p> to project:</h1>
                 <div>
                     <label class="label">
                         <select class="select" bind:value={$selectedProject}>
@@ -104,13 +108,13 @@
                         </select></label
                     >
                 </div>
-            </h1>
-            <br />
-            <button type="button" class="btn btn-sm variant-filled-warning" on:click={() => { onSubmitForm()
-            }}>Submit</button>
+                <br />
+                <button type="button" class="btn btn-sm variant-filled-warning" on:click={() => { onSubmitForm()
+                }}>Submit</button>
+            </div>
         </div>
+        {/await}
     </div>
-    {/await}
 </div>
 
 <Modal />
