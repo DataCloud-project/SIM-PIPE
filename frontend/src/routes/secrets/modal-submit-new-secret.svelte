@@ -150,7 +150,7 @@
 			const response = await requestGraphQLClient(createCredentialMutation, variables);
 		} catch (err: any) {
 			console.log(err);
-			alert(`Error: ${err.message}`)
+			alert(`Error: ${err.message}`);
 			throw error(500, err);
 		}
 
