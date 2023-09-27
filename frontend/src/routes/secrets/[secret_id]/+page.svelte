@@ -100,7 +100,7 @@
 				<div class="card p-5 w-full">
 					<h1 class="text-xl text-left">
 						Add secret <p class="text-sky-500 underline">{$selectedCredential.name}</p>
-						 to project:
+						to project:
 					</h1>
 					<div>
 						<label class="label">

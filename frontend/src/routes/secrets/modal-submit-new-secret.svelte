@@ -56,7 +56,7 @@
 	// vaidate server name
 	function validateServerName(input: string) {
 		// Define the regular expression pattern for validation
-		var pattern = /^[a-z0-9.,\/,:_,-]+$/;
+		var pattern = /^[a-z0-9.,/,:_,-]+$/;
 		let test1 = pattern.test(input);
 		return test1;
 	}
@@ -150,6 +150,7 @@
 			const response = await requestGraphQLClient(createCredentialMutation, variables);
 		} catch (err: any) {
 			console.log(err);
+			alert(`Error: ${err.message}`)
 			throw error(500, err);
 		}
 
@@ -177,7 +178,7 @@
 					class="input"
 					type="text"
 					bind:value={formData.name}
-					placeholder="Enter secret name..."
+					placeholder="image-registry-secret"
 					title="lowercase alpha numeric words separated by .-_"
 				/>
 			</label>
@@ -187,7 +188,7 @@
 					class="input"
 					type="text"
 					bind:value={formData.username}
-					placeholder="Enter username..."
+					placeholder="username..."
 					title="lowercase alpha numeric words separated by .-_"
 				/>
 			</label>
@@ -197,7 +198,7 @@
 					class="input"
 					type="text"
 					bind:value={formData.server}
-					placeholder="Enter hostname for image registry server..."
+					placeholder="https://image-registry.server.com:5000"
 					title="lowercase alpha numeric words separated by .-_:/"
 				/>
 			</label>
