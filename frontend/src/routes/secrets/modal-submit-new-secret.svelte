@@ -135,7 +135,7 @@
 		// TODO: Fix bug where request fails for different reasons (secret name already exists, uppercase, whitespace, underscore)
 		try {
 			const response = await requestGraphQLClient(createCredentialMutation, variables);
-		} catch (err) {
+		} catch (err: any) {
 			console.log(err)
 			throw error(500, err);
 		}

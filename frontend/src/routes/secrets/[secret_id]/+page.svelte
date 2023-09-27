@@ -26,7 +26,7 @@
         projectsList.push(...data)
     });
 
-    let template: JSON;
+    let template: any;
     let submit_response: any;
 
     async function onSubmitForm() {
@@ -38,11 +38,11 @@
 
         const response = requestGraphQLClient(getWorkflowQuery, {name: $selectedProject.name});
 
-        response.then((data) => {
+        response.then((data: any) => {
             template = data.workflowTemplate.argoWorkflowTemplate;
             template.spec["imagePullSecrets"] = [{"name": $selectedCredential.name}];
             // update path of template images:
-            template.spec.templates.forEach((template) => {
+            template.spec.templates.forEach((template: any) => {
                 if (template.container) {
                     let image = template.container.image;
                     image = image.split("/").slice(-1);

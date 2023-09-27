@@ -136,11 +136,12 @@
 			const template = project.workflowTemplates[0].argoWorkflowTemplate
 			const template_name = template?.metadata.name;
 			goto(`/templates/${template_name}`);
+			throw new Error('Template not found!');
 		} catch (error) {
 			visibleAlert = true;
 			alertTitle = 'Template not found!';
-			alertMessage = error.message;
-		}
+			alertMessage = `Workflow template does not exist for this project: ${clickedProjectId}`;
+		};
 	};
 	$: reactiveProjectsList = $projectsList;
 	$: dryRunCounts = getDryRunCounts(reactiveProjectsList);
