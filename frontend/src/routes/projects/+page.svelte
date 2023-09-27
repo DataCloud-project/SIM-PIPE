@@ -7,13 +7,17 @@
 	import { goto } from '$app/navigation';
 	import Timestamp from './[project_id]/[dry_run]/timestamp.svelte';
 	import { requestGraphQLClient } from '$lib/graphqlUtils';
-	import { EditIcon, FileTextIcon } from 'svelte-feather-icons';
+	import { AlertTriangleIcon, EditIcon, FileTextIcon } from 'svelte-feather-icons';
 	import ModalRenameProject from './modal-rename-project.svelte';
 	import allProjectsQuery from '../../queries/get_all_projects.js';
 	import deleteProjectMutation from '../../queries/delete_project.js';
 	import allDryRunsQuery from '../../queries/get_all_dryruns';
 	import deleteDryRunMutation from '../../queries/delete_dry_run.js';
 	import deleteWorkflowTemplateMutation from '../../queries/delete_workflow_template.js';
+
+	export let visibleAlert = false;
+	export let alertTitle = 'Alert!';
+	export let alertMessage = 'Alert!';
 
 	const getProjectsList = async (): Promise<Project[]> => {
 		const response: { projects: Project[] } = await requestGraphQLClient(allProjectsQuery);
@@ -70,7 +74,12 @@
 					{
 						name: element
 					}
-				);
+				).catch((error) => {
+					console.log(error);
+					visibleAlert = true;
+					alertTitle = 'Delete workflow template failed!';
+					alertMessage = error.message;
+				})
 				const delete_project_response = await requestGraphQLClient(
 					deleteProjectMutation,
 					project_variables
@@ -123,9 +132,16 @@
 	function showTemplate(event: any, project: Project) {
 		$clickedProjectId = project.id;
 		event.stopPropagation();
-		const template = project.workflowTemplates[0].argoWorkflowTemplate?.metadata.name;
-		goto(`/templates/${template}`);
-	}
+		try {
+			const template = project.workflowTemplates[0].argoWorkflowTemplate
+			const template_name = template?.metadata.name;
+			goto(`/templates/${template_name}`);
+		} catch (error) {
+			visibleAlert = true;
+			alertTitle = 'Template not found!';
+			alertMessage = error.message;
+		}
+	};
 	$: reactiveProjectsList = $projectsList;
 	$: dryRunCounts = getDryRunCounts(reactiveProjectsList);
 </script>
@@ -218,6 +234,23 @@
 
 {#if $modalStore[0]}
 	<Modal />
+{/if}
+
+{#if visibleAlert}
+    <aside class="alert variant-ghost">
+        <!-- Icon -->
+		<div class="flex w-full justify-between">
+        	<div><AlertTriangleIcon /></div>
+			<div class="alert-actions">
+				<button type="button" class="btn btn-sm variant-filled" on:click={() => { visibleAlert = false; }}>OK</button>
+			</div>
+		</div>
+        <!-- Message -->
+        <div class="alert-message">
+            <h3 class="h3">{alertTitle}</h3>
+            <p>{alertMessage}</p>
+        </div>
+    </aside>
 {/if}
 
 <style>

@@ -12,17 +12,21 @@
 	export let parent: any;
 
 	const formData = {
-		name: '',
+		project_name: '',
+		template_name: '',
 		template: ''
 	};
 	let hideModal = false;
 	let alertModal = false;
 
-	async function onCreateProjectSubmit(): Promise<void> {
+	// function to transform project_name to template_name
+	$: formData.template_name = formData.project_name.replace(/\s+/g, '-').toLowerCase();
+
+	export async function onCreateProjectSubmit(): Promise<void> {
 		modalStore.close();
 		hideModal = true;
 		const variables1 = {
-			project: { name: formData.name }
+			project: { name: formData.project_name }
 		};
 
 		const responseCreateProject: { createProject: Project } = await requestGraphQLClient(
@@ -50,12 +54,13 @@
 			const variables2 = {
 				input: {
 					argoWorkflowTemplate: template,
-					name: formData.name,
+					name: formData.template_name,
 					projectId: responseCreateProject.createProject.id
 				}
 			};
 			await requestGraphQLClient(createWorkflowTemplateMutation, variables2);
-		}
+		};
+		//console.log(formData);
 		// modalStore.close();
 		// update the project list after addition
 		const responseAllProjects: { projects: Project[] } = await requestGraphQLClient(
@@ -74,7 +79,7 @@
 		<form class="modal-form {cForm}">
 			<label class="label">
 				<span>Project name</span>
-				<input class="input" type="text" bind:value={formData.name} placeholder="Enter name..." />
+				<input class="input" type="text" bind:value={formData.project_name} placeholder="Enter name..." />
 			</label>
 			<label class="label">
 				Project template
@@ -100,3 +105,4 @@
 {#if alertModal}
 	<Modal />
 {/if}
+
