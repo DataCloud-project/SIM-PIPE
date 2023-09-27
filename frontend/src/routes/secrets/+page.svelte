@@ -70,7 +70,7 @@
 	function gotosecret(secret: DockerRegistryCredential) {
 		selectedCredential.set(secret);
 		goto(`/secrets/${secret.name}`);
-	};
+	}
 
 	$: reactiveCredentialsList = $credentialsList;
 </script>

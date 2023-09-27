@@ -79,7 +79,7 @@
 					visibleAlert = true;
 					alertTitle = 'Delete workflow template failed!';
 					alertMessage = error.message;
-				})
+				});
 				const delete_project_response = await requestGraphQLClient(
 					deleteProjectMutation,
 					project_variables
@@ -133,7 +133,7 @@
 		$clickedProjectId = project.id;
 		event.stopPropagation();
 		try {
-			const template = project.workflowTemplates[0].argoWorkflowTemplate
+			const template = project.workflowTemplates[0].argoWorkflowTemplate;
 			const template_name = template?.metadata.name;
 			goto(`/templates/${template_name}`);
 			throw new Error('Template not found!');
@@ -141,8 +141,8 @@
 			visibleAlert = true;
 			alertTitle = 'Template not found!';
 			alertMessage = `Workflow template does not exist for this project: ${clickedProjectId}`;
-		};
-	};
+		}
+	}
 	$: reactiveProjectsList = $projectsList;
 	$: dryRunCounts = getDryRunCounts(reactiveProjectsList);
 </script>
@@ -238,20 +238,26 @@
 {/if}
 
 {#if visibleAlert}
-    <aside class="alert variant-ghost">
-        <!-- Icon -->
+	<aside class="alert variant-ghost">
+		<!-- Icon -->
 		<div class="flex w-full justify-between">
-        	<div><AlertTriangleIcon /></div>
+			<div><AlertTriangleIcon /></div>
 			<div class="alert-actions">
-				<button type="button" class="btn btn-sm variant-filled" on:click={() => { visibleAlert = false; }}>OK</button>
+				<button
+					type="button"
+					class="btn btn-sm variant-filled"
+					on:click={() => {
+						visibleAlert = false;
+					}}>OK</button
+				>
 			</div>
 		</div>
-        <!-- Message -->
-        <div class="alert-message">
-            <h3 class="h3">{alertTitle}</h3>
-            <p>{alertMessage}</p>
-        </div>
-    </aside>
+		<!-- Message -->
+		<div class="alert-message">
+			<h3 class="h3">{alertTitle}</h3>
+			<p>{alertMessage}</p>
+		</div>
+	</aside>
 {/if}
 
 <style>

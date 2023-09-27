@@ -59,7 +59,7 @@
 				}
 			};
 			await requestGraphQLClient(createWorkflowTemplateMutation, variables2);
-		};
+		}
 		//console.log(formData);
 		// modalStore.close();
 		// update the project list after addition
@@ -79,7 +79,12 @@
 		<form class="modal-form {cForm}">
 			<label class="label">
 				<span>Project name</span>
-				<input class="input" type="text" bind:value={formData.project_name} placeholder="Enter name..." />
+				<input
+					class="input"
+					type="text"
+					bind:value={formData.project_name}
+					placeholder="Enter name..."
+				/>
 			</label>
 			<label class="label">
 				Project template
@@ -105,4 +110,3 @@
 {#if alertModal}
 	<Modal />
 {/if}
-

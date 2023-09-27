@@ -25,7 +25,7 @@
 		event: 'click',
 		target: 'popupPassword',
 		placement: 'top',
-		closeQuery: '#close-query',
+		closeQuery: '#close-query'
 	};
 
 	let checkedAutoGeneratePassword = false;
@@ -89,27 +89,40 @@
 
 		// If all criteria pass, the passphrase is valid
 		return true;
-	};
+	}
 
-	function validateInputs(secret_name: string, username: string, servername: string, password: string) {
+	function validateInputs(
+		secret_name: string,
+		username: string,
+		servername: string,
+		password: string
+	) {
 		let valid = true;
 		// validate secret name
 		if (!validateName(secret_name)) {
 			valid = false;
-			alert(`Secret name ${secret_name} is invalid! Must be lowercase alpha numeric words separated by either .-_`);
-		};
+			alert(
+				`Secret name ${secret_name} is invalid! Must be lowercase alpha numeric words separated by either .-_`
+			);
+		}
 		if (!validateName(username)) {
 			valid = false;
-			alert(`Username ${username} is invalid! Must be lowercase alpha numeric words separated by either .-_`);
-		};
+			alert(
+				`Username ${username} is invalid! Must be lowercase alpha numeric words separated by either .-_`
+			);
+		}
 		if (!validateServerName(servername)) {
 			valid = false;
-			alert(`Servername ${servername} is invalid! Must be lowercase alpha numeric words separated by either /.-_`);
-		};
+			alert(
+				`Servername ${servername} is invalid! Must be lowercase alpha numeric words separated by either /.-_`
+			);
+		}
 		if (!validatePassphrase(password)) {
 			valid = false;
-			alert(`Password is invalid! Must be at least 6 characters long and contain at least one lowercase letter, one uppercase letter, one digit and one special character`);
-		};			
+			alert(
+				`Password is invalid! Must be at least 6 characters long and contain at least one lowercase letter, one uppercase letter, one digit and one special character`
+			);
+		}
 		return valid;
 	}
 
@@ -136,7 +149,7 @@
 		try {
 			const response = await requestGraphQLClient(createCredentialMutation, variables);
 		} catch (err: any) {
-			console.log(err)
+			console.log(err);
 			throw error(500, err);
 		}
 
