@@ -539,7 +539,7 @@ http://localhost:8088
                   <body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
   <span class="hljs-attr">"data"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
     <span class="hljs-attr">"project"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
-      <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"project_789"</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"project789"</span><span class="hljs-punctuation">,</span>
       <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
       <span class="hljs-attr">"createdAt"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">""2023-08-17T08:14:00Z""</span><span class="hljs-punctuation">,</span>
       <span class="hljs-attr">"dryRuns"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-punctuation">{</span>
@@ -617,7 +617,7 @@ http://localhost:8088
       <span class="hljs-punctuation">{</span>
           <span class="hljs-attr">"data"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
             <span class="hljs-attr">"project"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
-              <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"project_789"</span><span class="hljs-punctuation">,</span>
+              <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"project789"</span><span class="hljs-punctuation">,</span>
               <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
               <span class="hljs-attr">"createdAt"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">""2023-08-17T08:14:00Z""</span><span class="hljs-punctuation">,</span>
               <span class="hljs-attr">"dryRuns"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-punctuation">{</span>
@@ -947,29 +947,12 @@ http://localhost:8088
                   <h5>Query</h5>
                   <html>
                   <head></head>
-                  <body><pre><code class="hljs language-gql"><span class="hljs-symbol"><span class="hljs-keyword">mutation</span> assignDryRunToProject<span class="hljs-tag">(
-  <span class="hljs-code">$dryRunId</span>:<span class="hljs-type"> String!</span>,
-  <span class="hljs-code">$projectId</span>:<span class="hljs-type"> String!</span>
-)</span> <span class="hljs-tag">{
-  <span class="hljs-symbol">assignDryRunToProject<span class="hljs-tag">(
-    dryRunId: <span class="hljs-code">$dryRunId</span>,
-    projectId: <span class="hljs-code">$projectId</span>
-  )</span> <span class="hljs-tag">{
+                  <body><pre><code class="hljs language-gql"><span class="hljs-symbol"><span class="hljs-keyword">mutation</span> assignDryRunToProject<span class="hljs-tag">(<span class="hljs-code">$dryRunId</span>:<span class="hljs-type"> String!</span>, <span class="hljs-code">$projectId</span>:<span class="hljs-type"> String!</span>)</span> <span class="hljs-tag">{
+  <span class="hljs-symbol">assignDryRunToProject<span class="hljs-tag">(dryRunId: <span class="hljs-code">$dryRunId</span>, projectId: <span class="hljs-code">$projectId</span>)</span> <span class="hljs-tag">{
     <span class="hljs-symbol">id</span>
-    <span class="hljs-symbol">createdAt</span>
-    <span class="hljs-symbol">argoWorkflow</span>
-    <span class="hljs-symbol">status <span class="hljs-tag">{
-      <span class="hljs-type">...DryRunStatusFragment</span>
-    }</span></span>
-    <span class="hljs-symbol">project <span class="hljs-tag">{
-      <span class="hljs-type">...ProjectFragment</span>
-    }</span></span>
-    <span class="hljs-symbol">nodes <span class="hljs-tag">{
-      <span class="hljs-type">...DryRunNodeFragment</span>
-    }</span></span>
-    <span class="hljs-symbol">node <span class="hljs-tag">{
-      <span class="hljs-type">...DryRunNodeFragment</span>
-    }</span></span>
+    <span class="hljs-symbol">project</span> <span class="hljs-tag">{
+      <span class="hljs-type">id</span>
+    }</span>      
   }</span></span>
 }</span></span>
 </code></pre> </body>
@@ -980,7 +963,7 @@ http://localhost:8088
                   <html>
                   <head></head>
                   <body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
-  <span class="hljs-attr">"dryRunId"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"dryRunId"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"projectId"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span>
 <span class="hljs-punctuation">}</span>
 </code></pre> </body>
@@ -994,12 +977,9 @@ http://localhost:8088
   <span class="hljs-attr">"data"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
     <span class="hljs-attr">"assignDryRunToProject"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
       <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
-      <span class="hljs-attr">"createdAt"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
-      <span class="hljs-attr">"argoWorkflow"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">ArgoWorkflow</span><span class="hljs-punctuation">,</span>
-      <span class="hljs-attr">"status"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">DryRunStatus</span><span class="hljs-punctuation">,</span>
-      <span class="hljs-attr">"project"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">Project</span><span class="hljs-punctuation">,</span>
-      <span class="hljs-attr">"nodes"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-string">DryRunNode</span><span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span>
-      <span class="hljs-attr">"node"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">DryRunNode</span>
+      <span class="hljs-attr">"project"</span><span class="hljs-punctuation">{</span>
+        <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-punctuation">}</span>
     <span class="hljs-punctuation">}</span>
   <span class="hljs-punctuation">}</span>
 <span class="hljs-punctuation">}</span>
@@ -1069,7 +1049,7 @@ http://localhost:8088
                   <h5>Variables</h5>
                   <html>
                   <head></head>
-                  <body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"key"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">}</span>
+                  <body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"key"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"file123"</span><span class="hljs-punctuation">}</span>
 </code></pre> </body>
                   </html>
                 </div>
@@ -1079,7 +1059,7 @@ http://localhost:8088
                   <head></head>
                   <body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
   <span class="hljs-attr">"data"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
-    <span class="hljs-attr">"computeUploadPresignedUrl"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span>
+    <span class="hljs-attr">"computeUploadPresignedUrl"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"http://url_to_upload/file123"</span>
   <span class="hljs-punctuation">}</span>
 <span class="hljs-punctuation">}</span>
 </code></pre> </body>
@@ -1152,7 +1132,15 @@ http://localhost:8088
                   <h5>Variables</h5>
                   <html>
                   <head></head>
-                  <body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"credential"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">DockerRegistryCredentialInput</span><span class="hljs-punctuation">}</span>
+                  <body><pre><code class="hljs language-json">
+<span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">"credential"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
+    <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span><span class="hljs-string">"name1"</span><span class="hljs-punctuation">,</span>
+    <span class="hljs-attr">"username"</span><span class="hljs-punctuation">:</span><span class="hljs-string">"username1"</span><span class="hljs-punctuation">,</span>
+    <span class="hljs-attr">"password"</span><span class="hljs-punctuation">:</span><span class="hljs-string">"password1"</span><span class="hljs-punctuation">,</span>
+    <span class="hljs-attr">"server"</span><span class="hljs-punctuation">:</span><span class="hljs-string">"sample.server.com"</span>    
+    <span class="hljs-punctuation">}</span>
+  <span class="hljs-punctuation">}</span>
 </code></pre> </body>
                   </html>
                 </div>
@@ -1163,9 +1151,9 @@ http://localhost:8088
                   <body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
   <span class="hljs-attr">"data"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
     <span class="hljs-attr">"createDockerRegistryCredential"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
-      <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
-      <span class="hljs-attr">"username"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
-      <span class="hljs-attr">"server"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span>
+      <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"name1"</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"username"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"username1"</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"server"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"sample.server.com"</span>
     <span class="hljs-punctuation">}</span>
   <span class="hljs-punctuation">}</span>
 <span class="hljs-punctuation">}</span>
@@ -1229,20 +1217,7 @@ http://localhost:8088
                   <body><pre><code class="hljs language-gql"><span class="hljs-symbol"><span class="hljs-keyword">mutation</span> createDryRun<span class="hljs-tag">(<span class="hljs-code">$input</span>:<span class="hljs-type"> CreateDryRunInput!</span>)</span> <span class="hljs-tag">{
   <span class="hljs-symbol">createDryRun<span class="hljs-tag">(input: <span class="hljs-code">$input</span>)</span> <span class="hljs-tag">{
     <span class="hljs-symbol">id</span>
-    <span class="hljs-symbol">createdAt</span>
-    <span class="hljs-symbol">argoWorkflow</span>
-    <span class="hljs-symbol">status <span class="hljs-tag">{
-      <span class="hljs-type">...DryRunStatusFragment</span>
-    }</span></span>
-    <span class="hljs-symbol">project <span class="hljs-tag">{
-      <span class="hljs-type">...ProjectFragment</span>
-    }</span></span>
-    <span class="hljs-symbol">nodes <span class="hljs-tag">{
-      <span class="hljs-type">...DryRunNodeFragment</span>
-    }</span></span>
-    <span class="hljs-symbol">node <span class="hljs-tag">{
-      <span class="hljs-type">...DryRunNodeFragment</span>
-    }</span></span>
+    <span class="hljs-symbol">createdAt</span>   
   }</span></span>
 }</span></span>
 </code></pre> </body>
@@ -1252,8 +1227,8 @@ http://localhost:8088
                   <h5>Variables</h5>
                   <html>
                   <head></head>
-                  <body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"input"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">CreateDryRunInput</span><span class="hljs-punctuation">}</span>
-</code></pre> </body>
+<body><pre><code class="hljs language-gql"><span class="hljs-symbol">{</span><span class="hljs-symbol">"input": {</span><span class="hljs-symbol">"projectId": "dag-diamond-100",</span><span class="hljs-symbol">"argoWorkflow": {</span><span class="hljs-symbol">"metadata": {</span><span class="hljs-symbol">"generateName": "dag-diamond-100-"</span><span class="hljs-symbol">},</span><span class="hljs-symbol">"spec": {</span><span class="hljs-symbol">"templates": [</span><span class="hljs-symbol">{</span><span class="hljs-symbol">"name": "diamond",</span><span class="hljs-symbol">"inputs": {},</span><span class="hljs-symbol">"outputs": {},</span><span class="hljs-symbol">"metadata": {},</span><span class="hljs-symbol">"dag": {</span><span class="hljs-symbol">"tasks": [</span><span class="hljs-symbol">{</span><span class="hljs-symbol">"name": "A",</span><span class="hljs-symbol">"template": "echo",</span><span class="hljs-symbol">"arguments": {</span><span class="hljs-symbol">"parameters": [</span><span class="hljs-symbol">{</span><span class="hljs-symbol">"name": "message",</span><span class="hljs-symbol">"value": "A"</span><span class="hljs-symbol">}</span><span class="hljs-symbol">]</span><span class="hljs-symbol">}</span><span class="hljs-symbol">}</span><span class="hljs-symbol">,</span><span class="hljs-symbol">{</span><span class="hljs-symbol">"name": "B",</span><span class="hljs-symbol">"template": "echo",</span><span class="hljs-symbol">"arguments": {</span><span class="hljs-symbol">"parameters": [</span><span class="hljs-symbol">{</span><span class="hljs-symbol">"name": "message",</span><span class="hljs-symbol">"value": "B"</span><span class="hljs-symbol">}</span><span class="hljs-symbol">]</span><span class="hljs-symbol">},</span><span class="hljs-symbol">"depends": "A"</span><span class="hljs-symbol">}</span><span class="hljs-symbol">,</span><span class="hljs-symbol">{</span><span class="hljs-symbol">"name": "C",</span><span class="hljs-symbol">"template": "echo",</span><span class="hljs-symbol">"arguments": {</span><span class="hljs-symbol">"parameters": [</span><span class="hljs-symbol">{</span><span class="hljs-symbol">"name": "message",</span><span class="hljs-symbol">"value": "C"</span><span class="hljs-symbol">}</span><span class="hljs-symbol">]</span><span class="hljs-symbol">},</span><span class="hljs-symbol">"depends": "A"</span><span class="hljs-symbol">}</span><span class="hljs-symbol">,</span><span class="hljs-symbol">{</span><span class="hljs-symbol">"name": "D",</span><span class="hljs-symbol">"template": "echo",</span><span class="hljs-symbol">"arguments": {</span><span class="hljs-symbol">"parameters": [</span><span class="hljs-symbol">{</span><span class="hljs-symbol">"name": "message",</span><span class="hljs-symbol">"value": "D"</span><span class="hljs-symbol">}</span><span class="hljs-symbol">]</span><span class="hljs-symbol">},</span><span class="hljs-symbol">"depends": "B && C"</span><span class="hljs-symbol">}</span><span class="hljs-symbol">]</span><span class="hljs-symbol">}</span><span class="hljs-symbol">}</span><span class="hljs-symbol">]</span><span class="hljs-symbol">}</span><span class="hljs-symbol">,</span><span class="hljs-symbol">{</span><span class="hljs-symbol">"name": "echo",</span><span class="hljs-symbol">"inputs": {</span><span class="hljs-symbol">"parameters": [</span><span class="hljs-symbol">{</span><span class="hljs-symbol">"name": "message"</span><span class="hljs-symbol">}</span><span class="hljs-symbol">]</span><span class="hljs-symbol">},</span><span class="hljs-symbol">"outputs": {},</span><span class="hljs-symbol">"metadata": {},</span><span class="hljs-symbol">"container": {</span><span class="hljs-symbol">"name": "",</span><span class="hljs-symbol">"image": "alpine:3.7",</span><span class="hljs-symbol">"command": [</span><span class="hljs-symbol">"/bin/sh"</span><span class="hljs-symbol">],</span><span class="hljs-symbol">"args": [</span><span class="hljs-symbol">"-c",</span><span class="hljs-symbol">"sleep 3; echo {{inputs.parameters.message}}; sleep 6;"</span><span class="hljs-symbol">],</span><span class="hljs-symbol">"resources": {}</span><span class="hljs-symbol">}</span><span class="hljs-symbol">}</span><span class="hljs-symbol">]</span><span class="hljs-symbol">,</span><span class="hljs-symbol">"entrypoint": "diamond",</span><span class="hljs-symbol">"arguments": {}</span><span class="hljs-symbol">}</span><span class="hljs-symbol">}</span><span class="hljs-symbol">}</span><span class="hljs-symbol">}</span></code></pre></body>
+
                   </html>
                 </div>
                 <div class="example-section example-section-is-code operation-response-example">
@@ -1264,12 +1239,7 @@ http://localhost:8088
   <span class="hljs-attr">"data"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
     <span class="hljs-attr">"createDryRun"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
       <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
-      <span class="hljs-attr">"createdAt"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
-      <span class="hljs-attr">"argoWorkflow"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">ArgoWorkflow</span><span class="hljs-punctuation">,</span>
-      <span class="hljs-attr">"status"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">DryRunStatus</span><span class="hljs-punctuation">,</span>
-      <span class="hljs-attr">"project"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">Project</span><span class="hljs-punctuation">,</span>
-      <span class="hljs-attr">"nodes"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-string">DryRunNode</span><span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span>
-      <span class="hljs-attr">"node"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">DryRunNode</span>
+      <span class="hljs-attr">"createdAt"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span>      
     <span class="hljs-punctuation">}</span>
   <span class="hljs-punctuation">}</span>
 <span class="hljs-punctuation">}</span>
@@ -1334,12 +1304,6 @@ http://localhost:8088
     <span class="hljs-symbol">name</span>
     <span class="hljs-symbol">id</span>
     <span class="hljs-symbol">createdAt</span>
-    <span class="hljs-symbol">dryRuns <span class="hljs-tag">{
-      <span class="hljs-type">...DryRunFragment</span>
-    }</span></span>
-    <span class="hljs-symbol">workflowTemplates <span class="hljs-tag">{
-      <span class="hljs-type">...WorkflowTemplateFragment</span>
-    }</span></span>
   }</span></span>
 }</span></span>
 </code></pre> </body>
@@ -1349,7 +1313,10 @@ http://localhost:8088
                   <h5>Variables</h5>
                   <html>
                   <head></head>
-                  <body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"project"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">CreateProjectInput</span><span class="hljs-punctuation">}</span>
+                  <body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"project"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"sequential-pipeline"</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-punctuation">}</span>
+<span class="hljs-punctuation">}</span>
 </code></pre> </body>
                   </html>
                 </div>
@@ -1360,11 +1327,9 @@ http://localhost:8088
                   <body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
   <span class="hljs-attr">"data"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
     <span class="hljs-attr">"createProject"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
-      <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
-      <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
-      <span class="hljs-attr">"createdAt"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
-      <span class="hljs-attr">"dryRuns"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-string">DryRun</span><span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span>
-      <span class="hljs-attr">"workflowTemplates"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-string">WorkflowTemplate</span><span class="hljs-punctuation">]</span>
+      <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"sequential-pipeline"</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"sequential-pipeline"</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"createdAt"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"2023-08-17T10:59:00Z"</span><span class="hljs-punctuation">,</span>
     <span class="hljs-punctuation">}</span>
   <span class="hljs-punctuation">}</span>
 <span class="hljs-punctuation">}</span>
@@ -1427,21 +1392,113 @@ http://localhost:8088
                   <body><pre><code class="hljs language-gql"><span class="hljs-symbol"><span class="hljs-keyword">mutation</span> createWorkflowTemplate<span class="hljs-tag">(<span class="hljs-code">$input</span>:<span class="hljs-type"> CreateWorkflowTemplateInput!</span>)</span> <span class="hljs-tag">{
   <span class="hljs-symbol">createWorkflowTemplate<span class="hljs-tag">(input: <span class="hljs-code">$input</span>)</span> <span class="hljs-tag">{
     <span class="hljs-symbol">name</span>
-    <span class="hljs-symbol">project <span class="hljs-tag">{
-      <span class="hljs-type">...ProjectFragment</span>
-    }</span></span>
-    <span class="hljs-symbol">argoWorkflowTemplate</span>
   }</span></span>
 }</span></span>
 </code></pre> </body>
                   </html>
                 </div>
+                <!-- TODO -->
                 <div class="example-section example-section-is-code operation-variables-example">
                   <h5>Variables</h5>
                   <html>
                   <head></head>
-                  <body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"input"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">CreateWorkflowTemplateInput</span><span class="hljs-punctuation">}</span>
-</code></pre> </body>
+<body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">"input"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
+    <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"workflowtemplate1"</span><span class="hljs-punctuation">,</span>
+    <span class="hljs-attr">"argoWorkflowTemplate"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
+      <span class="hljs-attr">"apiVersion"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"argoproj.io/v1alpha1"</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"kind"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"Workflow"</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"metadata"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
+        <span class="hljs-attr">"generateName"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"dag-diamond-"</span>
+      <span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"spec"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
+        <span class="hljs-attr">"entrypoint"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"diamond"</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-attr">"templates"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span>
+          <span class="hljs-punctuation">{</span>
+            <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"diamond"</span><span class="hljs-punctuation">,</span>
+            <span class="hljs-attr">"dag"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
+              <span class="hljs-attr">"tasks"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span>
+                <span class="hljs-punctuation">{</span>
+                  <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"step1"</span><span class="hljs-punctuation">,</span>
+                  <span class="hljs-attr">"template"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"echo"</span><span class="hljs-punctuation">,</span>
+                  <span class="hljs-attr">"arguments"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
+                    <span class="hljs-attr">"parameters"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span>
+                      <span class="hljs-punctuation">{</span>
+                        <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"message"</span><span class="hljs-punctuation">,</span>
+                        <span class="hljs-attr">"value"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"A"</span>
+                      <span class="hljs-punctuation">}</span>
+                    <span class="hljs-punctuation">]</span>
+                  <span class="hljs-punctuation">}</span>
+                <span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
+                <span class="hljs-punctuation">{</span>
+                  <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"step2"</span><span class="hljs-punctuation">,</span>
+                  <span class="hljs-attr">"depends"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"step1"</span><span class="hljs-punctuation">,</span>
+                  <span class="hljs-attr">"template"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"echo"</span><span class="hljs-punctuation">,</span>
+                  <span class="hljs-attr">"arguments"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
+                    <span class="hljs-attr">"parameters"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span>
+                      <span class="hljs-punctuation">{</span>
+                        <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"message"</span><span class="hljs-punctuation">,</span>
+                        <span class="hljs-attr">"value"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"B"</span>
+                      <span class="hljs-punctuation">}</span>
+                    <span class="hljs-punctuation">]</span>
+                  <span class="hljs-punctuation">}</span>
+                <span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
+                <span class="hljs-punctuation">{</span>
+                  <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"step3"</span><span class="hljs-punctuation">,</span>
+                  <span class="hljs-attr">"depends"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"step1"</span><span class="hljs-punctuation">,</span>
+                  <span class="hljs-attr">"template"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"echo"</span><span class="hljs-punctuation">,</span>
+                  <span class="hljs-attr">"arguments"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
+                    <span class="hljs-attr">"parameters"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span>
+                      <span class="hljs-punctuation">{</span>
+                        <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"message"</span><span class="hljs-punctuation">,</span>
+                        <span class="hljs-attr">"value"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"C"</span>
+                      <span class="hljs-punctuation">}</span>
+                    <span class="hljs-punctuation">]</span>
+                  <span class="hljs-punctuation">}</span>
+                <span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
+                <span class="hljs-punctuation">{</span>
+                  <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"step4"</span><span class="hljs-punctuation">,</span>
+                  <span class="hljs-attr">"depends"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"step2 && step3"</span><span class="hljs-punctuation">,</span>
+                  <span class="hljs-attr">"template"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"echo"</span><span class="hljs-punctuation">,</span>
+                  <span class="hljs-attr">"arguments"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
+                    <span class="hljs-attr">"parameters"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span>
+                      <span class="hljs-punctuation">{</span>
+                        <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"message"</span><span class="hljs-punctuation">,</span>
+                        <span class="hljs-attr">"value"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"D"</span>
+                      <span class="hljs-punctuation">}</span>
+                    <span class="hljs-punctuation">]</span>
+                  <span class="hljs-punctuation">}</span>
+                <span class="hljs-punctuation">}</span>
+              <span class="hljs-punctuation">]</span>
+            <span class="hljs-punctuation">}</span>
+          <span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
+          <span class="hljs-punctuation">{</span>
+            <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"echo"</span><span class="hljs-punctuation">,</span>
+            <span class="hljs-attr">"inputs"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
+              <span class="hljs-attr">"parameters"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span>
+                <span class="hljs-punctuation">{</span>
+                  <span class="hljs-attr">"name"</span>
+                <span class="hljs-punctuation">}</span>
+              <span class="hljs-punctuation">]</span>
+            <span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
+            <span class="hljs-attr">"container"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
+              <span class="hljs-attr">"image"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"alpine:3.7"</span><span class="hljs-punctuation">,</span>
+              <span class="hljs-attr">"command"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span>
+                <span class="hljs-string">"sh"</span><span class="hljs-punctuation">,</span>
+                <span class="hljs-string">"-c"</span><span class="hljs-punctuation">,</span>
+                <span class="hljs-string">"echo {{inputs.parameters.message}} && sleep 9"</span>
+              <span class="hljs-punctuation">]</span>
+            <span class="hljs-punctuation">}</span>
+          <span class="hljs-punctuation">}</span>
+        <span class="hljs-punctuation">]</span>
+      <span class="hljs-punctuation">}</span>
+    <span class="hljs-punctuation">}</span>
+  <span class="hljs-punctuation">}</span>
+<span class="hljs-punctuation">}</span>
+</code></pre></body>
+                       
+                  
+                  
                   </html>
                 </div>
                 <div class="example-section example-section-is-code operation-response-example">
@@ -1451,9 +1508,7 @@ http://localhost:8088
                   <body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
   <span class="hljs-attr">"data"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
     <span class="hljs-attr">"createWorkflowTemplate"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
-      <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
-      <span class="hljs-attr">"project"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">Project</span><span class="hljs-punctuation">,</span>
-      <span class="hljs-attr">"argoWorkflowTemplate"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">ArgoWorkflowTemplate</span>
+      <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"workflowtemplate1</span><span class="hljs-punctuation">,</span>
     <span class="hljs-punctuation">}</span>
   <span class="hljs-punctuation">}</span>
 <span class="hljs-punctuation">}</span>
@@ -1531,7 +1586,7 @@ http://localhost:8088
                   <h5>Response</h5>
                   <html>
                   <head></head>
-                  <body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"data"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span><span class="hljs-attr">"deleteDockerRegistryCredential"</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">false</span></span><span class="hljs-punctuation">}</span><span class="hljs-punctuation">}</span>
+                  <body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"data"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span><span class="hljs-attr">"deleteDockerRegistryCredential"</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">true</span></span><span class="hljs-punctuation">}</span><span class="hljs-punctuation">}</span>
 </code></pre> </body>
                   </html>
                 </div>
@@ -1832,13 +1887,6 @@ http://localhost:8088
   )</span> <span class="hljs-tag">{
     <span class="hljs-symbol">name</span>
     <span class="hljs-symbol">id</span>
-    <span class="hljs-symbol">createdAt</span>
-    <span class="hljs-symbol">dryRuns <span class="hljs-tag">{
-      <span class="hljs-type">...DryRunFragment</span>
-    }</span></span>
-    <span class="hljs-symbol">workflowTemplates <span class="hljs-tag">{
-      <span class="hljs-type">...WorkflowTemplateFragment</span>
-    }</span></span>
   }</span></span>
 }</span></span>
 </code></pre> </body>
@@ -1849,8 +1897,8 @@ http://localhost:8088
                   <html>
                   <head></head>
                   <body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
-  <span class="hljs-attr">"projectId"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span>
+  <span class="hljs-attr">"projectId"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"project1"</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"project2"</span>
 <span class="hljs-punctuation">}</span>
 </code></pre> </body>
                   </html>
@@ -1862,11 +1910,8 @@ http://localhost:8088
                   <body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
   <span class="hljs-attr">"data"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
     <span class="hljs-attr">"renameProject"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
-      <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
-      <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
-      <span class="hljs-attr">"createdAt"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
-      <span class="hljs-attr">"dryRuns"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-string">DryRun</span><span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span>
-      <span class="hljs-attr">"workflowTemplates"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-string">WorkflowTemplate</span><span class="hljs-punctuation">]</span>
+      <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"project2"</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"project1"</span><span class="hljs-punctuation">,</span>
     <span class="hljs-punctuation">}</span>
   <span class="hljs-punctuation">}</span>
 <span class="hljs-punctuation">}</span>
@@ -1929,19 +1974,8 @@ http://localhost:8088
                   <body><pre><code class="hljs language-gql"><span class="hljs-symbol"><span class="hljs-keyword">mutation</span> resubmitDryRun<span class="hljs-tag">(<span class="hljs-code">$dryRunId</span>:<span class="hljs-type"> String!</span>)</span> <span class="hljs-tag">{
   <span class="hljs-symbol">resubmitDryRun<span class="hljs-tag">(dryRunId: <span class="hljs-code">$dryRunId</span>)</span> <span class="hljs-tag">{
     <span class="hljs-symbol">id</span>
-    <span class="hljs-symbol">createdAt</span>
-    <span class="hljs-symbol">argoWorkflow</span>
     <span class="hljs-symbol">status <span class="hljs-tag">{
-      <span class="hljs-type">...DryRunStatusFragment</span>
-    }</span></span>
-    <span class="hljs-symbol">project <span class="hljs-tag">{
-      <span class="hljs-type">...ProjectFragment</span>
-    }</span></span>
-    <span class="hljs-symbol">nodes <span class="hljs-tag">{
-      <span class="hljs-type">...DryRunNodeFragment</span>
-    }</span></span>
-    <span class="hljs-symbol">node <span class="hljs-tag">{
-      <span class="hljs-type">...DryRunNodeFragment</span>
+      <span class="hljs-type">phase</span>
     }</span></span>
   }</span></span>
 }</span></span>
@@ -1952,7 +1986,7 @@ http://localhost:8088
                   <h5>Variables</h5>
                   <html>
                   <head></head>
-                  <body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"dryRunId"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">}</span>
+                  <body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"dryRunId"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"dryrun1"</span><span class="hljs-punctuation">}</span>
 </code></pre> </body>
                   </html>
                 </div>
@@ -1963,13 +1997,8 @@ http://localhost:8088
                   <body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
   <span class="hljs-attr">"data"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
     <span class="hljs-attr">"resubmitDryRun"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
-      <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
-      <span class="hljs-attr">"createdAt"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
-      <span class="hljs-attr">"argoWorkflow"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">ArgoWorkflow</span><span class="hljs-punctuation">,</span>
-      <span class="hljs-attr">"status"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">DryRunStatus</span><span class="hljs-punctuation">,</span>
-      <span class="hljs-attr">"project"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">Project</span><span class="hljs-punctuation">,</span>
-      <span class="hljs-attr">"nodes"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-string">DryRunNode</span><span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span>
-      <span class="hljs-attr">"node"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">DryRunNode</span>
+      <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"dryrun1"</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"status"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">Running</span><span class="hljs-punctuation">,</span>
     <span class="hljs-punctuation">}</span>
   <span class="hljs-punctuation">}</span>
 <span class="hljs-punctuation">}</span>
@@ -2032,19 +2061,8 @@ http://localhost:8088
                   <body><pre><code class="hljs language-gql"><span class="hljs-symbol"><span class="hljs-keyword">mutation</span> resumeDryRun<span class="hljs-tag">(<span class="hljs-code">$dryRunId</span>:<span class="hljs-type"> String!</span>)</span> <span class="hljs-tag">{
   <span class="hljs-symbol">resumeDryRun<span class="hljs-tag">(dryRunId: <span class="hljs-code">$dryRunId</span>)</span> <span class="hljs-tag">{
     <span class="hljs-symbol">id</span>
-    <span class="hljs-symbol">createdAt</span>
-    <span class="hljs-symbol">argoWorkflow</span>
     <span class="hljs-symbol">status <span class="hljs-tag">{
-      <span class="hljs-type">...DryRunStatusFragment</span>
-    }</span></span>
-    <span class="hljs-symbol">project <span class="hljs-tag">{
-      <span class="hljs-type">...ProjectFragment</span>
-    }</span></span>
-    <span class="hljs-symbol">nodes <span class="hljs-tag">{
-      <span class="hljs-type">...DryRunNodeFragment</span>
-    }</span></span>
-    <span class="hljs-symbol">node <span class="hljs-tag">{
-      <span class="hljs-type">...DryRunNodeFragment</span>
+      <span class="hljs-type">phase</span>
     }</span></span>
   }</span></span>
 }</span></span>
@@ -2055,7 +2073,7 @@ http://localhost:8088
                   <h5>Variables</h5>
                   <html>
                   <head></head>
-                  <body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"dryRunId"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">}</span>
+                  <body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"dryRunId"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"dryrun1"</span><span class="hljs-punctuation">}</span>
 </code></pre> </body>
                   </html>
                 </div>
@@ -2066,13 +2084,8 @@ http://localhost:8088
                   <body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
   <span class="hljs-attr">"data"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
     <span class="hljs-attr">"resumeDryRun"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
-      <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
-      <span class="hljs-attr">"createdAt"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
-      <span class="hljs-attr">"argoWorkflow"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">ArgoWorkflow</span><span class="hljs-punctuation">,</span>
-      <span class="hljs-attr">"status"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">DryRunStatus</span><span class="hljs-punctuation">,</span>
-      <span class="hljs-attr">"project"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">Project</span><span class="hljs-punctuation">,</span>
-      <span class="hljs-attr">"nodes"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-string">DryRunNode</span><span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span>
-      <span class="hljs-attr">"node"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">DryRunNode</span>
+      <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"dryrun1"</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"status"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">Running</span><span class="hljs-punctuation">,</span>
     <span class="hljs-punctuation">}</span>
   <span class="hljs-punctuation">}</span>
 <span class="hljs-punctuation">}</span>
@@ -2135,19 +2148,8 @@ http://localhost:8088
                   <body><pre><code class="hljs language-gql"><span class="hljs-symbol"><span class="hljs-keyword">mutation</span> retryDryRun<span class="hljs-tag">(<span class="hljs-code">$dryRunId</span>:<span class="hljs-type"> String!</span>)</span> <span class="hljs-tag">{
   <span class="hljs-symbol">retryDryRun<span class="hljs-tag">(dryRunId: <span class="hljs-code">$dryRunId</span>)</span> <span class="hljs-tag">{
     <span class="hljs-symbol">id</span>
-    <span class="hljs-symbol">createdAt</span>
-    <span class="hljs-symbol">argoWorkflow</span>
     <span class="hljs-symbol">status <span class="hljs-tag">{
-      <span class="hljs-type">...DryRunStatusFragment</span>
-    }</span></span>
-    <span class="hljs-symbol">project <span class="hljs-tag">{
-      <span class="hljs-type">...ProjectFragment</span>
-    }</span></span>
-    <span class="hljs-symbol">nodes <span class="hljs-tag">{
-      <span class="hljs-type">...DryRunNodeFragment</span>
-    }</span></span>
-    <span class="hljs-symbol">node <span class="hljs-tag">{
-      <span class="hljs-type">...DryRunNodeFragment</span>
+      <span class="hljs-type">phase</span>
     }</span></span>
   }</span></span>
 }</span></span>
@@ -2158,7 +2160,7 @@ http://localhost:8088
                   <h5>Variables</h5>
                   <html>
                   <head></head>
-                  <body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"dryRunId"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">}</span>
+                  <body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"dryRunId"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"dryrun1"</span><span class="hljs-punctuation">}</span>
 </code></pre> </body>
                   </html>
                 </div>
@@ -2169,13 +2171,8 @@ http://localhost:8088
                   <body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
   <span class="hljs-attr">"data"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
     <span class="hljs-attr">"retryDryRun"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
-      <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
-      <span class="hljs-attr">"createdAt"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
-      <span class="hljs-attr">"argoWorkflow"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">ArgoWorkflow</span><span class="hljs-punctuation">,</span>
-      <span class="hljs-attr">"status"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">DryRunStatus</span><span class="hljs-punctuation">,</span>
-      <span class="hljs-attr">"project"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">Project</span><span class="hljs-punctuation">,</span>
-      <span class="hljs-attr">"nodes"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-string">DryRunNode</span><span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span>
-      <span class="hljs-attr">"node"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">DryRunNode</span>
+      <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"dryrun1"</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"status"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">Running</span><span class="hljs-punctuation">,</span>
     <span class="hljs-punctuation">}</span>
   <span class="hljs-punctuation">}</span>
 <span class="hljs-punctuation">}</span>
@@ -2253,19 +2250,8 @@ http://localhost:8088
     terminate: <span class="hljs-code">$terminate</span>
   )</span> <span class="hljs-tag">{
     <span class="hljs-symbol">id</span>
-    <span class="hljs-symbol">createdAt</span>
-    <span class="hljs-symbol">argoWorkflow</span>
     <span class="hljs-symbol">status <span class="hljs-tag">{
-      <span class="hljs-type">...DryRunStatusFragment</span>
-    }</span></span>
-    <span class="hljs-symbol">project <span class="hljs-tag">{
-      <span class="hljs-type">...ProjectFragment</span>
-    }</span></span>
-    <span class="hljs-symbol">nodes <span class="hljs-tag">{
-      <span class="hljs-type">...DryRunNodeFragment</span>
-    }</span></span>
-    <span class="hljs-symbol">node <span class="hljs-tag">{
-      <span class="hljs-type">...DryRunNodeFragment</span>
+      <span class="hljs-type">phase</span>
     }</span></span>
   }</span></span>
 }</span></span>
@@ -2276,7 +2262,7 @@ http://localhost:8088
                   <h5>Variables</h5>
                   <html>
                   <head></head>
-                  <body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"dryRunId"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span> <span class="hljs-attr">"terminate"</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">false</span></span><span class="hljs-punctuation">}</span>
+                  <body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"dryRunId"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"dryrun1"</span><span class="hljs-punctuation">,</span> <span class="hljs-attr">"terminate"</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">false</span></span><span class="hljs-punctuation">}</span>
 </code></pre> </body>
                   </html>
                 </div>
@@ -2287,13 +2273,8 @@ http://localhost:8088
                   <body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
   <span class="hljs-attr">"data"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
     <span class="hljs-attr">"stopDryRun"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
-      <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
-      <span class="hljs-attr">"createdAt"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
-      <span class="hljs-attr">"argoWorkflow"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">ArgoWorkflow</span><span class="hljs-punctuation">,</span>
-      <span class="hljs-attr">"status"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">DryRunStatus</span><span class="hljs-punctuation">,</span>
-      <span class="hljs-attr">"project"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">Project</span><span class="hljs-punctuation">,</span>
-      <span class="hljs-attr">"nodes"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-string">DryRunNode</span><span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span>
-      <span class="hljs-attr">"node"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">DryRunNode</span>
+      <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"dryrun1"</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"status"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">Suspended</span><span class="hljs-punctuation">,</span>
     <span class="hljs-punctuation">}</span>
   <span class="hljs-punctuation">}</span>
 <span class="hljs-punctuation">}</span>
@@ -2356,19 +2337,8 @@ http://localhost:8088
                   <body><pre><code class="hljs language-gql"><span class="hljs-symbol"><span class="hljs-keyword">mutation</span> suspendDryRun<span class="hljs-tag">(<span class="hljs-code">$dryRunId</span>:<span class="hljs-type"> String!</span>)</span> <span class="hljs-tag">{
   <span class="hljs-symbol">suspendDryRun<span class="hljs-tag">(dryRunId: <span class="hljs-code">$dryRunId</span>)</span> <span class="hljs-tag">{
     <span class="hljs-symbol">id</span>
-    <span class="hljs-symbol">createdAt</span>
-    <span class="hljs-symbol">argoWorkflow</span>
     <span class="hljs-symbol">status <span class="hljs-tag">{
-      <span class="hljs-type">...DryRunStatusFragment</span>
-    }</span></span>
-    <span class="hljs-symbol">project <span class="hljs-tag">{
-      <span class="hljs-type">...ProjectFragment</span>
-    }</span></span>
-    <span class="hljs-symbol">nodes <span class="hljs-tag">{
-      <span class="hljs-type">...DryRunNodeFragment</span>
-    }</span></span>
-    <span class="hljs-symbol">node <span class="hljs-tag">{
-      <span class="hljs-type">...DryRunNodeFragment</span>
+      <span class="hljs-type">phase</span>
     }</span></span>
   }</span></span>
 }</span></span>
@@ -2379,7 +2349,7 @@ http://localhost:8088
                   <h5>Variables</h5>
                   <html>
                   <head></head>
-                  <body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"dryRunId"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">}</span>
+                  <body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"dryRunId"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"dryrun1</span><span class="hljs-punctuation">}</span>
 </code></pre> </body>
                   </html>
                 </div>
@@ -2390,13 +2360,8 @@ http://localhost:8088
                   <body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
   <span class="hljs-attr">"data"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
     <span class="hljs-attr">"suspendDryRun"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
-      <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
-      <span class="hljs-attr">"createdAt"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
-      <span class="hljs-attr">"argoWorkflow"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">ArgoWorkflow</span><span class="hljs-punctuation">,</span>
-      <span class="hljs-attr">"status"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">DryRunStatus</span><span class="hljs-punctuation">,</span>
-      <span class="hljs-attr">"project"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">Project</span><span class="hljs-punctuation">,</span>
-      <span class="hljs-attr">"nodes"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-string">DryRunNode</span><span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span>
-      <span class="hljs-attr">"node"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">DryRunNode</span>
+      <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"dryrun1"</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"status"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">Suspended</span><span class="hljs-punctuation">,</span>
     <span class="hljs-punctuation">}</span>
   <span class="hljs-punctuation">}</span>
 <span class="hljs-punctuation">}</span>
@@ -2470,7 +2435,12 @@ http://localhost:8088
                   <h5>Variables</h5>
                   <html>
                   <head></head>
-                  <body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"credential"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">DockerRegistryCredentialInput</span><span class="hljs-punctuation">}</span>
+<body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"credential"</span><span class="hljs-punctuation">:</span><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"username"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"server"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span>
+  <span class="hljs-punctuation">}</span> 
+<span class="hljs-punctuation">}</span>
 </code></pre> </body>
                   </html>
                 </div>
@@ -2502,7 +2472,7 @@ http://localhost:8088
               <div class="doc-copy">
                 <div class="operation-description doc-copy-section">
                   <h5>Description</h5>
-                  <p> Update an existing Argo workflow template </p>
+                  <p> Update an existing Argo workflow template. The resourceVersion of the original workflow template must be included in the metadata section of the new workflow template document. This can be found using the query <a href="#query-workflowTemplate">workflowTemplate</a>. </p>
                 </div>
               </div>
             </div>
@@ -2546,10 +2516,6 @@ http://localhost:8088
                   <body><pre><code class="hljs language-gql"><span class="hljs-symbol"><span class="hljs-keyword">mutation</span> updateWorkflowTemplate<span class="hljs-tag">(<span class="hljs-code">$update</span>:<span class="hljs-type"> UpdateWorkflowTemplateInput!</span>)</span> <span class="hljs-tag">{
   <span class="hljs-symbol">updateWorkflowTemplate<span class="hljs-tag">(update: <span class="hljs-code">$update</span>)</span> <span class="hljs-tag">{
     <span class="hljs-symbol">name</span>
-    <span class="hljs-symbol">project <span class="hljs-tag">{
-      <span class="hljs-type">...ProjectFragment</span>
-    }</span></span>
-    <span class="hljs-symbol">argoWorkflowTemplate</span>
   }</span></span>
 }</span></span>
 </code></pre> </body>
@@ -2558,9 +2524,102 @@ http://localhost:8088
                 <div class="example-section example-section-is-code operation-variables-example">
                   <h5>Variables</h5>
                   <html>
-                  <head></head>
-                  <body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"update"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">UpdateWorkflowTemplateInput</span><span class="hljs-punctuation">}</span>
-</code></pre> </body>
+<head></head>
+<body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">"update"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
+    <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"workflowtemplate1"</span><span class="hljs-punctuation">,</span>
+    <span class="hljs-attr">"argoWorkflowTemplate"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
+      <span class="hljs-attr">"apiVersion"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"argoproj.io/v1alpha1"</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"kind"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"Workflow"</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"metadata"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
+        <span class="hljs-attr">"generateName"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"dag-diamond-"</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-attr">"resourceVersion"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"1199168"</span>
+      <span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"spec"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
+        <span class="hljs-attr">"entrypoint"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"diamond"</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-attr">"templates"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span>
+          <span class="hljs-punctuation">{</span>
+            <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"diamond"</span><span class="hljs-punctuation">,</span>
+            <span class="hljs-attr">"dag"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
+              <span class="hljs-attr">"tasks"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span>
+                <span class="hljs-punctuation">{</span>
+                  <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"step1"</span><span class="hljs-punctuation">,</span>
+                  <span class="hljs-attr">"template"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"echo"</span><span class="hljs-punctuation">,</span>
+                  <span class="hljs-attr">"arguments"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
+                    <span class="hljs-attr">"parameters"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span>
+                      <span class="hljs-punctuation">{</span>
+                        <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"message"</span><span class="hljs-punctuation">,</span>
+                        <span class="hljs-attr">"value"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"newA"</span>
+                        <span class="hljs-punctuation">}</span>
+                    <span class="hljs-punctuation">]</span>
+                  <span class="hljs-punctuation">}</span>
+                <span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
+                <span class="hljs-punctuation">{</span>
+                  <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"step2"</span><span class="hljs-punctuation">,</span>
+                  <span class="hljs-attr">"depends"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"step1"</span><span class="hljs-punctuation">,</span>
+                  <span class="hljs-attr">"template"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"echo"</span><span class="hljs-punctuation">,</span>
+                  <span class="hljs-attr">"arguments"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
+                    <span class="hljs-attr">"parameters"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span>
+                      <span class="hljs-punctuation">{</span>
+                        <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"message"</span><span class="hljs-punctuation">,</span>
+                        <span class="hljs-attr">"value"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"newB"</span>
+                        <span class="hljs-punctuation">}</span>
+                    <span class="hljs-punctuation">]</span>
+                  <span class="hljs-punctuation">}</span>
+                <span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
+                <span class="hljs-punctuation">{</span>
+                  <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"step3"</span><span class="hljs-punctuation">,</span>
+                  <span class="hljs-attr">"depends"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"step1"</span><span class="hljs-punctuation">,</span>
+                  <span class="hljs-attr">"template"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"echo"</span><span class="hljs-punctuation">,</span>
+                  <span class="hljs-attr">"arguments"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
+                    <span class="hljs-attr">"parameters"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span>
+                      <span class="hljs-punctuation">{</span>
+                        <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"message"</span><span class="hljs-punctuation">,</span>
+                        <span class="hljs-attr">"value"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"newC"</span> 
+                        <span class="hljs-punctuation">}</span>
+                    <span class="hljs-punctuation">]</span>
+                  <span class="hljs-punctuation">}</span>
+                <span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
+                <span class="hljs-punctuation">{</span>
+                  <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"step4"</span><span class="hljs-punctuation">,</span>
+                  <span class="hljs-attr">"depends"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"step2 && step3"</span><span class="hljs-punctuation">,</span>
+                  <span class="hljs-attr">"template"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"echo"</span><span class="hljs-punctuation">,</span>
+                  <span class="hljs-attr">"arguments"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
+                    <span class="hljs-attr">"parameters"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span>
+                      <span class="hljs-punctuation">{</span>
+                        <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"message"</span><span class="hljs-punctuation">,</span>
+                        <span class="hljs-attr">"value"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"newD"</span>
+                      <span class="hljs-punctuation">}</span>
+                    <span class="hljs-punctuation">]</span>
+                  <span class="hljs-punctuation">}</span>
+                <span class="hljs-punctuation">}</span>
+              <span class="hljs-punctuation">]</span>
+            <span class="hljs-punctuation">}</span>
+          <span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
+          <span class="hljs-punctuation">{</span>
+            <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"echo"</span><span class="hljs-punctuation">,</span>
+            <span class="hljs-attr">"inputs"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
+              <span class="hljs-attr">"parameters"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span>
+                <span class="hljs-punctuation">{</span>
+                  <span class="hljs-attr">"name"</span>
+                <span class="hljs-punctuation">}</span>
+              <span class="hljs-punctuation">]</span>
+            <span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
+            <span class="hljs-attr">"container"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
+              <span class="hljs-attr">"image"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"alpine:3.7"</span><span class="hljs-punctuation">,</span>
+              <span class="hljs-attr">"command"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span>
+                <span class="hljs-string">"sh"</span><span class="hljs-punctuation">,</span>
+                <span class="hljs-string">"-c"</span><span class="hljs-punctuation">,</span>
+                <span class="hljs-string">"echo {{inputs.parameters.message}} && sleep 9"</span>
+              <span class="hljs-punctuation">]</span>
+            <span class="hljs-punctuation">}</span>
+          <span class="hljs-punctuation">}</span>
+        <span class="hljs-punctuation">]</span>
+      <span class="hljs-punctuation">}</span>
+    <span class="hljs-punctuation">}</span>
+  <span class="hljs-punctuation">}</span>
+<span class="hljs-punctuation">}</span>
+</code></pre></body>
                   </html>
                 </div>
                 <div class="example-section example-section-is-code operation-response-example">
@@ -2570,9 +2629,7 @@ http://localhost:8088
                   <body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
   <span class="hljs-attr">"data"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
     <span class="hljs-attr">"updateWorkflowTemplate"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
-      <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
-      <span class="hljs-attr">"project"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">Project</span><span class="hljs-punctuation">,</span>
-      <span class="hljs-attr">"argoWorkflowTemplate"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">ArgoWorkflowTemplate</span>
+      <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"workflowtemplate1"</span><span class="hljs-punctuation">,</span>
     <span class="hljs-punctuation">}</span>
   <span class="hljs-punctuation">}</span>
 <span class="hljs-punctuation">}</span>
