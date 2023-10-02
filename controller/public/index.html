@@ -365,18 +365,34 @@ http://localhost:8088
                   <h5>Query</h5>
                   <html>
                   <head></head>
-                  <body><pre><code class="hljs language-gql"><span class="hljs-symbol"><span class="hljs-keyword">query</span> dryRun<span class="hljs-tag">(<span class="hljs-code">$dryRunId</span>:<span class="hljs-type"> String!</span>)</span> <span class="hljs-tag">{
+<body><pre><code class="hljs language-gql"><span class="hljs-symbol"><span class="hljs-keyword">query</span> dryRun<span class="hljs-tag">(<span class="hljs-code">$dryRunId</span>:<span class="hljs-type"> String!</span>)</span> <span class="hljs-tag">{
   <span class="hljs-symbol">dryRun<span class="hljs-tag">(dryRunId: <span class="hljs-code">$dryRunId</span>)</span> <span class="hljs-tag">{
-      <span class="hljs-symbol">id</span>
-      <span class="hljs-symbol">createdAt</span>
-      <span class="hljs-symbol">status <span class="hljs-tag">{
-        <span class="hljs-type">phase</span>
-        <span class="hljs-symbol">startedAt</span>
-        <span class="hljs-symbol">finishedAt</span>
-      }</span></span>
+    <span class="hljs-symbol">id</span>
+    <span class="hljs-symbol">status <span class="hljs-tag">{
+      <span class="hljs-type">phase</span>
+      <span class="hljs-symbol">startedAt</span>
+      <span class="hljs-symbol">finishedAt</span>
     }</span></span>
-                    
-</code></pre> </body>
+    <span class="hljs-symbol">nodes <span class="hljs-tag">{
+      <span class="hljs-symbol">type</span>
+      <span class="hljs-symbol">startedAt</span>
+      <span class="hljs-symbol">finishedAt</span>
+      <span class="hljs-meta">... on DryRunNodePod <span class="hljs-tag">{
+        <span class="hljs-symbol">displayName</span>
+        <span class="hljs-symbol">metrics <span class="hljs-tag">{
+          <span class="hljs-symbol">cpuSystemSecondsTotal <span class="hljs-tag">{
+            <span class="hljs-symbol">timestamp</span>
+            <span class="hljs-symbol">value</span>
+          }</span>
+        }</span>
+        <span class="hljs-symbol">outputArtifacts <span class="hljs-tag">{
+          <span class="hljs-symbol">name</span>
+        }</span>
+      }</span></span></span>
+    }</span></span>
+  }</span></span>
+}</span></span></code></pre></body>
+                  
                   </html>
                 </div>
                 <div class="example-section example-section-is-code operation-variables-example">
@@ -391,20 +407,108 @@ http://localhost:8088
                   <h5>Response</h5>
                   <html>
                   <head></head>
-                  <body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
+<body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
   <span class="hljs-attr">"data"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
     <span class="hljs-attr">"dryRun"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
       <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
-      <span class="hljs-attr">"createdAt"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"2023-08-17T09:59:00Z"</span><span class="hljs-punctuation">,</span>
       <span class="hljs-attr">"status"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
-        <span class="hljs-attr">"phase"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">Succeded<span class="hljs-punctuation">,</span>
-        <span class="hljs-attr">"startedAt"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"2023-08-17T10:59:00Z"<span class="hljs-punctuation">,</span>
-        <span class="hljs-attr">"finishedAt"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"2023-08-17T11:59:00Z"
+        <span class="hljs-attr">"phase"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"Succeeded"</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-attr">"startedAt"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"2023-07-14T07:19:23Z"</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-attr">"finishedAt"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"2023-07-14T07:20:04Z"</span>
+      <span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"nodes"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span>
+        <span class="hljs-punctuation">{</span>
+          <span class="hljs-attr">"type"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"DAG"</span><span class="hljs-punctuation">,</span>
+          <span class="hljs-attr">"startedAt"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"2023-07-14T07:19:23Z"</span><span class="hljs-punctuation">,</span>
+          <span class="hljs-attr">"finishedAt"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"2023-07-14T07:20:04Z"</span>
+        <span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-punctuation">{</span>
+          <span class="hljs-attr">"type"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"Pod"</span><span class="hljs-punctuation">,</span>
+          <span class="hljs-attr">"startedAt"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"2023-07-14T07:19:23Z"</span><span class="hljs-punctuation">,</span>
+          <span class="hljs-attr">"finishedAt"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"2023-07-14T07:19:29Z"</span><span class="hljs-punctuation">,</span>
+          <span class="hljs-attr">"displayName"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"A"</span><span class="hljs-punctuation">,</span>
+          <span class="hljs-attr">"metrics"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
+            <span class="hljs-attr">"cpuSystemSecondsTotal"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span>
+              <span class="hljs-punctuation">{</span>
+                <span class="hljs-attr">"timestamp"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">1689319168</span><span class="hljs-punctuation">,</span>
+                <span class="hljs-attr">"value"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"0.03"</span>
+              <span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
+              <span class="hljs-punctuation">{</span>
+                <span class="hljs-attr">"timestamp"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">1689319169</span><span class="hljs-punctuation">,</span>
+                <span class="hljs-attr">"value"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"0.03"</span>
+              <span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
+              <span class="hljs-punctuation">{</span>
+                <span class="hljs-attr">"timestamp"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">1689319170</span><span class="hljs-punctuation">,</span>
+                <span class="hljs-attr">"value"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"0.03"</span>
+              <span class="hljs-punctuation">}</span>
+            <span class="hljs-punctuation">]</span>
+          <span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
+          <span class="hljs-attr">"outputArtifacts"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span>
+            <span class="hljs-punctuation">{</span>
+              <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"main-logs"</span>
+            <span class="hljs-punctuation">}</span>
+          <span class="hljs-punctuation">]</span>
+        <span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-punctuation">{</span>
+          <span class="hljs-attr">"type"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"Pod"</span><span class="hljs-punctuation">,</span>
+          <span class="hljs-attr">"startedAt"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"2023-07-14T07:19:33Z"</span><span class="hljs-punctuation">,</span>
+          <span class="hljs-attr">"finishedAt"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"2023-07-14T07:19:38Z"</span><span class="hljs-punctuation">,</span>
+          <span class="hljs-attr">"displayName"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"B"</span><span class="hljs-punctuation">,</span>
+          <span class="hljs-attr">"metrics"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
+            <span class="hljs-attr">"cpuSystemSecondsTotal"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[]</span>
+          <span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
+          <span class="hljs-attr">"outputArtifacts"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span>
+            <span class="hljs-punctuation">{</span>
+              <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"main-logs"</span>
+            <span class="hljs-punctuation">}</span>
+          <span class="hljs-punctuation">]</span>
+        <span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-punctuation">{</span>
+          <span class="hljs-attr">"type"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"Pod"</span><span class="hljs-punctuation">,</span>
+          <span class="hljs-attr">"startedAt"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"2023-07-14T07:19:43Z"</span><span class="hljs-punctuation">,</span>
+          <span class="hljs-attr">"finishedAt"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"2023-07-14T07:19:48Z"</span><span class="hljs-punctuation">,</span>
+          <span class="hljs-attr">"displayName"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"C"</span><span class="hljs-punctuation">,</span>
+          <span class="hljs-attr">"metrics"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
+            <span class="hljs-attr">"cpuSystemSecondsTotal"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[]</span>
+          <span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
+          <span class="hljs-attr">"outputArtifacts"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span>
+            <span class="hljs-punctuation">{</span>
+              <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"main-logs"</span>
+            <span class="hljs-punctuation">}</span>
+          <span class="hljs-punctuation">]</span>
+        <span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-punctuation">{</span>
+          <span class="hljs-attr">"type"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"Pod"</span><span class="hljs-punctuation">,</span>
+          <span class="hljs-attr">"startedAt"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"2023-07-14T07:19:54Z"</span><span class="hljs-punctuation">,</span>
+          <span class="hljs-attr">"finishedAt"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"2023-07-14T07:19:58Z"</span><span class="hljs-punctuation">,</span>
+          <span class="hljs-attr">"displayName"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"D"</span><span class="hljs-punctuation">,</span>
+          <span class="hljs-attr">"metrics"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
+            <span class="hljs-attr">"cpuSystemSecondsTotal"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span>
+              <span class="hljs-punctuation">{</span>
+                <span class="hljs-attr">"timestamp"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">1689319198</span><span class="hljs-punctuation">,</span>
+                <span class="hljs-attr">"value"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"0.02"</span>
+              <span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
+              <span class="hljs-punctuation">{</span>
+                <span class="hljs-attr">"timestamp"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">1689319199</span><span class="hljs-punctuation">,</span>
+                <span class="hljs-attr">"value"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"0.02"</span>
+              <span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
+              <span class="hljs-punctuation">{</span>
+                <span class="hljs-attr">"timestamp"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">1689319200</span><span class="hljs-punctuation">,</span>
+                <span class="hljs-attr">"value"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"0.02"</span>
+              <span class="hljs-punctuation">}</span>
+            <span class="hljs-punctuation">]</span>
+          <span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
+          <span class="hljs-attr">"outputArtifacts"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span>
+            <span class="hljs-punctuation">{</span>
+              <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"main-logs"</span>
+            <span class="hljs-punctuation">}</span>
+          <span class="hljs-punctuation">]</span>
         <span class="hljs-punctuation">}</span>
+      <span class="hljs-punctuation">]</span>
     <span class="hljs-punctuation">}</span>
   <span class="hljs-punctuation">}</span>
-<span class="hljs-punctuation">}</span>
-</code></pre> </body>
+<span class="hljs-punctuation">}</span></code></pre></body>
+                  
                   </html>
                 </div>
               </div>
@@ -541,7 +645,7 @@ http://localhost:8088
     <span class="hljs-attr">"project"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
       <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"project789"</span><span class="hljs-punctuation">,</span>
       <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
-      <span class="hljs-attr">"createdAt"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">""2023-08-17T08:14:00Z""</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"createdAt"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"2023-08-17T08:14:00Z"</span><span class="hljs-punctuation">,</span>
       <span class="hljs-attr">"dryRuns"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-punctuation">{</span>
         <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
         <span class="hljs-attr">"createdAt"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"2023-08-17T09:59:00Z"</span><span class="hljs-punctuation">,</span>
@@ -2654,8 +2758,96 @@ http://localhost:8088
                   <h5>Example</h5>
                   <html>
                   <head></head>
-                  <body><pre><code class="hljs language-gql"><span class="hljs-symbol">ArgoWorkflow</span>
-</code></pre> </body>
+<body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">"apiVersion"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"argoproj.io/v1alpha1"</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"kind"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"Workflow"</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"metadata"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
+    <span class="hljs-attr">"generateName"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"dag-diamond-"</span>
+  <span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"spec"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
+    <span class="hljs-attr">"entrypoint"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"diamond"</span><span class="hljs-punctuation">,</span>
+    <span class="hljs-attr">"templates"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span>
+      <span class="hljs-punctuation">{</span>
+        <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"diamond"</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-attr">"dag"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
+          <span class="hljs-attr">"tasks"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span>
+            <span class="hljs-punctuation">{</span>
+              <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"step1"</span><span class="hljs-punctuation">,</span>
+              <span class="hljs-attr">"template"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"echo"</span><span class="hljs-punctuation">,</span>
+              <span class="hljs-attr">"arguments"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
+                <span class="hljs-attr">"parameters"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span>
+                  <span class="hljs-punctuation">{</span>
+                    <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"message"</span><span class="hljs-punctuation">,</span>
+                    <span class="hljs-attr">"value"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"newA"</span>
+                  <span class="hljs-punctuation">}</span>
+                <span class="hljs-punctuation">]</span>
+              <span class="hljs-punctuation">}</span>
+            <span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
+            <span class="hljs-punctuation">{</span>
+              <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"step2"</span><span class="hljs-punctuation">,</span>
+              <span class="hljs-attr">"depends"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"step1"</span><span class="hljs-punctuation">,</span>
+              <span class="hljs-attr">"template"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"echo"</span><span class="hljs-punctuation">,</span>
+              <span class="hljs-attr">"arguments"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
+                <span class="hljs-attr">"parameters"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span>
+                  <span class="hljs-punctuation">{</span>
+                    <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"message"</span><span class="hljs-punctuation">,</span>
+                    <span class="hljs-attr">"value"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"newB"</span>
+                  <span class="hljs-punctuation">}</span>
+                <span class="hljs-punctuation">]</span>
+              <span class="hljs-punctuation">}</span>
+            <span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
+            <span class="hljs-punctuation">{</span>
+              <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"step3"</span><span class="hljs-punctuation">,</span>
+              <span class="hljs-attr">"depends"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"step1"</span><span class="hljs-punctuation">,</span>
+              <span class="hljs-attr">"template"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"echo"</span><span class="hljs-punctuation">,</span>
+              <span class="hljs-attr">"arguments"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
+                <span class="hljs-attr">"parameters"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span>
+                  <span class="hljs-punctuation">{</span>
+                    <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"message"</span><span class="hljs-punctuation">,</span>
+                    <span class="hljs-attr">"value"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"newC"</span>
+                  <span class="hljs-punctuation">}</span>
+                <span class="hljs-punctuation">]</span>
+              <span class="hljs-punctuation">}</span>
+            <span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
+            <span class="hljs-punctuation">{</span>
+              <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"step4"</span><span class="hljs-punctuation">,</span>
+              <span class="hljs-attr">"depends"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"step2 && step3"</span><span class="hljs-punctuation">,</span>
+              <span class="hljs-attr">"template"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"echo"</span><span class="hljs-punctuation">,</span>
+              <span class="hljs-attr">"arguments"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
+                <span class="hljs-attr">"parameters"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span>
+                  <span class="hljs-punctuation">{</span>
+                    <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"message"</span><span class="hljs-punctuation">,</span>
+                    <span class="hljs-attr">"value"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"newD"</span>
+                  <span class="hljs-punctuation">}</span>
+                <span class="hljs-punctuation">]</span>
+              <span class="hljs-punctuation">}</span>
+            <span class="hljs-punctuation">}</span>
+          <span class="hljs-punctuation">]</span>
+        <span class="hljs-punctuation">}</span>
+      <span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-punctuation">{</span>
+        <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"echo"</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-attr">"inputs"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
+          <span class="hljs-attr">"parameters"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span>
+            <span class="hljs-punctuation">{</span>
+              <span class="hljs-attr">"name"</span>
+            <span class="hljs-punctuation">}</span>
+          <span class="hljs-punctuation">]</span>
+        <span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-attr">"container"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
+          <span class="hljs-attr">"image"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"alpine:3.7"</span><span class="hljs-punctuation">,</span>
+          <span class="hljs-attr">"command"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span>
+            <span class="hljs-string">"sh"</span><span class="hljs-punctuation">,</span>
+            <span class="hljs-string">"-c"</span><span class="hljs-punctuation">,</span>
+            <span class="hljs-string">"echo {{inputs.parameters.message}} && sleep 9"</span>
+          <span class="hljs-punctuation">]</span>
+        <span class="hljs-punctuation">}</span>
+      <span class="hljs-punctuation">}</span>
+    <span class="hljs-punctuation">]</span>
+  <span class="hljs-punctuation">}</span>
+<span class="hljs-punctuation">}</span>
+                  </code></pre></body>
+                  
                   </html>
                 </div>
               </div>
@@ -2678,8 +2870,96 @@ http://localhost:8088
                   <h5>Example</h5>
                   <html>
                   <head></head>
-                  <body><pre><code class="hljs language-gql"><span class="hljs-symbol">ArgoWorkflowTemplate</span>
-</code></pre> </body>
+<body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">"apiVersion"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"argoproj.io/v1alpha1"</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"kind"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"Workflow"</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"metadata"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
+    <span class="hljs-attr">"generateName"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"dag-diamond-"</span>
+  <span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"spec"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
+    <span class="hljs-attr">"entrypoint"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"diamond"</span><span class="hljs-punctuation">,</span>
+    <span class="hljs-attr">"templates"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span>
+      <span class="hljs-punctuation">{</span>
+        <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"diamond"</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-attr">"dag"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
+          <span class="hljs-attr">"tasks"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span>
+            <span class="hljs-punctuation">{</span>
+              <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"step1"</span><span class="hljs-punctuation">,</span>
+              <span class="hljs-attr">"template"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"echo"</span><span class="hljs-punctuation">,</span>
+              <span class="hljs-attr">"arguments"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
+                <span class="hljs-attr">"parameters"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span>
+                  <span class="hljs-punctuation">{</span>
+                    <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"message"</span><span class="hljs-punctuation">,</span>
+                    <span class="hljs-attr">"value"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"newA"</span>
+                  <span class="hljs-punctuation">}</span>
+                <span class="hljs-punctuation">]</span>
+              <span class="hljs-punctuation">}</span>
+            <span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
+            <span class="hljs-punctuation">{</span>
+              <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"step2"</span><span class="hljs-punctuation">,</span>
+              <span class="hljs-attr">"depends"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"step1"</span><span class="hljs-punctuation">,</span>
+              <span class="hljs-attr">"template"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"echo"</span><span class="hljs-punctuation">,</span>
+              <span class="hljs-attr">"arguments"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
+                <span class="hljs-attr">"parameters"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span>
+                  <span class="hljs-punctuation">{</span>
+                    <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"message"</span><span class="hljs-punctuation">,</span>
+                    <span class="hljs-attr">"value"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"newB"</span>
+                  <span class="hljs-punctuation">}</span>
+                <span class="hljs-punctuation">]</span>
+              <span class="hljs-punctuation">}</span>
+            <span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
+            <span class="hljs-punctuation">{</span>
+              <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"step3"</span><span class="hljs-punctuation">,</span>
+              <span class="hljs-attr">"depends"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"step1"</span><span class="hljs-punctuation">,</span>
+              <span class="hljs-attr">"template"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"echo"</span><span class="hljs-punctuation">,</span>
+              <span class="hljs-attr">"arguments"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
+                <span class="hljs-attr">"parameters"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span>
+                  <span class="hljs-punctuation">{</span>
+                    <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"message"</span><span class="hljs-punctuation">,</span>
+                    <span class="hljs-attr">"value"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"newC"</span>
+                  <span class="hljs-punctuation">}</span>
+                <span class="hljs-punctuation">]</span>
+              <span class="hljs-punctuation">}</span>
+            <span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
+            <span class="hljs-punctuation">{</span>
+              <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"step4"</span><span class="hljs-punctuation">,</span>
+              <span class="hljs-attr">"depends"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"step2 && step3"</span><span class="hljs-punctuation">,</span>
+              <span class="hljs-attr">"template"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"echo"</span><span class="hljs-punctuation">,</span>
+              <span class="hljs-attr">"arguments"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
+                <span class="hljs-attr">"parameters"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span>
+                  <span class="hljs-punctuation">{</span>
+                    <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"message"</span><span class="hljs-punctuation">,</span>
+                    <span class="hljs-attr">"value"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"newD"</span>
+                  <span class="hljs-punctuation">}</span>
+                <span class="hljs-punctuation">]</span>
+              <span class="hljs-punctuation">}</span>
+            <span class="hljs-punctuation">}</span>
+          <span class="hljs-punctuation">]</span>
+        <span class="hljs-punctuation">}</span>
+      <span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-punctuation">{</span>
+        <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"echo"</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-attr">"inputs"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
+          <span class="hljs-attr">"parameters"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span>
+            <span class="hljs-punctuation">{</span>
+              <span class="hljs-attr">"name"</span>
+            <span class="hljs-punctuation">}</span>
+          <span class="hljs-punctuation">]</span>
+        <span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-attr">"container"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
+          <span class="hljs-attr">"image"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"alpine:3.7"</span><span class="hljs-punctuation">,</span>
+          <span class="hljs-attr">"command"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span>
+            <span class="hljs-string">"sh"</span><span class="hljs-punctuation">,</span>
+            <span class="hljs-string">"-c"</span><span class="hljs-punctuation">,</span>
+            <span class="hljs-string">"echo {{inputs.parameters.message}} && sleep 9"</span>
+          <span class="hljs-punctuation">]</span>
+        <span class="hljs-punctuation">}</span>
+      <span class="hljs-punctuation">}</span>
+    <span class="hljs-punctuation">]</span>
+  <span class="hljs-punctuation">}</span>
+<span class="hljs-punctuation">}</span>
+</code></pre></body>
+                  
                   </html>
                 </div>
               </div>
@@ -2774,12 +3054,82 @@ http://localhost:8088
                   <h5>Example</h5>
                   <html>
                   <head></head>
-                  <body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
+<body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
   <span class="hljs-attr">"projectId"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"dryRunId"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"argoWorkflow"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">ArgoWorkflow</span>
+  <span class="hljs-attr">"argoWorkflow"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
+    <span class="hljs-attr">"apiVersion"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"argoproj.io/v1alpha1"</span><span class="hljs-punctuation">,</span>
+    <span class="hljs-attr">"kind"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"Workflow"</span><span class="hljs-punctuation">,</span>
+    <span class="hljs-attr">"metadata"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
+      <span class="hljs-attr">"generateName"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"dag-diamond-"</span>
+    <span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
+    <span class="hljs-attr">"spec"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
+      <span class="hljs-attr">"entrypoint"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"diamond"</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"templates"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span>
+        <span class="hljs-punctuation">{</span>
+          <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"diamond"</span><span class="hljs-punctuation">,</span>
+          <span class="hljs-attr">"dag"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
+            <span class="hljs-attr">"tasks"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span>
+              <span class="hljs-punctuation">{</span>
+                <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"step1"</span><span class="hljs-punctuation">,</span>
+                <span class="hljs-attr">"template"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"echo"</span><span class="hljs-punctuation">,</span>
+                <span class="hljs-attr">"arguments"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
+                  <span class="hljs-attr">"parameters"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span>
+                    <span class="hljs-punctuation">{</span>
+                      <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"message"</span><span class="hljs-punctuation">,</span>
+                      <span class="hljs-attr">"value"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"A"</span>
+                    <span class="hljs-punctuation">}</span>
+                  <span class="hljs-punctuation">]</span>
+                <span class="hljs-punctuation">}</span>
+              <span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
+              <span class="hljs-punctuation">{</span>
+                <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"step2"</span><span class="hljs-punctuation">,</span>
+                <span class="hljs-attr">"depends"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"step1"</span><span class="hljs-punctuation">,</span>
+                <span class="hljs-attr">"template"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"echo"</span><span class="hljs-punctuation">,</span>
+                <span class="hljs-attr">"arguments"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
+                  <span class="hljs-attr">"parameters"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span>
+                    <span class="hljs-punctuation">{</span>
+                      <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"message"</span><span class="hljs-punctuation">,</span>
+                      <span class="hljs-attr">"value"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"B"</span>
+                    <span class="hljs-punctuation">}</span>
+                  <span class="hljs-punctuation">]</span>
+                <span class="hljs-punctuation">}</span>
+              <span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
+              <span class="hljs-punctuation">{</span>
+                <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"step3"</span><span class="hljs-punctuation">,</span>
+                <span class="hljs-attr">"depends"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"step1"</span><span class="hljs-punctuation">,</span>
+                <span class="hljs-attr">"template"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"echo"</span><span class="hljs-punctuation">,</span>
+                <span class="hljs-attr">"arguments"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
+                  <span class="hljs-attr">"parameters"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span>
+                    <span class="hljs-punctuation">{</span>
+                      <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"message"</span><span class="hljs-punctuation">,</span>
+                      <span class="hljs-attr">"value"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"C"</span>
+                    <span class="hljs-punctuation">}</span>
+                  <span class="hljs-punctuation">]</span>
+                <span class="hljs-punctuation">}</span>
+              <span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
+              <span class="hljs-punctuation">{</span>
+                <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"step4"</span><span class="hljs-punctuation">,</span>
+                <span class="hljs-attr">"depends"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"step2 && step3"</span><span class="hljs-punctuation">,</span>
+                <span class="hljs-attr">"template"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"echo"</span><span class="hljs-punctuation">,</span>
+                <span class="hljs-attr">"arguments"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
+                  <span class="hljs-attr">"parameters"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span>
+                    <span class="hljs-punctuation">{</span>
+                      <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"message"</span><span class="hljs-punctuation">,</span>
+                      <span class="hljs-attr">"value"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"D"</span>
+                    <span class="hljs-punctuation">}</span>
+                  <span class="hljs-punctuation">]</span>
+                <span class="hljs-punctuation">}</span>
+              <span class="hljs-punctuation">}</span>
+            <span class="hljs-punctuation">]</span>
+          <span class="hljs-punctuation">}</span>
+        <span class="hljs-punctuation">]</span>
+      <span class="hljs-punctuation">}</span>
+    <span class="hljs-punctuation">}</span>
+  <span class="hljs-punctuation">}</span>
 <span class="hljs-punctuation">}</span>
-</code></pre> </body>
+</code></pre></body>
+                  
                   </html>
                 </div>
               </div>
@@ -2910,12 +3260,82 @@ http://localhost:8088
                   <h5>Example</h5>
                   <html>
                   <head></head>
-                  <body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
-  <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
+<body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
   <span class="hljs-attr">"projectId"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"argoWorkflowTemplate"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">ArgoWorkflowTemplate</span>
+  <span class="hljs-attr">"dryRunId"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"argoWorkflowTemplate"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
+    <span class="hljs-attr">"apiVersion"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"argoproj.io/v1alpha1"</span><span class="hljs-punctuation">,</span>
+    <span class="hljs-attr">"kind"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"Workflow"</span><span class="hljs-punctuation">,</span>
+    <span class="hljs-attr">"metadata"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
+      <span class="hljs-attr">"generateName"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"dag-diamond-"</span>
+    <span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
+    <span class="hljs-attr">"spec"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
+      <span class="hljs-attr">"entrypoint"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"diamond"</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"templates"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span>
+        <span class="hljs-punctuation">{</span>
+          <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"diamond"</span><span class="hljs-punctuation">,</span>
+          <span class="hljs-attr">"dag"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
+            <span class="hljs-attr">"tasks"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span>
+              <span class="hljs-punctuation">{</span>
+                <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"step1"</span><span class="hljs-punctuation">,</span>
+                <span class="hljs-attr">"template"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"echo"</span><span class="hljs-punctuation">,</span>
+                <span class="hljs-attr">"arguments"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
+                  <span class="hljs-attr">"parameters"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span>
+                    <span class="hljs-punctuation">{</span>
+                      <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"message"</span><span class="hljs-punctuation">,</span>
+                      <span class="hljs-attr">"value"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"A"</span>
+                    <span class="hljs-punctuation">}</span>
+                  <span class="hljs-punctuation">]</span>
+                <span class="hljs-punctuation">}</span>
+              <span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
+              <span class="hljs-punctuation">{</span>
+                <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"step2"</span><span class="hljs-punctuation">,</span>
+                <span class="hljs-attr">"depends"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"step1"</span><span class="hljs-punctuation">,</span>
+                <span class="hljs-attr">"template"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"echo"</span><span class="hljs-punctuation">,</span>
+                <span class="hljs-attr">"arguments"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
+                  <span class="hljs-attr">"parameters"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span>
+                    <span class="hljs-punctuation">{</span>
+                      <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"message"</span><span class="hljs-punctuation">,</span>
+                      <span class="hljs-attr">"value"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"B"</span>
+                    <span class="hljs-punctuation">}</span>
+                  <span class="hljs-punctuation">]</span>
+                <span class="hljs-punctuation">}</span>
+              <span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
+              <span class="hljs-punctuation">{</span>
+                <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"step3"</span><span class="hljs-punctuation">,</span>
+                <span class="hljs-attr">"depends"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"step1"</span><span class="hljs-punctuation">,</span>
+                <span class="hljs-attr">"template"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"echo"</span><span class="hljs-punctuation">,</span>
+                <span class="hljs-attr">"arguments"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
+                  <span class="hljs-attr">"parameters"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span>
+                    <span class="hljs-punctuation">{</span>
+                      <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"message"</span><span class="hljs-punctuation">,</span>
+                      <span class="hljs-attr">"value"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"C"</span>
+                    <span class="hljs-punctuation">}</span>
+                  <span class="hljs-punctuation">]</span>
+                <span class="hljs-punctuation">}</span>
+              <span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
+              <span class="hljs-punctuation">{</span>
+                <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"step4"</span><span class="hljs-punctuation">,</span>
+                <span class="hljs-attr">"depends"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"step2 && step3"</span><span class="hljs-punctuation">,</span>
+                <span class="hljs-attr">"template"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"echo"</span><span class="hljs-punctuation">,</span>
+                <span class="hljs-attr">"arguments"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
+                  <span class="hljs-attr">"parameters"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span>
+                    <span class="hljs-punctuation">{</span>
+                      <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"message"</span><span class="hljs-punctuation">,</span>
+                      <span class="hljs-attr">"value"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"D"</span>
+                    <span class="hljs-punctuation">}</span>
+                  <span class="hljs-punctuation">]</span>
+                <span class="hljs-punctuation">}</span>
+              <span class="hljs-punctuation">}</span>
+            <span class="hljs-punctuation">]</span>
+          <span class="hljs-punctuation">}</span>
+        <span class="hljs-punctuation">]</span>
+      <span class="hljs-punctuation">}</span>
+    <span class="hljs-punctuation">}</span>
+  <span class="hljs-punctuation">}</span>
 <span class="hljs-punctuation">}</span>
-</code></pre> </body>
+</code></pre></body>
+                  
                   </html>
                 </div>
               </div>
@@ -3181,16 +3601,104 @@ http://localhost:8088
                   <h5>Example</h5>
                   <html>
                   <head></head>
-                  <body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
-  <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"createdAt"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"argoWorkflow"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">ArgoWorkflow</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"status"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">DryRunStatus</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"project"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">Project</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"nodes"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-string">DryRunNode</span><span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"node"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">DryRunNode</span>
-<span class="hljs-punctuation">}</span>
-</code></pre> </body>
+<body><pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"dag-diamond-w6jhd"</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"status"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
+    <span class="hljs-attr">"phase"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"Succeeded"</span><span class="hljs-punctuation">,</span>
+    <span class="hljs-attr">"startedAt"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"2023-07-14T07:19:23Z"</span><span class="hljs-punctuation">,</span>
+    <span class="hljs-attr">"finishedAt"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"2023-07-14T07:20:04Z"</span>
+  <span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"nodes"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span>
+    <span class="hljs-punctuation">{</span>
+      <span class="hljs-attr">"type"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"DAG"</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"startedAt"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"2023-07-14T07:19:23Z"</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"finishedAt"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"2023-07-14T07:20:04Z"</span>
+    <span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
+    <span class="hljs-punctuation">{</span>
+      <span class="hljs-attr">"type"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"Pod"</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"startedAt"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"2023-07-14T07:19:23Z"</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"finishedAt"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"2023-07-14T07:19:29Z"</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"displayName"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"A"</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"metrics"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
+        <span class="hljs-attr">"cpuSystemSecondsTotal"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span>
+          <span class="hljs-punctuation">{</span>
+            <span class="hljs-attr">"timestamp"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">1689319168</span><span class="hljs-punctuation">,</span>
+            <span class="hljs-attr">"value"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"0.03"</span>
+          <span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
+          <span class="hljs-punctuation">{</span>
+            <span class="hljs-attr">"timestamp"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">1689319169</span><span class="hljs-punctuation">,</span>
+            <span class="hljs-attr">"value"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"0.03"</span>
+          <span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
+          <span class="hljs-punctuation">{</span>
+            <span class="hljs-attr">"timestamp"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">1689319170</span><span class="hljs-punctuation">,</span>
+            <span class="hljs-attr">"value"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"0.03"</span>
+          <span class="hljs-punctuation">}</span>
+        <span class="hljs-punctuation">]</span>
+      <span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"outputArtifacts"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span>
+        <span class="hljs-punctuation">{</span>
+          <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"main-logs"</span>
+        <span class="hljs-punctuation">}</span>
+      <span class="hljs-punctuation">]</span>
+    <span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
+    <span class="hljs-punctuation">{</span>
+      <span class="hljs-attr">"type"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"Pod"</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"startedAt"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"2023-07-14T07:19:33Z"</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"finishedAt"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"2023-07-14T07:19:38Z"</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"displayName"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"B"</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"metrics"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
+        <span class="hljs-attr">"cpuSystemSecondsTotal"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[]</span>
+      <span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"outputArtifacts"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span>
+        <span class="hljs-punctuation">{</span>
+          <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"main-logs"</span>
+        <span class="hljs-punctuation">}</span>
+      <span class="hljs-punctuation">]</span>
+    <span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
+    <span class="hljs-punctuation">{</span>
+      <span class="hljs-attr">"type"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"Pod"</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"startedAt"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"2023-07-14T07:19:43Z"</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"finishedAt"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"2023-07-14T07:19:48Z"</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"displayName"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"C"</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"metrics"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
+        <span class="hljs-attr">"cpuSystemSecondsTotal"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[]</span>
+      <span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"outputArtifacts"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span>
+        <span class="hljs-punctuation">{</span>
+          <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"main-logs"</span>
+        <span class="hljs-punctuation">}</span>
+      <span class="hljs-punctuation">]</span>
+    <span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
+    <span class="hljs-punctuation">{</span>
+      <span class="hljs-attr">"type"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"Pod"</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"startedAt"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"2023-07-14T07:19:54Z"</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"finishedAt"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"2023-07-14T07:19:58Z"</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"displayName"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"D"</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"metrics"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
+        <span class="hljs-attr">"cpuSystemSecondsTotal"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span>
+          <span class="hljs-punctuation">{</span>
+            <span class="hljs-attr">"timestamp"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">1689319198</span><span class="hljs-punctuation">,</span>
+            <span class="hljs-attr">"value"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"0.02"</span>
+          <span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
+          <span class="hljs-punctuation">{</span>
+            <span class="hljs-attr">"timestamp"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">1689319199</span><span class="hljs-punctuation">,</span>
+            <span class="hljs-attr">"value"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"0.02"</span>
+          <span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
+          <span class="hljs-punctuation">{</span>
+            <span class="hljs-attr">"timestamp"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">1689319200</span><span class="hljs-punctuation">,</span>
+            <span class="hljs-attr">"value"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"0.02"</span>
+          <span class="hljs-punctuation">}</span>
+        <span class="hljs-punctuation">]</span>
+      <span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"outputArtifacts"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span>
+        <span class="hljs-punctuation">{</span>
+          <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"main-logs"</span>
+        <span class="hljs-punctuation">}</span>
+      <span class="hljs-punctuation">]</span>
+    <span class="hljs-punctuation">}</span>
+  <span class="hljs-punctuation">]</span>
+<span class="hljs-punctuation">}</span></code></pre></body>
+                  
                   </html>
                 </div>
               </div>
@@ -6302,7 +6810,7 @@ http://localhost:8088
                   <h5>Example</h5>
                   <html>
                   <head></head>
-                  <body><pre><code class="hljs language-gql"><span class="hljs-symbol">TimeStamp</span>
+                  <body><pre><code class="hljs language-gql"><span class="hljs-symbol">2023-08-17T08:14:00Z</span>
 </code></pre> </body>
                   </html>
                 </div>
