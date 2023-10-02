@@ -48,7 +48,7 @@
 		{:then workflow}
 			<h1>
 				<a href="/projects">Projects</a>
-				<span STYLE="font-size:14px">/ </span>{data.template}
+				/ templates / {data.template}
 			</h1>
 			<div class="flex flex-row justify-end p-5 space-x-1">
 				<div>
