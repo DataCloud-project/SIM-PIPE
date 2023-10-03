@@ -1,5 +1,8 @@
+""" ArgoWorkflow is the definition of an executable pipeline in Argo. This definition includes all the details about the specific workflow instance you want to run, including the sequence of steps, inputs, outputs, and other configuration parameters. This is required to create and start dry runs in SIM-PIPE. """
 scalar ArgoWorkflow
+""" Workflow Templates in Argo that are reusable and parameterized workflow definitions. They allow you to define a generic workflow structure that can be instantiated multiple times with different input parameters """
 scalar ArgoWorkflowTemplate
+""" A value that represents a specific point in time, includes information such as the date and time, and time zone offset """
 scalar TimeStamp
 """
 Prometheus represents number as strings in JSON, because
@@ -12,25 +15,33 @@ You will need to parse the string to a number in your application.
 scalar PrometheusStringNumber
 
 type Query {
-  """ Fetch the current username. """
-  username: String! @auth
+  """ Fetches the username of the current user. """
+  username: String! 
   """ Returns pong if the server is up and running. """
   ping: String!
-  """ List of docker registry credentials. """
-  dockerRegistryCredentials: [DockerRegistryCredential!]! @auth
+  """ List of all docker registry credentials """
+  dockerRegistryCredentials: [DockerRegistryCredential!]! 
 
-  """ List of projects """
-  projects: [Project!]! @auth
+  """ List of all projects """
+  projects: [Project!]! 
 
-  """ Get a project by id """
-  project(projectId: String!): Project! @auth
+  """ Get a project by ID """
+  project(
+    """ ID of the project to be fetched """
+    projectId: String!): Project! 
 
-  """ Get a dry run by id """
-  dryRun(dryRunId: String!): DryRun! @auth
+  """ Get a dry run by ID """
+  dryRun(
+    """ ID of the dry run to be fetched """
+    dryRunId: String!): DryRun! 
 
-  """ Get a workflow template by name """
-  workflowTemplate(name: String!): WorkflowTemplate @auth
+  """ Get an Argo  workflow template by name """
+  workflowTemplate(
+    """ Name of the Argo workflow template to be fetched """
+    name: String!): WorkflowTemplate 
 }
+
+""" Project is the high level concept for a specific pipeline in SIM-PIPE. It contains all the previous dry runs of the pipeline and its results. """
 
 type Project {
   """ The name of the project """
@@ -42,16 +53,17 @@ type Project {
   """ Date of creation """
   createdAt: String!
 
-  """ The dry runs in the project """
+  """ The list of dry runs in the project """
   dryRuns: [DryRun!]
 
-  """ The workflow templates in the project """
+  """ The list of workflow templates in the project """
   workflowTemplates: [WorkflowTemplate!]
 }
 
 
+""" Dry runs are created under a project which represents an executable instance of the pipeline. """
 type DryRun {
-  """ The identifier of the run """
+  """ The identifier of the dry run """
   id: String!
 
   """ Date of creation """
@@ -60,26 +72,28 @@ type DryRun {
   """ The raw Argo workflow document"""
   argoWorkflow: ArgoWorkflow!
 
-  """ Status of the run """
+  """ Status of the dry run """
   status: DryRunStatus!
 
-  """ The project to which the run belongs """
+  """ The project to which the dry run belongs """
   project: Project
 
-  """ The nodes of the run """
+  """ The nodes of the dry run """
   nodes: [DryRunNode!]
 
-  """ A node of the run, by id """
+  """ A node of the dry run, by id """
   node(id: String!): DryRunNode
 }
 
+
+""" Contains information about the status of a dry run """
 type DryRunStatus {
   """ Phase a simple, high-level summary of where the workflow is in its lifecycle.
   Will be "Unknown, "Pending", or "Running" before the workflow is completed,
   and "Succeeded", "Failed" or "Error" once the workflow has completed. """
   phase: DryRunPhase!
 
-  """ The current status of the run """
+  """ The current status of the dry run """
   startedAt: String
 
   """ Time at which this workflow completed """
@@ -286,6 +300,7 @@ type DryRunNodeMetrics {
   ulimitsSoft(start: TimeStamp, end: TimeStamp, step: Int): [PrometheusSample!]
 }
 
+""" Contains information about files produced during a dry run execution """
 type DryRunNodeArtifact {
   """ The artifact name """
   name: String!
@@ -305,6 +320,7 @@ type DryRunNodeResourceDuration {
   gpu: String
 }
 
+""" Contains details of a docker registry """
 type DockerRegistryCredential {
   """ The name of the docker registry """
   name: String!
@@ -314,6 +330,7 @@ type DockerRegistryCredential {
   server: String!
 }
 
+""" WorkflowTemplate in SIM-PIPE associates an ArgoWorkflowTemplate to a project"""
 type WorkflowTemplate {
   """ The name of the workflow template """
   name: String!
@@ -336,7 +353,7 @@ input DockerRegistryCredentialInput {
   server: String!
 }
 
-
+""" The input data to create a new project. """
 input CreateProjectInput {
   """ The name of the project """
   name: String!
@@ -345,15 +362,15 @@ input CreateProjectInput {
   id: String
 }
 
-""" The input data to create a run """
+""" The input data to create a new dry run """
 input CreateDryRunInput {
-  """ The project to which this run belongs (optional).
+  """ The project to which this dry run belongs (optional).
 
       The user must own the simulation.
   """
   projectId: String
 
-  """ The id of the run (optional), will be generated if not provided """
+  """ The id of the dry run (optional), will be generated if not provided """
   dryRunId: String
 
   """ The raw Argo workflow document.
@@ -387,63 +404,105 @@ input UpdateWorkflowTemplateInput {
   argoWorkflowTemplate: ArgoWorkflowTemplate!
 }
 
-type Mutation @auth {
-  """ Create a project """
-  createProject(project: CreateProjectInput!): Project!
+type Mutation  {
+  """ Create a new project """
+  createProject(
+    """ Details of the new project """
+    project: CreateProjectInput!): Project!
 
-  """ Rename a project """
-  renameProject(projectId: String!, name: String!): Project!
+  """ Rename an existing project """
+  renameProject(
+    """ ID of the project to be renamed """
+    projectId: String!, 
+    """ The new name for the project """
+    name: String!): Project!
 
-  """ Delete a project """
-  deleteProject(projectId: String!): Boolean!
+  """ Delete an existing project. The mutation returns true if the deletion was successful. """
+  deleteProject(
+    """ ID of the project to be deleted """
+    projectId: String!): Boolean!
 
-  """ Create a run.
+  """ Create a new dry run.
 
   projectId and id are optional and will be generated.
   If provided in the createDryRun arguments, they will overwrite the
   values in the argoWorkflow document.
   """
-  createDryRun(input: CreateDryRunInput!): DryRun!
+  createDryRun(
+    """ Input to create the new dry run """
+    input: CreateDryRunInput!): DryRun!
 
-  """ Suspend a run. """
-  suspendDryRun(dryRunId:String!): DryRun!
+  """ Suspend an active dry run. """
+  suspendDryRun(
+    """ ID of the dry run to be suspended """
+    dryRunId:String!): DryRun!
 
-  """ Resume a run. """
-  resumeDryRun(dryRunId:String!): DryRun!
+  """ Resume a paused dry run. """
+  resumeDryRun(
+    """ ID of the dry run to be resumed """
+    dryRunId:String!): DryRun!
 
-  """ Retry a run. Restart the current run."""
-  retryDryRun(dryRunId:String!): DryRun!
+  """ Retry a failed dry run. Restart an existing dry run."""
+  retryDryRun(
+    """ ID of the dry run to be restarted """    
+    dryRunId:String!): DryRun!
 
-  """ Resubmit a run. Create a copy of the current run and starts it."""
-  resubmitDryRun(dryRunId:String!): DryRun!
+  """ Resubmit a dry run. Create a copy of the current dry run and starts its execution."""
+  resubmitDryRun(
+    """ ID of the dry run to be resubmitted """        
+    dryRunId:String!): DryRun!
 
-  """ Stop a run. """
-  stopDryRun(dryRunId:String!, terminate: Boolean): DryRun!
+  """ Stop an active dry run. """
+  stopDryRun(
+    """ ID of the dry run to be stopped """        
+    dryRunId:String!, 
+    """ Set to true to terminate the dry run """        
+    terminate: Boolean): DryRun!
 
-  """ Delete a run. """
-  deleteDryRun(dryRunId:String!): Boolean!
+  """ Delete an existing dry run. The mutation returns true if the deletion was successful. """
+  deleteDryRun(
+    """ ID of the dry run to be deleted """        
+    dryRunId:String!): Boolean!
 
   """ Assign a dry run to a project """
-  assignDryRunToProject(dryRunId: String!, projectId: String!): DryRun!
+  assignDryRunToProject(
+    """ ID of the dry run to be assigned """        
+    dryRunId: String!, 
+    """ ID of the target project """    
+    projectId: String!): DryRun!
 
-  """ Create a docker registry credential """
-  createDockerRegistryCredential(credential: DockerRegistryCredentialInput!): DockerRegistryCredential!
+  """ Create a new docker registry credential """
+  createDockerRegistryCredential(
+    """ Input for the new docker registry credential """    
+    credential: DockerRegistryCredentialInput!): DockerRegistryCredential!
 
-  """ Delete a docker registry credential """
-  deleteDockerRegistryCredential(name: String!): Boolean!
+  """ Delete an existing docker registry credential. The mutation returns true if the deletion was successful. """
+  deleteDockerRegistryCredential(
+    """ Name of the docker registry credential to be deleted """    
+    name: String!): Boolean!
 
-  """ Update a docker registry credential """
-  updateDockerRegistryCredential(credential: DockerRegistryCredentialInput!): DockerRegistryCredential!
+  """ Update an existing docker registry credential """
+  updateDockerRegistryCredential(
+    """ The new value of the docker registry credential to be updated """        
+    credential: DockerRegistryCredentialInput!): DockerRegistryCredential!
 
-  """ Compute a presigned URL for uploading a file using a HTTP PUT. """
-  computeUploadPresignedUrl(key: String): String!
+  """ Compute a presigned URL for uploading a file using HTTP PUT. The mutation returns the URL to upload the file. """
+  computeUploadPresignedUrl(
+    """ The name of the file you wish to upload """
+    key: String): String!
 
-  """ Create a workflow template """
-  createWorkflowTemplate(input: CreateWorkflowTemplateInput!): WorkflowTemplate!
+  """ Create a new Argo workflow template """
+  createWorkflowTemplate(
+    """ Input for the new Argo workflow template """    
+    input: CreateWorkflowTemplateInput!): WorkflowTemplate!
 
-  """ Update a workflow template """
-  updateWorkflowTemplate(update: UpdateWorkflowTemplateInput!): WorkflowTemplate!
+  """ Update an existing Argo workflow template """
+  updateWorkflowTemplate(
+    """ The new value of the Argo workflow template to be updated """ 
+    update: UpdateWorkflowTemplateInput!): WorkflowTemplate!
 
-  """ Delete a workflow template """
-  deleteWorkflowTemplate(name: String!): Boolean!
+  """ Delete an existing Argo workflow template. The mutation returns true if the deletion was successful. """
+  deleteWorkflowTemplate(
+    """ Name of the Argo workflow template to be deleted """
+    name: String!): Boolean!
 }

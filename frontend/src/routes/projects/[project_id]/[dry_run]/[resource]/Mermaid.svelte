@@ -35,6 +35,13 @@
 	$: diagram && renderDiagram();
 </script>
 
-<div class="flex place-content-center">
-	<span class="mermaid" bind:this={container} />
-</div>
+<div class="mermaid justify-self-center" bind:this={container} />
+
+<style>
+	.mermaid {
+		max-width: 80%;
+		max-height: 80vh;
+		width: unset;
+		height: unset;
+	}
+</style>

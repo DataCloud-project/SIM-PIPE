@@ -4,13 +4,20 @@
 	import ModalSubmitNewProject from './modal-submit-new-project.svelte';
 	import { projectsList, clickedProjectId } from '../../stores/stores.js';
 	import type { Project } from '../../types.js';
-	import allProjectsQuery from '../../queries/get_all_projects.js';
-	import deleteProjectMutation from '../../queries/delete_project.js';
 	import { goto } from '$app/navigation';
 	import Timestamp from './[project_id]/[dry_run]/timestamp.svelte';
 	import { requestGraphQLClient } from '$lib/graphqlUtils';
-	import { EditIcon, FileTextIcon } from 'svelte-feather-icons';
+	import { AlertTriangleIcon, EditIcon, FileTextIcon } from 'svelte-feather-icons';
 	import ModalRenameProject from './modal-rename-project.svelte';
+	import allProjectsQuery from '../../queries/get_all_projects.js';
+	import deleteProjectMutation from '../../queries/delete_project.js';
+	import allDryRunsQuery from '../../queries/get_all_dryruns';
+	import deleteDryRunMutation from '../../queries/delete_dry_run.js';
+	import deleteWorkflowTemplateMutation from '../../queries/delete_workflow_template.js';
+
+	export let visibleAlert = false;
+	export let alertTitle = 'Alert!';
+	export let alertMessage = 'Alert!';
 
 	const getProjectsList = async (): Promise<Project[]> => {
 		const response: { projects: Project[] } = await requestGraphQLClient(allProjectsQuery);
@@ -53,10 +60,30 @@
 		Object.keys(checkboxes)
 			.filter((item) => checkboxes[item])
 			.forEach(async (element) => {
-				const variables = {
+				const project_variables = {
 					projectId: element
 				};
-				const response = await requestGraphQLClient(deleteProjectMutation, variables);
+				const response_dry_runs = await requestGraphQLClient(allDryRunsQuery, project_variables);
+				response_dry_runs.project.dryRuns.forEach(async (dry_run: Record<string, undefined>) => {
+					const response_delete_dry_run = await requestGraphQLClient(deleteDryRunMutation, {
+						dryRunId: dry_run.id
+					});
+				});
+				const delete_workflow_template = await requestGraphQLClient(
+					deleteWorkflowTemplateMutation,
+					{
+						name: element
+					}
+				).catch((error) => {
+					console.log(error);
+					visibleAlert = true;
+					alertTitle = 'Delete workflow template failed!';
+					alertMessage = error.message;
+				});
+				const delete_project_response = await requestGraphQLClient(
+					deleteProjectMutation,
+					project_variables
+				);
 			});
 		const projectDeletedMessageModal: ModalSettings = {
 			type: 'alert',
@@ -105,21 +132,29 @@
 	function showTemplate(event: any, project: Project) {
 		$clickedProjectId = project.id;
 		event.stopPropagation();
-		const template = project.workflowTemplates[0].argoWorkflowTemplate?.metadata.name;
-		goto(`/templates/${template}`);
+		try {
+			const template = project.workflowTemplates[0].argoWorkflowTemplate;
+			const template_name = template?.metadata.name;
+			goto(`/templates/${template_name}`);
+			throw new Error('Template not found!');
+		} catch (error) {
+			visibleAlert = true;
+			alertTitle = 'Template not found!';
+			alertMessage = `Workflow template does not exist for this project: ${clickedProjectId}`;
+		}
 	}
 	$: reactiveProjectsList = $projectsList;
 	$: dryRunCounts = getDryRunCounts(reactiveProjectsList);
 </script>
 
 <!-- svelte-ignore missing-declaration -->
-<div class="container p-5">
-	<h1>Projects</h1>
-	<div class="table-container p-5">
+<div class="flex w-full content-center p-10">
+	<div class="table-container">
 		{#await projectsPromise}
 			<p style="font-size:20px;">Loading projects...</p>
 			<ProgressBar />
 		{:then projectsList}
+			<h1>Projects</h1>
 			<div class="flex flex-row justify-end p-5 space-x-1">
 				<div>
 					<button
@@ -148,7 +183,7 @@
 						<th>Name</th>
 						<th>Created</th>
 						<th>Dry runs</th>
-						<th>Template</th>
+						<th style="text-align:center">Template</th>
 						<th />
 					</tr>
 				</thead>
@@ -172,7 +207,7 @@
 							</td>
 							<!-- svelte-ignore a11y-click-events-have-key-events -->
 							<td style="width:15%" on:click={(event) => showTemplate(event, project)}>
-								<div>
+								<div class="grid grid-rows-2 grid-cols-1 justify-items-center">
 									<div><FileTextIcon size="1x" /></div>
 									<div>
 										<p class="no-underline hover:underline">show</p>
@@ -200,6 +235,29 @@
 
 {#if $modalStore[0]}
 	<Modal />
+{/if}
+
+{#if visibleAlert}
+	<aside class="alert variant-ghost">
+		<!-- Icon -->
+		<div class="flex w-full justify-between">
+			<div><AlertTriangleIcon /></div>
+			<div class="alert-actions">
+				<button
+					type="button"
+					class="btn btn-sm variant-filled"
+					on:click={() => {
+						visibleAlert = false;
+					}}>OK</button
+				>
+			</div>
+		</div>
+		<!-- Message -->
+		<div class="alert-message">
+			<h3 class="h3">{alertTitle}</h3>
+			<p>{alertMessage}</p>
+		</div>
+	</aside>
 {/if}
 
 <style>

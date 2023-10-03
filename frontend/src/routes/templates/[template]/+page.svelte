@@ -40,16 +40,16 @@
 	}
 </script>
 
-<div class="container p-5">
-	<h1>
-		<a href="/projects">Projects</a>
-		<span STYLE="font-size:14px">/ </span>{data.template}
-	</h1>
-	<div class="table-container p-5">
+<div class="flex w-full content-center p-10">
+	<div class="table-container">
 		{#await workflowPromise}
 			<p style="font-size:20px;">Loading...</p>
 			<ProgressBar />
 		{:then workflow}
+			<h1>
+				<a href="/projects">Projects</a>
+				/ templates / {data.template}
+			</h1>
 			<div class="flex flex-row justify-end p-5 space-x-1">
 				<div>
 					<button type="button" class="btn btn-sm variant-filled" on:click={switchLanguage}>

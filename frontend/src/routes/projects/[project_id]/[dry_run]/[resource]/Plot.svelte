@@ -41,7 +41,7 @@
 </script>
 
 {#if !data || data.length == 0}
-	<Plot {data} layout={noDataLayout} fillParent="width" debounce={250} />
+	<Plot {data} layout={noDataLayout} fillParent={true} debounce={250} />
 {:else}
-	<Plot {data} {layout} fillParent="width" debounce={250} />
+	<Plot {data} {layout} fillParent={true} debounce={250} />
 {/if}
