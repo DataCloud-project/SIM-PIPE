@@ -88,6 +88,8 @@
 		);
 		// set stepsList as nodes
 		$stepsList = dryrun_response.dryRun.nodes;
+		// filter out all nodes which are not of type Pod
+		$stepsList = $stepsList.filter(entry => entry.type === 'Pod');
 		dryrun_response.dryRun.nodes.forEach((node: DryRunMetrics) => {
 			dryRunPhases[node.displayName] = node.phase;
 		});
@@ -406,7 +408,7 @@
 		//console.log($selectedDryRunName)
 	});
 	$: selectedStep = selectStepName;
-	$: reactiveStepsList = $stepsList?.slice(1);
+	$: reactiveStepsList = $stepsList;
 	$: reactiveMaxValues = maxValues;
 
 	function gotoOverview() {
@@ -480,7 +482,7 @@
 									</td>
 									<td style="width:15%">{step.phase}</td>
 									<td style="width:10%">
-										{#if step.type == 'Pod' && step.outputArtifacts?.length > 1}
+										{#if step.outputArtifacts?.length > 1}
 											{#each step.outputArtifacts as artifact}
 												{#if artifact.name != 'main-logs'}
 													<a href={step.outputArtifacts[0].url}>{step.outputArtifacts[0].name}* </a>
