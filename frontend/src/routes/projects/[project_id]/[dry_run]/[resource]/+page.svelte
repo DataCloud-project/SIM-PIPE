@@ -41,6 +41,8 @@
 	} = {};
 
 	const maxValues: { [key: string]: { value: number; unit: string } } = maxValuesFormat;
+	console.log('max values');
+	console.log(maxValues);
 	let showMax = false;
 
 	const getMetricsResponse = async () => {
@@ -89,7 +91,7 @@
 		// set stepsList as nodes
 		$stepsList = dryrun_response.dryRun.nodes;
 		// filter out all nodes which are not of type Pod
-		$stepsList = $stepsList.filter(entry => entry.type === 'Pod');
+		$stepsList = $stepsList.filter((entry) => entry.type === 'Pod');
 		dryrun_response.dryRun.nodes.forEach((node: DryRunMetrics) => {
 			dryRunPhases[node.displayName] = node.phase;
 		});
@@ -196,9 +198,15 @@
 
 						if (cpuValues.length > 0) {
 							const temp = Math.max(...cpuValues);
+							console.log('max values');
+							console.log(maxValues);
+							console.log('cpuValues');
+							console.log(cpuValues);
 							if (temp > maxValues['CPU'].value) {
 								maxValues['CPU'].value = temp;
 							}
+							console.log(' after editing max values');
+							console.log(maxValues);
 							showMax = true;
 							cpuData[node.displayName as string] = cpuUsage;
 						}
