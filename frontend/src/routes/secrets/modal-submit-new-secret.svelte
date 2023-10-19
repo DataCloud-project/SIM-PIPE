@@ -117,12 +117,12 @@
 				`Servername ${servername} is invalid! Must be lowercase alpha numeric words separated by either /.-_`
 			);
 		}
-		if (!validatePassphrase(password)) {
-			valid = false;
-			alert(
-				`Password is invalid! Must be at least 6 characters long and contain at least one lowercase letter, one uppercase letter, one digit and one special character`
-			);
-		}
+		// if (!validatePassphrase(password)) {
+		// 	valid = false;
+		// 	alert(
+		// 		`Password is invalid! Must be at least 6 characters long and contain at least one lowercase letter, one uppercase letter, one digit and one special character`
+		// 	);
+		// }
 		return valid;
 	}
 
@@ -203,13 +203,6 @@
 				/>
 			</label>
 			<div class="flex flex-row">
-				<div class="flex-initial w-8">
-					<input
-						class="checkbox variant-filled"
-						type="checkbox"
-						bind:checked={checkedAutoGeneratePassword}
-					/>
-				</div>
 				<div class="justify-stretch">
 					<label class="label">
 						<span>Password</span>
