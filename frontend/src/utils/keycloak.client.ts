@@ -10,12 +10,10 @@ function parseSimPipeEnvironment(): {
 	keycloakEnabled: boolean;
 	graphqlUrl: string;
 } {
-
 	let keycloakEnabled = config.KEYCLOAK_ENABLED;
 	let graphqlUrl = config.SIM_PIPE_CONTROLLER_URL;
 
 	if (keycloakEnabled === undefined || graphqlUrl === undefined) {
-
 		const localhostMatch = window.location.host.match(/^(localhost|127\.0\.0\.\d+|::1)(:\d+)?$/);
 
 		if (localhostMatch) {
@@ -38,15 +36,13 @@ function parseSimPipeEnvironment(): {
 		keycloakEnabled,
 		graphqlUrl
 	};
-
 }
-
 
 async function internalInitKeycloak(graphqlUrl: string): Promise<void> {
 	const keycloak = new Keycloak({
 		url: config.KEYCLOAK_URL,
 		realm: config.KEYCLOAK_REALM,
-		clientId: config.KEYCLOAK_CLIENT_ID,
+		clientId: config.KEYCLOAK_CLIENT_ID
 		// 'enable-cors': 'true', // it seems to be ignored
 	});
 	await keycloak.init({ onLoad: 'login-required', flow: 'implicit' }); //  Implicit flow.
@@ -81,9 +77,7 @@ export default async function initKeycloak(): Promise<void> {
 
 	const { keycloakEnabled, graphqlUrl } = parseSimPipeEnvironment();
 	if (!keycloakEnabled) {
-		graphQLClient.set(
-			new GraphQLClient(graphqlUrl, {}),
-		);
+		graphQLClient.set(new GraphQLClient(graphqlUrl, {}));
 		return;
 	}
 	if (!initKeycloakPromise) {
