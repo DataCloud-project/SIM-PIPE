@@ -6,6 +6,8 @@ on:
       - main
     paths:
       - "examples/fake-file-process/**"
+    tags:
+      - "*"
   pull_request:
     paths:
       - "examples/fake-file-process/**"

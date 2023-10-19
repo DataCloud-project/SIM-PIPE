@@ -1,13 +1,10 @@
-# SpectaQL is a Node.js library that generates static documentation for a GraphQL schema
-# https://github.com/anvilco/spectaql?ref=hackernoon.com
-
 spectaql:
+  logoFile: ../../../docs/logo/sim-pipe_logo.png
   displayAllServers: true
 
 introspection:
-  # removeTrailingPeriodFromDescriptions: false
-  schemaFile: src/db/schema.graphql
-  queryNameStrategy: capitalizeFirst
+  removeTrailingPeriodFromDescriptions: false
+  schemaFile: ../src/server/schema.graphql
   fieldExpansionDepth: 2
 
   spectaqlDirective:
@@ -18,21 +15,26 @@ extensions:
 
 info:
   title: SIM-PIPE API Reference
-  description: This provides documentation for the SIM-PIPE API which is implemented using GraphQL.
-  # termsOfService: https://www.example.com/terms
+  description: |
+    This is the reference documentation for the SIM-PIPE API which is implemented using GraphQL.
+    The API is authenticated and user authentication is managed using keycloak.<br>
+    The URL for token retrieval is "https://datacloud-auth.euprojects.net/auth/realms/user-authentication/protocol/openid-connect/token".<br><br>
+    More documentation on how to query a GraphQL API can be found <a href="https://graphql.org/learn/queries/">here</a>.
+
+    Some tutorials for GraphQL beginners are also listed below:<br>
+    <ul>
+      <li> <a href="https://stepzen.com/docs/using-graphql/graphql-query-basics">GraphQL Query Basics</a> </li>
+      <li> <a href="https://hasura.io/learn/graphql/intro-graphql/graphql-queries/">GraphQL Queries - Fetching data</a> </li>
+    </ul>
   contact:
-    name: Antoine Pultier, Aleena Thomas
-    # url: http://www.example.com/support
-    email: Antoine.Pultier@sintef.no, Aleena.Thomas@sintef.no
+    name: Antoine Pultier, Gøran Svaland, Aleena Thomas, Nikolay Nikolov
+    email: antoine.pultier@sintef.no, goran.svaland@sintef.no, aleena.thomas@sintef.no, nikolay.nikolov@sintef.no    
   license:
     name: Apache 2.0
-    url: https://www.apache.org/licenses/LICENSE-2.0.html
-  # x-introItems:
-    # - title: Important thing 1
-      # description: 
+    url: https://www.apache.org/licenses/LICENSE-2.0.html  
 
 servers:
-  - url: http://localhost:9000/graphql
+  - url: http://localhost:8088
     headers:
       - name: Authorization
-        example: Bearer jwt-example
+        example: Bearer <YOUR_TOKEN_HERE>

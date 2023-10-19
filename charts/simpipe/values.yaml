@@ -362,7 +362,7 @@ cadvisor:
 
   extraContainers:
     - name: simpipe-cadvisor-bridge
-      image: ghcr.io/datacloud-project/simpipe-cadvisor-bridge:pr-92
+      image: ghcr.io/datacloud-project/simpipe-cadvisor-bridge:0.3.0
       imagePullPolicy: IfNotPresent
       args:
         - http://localhost:8080/metrics
