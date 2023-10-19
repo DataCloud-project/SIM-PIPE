@@ -16,29 +16,29 @@ scalar PrometheusStringNumber
 
 type Query {
   """ Fetches the username of the current user. """
-  username: String! 
+  username: String! @auth
   """ Returns pong if the server is up and running. """
   ping: String!
   """ List of all docker registry credentials """
-  dockerRegistryCredentials: [DockerRegistryCredential!]! 
+  dockerRegistryCredentials: [DockerRegistryCredential!]! @auth
 
   """ List of all projects """
-  projects: [Project!]! 
+  projects: [Project!]! @auth
 
   """ Get a project by ID """
   project(
     """ ID of the project to be fetched """
-    projectId: String!): Project! 
+    projectId: String!): Project! @auth
 
   """ Get a dry run by ID """
   dryRun(
     """ ID of the dry run to be fetched """
-    dryRunId: String!): DryRun! 
+    dryRunId: String!): DryRun! @auth
 
   """ Get an Argo  workflow template by name """
   workflowTemplate(
     """ Name of the Argo workflow template to be fetched """
-    name: String!): WorkflowTemplate 
+    name: String!): WorkflowTemplate @auth
 }
 
 """ Project is the high level concept for a specific pipeline in SIM-PIPE. It contains all the previous dry runs of the pipeline and its results. """
@@ -404,7 +404,7 @@ input UpdateWorkflowTemplateInput {
   argoWorkflowTemplate: ArgoWorkflowTemplate!
 }
 
-type Mutation  {
+type Mutation @auth {
   """ Create a new project """
   createProject(
     """ Details of the new project """
@@ -413,7 +413,7 @@ type Mutation  {
   """ Rename an existing project """
   renameProject(
     """ ID of the project to be renamed """
-    projectId: String!, 
+    projectId: String!,
     """ The new name for the project """
     name: String!): Project!
 
@@ -444,46 +444,46 @@ type Mutation  {
 
   """ Retry a failed dry run. Restart an existing dry run."""
   retryDryRun(
-    """ ID of the dry run to be restarted """    
+    """ ID of the dry run to be restarted """
     dryRunId:String!): DryRun!
 
   """ Resubmit a dry run. Create a copy of the current dry run and starts its execution."""
   resubmitDryRun(
-    """ ID of the dry run to be resubmitted """        
+    """ ID of the dry run to be resubmitted """
     dryRunId:String!): DryRun!
 
   """ Stop an active dry run. """
   stopDryRun(
-    """ ID of the dry run to be stopped """        
-    dryRunId:String!, 
-    """ Set to true to terminate the dry run """        
+    """ ID of the dry run to be stopped """
+    dryRunId:String!,
+    """ Set to true to terminate the dry run """
     terminate: Boolean): DryRun!
 
   """ Delete an existing dry run. The mutation returns true if the deletion was successful. """
   deleteDryRun(
-    """ ID of the dry run to be deleted """        
+    """ ID of the dry run to be deleted """
     dryRunId:String!): Boolean!
 
   """ Assign a dry run to a project """
   assignDryRunToProject(
-    """ ID of the dry run to be assigned """        
-    dryRunId: String!, 
-    """ ID of the target project """    
+    """ ID of the dry run to be assigned """
+    dryRunId: String!,
+    """ ID of the target project """
     projectId: String!): DryRun!
 
   """ Create a new docker registry credential """
   createDockerRegistryCredential(
-    """ Input for the new docker registry credential """    
+    """ Input for the new docker registry credential """
     credential: DockerRegistryCredentialInput!): DockerRegistryCredential!
 
   """ Delete an existing docker registry credential. The mutation returns true if the deletion was successful. """
   deleteDockerRegistryCredential(
-    """ Name of the docker registry credential to be deleted """    
+    """ Name of the docker registry credential to be deleted """
     name: String!): Boolean!
 
   """ Update an existing docker registry credential """
   updateDockerRegistryCredential(
-    """ The new value of the docker registry credential to be updated """        
+    """ The new value of the docker registry credential to be updated """
     credential: DockerRegistryCredentialInput!): DockerRegistryCredential!
 
   """ Compute a presigned URL for uploading a file using HTTP PUT. The mutation returns the URL to upload the file. """
@@ -493,12 +493,12 @@ type Mutation  {
 
   """ Create a new Argo workflow template """
   createWorkflowTemplate(
-    """ Input for the new Argo workflow template """    
+    """ Input for the new Argo workflow template """
     input: CreateWorkflowTemplateInput!): WorkflowTemplate!
 
   """ Update an existing Argo workflow template """
   updateWorkflowTemplate(
-    """ The new value of the Argo workflow template to be updated """ 
+    """ The new value of the Argo workflow template to be updated """
     update: UpdateWorkflowTemplateInput!): WorkflowTemplate!
 
   """ Delete an existing Argo workflow template. The mutation returns true if the deletion was successful. """
