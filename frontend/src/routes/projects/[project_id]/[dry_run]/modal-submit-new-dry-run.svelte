@@ -80,8 +80,12 @@
 						input_artifacts[taskList[0].name].artifacts.forEach(
 							async (artifact: { raw: { data: string } }, index: number) => {
 								const files = formData.files[index] as unknown as FileList;
-								let text = await files[0].text();
-								artifact.raw.data = `${text}`;
+								if(files) {
+									let text = await files[0].text();
+									artifact.raw.data = `${text}`;
+								} else {
+									console.log('Input file not uploaded!')
+								}
 							}
 						);
 					}
@@ -132,7 +136,24 @@
 			modalStore.clear();
 		} catch (error) {
 			// TODO: handle error
-			console.log(error);
+			let createDryRunMessageModal:ModalSettings;
+			if((error as Error).message.includes('PayloadTooLargeError')) {
+				createDryRunMessageModal = {
+					type: 'alert',
+					title: 'Failed!',
+					body: 'Input file size exceeded limit (90KB)!',
+				};
+			} else {
+				createDryRunMessageModal = {
+					type: 'alert',
+					title: 'Failed to create dry run!',
+					body: 'Check dry run inputs!',
+				};
+			}
+			modalStore.trigger(createDryRunMessageModal);
+			alertModal = true;
+			await new Promise((resolve) => setTimeout(resolve, 2500));
+			modalStore.close();
 		}
 	}
 </script>
