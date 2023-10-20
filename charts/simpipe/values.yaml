@@ -31,6 +31,8 @@ controller:
     endpoint: http://simpipe-argo-workflows-server:2746/
   prometheus:
     serverUrl: http://prometheus-operated:9090
+  oauth2:
+    issuerEndpoint: "https://datacloud-auth.euprojects.net/auth/realms/user-authentication"
 
   serviceAccount:
     # Annotations to add to the service account

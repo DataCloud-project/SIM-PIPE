@@ -60,6 +60,10 @@ spec:
               value: {{ .Values.controller.prometheus.serverUrl | quote }}
             - name: NODE_ENV
               value: development
+            {{- if .Values.controller.oauth2.issuerEndpoint }}
+            - name: OAUTH2_ISSUER_ENDPOINT
+              value: {{ .Values.controller.oauth2.issuerEndpoint | quote }}
+            {{- end }}
           ports:
             - name: http
               containerPort: {{ .Values.controller.service.port }}
