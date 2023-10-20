@@ -39,7 +39,6 @@ function parseSimPipeEnvironment(): {
 }
 
 async function internalInitKeycloak(graphqlUrl: string): Promise<void> {
-
 	const sessionStorage = window.sessionStorage ?? {};
 
 	const existingToken = sessionStorage.getItem('keycloak-token');
