@@ -39,6 +39,31 @@ function parseSimPipeEnvironment(): {
 }
 
 async function internalInitKeycloak(graphqlUrl: string): Promise<void> {
+
+	const sessionStorage = window.sessionStorage ?? {};
+
+	const existingToken = sessionStorage.getItem('keycloak-token');
+	if (existingToken) {
+		const existingExp = sessionStorage.getItem('keycloak-exp');
+		if (existingExp) {
+			const exp = parseInt(existingExp, 10);
+			// If expire in less than 10 minutes, ignore it
+			if (exp - Date.now() / 1000 > 10 * 60) {
+				usertoken.set(existingToken);
+				username.set(sessionStorage.getItem('keycloak-username') ?? '');
+				graphQLClient.set(
+					new GraphQLClient(graphqlUrl, {
+						headers: {
+							authorization: `Bearer ${existingToken}`,
+							mode: 'cors'
+						}
+					})
+				);
+				return;
+			}
+		}
+	}
+
 	const keycloak = new Keycloak({
 		url: config.KEYCLOAK_URL,
 		realm: config.KEYCLOAK_REALM,
@@ -49,9 +74,21 @@ async function internalInitKeycloak(graphqlUrl: string): Promise<void> {
 	if (!keycloak.token) {
 		throw new Error("Keycloak didn't return a valid token");
 	}
+
+	const token = keycloak.token;
+
+	const exp = keycloak.tokenParsed?.exp ?? 0;
+	console.log('Token expires at', new Date(exp * 1000).toISOString());
+
+	const usernameFromKeycloak = keycloak.idTokenParsed?.preferred_username ?? '';
+
+	window.sessionStorage.setItem('keycloak-token', token);
+	window.sessionStorage.setItem('keycloak-exp', exp.toString());
+	window.sessionStorage.setItem('keycloak-username', usernameFromKeycloak);
+
 	// console.log('User is authenticated');
 	const requestHeaders = {
-		authorization: `Bearer ${keycloak.token}`,
+		authorization: `Bearer ${token}`,
 		mode: 'cors'
 	};
 	if (!keycloak.idTokenParsed) {
@@ -60,8 +97,8 @@ async function internalInitKeycloak(graphqlUrl: string): Promise<void> {
 	if (typeof keycloak.idTokenParsed.preferred_username !== 'string') {
 		throw new TypeError("Keycloak didn't return a valid preferred_username");
 	}
-	usertoken.set(keycloak.token);
-	username.set(keycloak.idTokenParsed.preferred_username);
+	usertoken.set(token);
+	username.set(usernameFromKeycloak);
 
 	graphQLClient.set(
 		new GraphQLClient(graphqlUrl, {
