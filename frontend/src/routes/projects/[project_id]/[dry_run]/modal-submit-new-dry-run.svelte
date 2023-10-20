@@ -27,9 +27,11 @@
 
 	let formData = {
 		name: '',
-		files: undefined,
+		files: [],
 		dagTemplate: { dag: { tasks: [] } }
 	};
+
+	const input_artifacts: any = {};
 
 	function parseTaskList() {
 		// only valid for dag format https://argoproj.github.io/argo-workflows/walk-through/dag/
@@ -46,6 +48,10 @@
 			/* eslint-disable */
 			formData.dagTemplate = templates.find((template: Template) => template.dag);
 			const tasks: Task[] = formData.dagTemplate ? formData.dagTemplate.dag?.tasks : [];
+			// extract input artifacts from template
+			templates.forEach((template: { name: string; inputs: any }) => {
+				input_artifacts[template.name] = template.inputs;
+			});
 			return tasks;
 		}
 	}
@@ -54,8 +60,34 @@
 	let alertModal = false;
 
 	// modify workflow template from project to create a valid argoWorkflow input for create new dryrun
-	function newWorkflowTemplate(template: { metadata: any; spec: any }) {
+	async function newWorkflowTemplate(template: { metadata: any; spec: any }) {
 		const newWorkflowTemplate = template;
+		if (formData.files.length != 0) {
+			newWorkflowTemplate.spec.templates.forEach(
+				async (template: { inputs: any; name: string }) => {
+					// find the initial step (currently assuming there is only 1 initial step)
+					let initial_task_name = '';
+					for (let task of taskList) {
+						if (!task.dependencies) {
+							// initial step has no dependencies
+							initial_task_name = task.name;
+							break;
+						}
+					}
+					// change input files content in the template for the initial step
+					// if any files are uploaded
+					if (template.name == initial_task_name) {
+						input_artifacts[taskList[0].name].artifacts.forEach(
+							async (artifact: { raw: { data: string } }, index: number) => {
+								const files = formData.files[index] as unknown as FileList;
+								let text = await files[0].text();
+								artifact.raw.data = `${text}`;
+							}
+						);
+					}
+				}
+			);
+		}
 		newWorkflowTemplate.metadata =
 			formData.name == ''
 				? { generateName: newWorkflowTemplate.metadata.generateName }
@@ -66,15 +98,17 @@
 	async function onCreateDryRunSubmit(): Promise<void> {
 		modalStore.close();
 		hideModal = true;
-
+		const modifiedWorkflowTemplate = await newWorkflowTemplate(
+			$selectedProject?.workflowTemplates[0].argoWorkflowTemplate
+		);
 		const variables = {
 			input: {
 				projectId: $selectedProject?.id,
-				argoWorkflow: newWorkflowTemplate(
-					$selectedProject?.workflowTemplates[0].argoWorkflowTemplate
-				)
+				argoWorkflow: modifiedWorkflowTemplate
 			}
 		};
+		await new Promise((resolve) => setTimeout(resolve, 1500));
+
 		try {
 			const responseCreateDryRun: { createDryRun: { id: string } } = await requestGraphQLClient(
 				createDryRunMutation,
@@ -103,7 +137,7 @@
 	}
 </script>
 
-{#if !hideModal}
+{#if !hideModal && $modalStore[0]}
 	<div class="modal-example-form {cBase} overflow-y-auto max-h-full">
 		<header class={cHeader}>{$modalStore[0].title ?? '(title missing)'}</header>
 		<article>{$modalStore[0].body ?? '(body missing)'}</article>
@@ -118,16 +152,12 @@
 					required
 				/>
 			</label>
-			<label class="label">
-				<span>Upload input files for the dry run </span>
-				<input class="input" multiple type="file" bind:files={formData.files} />
-			</label>
 
 			{#if taskList.length > 0}
 				{#each taskList as task, i}
 					<div class="ml-5">
 						<!-- svelte-ignore a11y-label-has-associated-control -->
-						<label><b>{task.name}</b></label>
+						<label><b>{i + 1}. {task.name}</b></label>
 						<label
 							>Template: <span>
 								<input class="variant-soft-surface" type="text" value={task.template} readonly />
@@ -144,6 +174,21 @@
 									/>
 								</span></label
 							>
+						{/if}
+						{#if Object.keys(input_artifacts[task.name]).length != 0}
+							<br />
+							<!-- svelte-ignore a11y-label-has-associated-control -->
+							<label>Upload Input files </label>
+							{#each input_artifacts[task.name].artifacts || [] as artifact, k}
+								<!-- svelte-ignore a11y-label-has-associated-control -->
+								<label>
+									{artifact.name}
+									<span>
+										<input class="input" type="file" bind:files={formData.files[k]} />
+									</span>
+								</label>
+								<br />
+							{/each}
 						{/if}
 						{#each taskList[i].arguments?.parameters || [] as param, j}
 							<!-- svelte-ignore a11y-label-has-associated-control -->

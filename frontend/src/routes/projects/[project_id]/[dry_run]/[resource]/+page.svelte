@@ -41,8 +41,6 @@
 	} = {};
 
 	const maxValues: { [key: string]: { value: number; unit: string } } = maxValuesFormat;
-	console.log('max values');
-	console.log(maxValues);
 	let showMax = false;
 
 	const getMetricsResponse = async () => {
@@ -198,15 +196,9 @@
 
 						if (cpuValues.length > 0) {
 							const temp = Math.max(...cpuValues);
-							console.log('max values');
-							console.log(maxValues);
-							console.log('cpuValues');
-							console.log(cpuValues);
 							if (temp > maxValues['CPU'].value) {
 								maxValues['CPU'].value = temp;
 							}
-							console.log(' after editing max values');
-							console.log(maxValues);
 							showMax = true;
 							cpuData[node.displayName as string] = cpuUsage;
 						}
@@ -412,8 +404,6 @@
 	onMount(async () => {
 		await getDataPromise;
 		buildDiagram();
-		//console.log($selectedProjectName)
-		//console.log($selectedDryRunName)
 	});
 	$: selectedStep = selectStepName;
 	$: reactiveStepsList = $stepsList;
@@ -520,7 +510,7 @@
 									<li>
 										{#if logs[key] != null}
 											<div class="w-full">
-												<CodeBlock language="bash" code={getPartLogs(key, 200)} />
+												<CodeBlock language="bash" code={getPartLogs(key, 20000)} />
 											</div>
 										{:else}
 											<p>No logs</p>
