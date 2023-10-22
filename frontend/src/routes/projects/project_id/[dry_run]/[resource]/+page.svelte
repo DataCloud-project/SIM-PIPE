@@ -435,7 +435,7 @@
 			<h1>
 				<a href="/projects">Projects</a>
 				<span STYLE="font-size:14px">/ </span>
-				<button on:click={() => goto(`/projects/[project_id]/${selectedProject?.id}`)}
+				<button on:click={() => goto(`/projects/project_id/${selectedProject?.id}`)}
 					>{selectedProject?.name}
 				</button>
 				<span STYLE="font-size:14px">/ </span>
@@ -446,7 +446,7 @@
 				<button
 					type="button"
 					class="btn-icon btn-icon-sm"
-					on:click={() => goto(`/projects/[project_id]/${data.resource}/${data.resource}/cpu`)}
+					on:click={() => goto(`/projects/project_id/${data.resource}/${data.resource}/cpu`)}
 					><ZoomInIcon /></button
 				>
 			</h1>

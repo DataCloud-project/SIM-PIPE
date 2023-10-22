@@ -99,7 +99,7 @@
 
 	function dryRunOnClick(dryRunId: string) {
 		const resource = dryRunId;
-		goto(`/projects/[project_id]/${dryRunId}/${resource}`);
+		goto(`/projects/project_id/${dryRunId}/${resource}`);
 	}
 
 	function displayDryRunDuration(status: string, nodes: DryRunMetrics[]) {
@@ -125,7 +125,7 @@
 			<h1>
 				<a href="/projects">Projects</a>
 				<span STYLE="font-size:14px">/ </span>
-				<button on:click={() => goto(`/projects/[project_id]/${reactiveProjectDetails?.id}`)}
+				<button on:click={() => goto(`/projects/${reactiveProjectDetails?.id}`)}
 					>{reactiveProjectDetails?.name}
 				</button>
 			</h1>
