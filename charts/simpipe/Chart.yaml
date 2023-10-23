@@ -3,7 +3,7 @@ name: simpipe
 description: SIMPIPE on Kubernetes
 type: application
 version: 0.3.0
-appVersion: "0.3.0"
+appVersion: pr-126
 dependencies:
   - name: cadvisor
     #version: "2.3.0"
