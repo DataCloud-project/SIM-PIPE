@@ -237,13 +237,13 @@
 			<h1>
 				<a href="/projects">Projects</a>
 				<span STYLE="font-size:14px">/ </span>
-				<button on:click={() => goto(`/projects/[project_id]/${$selectedProjectName}`)}
+				<button on:click={() => goto(`/projects/project_id/${$selectedProjectName}`)}
 					>{$selectedProjectName}
 				</button>
 				<span STYLE="font-size:14px">/ </span>
 				<button
 					on:click={() =>
-						goto(`/projects/[project_id]/${$selectedProjectName}/${$selectedDryRunName}`)}
+						goto(`/projects/project_id/${$selectedProjectName}/${$selectedDryRunName}`)}
 					>{$selectedDryRunName}
 				</button>
 				<span STYLE="font-size:14px">/ {$selectedMetricsType}</span>
