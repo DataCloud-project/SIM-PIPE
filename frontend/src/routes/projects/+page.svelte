@@ -207,7 +207,6 @@
 							<td style="width:25%">
 								{dryRunCounts[project.id]}
 							</td>
-							<!-- svelte-ignore a11y-click-events-have-key-events -->
 							<td style="width:15%" on:click={(event) => showTemplate(event, project)}>
 								<div class="grid grid-rows-2 grid-cols-1 justify-items-center">
 									<div><FileTextIcon size="1x" /></div>

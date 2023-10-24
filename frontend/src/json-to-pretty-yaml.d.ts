@@ -1,4 +1,4 @@
 declare module 'json-to-pretty-yaml' {
-	const YAML: any;
+	const YAML: unknown;
 	export default YAML;
 }
