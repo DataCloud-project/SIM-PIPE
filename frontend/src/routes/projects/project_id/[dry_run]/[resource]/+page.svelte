@@ -29,7 +29,7 @@
 	let mermaidCode = [];
 	let diagram: string;
 	$: diagram = diagram;
-	let selectedProject: { name: any; id: any };
+	let selectedProject: { name: string; id: string };
 	const datefmt = 'yyyy-MM-dd HH:mm:ss';
 	let showLogs = true;
 	let logs: { [x: string]: string } = {};
@@ -41,8 +41,6 @@
 	} = {};
 
 	const maxValues: { [key: string]: { value: number; unit: string } } = maxValuesFormat;
-	console.log('max values');
-	console.log(maxValues);
 	let showMax = false;
 
 	const getMetricsResponse = async () => {
@@ -69,9 +67,14 @@
 	};
 
 	const getData = async (): Promise<{ workflow: any; dryrun: any; metrics: any }> => {
-		const selectedProjectResponse = await requestGraphQLClient(getDryRunQuery, {
+		const selectedProjectResponse = await requestGraphQLClient<{
+			dryRun?: { project: { name: string; id: string } };
+		}>(getDryRunQuery, {
 			dryRunId: data.resource
 		});
+		if (!selectedProjectResponse.dryRun?.project) {
+			throw new Error('Project not found');
+		}
 		selectedProject = selectedProjectResponse.dryRun?.project;
 		selectedProjectName.set(selectedProject?.name);
 		const workflow_variables = {
@@ -82,7 +85,7 @@
 			dryRunId: data.resource
 		};
 		selectedDryRunName.set(data.resource);
-		const workflow_response = (await requestGraphQLClient(getProjectQuery, workflow_variables))
+		const workflow_response = (await requestGraphQLClient<any>(getProjectQuery, workflow_variables))
 			.project;
 		const dryrun_response: { dryRun: DryRun } = await requestGraphQLClient(
 			getDryRunPhaseResultsQuery,
@@ -198,15 +201,9 @@
 
 						if (cpuValues.length > 0) {
 							const temp = Math.max(...cpuValues);
-							console.log('max values');
-							console.log(maxValues);
-							console.log('cpuValues');
-							console.log(cpuValues);
 							if (temp > maxValues['CPU'].value) {
 								maxValues['CPU'].value = temp;
 							}
-							console.log(' after editing max values');
-							console.log(maxValues);
 							showMax = true;
 							cpuData[node.displayName as string] = cpuUsage;
 						}
@@ -412,8 +409,6 @@
 	onMount(async () => {
 		await getDataPromise;
 		buildDiagram();
-		//console.log($selectedProjectName)
-		//console.log($selectedDryRunName)
 	});
 	$: selectedStep = selectStepName;
 	$: reactiveStepsList = $stepsList;
@@ -445,7 +440,7 @@
 			<h1>
 				<a href="/projects">Projects</a>
 				<span STYLE="font-size:14px">/ </span>
-				<button on:click={() => goto(`/projects/[project_id]/${selectedProject?.id}`)}
+				<button on:click={() => goto(`/projects/project_id/${selectedProject?.id}`)}
 					>{selectedProject?.name}
 				</button>
 				<span STYLE="font-size:14px">/ </span>
@@ -456,7 +451,7 @@
 				<button
 					type="button"
 					class="btn-icon btn-icon-sm"
-					on:click={() => goto(`/projects/[project_id]/${data.resource}/${data.resource}/cpu`)}
+					on:click={() => goto(`/projects/project_id/${data.resource}/${data.resource}/cpu`)}
 					><ZoomInIcon /></button
 				>
 			</h1>
@@ -520,7 +515,7 @@
 									<li>
 										{#if logs[key] != null}
 											<div class="w-full">
-												<CodeBlock language="bash" code={getPartLogs(key, 200)} />
+												<CodeBlock language="bash" code={getPartLogs(key, 20000)} />
 											</div>
 										{:else}
 											<p>No logs</p>
@@ -592,9 +587,6 @@
 
 				<div class="flex card p-2">
 					<div class="flex container h-full w-full">
-						<!-- <div class="place-content-start">
-					<button type="button" class="btn-icon btn-icon-sm"><ZoomInIcon /></button>
-					</div> -->
 						<div class="place-content-center h-full w-full">
 							<Plot
 								data={getResource('network').data}

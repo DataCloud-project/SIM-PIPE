@@ -5,7 +5,7 @@
 	import { projectsList, clickedProjectId } from '../../stores/stores.js';
 	import type { Project } from '../../types.js';
 	import { goto } from '$app/navigation';
-	import Timestamp from './[project_id]/[dry_run]/timestamp.svelte';
+	import Timestamp from './project_id/[dry_run]/timestamp.svelte';
 	import { requestGraphQLClient } from '$lib/graphqlUtils';
 	import { AlertTriangleIcon, EditIcon, FileTextIcon } from 'svelte-feather-icons';
 	import ModalRenameProject from './modal-rename-project.svelte';
@@ -63,7 +63,9 @@
 				const project_variables = {
 					projectId: element
 				};
-				const response_dry_runs = await requestGraphQLClient(allDryRunsQuery, project_variables);
+				const response_dry_runs = await requestGraphQLClient<{
+					project: { dryRuns: Record<string, undefined>[] };
+				}>(allDryRunsQuery, project_variables);
 				response_dry_runs.project.dryRuns.forEach(async (dry_run: Record<string, undefined>) => {
 					const response_delete_dry_run = await requestGraphQLClient(deleteDryRunMutation, {
 						dryRunId: dry_run.id
@@ -112,7 +114,7 @@
 
 	function gotodryruns(dry_run: string) {
 		clickedProjectId.set(dry_run);
-		goto(`/projects/[project_id]/${dry_run}`);
+		goto(`/projects/project_id/${dry_run}`);
 	}
 
 	function renameProject(event: any, project: Project) {

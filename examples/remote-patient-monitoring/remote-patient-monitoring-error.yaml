@@ -1,0 +1,154 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  generateName: remote-patient-monitoring-pipeline-
+spec:
+  entrypoint: run-pipeline
+  volumes:
+    - name: out-volume
+      emptyDir: {}
+
+  templates:
+    - name: run-pipeline
+      dag:
+        tasks:
+          - name: retrieve-data
+            template: retrieve-data
+            arguments:
+              parameters:
+              - name: mqtt-host
+                value: oslo.sct.sintef.no
+              - name: mqtt-username
+                value: TGW000000003
+              - name: mqtt-client-id
+                value: TGWDATACLOUD
+              - name: mqtt-pass
+                value: verysecretpassword
+              - name: mqtt-port
+                value: "1883"
+              - name: input-frequency
+                value: "1"
+          - name: process-data
+            template: process-data
+            dependencies: [retrieve-data]
+            arguments:
+              parameters:
+              - name: rabbitmq-host
+                value: oslo.sct.sintef.no:5672
+              - name: rabbitmq-username
+                value: tellucareapi
+              - name: rabbitmq-password
+                value: secondsecretpassword
+              - name: fhir-url
+                value: https://tellucloud-fhir.sintef.cloud
+          - name: notify
+            template: notify
+            dependencies: [process-data]
+            arguments:
+              parameters:
+              - name: rabbitmq-host-notify
+                value: oslo.sct.sintef.no:5672
+              - name: rabbitmq-username-notify
+                value: tellucareapi
+              - name: rabbitmq-password-notify
+                value: secondsecretpassword
+              - name: fhir-url-notify
+                value: https://tellucloud-fhir.sintef.cloud
+            
+
+    - name: retrieve-data
+      inputs:
+        artifacts:
+        - name: Input
+          path: /in/input.txt
+          raw:
+            data: provide sample data file
+        parameters:
+          - name: mqtt-host
+          - name: mqtt-username
+          - name: mqtt-client-id
+          - name: mqtt-pass
+          - name: mqtt-port
+          - name: input-frequency
+      container:
+        image: ghcr.io/datacloud-project/01-sim-pipe-test-retrieve-file
+        env:
+          - name: MQTT_HOST
+            value: "{{inputs.parameters.mqtt-host}}"
+          - name: MQTT_USERNAME
+            value: "{{inputs.parameters.mqtt-username}}"
+          - name: MQTT_CLIENT_ID
+            value: "{{inputs.parameters.mqtt-client-id}}"
+          - name: MQTT_PASS
+            value: "{{inputs.parameters.mqtt-pass}}"
+          - name: MQTT_PORT
+            value: "{{inputs.parameters.mqtt-port}}"
+          - name: INPUT_FREQUENCY
+            value: "{{inputs.parameters.input-frequency}}"
+        command: ["/app/retrieve.sh", "10"]
+        volumeMounts:
+          - name: out-volume
+            mountPath: /out
+      outputs:
+        artifacts:
+        - name: fhir_outputs
+          path: /out/fhir_outputs.txt
+          archive:
+            none: {}
+
+    - name: process-data
+      inputs:
+        parameters:
+          - name: rabbitmq-host
+          - name: rabbitmq-username
+          - name: rabbitmq-password
+          - name: fhir-url
+      container:
+        image: ghcr.io/datacloud-project/02-sim-pipe-test-process-error
+        env:
+          - name: RABBITMQ_HOST
+            value: "{{inputs.parameters.rabbitmq-host}}"
+          - name: RABBITMQ_USERNAME
+            value: "{{inputs.parameters.rabbitmq-username}}"
+          - name: RABBITMQ_PASSWORD
+            value: "{{inputs.parameters.rabbitmq-password}}"
+          - name: FHIR_URL
+            value: "{{inputs.parameters.fhir-url}}"
+        command: ["/app/process.sh"]
+        volumeMounts:
+        - name: out-volume
+          mountPath: /out
+      outputs:
+        artifacts:
+        - name: process_output
+          path: /out/process_output.txt
+          archive:
+            none: {}
+    - name: notify
+      inputs:
+        parameters:
+          - name: rabbitmq-host-notify
+          - name: rabbitmq-username-notify
+          - name: rabbitmq-password-notify
+          - name: fhir-url-notify
+      container:
+        image: ghcr.io/datacloud-project/03-sim-pipe-test-notify
+        env:
+          - name: RABBITMQ_HOST
+            value: "{{inputs.parameters.rabbitmq-host-notify}}"
+          - name: RABBITMQ_USERNAME
+            value: "{{inputs.parameters.rabbitmq-username-notify}}"
+          - name: RABBITMQ_PASSWORD
+            value: "{{inputs.parameters.rabbitmq-password-notify}}"
+          - name: FHIR_URL
+            value: "{{inputs.parameters.fhir-url-notify}}"
+        command: ["/app/notify.sh"]
+        volumeMounts:
+        - name: out-volume
+          mountPath: /out
+      outputs:
+        artifacts:
+        - name: notify-output
+          path: /out/notify-output.txt
+          archive:
+            none: {}

@@ -85,8 +85,9 @@ def install_or_upgrade_simpipe():
 
     is_deployed = check_simpipe_deployment_presence()
 
-    # chart = os.path.join(os.path.dirname(__file__), "charts", "simpipe")
-    chart = "oci://ghcr.io/datacloud-project/simpipe"
+    chart = os.path.join(os.path.dirname(__file__), "charts", "simpipe")
+    values = os.path.join(os.path.dirname(__file__), "charts", "simpipe", "values.yaml")
+    # chart = "oci://ghcr.io/datacloud-project/simpipe"
 
     if is_deployed:
 
@@ -99,6 +100,8 @@ def install_or_upgrade_simpipe():
                     "upgrade",
                     "simpipe",
                     chart,
+                    "-f",
+                    values,
                     "--suppress-secrets",
                     "--detailed-exitcode",
                     "--no-hooks",
@@ -117,7 +120,7 @@ def install_or_upgrade_simpipe():
             try:
                 print("⬆️ upgrading simpipe")
                 subprocess.check_call(
-                    ["helm", "upgrade", "simpipe", "--wait", chart, "--no-hooks"]
+                    ["helm", "upgrade", "simpipe", "--wait", chart, "-f", values, "--no-hooks"]
                 )
             except subprocess.CalledProcessError as e:
                 print(f"❌ Error while upgrading simpipe: {e}")
@@ -126,7 +129,7 @@ def install_or_upgrade_simpipe():
         try:
             print("🌈 installing simpipe")
             subprocess.check_call(
-                ["helm", "install", "simpipe", "--wait", chart]
+                ["helm", "install", "simpipe", "--wait", chart, "-f", values]
             )
         except subprocess.CalledProcessError as e:
             print(f"❌ Error while installing simpipe: {e}")

@@ -1,21 +1,15 @@
-import { GraphQLClient, type RequestDocument } from 'graphql-request';
 import { graphQLClient } from '../stores/stores';
 import { get } from 'svelte/store';
-import initKeycloak from './keycloak';
+import initKeycloak from '../utils/keycloak.client';
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
-import { GraphQL_API_URL } from './config';
+import type { RequestDocument, Variables } from 'graphql-request';
 
-export async function requestGraphQLClient(
-	query: RequestDocument | TypedDocumentNode<unknown, any>,
-	variables = {}
-): Promise<any> {
+export async function requestGraphQLClient<T, V extends Variables = Variables>(
+	query: RequestDocument | TypedDocumentNode<T, V>,
+	variables: V = {} as V
+): Promise<T> {
 	if (!get(graphQLClient)) {
-		try {
-			graphQLClient.set(new GraphQLClient(GraphQL_API_URL, {}));
-		} catch {
-			// redirect to keycloak authentication
-			await initKeycloak();
-		}
+		await initKeycloak();
 	}
-	return await get(graphQLClient).request(query, variables);
+	return await get(graphQLClient).request<T>(query, variables);
 }

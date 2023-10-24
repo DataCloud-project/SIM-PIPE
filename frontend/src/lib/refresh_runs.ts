@@ -1,6 +1,6 @@
 import { get } from 'svelte/store';
 import allDryRunsQuery from '../queries/get_all_dryruns.js';
-import { clickedProjectId, selectedProject } from '../stores/stores.js';
+import { selectedProject } from '../stores/stores.js';
 import type { Project } from '../types.js';
 import { requestGraphQLClient } from './graphqlUtils.js';
 

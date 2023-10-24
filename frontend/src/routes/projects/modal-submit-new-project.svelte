@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { cBase, cHeader, cForm } from '../../styles/styles.js';
-	import { projectsList } from '../../stores/stores.js';
+	import { projectsList, username } from '../../stores/stores.js';
 	import createProjectMutation from '../../queries/create_project.js';
 	import allProjectsQuery from '../../queries/get_all_projects.js';
 	import createWorkflowTemplateMutation from '../../queries/create_workflow_template.js';
@@ -14,7 +14,7 @@
 	const formData = {
 		project_name: '',
 		template_name: '',
-		template: ''
+		files: undefined
 	};
 	let hideModal = false;
 	let alertModal = false;
@@ -25,8 +25,19 @@
 	export async function onCreateProjectSubmit(): Promise<void> {
 		modalStore.close();
 		hideModal = true;
+
+		let name = formData.project_name;
+		let currentUsername;
+		// Subscribe and release immediately…
+		username.subscribe(($value) => {
+			currentUsername = $value;
+		})();
+		if (username) {
+			name = `${name}-${currentUsername}`;
+		}
+
 		const variables1 = {
-			project: { name: formData.project_name }
+			project: { name }
 		};
 
 		const responseCreateProject: { createProject: Project } = await requestGraphQLClient(
@@ -43,13 +54,15 @@
 		await new Promise((resolve) => setTimeout(resolve, 1500));
 		modalStore.close();
 		modalStore.clear();
-		if (formData.template != '') {
+		const files = formData.files as unknown as FileList;
+		const template_text = await files[0].text();
+		if (template_text != '') {
 			let template: JSON;
 			// check if template is in JSON/YAML format, if YAML convert to JSON
 			try {
-				template = JSON.parse(formData.template);
+				template = JSON.parse(template_text);
 			} catch {
-				template = yaml.load(formData.template) as JSON;
+				template = yaml.load(template_text) as JSON;
 			}
 			const variables2 = {
 				input: {
@@ -60,8 +73,6 @@
 			};
 			await requestGraphQLClient(createWorkflowTemplateMutation, variables2);
 		}
-		//console.log(formData);
-		// modalStore.close();
 		// update the project list after addition
 		const responseAllProjects: { projects: Project[] } = await requestGraphQLClient(
 			allProjectsQuery
@@ -79,23 +90,25 @@
 		<form class="modal-form {cForm}">
 			<label class="label">
 				<span>Project name</span>
-				<input
-					class="input"
-					type="text"
-					bind:value={formData.project_name}
-					placeholder="Enter name..."
-				/>
+				<div class="flex">
+					<input
+						class="input"
+						type="text"
+						bind:value={formData.project_name}
+						placeholder="Enter name..."
+					/>
+					{#if $username}
+						<div class="whitespace-nowrap flex items-center pl-2">
+							<code>-{$username}</code>
+						</div>
+					{/if}
+				</div>
 			</label>
 			<label class="label">
-				Project template
-				<br />
-				<textarea
-					class="textarea"
-					rows="8"
-					cols="50"
-					bind:value={formData.template}
-					placeholder="Enter argo workflow template (JSON/YAML)..."
-				/>
+				Upload project template
+				<span>
+					<input class="input" type="file" bind:files={formData.files} />
+				</span>
 			</label>
 		</form>
 		<footer class="modal-footer {parent.regionFooter}">
