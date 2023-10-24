@@ -587,9 +587,6 @@
 
 				<div class="flex card p-2">
 					<div class="flex container h-full w-full">
-						<!-- <div class="place-content-start">
-					<button type="button" class="btn-icon btn-icon-sm"><ZoomInIcon /></button>
-					</div> -->
 						<div class="place-content-center h-full w-full">
 							<Plot
 								data={getResource('network').data}

@@ -1,9 +1,9 @@
+import { SIMPIPE_PROJECT_LABEL } from '../k8s/label.js';
 import {
   ConflictError, InvalidArgoWorkflowError, NotFoundError, WrongRequestError,
 } from '../server/apollo-errors.js';
 import { DryRunNodePhase, DryRunNodeType, DryRunPhase } from '../server/schema.js';
 import getPodName from './get-pod-name.js';
-import { SIMPIPE_PROJECT_LABEL } from './project-label.js';
 import type {
   DryRun, DryRunNode, DryRunNodeArtifact, DryRunNodePod,
 } from '../server/schema.js';

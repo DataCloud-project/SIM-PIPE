@@ -151,7 +151,6 @@
 				</div>
 			</div>
 			{#if reactiveProjectDetails?.dryRuns?.length || 0 > 0}
-				<!--<div class="table-container"> -->
 				<table class="table table-interactive">
 					<caption hidden>Dry runs</caption>
 					<thead>
@@ -197,7 +196,6 @@
 						{/each}
 					</tbody>
 				</table>
-				<!--</div> -->
 			{/if}
 		{/await}
 	</div>

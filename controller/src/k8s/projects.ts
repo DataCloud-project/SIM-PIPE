@@ -2,6 +2,8 @@ import slugify from 'slugify';
 import type { V1ListMeta, V1ObjectMeta } from '@kubernetes/client-node';
 
 import { ConflictError, InputValidationError, NotFoundError } from '../server/apollo-errors.js';
+import { SIMPIPE_USER_LABEL } from './label.js';
+import { assertIsValidKubernetesLabel } from './valid-kubernetes-label.js';
 import type { CreateProjectInput, Mutation } from '../server/schema.js';
 import type K8sClient from './k8s-client.js';
 
@@ -42,18 +44,23 @@ function convertK8SProjectToProject(k8sProject: K8SProject): Project {
 }
 
 export async function projects(
-  k8sClient: K8sClient, k8sNamespace = 'default',
+  k8sClient: K8sClient, k8sNamespace = 'default', user?: string,
 ): Promise<Project[]> {
   // load the list of projects (projects.simpipe.sct.sintef.no)
+  let labelSelector: string | undefined;
+  if (user) {
+    assertIsValidKubernetesLabel(user);
+    labelSelector = `${SIMPIPE_USER_LABEL}=${user}`;
+  }
   const response = await k8sClient.customObjects.listNamespacedCustomObject(
-    'simpipe.sct.sintef.no', 'v1', k8sNamespace, 'projects',
+    'simpipe.sct.sintef.no', 'v1', k8sNamespace, 'projects', undefined, undefined, undefined, undefined, labelSelector,
   );
   const { body } = response as { body: K8SProjectList };
   return body.items.map((project) => convertK8SProjectToProject(project));
 }
 
 export async function getProject(
-  id: string, k8sClient: K8sClient, k8sNamespace = 'default',
+  id: string, k8sClient: K8sClient, k8sNamespace = 'default', user?: string,
 ): Promise<Project> {
   let body: K8SProject;
   try {
@@ -68,6 +75,10 @@ export async function getProject(
     }
     throw error;
   }
+  // Check if the label matches the user
+  if (user && body.metadata.labels?.[SIMPIPE_USER_LABEL] !== user) {
+    throw new NotFoundError(`Project not found: ${id}`);
+  }
   return convertK8SProjectToProject(body);
 }
 
@@ -75,6 +86,7 @@ export async function createProject(
   createProjectInput: CreateProjectInput,
   k8sClient: K8sClient,
   k8sNamespace = 'default',
+  user?: string,
 ): Promise<Mutation['createProject']> {
   const { name, id } = createProjectInput;
 
@@ -91,6 +103,14 @@ export async function createProject(
 
   const slugName = id ?? slugify.default(name, { lower: true }).slice(0, 63);
 
+  let labels: Record<string, string> | undefined;
+  if (user) {
+    assertIsValidKubernetesLabel(user);
+    labels = {
+      [SIMPIPE_USER_LABEL]: user,
+    };
+  }
+
   let createdProject: K8SProject;
   // create the project (projects.simpipe.sct.sintef.no)
   try {
@@ -104,6 +124,7 @@ export async function createProject(
         kind: 'Project',
         metadata: {
           name: slugName,
+          labels,
         },
         spec: {
           projectName: name,

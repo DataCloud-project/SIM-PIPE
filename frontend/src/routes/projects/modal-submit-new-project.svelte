@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { cBase, cHeader, cForm } from '../../styles/styles.js';
-	import { projectsList } from '../../stores/stores.js';
+	import { projectsList, username } from '../../stores/stores.js';
 	import createProjectMutation from '../../queries/create_project.js';
 	import allProjectsQuery from '../../queries/get_all_projects.js';
 	import createWorkflowTemplateMutation from '../../queries/create_workflow_template.js';
@@ -25,8 +25,19 @@
 	export async function onCreateProjectSubmit(): Promise<void> {
 		modalStore.close();
 		hideModal = true;
+
+		let name = formData.project_name;
+		let currentUsername;
+		// Subscribe and release immediately…
+		username.subscribe(($value) => {
+			currentUsername = $value;
+		})();
+		if (username) {
+			name = `${name}-${currentUsername}`;
+		}
+
 		const variables1 = {
-			project: { name: formData.project_name }
+			project: { name }
 		};
 
 		const responseCreateProject: { createProject: Project } = await requestGraphQLClient(
@@ -79,12 +90,19 @@
 		<form class="modal-form {cForm}">
 			<label class="label">
 				<span>Project name</span>
-				<input
-					class="input"
-					type="text"
-					bind:value={formData.project_name}
-					placeholder="Enter name..."
-				/>
+				<div class="flex">
+					<input
+						class="input"
+						type="text"
+						bind:value={formData.project_name}
+						placeholder="Enter name..."
+					/>
+					{#if $username}
+						<div class="whitespace-nowrap flex items-center pl-2">
+							<code>-{$username}</code>
+						</div>
+					{/if}
+				</div>
 			</label>
 			<label class="label">
 				Upload project template
