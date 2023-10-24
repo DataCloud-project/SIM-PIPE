@@ -1,5 +1,6 @@
+import { SIMPIPE_PROJECT_LABEL, SIMPIPE_USER_LABEL } from '../k8s/label.js';
+import { assertIsValidKubernetesLabel } from '../k8s/valid-kubernetes-label.js';
 import { ConflictError, InvalidArgoWorkflowTemplateError, NotFoundError } from '../server/apollo-errors.js';
-import { SIMPIPE_PROJECT_LABEL } from './project-label.js';
 import type { WorkflowTemplate } from '../server/schema.js';
 import type ArgoWorkflowClient from './argo-client.js';
 import type { ArgoWorkflowTemplate } from './argo-client.js';
@@ -18,11 +19,13 @@ export async function createWorkflowTemplate({
   argoWorkflowTemplate: inputArgoWorkflowTemplate,
   projectId,
   name,
+  user,
   argoClient,
 }: {
   argoWorkflowTemplate: ArgoWorkflowTemplate;
   projectId?: string;
   name?: string;
+  user?: string;
   argoClient: ArgoWorkflowClient;
 }): Promise<WorkflowTemplate> {
   const workflowTemplate: ArgoWorkflowTemplate = {
@@ -42,8 +45,15 @@ export async function createWorkflowTemplate({
   }
 
   if (projectId) {
+    assertIsValidKubernetesLabel(projectId);
     workflowTemplate.metadata.labels[SIMPIPE_PROJECT_LABEL] = projectId;
   }
+
+  if (user) {
+    assertIsValidKubernetesLabel(user);
+    workflowTemplate.metadata.labels[SIMPIPE_USER_LABEL] = user;
+  }
+
   if (name) {
     workflowTemplate.metadata.name = name;
   } else if (!workflowTemplate.metadata.name && !workflowTemplate.metadata.generateName) {
@@ -78,6 +88,7 @@ export async function createWorkflowTemplate({
 export async function getWorkflowTemplate(
   name: string,
   argoClient: ArgoWorkflowClient,
+  user?: string,
 ): Promise<WorkflowTemplate> {
   let argoWorkflowTemplate: ArgoWorkflowTemplate;
   try {
@@ -89,6 +100,9 @@ export async function getWorkflowTemplate(
     }
     throw error;
   }
+  if (user && argoWorkflowTemplate.metadata.labels?.[SIMPIPE_USER_LABEL] !== user) {
+    throw new NotFoundError(`Workflow template ${name} not found`);
+  }
   return convertArgoWorkflowTemplate(argoWorkflowTemplate);
 }
 
@@ -96,11 +110,13 @@ export async function updateWorkflowTemplate({
   argoWorkflowTemplate: inputArgoWorkflowTemplate,
   projectId,
   name,
+  user,
   argoClient,
 }: {
   argoWorkflowTemplate: ArgoWorkflowTemplate;
   projectId?: string;
   name: string;
+  user?: string;
   argoClient: ArgoWorkflowClient;
 }): Promise<WorkflowTemplate> {
   const workflowTemplate: ArgoWorkflowTemplate = {
@@ -121,7 +137,13 @@ export async function updateWorkflowTemplate({
   }
 
   if (projectId) {
+    assertIsValidKubernetesLabel(projectId);
     workflowTemplate.metadata.labels[SIMPIPE_PROJECT_LABEL] = projectId;
+  }
+
+  if (user) {
+    assertIsValidKubernetesLabel(user);
+    workflowTemplate.metadata.labels[SIMPIPE_USER_LABEL] = user;
   }
 
   let updatedWorkflowTemplate: ArgoWorkflowTemplate;
@@ -166,10 +188,14 @@ export async function deleteWorkflowTemplate(
 
 export async function workflowTemplatesForProject(
   projectId: string,
+  userId: string,
   argoClient: ArgoWorkflowClient,
 ): Promise<WorkflowTemplate[]> {
+  assertIsValidKubernetesLabel(projectId);
+  assertIsValidKubernetesLabel(userId);
   const workflowTemplates = await argoClient.listWorkflowTemplates({
     [SIMPIPE_PROJECT_LABEL]: projectId,
+    [SIMPIPE_USER_LABEL]: userId,
   });
   return workflowTemplates.map(
     (argoWorkflowTemplate) => convertArgoWorkflowTemplate(argoWorkflowTemplate));

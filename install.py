@@ -87,7 +87,7 @@ def install_or_upgrade_simpipe():
 
     chart = os.path.join(os.path.dirname(__file__), "charts", "simpipe")
     values = os.path.join(os.path.dirname(__file__), "charts", "simpipe", "values.yaml")
-    #chart = "oci://ghcr.io/datacloud-project/simpipe"
+    # chart = "oci://ghcr.io/datacloud-project/simpipe"
 
     if is_deployed:
 

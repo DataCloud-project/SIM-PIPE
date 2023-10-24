@@ -8,6 +8,10 @@
     k3s_become: true
     k3s_server:
       docker: true
+      # Enable this if you run K3S inside a VM managed by another Kubernetes Cluster
+      # The idea is to not use the default network CIDRs (10.42.0.0/16 and 10.43.0.0/16)
+      # cluster-cidr: 10.51.0.0/16
+      # service-cidr: 10.52.0.0/16
       disable:
         - traefik
       write-kubeconfig-mode: '0640'

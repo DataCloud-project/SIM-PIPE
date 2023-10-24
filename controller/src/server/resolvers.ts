@@ -8,7 +8,6 @@ import {
   getDryRun, getDryRunNodeLog, resubmitDryRun, resumeDryRun,
   retryDryRun, stopDryRun, suspendDryRun,
 } from '../argo/dry-runs.js';
-import { SIMPIPE_PROJECT_LABEL } from '../argo/project-label.js';
 import {
   createWorkflowTemplate,
   deleteWorkflowTemplate,
@@ -23,6 +22,7 @@ import {
   dockerRegistryCredentials,
   updateDockerRegistryCredential,
 } from '../k8s/docker-config-json.js';
+import { SIMPIPE_PROJECT_LABEL } from '../k8s/label.js';
 import {
   createProject, deleteProject, getProject, projects, renameProject,
 } from '../k8s/projects.js';
@@ -133,15 +133,17 @@ const resolvers = {
     async projects(
       _p: EmptyParent, _a: EmptyArguments, context: AuthenticatedContext,
     ): Promise<Query['projects']> {
-      const { k8sClient, k8sNamespace } = context;
-      return await projects(k8sClient, k8sNamespace);
+      const { k8sClient, k8sNamespace, user } = context;
+      const { sub } = user;
+      return await projects(k8sClient, k8sNamespace, sub);
     },
     async project(
       _p: EmptyParent, arguments_: QueryProjectArguments, context: AuthenticatedContext,
     ): Promise<Query['project']> {
-      const { k8sClient, k8sNamespace } = context;
+      const { k8sClient, k8sNamespace, user } = context;
+      const { sub } = user;
       const { projectId } = arguments_;
-      return await getProject(projectId, k8sClient, k8sNamespace);
+      return await getProject(projectId, k8sClient, k8sNamespace, sub);
     },
     async dryRun(
       _p: EmptyParent, arguments_: QueryDryRunArguments, context: AuthenticatedContext,
@@ -154,8 +156,9 @@ const resolvers = {
       _p: EmptyParent, arguments_: QueryWorkflowTemplateArguments, context: AuthenticatedContext,
     ): Promise<Query['workflowTemplate']> {
       const { name } = arguments_;
-      const { argoClient } = context;
-      return await getWorkflowTemplate(name, argoClient);
+      const { argoClient, user } = context;
+      const { sub } = user;
+      return await getWorkflowTemplate(name, argoClient, sub);
     },
   } as Required<QueryResolvers<AuthenticatedContext, EmptyParent>>,
   Mutation: {
@@ -282,8 +285,9 @@ const resolvers = {
       context: AuthenticatedContext,
     ): Promise<Mutation['createProject']> {
       const { project } = arguments_;
-      const { k8sClient, k8sNamespace } = context;
-      return await createProject(project, k8sClient, k8sNamespace);
+      const { k8sClient, k8sNamespace, user } = context;
+      const { sub } = user;
+      return await createProject(project, k8sClient, k8sNamespace, sub);
     },
     async renameProject(
       _p: EmptyParent,
@@ -333,11 +337,13 @@ const resolvers = {
     ): Promise<Mutation['createWorkflowTemplate']> {
       const { input } = arguments_;
       const { name, projectId, argoWorkflowTemplate } = input;
-      const { argoClient } = context;
+      const { argoClient, user } = context;
+      const { sub } = user;
       return await createWorkflowTemplate({
         name: name ?? undefined,
         projectId: projectId ?? undefined,
         argoWorkflowTemplate: argoWorkflowTemplate as ArgoWorkflowTemplate,
+        user: sub,
         argoClient,
       });
     },
@@ -383,8 +389,8 @@ const resolvers = {
       context: AuthenticatedContext,
     ): Promise<Project['workflowTemplates']> {
       const { id } = parent;
-      const { argoClient } = context;
-      return await workflowTemplatesForProject(id, argoClient);
+      const { argoClient, user } = context;
+      return await workflowTemplatesForProject(id, user.sub, argoClient);
     },
   },
   DryRun: {
