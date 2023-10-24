@@ -24,3 +24,4 @@ export const selectedCredential = writable<DockerRegistryCredential>();
 export const pausedDryRuns = writable<string[]>([]);
 
 export const username = writable<string>('username');
+export const usertoken = writable<string>('usertoken');

@@ -63,7 +63,9 @@
 				const project_variables = {
 					projectId: element
 				};
-				const response_dry_runs = await requestGraphQLClient(allDryRunsQuery, project_variables);
+				const response_dry_runs = await requestGraphQLClient<{
+					project: { dryRuns: Record<string, undefined>[] };
+				}>(allDryRunsQuery, project_variables);
 				response_dry_runs.project.dryRuns.forEach(async (dry_run: Record<string, undefined>) => {
 					const response_delete_dry_run = await requestGraphQLClient(deleteDryRunMutation, {
 						dryRunId: dry_run.id

@@ -29,7 +29,7 @@
 	let mermaidCode = [];
 	let diagram: string;
 	$: diagram = diagram;
-	let selectedProject: { name: any; id: any };
+	let selectedProject: { name: string; id: string };
 	const datefmt = 'yyyy-MM-dd HH:mm:ss';
 	let showLogs = true;
 	let logs: { [x: string]: string } = {};
@@ -67,9 +67,14 @@
 	};
 
 	const getData = async (): Promise<{ workflow: any; dryrun: any; metrics: any }> => {
-		const selectedProjectResponse = await requestGraphQLClient(getDryRunQuery, {
+		const selectedProjectResponse = await requestGraphQLClient<{
+			dryRun?: { project: { name: string; id: string } };
+		}>(getDryRunQuery, {
 			dryRunId: data.resource
 		});
+		if (!selectedProjectResponse.dryRun?.project) {
+			throw new Error('Project not found');
+		}
 		selectedProject = selectedProjectResponse.dryRun?.project;
 		selectedProjectName.set(selectedProject?.name);
 		const workflow_variables = {
@@ -80,7 +85,7 @@
 			dryRunId: data.resource
 		};
 		selectedDryRunName.set(data.resource);
-		const workflow_response = (await requestGraphQLClient(getProjectQuery, workflow_variables))
+		const workflow_response = (await requestGraphQLClient<any>(getProjectQuery, workflow_variables))
 			.project;
 		const dryrun_response: { dryRun: DryRun } = await requestGraphQLClient(
 			getDryRunPhaseResultsQuery,

@@ -14,7 +14,9 @@ export type Scalars = {
   Boolean: { input: boolean; output: boolean; }
   Int: { input: number; output: number; }
   Float: { input: number; output: number; }
+  /**  ArgoWorkflow is the definition of an executable pipeline in Argo. This definition includes all the details about the specific workflow instance you want to run, including the sequence of steps, inputs, outputs, and other configuration parameters. This is required to create and start dry runs in SIM-PIPE.  */
   ArgoWorkflow: { input: unknown; output: unknown; }
+  /**  Workflow Templates in Argo that are reusable and parameterized workflow definitions. They allow you to define a generic workflow structure that can be instantiated multiple times with different input parameters  */
   ArgoWorkflowTemplate: { input: unknown; output: unknown; }
   /**
    * Prometheus represents number as strings in JSON, because
@@ -25,10 +27,11 @@ export type Scalars = {
    * You will need to parse the string to a number in your application.
    */
   PrometheusStringNumber: { input: string; output: string; }
+  /**  A value that represents a specific point in time, includes information such as the date and time, and time zone offset  */
   TimeStamp: { input: number; output: number; }
 };
 
-/**  The input data to create a run  */
+/**  The input data to create a new dry run  */
 export type CreateDryRunInput = {
   /**
    *  The raw Argo workflow document.
@@ -36,16 +39,17 @@ export type CreateDryRunInput = {
    * It's project id and and name will be overwritten if provided.
    */
   argoWorkflow: Scalars['ArgoWorkflow']['input'];
-  /**  The id of the run (optional), will be generated if not provided  */
+  /**  The id of the dry run (optional), will be generated if not provided  */
   dryRunId?: InputMaybe<Scalars['String']['input']>;
   /**
-   *  The project to which this run belongs (optional).
+   *  The project to which this dry run belongs (optional).
    *
    * The user must own the simulation.
    */
   projectId?: InputMaybe<Scalars['String']['input']>;
 };
 
+/**  The input data to create a new project.  */
 export type CreateProjectInput = {
   /**  The id name of the project (optional)  */
   id?: InputMaybe<Scalars['String']['input']>;
@@ -63,6 +67,7 @@ export type CreateWorkflowTemplateInput = {
   projectId?: InputMaybe<Scalars['String']['input']>;
 };
 
+/**  Contains details of a docker registry  */
 export type DockerRegistryCredential = {
   __typename?: 'DockerRegistryCredential';
   /**  The name of the docker registry  */
@@ -84,25 +89,27 @@ export type DockerRegistryCredentialInput = {
   username: Scalars['String']['input'];
 };
 
+/**  Dry runs are created under a project which represents an executable instance of the pipeline.  */
 export type DryRun = {
   __typename?: 'DryRun';
   /**  The raw Argo workflow document */
   argoWorkflow: Scalars['ArgoWorkflow']['output'];
   /**  Date of creation  */
   createdAt: Scalars['String']['output'];
-  /**  The identifier of the run  */
+  /**  The identifier of the dry run  */
   id: Scalars['String']['output'];
-  /**  A node of the run, by id  */
+  /**  A node of the dry run, by id  */
   node?: Maybe<DryRunNode>;
-  /**  The nodes of the run  */
+  /**  The nodes of the dry run  */
   nodes?: Maybe<Array<DryRunNode>>;
-  /**  The project to which the run belongs  */
+  /**  The project to which the dry run belongs  */
   project?: Maybe<Project>;
-  /**  Status of the run  */
+  /**  Status of the dry run  */
   status: DryRunStatus;
 };
 
 
+/**  Dry runs are created under a project which represents an executable instance of the pipeline.  */
 export type DryRunNodeArgs = {
   id: Scalars['String']['input'];
 };
@@ -132,6 +139,7 @@ export type DryRunNode = {
   type: DryRunNodeType;
 };
 
+/**  Contains information about files produced during a dry run execution  */
 export type DryRunNodeArtifact = {
   __typename?: 'DryRunNodeArtifact';
   /**  The artifact path  */
@@ -632,6 +640,7 @@ export enum DryRunPhase {
   Unknown = 'Unknown'
 }
 
+/**  Contains information about the status of a dry run  */
 export type DryRunStatus = {
   __typename?: 'DryRunStatus';
   /**  Estimated duration in seconds  */
@@ -648,7 +657,7 @@ export type DryRunStatus = {
   phase: DryRunPhase;
   /**  Progress to completion  */
   progress?: Maybe<Scalars['String']['output']>;
-  /**  The current status of the run  */
+  /**  The current status of the dry run  */
   startedAt?: Maybe<Scalars['String']['output']>;
 };
 
@@ -656,45 +665,45 @@ export type Mutation = {
   __typename?: 'Mutation';
   /**  Assign a dry run to a project  */
   assignDryRunToProject: DryRun;
-  /**  Compute a presigned URL for uploading a file using a HTTP PUT.  */
+  /**  Compute a presigned URL for uploading a file using HTTP PUT. The mutation returns the URL to upload the file.  */
   computeUploadPresignedUrl: Scalars['String']['output'];
-  /**  Create a docker registry credential  */
+  /**  Create a new docker registry credential  */
   createDockerRegistryCredential: DockerRegistryCredential;
   /**
-   *  Create a run.
+   *  Create a new dry run.
    *
    * projectId and id are optional and will be generated.
    * If provided in the createDryRun arguments, they will overwrite the
    * values in the argoWorkflow document.
    */
   createDryRun: DryRun;
-  /**  Create a project  */
+  /**  Create a new project  */
   createProject: Project;
-  /**  Create a workflow template  */
+  /**  Create a new Argo workflow template  */
   createWorkflowTemplate: WorkflowTemplate;
-  /**  Delete a docker registry credential  */
+  /**  Delete an existing docker registry credential. The mutation returns true if the deletion was successful.  */
   deleteDockerRegistryCredential: Scalars['Boolean']['output'];
-  /**  Delete a run.  */
+  /**  Delete an existing dry run. The mutation returns true if the deletion was successful.  */
   deleteDryRun: Scalars['Boolean']['output'];
-  /**  Delete a project  */
+  /**  Delete an existing project. The mutation returns true if the deletion was successful.  */
   deleteProject: Scalars['Boolean']['output'];
-  /**  Delete a workflow template  */
+  /**  Delete an existing Argo workflow template. The mutation returns true if the deletion was successful.  */
   deleteWorkflowTemplate: Scalars['Boolean']['output'];
-  /**  Rename a project  */
+  /**  Rename an existing project  */
   renameProject: Project;
-  /**  Resubmit a run. Create a copy of the current run and starts it. */
+  /**  Resubmit a dry run. Create a copy of the current dry run and starts its execution. */
   resubmitDryRun: DryRun;
-  /**  Resume a run.  */
+  /**  Resume a paused dry run.  */
   resumeDryRun: DryRun;
-  /**  Retry a run. Restart the current run. */
+  /**  Retry a failed dry run. Restart an existing dry run. */
   retryDryRun: DryRun;
-  /**  Stop a run.  */
+  /**  Stop an active dry run.  */
   stopDryRun: DryRun;
-  /**  Suspend a run.  */
+  /**  Suspend an active dry run.  */
   suspendDryRun: DryRun;
-  /**  Update a docker registry credential  */
+  /**  Update an existing docker registry credential  */
   updateDockerRegistryCredential: DockerRegistryCredential;
-  /**  Update a workflow template  */
+  /**  Update an existing Argo workflow template  */
   updateWorkflowTemplate: WorkflowTemplate;
 };
 
@@ -791,17 +800,18 @@ export type MutationUpdateWorkflowTemplateArgs = {
   update: UpdateWorkflowTemplateInput;
 };
 
+/**  Project is the high level concept for a specific pipeline in SIM-PIPE. It contains all the previous dry runs of the pipeline and its results.  */
 export type Project = {
   __typename?: 'Project';
   /**  Date of creation  */
   createdAt: Scalars['String']['output'];
-  /**  The dry runs in the project  */
+  /**  The list of dry runs in the project  */
   dryRuns?: Maybe<Array<DryRun>>;
   /**  The identifier of the project  */
   id: Scalars['String']['output'];
   /**  The name of the project  */
   name: Scalars['String']['output'];
-  /**  The workflow templates in the project  */
+  /**  The list of workflow templates in the project  */
   workflowTemplates?: Maybe<Array<WorkflowTemplate>>;
 };
 
@@ -813,19 +823,19 @@ export type PrometheusSample = {
 
 export type Query = {
   __typename?: 'Query';
-  /**  List of docker registry credentials.  */
+  /**  List of all docker registry credentials  */
   dockerRegistryCredentials: Array<DockerRegistryCredential>;
-  /**  Get a dry run by id  */
+  /**  Get a dry run by ID  */
   dryRun: DryRun;
   /**  Returns pong if the server is up and running.  */
   ping: Scalars['String']['output'];
-  /**  Get a project by id  */
+  /**  Get a project by ID  */
   project: Project;
-  /**  List of projects  */
+  /**  List of all projects  */
   projects: Array<Project>;
-  /**  Fetch the current username.  */
+  /**  Fetches the username of the current user.  */
   username: Scalars['String']['output'];
-  /**  Get a workflow template by name  */
+  /**  Get an Argo  workflow template by name  */
   workflowTemplate?: Maybe<WorkflowTemplate>;
 };
 
@@ -854,6 +864,7 @@ export type UpdateWorkflowTemplateInput = {
   projectId?: InputMaybe<Scalars['String']['input']>;
 };
 
+/**  WorkflowTemplate in SIM-PIPE associates an ArgoWorkflowTemplate to a project */
 export type WorkflowTemplate = {
   __typename?: 'WorkflowTemplate';
   /**  The raw Argo workflow document  */
