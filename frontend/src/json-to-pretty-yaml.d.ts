@@ -1,4 +1,6 @@
 declare module 'json-to-pretty-yaml' {
-	const YAML: unknown;
+	const YAML: {
+		stringify: (json: unknown, _: null, indents: number) => string;
+	};
 	export default YAML;
 }
