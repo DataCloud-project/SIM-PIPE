@@ -59,7 +59,9 @@ spec:
             - name: PROMETHEUS_SERVER_URL
               value: {{ .Values.controller.prometheus.serverUrl | quote }}
             - name: NODE_ENV
-              value: development
+              value: {{ .Values.controller.nodeEnv | quote }}
+            - name: OAUTH2_ISSUER_ENDPOINT
+              value: {{ .Values.controller.oauth2.issuerEndpoint | quote }}
           ports:
             - name: http
               containerPort: {{ .Values.controller.service.port }}
