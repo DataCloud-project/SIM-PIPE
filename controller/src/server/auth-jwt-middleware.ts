@@ -62,16 +62,23 @@ const fixedLocalAuth: Auth = {
 async function hybridAuthJwtMiddlewareAsync(
   request: Request, response: Response, next: NextFunction,
 ): Promise<void> {
+  // Load the Authorisation header
+  // and that the header is a Bearer token
+  const authHeader = request.headers.authorization;
+
   // If we are in development mode, we allow a fixed local user
   if (oauth2IssuerEndpoint === undefined) {
+    // Throw an error if the user is trying to use a bearer token
+    // It might be a dangerous mistake
+    if (authHeader) {
+      response.sendStatus(400);
+      return;
+    }
+
     (request as unknown as { auth: Auth }).auth = fixedLocalAuth;
     next();
     return;
   }
-
-  // Load the Authorisation header
-  // and that the header is a Bearer token
-  const authHeader = request.headers.authorization;
 
   // We allow anonymous access to the API
   if (!authHeader) {
