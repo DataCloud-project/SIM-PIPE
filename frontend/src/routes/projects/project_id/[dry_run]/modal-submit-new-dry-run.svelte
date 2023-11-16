@@ -31,6 +31,7 @@
 		dagTemplate: { dag: { tasks: [] } }
 	};
 
+	// stores the names of input files expected for initial steps while parsing
 	const input_artifacts: any = {};
 
 	function parseTaskList() {
@@ -196,7 +197,7 @@
 								</span></label
 							>
 						{/if}
-						{#if Object.keys(input_artifacts[task.name]).length != 0}
+						{#if input_artifacts[task.name]}
 							<br />
 							<!-- svelte-ignore a11y-label-has-associated-control -->
 							<label>Upload Input files </label>

@@ -4,7 +4,6 @@
 	import type { DryRunMetrics, DryRun } from '../../../../../types';
 	import getDryRunMetricsQuery from '../../../../../queries/get_dry_run_metrics.js';
 	import getDryRunNoLogsMetricsQuery from '../../../../../queries/get_dry_run_metrics_no_logs.js';
-	import { format } from 'date-fns';
 	import getProjectQuery from '../../../../../queries/get_project';
 	import getDryRunPhaseResultsQuery from '../../../../../queries/get_dry_run_phase_results';
 	import getDryRunQuery from '../../../../../queries/get_selected_project';
@@ -12,16 +11,22 @@
 	import { goto } from '$app/navigation';
 	import Plot from './Plot.svelte';
 	import Mermaid from './Mermaid.svelte';
-	import { colors, maxValuesFormat } from './Config.js';
+	import { colors } from './Config.js';
 	import { stepsList } from '../../../../../stores/stores';
 	import Legend from './Legend.svelte';
 	import { ZoomInIcon } from 'svelte-feather-icons';
 	import { CodeBlock } from '@skeletonlabs/skeleton';
 	import { selectedProjectName, selectedDryRunName } from '../../../../../stores/stores';
+	import { filesize } from 'filesize';
+	import { time_difference } from '$lib/time_difference.js';
+	import {
+		getMetricsUsageUtils,
+		getMetricsAnalyticsUtils
+	} from '../../../../../utils/resource_utils';
+	import type { MetricsAnalytics } from '../../../../../utils/resource_utils';
 
 	export let data;
 	let workflow: { workflowTemplates: { argoWorkflowTemplate: { spec: { templates: any[] } } }[] };
-	let dryrun_results: { dryRun: { nodes: any[] } };
 	let selectStepName = '';
 	let dryRunPhases: { [x: string]: string } = {};
 	const graphOrientation = 'LR';
@@ -30,7 +35,6 @@
 	let diagram: string;
 	$: diagram = diagram;
 	let selectedProject: { name: string; id: string };
-	const datefmt = 'yyyy-MM-dd HH:mm:ss';
 	let showLogs = true;
 	let logs: { [x: string]: string } = {};
 
@@ -40,9 +44,9 @@
 		[key: string]: { x: string[]; y: number[]; type: string; name: string }[];
 	} = {};
 
-	const maxValues: { [key: string]: { value: number; unit: string } } = maxValuesFormat;
-	let showMax = false;
+	let pipelineMetricsAnalytics: MetricsAnalytics = {};
 
+	let showMax = false;
 	const getMetricsResponse = async () => {
 		const dryrun_variables = {
 			dryRunId: data.resource
@@ -116,129 +120,28 @@
 		}
 		return word;
 	}
+
 	let allStepNames: string[] = [];
 	getDataPromise
-		.then((data: { workflow: any; dryrun: any; metrics: any }) => {
+		.then(async (data: { workflow: any; dryrun: any; metrics: any }) => {
 			selectedProjectName.set;
 			workflow = data.workflow;
-			dryrun_results = data.dryrun;
-			data.metrics?.forEach(
-				(node: {
-					log: string;
-					displayName: string | number;
-					startedAt: string;
-					metrics: {
-						cpuUsageSecondsTotal: any[];
-						memoryUsageBytes: any[];
-						networkReceiveBytesTotal: any[];
-						networkTransmitBytesTotal: any[];
-					};
-				}) => {
-					// TODO: make more efficient if data missing?
-					if (isEmpty(node) === false) {
-						allStepNames.push(node.displayName as string);
-						if (node.log) {
-							//logs[node.displayName] = node.log;
-							logs[node.displayName] = node.log;
-						}
-						let cpuTimestamps = timestampsToDatetime(
-							node.startedAt,
-							node.metrics.cpuUsageSecondsTotal.map((item: { timestamp: any }) => item.timestamp)
-						);
-						let memTimestamps = timestampsToDatetime(
-							node.startedAt,
-							node.metrics.memoryUsageBytes.map((item: { timestamp: any }) => item.timestamp)
-						);
-						let nrcTimestamps = timestampsToDatetime(
-							node.startedAt,
-							node.metrics.networkReceiveBytesTotal.map(
-								(item: { timestamp: any }) => item.timestamp
-							)
-						);
-						let ntrTimestamps = timestampsToDatetime(
-							node.startedAt,
-							node.metrics.networkTransmitBytesTotal.map(
-								(item: { timestamp: any }) => item.timestamp
-							)
-						);
-						let cpuValues = node.metrics.cpuUsageSecondsTotal.map((item: { value: string }) =>
-							Number(item.value)
-						);
-
-						let memValues = node.metrics.memoryUsageBytes.map((item: { value: string }) =>
-							Number(item.value)
-						);
-						let nrcValues = node.metrics.networkReceiveBytesTotal.map((item: { value: string }) =>
-							Number(item.value)
-						);
-						let ntrValues = node.metrics.networkTransmitBytesTotal.map((item: { value: string }) =>
-							Number(item.value)
-						);
-						var cpuUsage = {
-							x: cpuTimestamps,
-							y: cpuValues,
-							type: 'scatter',
-							name: truncateString(node.displayName as string, 15)
-						};
-						var memoryUsage = {
-							x: memTimestamps,
-							y: memValues,
-							type: 'scatter',
-							name: truncateString(node.displayName as string, 15)
-						};
-						var networkReceiveBytesTotal = {
-							x: nrcTimestamps,
-							y: nrcValues,
-							type: 'scatter',
-							name: `Received ${truncateString(node.displayName as string, 15)}`
-						};
-						var networkTransmitBytesTotal = {
-							x: ntrTimestamps,
-							y: ntrValues,
-							type: 'scatter',
-							name: `Transmitted ${truncateString(node.displayName as string, 15)}`
-						};
-
-						if (cpuValues.length > 0) {
-							const temp = Math.max(...cpuValues);
-							if (temp > maxValues['CPU'].value) {
-								maxValues['CPU'].value = temp;
-							}
-							showMax = true;
-							cpuData[node.displayName as string] = cpuUsage;
-						}
-
-						if (memValues.length > 0) {
-							const temp = Math.max(...memValues);
-							if (temp > maxValues['Memory'].value) {
-								maxValues['Memory'].value = temp;
-							}
-							showMax = true;
-							memoryData[node.displayName as string] = memoryUsage;
-						}
-
-						if (nrcValues.length > 0) {
-							const temp = Math.max(...nrcValues);
-							if (temp > maxValues['Network received'].value) {
-								maxValues['Network received'].value = temp;
-							}
-							showMax = true;
-							if (!networkDataCombined[node.displayName as string])
-								networkDataCombined[node.displayName as string] = [];
-							networkDataCombined[node.displayName as string].push(networkReceiveBytesTotal);
-						}
-						if (ntrValues.length > 0) {
-							const temp = Math.max(...ntrValues);
-							if (temp > maxValues['Network transferred'].value) {
-								maxValues['Network transferred'].value = temp;
-							}
-							showMax = true;
-							if (!networkDataCombined[node.displayName as string])
-								networkDataCombined[node.displayName as string] = [];
-							networkDataCombined[node.displayName as string].push(networkTransmitBytesTotal);
-						}
-					}
-				}
+			const result = await getMetricsUsageUtils(
+				showMax,
+				cpuData,
+				memoryData,
+				networkDataCombined,
+				logs,
+				data.metrics
+			);
+			showMax = result.showMax;
+			allStepNames = result.allStepNames;
+			await getMetricsAnalyticsUtils(
+				allStepNames,
+				pipelineMetricsAnalytics,
+				cpuData,
+				memoryData,
+				networkDataCombined
 			);
 		})
 		.catch((error) => {
@@ -269,27 +172,6 @@
 			}
 		});
 		diagram = mermaidCode.join('\n');
-	}
-
-	function addSeconds(date: Date, seconds: number) {
-		date.setSeconds(date.getSeconds() + seconds);
-		let dateStr = format(date, datefmt);
-		return dateStr;
-	}
-
-	function timestampsToDatetime(startedAt: string, input_array: number[]) {
-		let date = new Date(startedAt);
-		let timeseries = [addSeconds(date, 0)];
-		for (let i = 0; i < input_array.length - 1; i++) {
-			let v = input_array[i + 1] - input_array[i];
-			let newDate = addSeconds(date, v);
-			timeseries.push(newDate);
-		}
-		return timeseries;
-	}
-
-	function isEmpty(obj: any) {
-		return Object.keys(obj).length === 0;
 	}
 
 	function argoStepsToMermaid(argoWorkflow: any) {
@@ -412,7 +294,6 @@
 	});
 	$: selectedStep = selectStepName;
 	$: reactiveStepsList = $stepsList;
-	$: reactiveMaxValues = maxValues;
 
 	function gotoOverview() {
 		selectedStep = '';
@@ -428,6 +309,13 @@
 			result.push();
 		}
 		return result.join('\n');
+	}
+
+	function displayStepDuration(step: DryRunMetrics) {
+		if (step.startedAt && step.finishedAt) {
+			return time_difference(step.startedAt, step.finishedAt);
+		}
+		return '-';
 	}
 </script>
 
@@ -469,6 +357,7 @@
 								<th>Name</th>
 								<th>Started</th>
 								<th>Finished</th>
+								<th>Duration</th>
 								<th>Status</th>
 								<th>Output</th>
 							</tr>
@@ -477,14 +366,15 @@
 							{#each reactiveStepsList || [] as step}
 								<tr on:click={() => stepOnClick(step.displayName, step.type)}>
 									<td style="width:15%">{step.displayName}</td>
-									<td style="width:35%">
+									<td style="width:20%">
 										{step.startedAt ? step.startedAt : '-'}
 									</td>
-									<td style="width:35%">
+									<td style="width:20%">
 										{step.finishedAt ? step.finishedAt : '-'}
 									</td>
+									<td style="width:15%">{displayStepDuration(step)}</td>
 									<td style="width:15%">{step.phase}</td>
-									<td style="width:10%">
+									<td style="width:15%">
 										{#if step.outputArtifacts?.length > 1}
 											{#each step.outputArtifacts as artifact}
 												{#if artifact.name != 'main-logs'}
@@ -536,17 +426,28 @@
 							<thead>
 								<tr>
 									<th>Resource</th>
-									<th>Maximum usage</th>
+									<th>Average, Maximum usage</th>
 								</tr>
 							</thead>
 							<tbody>
-								{#each Object.keys(reactiveMaxValues) as key}
+								{#each Object.keys(pipelineMetricsAnalytics[selectedStep]) as key}
+
 									<tr>
 										<td>{key}</td>
-										{#if maxValues[key].value != -1}
-											<td>{maxValues[key].value.toFixed(2)}{maxValues[key].unit}</td>
-										{:else}
-											<td>-</td>
+										{#if key == 'CPU'}
+											<td
+												>{(
+													pipelineMetricsAnalytics[selectedStep][key][1] / allStepNames.length
+												).toFixed(3)} %, {pipelineMetricsAnalytics[selectedStep][key][0].toFixed(3)}
+												%</td
+											>
+										<!-- for eslint -->
+										{:else if key == 'Memory' || key == 'Network_received' || key == 'Network_transferred'}
+											<td
+												>{filesize(
+													pipelineMetricsAnalytics[selectedStep][key][1] / allStepNames.length
+												)}, {filesize(pipelineMetricsAnalytics[selectedStep][key][0])}</td
+											>
 										{/if}
 									</tr>
 								{/each}
