@@ -38,19 +38,6 @@
 
 	let checkboxes: Record<string, boolean> = {};
 
-	function transformSecondsToHoursMinutesSeconds(seconds_string: string) {
-		let seconds = Number(seconds_string);
-		let hours = Math.floor(seconds / 3600);
-		let minutes = Math.floor((seconds - hours * 3600) / 60);
-		let secondsLeft = seconds - hours * 3600 - minutes * 60;
-
-		let formattedHours = hours.toString().padStart(2, '0');
-		let formattedMinutes = minutes.toString().padStart(2, '0');
-		let formattedSeconds = secondsLeft.toString().padStart(2, '0');
-
-		return `${formattedHours}:${formattedMinutes}:${formattedSeconds}`;
-	}
-
 	async function onDeleteSelected() {
 		Object.keys(checkboxes)
 			.filter((item) => checkboxes[item])
@@ -78,6 +65,13 @@
 		});
 		$selectedProject = responseProjectDetails.project;
 	}
+	async function onPredictSelected() {
+		// TODO: later change to passing dry runs ids through some other means (not to have too long url)
+		const dryRunIsToCompared = Object.keys(checkboxes)
+			.filter((item) => checkboxes[item])
+			.join(' ');
+		goto(`/projects/analytics/${dryRunIsToCompared}`);
+	}
 	async function onCreateSelected() {
 		const modal: ModalSettings = {
 			type: 'component',
@@ -88,7 +82,6 @@
 		modalStore.trigger(modal);
 	}
 
-	// TODO: fill all possible phase values
 	function getDryRunAction(status: string): string {
 		if (status == 'Succeeded') return 'rerun';
 		else if (status == 'Running') return 'stop';
@@ -148,6 +141,17 @@
 							<span>Delete</span>
 						</button>
 					</div>
+					{#if Object.values(checkboxes).some((value) => value)}
+						<div>
+							<button
+								type="button"
+								class="btn btn-sm variant-filled-primary"
+								on:click={onPredictSelected}
+							>
+								<span>Predict</span>
+							</button>
+						</div>
+					{/if}
 				</div>
 			</div>
 			{#if reactiveProjectDetails?.dryRuns?.length || 0 > 0}
