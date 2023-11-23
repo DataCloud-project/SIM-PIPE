@@ -1,37 +1,36 @@
 <script lang="ts">
-	import { ProgressBar } from '@skeletonlabs/skeleton';
+	import { ProgressBar, type ModalSettings, modalStore, Modal } from '@skeletonlabs/skeleton';
 	import {
 		getMetricsAnalyticsUtils,
 		getMetricsResponse,
 		getMetricsUsageUtils,
 		type MetricsAnalytics
 	} from '../../../../utils/resource_utils.js';
+	import { fileSizes, selectedProject } from '../../../../stores/stores.js';
+	import { goto } from '$app/navigation';
 
 	export let data;
 
 	type metricsWithTimeStamps = { x: string[]; y: number[]; type: string; name: string };
 
 	const dryruns_for_prediction = data.prediction.split(' ');
+	let allStepNames: string[];
 
 	var collectedMetrics: {
 		[key: string]: {
-			allStepNames: string[];
-			cpuData: { [key: string]: metricsWithTimeStamps };
-			memoryData: { [key: string]: metricsWithTimeStamps };
-			networkDataCombined: { [key: string]: metricsWithTimeStamps[] };
+			// cpuData: { [key: string]: metricsWithTimeStamps };
+			// memoryData: { [key: string]: metricsWithTimeStamps };
+			// networkDataCombined: { [key: string]: metricsWithTimeStamps[] };
 			pipelineMetricsAnalytics: MetricsAnalytics;
 		};
 	} = {};
 
-	// Linear regression function
 	function linearRegression(x: number[], y: number[]): { slope: number; intercept: number } {
 		const n = x.length;
 
-		// Calculate mean of x and y
 		const meanX = x.reduce((acc, val) => acc + val, 0) / n;
 		const meanY = y.reduce((acc, val) => acc + val, 0) / n;
 
-		// Calculate slope (m) and intercept (b)
 		const numerator = x.reduce((acc, xi, i) => acc + (xi - meanX) * (y[i] - meanY), 0);
 		const denominator = x.reduce((acc, xi) => acc + (xi - meanX) ** 2, 0);
 
@@ -41,7 +40,6 @@
 		return { slope, intercept };
 	}
 
-	// Prediction function
 	function predictMaxCPU(fileSize: number, slope: number, intercept: number): number {
 		return slope * fileSize + intercept;
 	}
@@ -49,10 +47,9 @@
 	export const getPredictionDetails = async (): Promise<void> => {
 		dryruns_for_prediction.forEach(async (dryRunId) => {
 			collectedMetrics[dryRunId] = {
-				allStepNames: [],
-				cpuData: {},
-				memoryData: {},
-				networkDataCombined: {},
+				// cpuData: {},
+				// memoryData: {},
+				// networkDataCombined: {},
 				pipelineMetricsAnalytics: {}
 			};
 			var cpuData: { [key: string]: metricsWithTimeStamps } = {};
@@ -78,55 +75,70 @@
 				networkDataCombined
 			);
 
-			collectedMetrics[dryRunId].allStepNames = result.allStepNames;
-			collectedMetrics[dryRunId].cpuData = cpuData;
-			collectedMetrics[dryRunId].memoryData = memoryData;
-			collectedMetrics[dryRunId].networkDataCombined = networkDataCombined;
+			allStepNames = result.allStepNames;
+			// collectedMetrics[dryRunId].cpuData = cpuData;
+			// collectedMetrics[dryRunId].memoryData = memoryData;
+			// collectedMetrics[dryRunId].networkDataCombined = networkDataCombined;
 			collectedMetrics[dryRunId].pipelineMetricsAnalytics = pipelineMetricsAnalytics;
-			// predictionDetailsPromise.resolve();
 		});
 		await new Promise((resolve) => setTimeout(resolve, 1500));
 
 		console.log('collected metrics');
 		console.log(collectedMetrics);
 
-		// Example usage
-		const fileSizeData = [20, 30];
-		const maxCpuUsageData = [
-			collectedMetrics[dryruns_for_prediction[0]].pipelineMetricsAnalytics[''].CPU[0],
-			collectedMetrics[dryruns_for_prediction[1]].pipelineMetricsAnalytics[''].CPU[0]
-		];
-		// const fileSizeData = [20, 30, 40, 100];
-		// const maxCpuUsageData = [0.1, 0.2, 0.3, 0.8];
+		const fileSizeData = dryruns_for_prediction.map(async (dryrun) => {
+			const size = fileSizes[dryrun]?.[0]?.size;
+			// console.log('file sizes from store')
+			// console.log(fileSizes)
+			if(!size) {
+				validFileSizes = false;
+				let createDryRunMessageModal: ModalSettings;
+				createDryRunMessageModal = {
+					type: 'alert',
+					title: 'Invalid filesizes! Please select some other dry runs to make predictions',
+					body: 'You will be taken back to the dry runs list on close'
+				};
+				modalStore.trigger(createDryRunMessageModal);
+				await new Promise((resolve) => setTimeout(resolve, 2500));
+				modalStore.close();
+				goto(`/projects/project_id/${$selectedProject?.id}`);
+				return;
+				}
+			return size;
+		});
+		
+		const CpuUsageDataPerStep: Record<string, { max: number[], avg: number[] }> = [...allStepNames, ''].reduce((acc, stepName) => ({ ...acc, [stepName]: { max: [], avg: [] } }), {});
+		dryruns_for_prediction.forEach((dryrunId) => {
+			[...allStepNames, ''].forEach((stepName) => {
+				const maxCpuUsage = collectedMetrics[dryrunId].pipelineMetricsAnalytics[stepName]?.CPU.max;
+				const avgCpuUsage = collectedMetrics[dryrunId].pipelineMetricsAnalytics[stepName]?.CPU.avg;
 
-		// Calculate linear regression
-		const { slope, intercept } = linearRegression(fileSizeData, maxCpuUsageData);
+				if (maxCpuUsage) {								
+					CpuUsageDataPerStep[stepName].max.push(maxCpuUsage);
+					CpuUsageDataPerStep[stepName].avg.push(avgCpuUsage);
+				}
+			});
+		});		
 
-		// Example prediction for a given file size
-		const predictedMaxCPU = predictMaxCPU(34, slope, intercept);
-		console.log(`Predicted Max CPU Usage: ${predictedMaxCPU}`);
+		maxCpuUsagePerStep = Array<number>(allStepNames.length + 1).fill(0);
+		[...allStepNames, ''].forEach(async (stepName, i) => {
+			const r = linearRegression(await Promise.all(fileSizeData) as number[], CpuUsageDataPerStep[stepName].max);
+			maxCpuUsagePerStep[i] = predictMaxCPU(valueforPrediction, r.slope, r.intercept).toFixed(3) as unknown as number;
+		});
+		avgCpuUsagePerStep = Array<number>(allStepNames.length + 1).fill(0);
+		[...allStepNames, ''].forEach(async (stepName, i) => {
+			const r = linearRegression(await Promise.all(fileSizeData) as number[], CpuUsageDataPerStep[stepName].avg);
+			avgCpuUsagePerStep[i] = predictMaxCPU(valueforPrediction, r.slope, r.intercept).toFixed(3) as unknown as number;
+		});
+
 		showPredictions = true;
 	};
-	// const predictionDetailsPromise = getPredictionDetails();
-
-	// // TODO: move to lib or utils
-	// predictionDetailsPromise
-	// 	.then((value) => {
-	// 		maxCpuUsageRun = 1;
-	// 		maxCpuUsagePerStep = [1, 0.4, 0.8, 1];
-	// 		avgCpuUsageRun = 0.8;
-	// 		avgCpuUsagePerStep = [1, 0.4, 0.8, 1];
-	// 	})
-	// 	.catch(() => {
-	// 		console.log('error in prediction details promise');
-	// 	});
 	let predictionDetailsPromise: { resolve: () => void };
-	let valueforPrediction = 0;
+	let valueforPrediction = 234;
 	let showPredictions = false;
-	$: maxCpuUsageRun = 1;
-	$: maxCpuUsagePerStep = [1, 0.4, 0.8, 1];
-	$: avgCpuUsageRun = 0.8;
-	$: avgCpuUsagePerStep = [1, 0.4, 0.8, 1];
+	let validFileSizes = true;
+	let maxCpuUsagePerStep: number[];
+	let avgCpuUsagePerStep:number[];
 </script>
 
 <div class="flex w-full content-center p-10">
@@ -135,71 +147,84 @@
 			Estimations
 			<span STYLE="font-size:14px">based on {dryruns_for_prediction} </span>
 		</h1>
-		<h1>
-			Input filesize:
-			<span><input bind:value={valueforPrediction} placeholder="enter in bytes" /> </span>
-		</h1>
-		<div class="flex justify-between">
-			<div class="flex flex-row justify-end p-5 space-x-1">
+		{#if validFileSizes} 
+			<h1>
+				Input filesize:
+				<span><input bind:value={valueforPrediction} placeholder="enter in bytes" /> </span>
+			</h1>
+			<div class="flex justify-between">
+				<div class="flex flex-row justify-end p-5 space-x-1">
+					<div>
+						<button type="button" class="btn btn-sm variant-filled" on:click={getPredictionDetails}>
+							<span>Predict</span>
+						</button>
+					</div>
+				</div>
+			</div>
+			{#if showPredictions}				
+				<table class="table">
+					<thead>
+						<tr>
+							<th scope="col">Metric</th>
+							<th scope="col">Predicted Maximum</th>
+							<th scope="col">Predicted Average</th>
+						</tr>
+					</thead>
+					<tbody>
+						<!-- Repeat the following for each metric -->
+						<tr>
+							<td>CPU Usage</td>
+							<td>
+								<table class="table">
+									<tbody>
+										{#each allStepNames as name, i}
+											<tr>
+												<td>{name}</td>
+												<td>{maxCpuUsagePerStep[i]}</td>
+											</tr>
+										{/each}
+										<tr>
+											<td class="font-bold">Whole</td>
+											<td class="font-bold">{maxCpuUsagePerStep.slice(-1)[0]}</td>
+										</tr>
+									</tbody>
+								</table>
+							</td>
+							
+							<td>
+								<table class="table">
+									<tbody>
+										{#each allStepNames as name, i}
+											<tr>
+												<td>{name}</td>
+												<td>{avgCpuUsagePerStep[i]}</td>
+											</tr>
+										{/each}
+										<tr>
+											<td class="font-bold">Whole</td>
+											<td class="font-bold">{avgCpuUsagePerStep.slice(-1)[0]}</td>
+										</tr>
+									</tbody>
+								</table>
+							</td>
+						</tr>
+						<!-- Repeat for other metrics -->
+					</tbody>
+				</table>
+			{/if}
+		{:else}
+			<h1>
+				
+			</h1>	
+			<div class="flex flex-row p-5 space-x-1">
 				<div>
-					<button type="button" class="btn btn-sm variant-filled" on:click={getPredictionDetails}>
-						<span>Predict</span>
+					<button type="button" class="btn variant-filled-warning">
+						<span>Invalid filesizes! Please select some other dry runs to make predictions.</span>
 					</button>
 				</div>
 			</div>
-		</div>
-		{#if showPredictions}
-			<!-- {#await predictionDetailsPromise}
-			<p style="font-size:20px;">Calculating predictions ....</p>
-			<ProgressBar />
-		{:then response} -->
-			<table class="table table-interactive">
-				<thead>
-					<tr>
-						<th scope="col">Metric</th>
-						<th scope="col">Max Run</th>
-						<th scope="col">Per Step</th>
-						<th scope="col">Avg Run</th>
-						<th scope="col">Per Step</th>
-					</tr>
-				</thead>
-				<tbody>
-					<!-- Repeat the following for each metric -->
-					<tr>
-						<td>CPU Usage</td>
-						<td>{maxCpuUsageRun}</td>
-						<td>
-							<!-- Nested table for per-step values -->
-							<table class="table table-interactive">
-								<tbody>
-									{#each avgCpuUsagePerStep as stepValue}
-										<tr>
-											<td>Step {+1}</td>
-											<td>{stepValue}</td>
-										</tr>
-									{/each}
-								</tbody>
-							</table>
-						</td>
-						<td>{avgCpuUsageRun}</td>
-						<td>
-							<!-- Nested table for per-step values -->
-							<table class="table table-interactive">
-								<tbody>
-									{#each avgCpuUsagePerStep as stepValue}
-										<tr>
-											<td>Step {+1}</td>
-											<td>{stepValue}</td>
-										</tr>
-									{/each}
-								</tbody>
-							</table>
-						</td>
-					</tr>
-					<!-- Repeat for other metrics -->
-				</tbody>
-			</table>
-			<!-- {/await} -->
 		{/if}
 	</div>
 </div>
+
+<Modal />

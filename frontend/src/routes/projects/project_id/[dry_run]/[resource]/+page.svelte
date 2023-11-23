@@ -437,8 +437,8 @@
 										{#if key == 'CPU'}
 											<td
 												>{(
-													pipelineMetricsAnalytics[selectedStep][key][1] / allStepNames.length
-												).toFixed(3)} %, {pipelineMetricsAnalytics[selectedStep][key][0].toFixed(3)}
+													pipelineMetricsAnalytics[selectedStep][key].avg / allStepNames.length
+												).toFixed(3)} %, {pipelineMetricsAnalytics[selectedStep][key].max.toFixed(3)}
 												%</td
 											>
 										<!-- for eslint -->

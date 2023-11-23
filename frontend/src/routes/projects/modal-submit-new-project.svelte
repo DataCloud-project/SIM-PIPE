@@ -32,7 +32,7 @@
 		username.subscribe(($value) => {
 			currentUsername = $value;
 		})();
-		if (username) {
+		if (username && currentUsername) {
 			name = `${name}-${currentUsername}`;
 		}
 

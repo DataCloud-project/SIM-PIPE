@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { cBase, cHeader, cForm, optional } from '../../../../styles/styles.js';
 	import { Modal, modalStore, type ModalSettings } from '@skeletonlabs/skeleton';
-	import { selectedProject } from '../../../../stores/stores.js';
+	import { selectedProject, fileSizes } from '../../../../stores/stores.js';
 	import createDryRunMutation from '../../../../queries/create_dry_run.js';
 	import allDryRunsQuery from '../../../../queries/get_all_dryruns.js';
 	import type { Project } from '../../../../types.js';
@@ -60,8 +60,10 @@
 	let hideModal = false;
 	let alertModal = false;
 
+	let dryRunsInputFilesizes: Array<{ name: string; size: number }> = []
+
 	// modify workflow template from project to create a valid argoWorkflow input for create new dryrun
-	async function newWorkflowTemplate(template: { metadata: any; spec: any }) {
+	async function newWorkflowTemplate(template: { metadata: any; spec: any }) {		
 		const newWorkflowTemplate = template;
 		if (formData.files.length != 0) {
 			newWorkflowTemplate.spec.templates.forEach(
@@ -79,11 +81,12 @@
 					// if any files are uploaded
 					if (template.name == initial_task_name) {
 						input_artifacts[taskList[0].name].artifacts.forEach(
-							async (artifact: { raw: { data: string } }, index: number) => {
+							async (artifact: { name:string; raw: { data: string } }, index: number) => {
 								const files = formData.files[index] as unknown as FileList;
 								if (files) {
 									let text = await files[0].text();
 									artifact.raw.data = `${text}`;
+									dryRunsInputFilesizes.push({'name': artifact.name, 'size': files[0].size})
 								} else {
 									console.log('Input file not uploaded!');
 								}
@@ -129,6 +132,7 @@
 				title: 'New dry run created&#10024;!',
 				body: `New dry run ID: ${responseCreateDryRun?.createDryRun?.id}`
 			};
+			fileSizes[responseCreateDryRun?.createDryRun?.id] = dryRunsInputFilesizes;
 			modalStore.trigger(createDryRunMessageModal);
 			alertModal = true;
 			await new Promise((resolve) => setTimeout(resolve, 1500));
@@ -136,7 +140,6 @@
 			await refreshProjectDetails();
 			modalStore.clear();
 		} catch (error) {
-			// TODO: handle error
 			let createDryRunMessageModal: ModalSettings;
 			if ((error as Error).message.includes('PayloadTooLargeError')) {
 				createDryRunMessageModal = {

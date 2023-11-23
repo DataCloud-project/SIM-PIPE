@@ -1,7 +1,6 @@
 import { format } from 'date-fns';
 import getDryRunNoLogsMetricsQuery from '../queries/get_dry_run_all_metrics_no_logs';
 import { requestGraphQLClient } from '$lib/graphqlUtils';
-import type { DryRunMetrics } from '../types';
 
 const datefmt = 'yyyy-MM-dd HH:mm:ss';
 
@@ -31,7 +30,7 @@ function timestampsToDatetime(startedAt: string, input_array: number[]) {
 
 export type MetricsAnalytics = {
 	[step: string]: {
-		CPU: number[];
+		CPU: { max: number, avg: number };
 		Memory: number[];
 		Network_received: number[];
 		Network_transferred: number[];
@@ -40,7 +39,8 @@ export type MetricsAnalytics = {
 
 const initMaxResourcePerStep = () => {
 	return {
-		CPU: Array<number>(2).fill(0),
+		CPU: {max: 0, avg: 0},
+		// CPU: Array<number>(2).fill(0),
 		Memory: Array<number>(2).fill(0),
 		Network_received: Array<number>(2).fill(0),
 		Network_transferred: Array<number>(2).fill(0)
@@ -196,14 +196,14 @@ export async function getMetricsAnalyticsUtils(
 	allStepNames.forEach((name) => {
 		pipelineMetricsAnalytics[name] = initMaxResourcePerStep();
 		if (cpuData[name]) {
-			pipelineMetricsAnalytics[name].CPU[0] = Math.max(...cpuData[name].y);
-			pipelineMetricsAnalytics[name].CPU[1] = calculateMean(cpuData[name].y);
+			pipelineMetricsAnalytics[name].CPU.max = Math.max(...cpuData[name].y);
+			pipelineMetricsAnalytics[name].CPU.avg = calculateMean(cpuData[name].y);
 		}
 		if (memoryData[name]) {
 			pipelineMetricsAnalytics[name].Memory[0] = Math.max(...memoryData[name].y);
 			pipelineMetricsAnalytics[name].Memory[1] = calculateMean(memoryData[name].y);
 		}
-		if (networkDataCombined[name][0]) {
+		if (networkDataCombined[name]?.[0]) {
 			pipelineMetricsAnalytics[name].Network_received[0] = Math.max(
 				...networkDataCombined[name][0].y
 			);
@@ -211,7 +211,7 @@ export async function getMetricsAnalyticsUtils(
 				networkDataCombined[name][0].y
 			);
 		}
-		if (networkDataCombined[name][1]) {
+		if (networkDataCombined[name]?.[1]) {
 			pipelineMetricsAnalytics[name].Network_transferred[0] = Math.max(
 				...networkDataCombined[name][1].y
 			);
@@ -222,11 +222,11 @@ export async function getMetricsAnalyticsUtils(
 	});
 	pipelineMetricsAnalytics[''] = initMaxResourcePerStep();
 	allStepNames.forEach((name) => {
-		pipelineMetricsAnalytics[''].CPU[0] = Math.max(
-			pipelineMetricsAnalytics[''].CPU[0],
-			pipelineMetricsAnalytics[name].CPU[0]
+		pipelineMetricsAnalytics[''].CPU.max = Math.max(
+			pipelineMetricsAnalytics[''].CPU.max,
+			pipelineMetricsAnalytics[name].CPU.max
 		);
-		if (cpuData[name]) pipelineMetricsAnalytics[''].CPU[1] += calculateMean(cpuData[name].y);
+		if (cpuData[name]) pipelineMetricsAnalytics[''].CPU.avg += calculateMean(cpuData[name].y);
 		pipelineMetricsAnalytics[''].Memory[0] = Math.max(
 			pipelineMetricsAnalytics[''].Memory[0],
 			pipelineMetricsAnalytics[name].Memory[0]
@@ -237,7 +237,7 @@ export async function getMetricsAnalyticsUtils(
 			pipelineMetricsAnalytics[''].Network_received[0],
 			pipelineMetricsAnalytics[name].Network_received[0]
 		);
-		if (networkDataCombined[name][0])
+		if (networkDataCombined[name]?.[0])
 			pipelineMetricsAnalytics[''].Network_received[1] += calculateMean(
 				networkDataCombined[name][0].y
 			);
@@ -245,10 +245,44 @@ export async function getMetricsAnalyticsUtils(
 			pipelineMetricsAnalytics[''].Network_transferred[0],
 			pipelineMetricsAnalytics[name].Network_transferred[0]
 		);
-		if (networkDataCombined[name][1])
+		if (networkDataCombined[name]?.[1])
 			pipelineMetricsAnalytics[''].Network_transferred[1] += calculateMean(
 				networkDataCombined[name][1].y
 			);
-	});
+	});	
+	console.log('allStepNames.map((name) => pipelineMetricsAnalytics[name].CPU[1] )');
+	console.log(allStepNames.map((name) => pipelineMetricsAnalytics[name].CPU.avg ))
+
+	pipelineMetricsAnalytics[''].CPU.max = Math.max(...allStepNames.map((name) => pipelineMetricsAnalytics[name].CPU.max ));
+	pipelineMetricsAnalytics[''].CPU.avg = calculateMean(allStepNames.map((name) => pipelineMetricsAnalytics[name].CPU.avg ));
+	// allStepNames.forEach((name) => {
+	// 	 = Math.max(
+	// 		pipelineMetricsAnalytics[''].CPU[0],
+	// 		pipelineMetricsAnalytics[name].CPU[0]
+	// 	);
+	// 	if (cpuData[name]) pipelineMetricsAnalytics[''].CPU[1] += calculateMean(cpuData[name].y);
+	// 	pipelineMetricsAnalytics[''].Memory[0] = Math.max(
+	// 		pipelineMetricsAnalytics[''].Memory[0],
+	// 		pipelineMetricsAnalytics[name].Memory[0]
+	// 	);
+	// 	if (memoryData[name])
+	// 		pipelineMetricsAnalytics[''].Memory[1] += calculateMean(memoryData[name].y);
+	// 	pipelineMetricsAnalytics[''].Network_received[0] = Math.max(
+	// 		pipelineMetricsAnalytics[''].Network_received[0],
+	// 		pipelineMetricsAnalytics[name].Network_received[0]
+	// 	);
+	// 	if (networkDataCombined[name]?.[0])
+	// 		pipelineMetricsAnalytics[''].Network_received[1] += calculateMean(
+	// 			networkDataCombined[name][0].y
+	// 		);
+	// 	pipelineMetricsAnalytics[''].Network_transferred[0] = Math.max(
+	// 		pipelineMetricsAnalytics[''].Network_transferred[0],
+	// 		pipelineMetricsAnalytics[name].Network_transferred[0]
+	// 	);
+	// 	if (networkDataCombined[name]?.[1])
+	// 		pipelineMetricsAnalytics[''].Network_transferred[1] += calculateMean(
+	// 			networkDataCombined[name][1].y
+	// 		);
+	// });
 	delete pipelineMetricsAnalytics['undefined'];
 }

@@ -22,6 +22,9 @@ export const credentialsList = writable<DockerRegistryCredential[] | undefined>(
 export const selectedCredential = writable<DockerRegistryCredential>();
 // need separate list in frontend as argo stores suspended runs in state 'Running'
 export const pausedDryRuns = writable<string[]>([]);
+// need a list to store the filesizes for the dry runs input files since 
+// argo doesn't have a field in input artifacts for the size
+export const fileSizes: { [key: string]: Array<{ name: string; size: number }>; } = {};
 
 export const username = writable<string | undefined>(undefined);
 export const usertoken = writable<string | undefined>(undefined);
