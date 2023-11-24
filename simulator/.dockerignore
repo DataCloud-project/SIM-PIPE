@@ -1,0 +1,14 @@
+# ignore environment variables files
+.env
+
+# virtual environment
+venv/
+.venv/
+
+# ignore standard files and folders
+__pycache__/
+.git/
+.vscode/
+
+# notebooks
+*.ipynb
