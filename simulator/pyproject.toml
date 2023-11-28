@@ -1,0 +1,16 @@
+[tool.poetry]
+name = "kwok-simulator"
+version = "0.1.0"
+description = "simulate argo workflows pipeline on kwok cluster"
+authors = ["Gøran Brekke Svaland <goran.svaland@sintef.no>"]
+license = "MIT"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+PyYAML = "^6.0.1"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
