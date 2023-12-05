@@ -32,8 +32,8 @@ export type MetricsAnalytics = {
 	[step: string]: {
 		CPU: { max: number, avg: number };
 		Memory: { max: number, avg: number };
-		Network_received: number[];
-		Network_transferred: number[];
+		Network_received: { max: number, avg: number };
+		Network_transferred: { max: number, avg: number };
 	};
 };
 
@@ -41,8 +41,8 @@ const initMaxResourcePerStep = () => {
 	return {
 		CPU: {max: 0, avg: 0},
 		Memory: {max: 0, avg: 0},
-		Network_received: Array<number>(2).fill(0),
-		Network_transferred: Array<number>(2).fill(0)
+		Network_received: {max: 0, avg: 0},
+		Network_transferred: {max: 0, avg: 0}
 	};
 };
 
@@ -191,18 +191,18 @@ export async function getMetricsAnalyticsUtils(
 			pipelineMetricsAnalytics[name].Memory.avg = calculateMean(memoryData[name].y);
 		}
 		if (networkDataCombined[name]?.[0]) {
-			pipelineMetricsAnalytics[name].Network_received[0] = Math.max(
+			pipelineMetricsAnalytics[name].Network_received.max = Math.max(
 				...networkDataCombined[name][0].y
 			);
-			pipelineMetricsAnalytics[name].Network_received[1] = calculateMean(
+			pipelineMetricsAnalytics[name].Network_received.avg = calculateMean(
 				networkDataCombined[name][0].y
 			);
 		}
 		if (networkDataCombined[name]?.[1]) {
-			pipelineMetricsAnalytics[name].Network_transferred[0] = Math.max(
+			pipelineMetricsAnalytics[name].Network_transferred.max = Math.max(
 				...networkDataCombined[name][1].y
 			);
-			pipelineMetricsAnalytics[name].Network_transferred[1] = calculateMean(
+			pipelineMetricsAnalytics[name].Network_transferred.avg = calculateMean(
 				networkDataCombined[name][1].y
 			);
 		}
@@ -220,20 +220,20 @@ export async function getMetricsAnalyticsUtils(
 		);
 		if (memoryData[name])
 			pipelineMetricsAnalytics[''].Memory.avg += calculateMean(memoryData[name].y);
-		pipelineMetricsAnalytics[''].Network_received[0] = Math.max(
-			pipelineMetricsAnalytics[''].Network_received[0],
-			pipelineMetricsAnalytics[name].Network_received[0]
+		pipelineMetricsAnalytics[''].Network_received.max = Math.max(
+			pipelineMetricsAnalytics[''].Network_received.max,
+			pipelineMetricsAnalytics[name].Network_received.max
 		);
 		if (networkDataCombined[name]?.[0])
-			pipelineMetricsAnalytics[''].Network_received[1] += calculateMean(
+			pipelineMetricsAnalytics[''].Network_received.avg += calculateMean(
 				networkDataCombined[name][0].y
 			);
-		pipelineMetricsAnalytics[''].Network_transferred[0] = Math.max(
-			pipelineMetricsAnalytics[''].Network_transferred[0],
-			pipelineMetricsAnalytics[name].Network_transferred[0]
+		pipelineMetricsAnalytics[''].Network_transferred.max = Math.max(
+			pipelineMetricsAnalytics[''].Network_transferred.max,
+			pipelineMetricsAnalytics[name].Network_transferred.max
 		);
 		if (networkDataCombined[name]?.[1])
-			pipelineMetricsAnalytics[''].Network_transferred[1] += calculateMean(
+			pipelineMetricsAnalytics[''].Network_transferred.avg += calculateMean(
 				networkDataCombined[name][1].y
 			);
 	});		

@@ -104,7 +104,26 @@
 		});
 
 		const metrics_response = await getMetricsResponse();
-
+		
+		selectedProjectName.set;
+			workflow = workflow_response;
+			const result = await getMetricsUsageUtils(
+				showMax,
+				cpuData,
+				memoryData,
+				networkDataCombined,
+				logs,
+				metrics_response
+			);
+			showMax = result.showMax;
+			allStepNames = result.allStepNames;
+			await getMetricsAnalyticsUtils(
+				allStepNames,
+				pipelineMetricsAnalytics,
+				cpuData,
+				memoryData,
+				networkDataCombined
+			);
 		const responses = {
 			workflow: workflow_response,
 			dryrun: dryrun_response,
@@ -121,32 +140,7 @@
 		return word;
 	}
 
-	let allStepNames: string[] = [];
-	getDataPromise
-		.then(async (data: { workflow: any; dryrun: any; metrics: any }) => {
-			selectedProjectName.set;
-			workflow = data.workflow;
-			const result = await getMetricsUsageUtils(
-				showMax,
-				cpuData,
-				memoryData,
-				networkDataCombined,
-				logs,
-				data.metrics
-			);
-			showMax = result.showMax;
-			allStepNames = result.allStepNames;
-			await getMetricsAnalyticsUtils(
-				allStepNames,
-				pipelineMetricsAnalytics,
-				cpuData,
-				memoryData,
-				networkDataCombined
-			);
-		})
-		.catch((error) => {
-			console.log(error);
-		});
+	let allStepNames: string[] = [];	
 
 	function generateRandomString() {
 		let result = '';
@@ -445,9 +439,9 @@
 										{:else if key == 'Memory' || key == 'Network_received' || key == 'Network_transferred'}
 											<td
 												>{filesize(
-													pipelineMetricsAnalytics[selectedStep][key][1] / allStepNames.length
-												)}, {filesize(pipelineMetricsAnalytics[selectedStep][key][0])}</td
-											>
+													pipelineMetricsAnalytics[selectedStep][key].avg / allStepNames.length
+												)}, {filesize(pipelineMetricsAnalytics[selectedStep][key].max)}</td
+											>											
 										{/if}
 									</tr>
 								{/each}

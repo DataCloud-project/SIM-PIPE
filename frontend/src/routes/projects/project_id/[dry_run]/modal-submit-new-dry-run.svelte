@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { cBase, cHeader, cForm, optional } from '../../../../styles/styles.js';
 	import { Modal, modalStore, type ModalSettings } from '@skeletonlabs/skeleton';
-	import { selectedProject, fileSizes } from '../../../../stores/stores.js';
+	import { selectedProject } from '../../../../stores/stores.js';
 	import createDryRunMutation from '../../../../queries/create_dry_run.js';
 	import allDryRunsQuery from '../../../../queries/get_all_dryruns.js';
 	import type { Project } from '../../../../types.js';
@@ -60,14 +60,14 @@
 	let hideModal = false;
 	let alertModal = false;
 
-	let dryRunsInputFilesizes: Array<{ name: string; size: number }> = []
-
+	// TODO: change this to store multiple initial input file values
+	let dryRunsInputFilesizes: { name: string, size: string };
+	
 	// modify workflow template from project to create a valid argoWorkflow input for create new dryrun
 	async function newWorkflowTemplate(template: { metadata: any; spec: any }) {		
 		const newWorkflowTemplate = template;
 		if (formData.files.length != 0) {
-			newWorkflowTemplate.spec.templates.forEach(
-				async (template: { inputs: any; name: string }) => {
+			for (const template of newWorkflowTemplate.spec.templates) {
 					// find the initial step (currently assuming there is only 1 initial step)
 					let initial_task_name = '';
 					for (let task of taskList) {
@@ -86,7 +86,7 @@
 								if (files) {
 									let text = await files[0].text();
 									artifact.raw.data = `${text}`;
-									dryRunsInputFilesizes.push({'name': artifact.name, 'size': files[0].size})
+									dryRunsInputFilesizes = {'name': artifact.name, 'size': files[0].size.toString()}
 								} else {
 									console.log('Input file not uploaded!');
 								}
@@ -94,12 +94,18 @@
 						);
 					}
 				}
-			);
-		}
+			}
+		await new Promise((resolve) => setTimeout(resolve, 1500));
+		
 		newWorkflowTemplate.metadata =
 			formData.name == ''
-				? { generateName: newWorkflowTemplate.metadata.generateName }
-				: { name: formData.name };
+				? { generateName: newWorkflowTemplate.metadata.generateName,
+					// filesizes: {'name': 'file1', 'size': 100}
+					// annotations: {'file1': '100'}
+				}
+				: { generateName: formData.name,
+				 };		
+		newWorkflowTemplate.metadata.annotations = dryRunsInputFilesizes;	
 		return newWorkflowTemplate;
 	}
 
@@ -108,14 +114,15 @@
 		hideModal = true;
 		const modifiedWorkflowTemplate = await newWorkflowTemplate(
 			$selectedProject?.workflowTemplates[0].argoWorkflowTemplate
-		);
+		);		
+		
+		await new Promise((resolve) => setTimeout(resolve, 1500));
 		const variables = {
 			input: {
 				projectId: $selectedProject?.id,
 				argoWorkflow: modifiedWorkflowTemplate
 			}
 		};
-		await new Promise((resolve) => setTimeout(resolve, 1500));
 
 		try {
 			const responseCreateDryRun: { createDryRun: { id: string } } = await requestGraphQLClient(
@@ -132,7 +139,6 @@
 				title: 'New dry run created&#10024;!',
 				body: `New dry run ID: ${responseCreateDryRun?.createDryRun?.id}`
 			};
-			fileSizes[responseCreateDryRun?.createDryRun?.id] = dryRunsInputFilesizes;
 			modalStore.trigger(createDryRunMessageModal);
 			alertModal = true;
 			await new Promise((resolve) => setTimeout(resolve, 1500));
@@ -140,6 +146,7 @@
 			await refreshProjectDetails();
 			modalStore.clear();
 		} catch (error) {
+			console.log(error)
 			let createDryRunMessageModal: ModalSettings;
 			if ((error as Error).message.includes('PayloadTooLargeError')) {
 				createDryRunMessageModal = {
@@ -173,7 +180,7 @@
 					class="input"
 					type="text"
 					bind:value={formData.name}
-					placeholder="Enter name..."
+					placeholder="Enter name generator..."
 					required
 				/>
 			</label>

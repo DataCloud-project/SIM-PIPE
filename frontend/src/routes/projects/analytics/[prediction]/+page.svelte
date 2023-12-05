@@ -1,14 +1,16 @@
 <script lang="ts">
-	import { ProgressBar, type ModalSettings, modalStore, Modal } from '@skeletonlabs/skeleton';
+	import { type ModalSettings, modalStore, Modal } from '@skeletonlabs/skeleton';
 	import {
 		getMetricsAnalyticsUtils,
 		getMetricsResponse,
 		getMetricsUsageUtils,
 		type MetricsAnalytics
 	} from '../../../../utils/resource_utils.js';
-	import { fileSizes, selectedProject } from '../../../../stores/stores.js';
+	import { selectedProject } from '../../../../stores/stores.js';
 	import { goto } from '$app/navigation';
 	import { filesize } from 'filesize';
+	import getDryRunInputFilesizeQuery from '../../../../queries/get_dry_run_phase_results copy.js';
+	import { requestGraphQLClient } from '$lib/graphqlUtils';
 
 	export let data;
 
@@ -20,7 +22,23 @@
 		[key: string]: MetricsAnalytics;
 	} = {};
 
-	function linearRegression(x: number[], y: number[]): { slope: number; intercept: number } {
+	async function linearRegression(x: number[], y: number[]): Promise<{ slope: number; intercept: number; }> {
+		 // Check if all x values are the same
+		 if (new Set(x).size === 1) {
+			// throw new Error(`All filesize values are the same. Unable to perform linear regression.\n Filesizes for prediction are ${x}`);
+			validFileSizes = false;
+				let createDryRunMessageModal: ModalSettings;
+				createDryRunMessageModal = {
+					type: 'alert',
+					title: 'All filesize values are the same. Unable to perform linear regression',
+					body: `Filesizes for prediction are ${x}. Please choose other filesizes. You will be taken back to the dry runs list on close`
+				};
+				modalStore.trigger(createDryRunMessageModal);
+				await new Promise((resolve) => setTimeout(resolve, 2500));
+				modalStore.close();
+				goto(`/projects/project_id/${$selectedProject?.id}`);
+				return { slope:0, intercept:0 };
+		}
 		const n = x.length;
 		const meanX = x.reduce((acc, val) => acc + val, 0) / n;
 		const meanY = y.reduce((acc, val) => acc + val, 0) / n;
@@ -28,7 +46,7 @@
 		const denominator = x.reduce((acc, xi) => acc + (xi - meanX) ** 2, 0);
 		
 		const slope = numerator / denominator;
-		const intercept = meanY - slope * meanX;
+		const intercept = meanY - slope * meanX;		
 		return { slope, intercept };
 	}
 
@@ -36,6 +54,7 @@
 		return slope * fileSize + intercept;
 	}
 
+	// for each selected dry run, get the resource analytics (avg, max) per step and per dry run level
 	export const getPredictionDetails = async (): Promise<void> => {
 		dryruns_for_prediction.forEach(async (dryRunId) => {
 			collectedMetrics[dryRunId] = {};
@@ -67,19 +86,21 @@
 		});
 		await new Promise((resolve) => setTimeout(resolve, 1500));
 
-		console.log('collected metrics');
-		console.log(collectedMetrics);
-
-		const fileSizeData = dryruns_for_prediction.map(async (dryrun) => {
-			const size = fileSizes[dryrun]?.[0]?.size;
-			// console.log('file sizes from store')
-			// console.log(fileSizes)
-			if(!size) {
+		// read and store filesizes stored in the annotations in argoworkflows of the selected dryruns
+		const fileSizeDataPromise = dryruns_for_prediction.map(async (dryRunId) => { 		
+			try {
+				const response: { dryRun: { argoWorkflow: {metadata: {annotations: any }} }} = await requestGraphQLClient(
+					getDryRunInputFilesizeQuery,
+					{ dryRunId }
+				);				
+				return Number(response.dryRun.argoWorkflow.metadata.annotations.size);
+			} catch (error) {
+				// throw new Error(`Problem reading input filesizes for dry run - ${dryRunId}`);
 				validFileSizes = false;
 				let createDryRunMessageModal: ModalSettings;
 				createDryRunMessageModal = {
 					type: 'alert',
-					title: 'Invalid filesizes! Please select some other dry runs to make predictions',
+					title: 'Error reading input filesizes for dry run - ${dryRunId}',
 					body: 'You will be taken back to the dry runs list on close'
 				};
 				modalStore.trigger(createDryRunMessageModal);
@@ -87,8 +108,7 @@
 				modalStore.close();
 				goto(`/projects/project_id/${$selectedProject?.id}`);
 				return;
-				}
-			return size;
+			}
 		});
 		
 		const CpuUsageDataPerStep: Record<string, { max: number[], avg: number[] }> = [...allStepNames, ''].reduce((acc, stepName) => ({ ...acc, [stepName]: { max: [], avg: [] } }), {});
@@ -112,32 +132,35 @@
 				}
 			});
 		});		
+		const fileSizeData = await Promise.all(fileSizeDataPromise) as number[];
+		console.log('filesize stored in metadata annotations')
+		console.log(fileSizeData)
 
 		// make predictions with the combined resource values of all selected dry runs
 		maxCpuPredictions = Array<number>(allStepNames.length + 1).fill(0);
 		[...allStepNames, ''].forEach(async (stepName, i) => {
-			const r = linearRegression(await Promise.all(fileSizeData) as number[], CpuUsageDataPerStep[stepName].max);
+			const r = await linearRegression(fileSizeData, CpuUsageDataPerStep[stepName].max);
 			maxCpuPredictions[i] = predictLinearRegression(valueforPrediction, r.slope, r.intercept).toFixed(3) as unknown as number;
 		});
+
 		avgCpuPredictions = Array<number>(allStepNames.length + 1).fill(0);
 		[...allStepNames, ''].forEach(async (stepName, i) => {
-			const r = linearRegression(await Promise.all(fileSizeData) as number[], CpuUsageDataPerStep[stepName].avg);
+			const r = await linearRegression(fileSizeData, CpuUsageDataPerStep[stepName].avg);
 			avgCpuPredictions[i] = predictLinearRegression(valueforPrediction, r.slope, r.intercept).toFixed(3) as unknown as number;
 		});
 		maxMemPredictions = Array<number>(allStepNames.length + 1).fill(0);
 		[...allStepNames, ''].forEach(async (stepName, i) => {
-			const r = linearRegression(await Promise.all(fileSizeData) as number[], MemoryUsageDataPerStep[stepName].max);
+			const r = await linearRegression(fileSizeData, MemoryUsageDataPerStep[stepName].max);
 			maxMemPredictions[i] = predictLinearRegression(valueforPrediction, r.slope, r.intercept).toFixed(3) as unknown as number;
 		});
 		avgMemPredictions = Array<number>(allStepNames.length + 1).fill(0);
 		[...allStepNames, ''].forEach(async (stepName, i) => {
-			const r = linearRegression(await Promise.all(fileSizeData) as number[], MemoryUsageDataPerStep[stepName].avg);
+			const r = await linearRegression(fileSizeData, MemoryUsageDataPerStep[stepName].avg);
 			avgMemPredictions[i] = predictLinearRegression(valueforPrediction, r.slope, r.intercept).toFixed(3) as unknown as number;
 		});
 
 		showPredictions = true;
 	};
-	let predictionDetailsPromise: { resolve: () => void };
 	let valueforPrediction = 234;
 	let showPredictions = false;
 	let validFileSizes = true;
@@ -149,15 +172,18 @@
 
 <div class="flex w-full content-center p-10">
 	<div class="table-container">
-		<h1>
+		<h1 STYLE="font-size:28px">
 			Estimations
-			<span STYLE="font-size:14px">based on {dryruns_for_prediction} </span>
+			<span STYLE="font-size:28px">based on dryruns {dryruns_for_prediction} </span>
 		</h1>
+		<br/>
+
 		{#if validFileSizes} 
-			<h1>
-				Input filesize:
+			<h1 STYLE="font-size:20px">
+				Input filesize for prediction:
 				<span><input bind:value={valueforPrediction} placeholder="enter in bytes" /> </span>
 			</h1>
+			<br/>
 			<div class="flex justify-between">
 				<div class="flex flex-row justify-end p-5 space-x-1">
 					<div>
@@ -166,7 +192,9 @@
 						</button>
 					</div>
 				</div>
-			</div>
+			</div>			
+			
+			<br/>
 			{#if showPredictions}				
 				<table class="table">
 					<thead>
