@@ -115,3 +115,22 @@ export type DockerRegistryCredentialInput = {
 	password: string;
 	server: string;
 };
+
+// start: argo workflow template types
+type Parameters = {
+	name: string;
+	value: string;
+}[];
+
+type Task = {
+	name: string;
+	template: string;
+	arguments: { parameters: Parameters };
+	dependencies?: string[];
+};
+
+interface Template {
+	dag?: any;
+}
+
+// end: argo workflow template types

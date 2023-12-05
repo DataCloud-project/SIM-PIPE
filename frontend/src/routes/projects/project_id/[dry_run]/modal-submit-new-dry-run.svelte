@@ -4,35 +4,30 @@
 	import { selectedProject } from '../../../../stores/stores.js';
 	import createDryRunMutation from '../../../../queries/create_dry_run.js';
 	import allDryRunsQuery from '../../../../queries/get_all_dryruns.js';
-	import type { Project } from '../../../../types.js';
+	import type { Project, Template, Task } from '../../../../types.js';
+	// import { FileUploadType } from '../../../../types.js';
 	import refreshProjectDetails from '../../../../lib/refresh_runs.js';
 	import { requestGraphQLClient } from '$lib/graphqlUtils.js';
 
 	export let parent: any;
-	type Parameters = {
-		name: string;
-		value: string;
-	}[];
-
-	type Task = {
-		name: string;
-		template: string;
-		arguments: { parameters: Parameters };
-		dependencies?: string[];
-	};
-
-	interface Template {
-		dag?: any;
+	
+	enum FileUploadType {
+		Raw,
+		S3,
 	}
 
 	let formData = {
 		name: '',
 		files: [],
+		s3Key: '',
 		dagTemplate: { dag: { tasks: [] } }
 	};
 
 	// stores the names of input files expected for initial steps while parsing
 	const input_artifacts: any = {};
+	const taskList = parseTaskList() || [];
+	let alertModal = false;
+	let initial_task_name = '';
 
 	function parseTaskList() {
 		// only valid for dag format https://argoproj.github.io/argo-workflows/walk-through/dag/
@@ -51,50 +46,63 @@
 			const tasks: Task[] = formData.dagTemplate ? formData.dagTemplate.dag?.tasks : [];
 			// extract input artifacts from template
 			templates.forEach((template: { name: string; inputs: any }) => {
-				input_artifacts[template.name] = template.inputs;
-			});
+				// TODO: only 1 initial input file is considered
+				if(template.inputs.artifacts) {
+					if(template.inputs.artifacts[0].s3) {
+						// the input file is of type s3
+						input_artifacts[template.name] = { inputs: template.inputs, type: FileUploadType.S3};
+					} else if(template.inputs.artifacts[0].raw) {
+						input_artifacts[template.name] = { inputs: template.inputs, type: FileUploadType.Raw};
+					}
+				}
+			});			
 			return tasks;
 		}
-	}
-	const taskList = parseTaskList() || [];
-	let hideModal = false;
-	let alertModal = false;
+	}	
 
 	// TODO: change this to store multiple initial input file values
 	let dryRunsInputFilesizes: { name: string, size: string };
 	
 	// modify workflow template from project to create a valid argoWorkflow input for create new dryrun
-	async function newWorkflowTemplate(template: { metadata: any; spec: any }) {		
-		const newWorkflowTemplate = template;
-		if (formData.files.length != 0) {
-			for (const template of newWorkflowTemplate.spec.templates) {
-					// find the initial step (currently assuming there is only 1 initial step)
-					let initial_task_name = '';
-					for (let task of taskList) {
-						if (!task.dependencies) {
-							// initial step has no dependencies
-							initial_task_name = task.name;
-							break;
-						}
-					}
-					// change input files content in the template for the initial step
-					// if any files are uploaded
-					if (template.name == initial_task_name) {
-						input_artifacts[taskList[0].name].artifacts.forEach(
-							async (artifact: { name:string; raw: { data: string } }, index: number) => {
-								const files = formData.files[index] as unknown as FileList;
-								if (files) {
-									let text = await files[0].text();
-									artifact.raw.data = `${text}`;
-									dryRunsInputFilesizes = {'name': artifact.name, 'size': files[0].size.toString()}
-								} else {
-									console.log('Input file not uploaded!');
-								}
-							}
-						);
-					}
-				}
+	async function newWorkflowTemplate(template: { metadata: any; spec: any }) {	
+		// TODO: extend; find the initial step (currently assuming there is only 1 initial step)
+		for (let task of taskList) {
+			if (!task.dependencies) {
+				// initial step has no dependencies
+				initial_task_name = task.name;
+				break;
 			}
+		}	
+		const newWorkflowTemplate = template;
+		// if (formData.files.length != 0) {
+		for (const template of newWorkflowTemplate.spec.templates) {				
+			// TODO: if there is any input file then check the type of input and give user to either upload the file or choose minio key
+			// change input files content in the template for the initial step
+			// if any files are uploaded
+			if (template.name == initial_task_name) {
+				input_artifacts[initial_task_name].inputs.artifacts.forEach(
+					async (artifact: { name:string; raw:any; s3: any; }, index: number) => {
+						// for input file type = raw, replace the raw contents in the workflow template
+						if(input_artifacts[initial_task_name].type == FileUploadType.Raw) {
+							const files = formData.files[index] as unknown as FileList;
+							if (files) {
+								let text = await files[0].text();
+								artifact.raw.data = `${text}`;
+								dryRunsInputFilesizes = {'name': artifact.name, 'size': files[0].size.toString()}
+							} else {
+								console.log('Input file not uploaded!');
+							}
+						} else if(input_artifacts[initial_task_name].type == FileUploadType.S3) {
+							artifact.s3.key = formData.s3Key;
+							// TODO: handle file size for s3 files
+							dryRunsInputFilesizes = {'name': artifact.name, 'size': '1000'} 
+						} 
+					}
+				);
+			} 
+		}
+		// }
+			
 		await new Promise((resolve) => setTimeout(resolve, 1500));
 		
 		newWorkflowTemplate.metadata =
@@ -111,7 +119,6 @@
 
 	async function onCreateDryRunSubmit(): Promise<void> {
 		modalStore.close();
-		hideModal = true;
 		const modifiedWorkflowTemplate = await newWorkflowTemplate(
 			$selectedProject?.workflowTemplates[0].argoWorkflowTemplate
 		);		
@@ -169,7 +176,7 @@
 	}
 </script>
 
-{#if !hideModal && $modalStore[0]}
+{#if $modalStore[0]}
 	<div class="modal-example-form {cBase} overflow-y-auto max-h-full">
 		<header class={cHeader}>{$modalStore[0].title ?? '(title missing)'}</header>
 		<article>{$modalStore[0].body ?? '(body missing)'}</article>
@@ -210,17 +217,33 @@
 						{#if input_artifacts[task.name]}
 							<br />
 							<!-- svelte-ignore a11y-label-has-associated-control -->
-							<label>Upload Input files </label>
-							{#each input_artifacts[task.name].artifacts || [] as artifact, k}
-								<!-- svelte-ignore a11y-label-has-associated-control -->
-								<label>
-									{artifact.name}
-									<span>
-										<input class="input" type="file" bind:files={formData.files[k]} />
-									</span>
-								</label>
-								<br />
-							{/each}
+							{#if input_artifacts[task.name].type == FileUploadType.Raw}
+								<p>Upload Input files </p>
+								{#each input_artifacts[task.name].inputs.artifacts || [] as artifact, k}
+									<!-- svelte-ignore a11y-label-has-associated-control -->
+									<label>
+										{artifact.name}
+										<span>
+											<input class="input" type="file" bind:files={formData.files[k]} />
+										</span>
+									</label>
+									<br />
+								{/each}
+							{:else if input_artifacts[task.name].type == FileUploadType.S3}
+								{#each input_artifacts[task.name].inputs.artifacts || [] as artifact, k}
+									<!-- svelte-ignore a11y-label-has-associated-control -->
+									<label>
+										Enter S3 key for file input: <span class="italic">{artifact.name} </span>
+											<input
+												class="input variant-form-material"
+												type="text"
+												bind:value={formData.s3Key}
+											/>
+									</label>
+									<br />
+								{/each}
+							{/if}
+
 						{/if}
 						{#each taskList[i].arguments?.parameters || [] as param, j}
 							<!-- svelte-ignore a11y-label-has-associated-control -->
