@@ -11,6 +11,7 @@
 	import { filesize } from 'filesize';
 	import getDryRunInputFilesizeQuery from '../../../../queries/get_dry_run_phase_results copy.js';
 	import { requestGraphQLClient } from '$lib/graphqlUtils';
+	import { readable_time } from '$lib/time_difference.js';
 
 	export let data;
 
@@ -75,6 +76,7 @@
 			let pipelineMetricsAnalytics: MetricsAnalytics = {};
 			await getMetricsAnalyticsUtils(
 				result.allStepNames,
+				metrics,
 				pipelineMetricsAnalytics,
 				cpuData,
 				memoryData,
@@ -111,9 +113,11 @@
 			}
 		});
 		
-		const CpuUsageDataPerStep: Record<string, { max: number[], avg: number[] }> = [...allStepNames, ''].reduce((acc, stepName) => ({ ...acc, [stepName]: { max: [], avg: [] } }), {});
-		const MemoryUsageDataPerStep: Record<string, { max: number[], avg: number[] }> = [...allStepNames, ''].reduce((acc, stepName) => ({ ...acc, [stepName]: { max: [], avg: [] } }), {});
-		
+		// store combined resource usage for selected dry runs 
+		const CpuCombined: Record<string, { max: number[], avg: number[] }> = [...allStepNames, ''].reduce((acc, stepName) => ({ ...acc, [stepName]: { max: [], avg: [] } }), {});
+		const MemoryCombined: Record<string, { max: number[], avg: number[] }> = [...allStepNames, ''].reduce((acc, stepName) => ({ ...acc, [stepName]: { max: [], avg: [] } }), {});
+		const DurationCombined: { [key: string]: number[] } = Object.fromEntries([...allStepNames, ''].map(name => [name, []]));
+
 		// combine resource values for the selected dry runs
 		dryruns_for_prediction.forEach((dryrunId) => {
 			[...allStepNames, ''].forEach((stepName) => {
@@ -123,13 +127,14 @@
 				const avgMemoryUsage = collectedMetrics[dryrunId][stepName]?.Memory.avg;
 
 				if (maxCpuUsage) {								
-					CpuUsageDataPerStep[stepName].max.push(maxCpuUsage);
-					CpuUsageDataPerStep[stepName].avg.push(avgCpuUsage);
+					CpuCombined[stepName].max.push(maxCpuUsage);
+					CpuCombined[stepName].avg.push(avgCpuUsage);
 				}
 				if(maxMemoryUsage) {
-					MemoryUsageDataPerStep[stepName].max.push(maxMemoryUsage);
-					MemoryUsageDataPerStep[stepName].avg.push(avgMemoryUsage);
+					MemoryCombined[stepName].max.push(maxMemoryUsage);
+					MemoryCombined[stepName].avg.push(avgMemoryUsage);
 				}
+				DurationCombined[stepName].push(collectedMetrics[dryrunId][stepName]?.Duration);
 			});
 		});		
 		const fileSizeData = await Promise.all(fileSizeDataPromise) as number[];
@@ -139,35 +144,42 @@
 		// make predictions with the combined resource values of all selected dry runs
 		maxCpuPredictions = Array<number>(allStepNames.length + 1).fill(0);
 		[...allStepNames, ''].forEach(async (stepName, i) => {
-			const r = await linearRegression(fileSizeData, CpuUsageDataPerStep[stepName].max);
+			const r = await linearRegression(fileSizeData, CpuCombined[stepName].max);
 			maxCpuPredictions[i] = predictLinearRegression(valueforPrediction, r.slope, r.intercept).toFixed(3) as unknown as number;
 		});
 
 		avgCpuPredictions = Array<number>(allStepNames.length + 1).fill(0);
 		[...allStepNames, ''].forEach(async (stepName, i) => {
-			const r = await linearRegression(fileSizeData, CpuUsageDataPerStep[stepName].avg);
+			const r = await linearRegression(fileSizeData, CpuCombined[stepName].avg);
 			avgCpuPredictions[i] = predictLinearRegression(valueforPrediction, r.slope, r.intercept).toFixed(3) as unknown as number;
 		});
 		maxMemPredictions = Array<number>(allStepNames.length + 1).fill(0);
 		[...allStepNames, ''].forEach(async (stepName, i) => {
-			const r = await linearRegression(fileSizeData, MemoryUsageDataPerStep[stepName].max);
+			const r = await linearRegression(fileSizeData, MemoryCombined[stepName].max);
 			maxMemPredictions[i] = predictLinearRegression(valueforPrediction, r.slope, r.intercept).toFixed(3) as unknown as number;
 		});
 		avgMemPredictions = Array<number>(allStepNames.length + 1).fill(0);
 		[...allStepNames, ''].forEach(async (stepName, i) => {
-			const r = await linearRegression(fileSizeData, MemoryUsageDataPerStep[stepName].avg);
+			const r = await linearRegression(fileSizeData, MemoryCombined[stepName].avg);
 			avgMemPredictions[i] = predictLinearRegression(valueforPrediction, r.slope, r.intercept).toFixed(3) as unknown as number;
+		});
+
+		durationPredictions = Array<string>(allStepNames.length + 1).fill('');
+		[...allStepNames, ''].forEach(async (stepName, i) => {
+			const r = await linearRegression(fileSizeData, DurationCombined[stepName]);
+			durationPredictions[i] = readable_time(predictLinearRegression(valueforPrediction, r.slope, r.intercept).toFixed(3) as unknown as number);
 		});
 
 		showPredictions = true;
 	};
-	let valueforPrediction = 234;
+	let valueforPrediction = 0;
 	let showPredictions = false;
 	let validFileSizes = true;
 	let maxCpuPredictions: number[];
 	let avgCpuPredictions:number[];
 	let maxMemPredictions: number[];
 	let avgMemPredictions:number[];
+	let durationPredictions:string[];
 </script>
 
 <div class="flex w-full content-center p-10">
@@ -206,6 +218,29 @@
 					</thead>
 					<tbody>
 						<tr>
+							<td>Duration</td>
+							<td>
+								<table class="table">
+									<tbody>
+										{#each allStepNames as name, i}
+											<tr>
+												<td>{name}</td>
+												<td>{durationPredictions[i]}</td>
+											</tr>
+										{/each}
+										<tr>
+											<td class="font-bold">Total</td>
+											<td class="font-bold">{durationPredictions.slice(-1)[0]}</td>
+										</tr>
+									</tbody>
+								</table>
+							</td>
+							<td>
+								-
+							</td>
+						</tr>
+						
+						<tr>
 							<td>CPU Usage</td>
 							<td>
 								<table class="table">
@@ -217,7 +252,7 @@
 											</tr>
 										{/each}
 										<tr>
-											<td class="font-bold">Whole</td>
+											<td class="font-bold">Total</td>
 											<td class="font-bold">{maxCpuPredictions.slice(-1)[0]}</td>
 										</tr>
 									</tbody>
@@ -234,7 +269,7 @@
 											</tr>
 										{/each}
 										<tr>
-											<td class="font-bold">Whole</td>
+											<td class="font-bold">Total</td>
 											<td class="font-bold">{avgCpuPredictions.slice(-1)[0]}</td>
 										</tr>
 									</tbody>
@@ -253,7 +288,7 @@
 											</tr>
 										{/each}
 										<tr>
-											<td class="font-bold">Whole</td>
+											<td class="font-bold">Total</td>
 											<td class="font-bold">{filesize(maxMemPredictions.slice(-1)[0])}</td>
 										</tr>
 									</tbody>
@@ -270,7 +305,7 @@
 											</tr>
 										{/each}
 										<tr>
-											<td class="font-bold">Whole</td>
+											<td class="font-bold">Total</td>
 											<td class="font-bold">{filesize(avgMemPredictions.slice(-1)[0])}</td>
 										</tr>
 									</tbody>

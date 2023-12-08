@@ -12,7 +12,7 @@
 	import { goto } from '$app/navigation';
 	import Timestamp from './timestamp.svelte';
 	import { requestGraphQLClient } from '$lib/graphqlUtils.js';
-	import { time_difference } from '$lib/time_difference.js';
+	import { displayDryRunDuration } from '../../../../utils/resource_utils.js';
 
 	export let data;
 
@@ -95,12 +95,6 @@
 		goto(`/projects/project_id/${dryRunId}/${resource}`);
 	}
 
-	function displayDryRunDuration(status: string, nodes: DryRunMetrics[]) {
-		const firstNode = nodes ? nodes[0] : undefined;
-		if (firstNode && (status == 'Succeeded' || status == 'Failed' || status == 'Error'))
-			return time_difference(firstNode.startedAt, firstNode.finishedAt);
-		return '-';
-	}
 	// to disable onclick propogation for checkbox input
 	const handleCheckboxClick = (event: any) => {
 		event.stopPropagation();

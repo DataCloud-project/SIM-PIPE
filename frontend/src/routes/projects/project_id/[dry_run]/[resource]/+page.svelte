@@ -18,10 +18,11 @@
 	import { CodeBlock } from '@skeletonlabs/skeleton';
 	import { selectedProjectName, selectedDryRunName } from '../../../../../stores/stores';
 	import { filesize } from 'filesize';
-	import { time_difference } from '$lib/time_difference.js';
 	import {
 		getMetricsUsageUtils,
-		getMetricsAnalyticsUtils
+		getMetricsAnalyticsUtils,
+		displayStepDuration
+
 	} from '../../../../../utils/resource_utils';
 	import type { MetricsAnalytics } from '../../../../../utils/resource_utils';
 
@@ -46,26 +47,26 @@
 
 	let pipelineMetricsAnalytics: MetricsAnalytics = {};
 
-	let showMax = false;
+	let showMax = true;
 	const getMetricsResponse = async () => {
 		const dryrun_variables = {
 			dryRunId: data.resource
 		};
 		try {
-			const metrics_response: { dryRun: { nodes: [] } } = await requestGraphQLClient(
+			const response: { dryRun: { nodes: [] } } = await requestGraphQLClient(
 				getDryRunMetricsQuery,
 				dryrun_variables
 			);
-			return metrics_response?.dryRun?.nodes;
+			return response?.dryRun?.nodes;
 		} catch (error) {
 			// internal server error from graphql API when requesting logs for dry runs which has no logs
 			if ((error as Error).message.includes('No logs found:')) {
 				showLogs = false;
-				const metrics_response: { dryRun: { nodes: [] } } = await requestGraphQLClient(
+				const response: { dryRun: { nodes: [] } } = await requestGraphQLClient(
 					getDryRunNoLogsMetricsQuery,
 					dryrun_variables
 				);
-				return metrics_response?.dryRun?.nodes;
+				return response?.dryRun?.nodes;
 			}
 		}
 	};
@@ -98,7 +99,7 @@
 		// set stepsList as nodes
 		$stepsList = dryrun_response.dryRun.nodes;
 		// filter out all nodes which are not of type Pod
-		$stepsList = $stepsList.filter((entry) => entry.type === 'Pod');
+		$stepsList = $stepsList.filter((item) => item.type === 'Pod');
 		dryrun_response.dryRun.nodes.forEach((node: DryRunMetrics) => {
 			dryRunPhases[node.displayName] = node.phase;
 		});
@@ -113,12 +114,13 @@
 				memoryData,
 				networkDataCombined,
 				logs,
-				metrics_response
+				metrics_response as unknown as DryRunMetrics[]
 			);
 			showMax = result.showMax;
 			allStepNames = result.allStepNames;
 			await getMetricsAnalyticsUtils(
 				allStepNames,
+				metrics_response as unknown as DryRunMetrics[],
 				pipelineMetricsAnalytics,
 				cpuData,
 				memoryData,
@@ -281,7 +283,7 @@
 		}
 		return { title: `- entire dry run`, data: wholeData };
 	};
-
+	
 	onMount(async () => {
 		await getDataPromise;
 		buildDiagram();
@@ -305,12 +307,6 @@
 		return result.join('\n');
 	}
 
-	function displayStepDuration(step: DryRunMetrics) {
-		if (step.startedAt && step.finishedAt) {
-			return time_difference(step.startedAt, step.finishedAt);
-		}
-		return '-';
-	}
 </script>
 
 <div class="flex w-full content-center p-10">

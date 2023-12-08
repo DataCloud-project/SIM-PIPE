@@ -1,9 +1,13 @@
-export function time_difference(started: string, finished: string) {
+export function readable_time_difference(started: string, finished: string) {
 	const timeDifferenceMilliseconds = new Date(finished).getTime() - new Date(started).getTime();
+	return readable_time(timeDifferenceMilliseconds);
+}
 
-	const hours = Math.floor(timeDifferenceMilliseconds / (1000 * 60 * 60));
-	const minutes = Math.floor((timeDifferenceMilliseconds % (1000 * 60 * 60)) / (1000 * 60));
-	const seconds = Math.floor((timeDifferenceMilliseconds % (1000 * 60)) / 1000);
+export function readable_time(milliseconds:number) {
+
+	const hours = Math.floor(milliseconds / (1000 * 60 * 60));
+	const minutes = Math.floor((milliseconds % (1000 * 60 * 60)) / (1000 * 60));
+	const seconds = Math.floor((milliseconds % (1000 * 60)) / 1000);
 
 	let timeDifferenceString = '';
 
@@ -18,7 +22,7 @@ export function time_difference(started: string, finished: string) {
 		timeDifferenceString += `${minutes} minute${minutes > 1 ? 's' : ''}`;
 	}
 
-	if (seconds >= 0) {
+	if (seconds > 0) {
 		if (timeDifferenceString) {
 			timeDifferenceString += ' ';
 		}

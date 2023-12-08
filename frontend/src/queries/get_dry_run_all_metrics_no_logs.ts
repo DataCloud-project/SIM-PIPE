@@ -7,7 +7,9 @@ const getDryRunNoLogsMetricsQuery = gql`
 				... on DryRunNodePod {
 					displayName
 					startedAt
+					finishedAt
 					duration
+					type
 					metrics {
 						cpuUsageSecondsTotal {
 							timestamp
