@@ -226,7 +226,8 @@ class Kwok:
         """
         ifile = Path(workflow_file)
         self.workflow = yaml.load(open(ifile), Loader=yaml.FullLoader)
-        self.workflow4kwok = self._modify_workflow_for_kwok(ifile)
+        # self.workflow4kwok = self._modify_workflow_for_kwok(ifile)
+        self.workflow4kwok = self.workflow
 
     def _modify_workflow_for_kwok(self, ifile: Path):
         """
