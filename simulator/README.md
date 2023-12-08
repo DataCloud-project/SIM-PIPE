@@ -26,3 +26,10 @@ Create and run docker image
 docker build -f Dockerfile -t kwoksim .
 docker run -v /var/run/docker.sock:/var/run/docker.sock kwoksim
 ```
+
+# Troubleshooting
+
+## Known issues
+Experienced problems using Rancher desktop. The program did not successfully start required containers.
+Try using Docker desktop
+
