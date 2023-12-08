@@ -9,7 +9,7 @@
 	import { AppShell, AppBar, AppRail, AppRailTile } from '@skeletonlabs/skeleton';
 	import { LightSwitch } from '@skeletonlabs/skeleton';
 
-	import { LockIcon, BookOpenIcon, FileIcon } from 'svelte-feather-icons';
+	import { LockIcon, BookOpenIcon, FileIcon, FolderIcon } from 'svelte-feather-icons';
 	import hljs from 'highlight.js';
 	import 'highlight.js/styles/github-dark.css'; // highlight.js theme
 	import { storeHighlightJs } from '@skeletonlabs/skeleton';
@@ -69,6 +69,7 @@
 		<AppRail>
 			<AppRailTile label="Projects" href="/projects"><BookOpenIcon size="1.5x" /></AppRailTile>
 			<AppRailTile label="Registry Key Vault" href="/secrets"><LockIcon size="1.5x" /></AppRailTile>
+			<AppRailTile label="Artifacts" href="/artifacts"><FolderIcon size="1.5x" /></AppRailTile>
 			<!-- TO DO: temporary redirect to sftp go web interface; will be replaced by files manager when api is ready -->
 			<AppRailTile label="Sample Files" href={generateServiceUrl()}
 				><FileIcon size="1.5x" /></AppRailTile
