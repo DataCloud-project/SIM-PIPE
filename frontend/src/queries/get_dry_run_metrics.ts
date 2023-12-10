@@ -7,6 +7,8 @@ const getDryRunMetricsQuery = gql`
 				... on DryRunNodePod {
 					displayName
 					startedAt
+					finishedAt
+					type
 					duration
 					log
 					metrics {

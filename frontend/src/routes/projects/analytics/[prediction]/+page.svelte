@@ -95,7 +95,8 @@
 					getDryRunInputFilesizeQuery,
 					{ dryRunId }
 				);				
-				return Number(response.dryRun.argoWorkflow.metadata.annotations.size);
+				// return Number(response.dryRun.argoWorkflow.metadata.annotations.size);
+				return Number(response.dryRun.argoWorkflow.metadata.annotations.filesize);
 			} catch (error) {
 				// throw new Error(`Problem reading input filesizes for dry run - ${dryRunId}`);
 				validFileSizes = false;
@@ -138,8 +139,6 @@
 			});
 		});		
 		const fileSizeData = await Promise.all(fileSizeDataPromise) as number[];
-		console.log('filesize stored in metadata annotations')
-		console.log(fileSizeData)
 
 		// make predictions with the combined resource values of all selected dry runs
 		maxCpuPredictions = Array<number>(allStepNames.length + 1).fill(0);
@@ -167,12 +166,11 @@
 		durationPredictions = Array<string>(allStepNames.length + 1).fill('');
 		[...allStepNames, ''].forEach(async (stepName, i) => {
 			const r = await linearRegression(fileSizeData, DurationCombined[stepName]);
-			durationPredictions[i] = readable_time(predictLinearRegression(valueforPrediction, r.slope, r.intercept).toFixed(3) as unknown as number);
+			durationPredictions[i] = readable_time(predictLinearRegression(valueforPrediction, r.slope, r.intercept)*1000 as unknown as number);
 		});
-
 		showPredictions = true;
 	};
-	let valueforPrediction = 0;
+	let valueforPrediction:number;
 	let showPredictions = false;
 	let validFileSizes = true;
 	let maxCpuPredictions: number[];
@@ -182,29 +180,29 @@
 	let durationPredictions:string[];
 </script>
 
-<div class="flex w-full content-center p-10">
+<div class="p-10">
 	<div class="table-container">
-		<h1 STYLE="font-size:28px">
-			Estimations
-			<span STYLE="font-size:28px">based on dryruns {dryruns_for_prediction} </span>
+
+		<h1 class="flex justify-between items-center" STYLE="font-size:24px">
+			Estimations based on dryruns {dryruns_for_prediction.join(', ')}
+			<span>
+				<button type="button" class="justify-end btn btn-sm variant-filled" on:click={() => goto(`/projects/project_id/${$selectedProject?.id}`)}>
+					<span>Back to dry runs</span>
+				</button>
+		</span>
 		</h1>
 		<br/>
 
 		{#if validFileSizes} 
 			<h1 STYLE="font-size:20px">
 				Input filesize for prediction:
-				<span><input bind:value={valueforPrediction} placeholder="enter in bytes" /> </span>
+				<span><input bind:value={valueforPrediction} placeholder="Enter in bytes" /> 
+					<button type="button" class="btn btn-sm variant-filled" on:click={getPredictionDetails}>
+						<span>Predict</span>
+					</button>
+			</span>
 			</h1>
-			<br/>
-			<div class="flex justify-between">
-				<div class="flex flex-row justify-end p-5 space-x-1">
-					<div>
-						<button type="button" class="btn btn-sm variant-filled" on:click={getPredictionDetails}>
-							<span>Predict</span>
-						</button>
-					</div>
-				</div>
-			</div>			
+			<br/>			
 			
 			<br/>
 			{#if showPredictions}				

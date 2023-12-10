@@ -424,12 +424,15 @@
 
 									<tr>
 										<td>{key}</td>
+										{#if pipelineMetricsAnalytics[selectedStep][key]?.max != -1}
 										{#if key == 'CPU'}
 											<td
-												>{(
+												>
+												{(
 													pipelineMetricsAnalytics[selectedStep][key].avg / allStepNames.length
 												).toFixed(3)} %, {pipelineMetricsAnalytics[selectedStep][key].max.toFixed(3)}
-												%</td
+												%
+												</td
 											>
 										<!-- for eslint -->
 										{:else if key == 'Memory' || key == 'Network_received' || key == 'Network_transferred'}
@@ -438,6 +441,11 @@
 													pipelineMetricsAnalytics[selectedStep][key].avg / allStepNames.length
 												)}, {filesize(pipelineMetricsAnalytics[selectedStep][key].max)}</td
 											>											
+											{:else if key == 'Duration'}
+												<td> {pipelineMetricsAnalytics[selectedStep][key]}</td>											
+										{/if}
+										{:else}
+											<td> NA </td>
 										{/if}
 									</tr>
 								{/each}

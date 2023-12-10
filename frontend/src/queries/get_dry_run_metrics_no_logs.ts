@@ -8,6 +8,8 @@ const getDryRunNoLogsMetricsQuery = gql`
 					displayName
 					startedAt
 					duration
+					finishedAt
+					type
 					metrics {
 						cpuUsageSecondsTotal {
 							timestamp

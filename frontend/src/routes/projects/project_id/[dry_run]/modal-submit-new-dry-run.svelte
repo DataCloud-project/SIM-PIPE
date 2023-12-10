@@ -5,7 +5,6 @@
 	import createDryRunMutation from '../../../../queries/create_dry_run.js';
 	import allDryRunsQuery from '../../../../queries/get_all_dryruns.js';
 	import type { Project, Template, Task } from '../../../../types.js';
-	// import { FileUploadType } from '../../../../types.js';
 	import refreshProjectDetails from '../../../../lib/refresh_runs.js';
 	import { requestGraphQLClient } from '$lib/graphqlUtils.js';
 
@@ -20,6 +19,7 @@
 		name: '',
 		files: [],
 		s3Key: '',
+		filesize: '',
 		dagTemplate: { dag: { tasks: [] } }
 	};
 
@@ -108,12 +108,12 @@
 		newWorkflowTemplate.metadata =
 			formData.name == ''
 				? { generateName: newWorkflowTemplate.metadata.generateName,
-					// filesizes: {'name': 'file1', 'size': 100}
-					// annotations: {'file1': '100'}
 				}
 				: { generateName: formData.name,
 				 };		
 		newWorkflowTemplate.metadata.annotations = dryRunsInputFilesizes;	
+		// TODO: current fix is to have the user enter the input filesize manually
+		newWorkflowTemplate.metadata.annotations = {"filesize" : formData.filesize};	
 		return newWorkflowTemplate;
 	}
 
@@ -197,11 +197,11 @@
 					<div class="ml-5">
 						<!-- svelte-ignore a11y-label-has-associated-control -->
 						<label><b>{i + 1}. {task.name}</b></label>
-						<label
+						<!-- <label
 							>Template: <span>
 								<input class="variant-soft-surface" type="text" value={task.template} readonly />
 							</span></label
-						>
+						> -->
 						{#if task.dependencies}
 							<label
 								>Dependencies: <span>
@@ -222,8 +222,8 @@
 								{#each input_artifacts[task.name].inputs.artifacts || [] as artifact, k}
 									<!-- svelte-ignore a11y-label-has-associated-control -->
 									<label>
-										{artifact.name}
 										<span>
+										{artifact.name}
 											<input class="input" type="file" bind:files={formData.files[k]} />
 										</span>
 									</label>
@@ -243,7 +243,12 @@
 									<br />
 								{/each}
 							{/if}
-
+							<label>
+								Enter total input file size in bytes: 
+								<span>
+									<input class="input" type="text" bind:value={formData.filesize} />
+								</span>
+							</label>
 						{/if}
 						{#each taskList[i].arguments?.parameters || [] as param, j}
 							<!-- svelte-ignore a11y-label-has-associated-control -->
