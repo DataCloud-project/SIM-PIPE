@@ -55,7 +55,7 @@
 		modalStore.close();
 		modalStore.clear();
 		const files = formData.files as unknown as FileList;
-		const template_text = await files[0]?.text();
+		const template_text = await files?.[0]?.text();
 		if (template_text != '') {
 			let template: JSON;
 			// check if template is in JSON/YAML format, if YAML convert to JSON
@@ -83,7 +83,7 @@
 </script>
 
 <!-- {#if $modalStore[0]} -->
-{#if !hideModal}
+{#if !hideModal && $modalStore[0]}
 	<div class="modal-example-form {cBase}">
 		<header class={cHeader}>{$modalStore[0].title ?? '(title missing)'}</header>
 		<article>{$modalStore[0].body ?? '(body missing)'}</article>

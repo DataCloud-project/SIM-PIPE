@@ -127,6 +127,7 @@ export async function getMetricsUsageUtils(
 			}
 		}	
 	);
+	
 	return { showMax, allStepNames };
 }
 export async function getMetricsUsageUtils1(
@@ -249,7 +250,6 @@ export async function getMetricsAnalyticsUtils(
 	memoryData: { [x: string]: { x: string[]; y: number[]; type: string; name: string } },
 	networkDataCombined: { [x: string]: { x: string[]; y: number[]; type: string; name: string }[] }
 ): Promise<void> {
-	pipelineMetricsAnalytics[''] = initMaxResourcePerStep();	
 	allStepNames.forEach((name) => {
 		pipelineMetricsAnalytics[name] = initMaxResourcePerStep();
 
@@ -280,22 +280,24 @@ export async function getMetricsAnalyticsUtils(
 		}
 	});
 
+	// calculate for total dry run
+	pipelineMetricsAnalytics['Total'] = initMaxResourcePerStep();
 	let allValues = allStepNames.flatMap(name => cpuData[name].y);
-	pipelineMetricsAnalytics[''].CPU.max = Math.max(...allValues);
-	pipelineMetricsAnalytics[''].CPU.avg += calculateMean(allValues);
+	pipelineMetricsAnalytics['Total'].CPU.max = Math.max(...allValues);
+	pipelineMetricsAnalytics['Total'].CPU.avg += calculateMean(allValues);
 	allValues = allStepNames.flatMap(name => memoryData[name].y);
-	pipelineMetricsAnalytics[''].Memory.max = Math.max(...allValues);
-	pipelineMetricsAnalytics[''].Memory.avg += calculateMean(allValues);
+	pipelineMetricsAnalytics['Total'].Memory.max = Math.max(...allValues);
+	pipelineMetricsAnalytics['Total'].Memory.avg += calculateMean(allValues);
 	allValues = allStepNames.flatMap(name => networkDataCombined[name][0].y);
-	pipelineMetricsAnalytics[''].Network_received.max = Math.max(...allValues);
-	pipelineMetricsAnalytics[''].Network_received.avg += calculateMean(allValues);
+	pipelineMetricsAnalytics['Total'].Network_received.max = Math.max(...allValues);
+	pipelineMetricsAnalytics['Total'].Network_received.avg += calculateMean(allValues);
 	allValues = allStepNames.flatMap(name => networkDataCombined[name][1].y);
-	pipelineMetricsAnalytics[''].Network_transferred.max = Math.max(...allValues);
-	pipelineMetricsAnalytics[''].Network_transferred.avg += calculateMean(allValues);
+	pipelineMetricsAnalytics['Total'].Network_transferred.max = Math.max(...allValues);
+	pipelineMetricsAnalytics['Total'].Network_transferred.avg += calculateMean(allValues);
 
 	metrics.filter((item) => item.type === 'Pod').forEach((step) => {
 		pipelineMetricsAnalytics[step.displayName].Duration = step.duration;
 	});
-	pipelineMetricsAnalytics[''].Duration = (new Date(metrics[allStepNames.length].finishedAt).getTime() - new Date(metrics[1].startedAt).getTime())/1000;
+	pipelineMetricsAnalytics['Total'].Duration = (new Date(metrics[allStepNames.length].finishedAt).getTime() - new Date(metrics[1].startedAt).getTime())/1000;
 	delete pipelineMetricsAnalytics['undefined'];
 }

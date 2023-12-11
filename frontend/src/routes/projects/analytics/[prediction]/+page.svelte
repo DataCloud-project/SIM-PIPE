@@ -12,6 +12,7 @@
 	import getDryRunInputFilesizeQuery from '../../../../queries/get_dry_run_phase_results copy.js';
 	import { requestGraphQLClient } from '$lib/graphqlUtils';
 	import { readable_time } from '$lib/time_difference.js';
+	import { cForm } from '../../../../styles/styles.js';
 
 	export let data;
 
@@ -115,13 +116,13 @@
 		});
 		
 		// store combined resource usage for selected dry runs 
-		const CpuCombined: Record<string, { max: number[], avg: number[] }> = [...allStepNames, ''].reduce((acc, stepName) => ({ ...acc, [stepName]: { max: [], avg: [] } }), {});
-		const MemoryCombined: Record<string, { max: number[], avg: number[] }> = [...allStepNames, ''].reduce((acc, stepName) => ({ ...acc, [stepName]: { max: [], avg: [] } }), {});
-		const DurationCombined: { [key: string]: number[] } = Object.fromEntries([...allStepNames, ''].map(name => [name, []]));
+		const CpuCombined: Record<string, { max: number[], avg: number[] }> = [...allStepNames, 'Total'].reduce((acc, stepName) => ({ ...acc, [stepName]: { max: [], avg: [] } }), {});
+		const MemoryCombined: Record<string, { max: number[], avg: number[] }> = [...allStepNames, 'Total'].reduce((acc, stepName) => ({ ...acc, [stepName]: { max: [], avg: [] } }), {});
+		const DurationCombined: { [key: string]: number[] } = Object.fromEntries([...allStepNames, 'Total'].map(name => [name, []]));
 
 		// combine resource values for the selected dry runs
 		dryruns_for_prediction.forEach((dryrunId) => {
-			[...allStepNames, ''].forEach((stepName) => {
+			[...allStepNames, 'Total'].forEach((stepName) => {
 				const maxCpuUsage = collectedMetrics[dryrunId][stepName]?.CPU.max;
 				const avgCpuUsage = collectedMetrics[dryrunId][stepName]?.CPU.avg;
 				const maxMemoryUsage = collectedMetrics[dryrunId][stepName]?.Memory.max;
@@ -142,29 +143,29 @@
 
 		// make predictions with the combined resource values of all selected dry runs
 		maxCpuPredictions = Array<number>(allStepNames.length + 1).fill(0);
-		[...allStepNames, ''].forEach(async (stepName, i) => {
+		[...allStepNames, 'Total'].forEach(async (stepName, i) => {
 			const r = await linearRegression(fileSizeData, CpuCombined[stepName].max);
 			maxCpuPredictions[i] = predictLinearRegression(valueforPrediction, r.slope, r.intercept).toFixed(3) as unknown as number;
 		});
 
 		avgCpuPredictions = Array<number>(allStepNames.length + 1).fill(0);
-		[...allStepNames, ''].forEach(async (stepName, i) => {
+		[...allStepNames, 'Total'].forEach(async (stepName, i) => {
 			const r = await linearRegression(fileSizeData, CpuCombined[stepName].avg);
 			avgCpuPredictions[i] = predictLinearRegression(valueforPrediction, r.slope, r.intercept).toFixed(3) as unknown as number;
 		});
 		maxMemPredictions = Array<number>(allStepNames.length + 1).fill(0);
-		[...allStepNames, ''].forEach(async (stepName, i) => {
+		[...allStepNames, 'Total'].forEach(async (stepName, i) => {
 			const r = await linearRegression(fileSizeData, MemoryCombined[stepName].max);
 			maxMemPredictions[i] = predictLinearRegression(valueforPrediction, r.slope, r.intercept).toFixed(3) as unknown as number;
 		});
 		avgMemPredictions = Array<number>(allStepNames.length + 1).fill(0);
-		[...allStepNames, ''].forEach(async (stepName, i) => {
+		[...allStepNames, 'Total'].forEach(async (stepName, i) => {
 			const r = await linearRegression(fileSizeData, MemoryCombined[stepName].avg);
 			avgMemPredictions[i] = predictLinearRegression(valueforPrediction, r.slope, r.intercept).toFixed(3) as unknown as number;
 		});
 
 		durationPredictions = Array<string>(allStepNames.length + 1).fill('');
-		[...allStepNames, ''].forEach(async (stepName, i) => {
+		[...allStepNames, 'Total'].forEach(async (stepName, i) => {
 			const r = await linearRegression(fileSizeData, DurationCombined[stepName]);
 			durationPredictions[i] = readable_time(predictLinearRegression(valueforPrediction, r.slope, r.intercept)*1000 as unknown as number);
 		});
@@ -194,14 +195,21 @@
 		<br/>
 
 		{#if validFileSizes} 
-			<h1 STYLE="font-size:20px">
-				Input filesize for prediction:
-				<span><input bind:value={valueforPrediction} placeholder="Enter in bytes" /> 
-					<button type="button" class="btn btn-sm variant-filled" on:click={getPredictionDetails}>
-						<span>Predict</span>
-					</button>
-			</span>
-			</h1>
+		<form class="modal-form {cForm}">
+			<label class="label">
+			<span>Input filesize for prediction</span>
+				<div class="flex w-half">
+					<input
+						class="input"
+						type="text"
+						bind:value={valueforPrediction}
+						placeholder="Enter name..."
+					/>
+			</label>
+			<button type="button" class="btn btn-sm variant-filled" on:click={getPredictionDetails}>
+				<span>Predict</span>
+			</button>
+		</form>
 			<br/>			
 			
 			<br/>

@@ -28,7 +28,7 @@
 
 	export let data;
 	let workflow: { workflowTemplates: { argoWorkflowTemplate: { spec: { templates: any[] } } }[] };
-	let selectStepName = '';
+	let selectStepName = 'Total';
 	let dryRunPhases: { [x: string]: string } = {};
 	const graphOrientation = 'LR';
 
@@ -240,7 +240,7 @@
 	}
 
 	$: getLogs = () => {
-		if (selectedStep != '') {
+		if (selectedStep != 'Total') {
 			return [selectedStep];
 		}
 		return allStepNames;
@@ -270,7 +270,7 @@
 				});
 			});
 		}
-		if (selectedStep != '') {
+		if (selectedStep != 'Total') {
 			if (resource == 'network')
 				return {
 					title: `${selectedStep}`,
@@ -292,7 +292,7 @@
 	$: reactiveStepsList = $stepsList;
 
 	function gotoOverview() {
-		selectedStep = '';
+		selectedStep = 'Total';
 	}
 
 	function getPartLogs(stepName: string, nmaxlinelength: number) {
@@ -323,7 +323,7 @@
 				</button>
 				<span STYLE="font-size:14px">/ </span>
 				<button on:click={() => gotoOverview()}>{data.resource} </button>
-				{#if selectStepName != ''}
+				{#if selectStepName != 'Total'}
 					<span STYLE="font-size:14px">/ </span>{selectStepName}
 				{/if}
 				<button
@@ -424,13 +424,10 @@
 
 									<tr>
 										<td>{key}</td>
-										{#if pipelineMetricsAnalytics[selectedStep][key]?.max != -1}
 										{#if key == 'CPU'}
-											<td
-												>
-												{(
-													pipelineMetricsAnalytics[selectedStep][key].avg / allStepNames.length
-												).toFixed(3)} %, {pipelineMetricsAnalytics[selectedStep][key].max.toFixed(3)}
+											<td>
+												{(pipelineMetricsAnalytics[selectedStep][key].avg).toFixed(3)} %, 
+												{pipelineMetricsAnalytics[selectedStep][key].max.toFixed(3)}
 												%
 												</td
 											>
@@ -438,16 +435,14 @@
 										{:else if key == 'Memory' || key == 'Network_received' || key == 'Network_transferred'}
 											<td
 												>{filesize(
-													pipelineMetricsAnalytics[selectedStep][key].avg / allStepNames.length
-												)}, {filesize(pipelineMetricsAnalytics[selectedStep][key].max)}</td
+													pipelineMetricsAnalytics[selectedStep][key].avg)}, 
+													{filesize(pipelineMetricsAnalytics[selectedStep][key].max)}</td
 											>											
 											{:else if key == 'Duration'}
 												<td> {pipelineMetricsAnalytics[selectedStep][key]}</td>											
 										{/if}
-										{:else}
-											<td> NA </td>
-										{/if}
 									</tr>
+									
 								{/each}
 							</tbody>
 						</table>
