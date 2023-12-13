@@ -31,6 +31,9 @@ controller:
     endpoint: http://simpipe-argo-workflows-server:2746/
   prometheus:
     serverUrl: http://prometheus-operated:9090
+  nodeEnv: development
+  oauth2:
+    issuerEndpoint: ""
 
   serviceAccount:
     # Annotations to add to the service account
