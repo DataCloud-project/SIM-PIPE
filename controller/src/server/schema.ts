@@ -31,6 +31,19 @@ export type Scalars = {
   TimeStamp: { input: number; output: number; }
 };
 
+/**  Contains information about files produced during a dry run execution  */
+export type Artifact = {
+  __typename?: 'Artifact';
+  /**  The artifact path  */
+  key?: Maybe<Scalars['String']['output']>;
+  /**  The artifact name  */
+  name: Scalars['String']['output'];
+  /**  The artifact size  */
+  size?: Maybe<Scalars['Int']['output']>;
+  /**  URL to download the artifact using an HTTP GET. */
+  url?: Maybe<Scalars['String']['output']>;
+};
+
 /**  The input data to create a new dry run  */
 export type CreateDryRunInput = {
   /**
@@ -137,17 +150,6 @@ export type DryRunNode = {
   templateName?: Maybe<Scalars['String']['output']>;
   /**  The type of the node  */
   type: DryRunNodeType;
-};
-
-/**  Contains information about files produced during a dry run execution  */
-export type DryRunNodeArtifact = {
-  __typename?: 'DryRunNodeArtifact';
-  /**  The artifact path  */
-  key?: Maybe<Scalars['String']['output']>;
-  /**  The artifact name  */
-  name: Scalars['String']['output'];
-  /**  URL to download the artifact using an HTTP GET. */
-  url?: Maybe<Scalars['String']['output']>;
 };
 
 /**  Prometheus metrics for the node.  */
@@ -569,14 +571,14 @@ export type DryRunNodePod = DryRunNode & {
   finishedAt?: Maybe<Scalars['String']['output']>;
   id: Scalars['String']['output'];
   /**  Input artifacts of the node.  */
-  inputArtifacts?: Maybe<Array<DryRunNodeArtifact>>;
+  inputArtifacts?: Maybe<Array<Artifact>>;
   /**  The logs of the node.  */
   log?: Maybe<Array<Scalars['String']['output']>>;
   /**  The name of the pod.  */
   metrics: DryRunNodeMetrics;
   name: Scalars['String']['output'];
   /**  Output artifacts of the node.  */
-  outputArtifacts?: Maybe<Array<DryRunNodeArtifact>>;
+  outputArtifacts?: Maybe<Array<Artifact>>;
   phase: DryRunNodePhase;
   /**  The name of the pod.  */
   podName: Scalars['String']['output'];
@@ -823,6 +825,8 @@ export type PrometheusSample = {
 
 export type Query = {
   __typename?: 'Query';
+  /**  List of all the artifacts  */
+  artifacts: Array<Artifact>;
   /**  List of all docker registry credentials  */
   dockerRegistryCredentials: Array<DockerRegistryCredential>;
   /**  Get a dry run by ID  */
@@ -952,6 +956,7 @@ export type ResolversInterfaceTypes<RefType extends Record<string, unknown>> = {
 export type ResolversTypes = {
   ArgoWorkflow: ResolverTypeWrapper<Scalars['ArgoWorkflow']['output']>;
   ArgoWorkflowTemplate: ResolverTypeWrapper<Scalars['ArgoWorkflowTemplate']['output']>;
+  Artifact: ResolverTypeWrapper<Artifact>;
   Boolean: ResolverTypeWrapper<Scalars['Boolean']['output']>;
   CreateDryRunInput: CreateDryRunInput;
   CreateProjectInput: CreateProjectInput;
@@ -960,7 +965,6 @@ export type ResolversTypes = {
   DockerRegistryCredentialInput: DockerRegistryCredentialInput;
   DryRun: ResolverTypeWrapper<DryRun>;
   DryRunNode: ResolverTypeWrapper<ResolversInterfaceTypes<ResolversTypes>['DryRunNode']>;
-  DryRunNodeArtifact: ResolverTypeWrapper<DryRunNodeArtifact>;
   DryRunNodeMetrics: ResolverTypeWrapper<DryRunNodeMetrics>;
   DryRunNodeMisc: ResolverTypeWrapper<DryRunNodeMisc>;
   DryRunNodePhase: DryRunNodePhase;
@@ -985,6 +989,7 @@ export type ResolversTypes = {
 export type ResolversParentTypes = {
   ArgoWorkflow: Scalars['ArgoWorkflow']['output'];
   ArgoWorkflowTemplate: Scalars['ArgoWorkflowTemplate']['output'];
+  Artifact: Artifact;
   Boolean: Scalars['Boolean']['output'];
   CreateDryRunInput: CreateDryRunInput;
   CreateProjectInput: CreateProjectInput;
@@ -993,7 +998,6 @@ export type ResolversParentTypes = {
   DockerRegistryCredentialInput: DockerRegistryCredentialInput;
   DryRun: DryRun;
   DryRunNode: ResolversInterfaceTypes<ResolversParentTypes>['DryRunNode'];
-  DryRunNodeArtifact: DryRunNodeArtifact;
   DryRunNodeMetrics: DryRunNodeMetrics;
   DryRunNodeMisc: DryRunNodeMisc;
   DryRunNodePod: DryRunNodePod;
@@ -1018,6 +1022,14 @@ export interface ArgoWorkflowScalarConfig extends GraphQLScalarTypeConfig<Resolv
 export interface ArgoWorkflowTemplateScalarConfig extends GraphQLScalarTypeConfig<ResolversTypes['ArgoWorkflowTemplate'], any> {
   name: 'ArgoWorkflowTemplate';
 }
+
+export type ArtifactResolvers<ContextType = any, ParentType extends ResolversParentTypes['Artifact'] = ResolversParentTypes['Artifact']> = {
+  key?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  size?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
+  url?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
 
 export type DockerRegistryCredentialResolvers<ContextType = any, ParentType extends ResolversParentTypes['DockerRegistryCredential'] = ResolversParentTypes['DockerRegistryCredential']> = {
   name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
@@ -1050,13 +1062,6 @@ export type DryRunNodeResolvers<ContextType = any, ParentType extends ResolversP
   startedAt?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   templateName?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   type?: Resolver<ResolversTypes['DryRunNodeType'], ParentType, ContextType>;
-};
-
-export type DryRunNodeArtifactResolvers<ContextType = any, ParentType extends ResolversParentTypes['DryRunNodeArtifact'] = ResolversParentTypes['DryRunNodeArtifact']> = {
-  key?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  url?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
 export type DryRunNodeMetricsResolvers<ContextType = any, ParentType extends ResolversParentTypes['DryRunNodeMetrics'] = ResolversParentTypes['DryRunNodeMetrics']> = {
@@ -1126,11 +1131,11 @@ export type DryRunNodePodResolvers<ContextType = any, ParentType extends Resolve
   exitCode?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   finishedAt?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   id?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  inputArtifacts?: Resolver<Maybe<Array<ResolversTypes['DryRunNodeArtifact']>>, ParentType, ContextType>;
+  inputArtifacts?: Resolver<Maybe<Array<ResolversTypes['Artifact']>>, ParentType, ContextType>;
   log?: Resolver<Maybe<Array<ResolversTypes['String']>>, ParentType, ContextType, Partial<DryRunNodePodLogArgs>>;
   metrics?: Resolver<ResolversTypes['DryRunNodeMetrics'], ParentType, ContextType>;
   name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  outputArtifacts?: Resolver<Maybe<Array<ResolversTypes['DryRunNodeArtifact']>>, ParentType, ContextType>;
+  outputArtifacts?: Resolver<Maybe<Array<ResolversTypes['Artifact']>>, ParentType, ContextType>;
   phase?: Resolver<ResolversTypes['DryRunNodePhase'], ParentType, ContextType>;
   podName?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   progress?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
@@ -1199,6 +1204,7 @@ export interface PrometheusStringNumberScalarConfig extends GraphQLScalarTypeCon
 }
 
 export type QueryResolvers<ContextType = any, ParentType extends ResolversParentTypes['Query'] = ResolversParentTypes['Query']> = {
+  artifacts?: Resolver<Array<ResolversTypes['Artifact']>, ParentType, ContextType>;
   dockerRegistryCredentials?: Resolver<Array<ResolversTypes['DockerRegistryCredential']>, ParentType, ContextType>;
   dryRun?: Resolver<ResolversTypes['DryRun'], ParentType, ContextType, RequireFields<QueryDryRunArgs, 'dryRunId'>>;
   ping?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
@@ -1222,10 +1228,10 @@ export type WorkflowTemplateResolvers<ContextType = any, ParentType extends Reso
 export type Resolvers<ContextType = any> = {
   ArgoWorkflow?: GraphQLScalarType;
   ArgoWorkflowTemplate?: GraphQLScalarType;
+  Artifact?: ArtifactResolvers<ContextType>;
   DockerRegistryCredential?: DockerRegistryCredentialResolvers<ContextType>;
   DryRun?: DryRunResolvers<ContextType>;
   DryRunNode?: DryRunNodeResolvers<ContextType>;
-  DryRunNodeArtifact?: DryRunNodeArtifactResolvers<ContextType>;
   DryRunNodeMetrics?: DryRunNodeMetricsResolvers<ContextType>;
   DryRunNodeMisc?: DryRunNodeMiscResolvers<ContextType>;
   DryRunNodePod?: DryRunNodePodResolvers<ContextType>;
