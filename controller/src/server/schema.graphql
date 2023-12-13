@@ -39,6 +39,9 @@ type Query {
   workflowTemplate(
     """ Name of the Argo workflow template to be fetched """
     name: String!): WorkflowTemplate @auth
+
+  """ List of all the artifacts """
+  artifacts: [Artifact!]! @auth
 }
 
 """ Project is the high level concept for a specific pipeline in SIM-PIPE. It contains all the previous dry runs of the pipeline and its results. """
@@ -229,10 +232,10 @@ type DryRunNodePod implements DryRunNode {
   log(maxLines: Int, grep: String, sinceSeconds: Int, sinceTime: Int): [String!]
 
   """ Input artifacts of the node. """
-  inputArtifacts: [DryRunNodeArtifact!]
+  inputArtifacts: [Artifact!]
 
   """ Output artifacts of the node. """
-  outputArtifacts: [DryRunNodeArtifact!]
+  outputArtifacts: [Artifact!]
 }
 
 type DryRunNodeMisc implements DryRunNode {
@@ -301,13 +304,15 @@ type DryRunNodeMetrics {
 }
 
 """ Contains information about files produced during a dry run execution """
-type DryRunNodeArtifact {
+type Artifact {
   """ The artifact name """
   name: String!
   """ The artifact path """
   key: String
   """ URL to download the artifact using an HTTP GET."""
   url: String
+  """ The artifact size """
+  size: Int
 }
 
 """
