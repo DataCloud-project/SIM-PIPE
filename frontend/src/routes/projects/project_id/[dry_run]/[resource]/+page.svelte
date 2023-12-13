@@ -297,14 +297,10 @@
 
 	function getPartLogs(stepName: string, nmaxlinelength: number) {
 		let steplogs = logs[stepName];
-		let result = [];
-		for (let i = 0; i < steplogs.length; i++) {
-			if (steplogs[i].length > nmaxlinelength)
-				result.push(steplogs[i].slice(0, nmaxlinelength) + '...');
-			else result.push(steplogs[i]);
-			result.push();
-		}
-		return result.join('\n');
+		if(steplogs.length < nmaxlinelength)
+			return steplogs;
+		else 
+			return steplogs.slice(0, nmaxlinelength) + '...';		
 	}
 
 </script>
