@@ -9,7 +9,7 @@
 	import { selectedProject } from '../../../../stores/stores.js';
 	import { goto } from '$app/navigation';
 	import { filesize } from 'filesize';
-	import getDryRunInputFilesizeQuery from '../../../../queries/get_dry_run_phase_results copy.js';
+	import getDryRunInputFilesizeQuery from '../../../../queries/get_dry_run_input_filesizes.js';
 	import { requestGraphQLClient } from '$lib/graphqlUtils';
 	import { readable_time } from '$lib/time_difference.js';
 	import { cForm } from '../../../../styles/styles.js';
@@ -92,11 +92,20 @@
 		// read and store filesizes stored in the annotations in argoworkflows of the selected dryruns
 		const fileSizeDataPromise = dryruns_for_prediction.map(async (dryRunId) => { 		
 			try {
-				const response: { dryRun: { argoWorkflow: {metadata: {annotations: any }} }} = await requestGraphQLClient(
+				const response: { dryRun: {
+					nodes: any;
+					project: any; argoWorkflow: {metadata: {annotations: any }} 
+				}} = await requestGraphQLClient(
 					getDryRunInputFilesizeQuery,
 					{ dryRunId }
-				);				
+				);		
+				if(!$selectedProject) 
+					$selectedProject = response.dryRun.project.id;	
 				// return Number(response.dryRun.argoWorkflow.metadata.annotations.size);
+				console.log('response.dryRun.argoWorkflow.metadata.annotations.initial_Task_name')
+				console.log(response.dryRun.argoWorkflow.metadata.annotations.initial_task_name)
+				console.log(response.dryRun.nodes)
+
 				return Number(response.dryRun.argoWorkflow.metadata.annotations.filesize);
 			} catch (error) {
 				// throw new Error(`Problem reading input filesizes for dry run - ${dryRunId}`);
