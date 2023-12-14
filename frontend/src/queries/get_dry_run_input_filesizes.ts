@@ -8,12 +8,12 @@ const getDryRunInputFilesizeQuery = gql`
 				id
 			}
 			nodes {
-			... on DryRunNodePod {
-				inputArtifacts {
-					name
-					size
+				... on DryRunNodePod {
+					inputArtifacts {
+						name
+						size
+					}
 				}
-			}
 			}
 		}
 	}

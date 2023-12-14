@@ -22,7 +22,6 @@
 		getMetricsUsageUtils,
 		getMetricsAnalyticsUtils,
 		displayStepDuration
-
 	} from '../../../../../utils/resource_utils';
 	import type { MetricsAnalytics } from '../../../../../utils/resource_utils';
 
@@ -105,27 +104,27 @@
 		});
 
 		const metrics_response = await getMetricsResponse();
-		
+
 		selectedProjectName.set;
-			workflow = workflow_response;
-			const result = await getMetricsUsageUtils(
-				showMax,
-				cpuData,
-				memoryData,
-				networkDataCombined,
-				logs,
-				metrics_response as unknown as DryRunMetrics[]
-			);
-			showMax = result.showMax;
-			allStepNames = result.allStepNames;
-			await getMetricsAnalyticsUtils(
-				allStepNames,
-				metrics_response as unknown as DryRunMetrics[],
-				pipelineMetricsAnalytics,
-				cpuData,
-				memoryData,
-				networkDataCombined
-			);
+		workflow = workflow_response;
+		const result = await getMetricsUsageUtils(
+			showMax,
+			cpuData,
+			memoryData,
+			networkDataCombined,
+			logs,
+			metrics_response as unknown as DryRunMetrics[]
+		);
+		showMax = result.showMax;
+		allStepNames = result.allStepNames;
+		await getMetricsAnalyticsUtils(
+			allStepNames,
+			metrics_response as unknown as DryRunMetrics[],
+			pipelineMetricsAnalytics,
+			cpuData,
+			memoryData,
+			networkDataCombined
+		);
 		const responses = {
 			workflow: workflow_response,
 			dryrun: dryrun_response,
@@ -142,7 +141,7 @@
 		return word;
 	}
 
-	let allStepNames: string[] = [];	
+	let allStepNames: string[] = [];
 
 	function generateRandomString() {
 		let result = '';
@@ -283,7 +282,7 @@
 		}
 		return { title: `- entire dry run`, data: wholeData };
 	};
-	
+
 	onMount(async () => {
 		await getDataPromise;
 		buildDiagram();
@@ -297,12 +296,9 @@
 
 	function getPartLogs(stepName: string, nmaxlinelength: number) {
 		let steplogs = logs[stepName];
-		if(steplogs.length < nmaxlinelength)
-			return steplogs;
-		else 
-			return steplogs.slice(0, nmaxlinelength) + '...';		
+		if (steplogs.length < nmaxlinelength) return steplogs;
+		else return steplogs.slice(0, nmaxlinelength) + '...';
 	}
-
 </script>
 
 <div class="flex w-full content-center p-10">
@@ -417,28 +413,24 @@
 							</thead>
 							<tbody>
 								{#each Object.keys(pipelineMetricsAnalytics[selectedStep]) as key}
-
 									<tr>
 										<td>{key}</td>
 										{#if key == 'CPU'}
 											<td>
-												{(pipelineMetricsAnalytics[selectedStep][key].avg).toFixed(3)} %, 
+												{pipelineMetricsAnalytics[selectedStep][key].avg.toFixed(3)} %,
 												{pipelineMetricsAnalytics[selectedStep][key].max.toFixed(3)}
 												%
-												</td
-											>
-										<!-- for eslint -->
+											</td>
+											<!-- for eslint -->
 										{:else if key == 'Memory' || key == 'Network_received' || key == 'Network_transferred'}
 											<td
-												>{filesize(
-													pipelineMetricsAnalytics[selectedStep][key].avg)}, 
-													{filesize(pipelineMetricsAnalytics[selectedStep][key].max)}</td
-											>											
-											{:else if key == 'Duration'}
-												<td> {pipelineMetricsAnalytics[selectedStep][key]}</td>											
+												>{filesize(pipelineMetricsAnalytics[selectedStep][key].avg)},
+												{filesize(pipelineMetricsAnalytics[selectedStep][key].max)}</td
+											>
+										{:else if key == 'Duration'}
+											<td> {pipelineMetricsAnalytics[selectedStep][key]}</td>
 										{/if}
 									</tr>
-									
 								{/each}
 							</tbody>
 						</table>

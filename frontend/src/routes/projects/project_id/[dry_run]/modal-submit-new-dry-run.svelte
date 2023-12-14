@@ -9,10 +9,10 @@
 	import { requestGraphQLClient } from '$lib/graphqlUtils.js';
 
 	export let parent: any;
-	
+
 	enum FileUploadType {
 		Raw,
-		S3,
+		S3
 	}
 
 	let formData = {
@@ -51,58 +51,63 @@
 					initial_task_name = task.name;
 					break;
 				}
-			}	
+			}
 
 			// extract input artifacts from initial step in the template
 			templates.forEach((template: { name: string; inputs: any }) => {
 				// TODO: only 1 initial input file is considered
-				if(template.name == initial_task_name) {
-					if(template.inputs.artifacts?.[0].s3) {		// the input file is of type s3				
-						input_artifacts[template.name] = { inputs: template.inputs, type: FileUploadType.S3};
-					} else if(template.inputs.artifacts?.[0].raw) {		// the input file is of type raw
-						input_artifacts[template.name] = { inputs: template.inputs, type: FileUploadType.Raw};
+				if (template.name == initial_task_name) {
+					if (template.inputs.artifacts?.[0].s3) {
+						// the input file is of type s3
+						input_artifacts[template.name] = { inputs: template.inputs, type: FileUploadType.S3 };
+					} else if (template.inputs.artifacts?.[0].raw) {
+						// the input file is of type raw
+						input_artifacts[template.name] = { inputs: template.inputs, type: FileUploadType.Raw };
 					}
-					}
-				});			
+				}
+			});
 			return tasks;
 		}
-	}	
-	
+	}
+
 	// modify workflow template from project to create a valid argoWorkflow input for create new dryrun
-	async function newWorkflowTemplate(template: { metadata: any; spec: any }) {			
+	async function newWorkflowTemplate(template: { metadata: any; spec: any }) {
 		const newWorkflowTemplate = template;
 		// if (formData.files.length != 0) {
-		for (const template of newWorkflowTemplate.spec.templates) {				
+		for (const template of newWorkflowTemplate.spec.templates) {
 			try {
-				for (const [index, artifact] of input_artifacts[initial_task_name].inputs.artifacts.entries()) {
+				for (const [index, artifact] of input_artifacts[
+					initial_task_name
+				].inputs.artifacts.entries()) {
 					// for input file type = raw, replace the raw contents in the workflow template
-					if(input_artifacts[initial_task_name].type == FileUploadType.Raw) {
+					if (input_artifacts[initial_task_name].type == FileUploadType.Raw) {
 						const files = formData.files[index] as unknown as FileList;
 						if (files) {
 							let text = await files[0].text();
 							artifact.raw.data = `${text}`;
 						} else {
 							throw new Error('Initial input file is not uploaded!');
-						}													
-					} else if(input_artifacts[initial_task_name].type == FileUploadType.S3) {
+						}
+					} else if (input_artifacts[initial_task_name].type == FileUploadType.S3) {
 						artifact.s3.key = formData.s3Key;
-					} 
+					}
 				}
-			} catch(error) {
+			} catch (error) {
 				throw error;
 			}
 		}
-			
+
 		await new Promise((resolve) => setTimeout(resolve, 1500));
-		
+
 		newWorkflowTemplate.metadata =
 			formData.name == ''
-				? { generateName: newWorkflowTemplate.metadata.generateName,
-				}
-				: { generateName: formData.name,
-				 };		
+				? { generateName: newWorkflowTemplate.metadata.generateName }
+				: { generateName: formData.name };
 		// TODO: current fix is to have the user enter the input filesize manually
-		newWorkflowTemplate.metadata.annotations = {"filesize" : formData.filesize, "initial_task_name": initial_task_name};	
+		newWorkflowTemplate.metadata.annotations = {
+			filesize: formData.filesize,
+			initial_task_name: initial_task_name
+		};
 		return newWorkflowTemplate;
 	}
 
@@ -111,7 +116,7 @@
 		try {
 			const modifiedWorkflowTemplate = await newWorkflowTemplate(
 				$selectedProject?.workflowTemplates[0].argoWorkflowTemplate
-			);		
+			);
 			await new Promise((resolve) => setTimeout(resolve, 1500));
 			const variables = {
 				input: {
@@ -141,7 +146,7 @@
 			await refreshProjectDetails();
 			modalStore.clear();
 		} catch (error) {
-			console.log(error)
+			console.log(error);
 			const message = (error as Error).message;
 			let createDryRunMessageModal: ModalSettings;
 			if (message.includes('PayloadTooLargeError')) {
@@ -208,12 +213,12 @@
 							<br />
 							<!-- svelte-ignore a11y-label-has-associated-control -->
 							{#if input_artifacts[task.name].type == FileUploadType.Raw}
-								<p>Upload Input files </p>
+								<p>Upload Input files</p>
 								{#each input_artifacts[task.name].inputs.artifacts || [] as artifact, k}
 									<!-- svelte-ignore a11y-label-has-associated-control -->
 									<label>
 										<span>
-										{artifact.name}
+											{artifact.name}
 											<input class="input" type="file" bind:files={formData.files[k]} />
 										</span>
 									</label>
@@ -224,17 +229,17 @@
 									<!-- svelte-ignore a11y-label-has-associated-control -->
 									<label>
 										Enter S3 key for file input: <span class="italic">{artifact.name} </span>
-											<input
-												class="input variant-form-material"
-												type="text"
-												bind:value={formData.s3Key}
-											/>
+										<input
+											class="input variant-form-material"
+											type="text"
+											bind:value={formData.s3Key}
+										/>
 									</label>
 									<br />
 								{/each}
 							{/if}
 							<label>
-								Enter total input file size in bytes: 
+								Enter total input file size in bytes:
 								<span>
 									<input class="input" type="text" bind:value={formData.filesize} />
 								</span>
