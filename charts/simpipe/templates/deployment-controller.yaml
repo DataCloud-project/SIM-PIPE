@@ -44,8 +44,10 @@ spec:
                   key: minioSecretKey
             - name: JWT_DEV_MODE
               value: "true"
-            - name: MINIO_URL
-              value: {{ .Values.controller.minio.url | quote }}
+            - name: MINIO_PUBLIC_URL
+              value: {{ .Values.controller.minio.publicUrl | quote }}
+            - name: MINIO_INTERNaL_URL
+              value: {{ .Values.controller.minio.internalUrl | quote }}
             - name: MINIO_BUCKET_NAME
               value: {{ .Values.controller.minio.bucketName | quote }}
             - name: MINIO_REGION
