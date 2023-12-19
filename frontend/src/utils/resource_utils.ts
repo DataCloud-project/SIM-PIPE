@@ -1,8 +1,8 @@
 import { format } from 'date-fns';
 import getDryRunNoLogsMetricsQuery from '../queries/get_dry_run_all_metrics_no_logs';
 import { requestGraphQLClient } from '$lib/graphqlUtils';
-import { readable_time_difference } from '$lib/time_difference.js';
 import type { DryRunMetrics } from '../types';
+import { filesize } from 'filesize';
 
 const datefmt = 'yyyy-MM-dd HH:mm:ss';
 
@@ -30,18 +30,9 @@ function timestampsToDatetime(startedAt: string, input_array: number[]) {
 	return timeseries;
 }
 
-export function displayDryRunDuration(status: string, nodes: DryRunMetrics[]) {
-	const firstNode = nodes ? nodes[0] : undefined;
-	if (firstNode && (status == 'Succeeded' || status == 'Failed' || status == 'Error'))
-		return readable_time_difference(firstNode.startedAt, firstNode.finishedAt);
-	return '-';
-}
-
-export function displayStepDuration(step: DryRunMetrics) {
-	if (step.startedAt && step.finishedAt) {
-		return readable_time_difference(step.startedAt, step.finishedAt);
-	}
-	return '-';
+export function displayStepDuration(step: DryRunMetrics) {	
+	const duration = step.duration == null ? '-' : step.duration;
+	return duration;
 }
 
 export type MetricsAnalytics = {
@@ -71,21 +62,37 @@ export const getMetricsResponse = async (dryRunId: string) => {
 			nodes: [];
 		};
 	} = await requestGraphQLClient(getDryRunNoLogsMetricsQuery, { dryRunId });
-	return metrics_response?.dryRun?.nodes;
+	return metrics_response?.dryRun?.nodes.filter(node => Object.keys(node).length > 0);;
+};
+
+
+export const printReadableBytes = (bytes: number|undefined) => {	
+	return (!bytes || isNaN(bytes) || bytes == -1) ? '-' : filesize(bytes*1024000);
+};
+
+export const printReadablePercent = (value: number|undefined) => {	
+	return (!value || isNaN(value) || value == -1) ? '-' : value;
 };
 
 const calculateMean = (input: number[]) => {
-	if (input?.length == 0) return -1;
+	if (input?.length == 0) return 0;
 	return input.reduce((a, b) => a + b, 0) / input.length;
 };
-
 const changeResourceFormat = (
 	startedAt: string,
 	argoUsageBytes: any,
 	stepName: string,
-	networkType = ''
+	resourceType = ''
 ) => {
-	const resourceValues = argoUsageBytes.map((item: { value: string }) => Number(item.value));
+	let resourceValues;
+	if(resourceType == 'cpu') {
+		resourceValues = argoUsageBytes.map((item: { value: string }) => Number(item.value));
+		resourceType = '';
+	}
+	else {
+		// convert bytes to megabytes
+		resourceValues = argoUsageBytes.map((item: { value: string }) => Number(item.value)/1024000.0);
+	}
 	const resourceTimestamps = timestampsToDatetime(
 		startedAt,
 		argoUsageBytes.map((item: { timestamp: any }) => item.timestamp)
@@ -96,32 +103,20 @@ const changeResourceFormat = (
 		x: resourceTimestamps,
 		y: resourceValues,
 		type: 'scatter',
-		name: `${networkType} ${truncateString(stepName, 15)}`
+		name: `${resourceType} ${truncateString(stepName, 15)}`
 	};
 	// }
 	// return {};
 };
 
 const findMax = (input: number[]) => {
-	if (input?.length == 0) return -1;
+	if (input?.length == 0) return 0;
 	return Math.max(...input);
 };
 
-const calculateDuration = (metrics: DryRunMetrics[], allStepNames: string[]) => {
-	metrics?.forEach((node: DryRunMetrics) => {
-		if (node.phase == 'Succeeded')
-			return (
-				(new Date(metrics[allStepNames.length].finishedAt).getTime() -
-					new Date(metrics[1].startedAt).getTime()) /
-				1000
-			);
-		// else
-	});
-	return (
-		(new Date(metrics[allStepNames.length].finishedAt).getTime() -
-			new Date(metrics[1].startedAt).getTime()) /
-		1000
-	);
+export const calculateDuration = (metrics: DryRunMetrics[]) => {	
+	const duration = metrics?.filter(metric => metric.type === "Steps")[0]?.duration || metrics?.filter(metric => metric.type === "DAG")[0]?.duration;	
+	return duration == null ? '-' : duration;
 };
 
 export async function getMetricsUsageUtils(
@@ -134,16 +129,17 @@ export async function getMetricsUsageUtils(
 ): Promise<{ showMax: boolean; allStepNames: string[] }> {
 	const allStepNames: string[] = [];
 
-	metrics?.forEach((node: DryRunMetrics) => {
+	metrics?.filter(metric => metric.type === "Pod").forEach((node: DryRunMetrics) => {
 		if (Object.keys(node).length != 0) {
 			allStepNames.push(node.displayName);
 			if (node.log) {
-				logs[node.displayName] = node.log[0];
+				logs[node.displayName] = node.log.join('\n');
 			}
 			cpuData[node.displayName] = changeResourceFormat(
 				node.startedAt,
 				node.metrics.cpuUsageSecondsTotal,
-				node.displayName
+				node.displayName,
+				'cpu'
 			);
 			memoryData[node.displayName] = changeResourceFormat(
 				node.startedAt,
@@ -183,30 +179,22 @@ export async function getMetricsAnalyticsUtils(
 ): Promise<void> {
 	allStepNames.forEach((name) => {
 		pipelineMetricsAnalytics[name] = initMaxResourcePerStep();
-		if (cpuData[name]?.y.length > 0) {
-			pipelineMetricsAnalytics[name].CPU.max = Math.max(...cpuData[name].y);
-			pipelineMetricsAnalytics[name].CPU.avg = calculateMean(cpuData[name].y);
-		}
-		if (memoryData[name]?.y.length > 0) {
-			pipelineMetricsAnalytics[name].Memory.max = Math.max(...memoryData[name].y);
-			pipelineMetricsAnalytics[name].Memory.avg = calculateMean(memoryData[name].y);
-		}
-		if (networkDataCombined[name]?.[0].y.length > 0) {
-			pipelineMetricsAnalytics[name].Network_received.max = Math.max(
-				...networkDataCombined[name][0].y
-			);
-			pipelineMetricsAnalytics[name].Network_received.avg = calculateMean(
-				networkDataCombined[name][0].y
-			);
-		}
-		if (networkDataCombined[name]?.[1].y.length > 0) {
-			pipelineMetricsAnalytics[name].Network_transferred.max = Math.max(
-				...networkDataCombined[name][1].y
-			);
-			pipelineMetricsAnalytics[name].Network_transferred.avg = calculateMean(
-				networkDataCombined[name][1].y
-			);
-		}
+		pipelineMetricsAnalytics[name].CPU.max = findMax(cpuData[name].y);
+		pipelineMetricsAnalytics[name].CPU.avg = calculateMean(cpuData[name].y);
+		pipelineMetricsAnalytics[name].Memory.max = findMax(memoryData[name].y);
+		pipelineMetricsAnalytics[name].Memory.avg = calculateMean(memoryData[name].y);
+		pipelineMetricsAnalytics[name].Network_received.max = findMax(
+			networkDataCombined[name][0].y
+		);
+		pipelineMetricsAnalytics[name].Network_received.avg = calculateMean(
+			networkDataCombined[name][0].y
+		);
+		pipelineMetricsAnalytics[name].Network_transferred.max = findMax(
+			networkDataCombined[name][1].y
+		);
+		pipelineMetricsAnalytics[name].Network_transferred.avg = calculateMean(
+			networkDataCombined[name][1].y
+		);
 	});
 
 	// calculate for total dry run
@@ -223,13 +211,11 @@ export async function getMetricsAnalyticsUtils(
 	allValues = allStepNames.flatMap((name) => networkDataCombined[name][1].y);
 	pipelineMetricsAnalytics['Total'].Network_transferred.max = findMax(allValues);
 	pipelineMetricsAnalytics['Total'].Network_transferred.avg += calculateMean(allValues);
-
 	metrics
-		.filter((item) => item.type === 'Pod')
-		.forEach((step) => {
+		?.filter((item) => item.type === 'Pod')
+		?.forEach((step) => {
 			pipelineMetricsAnalytics[step.displayName].Duration = step.duration;
 		});
-	// if all steps succeeded
-	pipelineMetricsAnalytics['Total'].Duration = calculateDuration(metrics, allStepNames);
+	pipelineMetricsAnalytics['Total'].Duration = metrics?.filter(metric => metric.type === "Steps")[0]?.duration || metrics?.filter(metric => metric.type === "DAG")[0]?.duration;
 	delete pipelineMetricsAnalytics['undefined'];
 }

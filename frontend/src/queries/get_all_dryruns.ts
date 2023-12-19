@@ -17,8 +17,11 @@ const allDryRunsQuery = gql`
 				nodes {
 					startedAt
 					finishedAt
+					duration
+					type
 					... on DryRunNodePod {
 						displayName
+						type
 						startedAt
 						finishedAt
 						duration

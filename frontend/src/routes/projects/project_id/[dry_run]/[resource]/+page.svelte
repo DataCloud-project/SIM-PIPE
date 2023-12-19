@@ -56,7 +56,7 @@
 				getDryRunMetricsQuery,
 				dryrun_variables
 			);
-			return response?.dryRun?.nodes;
+			return response?.dryRun?.nodes.filter(node => Object.keys(node).length > 0);
 		} catch (error) {
 			// internal server error from graphql API when requesting logs for dry runs which has no logs
 			if ((error as Error).message.includes('No logs found:')) {
@@ -65,7 +65,7 @@
 					getDryRunNoLogsMetricsQuery,
 					dryrun_variables
 				);
-				return response?.dryRun?.nodes;
+				return response?.dryRun?.nodes.filter(node => Object.keys(node).length > 0);;
 			}
 		}
 	};
@@ -423,9 +423,13 @@
 											</td>
 											<!-- for eslint -->
 										{:else if key == 'Memory' || key == 'Network_received' || key == 'Network_transferred'}
-											<td
+											<!-- <td
 												>{filesize(pipelineMetricsAnalytics[selectedStep][key].avg)},
 												{filesize(pipelineMetricsAnalytics[selectedStep][key].max)}</td
+											> -->
+											<td
+												>{pipelineMetricsAnalytics[selectedStep][key].avg},
+												{pipelineMetricsAnalytics[selectedStep][key].max}</td
 											>
 										{:else if key == 'Duration'}
 											<td> {pipelineMetricsAnalytics[selectedStep][key]}</td>

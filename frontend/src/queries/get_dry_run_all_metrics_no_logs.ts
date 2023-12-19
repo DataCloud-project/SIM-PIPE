@@ -4,6 +4,8 @@ const getDryRunNoLogsMetricsQuery = gql`
 	query getDryRunAllMetrics($dryRunId: String!) {
 		dryRun(dryRunId: $dryRunId) {
 			nodes {
+				duration
+				type
 				... on DryRunNodePod {
 					displayName
 					startedAt

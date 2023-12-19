@@ -26,6 +26,7 @@
 	// stores the names of input files expected for initial steps while parsing
 	const input_artifacts: any = {};
 	let initial_task_name = ''; //TODO: make this a list to accomodate multiple initial steps in the pipeline
+	let initial_task_index = -1; //TODO: make this a list to accomodate multiple initial steps in the pipeline
 	const taskList = parseTaskList() || [];
 	let alertModal = false;
 
@@ -49,6 +50,7 @@
 				if (!task.dependencies) {
 					// initial step has no dependencies
 					initial_task_name = task.name;
+					// initial_task_index = index;
 					break;
 				}
 			}
@@ -73,12 +75,11 @@
 	// modify workflow template from project to create a valid argoWorkflow input for create new dryrun
 	async function newWorkflowTemplate(template: { metadata: any; spec: any }) {
 		const newWorkflowTemplate = template;
-		// if (formData.files.length != 0) {
-		for (const template of newWorkflowTemplate.spec.templates) {
+		if (Object.keys(input_artifacts).length != 0) {		// if pipeline has initial input files
 			try {
 				for (const [index, artifact] of input_artifacts[
 					initial_task_name
-				].inputs.artifacts.entries()) {
+				]?.inputs.artifacts.entries()) {
 					// for input file type = raw, replace the raw contents in the workflow template
 					if (input_artifacts[initial_task_name].type == FileUploadType.Raw) {
 						const files = formData.files[index] as unknown as FileList;
@@ -96,7 +97,6 @@
 				throw error;
 			}
 		}
-
 		await new Promise((resolve) => setTimeout(resolve, 1500));
 
 		newWorkflowTemplate.metadata =
@@ -212,7 +212,7 @@
 						{#if task.name == initial_task_name}
 							<br />
 							<!-- svelte-ignore a11y-label-has-associated-control -->
-							{#if input_artifacts[task.name].type == FileUploadType.Raw}
+							{#if input_artifacts?.[task.name]?.type == FileUploadType.Raw}
 								<p>Upload Input files</p>
 								{#each input_artifacts[task.name].inputs.artifacts || [] as artifact, k}
 									<!-- svelte-ignore a11y-label-has-associated-control -->
@@ -224,8 +224,8 @@
 									</label>
 									<br />
 								{/each}
-							{:else if input_artifacts[task.name].type == FileUploadType.S3}
-								{#each input_artifacts[task.name].inputs.artifacts || [] as artifact, k}
+							{:else if input_artifacts?.[task.name]?.type == FileUploadType.S3}
+								{#each input_artifacts[task.name].inputs.artifacts || [] as artifact}
 									<!-- svelte-ignore a11y-label-has-associated-control -->
 									<label>
 										Enter S3 key for file input: <span class="italic">{artifact.name} </span>

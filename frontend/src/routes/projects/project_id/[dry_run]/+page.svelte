@@ -12,7 +12,7 @@
 	import { goto } from '$app/navigation';
 	import Timestamp from './timestamp.svelte';
 	import { requestGraphQLClient } from '$lib/graphqlUtils.js';
-	import { displayDryRunDuration } from '../../../../utils/resource_utils.js';
+	import { calculateDuration } from '../../../../utils/resource_utils.js';
 
 	export let data;
 
@@ -100,6 +100,7 @@
 		event.stopPropagation();
 	};
 	$: reactiveProjectDetails = $selectedProject;
+
 </script>
 
 <!-- Page Header -->
@@ -178,7 +179,7 @@
 								</td>
 								<td style="width:20%">
 									<div>
-										{displayDryRunDuration(run.status.phase.toString(), run.nodes)}
+										{calculateDuration(run.nodes)}
 									</div>
 								</td>
 								<td style="width:20%">
