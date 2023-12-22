@@ -8,15 +8,13 @@
 
 	import getWorkflowQuery from '../../../queries/get-workflow-template';
 	import { clickedProjectId } from '../../../stores/stores';
+	import type { WorkflowTemplate } from '../../../types';
 
 	$: language = 'yaml';
 
-	const getWorkflowTemplate = async (): Promise<any> => {
-		const variables = {
-			name: data.template
-		};
-		const response = await requestGraphQLClient(getWorkflowQuery, variables);
-		return response;
+
+
+	const getWorkflowTemplate = async (): Promise<WorkflowTemplate> => {
 	};
 
 	const workflowPromise = getWorkflowTemplate();

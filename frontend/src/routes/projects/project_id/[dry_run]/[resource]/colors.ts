@@ -1,4 +1,4 @@
-export const colors = {
+const colors = {
 	Succeeded: '#34D399',
 	Running: '#0EA5E9',
 	Failed: '#f87171',
@@ -8,3 +8,5 @@ export const colors = {
 	Omitted: '#bae6fd',
 	Unknown: '#701a75'
 };
+
+export default colors;

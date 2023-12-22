@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { colors } from './Config';
+	import { colors } from './config.js';
 
 	type Status = keyof typeof colors;
 

@@ -3,7 +3,6 @@
 	import { format } from 'date-fns';
 	import { gql } from 'graphql-request';
 
-	import { goto } from '$app/navigation';
 	import { requestGraphQLClient } from '$lib/graphql-utils.js';
 
 	import {
@@ -11,7 +10,9 @@
 		selectedMetricsType,
 		selectedProjectName
 	} from '../../../../../../stores/stores';
+	import { truncateString } from '../../../../../../utils/resource-utils';
 	import Plot from '../Plot.svelte';
+	import type { DryRun, DryRunMetrics } from '../../../../../../types';
 
 	const datefmt = 'yyyy-MM-dd HH:mm:ss';
 	const defaultMetricsType = 'All';
@@ -133,11 +134,11 @@
 		return metricq;
 	}
 
-	const getMetricsResponse = async () => {
+	const getMetricsResponse = async (): Promise<DryRunMetrics[]> => {
 		for (const metric of Object.keys(metricMetadata)) {
 			metricsData[metric] = [];
-			for (const metric_source of metricMetadata[metric].metric_sources) {
-				metricSources.push(metric_source);
+			for (const metricSource of metricMetadata[metric].metric_sources) {
+				metricSources.push(metricSource);
 			}
 		}
 		// console.log(metricSources);
@@ -146,88 +147,76 @@
 		const metricsQuery = gql`
 			${queryString}
 		`;
-		const dryrun_variables = {
+		const dryrunVariables = {
 			dryRunId: $selectedDryRunName
 		};
-		const metrics_response: { dryRun: { nodes: [] } } = await requestGraphQLClient(
-			metricsQuery,
-			dryrun_variables
-		);
-		return metrics_response?.dryRun?.nodes;
+		const metricsResponse = await requestGraphQLClient<{
+			dryRun: DryRun;
+		}>(metricsQuery, dryrunVariables);
+		return metricsResponse?.dryRun?.nodes;
 	};
 
-	const getDataPromise = getMetricsResponse();
-
-	getDataPromise
-		.then((data: any) => {
-			data?.forEach(
-				(node: {
-					displayName: string | number;
-					startedAt: string;
-					metrics: {
-						[metric_source: string]: { timestamp: string; value: string }[];
-					};
-				}) => {
-					if (isEmpty(node) === false) {
-						for (const metric of Object.keys(metricMetadata)) {
-							const { metric_sources } = metricMetadata[metric];
-							for (const metric_source of metric_sources) {
-								const timestamps = timestampsToDatetime(
-									node.startedAt,
-									node.metrics[metric_source].map((item: { timestamp: any }) => item.timestamp)
-								);
-								const values = node.metrics[metric_source].map((item: { value: string }) =>
-									Number(item.value)
-								);
-								const metric_data = {
-									x: timestamps,
-									y: values,
-									type: metricMetadata[metric].type,
-									name: truncateString(node.displayName as string, 15)
-								};
-								if (values.length > 0) {
-									metricsData[metric].push(metric_data);
-								}
-							}
-						}
-					}
-				}
-			);
-		})
-		.catch((error) => {
-			console.log(error);
-		});
-
-	// TODO: These functions are the same as in [resource].svelte
-	// should be merged and moved into lib?
-
-	function isEmpty(object: any) {
+	function isEmpty(object: object): boolean {
 		return Object.keys(object).length === 0;
 	}
 
-	function truncateString(word: string, maxLength: number) {
-		if (word.length > maxLength) {
-			return `${word.slice(0, maxLength)}..`;
-		}
-		return word;
-	}
-
-	function addSeconds(date: Date, seconds: number) {
+	function addSeconds(date: Date, seconds: number): string {
 		date.setSeconds(date.getSeconds() + seconds);
 		const dateString = format(date, datefmt);
 		return dateString;
 	}
 
-	function timestampsToDatetime(startedAt: string, input_array: number[]) {
+	function timestampsToDatetime(startedAt: string, input_array: number[]): string[] {
 		const date = new Date(startedAt);
 		const timeseries = [addSeconds(date, 0)];
-		for (let index = 0; index < input_array.length - 1; index++) {
+		for (let index = 0; index < input_array.length - 1; index += 1) {
 			const v = input_array[index + 1] - input_array[index];
 			const newDate = addSeconds(date, v);
 			timeseries.push(newDate);
 		}
 		return timeseries;
 	}
+
+	const getDataPromise = getMetricsResponse();
+
+	getDataPromise
+		.then((data) => {
+			// data?.forEach(
+			for (const node of data) {
+				if (isEmpty(node) === false) {
+					for (const metric of Object.keys(metricMetadata)) {
+						const { metric_sources: localMetricSources } = metricMetadata[metric];
+						for (const metricSource of localMetricSources) {
+							const timestamps = timestampsToDatetime(
+								node.startedAt,
+								node.metrics[metricSource].map(({ timestamp }) => Number.parseInt(timestamp, 10))
+							);
+							const values = node.metrics[metricSource].map((item: { value: string }) =>
+								Number(item.value)
+							);
+							const metricData = {
+								x: timestamps,
+								y: values,
+								type: metricMetadata[metric].type,
+								name: truncateString(node.displayName, 15)
+							};
+							if (values.length > 0) {
+								metricsData[metric].push(metricData);
+							}
+						}
+					}
+				}
+			}
+		})
+		// eslint-disable-next-line unicorn/prefer-top-level-await
+		.catch((error) => {
+			// TODO: implement proper error handling
+			// eslint-disable-next-line no-console
+			console.log(error);
+		});
+
+	// TODO: These functions are the same as in [resource].svelte
+	// should be merged and moved into lib?
 </script>
 
 <div class="flex w-full content-center p-10">
@@ -239,15 +228,11 @@
 			<h1>
 				<a href="/projects">Projects</a>
 				<span STYLE="font-size:14px">/ </span>
-				<button on:click={() => goto(`/projects/project_id/${$selectedProjectName}`)}
-					>{$selectedProjectName}
-				</button>
+				<a href={`/projects/project_id/${$selectedProjectName}`}>{$selectedProjectName}</a>
 				<span STYLE="font-size:14px">/ </span>
-				<button
-					on:click={() =>
-						goto(`/projects/project_id/${$selectedProjectName}/${$selectedDryRunName}`)}
-					>{$selectedDryRunName}
-				</button>
+				<a href={`/projects/project_id/${$selectedProjectName}/${$selectedDryRunName}`}>
+					{$selectedDryRunName}
+				</a>
 				<span STYLE="font-size:14px">/ {$selectedMetricsType}</span>
 			</h1>
 			<div class="flex flex-row justify-end p-5 space-x-1">

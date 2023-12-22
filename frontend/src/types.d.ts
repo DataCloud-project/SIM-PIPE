@@ -21,8 +21,14 @@ export type WorkflowTemplate = {
 	argoWorkflowTemplate: ArgoWorkflowTemplate;
 };
 
+export type ArgoWorkflowTemplate = {
+	spec: {
+		entrypoint: string;
+		templates: ArgoWorkflowTemplateInSpec[];
+	};
+};
+
 export type DryRun = {
-	nodes: [DryRunMetrics];
 	id: string;
 	createdAt: string;
 	argoWorkflow: ArgoWorkflow;
@@ -31,7 +37,8 @@ export type DryRun = {
 	log: [string];
 	// TODO: change if needed; original type definition in graphql is
 	// log(maxLines: number, grep: string): [string];
-	nodes: [DryRunNode];
+	nodes: [DryRunMetrics];
+	// nodes: [DryRunNode];
 };
 
 export type DryRunNode = {
@@ -58,22 +65,7 @@ export type DryRunMetrics = {
 	log: string[]?;
 	type: string;
 	metrics: {
-		cpuUsageSecondsTotal: Array<{
-			timestamp: number;
-			value: number;
-		}>;
-		memoryUsageBytes: Array<{
-			timestamp: number;
-			value: number;
-		}>;
-		networkReceiveBytesTotal: Array<{
-			timestamp: number;
-			value: number;
-		}>;
-		networkTransmitBytesTotal: Array<{
-			timestamp: number;
-			value: number;
-		}>;
+		[metricSource: string]: { timestamp: string; value: string }[];
 	};
 	outputArtifacts: {
 		key: string;
@@ -131,10 +123,21 @@ type Task = {
 	template: string;
 	arguments: { parameters: Parameters };
 	dependencies?: string[];
+	depends?: string;
 };
 
-interface Template {
-	dag?: unknown;
+interface ArgoWorkflowTemplateInSpec {
+	dag?: ArgoWorkflowDag;
+	steps?: ArgoWorkflowStep[][];
+}
+
+interface ArgoWorkflowDag {
+	tasks: Task[];
+	targets?: string[];
+}
+
+interface ArgoWorkflowStep {
+	name: string;
 }
 
 // end: argo workflow template types
@@ -145,5 +148,3 @@ interface SimPipeModal {
 	buttonPositive: string;
 	onClose: () => void;
 }
-
-interface Metric

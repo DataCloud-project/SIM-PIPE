@@ -10,9 +10,11 @@
 		AppRailTile,
 		AppShell,
 		initializeStores,
-		LightSwitch	, storeHighlightJs } from '@skeletonlabs/skeleton';
-		import hljs from 'highlight.js';
-	import { BookOpenIcon, FileIcon,LockIcon } from 'svelte-feather-icons';
+		LightSwitch,
+		storeHighlightJs
+	} from '@skeletonlabs/skeleton';
+	import hljs from 'highlight.js';
+	import { BookOpenIcon, FileIcon, LockIcon } from 'svelte-feather-icons';
 
 	import { browser } from '$app/environment';
 

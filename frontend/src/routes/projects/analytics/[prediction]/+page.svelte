@@ -15,7 +15,7 @@
 		type MetricsAnalytics,
 		printReadableBytes,
 		printReadablePercent
-	} from '../../../../utils/resource_utils.js';
+	} from '../../../../utils/resource-utils.js';
 	import type { DryRun } from '../../../../types.js';
 
 	export let data: { prediction?: string };
