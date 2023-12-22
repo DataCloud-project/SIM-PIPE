@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { XIcon, CheckIcon, ClockIcon, HelpCircleIcon, CoffeeIcon } from 'svelte-feather-icons';
+	import { CheckIcon, ClockIcon, CoffeeIcon,HelpCircleIcon, XIcon } from 'svelte-feather-icons';
 
 	export let run_result: string;
 </script>

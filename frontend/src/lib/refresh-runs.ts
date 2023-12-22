@@ -1,9 +1,9 @@
 import { get } from 'svelte/store';
 
-import allDryRunsQuery from '../queries/get_all_dryruns.js';
+import allDryRunsQuery from '../queries/get-all-dryruns.js';
 import { selectedProject } from '../stores/stores.js';
+import { DryRunPhase, type Project } from '../types.js';
 import { requestGraphQLClient } from './graphql-utils.js';
-import type { Project } from '../types.js';
 
 let refreshActiveRunsPromise: Promise<void> | undefined;
 
@@ -16,22 +16,21 @@ export default async function refreshProjectDetails(): Promise<void> {
 	refreshActiveRunsPromise = (async function waitForCompletion(): Promise<void> {
 		let activeDryRuns: boolean | undefined = false;
 		do {
+			// eslint-disable-next-line no-await-in-loop
 			const responseProjectDetails: { project: Project } = await requestGraphQLClient(
 				allDryRunsQuery,
 				{ projectId: get(selectedProject)?.id }
 			);
 			selectedProject.set(responseProjectDetails.project);
-			// check if updating can be stopped
-			for (const item of get(selectedProject)?.dryRuns) {
-				if (item.status.phase.toString() == 'Running') {
-					activeDryRuns = true;
-				}
-			}
-			activeDryRuns = !get(selectedProject)?.dryRuns.every(
+			activeDryRuns = get(selectedProject)?.dryRuns.some(
 				(run) =>
-					run.status.phase.toString() !== 'Running' && run.status.phase.toString() !== 'Pending'
+					run.status.phase === DryRunPhase.Running || run.status.phase === DryRunPhase.Pending
 			);
-			await new Promise((resolve) => setTimeout(resolve, 4000));
+
+			// eslint-disable-next-line no-await-in-loop
+			await new Promise((resolve) => {
+				setTimeout(resolve, 4000);
+			});
 
 			if (!activeDryRuns) {
 				refreshActiveRunsPromise = undefined;

@@ -1,8 +1,10 @@
 import { GraphQLClient } from 'graphql-request';
 import Keycloak from 'keycloak-js';
+
+import { browser } from '$app/environment';
+
 import * as config from '../lib/config';
 import { graphQLClient, username, usertoken } from '../stores/stores';
-import { browser } from '$app/environment';
 
 let initKeycloakPromise: Promise<void> | undefined;
 

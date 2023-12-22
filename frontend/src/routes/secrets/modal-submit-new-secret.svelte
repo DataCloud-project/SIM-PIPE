@@ -1,6 +1,6 @@
 <script lang="ts">
-	import createCredentialMutation from '../../queries/create_credential.js';
-	import allCredentialsQuery from '../../queries/get_all_credentials.js';
+	import createCredentialMutation from '../../queries/create-credential.js';
+	import allCredentialsQuery from '../../queries/get-all-credentials.js';
 	import { credentialsList } from '../../stores/stores.js';
 	import { cBase, cForm, cHeader } from '../../styles/styles.js';
 	import type { DockerRegistryCredential } from '../../types.js';

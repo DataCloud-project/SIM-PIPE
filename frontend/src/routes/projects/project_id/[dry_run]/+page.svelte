@@ -5,8 +5,8 @@
 	import { goto } from '$app/navigation';
 	import { requestGraphQLClient } from '$lib/graphqlUtils.js';
 
-	import deleteDryRunMutation from '../../../../queries/delete_dry_run.js';
-	import allDryRunsQuery from '../../../../queries/get_all_dryruns.js';
+	import deleteDryRunMutation from '../../../../queries/delete-dry-run.js';
+	import allDryRunsQuery from '../../../../queries/get-all-dryruns.js';
 	import { clickedProjectId, selectedProject } from '../../../../stores/stores.js';
 	import { calculateDuration } from '../$lib/graphql-utils.jsrce_utils.js';
 	import ModalSubmitNewDryRun from './modal-submit-new-dry-run.svelte';

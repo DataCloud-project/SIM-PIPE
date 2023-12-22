@@ -4,14 +4,14 @@
 
 	import { requestGraphQLClient } from '$lib/graphql-utils.js';
 
-	import createProjectMutation from '../../queries/create_project.js';
-	import createWorkflowTemplateMutation from '../../queries/create_workflow_template.js';
-	import allProjectsQuery from '../../queries/get_all_projects.js';
+	import createProjectMutation from '../../queries/create-project.js';
+	import createWorkflowTemplateMutation from '../../queries/create-workflow-template.js';
+	import allProjectsQuery from '../../queries/get-all-projects.js';
 	import { projectsList, username } from '../../stores/stores.js';
 	import { cBase, cForm, cHeader } from '../../styles/styles.js';
-	import type { Project } from '../../types.js';
+	import type { Project, SimPipeModal } from '../../types.js';
 
-	export let parent: any;
+	export let parent: SimPipeModal;
 	const modalStore = getModalStore();
 
 	const formData = {

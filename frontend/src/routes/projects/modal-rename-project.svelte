@@ -3,13 +3,14 @@
 
 	import { requestGraphQLClient } from '$lib/graphql-utils.js';
 
-	import allProjectsQuery from '../../queries/get_all_projects.js';
-	import renameProjectMutation from '../../queries/rename_project.js';
+	import allProjectsQuery from '../../queries/get-all-projects.js';
+	import renameProjectMutation from '../../queries/rename-project.js';
 	import { projectsList } from '../../stores/stores.js';
 	import { cBase, cForm, cHeader } from '../../styles/styles.js';
-	import type { Project } from '../../types.js';
+	import type { Project, SimPipeModal } from '../../types.js';
 
-	export let parent: any;
+	export let parent: SimPipeModal;
+
 	const modalStore = getModalStore();
 	const project: { projectId: string; projectName: string } = modalStore[0]?.valueAttr as {
 		projectId: string;

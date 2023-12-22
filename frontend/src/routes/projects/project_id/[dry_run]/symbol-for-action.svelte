@@ -11,9 +11,9 @@
 
 	import { requestGraphQLClient } from '$lib/graphql-utils.js';
 
-	import resumeDryRunMutation from '../../../../queries/resume_dry_run.js';
-	import stopDryRunMutation from '../../../../queries/stop_dry_run.js';
-	import suspendDryRunMutation from '../../../../queries/suspend_dry_run.js';
+	import resumeDryRunMutation from '../../../../queries/resume-dry-run.js';
+	import stopDryRunMutation from '../../../../queries/stop-dry-run.js';
+	import suspendDryRunMutation from '../../../../queries/suspend-dry-run.js';
 	import { pausedDryRuns } from '../../../../stores/stores.js';
 
 	export let action: string, dryRunId: string;

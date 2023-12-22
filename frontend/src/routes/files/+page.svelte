@@ -1,9 +1,12 @@
 <script lang="ts">
-	import { Modal, ProgressBar, getModalStore, type ModalSettings } from '@skeletonlabs/skeleton';
+	import { getModalStore, Modal, type ModalSettings, ProgressBar } from '@skeletonlabs/skeleton';
+
 	import { filesList } from '../../stores/stores.js';
-	import type { SampleFile } from '../../types.js';
 	import Timestamp from '../projects/project_id/[dry_run]/timestamp.svelte';
 	import ModalSubmitNewFile from './modal-submit-new-file.svelte';
+	import type { SampleFile } from '../../types.js';
+
+	$: reactiveFilesList = $filesList;
 
 	const getProjectsList = async (): Promise<SampleFile[]> => {
 		// TODO: change to api query when ready
@@ -21,15 +24,17 @@
 		.then((value) => {
 			reactiveFilesList = value;
 		})
+		// TODO consider using the sveltekit load functionpattern
+		// eslint-disable-next-line unicorn/prefer-top-level-await
 		.catch(() => {
 			$filesList = undefined;
 		});
 	// to disable onclick propogation for checkbox input
-	const handleCheckboxClick = (event: MouseEvent) => {
+	const handleCheckboxClick = (event: MouseEvent): void => {
 		event.stopPropagation();
 	};
 
-	async function onCreateSelected() {
+	function onCreateSelected(): void {
 		const modal: ModalSettings = {
 			type: 'component',
 			component: { ref: ModalSubmitNewFile },
@@ -40,30 +45,32 @@
 
 		getModalStore().trigger(modal);
 	}
-	async function onDeleteSelected() {
+	async function onDeleteSelected(): Promise<void> {
 		// get file ids from checkboxes
-		Object.keys(checkboxes)
+		/* Object.keys(checkboxes)
 			.filter((item) => checkboxes[item])
-			.forEach(async (element) => {
+			.forEach((element) => {
 				const variables = {
 					fileId: element
 				};
 				// TODO:change to api call
 				console.log('fileid', variables.fileId);
-			});
+			}); */
 		const fileDeletedMessageModal: ModalSettings = {
 			type: 'alert',
 			title: 'Sample File deleted🗑️!',
-			body: `Deleted files: ${Object.keys(checkboxes).filter((item) => checkboxes[item])}`
+			body: `Deleted files: ${Object.keys(checkboxes)
+				.filter((item) => checkboxes[item])
+				.join(', ')}`
 		};
 		getModalStore().trigger(fileDeletedMessageModal);
-		await new Promise((resolve) => setTimeout(resolve, 1500));
+		await new Promise((resolve) => {
+			setTimeout(resolve, 1500);
+		});
 		getModalStore().close();
 	}
 
 	const modalStore = getModalStore();
-
-	$: reactiveFilesList = $filesList;
 </script>
 
 <div class="container p-5">
@@ -72,7 +79,7 @@
 		{#await filesPromise}
 			<p style="font-size:20px;">Loading files...</p>
 			<ProgressBar />
-		{:then filesList}
+		{:then}
 			<div class="flex flex-row justify-end p-5 space-x-1">
 				<div>
 					<button type="button" class="btn btn-sm variant-filled" on:click={onCreateSelected}>
@@ -107,7 +114,7 @@
 									type="checkbox"
 									class="checkbox"
 									bind:checked={checkboxes[file.id]}
-									on:click={(event) => handleCheckboxClick(event)}
+									on:click={handleCheckboxClick}
 								/>
 							</td>
 							<td style="width:35%">{file.name}</td>

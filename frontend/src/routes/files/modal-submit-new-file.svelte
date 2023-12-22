@@ -1,8 +1,10 @@
 <script lang="ts">
-	import { getModalStore, type ModalSettings, Modal } from '@skeletonlabs/skeleton';
-	import { cBase, cHeader, cForm } from '../../styles/styles.js';
+	import { getModalStore, Modal, type ModalSettings } from '@skeletonlabs/skeleton';
 
-	export let parent: any;
+	import { cBase, cForm, cHeader } from '../../styles/styles.js';
+	import type { SimPipeModal } from '../../types.js';
+
+	export let parent: SimPipeModal;
 
 	const formData = {
 		name: '',

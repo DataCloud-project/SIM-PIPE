@@ -1,49 +1,51 @@
 <script lang="ts">
-	import { type ModalSettings, modalStore, Modal } from '@skeletonlabs/skeleton';
+	import { getModalStore, Modal, type ModalSettings } from '@skeletonlabs/skeleton';
+
+	import { goto } from '$app/navigation';
+	import { requestGraphQLClient } from '$lib/graphql-utils.js';
+	import { readableTime } from '$lib/time-difference.js';
+
+	import getDryRunInputFilesizeQuery from '../../../../queries/get-dry-run-input-filesizes.js';
+	import { selectedProject } from '../../../../stores/stores.js';
+	import { cForm } from '../../../../styles/styles.js';
 	import {
 		getMetricsAnalyticsUtils,
 		getMetricsResponse,
 		getMetricsUsageUtils,
-		printReadableBytes,
 		type MetricsAnalytics,
+		printReadableBytes,
 		printReadablePercent
 	} from '../../../../utils/resource_utils.js';
-	import { selectedProject } from '../../../../stores/stores.js';
-	import { goto } from '$app/navigation';
-	import getDryRunInputFilesizeQuery from '../../../../queries/get_dry_run_input_filesizes.js';
-	import { requestGraphQLClient } from '$lib/graphqlUtils';
-	import { readable_time } from '$lib/ti$lib/graphql-utils.js;
-	import { cForm } from '../../../../styles/styles.js';
+	import type { DryRun } from '../../../../types.js';
 
-	export let data;
+	export let data: { prediction?: string };
 
-	type metricsWithTimeStamps = { x: string[]; y: number[]; type: string; name: string };
+	const modalStore = getModalStore();
+	let valueforPrediction: number = 11_000;
+	let showPredictions = false;
+	let maxCpuPredictions: number[];
+	let avgCpuPredictions: number[];
+	let maxMemPredictions: number[];
+	let avgMemPredictions: number[];
+	let durationPredictions: string[];
 
-	const dryruns_for_prediction = data.prediction.split(' ');
+	type MetricsWithTimeStamps = { x: string[]; y: number[]; type: string; name: string };
+
+	const dryrunsForPrediction = data.prediction?.split(' ') ?? [];
+
 	let allStepNames: string[];
-	var collectedMetrics: {
+	const collectedMetrics: {
 		[key: string]: MetricsAnalytics;
 	} = {};
 
-	async function linearRegression(
-		x: number[],
-		y: number[]
-	): Promise<{ slope: number; intercept: number }> {
+	function linearRegression(x: number[], y: number[]): { slope: number; intercept: number } {
 		// Check if all x values are the same
 		if (new Set(x).size === 1) {
-			// throw new Error(`All filesize values are the same. Unable to perform linear regression.\n Filesizes for prediction are ${x}`);
-			validFileSizes = false;
-			let createDryRunMessageModal: ModalSettings;
-			createDryRunMessageModal = {
-				type: 'alert',
-				title: 'All filesize values are the same. Unable to perform linear regression',
-				body: `Filesizes for prediction are ${x}. Please choose other filesizes. You will be taken back to the dry runs list on close`
-			};
-			modalStore.trigger(createDryRunMessageModal);
-			await new Promise((resolve) => setTimeout(resolve, 2500));
-			modalStore.close();
-			goto(`/projects/project_id/${$selectedProject?.id}`);
-			return { slope: 0, intercept: 0 };
+			throw new Error(
+				`All filesize values are the same. Unable to perform linear regression.\n Filesizes for prediction are ${x.join(
+					','
+				)}`
+			);
 		}
 		const n = x.length;
 		const meanX = x.reduce((accumulator, value) => accumulator + value, 0) / n;
@@ -65,154 +67,155 @@
 
 	// for each selected dry run, get the resource analytics (avg, max) per step and per dry run level
 	export const getPredictionDetails = async (): Promise<void> => {
-		dryruns_for_prediction.forEach(async (dryRunId) => {
-			collectedMetrics[dryRunId] = {};
-			const cpuData: { [key: string]: metricsWithTimeStamps } = {};
-			const memoryData: { [key: string]: metricsWithTimeStamps } = {};
-			const networkDataCombined: {
-				[key: string]: metricsWithTimeStamps[];
-			} = {};
-			const metrics = await getMetricsResponse(dryRunId);
-			const result = await getMetricsUsageUtils(
-				true,
-				cpuData,
-				memoryData,
-				networkDataCombined,
-				{},
-				metrics
+		try {
+			await Promise.all(
+				dryrunsForPrediction.map(async (dryRunId) => {
+					collectedMetrics[dryRunId] = {};
+					const cpuData: { [key: string]: MetricsWithTimeStamps } = {};
+					const memoryData: { [key: string]: MetricsWithTimeStamps } = {};
+					const networkDataCombined: {
+						[key: string]: MetricsWithTimeStamps[];
+					} = {};
+					const metrics = await getMetricsResponse(dryRunId);
+					const result = await getMetricsUsageUtils(
+						true,
+						cpuData,
+						memoryData,
+						networkDataCombined,
+						{},
+						metrics
+					);
+					const pipelineMetricsAnalytics: MetricsAnalytics = {};
+					await getMetricsAnalyticsUtils(
+						result.allStepNames,
+						metrics,
+						pipelineMetricsAnalytics,
+						cpuData,
+						memoryData,
+						networkDataCombined
+					);
+
+					allStepNames = result.allStepNames;
+					collectedMetrics[dryRunId] = pipelineMetricsAnalytics;
+				})
 			);
-			const pipelineMetricsAnalytics: MetricsAnalytics = {};
-			await getMetricsAnalyticsUtils(
-				result.allStepNames,
-				metrics,
-				pipelineMetricsAnalytics,
-				cpuData,
-				memoryData,
-				networkDataCombined
+			await new Promise((resolve) => {
+				setTimeout(resolve, 1500);
+			});
+			// read and store filesizes stored in the annotations in argoworkflows of the selected dryruns
+			const fileSizeDataPromise = dryrunsForPrediction.map(async (dryRunId): Promise<number> => {
+				try {
+					const response = await requestGraphQLClient<{
+						dryRun: DryRun;
+					}>(getDryRunInputFilesizeQuery, { dryRunId });
+					// TODO is this necessary?
+					if (!$selectedProject) $selectedProject = response.dryRun.project;
+					// TODO: change when filesize api is ready
+					// @ts-expect-error we do not have metadata.annotations.filesize
+					// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+					return Number(response.dryRun.argoWorkflow.metadata.annotations.filesize);
+				} catch {
+					throw new Error(`Problem reading input filesizes for dry run - ${dryRunId}`);
+				}
+			});
+
+			// store combined resource usage for selected dry runs
+			const CpuCombined: Record<string, { max: number[]; avg: number[] }> = Object.fromEntries(
+				[...allStepNames, 'Total'].map((stepName) => [stepName, { max: [], avg: [] }])
+			);
+			const MemoryCombined: Record<string, { max: number[]; avg: number[] }> = Object.fromEntries(
+				[...allStepNames, 'Total'].map((stepName) => [stepName, { max: [], avg: [] }])
+			);
+			const DurationCombined: { [key: string]: number[] } = Object.fromEntries(
+				[...allStepNames, 'Total'].map((name) => [name, []])
 			);
 
-			allStepNames = result.allStepNames;
-			collectedMetrics[dryRunId] = pipelineMetricsAnalytics;
-		});
-		await new Promise((resolve) => setTimeout(resolve, 1500));
-		// read and store filesizes stored in the annotations in argoworkflows of the selected dryruns
-		const fileSizeDataPromise = dryruns_for_prediction.map(async (dryRunId) => {
-			try {
-				const response: {
-					dryRun: {
-						nodes: any;
-						project: any;
-						argoWorkflow: { metadata: { annotations: any } };
-					};
-				} = await requestGraphQLClient(getDryRunInputFilesizeQuery, { dryRunId });
-				if (!$selectedProject) $selectedProject = response.dryRun.project.id;
-				// TODO: change when filesize api is ready
-				return Number(response.dryRun.argoWorkflow.metadata.annotations.filesize);
-			} catch (error) {
-				console.log(error);
-				// throw new Error(`Problem reading input filesizes for dry run - ${dryRunId}`);
-				validFileSizes = false;
-				let createDryRunMessageModal: ModalSettings;
-				createDryRunMessageModal = {
-					type: 'alert',
-					title: 'Error reading input filesizes for dry run - ${dryRunId}',
-					body: 'You will be taken back to the dry runs list on close'
-				};
-				modalStore.trigger(createDryRunMessageModal);
-				await new Promise((resolve) => setTimeout(resolve, 2500));
-				modalStore.close();
-				goto(`/projects/project_id/${$selectedProject?.id}`);
+			// combine resource values for the selected dry runs
+			for (const dryrunId of dryrunsForPrediction) {
+				for (const stepName of [...allStepNames, 'Total']) {
+					CpuCombined[stepName].max.push(collectedMetrics[dryrunId][stepName]?.CPU.max);
+					CpuCombined[stepName].avg.push(collectedMetrics[dryrunId][stepName]?.CPU.avg);
+					MemoryCombined[stepName].max.push(collectedMetrics[dryrunId][stepName]?.Memory.max);
+					MemoryCombined[stepName].avg.push(collectedMetrics[dryrunId][stepName]?.Memory.avg);
+					DurationCombined[stepName].push(collectedMetrics[dryrunId][stepName]?.Duration);
+				}
 			}
-		});
-
-		// store combined resource usage for selected dry runs
-		const CpuCombined: Record<string, { max: number[]; avg: number[] }> = Object.fromEntries(
-			[...allStepNames, 'Total'].map((stepName) => [stepName, { max: [], avg: [] }])
-		);
-		const MemoryCombined: Record<string, { max: number[]; avg: number[] }> = Object.fromEntries(
-			[...allStepNames, 'Total'].map((stepName) => [stepName, { max: [], avg: [] }])
-		);
-		const DurationCombined: { [key: string]: number[] } = Object.fromEntries(
-			[...allStepNames, 'Total'].map((name) => [name, []])
-		);
-
-		// combine resource values for the selected dry runs
-		for (const dryrunId of dryruns_for_prediction) {
-			for (const stepName of [...allStepNames, 'Total']) {
-				CpuCombined[stepName].max.push(collectedMetrics[dryrunId][stepName]?.CPU.max);
-				CpuCombined[stepName].avg.push(collectedMetrics[dryrunId][stepName]?.CPU.avg);
-				MemoryCombined[stepName].max.push(collectedMetrics[dryrunId][stepName]?.Memory.max);
-				MemoryCombined[stepName].avg.push(collectedMetrics[dryrunId][stepName]?.Memory.avg);
-				DurationCombined[stepName].push(collectedMetrics[dryrunId][stepName]?.Duration);
+			const fileSizeData = await Promise.all(fileSizeDataPromise);
+			// make predictions with the combined resource values of all selected dry runs
+			maxCpuPredictions = Array.from({ length: allStepNames.length + 1 }).fill(0) as number[];
+			for (const [index, stepName] of [...allStepNames, 'Total'].entries()) {
+				const r = linearRegression(fileSizeData, CpuCombined[stepName].max);
+				maxCpuPredictions[index] = predictLinearRegression(
+					valueforPrediction,
+					r.slope,
+					r.intercept
+				).toFixed(3) as unknown as number;
 			}
+			avgCpuPredictions = Array.from({ length: allStepNames.length + 1 }).fill(0) as number[];
+			for (const [index, stepName] of [...allStepNames, 'Total'].entries()) {
+				const r = linearRegression(fileSizeData, CpuCombined[stepName].avg);
+				avgCpuPredictions[index] = predictLinearRegression(
+					valueforPrediction,
+					r.slope,
+					r.intercept
+				).toFixed(3) as unknown as number;
+			}
+			maxMemPredictions = Array.from({ length: allStepNames.length + 1 }).fill(0) as number[];
+			for (const [index, stepName] of [...allStepNames, 'Total'].entries()) {
+				const r = linearRegression(fileSizeData, MemoryCombined[stepName].max);
+				maxMemPredictions[index] = predictLinearRegression(
+					valueforPrediction,
+					r.slope,
+					r.intercept
+				);
+			}
+
+			avgMemPredictions = Array.from({ length: allStepNames.length + 1 }).fill(0) as number[];
+			for (const [index, stepName] of [...allStepNames, 'Total'].entries()) {
+				const r = linearRegression(fileSizeData, MemoryCombined[stepName].avg);
+				avgMemPredictions[index] = predictLinearRegression(
+					valueforPrediction,
+					r.slope,
+					r.intercept
+				).toFixed(3) as unknown as number;
+			}
+			durationPredictions = Array.from({ length: allStepNames.length + 1 }).fill('') as string[];
+			for (const [index, stepName] of [...allStepNames, 'Total'].entries()) {
+				const r = linearRegression(fileSizeData, DurationCombined[stepName]);
+				durationPredictions[index] = readableTime(
+					(predictLinearRegression(valueforPrediction, r.slope, r.intercept) *
+						1000) as unknown as number
+				);
+			}
+			showPredictions = true;
+		} catch (error) {
+			// console.log(error);
+			const createDryRunMessageModal: ModalSettings = {
+				type: 'alert',
+				title: 'Error predicting resource usage',
+				body: (error as Error).message ?? 'Unknown error'
+			};
+			modalStore.trigger(createDryRunMessageModal);
+			await new Promise((resolve) => {
+				setTimeout(resolve, 2500);
+			});
+			modalStore.close();
+			await goto(`/projects/project_id/${$selectedProject?.id}`);
 		}
-		const fileSizeData = (await Promise.all(fileSizeDataPromise)) as number[];
-		// make predictions with the combined resource values of all selected dry runs
-		maxCpuPredictions = Array.from({ length: allStepNames.length + 1 }).fill(0);
-		[...allStepNames, 'Total'].forEach(async (stepName, index) => {
-			const r = await linearRegression(fileSizeData, CpuCombined[stepName].max);
-			maxCpuPredictions[index] = predictLinearRegression(
-				valueforPrediction,
-				r.slope,
-				r.intercept
-			).toFixed(3) as unknown as number;
-		});
-		avgCpuPredictions = Array.from({ length: allStepNames.length + 1 }).fill(0);
-		[...allStepNames, 'Total'].forEach(async (stepName, index) => {
-			const r = await linearRegression(fileSizeData, CpuCombined[stepName].avg);
-			avgCpuPredictions[index] = predictLinearRegression(
-				valueforPrediction,
-				r.slope,
-				r.intercept
-			).toFixed(3) as unknown as number;
-		});
-		maxMemPredictions = Array.from({ length: allStepNames.length + 1 }).fill(0);
-		[...allStepNames, 'Total'].forEach(async (stepName, index) => {
-			const r = await linearRegression(fileSizeData, MemoryCombined[stepName].max);
-			maxMemPredictions[index] = predictLinearRegression(valueforPrediction, r.slope, r.intercept);
-		});
-
-		avgMemPredictions = Array.from({ length: allStepNames.length + 1 }).fill(0);
-		[...allStepNames, 'Total'].forEach(async (stepName, index) => {
-			const r = await linearRegression(fileSizeData, MemoryCombined[stepName].avg);
-			avgMemPredictions[index] = predictLinearRegression(
-				valueforPrediction,
-				r.slope,
-				r.intercept
-			).toFixed(3) as unknown as number;
-		});
-		durationPredictions = Array.from({ length: allStepNames.length + 1 }).fill('');
-		[...allStepNames, 'Total'].forEach(async (stepName, index) => {
-			const r = await linearRegression(fileSizeData, DurationCombined[stepName]);
-			durationPredictions[index] = readable_time(
-				(predictLinearRegression(valueforPrediction, r.slope, r.intercept) *
-					1000) as unknown as number
-			);
-		});
-		showPredictions = true;
 	};
-	let valueforPrediction: number = 11_000;
-	let showPredictions = false;
-	let validFileSizes = true;
-	let maxCpuPredictions: number[];
-	let avgCpuPredictions: number[];
-	let maxMemPredictions: number[];
-	let avgMemPredictions: number[];
-	let durationPredictions: string[];
 </script>
 
 <div class="p-10">
 	<div class="table-container">
 		<h1 class="flex justify-between items-center" STYLE="font-size:24px">
-			Estimations based on dryruns {dryruns_for_prediction.join(', ')}
+			Estimations based on dryruns {dryrunsForPrediction.join(', ')}
 			<span>
-				<button
-					type="button"
+				<a
 					class="justify-end btn btn-sm variant-filled"
-					on:click={() => goto(`/projects/project_id/${$selectedProject?.id}`)}
+					href={`/projects/project_id/${$selectedProject?.id}`}
 				>
 					<span>Back to dry runs</span>
-				</button>
+				</a>
 			</span>
 		</h1>
 		<br />

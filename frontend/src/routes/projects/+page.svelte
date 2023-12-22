@@ -6,11 +6,11 @@
 	import { goto } from '$app/navigation';
 	import { requestGraphQLClient } from '$lib/graphql-utils';
 
-	import deleteDryRunMutation from '../../queries/delete_dry_run.js';
-	import deleteProjectMutation from '../../queries/delete_project.js';
-	import deleteWorkflowTemplateMutation from '../../queries/delete_workflow_template.js';
-	import allDryRunsQuery from '../../queries/get_all_dryruns';
-	import allProjectsQuery from '../../queries/get_all_projects.js';
+	import deleteDryRunMutation from '../../queries/delete-dry-run.js';
+	import deleteProjectMutation from '../../queries/delete-project.js';
+	import deleteWorkflowTemplateMutation from '../../queries/delete-workflow-template.js';
+	import allDryRunsQuery from '../../queries/get-all-dryruns.js';
+	import allProjectsQuery from '../../queries/get-all-projects.js';
 	import { clickedProjectId, projectsList } from '../../stores/stores.js';
 	import ModalRenameProject from './modal-rename-project.svelte';
 	import ModalSubmitNewProject from './modal-submit-new-project.svelte';

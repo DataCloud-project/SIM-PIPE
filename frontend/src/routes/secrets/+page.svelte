@@ -5,8 +5,8 @@
 	import { goto } from '$app/navigation';
 	import { requestGraphQLClient } from '$lib/graphql-utils';
 
-	import deleteCredentialMutation from '../../queries/delete_credential.js';
-	import allCredentialsQuery from '../../queries/get_all_credentials.js';
+	import deleteCredentialMutation from '../../queries/delete-credential.js';
+	import allCredentialsQuery from '../../queries/get-all-credentials.js';
 	import { credentialsList, selectedCredential } from '../../stores/stores.js';
 	import ModalSubmitNewSecret from './modal-submit-new-secret.svelte';
 	import type { DockerRegistryCredential } from '../../types.js';

@@ -1,7 +1,9 @@
 import { format } from 'date-fns';
 import { filesize } from 'filesize';
-import getDryRunNoLogsMetricsQuery from '../queries/get_dry_run_all_metrics_no_logs';
+
 import { requestGraphQLClient } from '$lib/graphql-utils';
+
+import getDryRunNoLogsMetricsQuery from '../queries/get-dry-run-all-metrics-no-logs';
 import type { DryRunMetrics } from '../types';
 
 const datefmt = 'yyyy-MM-dd HH:mm:ss';

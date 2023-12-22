@@ -1,12 +1,12 @@
 import { writable } from 'svelte/store';
 import type { GraphQLClient } from 'graphql-request';
+
 import type {
-	Project,
 	DockerRegistryCredential,
 	DryRun,
-	SampleFile,
-	DryRunMetrics
-} from '../types.js';
+	DryRunMetrics,
+	Project,
+	SampleFile} from '../types.js';
 
 export const graphQLClient = writable<GraphQLClient>();
 export const filesList = writable<SampleFile[] | undefined>();

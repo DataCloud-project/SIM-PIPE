@@ -1,7 +1,6 @@
 <script lang="ts">
-	import Plot, { type Data } from 'svelte-plotly.js';
-
 	import { modeCurrent } from '@skeletonlabs/skeleton';
+	import Plot, { type Data } from 'svelte-plotly.js';
 
 	export let data: any;
 	export let plot_title = 'Plot title';

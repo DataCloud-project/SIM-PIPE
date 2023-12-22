@@ -8,9 +8,9 @@
 	import { goto } from '$app/navigation';
 	import { requestGraphQLClient } from '$lib/graphqlUtils';
 
-	import allProjectsQuery from '../../../queries/get_all_projects.js';
-	import getWorkflowQuery from '../../../queries/get_workflow_template.js';
-	import updateCredentialMutation from '../../../queries/update_workflow_template';
+	import allProjectsQuery from '../../../queries/get-all-projects.js';
+	import getWorkflowQuery from '../../../queries/get-workflow-template.js';
+	import updateCredentialMutation from '../../../queries/update-workflow-template.js';
 	import { selectedCredential, selectedProject } from '../../../stores/stores';
 	import type { Project } from '../../../types';
 

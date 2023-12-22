@@ -2,13 +2,15 @@
 	import { ProgressBar } from '@skeletonlabs/skeleton';
 	import { format } from 'date-fns';
 	import { gql } from 'graphql-request';
+
+	import { goto } from '$app/navigation';
+	import { requestGraphQLClient } from '$lib/graphql-utils.js';
+
 	import {
-		selectedProjectName,
 		selectedDryRunName,
-		selectedMetricsType
+		selectedMetricsType,
+		selectedProjectName
 	} from '../../../../../../stores/stores';
-	import { goto } from '$app/navigation'$lib/graphql-utils
-	import { requestGraphQLClient } from '$lib/graphqlUtils';
 	import Plot from '../Plot.svelte';
 
 	const datefmt = 'yyyy-MM-dd HH:mm:ss';
@@ -16,20 +18,20 @@
 	selectedMetricsType.set(defaultMetricsType);
 
 	// metrics
-	interface metrics {
+	interface Metrics {
 		x: string[];
 		y: number[];
 		type: string;
 		name: string;
 	}
-	interface allMetrics {
-		[metric: string]: metrics[];
+	interface AllMetrics {
+		[metric: string]: Metrics[];
 	}
-	interface metricMetadata {
+	interface MetricMetadata {
 		[metric: string]: { metric_sources: string[]; ylabel: string; type: string };
 	}
 
-	const metric_metadata: metricMetadata = {
+	const metricMetadata: MetricMetadata = {
 		cpu: { metric_sources: ['cpuUsageSecondsTotal'], ylabel: 'cpu usage', type: 'scatter' },
 		'cpu-system': {
 			metric_sources: ['cpuSystemSecondsTotal'],
@@ -101,13 +103,13 @@
 			type: 'scatter'
 		}
 	};
-	var metricsData: allMetrics = {};
-	var metricSources: string[] = [];
+	const metricsData: AllMetrics = {};
+	const metricSources: string[] = [];
 
-	function buildMetricQuery(metrics: string[]) {
-		let metric_string = ``;
+	function buildMetricQuery(metrics: string[]): string {
+		let metricString = '';
 		for (const metric of metrics) {
-			metric_string += `${metric} {
+			metricString += `${metric} {
 			timestamp
 			value
 			}
@@ -121,7 +123,7 @@
 					startedAt
 					duration
 					metrics {
-						${metric_string}
+						${metricString}
 						}
 					}
 				}
@@ -132,9 +134,9 @@
 	}
 
 	const getMetricsResponse = async () => {
-		for (const metric of Object.keys(metric_metadata)) {
+		for (const metric of Object.keys(metricMetadata)) {
 			metricsData[metric] = [];
-			for (const metric_source of metric_metadata[metric].metric_sources) {
+			for (const metric_source of metricMetadata[metric].metric_sources) {
 				metricSources.push(metric_source);
 			}
 		}
@@ -167,8 +169,8 @@
 					};
 				}) => {
 					if (isEmpty(node) === false) {
-						for (const metric of Object.keys(metric_metadata)) {
-							const { metric_sources } = metric_metadata[metric];
+						for (const metric of Object.keys(metricMetadata)) {
+							const { metric_sources } = metricMetadata[metric];
 							for (const metric_source of metric_sources) {
 								const timestamps = timestampsToDatetime(
 									node.startedAt,
@@ -180,7 +182,7 @@
 								const metric_data = {
 									x: timestamps,
 									y: values,
-									type: metric_metadata[metric].type,
+									type: metricMetadata[metric].type,
 									name: truncateString(node.displayName as string, 15)
 								};
 								if (values.length > 0) {
@@ -253,7 +255,7 @@
 					<label class="label">
 						<select class="select" bind:value={$selectedMetricsType}>
 							<option value={defaultMetricsType}>{defaultMetricsType}</option>
-							{#each Object.keys(metric_metadata) as metric}
+							{#each Object.keys(metricMetadata) as metric}
 								<option value={metric}>{metric}</option>
 							{/each}
 						</select></label
@@ -269,7 +271,7 @@
 									data={metricsData[metric]}
 									plot_title={metric}
 									xaxis_title="time"
-									yaxis_title={metric_metadata[metric].ylabel}
+									yaxis_title={metricMetadata[metric].ylabel}
 								/>
 							</div>
 						</div>
@@ -282,7 +284,7 @@
 							data={metricsData[$selectedMetricsType]}
 							plot_title={$selectedMetricsType}
 							xaxis_title="time"
-							yaxis_title={metric_metadata[$selectedMetricsType].ylabel}
+							yaxis_title={metricMetadata[$selectedMetricsType].ylabel}
 						/>
 					</div>
 				</div>

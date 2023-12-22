@@ -4,11 +4,11 @@
 	import { ZoomInIcon } from 'svelte-feather-icons';
 	import { filesize } from 'filesize';
 	import type { DryRunMetrics, DryRun } from '../../../../../types';
-	import getDryRunMetricsQuery from '../../../../../queries/get_dry_run_metrics.js';
-	import getDryRunNoLogsMetricsQuery from '../../../../../queries/get_dry_run_metrics_no_logs.js';
-	import getProjectQuery from '../../../../../queries/get_project';
+	import getDryRunMetricsQuery from '../../../../../queries/get-dry-run-metrics.js';
+	import getDryRunNoLogsMetricsQuery from '../../../../../queries/get-dry-run-metrics-no-logs.js';
+	import getProjectQuery from '../../../../../queries/get-project';
 	import getDryRunPhaseResultsQuery from$lib/graphql-utilsqueries/get_dry_run_phase_results';
-	import getDryRunQuery from '../../../../../queries/get_selected_project';
+	import getDryRunQuery from '../../../../../queries/get-selected-project';
 	import { requestGraphQLClient } from '$lib/graphqlUtils';
 	import { goto } from '$app/navigation';
 	import Plot from './Plot.svelte';

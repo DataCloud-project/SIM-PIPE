@@ -6,7 +6,7 @@
 	import { goto } from '$app/navigation';
 	import { requestGraphQLClient } from '$lib/graphql-utils';
 
-	import getWorkflowQuery from '../../../queries/get_workflow_template';
+	import getWorkflowQuery from '../../../queries/get-workflow-template';
 	import { clickedProjectId } from '../../../stores/stores';
 
 	$: language = 'yaml';

@@ -4,8 +4,8 @@
 	import { requestGraphQLClient } from '$lib/graphql-utils.js';
 
 	import refreshProjectDetails from '../../../../lib/refresh-runs.js';
-	import createDryRunMutation from '../../../../queries/create_dry_run.js';
-	import allDryRunsQuery from '../../../../queries/get_all_dryruns.js';
+	import createDryRunMutation from '../../../../queries/create-dry-run.js';
+	import allDryRunsQuery from '../../../../queries/get-all-dryruns.js';
 	import { selectedProject } from '../../../../stores/stores.js';
 	import { cBase, cForm, cHeader, optional } from '../../../../styles/styles.js';
 	import type { Project, Task, Template } from '../../../../types.js';

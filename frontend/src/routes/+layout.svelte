@@ -2,22 +2,21 @@
 	import '@fontsource/ibm-plex-sans/400.css';
 	import '@fontsource/ibm-plex-sans/600.css';
 	import '../app.postcss';
+	import 'highlight.js/styles/github-dark.css'; // highlight.js theme
+
 	import {
-		AppShell,
 		AppBar,
 		AppRail,
 		AppRailTile,
-		LightSwitch,
-		initializeStores
-	} from '@skeletonlabs/skeleton';
-
-	import { LockIcon, BookOpenIcon, FileIcon } from 'svelte-feather-icons';
-	import hljs from 'highlight.js';
-	import 'highlight.js/styles/github-dark.css'; // highlight.js theme
-	import { storeHighlightJs } from '@skeletonlabs/skeleton';
-	import * as config from '../lib/config';
+		AppShell,
+		initializeStores,
+		LightSwitch	, storeHighlightJs } from '@skeletonlabs/skeleton';
+		import hljs from 'highlight.js';
+	import { BookOpenIcon, FileIcon,LockIcon } from 'svelte-feather-icons';
 
 	import { browser } from '$app/environment';
+
+	import * as config from '../lib/config';
 
 	storeHighlightJs.set(hljs);
 

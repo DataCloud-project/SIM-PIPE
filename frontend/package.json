@@ -12,7 +12,8 @@
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
 		"test:unit": "vitest",
 		"lint": "prettier --plugin-search-dir . --check . && eslint .",
-		"format": "prettier --plugin-search-dir . --write ."
+		"format": "prettier --plugin-search-dir . --write .",
+		"find-deadcode": "ts-prune --error --ignore \"(src/example\\.ts)\""
 	},
 	"devDependencies": {
 		"@floating-ui/dom": "^1.5.3",
@@ -66,5 +67,8 @@
 		"prismjs": "^1.29.0",
 		"svelte-feather-icons": "^4.1.0",
 		"svelte-plotly.js": "^0.3.2"
+	},
+	"optionalDependencies": {
+		"ts-prune": "^0.10.3"
 	}
 }

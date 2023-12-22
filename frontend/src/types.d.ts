@@ -1,14 +1,3 @@
-export type _Project = {
-	project_id: string;
-	name: string;
-	created: string;
-	// TODO:change when argo storage format is ready
-	dry_run_count?: number;
-	simulations_count?: number;
-	// dry_runs?: DryRun[];
-	// pipeline_description?: PipelineDescription;
-};
-
 export type SampleFile = {
 	id: string;
 	name: string;
@@ -42,7 +31,22 @@ export type DryRun = {
 	log: [string];
 	// TODO: change if needed; original type definition in graphql is
 	// log(maxLines: number, grep: string): [string];
+	nodes: [DryRunNode];
 };
+
+export type DryRunNode = {
+	id: string;
+	name: string;
+	type: unknown;
+	displayName?: string;
+	templateName?: string;
+	phase: unknown;
+	startedAt?: string;
+	finishedAt?: string;
+	duration?: number;
+	progress?: string;
+	children?: [DryRunNode];
+}
 
 export type DryRunMetrics = {
 	phase: string;
@@ -130,7 +134,16 @@ type Task = {
 };
 
 interface Template {
-	dag?: any;
+	dag?: unknown;
 }
 
 // end: argo workflow template types
+interface SimPipeModal {
+	regionFooter: string;
+	buttonNeutral: string;
+	buttonTextCancel: string;
+	buttonPositive: string;
+	onClose: () => void;
+}
+
+interface Metric
