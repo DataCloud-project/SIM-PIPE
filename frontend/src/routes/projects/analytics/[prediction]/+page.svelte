@@ -6,14 +6,13 @@
 		getMetricsUsageUtils,
 		printReadableBytes,
 		type MetricsAnalytics,
-		printReadablePercent,
-
+		printReadablePercent
 	} from '../../../../utils/resource_utils.js';
 	import { selectedProject } from '../../../../stores/stores.js';
 	import { goto } from '$app/navigation';
 	import getDryRunInputFilesizeQuery from '../../../../queries/get_dry_run_input_filesizes.js';
 	import { requestGraphQLClient } from '$lib/graphqlUtils';
-	import { readable_time } from '$lib/time_difference.js';
+	import { readable_time } from '$lib/ti$lib/graphql-utils.js;
 	import { cForm } from '../../../../styles/styles.js';
 
 	export let data;
@@ -47,10 +46,13 @@
 			return { slope: 0, intercept: 0 };
 		}
 		const n = x.length;
-		const meanX = x.reduce((acc, val) => acc + val, 0) / n;
-		const meanY = y.reduce((acc, val) => acc + val, 0) / n;
-		const numerator = x.reduce((acc, xi, i) => acc + (xi - meanX) * (y[i] - meanY), 0);
-		const denominator = x.reduce((acc, xi) => acc + (xi - meanX) ** 2, 0);
+		const meanX = x.reduce((accumulator, value) => accumulator + value, 0) / n;
+		const meanY = y.reduce((accumulator, value) => accumulator + value, 0) / n;
+		const numerator = x.reduce(
+			(accumulator, xi, index) => accumulator + (xi - meanX) * (y[index] - meanY),
+			0
+		);
+		const denominator = x.reduce((accumulator, xi) => accumulator + (xi - meanX) ** 2, 0);
 
 		const slope = numerator / denominator;
 		const intercept = meanY - slope * meanX;
@@ -65,9 +67,9 @@
 	export const getPredictionDetails = async (): Promise<void> => {
 		dryruns_for_prediction.forEach(async (dryRunId) => {
 			collectedMetrics[dryRunId] = {};
-			var cpuData: { [key: string]: metricsWithTimeStamps } = {};
-			var memoryData: { [key: string]: metricsWithTimeStamps } = {};
-			var networkDataCombined: {
+			const cpuData: { [key: string]: metricsWithTimeStamps } = {};
+			const memoryData: { [key: string]: metricsWithTimeStamps } = {};
+			const networkDataCombined: {
 				[key: string]: metricsWithTimeStamps[];
 			} = {};
 			const metrics = await getMetricsResponse(dryRunId);
@@ -79,7 +81,7 @@
 				{},
 				metrics
 			);
-			let pipelineMetricsAnalytics: MetricsAnalytics = {};
+			const pipelineMetricsAnalytics: MetricsAnalytics = {};
 			await getMetricsAnalyticsUtils(
 				result.allStepNames,
 				metrics,
@@ -107,7 +109,7 @@
 				// TODO: change when filesize api is ready
 				return Number(response.dryRun.argoWorkflow.metadata.annotations.filesize);
 			} catch (error) {
-				console.log(error)
+				console.log(error);
 				// throw new Error(`Problem reading input filesizes for dry run - ${dryRunId}`);
 				validFileSizes = false;
 				let createDryRunMessageModal: ModalSettings;
@@ -124,21 +126,19 @@
 		});
 
 		// store combined resource usage for selected dry runs
-		const CpuCombined: Record<string, { max: number[]; avg: number[] }> = [
-			...allStepNames,
-			'Total'
-		].reduce((acc, stepName) => ({ ...acc, [stepName]: { max: [], avg: [] } }), {});
-		const MemoryCombined: Record<string, { max: number[]; avg: number[] }> = [
-			...allStepNames,
-			'Total'
-		].reduce((acc, stepName) => ({ ...acc, [stepName]: { max: [], avg: [] } }), {});
+		const CpuCombined: Record<string, { max: number[]; avg: number[] }> = Object.fromEntries(
+			[...allStepNames, 'Total'].map((stepName) => [stepName, { max: [], avg: [] }])
+		);
+		const MemoryCombined: Record<string, { max: number[]; avg: number[] }> = Object.fromEntries(
+			[...allStepNames, 'Total'].map((stepName) => [stepName, { max: [], avg: [] }])
+		);
 		const DurationCombined: { [key: string]: number[] } = Object.fromEntries(
 			[...allStepNames, 'Total'].map((name) => [name, []])
 		);
 
 		// combine resource values for the selected dry runs
-		for(const dryrunId of dryruns_for_prediction) {
-			for(const stepName of [...allStepNames, 'Total']) {
+		for (const dryrunId of dryruns_for_prediction) {
+			for (const stepName of [...allStepNames, 'Total']) {
 				CpuCombined[stepName].max.push(collectedMetrics[dryrunId][stepName]?.CPU.max);
 				CpuCombined[stepName].avg.push(collectedMetrics[dryrunId][stepName]?.CPU.avg);
 				MemoryCombined[stepName].max.push(collectedMetrics[dryrunId][stepName]?.Memory.max);
@@ -148,54 +148,50 @@
 		}
 		const fileSizeData = (await Promise.all(fileSizeDataPromise)) as number[];
 		// make predictions with the combined resource values of all selected dry runs
-		maxCpuPredictions = Array<number>(allStepNames.length + 1).fill(0);
-		[...allStepNames, 'Total'].forEach(async (stepName, i) => {
+		maxCpuPredictions = Array.from({ length: allStepNames.length + 1 }).fill(0);
+		[...allStepNames, 'Total'].forEach(async (stepName, index) => {
 			const r = await linearRegression(fileSizeData, CpuCombined[stepName].max);
-			maxCpuPredictions[i] = predictLinearRegression(
+			maxCpuPredictions[index] = predictLinearRegression(
 				valueforPrediction,
 				r.slope,
 				r.intercept
 			).toFixed(3) as unknown as number;
 		});
-		avgCpuPredictions = Array<number>(allStepNames.length + 1).fill(0);
-		[...allStepNames, 'Total'].forEach(async (stepName, i) => {
+		avgCpuPredictions = Array.from({ length: allStepNames.length + 1 }).fill(0);
+		[...allStepNames, 'Total'].forEach(async (stepName, index) => {
 			const r = await linearRegression(fileSizeData, CpuCombined[stepName].avg);
-			avgCpuPredictions[i] = predictLinearRegression(
+			avgCpuPredictions[index] = predictLinearRegression(
 				valueforPrediction,
 				r.slope,
 				r.intercept
 			).toFixed(3) as unknown as number;
 		});
-		maxMemPredictions = Array<number>(allStepNames.length + 1).fill(0);
-		[...allStepNames, 'Total'].forEach(async (stepName, i) => {
+		maxMemPredictions = Array.from({ length: allStepNames.length + 1 }).fill(0);
+		[...allStepNames, 'Total'].forEach(async (stepName, index) => {
 			const r = await linearRegression(fileSizeData, MemoryCombined[stepName].max);
-			maxMemPredictions[i] = predictLinearRegression(
-				valueforPrediction,
-				r.slope,
-				r.intercept
-			);;
+			maxMemPredictions[index] = predictLinearRegression(valueforPrediction, r.slope, r.intercept);
 		});
-		
-		avgMemPredictions = Array<number>(allStepNames.length + 1).fill(0);
-		[...allStepNames, 'Total'].forEach(async (stepName, i) => {
+
+		avgMemPredictions = Array.from({ length: allStepNames.length + 1 }).fill(0);
+		[...allStepNames, 'Total'].forEach(async (stepName, index) => {
 			const r = await linearRegression(fileSizeData, MemoryCombined[stepName].avg);
-			avgMemPredictions[i] = predictLinearRegression(
+			avgMemPredictions[index] = predictLinearRegression(
 				valueforPrediction,
 				r.slope,
 				r.intercept
 			).toFixed(3) as unknown as number;
 		});
-		durationPredictions = Array<string>(allStepNames.length + 1).fill('');
-		[...allStepNames, 'Total'].forEach(async (stepName, i) => {
+		durationPredictions = Array.from({ length: allStepNames.length + 1 }).fill('');
+		[...allStepNames, 'Total'].forEach(async (stepName, index) => {
 			const r = await linearRegression(fileSizeData, DurationCombined[stepName]);
-			durationPredictions[i] = readable_time(
+			durationPredictions[index] = readable_time(
 				(predictLinearRegression(valueforPrediction, r.slope, r.intercept) *
 					1000) as unknown as number
 			);
 		});
 		showPredictions = true;
 	};
-	let valueforPrediction: number = 11000;
+	let valueforPrediction: number = 11_000;
 	let showPredictions = false;
 	let validFileSizes = true;
 	let maxCpuPredictions: number[];
@@ -255,10 +251,10 @@
 						<td>
 							<table class="table">
 								<tbody>
-									{#each allStepNames as name, i}
+									{#each allStepNames as name, index}
 										<tr>
 											<td>{name}</td>
-											<td>{durationPredictions[i]}</td>
+											<td>{durationPredictions[index]}</td>
 										</tr>
 									{/each}
 									<tr>
@@ -276,10 +272,10 @@
 						<td>
 							<table class="table">
 								<tbody>
-									{#each allStepNames as name, i}
+									{#each allStepNames as name, index}
 										<tr>
 											<td>{name}</td>
-											<td>{printReadablePercent(maxCpuPredictions[i])}</td>
+											<td>{printReadablePercent(maxCpuPredictions[index])}</td>
 										</tr>
 									{/each}
 									<tr>
@@ -293,15 +289,15 @@
 						<td>
 							<table class="table">
 								<tbody>
-									{#each allStepNames as name, i}
+									{#each allStepNames as name, index}
 										<tr>
 											<td>{name}</td>
-											<td>{printReadablePercent(avgCpuPredictions[i])}</td>
+											<td>{printReadablePercent(avgCpuPredictions[index])}</td>
 										</tr>
 									{/each}
 									<tr>
 										<td class="font-bold">Total</td>
-										<td class="font-bold">{printReadablePercent(avgCpuPredictions.slice(-1)[0])}</td>
+										<td class="font-bold">{printReadablePercent(avgCpuPredictions.at(-1))}</td>
 									</tr>
 								</tbody>
 							</table>
@@ -312,10 +308,10 @@
 						<td>
 							<table class="table">
 								<tbody>
-									{#each allStepNames as name, i}
+									{#each allStepNames as name, index}
 										<tr>
 											<td>{name}</td>
-											<td>{printReadableBytes(maxMemPredictions[i])}</td>
+											<td>{printReadableBytes(maxMemPredictions[index])}</td>
 										</tr>
 									{/each}
 									<tr>
@@ -329,10 +325,10 @@
 						<td>
 							<table class="table">
 								<tbody>
-									{#each allStepNames as name, i}
+									{#each allStepNames as name, index}
 										<tr>
 											<td>{name}</td>
-											<td>{printReadableBytes(avgMemPredictions[i])}</td>
+											<td>{printReadableBytes(avgMemPredictions[index])}</td>
 										</tr>
 									{/each}
 									<tr>
@@ -345,7 +341,7 @@
 					</tr>
 				</tbody>
 			</table>
-		{/if}		
+		{/if}
 	</div>
 </div>
 

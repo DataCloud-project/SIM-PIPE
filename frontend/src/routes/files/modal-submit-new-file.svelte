@@ -1,13 +1,6 @@
 <script lang="ts">
+	import { getModalStore, type ModalSettings, Modal } from '@skeletonlabs/skeleton';
 	import { cBase, cHeader, cForm } from '../../styles/styles.js';
-	import { filesList } from '../../stores/stores.js';
-	import createProjectMutation from '../../queries/create_project.js';
-	import allProjectsQuery from '../../queries/get_all_projects.js';
-	import createWorkflowTemplateMutation from '../../queries/create_workflow_template.js';
-	import type { Project } from '../../types.js';
-	import { modalStore, type ModalSettings, Modal } from '@skeletonlabs/skeleton';
-	import yaml from 'js-yaml';
-	import { requestGraphQLClient } from '$lib/graphqlUtils.js';
 
 	export let parent: any;
 
@@ -17,6 +10,8 @@
 	};
 	let hideModal = false;
 	let alertModal = false;
+
+	const modalStore = getModalStore();
 
 	async function onCreateProjectSubmit(): Promise<void> {
 		modalStore.close();
@@ -36,7 +31,9 @@
 		};
 		alertModal = true;
 		modalStore.trigger(projectCreatedMessageModal);
-		await new Promise((resolve) => setTimeout(resolve, 1500));
+		await new Promise((resolve) => {
+			setTimeout(resolve, 1500);
+		});
 		modalStore.close();
 		modalStore.clear();
 

@@ -1,8 +1,9 @@
-import { graphQLClient } from '../stores/stores';
 import { get } from 'svelte/store';
-import initKeycloak from '../utils/keycloak.client';
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 import type { RequestDocument, Variables } from 'graphql-request';
+
+import { graphQLClient } from '../stores/stores';
+import initKeycloak from '../utils/keycloak.client';
 
 export async function requestGraphQLClient<T, V extends Variables = Variables>(
 	query: RequestDocument | TypedDocumentNode<T, V>,
@@ -11,5 +12,5 @@ export async function requestGraphQLClient<T, V extends Variables = Variables>(
 	if (!get(graphQLClient)) {
 		await initKeycloak();
 	}
-	return await get(graphQLClient).request<T>(query, variables);
+	return get(graphQLClient).request<T>(query, variables);
 }

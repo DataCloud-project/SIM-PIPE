@@ -1,4 +1,4 @@
 export async function load({ params }) {
-	let { prediction } = params;
+	const { prediction } = params;
 	return { prediction };
 }

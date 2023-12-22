@@ -1,13 +1,15 @@
 <script lang="ts">
 	import { Modal, modalStore, ProgressBar } from '@skeletonlabs/skeleton';
-	import type { ModalSettings, ModalComponent } from '@skeletonlabs/skeleton';
-	import ModalSubmitNewSecret from './modal-submit-new-secret.svelte';
-	import allCredentialsQuery from '../../queries/get_all_credentials.js';
-	import deleteCredentialMutation from '../../queries/delete_credential.js';
-	import type { DockerRegistryCredential } from '../../types.js';
-	import { credentialsList, selectedCredential } from '../../stores/stores.js';
-	import { requestGraphQLClient } from '$lib/graphqlUtils';
+	import type { ModalComponent, ModalSettings } from '@skeletonlabs/skeleton';
+
 	import { goto } from '$app/navigation';
+	import { requestGraphQLClient } from '$lib/graphql-utils';
+
+	import deleteCredentialMutation from '../../queries/delete_credential.js';
+	import allCredentialsQuery from '../../queries/get_all_credentials.js';
+	import { credentialsList, selectedCredential } from '../../stores/stores.js';
+	import ModalSubmitNewSecret from './modal-submit-new-secret.svelte';
+	import type { DockerRegistryCredential } from '../../types.js';
 
 	const modalComponent: ModalComponent = {
 		ref: ModalSubmitNewSecret
@@ -27,16 +29,16 @@
 	};
 
 	const credentialsPromise = getCredentialsList();
-	let checkboxes: Record<string, boolean> = {};
+	const checkboxes: Record<string, boolean> = {};
 
 	// TODO: why do credentials not have an id? That is quite stupid!
 	credentialsPromise
 		.then((value) => {
 			$credentialsList = value;
 			reactiveCredentialsList = value;
-			$credentialsList.forEach((element) => {
+			for (const element of $credentialsList) {
 				checkboxes[element.name] = false;
-			});
+			}
 		})
 		.catch(() => {
 			$credentialsList = undefined;
@@ -52,9 +54,10 @@
 				const response = await requestGraphQLClient(deleteCredentialMutation, variables);
 			});
 		// reset checkboxes
-		$credentialsList?.forEach((element) => {
-			checkboxes[element.name] = false;
-		});
+		if ($credentialsList)
+			for (const element of $credentialsList) {
+				checkboxes[element.name] = false;
+			}
 		const newcredentialsPromise: { dockerRegistryCredentials: DockerRegistryCredential[] } =
 			await requestGraphQLClient(allCredentialsQuery);
 		// Update credentialsList

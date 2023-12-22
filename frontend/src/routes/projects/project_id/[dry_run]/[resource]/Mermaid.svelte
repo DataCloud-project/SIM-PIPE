@@ -21,12 +21,12 @@
 	mermaid.initialize(mermaidConfig);
 
 	async function renderDiagram() {
-		let { svg } = await mermaid.render('mermaid', diagram, container);
+		const { svg } = await mermaid.render('mermaid', diagram, container);
 		container.innerHTML = svg;
-		container.addEventListener('click', function (e: any) {
+		container.addEventListener('click', (e: any) => {
 			if (e.target.attributes.getNamedItem('class').value === 'nodeLabel') {
-				//buildDiagram();
-				//console.log(diagram);
+				// buildDiagram();
+				// console.log(diagram);
 			}
 		});
 		return svg;

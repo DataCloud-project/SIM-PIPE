@@ -1,15 +1,15 @@
 <script lang="ts">
 	import { ProgressBar } from '@skeletonlabs/skeleton';
+	import { format } from 'date-fns';
+	import { gql } from 'graphql-request';
 	import {
 		selectedProjectName,
 		selectedDryRunName,
 		selectedMetricsType
 	} from '../../../../../../stores/stores';
-	import { goto } from '$app/navigation';
-	import { format } from 'date-fns';
+	import { goto } from '$app/navigation'$lib/graphql-utils
 	import { requestGraphQLClient } from '$lib/graphqlUtils';
 	import Plot from '../Plot.svelte';
-	import { gql } from 'graphql-request';
 
 	const datefmt = 'yyyy-MM-dd HH:mm:ss';
 	const defaultMetricsType = 'All';
@@ -106,14 +106,14 @@
 
 	function buildMetricQuery(metrics: string[]) {
 		let metric_string = ``;
-		for (let i = 0; i < metrics.length; i++) {
-			metric_string += `${metrics[i]} {
+		for (const metric of metrics) {
+			metric_string += `${metric} {
 			timestamp
 			value
 			}
 		`;
 		}
-		let metricq = `query getDryRunAllMetrics($dryRunId: String!) {
+		const metricq = `query getDryRunAllMetrics($dryRunId: String!) {
 		dryRun(dryRunId: $dryRunId) {
 			nodes {
 				... on DryRunNodePod {
@@ -132,15 +132,15 @@
 	}
 
 	const getMetricsResponse = async () => {
-		Object.keys(metric_metadata).forEach((metric) => {
+		for (const metric of Object.keys(metric_metadata)) {
 			metricsData[metric] = [];
-			metric_metadata[metric]['metric_sources'].forEach((metric_source) => {
+			for (const metric_source of metric_metadata[metric].metric_sources) {
 				metricSources.push(metric_source);
-			});
-		});
-		//console.log(metricSources);
+			}
+		}
+		// console.log(metricSources);
 		const queryString = buildMetricQuery(metricSources);
-		//console.log(queryString);
+		// console.log(queryString);
 		const metricsQuery = gql`
 			${queryString}
 		`;
@@ -167,27 +167,27 @@
 					};
 				}) => {
 					if (isEmpty(node) === false) {
-						Object.keys(metric_metadata).forEach((metric) => {
-							let metric_sources = metric_metadata[metric]['metric_sources'];
-							metric_sources.forEach((metric_source) => {
-								let timestamps = timestampsToDatetime(
+						for (const metric of Object.keys(metric_metadata)) {
+							const { metric_sources } = metric_metadata[metric];
+							for (const metric_source of metric_sources) {
+								const timestamps = timestampsToDatetime(
 									node.startedAt,
 									node.metrics[metric_source].map((item: { timestamp: any }) => item.timestamp)
 								);
-								let values = node.metrics[metric_source].map((item: { value: string }) =>
+								const values = node.metrics[metric_source].map((item: { value: string }) =>
 									Number(item.value)
 								);
-								var metric_data = {
+								const metric_data = {
 									x: timestamps,
 									y: values,
-									type: metric_metadata[metric]['type'],
+									type: metric_metadata[metric].type,
 									name: truncateString(node.displayName as string, 15)
 								};
 								if (values.length > 0) {
 									metricsData[metric].push(metric_data);
 								}
-							});
-						});
+							}
+						}
 					}
 				}
 			);
@@ -199,29 +199,29 @@
 	// TODO: These functions are the same as in [resource].svelte
 	// should be merged and moved into lib?
 
-	function isEmpty(obj: any) {
-		return Object.keys(obj).length === 0;
+	function isEmpty(object: any) {
+		return Object.keys(object).length === 0;
 	}
 
 	function truncateString(word: string, maxLength: number) {
 		if (word.length > maxLength) {
-			return word.slice(0, maxLength) + '..';
+			return `${word.slice(0, maxLength)}..`;
 		}
 		return word;
 	}
 
 	function addSeconds(date: Date, seconds: number) {
 		date.setSeconds(date.getSeconds() + seconds);
-		let dateStr = format(date, datefmt);
-		return dateStr;
+		const dateString = format(date, datefmt);
+		return dateString;
 	}
 
 	function timestampsToDatetime(startedAt: string, input_array: number[]) {
-		let date = new Date(startedAt);
-		let timeseries = [addSeconds(date, 0)];
-		for (let i = 0; i < input_array.length - 1; i++) {
-			let v = input_array[i + 1] - input_array[i];
-			let newDate = addSeconds(date, v);
+		const date = new Date(startedAt);
+		const timeseries = [addSeconds(date, 0)];
+		for (let index = 0; index < input_array.length - 1; index++) {
+			const v = input_array[index + 1] - input_array[index];
+			const newDate = addSeconds(date, v);
 			timeseries.push(newDate);
 		}
 		return timeseries;

@@ -1,4 +1,4 @@
 export async function load({ params }) {
-	let { resource } = params;
+	const { resource } = params;
 	return { resource };
 }

@@ -1,8 +1,9 @@
 import { get } from 'svelte/store';
+
 import allDryRunsQuery from '../queries/get_all_dryruns.js';
 import { selectedProject } from '../stores/stores.js';
+import { requestGraphQLClient } from './graphql-utils.js';
 import type { Project } from '../types.js';
-import { requestGraphQLClient } from './graphqlUtils.js';
 
 let refreshActiveRunsPromise: Promise<void> | undefined;
 
@@ -21,11 +22,11 @@ export default async function refreshProjectDetails(): Promise<void> {
 			);
 			selectedProject.set(responseProjectDetails.project);
 			// check if updating can be stopped
-			get(selectedProject)?.dryRuns.forEach((item) => {
+			for (const item of get(selectedProject)?.dryRuns) {
 				if (item.status.phase.toString() == 'Running') {
 					activeDryRuns = true;
 				}
-			});
+			}
 			activeDryRuns = !get(selectedProject)?.dryRuns.every(
 				(run) =>
 					run.status.phase.toString() !== 'Running' && run.status.phase.toString() !== 'Pending'

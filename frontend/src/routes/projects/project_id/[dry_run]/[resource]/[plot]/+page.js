@@ -1,4 +1,4 @@
 export async function load({ params }) {
-	let { plot } = params;
+	const { plot } = params;
 	return { plot };
 }

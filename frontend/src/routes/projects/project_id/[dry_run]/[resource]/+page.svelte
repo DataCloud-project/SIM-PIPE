@@ -1,23 +1,21 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { ProgressBar } from '@skeletonlabs/skeleton';
+	import { ProgressBar, CodeBlock } from '@skeletonlabs/skeleton';
+	import { ZoomInIcon } from 'svelte-feather-icons';
+	import { filesize } from 'filesize';
 	import type { DryRunMetrics, DryRun } from '../../../../../types';
 	import getDryRunMetricsQuery from '../../../../../queries/get_dry_run_metrics.js';
 	import getDryRunNoLogsMetricsQuery from '../../../../../queries/get_dry_run_metrics_no_logs.js';
 	import getProjectQuery from '../../../../../queries/get_project';
-	import getDryRunPhaseResultsQuery from '../../../../../queries/get_dry_run_phase_results';
+	import getDryRunPhaseResultsQuery from$lib/graphql-utilsqueries/get_dry_run_phase_results';
 	import getDryRunQuery from '../../../../../queries/get_selected_project';
 	import { requestGraphQLClient } from '$lib/graphqlUtils';
 	import { goto } from '$app/navigation';
 	import Plot from './Plot.svelte';
 	import Mermaid from './Mermaid.svelte';
 	import { colors } from './Config.js';
-	import { stepsList } from '../../../../../stores/stores';
+	import { stepsList, selectedProjectName, selectedDryRunName } from '../../../../../stores/stores';
 	import Legend from './Legend.svelte';
-	import { ZoomInIcon } from 'svelte-feather-icons';
-	import { CodeBlock } from '@skeletonlabs/skeleton';
-	import { selectedProjectName, selectedDryRunName } from '../../../../../stores/stores';
-	import { filesize } from 'filesize';
 	import {
 		getMetricsUsageUtils,
 		getMetricsAnalyticsUtils,
@@ -28,7 +26,7 @@
 	export let data;
 	let workflow: { workflowTemplates: { argoWorkflowTemplate: { spec: { templates: any[] } } }[] };
 	let selectStepName = 'Total';
-	let dryRunPhases: { [x: string]: string } = {};
+	const dryRunPhases: { [x: string]: string } = {};
 	const graphOrientation = 'LR';
 
 	let mermaidCode = [];
@@ -36,7 +34,7 @@
 	$: diagram = diagram;
 	let selectedProject: { name: string; id: string };
 	let showLogs = true;
-	let logs: { [x: string]: string } = {};
+	const logs: { [x: string]: string } = {};
 
 	var cpuData: { [key: string]: { x: string[]; y: number[]; type: string; name: string } } = {};
 	var memoryData: { [key: string]: { x: string[]; y: number[]; type: string; name: string } } = {};
@@ -44,7 +42,7 @@
 		[key: string]: { x: string[]; y: number[]; type: string; name: string }[];
 	} = {};
 
-	let pipelineMetricsAnalytics: MetricsAnalytics = {};
+	const pipelineMetricsAnalytics: MetricsAnalytics = {};
 
 	let showMax = true;
 	const getMetricsResponse = async () => {
@@ -56,7 +54,7 @@
 				getDryRunMetricsQuery,
 				dryrun_variables
 			);
-			return response?.dryRun?.nodes.filter(node => Object.keys(node).length > 0);
+			return response?.dryRun?.nodes.filter((node) => Object.keys(node).length > 0);
 		} catch (error) {
 			// internal server error from graphql API when requesting logs for dry runs which has no logs
 			if ((error as Error).message.includes('No logs found:')) {
@@ -65,7 +63,7 @@
 					getDryRunNoLogsMetricsQuery,
 					dryrun_variables
 				);
-				return response?.dryRun?.nodes.filter(node => Object.keys(node).length > 0);;
+				return response?.dryRun?.nodes.filter((node) => Object.keys(node).length > 0);
 			}
 		}
 	};
@@ -136,7 +134,7 @@
 	const getDataPromise = getData();
 	function truncateString(word: string, maxLength: number) {
 		if (word.length > maxLength) {
-			return word.slice(0, maxLength) + '..';
+			return `${word.slice(0, maxLength)}..`;
 		}
 		return word;
 	}
@@ -158,14 +156,14 @@
 	function buildDiagram() {
 		mermaidCode = []; // clear mermaidCode
 		mermaidCode.push(`graph ${graphOrientation};`);
-		workflow.workflowTemplates[0]?.argoWorkflowTemplate.spec.templates.forEach((template) => {
+		for (const template of workflow.workflowTemplates[0]?.argoWorkflowTemplate.spec.templates) {
 			try {
 				if (template.dag) argoDAGtoMermaid(template.dag);
 				else if (template.steps) argoStepsToMermaid(template.steps);
 			} catch (error) {
 				console.log(error);
 			}
-		});
+		}
 		diagram = mermaidCode.join('\n');
 	}
 
@@ -174,51 +172,45 @@
 		for (const stepList of argoWorkflow) {
 			for (const parallellStep of stepList) {
 				const stepName = parallellStep.name;
-				mermaidCode.push(`  ${stepName}["${truncateString(stepName, 12)}"];`);
-				// TODO: replace with actual step click
-				mermaidCode.push(`  click ${stepName} href "javascript:console.log('task ${stepName}');"`);
 				mermaidCode.push(
+					`  ${stepName}["${truncateString(stepName, 12)}"];`,
+					`  click ${stepName} href "javascript:console.log('task ${stepName}');"`,
 					`  style ${stepName} fill:${colors[dryRunPhases[stepName] as keyof typeof colors]}`
 				);
 			}
-			if (previousStep !== '') {
-				if (stepList.length > 1) {
-					let subgraphName = `parallel-${generateRandomString()}`;
-					mermaidCode.push(`  subgraph ${subgraphName}`);
-					for (const step of stepList) {
-						const stepName = step.name;
-						mermaidCode.push(`    ${stepName};`);
-					}
-					mermaidCode.push(`  end`);
-					mermaidCode.push(`  ${previousStep} --> ${subgraphName};`);
-					previousStep = subgraphName;
-				} else {
-					for (const step of stepList) {
-						const stepName = step.name;
-						if (previousStep !== '') {
-							mermaidCode.push(`    ${previousStep} --> ${stepName};`);
-						}
-						previousStep = stepName;
-					}
-				}
-			} else {
+			if (previousStep === '') {
 				const stepName = stepList[0].name;
 				previousStep = stepName;
+			} else if (stepList.length > 1) {
+				const subgraphName = `parallel-${generateRandomString()}`;
+				mermaidCode.push(`  subgraph ${subgraphName}`);
+				for (const step of stepList) {
+					const stepName = step.name;
+					mermaidCode.push(`    ${stepName};`);
+				}
+				mermaidCode.push(`  end`, `  ${previousStep} --> ${subgraphName};`);
+				previousStep = subgraphName;
+			} else {
+				for (const step of stepList) {
+					const stepName = step.name;
+					if (previousStep !== '') {
+						mermaidCode.push(`    ${previousStep} --> ${stepName};`);
+					}
+					previousStep = stepName;
+				}
 			}
 		}
 	}
 
 	function argoDAGtoMermaid(argoWorkflow: { tasks: any[] }) {
-		argoWorkflow.tasks.forEach((task) => {
+		for (const task of argoWorkflow.tasks) {
 			const taskName = task.name;
 			const dependencies = task.dependencies || [];
 			const depends = task.depends || '';
 
-			mermaidCode.push(`  ${taskName}["${truncateString(taskName, 12)}"];`);
-			// TODO: replace with actual step click
-			mermaidCode.push(`  click ${taskName} href "javascript:console.log('task ${taskName}');"`);
-
 			mermaidCode.push(
+				`  ${taskName}["${truncateString(taskName, 12)}"];`,
+				`  click ${taskName} href "javascript:console.log('task ${taskName}');"`,
 				`  style ${taskName} fill:${colors[dryRunPhases[taskName] as keyof typeof colors]}`
 			);
 			for (const depTask of dependencies) {
@@ -231,7 +223,7 @@
 					}
 				});
 			}
-		});
+		}
 	}
 
 	function stepOnClick(stepName: string, stepType: string) {
@@ -251,23 +243,24 @@
 		if (resource == 'cpu') {
 			resourceData = cpuData;
 			if (Object.keys(cpuData).length > 0)
-				allStepNames.forEach((step) => {
+				for (const step of allStepNames) {
 					if (cpuData[step]) wholeData.push(cpuData[step]);
-				});
+				}
 		} else if (resource == 'memory') {
 			resourceData = memoryData;
 			if (Object.keys(memoryData).length > 0)
-				allStepNames.forEach((step) => {
+				for (const step of allStepNames) {
 					if (memoryData[step]) wholeData.push(memoryData[step]);
-				});
+				}
 		} else {
 			resourceData = networkDataCombined;
 			wholeData = [];
-			allStepNames.forEach((step) => {
-				networkDataCombined[step]?.forEach((elem) => {
-					wholeData.push(elem);
-				});
-			});
+			for (const step of allStepNames) {
+				if (networkDataCombined[step])
+					for (const element of networkDataCombined[step]) {
+						wholeData.push(element);
+					}
+			}
 		}
 		if (selectedStep != 'Total') {
 			if (resource == 'network')
@@ -295,9 +288,9 @@
 	}
 
 	function getPartLogs(stepName: string, nmaxlinelength: number) {
-		let steplogs = logs[stepName];
+		const steplogs = logs[stepName];
 		if (steplogs.length < nmaxlinelength) return steplogs;
-		else return steplogs.slice(0, nmaxlinelength) + '...';
+		return `${steplogs.slice(0, nmaxlinelength)}...`;
 	}
 </script>
 
@@ -385,9 +378,9 @@
 										<h2>{key}</h2>
 									</li>
 									<li>
-										{#if logs[key] != null}
+										{#if logs[key] != undefined}
 											<div class="w-full">
-												<CodeBlock language="bash" code={getPartLogs(key, 20000)} />
+												<CodeBlock language="bash" code={getPartLogs(key, 20_000)} />
 											</div>
 										{:else}
 											<p>No logs</p>

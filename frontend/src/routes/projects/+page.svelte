@@ -1,23 +1,27 @@
 <script lang="ts">
-	import { Modal, modalStore, ProgressBar } from '@skeletonlabs/skeleton';
-	import type { ModalSettings } from '@skeletonlabs/skeleton';
-	import ModalSubmitNewProject from './modal-submit-new-project.svelte';
-	import { projectsList, clickedProjectId } from '../../stores/stores.js';
-	import type { Project } from '../../types.js';
-	import { goto } from '$app/navigation';
-	import Timestamp from './project_id/[dry_run]/timestamp.svelte';
-	import { requestGraphQLClient } from '$lib/graphqlUtils';
+	import { getModalStore, Modal, ProgressBar } from '@skeletonlabs/skeleton';
 	import { AlertTriangleIcon, EditIcon, FileTextIcon } from 'svelte-feather-icons';
-	import ModalRenameProject from './modal-rename-project.svelte';
-	import allProjectsQuery from '../../queries/get_all_projects.js';
-	import deleteProjectMutation from '../../queries/delete_project.js';
-	import allDryRunsQuery from '../../queries/get_all_dryruns';
+	import type { ModalSettings } from '@skeletonlabs/skeleton';
+
+	import { goto } from '$app/navigation';
+	import { requestGraphQLClient } from '$lib/graphql-utils';
+
 	import deleteDryRunMutation from '../../queries/delete_dry_run.js';
+	import deleteProjectMutation from '../../queries/delete_project.js';
 	import deleteWorkflowTemplateMutation from '../../queries/delete_workflow_template.js';
+	import allDryRunsQuery from '../../queries/get_all_dryruns';
+	import allProjectsQuery from '../../queries/get_all_projects.js';
+	import { clickedProjectId, projectsList } from '../../stores/stores.js';
+	import ModalRenameProject from './modal-rename-project.svelte';
+	import ModalSubmitNewProject from './modal-submit-new-project.svelte';
+	import Timestamp from './project_id/[dry_run]/timestamp.svelte';
+	import type { Project } from '../../types.js';
 
 	export let visibleAlert = false;
 	export let alertTitle = 'Alert!';
 	export let alertMessage = 'Alert!';
+
+	const modalStore = getModalStore();
 
 	const getProjectsList = async (): Promise<Project[]> => {
 		const response: { projects: Project[] } = await requestGraphQLClient(allProjectsQuery);
@@ -28,10 +32,11 @@
 	// get dry run counts for each project, and reset checkboxes
 	function getDryRunCounts(projectList: Project[] | undefined): Record<string, number> {
 		dryRunCounts = {};
-		projectList?.forEach((project) => {
-			checkboxes[project.id] = false;
-			dryRunCounts[project.id] = project.dryRuns.length;
-		});
+		if (projectList)
+			for (const project of projectList) {
+				checkboxes[project.id] = false;
+				dryRunCounts[project.id] = project.dryRuns.length;
+			}
 		return dryRunCounts;
 	}
 
@@ -96,14 +101,16 @@
 		await new Promise((resolve) => setTimeout(resolve, 1500));
 		modalStore.close();
 		// reset checkboxes
-		$projectsList?.forEach((element) => {
-			checkboxes[element.id] = false;
-		});
+		if ($projectsList)
+			for (const element of $projectsList) {
+				checkboxes[element.id] = false;
+			}
 		// inserting a small delay because sometimes delete mutation returns true, but all projects query returns the deleted project as well
 		await new Promise((resolve) => setTimeout(resolve, 150));
 
 		// update the project list after deletion
-		let responseAllProjects: { projects: Project[] } = await requestGraphQLClient(allProjectsQuery);
+		const responseAllProjects: { projects: Project[] } =
+			await requestGraphQLClient(allProjectsQuery);
 		projectsList.set(responseAllProjects.projects);
 	}
 
@@ -139,7 +146,7 @@
 			const template_name = template?.metadata.name;
 			goto(`/templates/${template_name}`);
 			throw new Error('Template not found!');
-		} catch (error) {
+		} catch {
 			visibleAlert = true;
 			alertTitle = 'Template not found!';
 			alertMessage = `Workflow template does not exist for this project: ${clickedProjectId}`;

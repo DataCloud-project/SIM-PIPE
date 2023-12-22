@@ -1,14 +1,17 @@
 <script lang="ts">
-	import { cBase, cHeader, cForm } from '../../styles/styles.js';
-	import { projectsList } from '../../stores/stores.js';
+	import { getModalStore, Modal, type ModalSettings } from '@skeletonlabs/skeleton';
+
+	import { requestGraphQLClient } from '$lib/graphql-utils.js';
+
 	import allProjectsQuery from '../../queries/get_all_projects.js';
-	import type { Project } from '../../types.js';
-	import { modalStore, type ModalSettings, Modal } from '@skeletonlabs/skeleton';
-	import { requestGraphQLClient } from '$lib/graphqlUtils.js';
 	import renameProjectMutation from '../../queries/rename_project.js';
+	import { projectsList } from '../../stores/stores.js';
+	import { cBase, cForm, cHeader } from '../../styles/styles.js';
+	import type { Project } from '../../types.js';
 
 	export let parent: any;
-	const project: { projectId: string; projectName: string } = $modalStore[0]?.valueAttr as {
+	const modalStore = getModalStore();
+	const project: { projectId: string; projectName: string } = modalStore[0]?.valueAttr as {
 		projectId: string;
 		projectName: string;
 	};
@@ -39,9 +42,8 @@
 		modalStore.clear();
 
 		// update the project list after addition
-		const responseAllProjects: { projects: Project[] } = await requestGraphQLClient(
-			allProjectsQuery
-		);
+		const responseAllProjects: { projects: Project[] } =
+			await requestGraphQLClient(allProjectsQuery);
 		$projectsList = [];
 		$projectsList = responseAllProjects.projects;
 	}

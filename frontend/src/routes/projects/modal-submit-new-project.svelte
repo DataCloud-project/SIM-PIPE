@@ -1,15 +1,18 @@
 <script lang="ts">
-	import { cBase, cHeader, cForm } from '../../styles/styles.js';
-	import { projectsList, username } from '../../stores/stores.js';
-	import createProjectMutation from '../../queries/create_project.js';
-	import allProjectsQuery from '../../queries/get_all_projects.js';
-	import createWorkflowTemplateMutation from '../../queries/create_workflow_template.js';
-	import type { Project } from '../../types.js';
-	import { modalStore, type ModalSettings, Modal } from '@skeletonlabs/skeleton';
+	import { getModalStore, Modal, type ModalSettings } from '@skeletonlabs/skeleton';
 	import yaml from 'js-yaml';
-	import { requestGraphQLClient } from '$lib/graphqlUtils.js';
+
+	import { requestGraphQLClient } from '$lib/graphql-utils.js';
+
+	import createProjectMutation from '../../queries/create_project.js';
+	import createWorkflowTemplateMutation from '../../queries/create_workflow_template.js';
+	import allProjectsQuery from '../../queries/get_all_projects.js';
+	import { projectsList, username } from '../../stores/stores.js';
+	import { cBase, cForm, cHeader } from '../../styles/styles.js';
+	import type { Project } from '../../types.js';
 
 	export let parent: any;
+	const modalStore = getModalStore();
 
 	const formData = {
 		project_name: '',
@@ -20,7 +23,7 @@
 	let alertModal = false;
 
 	// function to transform project_name to template_name
-	$: formData.template_name = formData.project_name.replace(/\s+/g, '-').toLowerCase();
+	$: formData.template_name = formData.project_name.replaceAll(/\s+/g, '-').toLowerCase();
 
 	export async function onCreateProjectSubmit(): Promise<void> {
 		modalStore.close();
@@ -74,9 +77,8 @@
 			await requestGraphQLClient(createWorkflowTemplateMutation, variables2);
 		}
 		// update the project list after addition
-		const responseAllProjects: { projects: Project[] } = await requestGraphQLClient(
-			allProjectsQuery
-		);
+		const responseAllProjects: { projects: Project[] } =
+			await requestGraphQLClient(allProjectsQuery);
 		$projectsList = [];
 		$projectsList = responseAllProjects.projects;
 	}

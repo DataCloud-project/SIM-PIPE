@@ -1,14 +1,13 @@
 <script lang="ts">
-	import { ProgressBar } from '@skeletonlabs/skeleton';
-	import { clickedProjectId } from '../../../stores/stores';
-	import getWorkflowQuery from '../../../queries/get_workflow_template';
-	import { CodeBlock } from '@skeletonlabs/skeleton';
+	import { CodeBlock, ProgressBar } from '@skeletonlabs/skeleton';
 	import YAML from 'json-to-pretty-yaml';
-	import { goto } from '$app/navigation';
-	import { requestGraphQLClient } from '$lib/graphqlUtils';
 	import { ArrowRightIcon } from 'svelte-feather-icons';
 
-	export let data;
+	import { goto } from '$app/navigation';
+	import { requestGraphQLClient } from '$lib/graphql-utils';
+
+	import getWorkflowQuery from '../../../queries/get_workflow_template';
+	import { clickedProjectId } from '../../../stores/stores';
 
 	$: language = 'yaml';
 
@@ -32,12 +31,10 @@
 		});
 
 	function switchLanguage() {
-		if (language === 'yaml') {
-			language = 'json';
-		} else {
-			language = 'yaml';
-		}
+		language = language === 'yaml' ? 'json' : 'yaml';
 	}
+
+	export let data;
 </script>
 
 <div class="flex w-full content-center p-10">

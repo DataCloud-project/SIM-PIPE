@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Modal, ProgressBar, modalStore, type ModalSettings } from '@skeletonlabs/skeleton';
+	import { Modal, ProgressBar, getModalStore, type ModalSettings } from '@skeletonlabs/skeleton';
 	import { filesList } from '../../stores/stores.js';
 	import type { SampleFile } from '../../types.js';
 	import Timestamp from '../projects/project_id/[dry_run]/timestamp.svelte';
@@ -15,7 +15,7 @@
 
 	const filesPromise = getProjectsList();
 
-	let checkboxes: Record<string, boolean> = {};
+	const checkboxes: Record<string, boolean> = {};
 
 	filesPromise
 		.then((value) => {
@@ -25,7 +25,7 @@
 			$filesList = undefined;
 		});
 	// to disable onclick propogation for checkbox input
-	const handleCheckboxClick = (event: any) => {
+	const handleCheckboxClick = (event: MouseEvent) => {
 		event.stopPropagation();
 	};
 
@@ -38,7 +38,7 @@
 			// valueAttr: { projectId: project.id, projectName: project.name }
 		};
 
-		modalStore.trigger(modal);
+		getModalStore().trigger(modal);
 	}
 	async function onDeleteSelected() {
 		// get file ids from checkboxes
@@ -56,10 +56,12 @@
 			title: 'Sample File deleted🗑️!',
 			body: `Deleted files: ${Object.keys(checkboxes).filter((item) => checkboxes[item])}`
 		};
-		modalStore.trigger(fileDeletedMessageModal);
+		getModalStore().trigger(fileDeletedMessageModal);
 		await new Promise((resolve) => setTimeout(resolve, 1500));
-		modalStore.close();
+		getModalStore().close();
 	}
+
+	const modalStore = getModalStore();
 
 	$: reactiveFilesList = $filesList;
 </script>

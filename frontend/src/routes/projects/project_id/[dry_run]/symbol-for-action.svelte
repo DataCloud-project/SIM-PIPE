@@ -1,18 +1,20 @@
 <script lang="ts">
+	import { type ModalSettings, modalStore } from '@skeletonlabs/skeleton';
 	import {
+		AlertCircleIcon,
 		HelpCircleIcon,
-		StopCircleIcon,
 		PauseIcon,
 		PlayIcon,
 		RepeatIcon,
-		AlertCircleIcon
+		StopCircleIcon
 	} from 'svelte-feather-icons';
+
+	import { requestGraphQLClient } from '$lib/graphql-utils.js';
+
+	import resumeDryRunMutation from '../../../../queries/resume_dry_run.js';
 	import stopDryRunMutation from '../../../../queries/stop_dry_run.js';
 	import suspendDryRunMutation from '../../../../queries/suspend_dry_run.js';
-	import resumeDryRunMutation from '../../../../queries/resume_dry_run.js';
 	import { pausedDryRuns } from '../../../../stores/stores.js';
-	import { modalStore, type ModalSettings } from '@skeletonlabs/skeleton';
-	import { requestGraphQLClient } from '$lib/graphqlUtils.js';
 
 	export let action: string, dryRunId: string;
 	$: paused = $pausedDryRuns?.includes(dryRunId);
@@ -20,8 +22,8 @@
 	async function displayAlert(title: string, body: string) {
 		const alertModal: ModalSettings = {
 			type: 'alert',
-			title: title,
-			body: body
+			title,
+			body
 		};
 		modalStore.trigger(alertModal);
 		await new Promise((resolve) => setTimeout(resolve, 1000));
@@ -32,7 +34,7 @@
 	async function stopRun(event: any) {
 		try {
 			event.stopPropagation();
-			await requestGraphQLClient(stopDryRunMutation, { dryRunId: dryRunId, terminate: false });
+			await requestGraphQLClient(stopDryRunMutation, { dryRunId, terminate: false });
 			displayAlert('Stopping dry run..', `ID: ${dryRunId}`);
 		} catch (error) {
 			// TODO: handle error
@@ -43,7 +45,7 @@
 	async function pauseRun(event: any) {
 		try {
 			event.stopPropagation();
-			await requestGraphQLClient(suspendDryRunMutation, { dryRunId: dryRunId, terminate: false });
+			await requestGraphQLClient(suspendDryRunMutation, { dryRunId, terminate: false });
 			paused = true;
 			$pausedDryRuns.push(dryRunId);
 			displayAlert('Pausing dry run..', `ID: ${dryRunId}`);
@@ -56,7 +58,7 @@
 	async function resumeRun(event: any) {
 		try {
 			event.stopPropagation();
-			await requestGraphQLClient(resumeDryRunMutation, { dryRunId: dryRunId, terminate: false });
+			await requestGraphQLClient(resumeDryRunMutation, { dryRunId, terminate: false });
 			paused = false;
 			$pausedDryRuns.filter((item) => item !== dryRunId);
 			displayAlert('Resuming dry run..', `ID: ${dryRunId}`);

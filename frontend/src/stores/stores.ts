@@ -23,5 +23,5 @@ export const selectedCredential = writable<DockerRegistryCredential>();
 // need separate list in frontend as argo stores suspended runs in state 'Running'
 export const pausedDryRuns = writable<string[]>([]);
 
-export const username = writable<string | undefined>(undefined);
-export const usertoken = writable<string | undefined>(undefined);
+export const username = writable<string | undefined>();
+export const usertoken = writable<string | undefined>();

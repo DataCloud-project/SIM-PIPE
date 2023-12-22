@@ -1,12 +1,14 @@
 <script lang="ts">
-	import { cBase, cHeader, cForm, optional } from '../../../../styles/styles.js';
-	import { Modal, modalStore, type ModalSettings } from '@skeletonlabs/skeleton';
-	import { selectedProject } from '../../../../stores/stores.js';
+	import { Modal, type ModalSettings, modalStore } from '@skeletonlabs/skeleton';
+
+	import { requestGraphQLClient } from '$lib/graphql-utils.js';
+
+	import refreshProjectDetails from '../../../../lib/refresh-runs.js';
 	import createDryRunMutation from '../../../../queries/create_dry_run.js';
 	import allDryRunsQuery from '../../../../queries/get_all_dryruns.js';
-	import type { Project, Template, Task } from '../../../../types.js';
-	import refreshProjectDetails from '../../../../lib/refresh_runs.js';
-	import { requestGraphQLClient } from '$lib/graphqlUtils.js';
+	import { selectedProject } from '../../../../stores/stores.js';
+	import { cBase, cForm, cHeader, optional } from '../../../../styles/styles.js';
+	import type { Project, Task, Template } from '../../../../types.js';
 
 	export let parent: any;
 
@@ -15,7 +17,7 @@
 		S3
 	}
 
-	let formData = {
+	const formData = {
 		name: '',
 		files: [],
 		s3Key: '',
@@ -25,8 +27,8 @@
 
 	// stores the names of input files expected for initial steps while parsing
 	const input_artifacts: any = {};
-	let initial_task_name = ''; //TODO: make this a list to accomodate multiple initial steps in the pipeline
-	let initial_task_index = -1; //TODO: make this a list to accomodate multiple initial steps in the pipeline
+	let initial_task_name = ''; // TODO: make this a list to accomodate multiple initial steps in the pipeline
+	const initial_task_index = -1; // TODO: make this a list to accomodate multiple initial steps in the pipeline
 	const taskList = parseTaskList() || [];
 	let alertModal = false;
 
@@ -75,7 +77,8 @@
 	// modify workflow template from project to create a valid argoWorkflow input for create new dryrun
 	async function newWorkflowTemplate(template: { metadata: any; spec: any }) {
 		const newWorkflowTemplate = template;
-		if (Object.keys(input_artifacts).length != 0) {		// if pipeline has initial input files
+		if (Object.keys(input_artifacts).length != 0) {
+			// if pipeline has initial input files
 			try {
 				for (const [index, artifact] of input_artifacts[
 					initial_task_name

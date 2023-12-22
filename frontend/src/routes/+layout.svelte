@@ -1,13 +1,15 @@
 <script lang="ts">
-	// The ordering of these imports is critical to your app working properly
-	import '@skeletonlabs/skeleton/themes/theme-skeleton.css';
-	// If you have source.organizeImports set to true in VSCode, then it will auto change this ordering
-	import '@skeletonlabs/skeleton/styles/skeleton.css';
 	import '@fontsource/ibm-plex-sans/400.css';
 	import '@fontsource/ibm-plex-sans/600.css';
 	import '../app.postcss';
-	import { AppShell, AppBar, AppRail, AppRailTile } from '@skeletonlabs/skeleton';
-	import { LightSwitch } from '@skeletonlabs/skeleton';
+	import {
+		AppShell,
+		AppBar,
+		AppRail,
+		AppRailTile,
+		LightSwitch,
+		initializeStores
+	} from '@skeletonlabs/skeleton';
 
 	import { LockIcon, BookOpenIcon, FileIcon } from 'svelte-feather-icons';
 	import hljs from 'highlight.js';
@@ -18,6 +20,8 @@
 	import { browser } from '$app/environment';
 
 	storeHighlightJs.set(hljs);
+
+	initializeStores();
 
 	function generateServiceUrl(): string {
 		if (!browser) {

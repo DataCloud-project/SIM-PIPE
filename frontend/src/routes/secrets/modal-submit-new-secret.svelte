@@ -1,16 +1,17 @@
 <script lang="ts">
-	import { cBase, cHeader, cForm } from '../../styles/styles.js';
 	import createCredentialMutation from '../../queries/create_credential.js';
-	import { credentialsList } from '../../stores/stores.js';
 	import allCredentialsQuery from '../../queries/get_all_credentials.js';
+	import { credentialsList } from '../../stores/stores.js';
+	import { cBase, cForm, cHeader } from '../../styles/styles.js';
 	import type { DockerRegistryCredential } from '../../types.js';
+
 	export let parent: any;
-	import { modalStore } from '@skeletonlabs/skeleton';
-	import { requestGraphQLClient } from '$lib/graphqlUtils.js';
-	import { popup } from '@skeletonlabs/skeleton';
-	import type { PopupSettings } from '@skeletonlabs/skeleton';
+	import { modalStore, popup } from '@skeletonlabs/skeleton';
 	import { error } from '@sveltejs/kit';
 	import th from 'date-fns/locale/th';
+	import type { PopupSettings } from '@skeletonlabs/skeleton';
+
+	import { requestGraphQLClient } from '$lib/graphql-utils.js';
 
 	// Form Data
 	const formData = {
@@ -28,13 +29,13 @@
 		closeQuery: '#close-query'
 	};
 
-	let checkedAutoGeneratePassword = false;
+	const checkedAutoGeneratePassword = false;
 	$: passwordInputText = checkedAutoGeneratePassword
 		? 'auto generate strong password'
 		: 'Enter password...';
 
 	// write a function that generates a random password
-	let detfault_password_length = 30;
+	const detfault_password_length = 30;
 	function generateRandomPassword(length: number) {
 		let result = '';
 		const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -50,14 +51,14 @@
 	// function validate credentials input fields
 	function validateName(input: string) {
 		// Define the regular expression pattern for validation
-		var pattern = /^[a-z0-9.,_,-]+$/;
+		const pattern = /^[\d,._a-z-]+$/;
 		return pattern.test(input);
 	}
 	// vaidate server name
 	function validateServerName(input: string) {
 		// Define the regular expression pattern for validation
-		var pattern = /^[a-z0-9.,/,:_,-]+$/;
-		let test1 = pattern.test(input);
+		const pattern = /^[\d,./:_a-z-]+$/;
+		const test1 = pattern.test(input);
 		return test1;
 	}
 	// validate password
@@ -83,9 +84,9 @@
 		}
 
 		// Check if the passphrase contains at least one special character
-		//if (!/[!@#$%^&*()_+{}\[\]:;<>,.?~\\/\-|=]/.test(passphrase)) {
+		// if (!/[!@#$%^&*()_+{}\[\]:;<>,.?~\\/\-|=]/.test(passphrase)) {
 		//		return false;
-		//}
+		// }
 
 		// If all criteria pass, the passphrase is valid
 		return true;
@@ -136,7 +137,7 @@
 				name: formData.name,
 				server: formData.server,
 				username: formData.username,
-				password: password
+				password
 			}
 		};
 		if (!validateInputs(formData.name, formData.username, formData.server, password)) {
@@ -148,10 +149,10 @@
 		// TODO: Fix bug where request fails for different reasons (secret name already exists, uppercase, whitespace, underscore)
 		try {
 			const response = await requestGraphQLClient(createCredentialMutation, variables);
-		} catch (err: any) {
-			console.log(err);
-			alert(`Error: ${err.message}`);
-			throw error(500, err);
+		} catch (error_: any) {
+			console.log(error_);
+			alert(`Error: ${error_.message}`);
+			throw error(500, error_);
 		}
 
 		modalStore.close();

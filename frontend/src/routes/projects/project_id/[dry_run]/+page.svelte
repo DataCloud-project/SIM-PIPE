@@ -1,18 +1,19 @@
 <script lang="ts">
-	import { ProgressBar } from '@skeletonlabs/skeleton';
-	import { selectedProject, clickedProjectId } from '../../../../stores/stores.js';
-	import SymbolForRunResult from './symbol-for-run-result.svelte';
-	import SymbolForAction from './symbol-for-action.svelte';
-	import { Modal, modalStore } from '@skeletonlabs/skeleton';
+	import { Modal, modalStore, ProgressBar } from '@skeletonlabs/skeleton';
 	import type { ModalSettings } from '@skeletonlabs/skeleton';
-	import ModalSubmitNewDryRun from './modal-submit-new-dry-run.svelte';
-	import type { DryRun, DryRunMetrics, Project } from '../../../../types.js';
-	import allDryRunsQuery from '../../../../queries/get_all_dryruns.js';
-	import deleteDryRunMutation from '../../../../queries/delete_dry_run.js';
+
 	import { goto } from '$app/navigation';
-	import Timestamp from './timestamp.svelte';
 	import { requestGraphQLClient } from '$lib/graphqlUtils.js';
-	import { calculateDuration } from '../../../../utils/resource_utils.js';
+
+	import deleteDryRunMutation from '../../../../queries/delete_dry_run.js';
+	import allDryRunsQuery from '../../../../queries/get_all_dryruns.js';
+	import { clickedProjectId, selectedProject } from '../../../../stores/stores.js';
+	import { calculateDuration } from '../$lib/graphql-utils.jsrce_utils.js';
+	import ModalSubmitNewDryRun from './modal-submit-new-dry-run.svelte';
+	import SymbolForAction from './symbol-for-action.svelte';
+	import SymbolForRunResult from './symbol-for-run-result.svelte';
+	import Timestamp from './timestamp.svelte';
+	import type { DryRun, DryRunMetrics, Project } from '../../../../types.js';
 
 	export let data;
 
@@ -53,16 +54,19 @@
 		await new Promise((resolve) => setTimeout(resolve, 1500));
 		modalStore.close();
 		// reset checkboxes
-		$selectedProject?.dryRuns.forEach((element) => {
+		for (const element of $selectedProject?.dryRuns) {
 			checkboxes[element.id] = false;
-		});
+		}
 		// inserting a small delay because sometimes delete mutation returns true, but the deleted dry run is also returned in the query
 		await new Promise((resolve) => setTimeout(resolve, 100));
 
 		// update the project list after deletion
-		let responseProjectDetails: { project: Project } = await requestGraphQLClient(allDryRunsQuery, {
-			projectId: $clickedProjectId
-		});
+		const responseProjectDetails: { project: Project } = await requestGraphQLClient(
+			allDryRunsQuery,
+			{
+				projectId: $clickedProjectId
+			}
+		);
 		$selectedProject = responseProjectDetails.project;
 	}
 	async function onPredictSelected() {
@@ -84,9 +88,9 @@
 
 	function getDryRunAction(status: string): string {
 		if (status == 'Succeeded') return 'rerun';
-		else if (status == 'Running') return 'stop';
-		else if (status == 'Pending' || status == 'Skipped' || status == 'Omitted') return 'run';
-		else if (status == 'Failed' || status == 'Error') return 'alert';
+		if (status == 'Running') return 'stop';
+		if (status == 'Pending' || status == 'Skipped' || status == 'Omitted') return 'run';
+		if (status == 'Failed' || status == 'Error') return 'alert';
 		return 'unknown';
 	}
 
@@ -100,7 +104,6 @@
 		event.stopPropagation();
 	};
 	$: reactiveProjectDetails = $selectedProject;
-
 </script>
 
 <!-- Page Header -->
@@ -136,7 +139,7 @@
 							<span>Delete</span>
 						</button>
 					</div>
-					{#if Object.values(checkboxes).some((value) => value)}
+					{#if Object.values(checkboxes).some(Boolean)}
 						<div>
 							<button
 								type="button"

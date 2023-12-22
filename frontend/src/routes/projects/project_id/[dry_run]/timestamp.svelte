@@ -1,6 +1,5 @@
 <script>
-	import { onMount } from 'svelte';
-	import { onDestroy } from 'svelte';
+	import { onMount, onDestroy } from 'svelte';
 
 	/**
 	 * @type {string}
@@ -24,17 +23,20 @@
 
 		if (years > 0) {
 			return years === 1 ? 'a year ago' : `${years} years ago`;
-		} else if (months > 0) {
-			return months === 1 ? 'a month ago' : `${months} months ago`;
-		} else if (days > 0) {
-			return days === 1 ? 'a day ago' : `${days} days ago`;
-		} else if (hours > 0) {
-			return hours === 1 ? 'an hour ago' : `${hours} hours ago`;
-		} else if (minutes > 0) {
-			return minutes === 1 ? 'a minute ago' : `${minutes} minutes ago`;
-		} else {
-			return seconds <= 5 ? 'just now' : `${seconds} seconds ago`;
 		}
+		if (months > 0) {
+			return months === 1 ? 'a month ago' : `${months} months ago`;
+		}
+		if (days > 0) {
+			return days === 1 ? 'a day ago' : `${days} days ago`;
+		}
+		if (hours > 0) {
+			return hours === 1 ? 'an hour ago' : `${hours} hours ago`;
+		}
+		if (minutes > 0) {
+			return minutes === 1 ? 'a minute ago' : `${minutes} minutes ago`;
+		}
+		return seconds <= 5 ? 'just now' : `${seconds} seconds ago`;
 	}
 
 	$: relativeTime = getRelativeTimeDifference();
@@ -43,7 +45,7 @@
 	onMount(() => {
 		interval = setInterval(() => {
 			relativeTime = getRelativeTimeDifference();
-		}, 60000); // 60,000 milliseconds = 1 minute
+		}, 60_000); // 60,000 milliseconds = 1 minute
 	});
 
 	// Cleanup interval when the component is destroyed
