@@ -4,10 +4,11 @@
 	import createProjectMutation from '../../queries/create_project.js';
 	import allProjectsQuery from '../../queries/get_all_projects.js';
 	import createWorkflowTemplateMutation from '../../queries/create_workflow_template.js';
-	import type { Project } from '../../types.js';
-	import { modalStore, type ModalSettings, Modal } from '@skeletonlabs/skeleton';
+	import type { AllProjectsResponse, Project } from '../../types.js';
+	import { modalStore, Modal } from '@skeletonlabs/skeleton';
 	import yaml from 'js-yaml';
 	import { requestGraphQLClient } from '$lib/graphqlUtils.js';
+	import { displayAlert } from '../../utils/alerts_utils.js';
 
 	export let parent: any;
 
@@ -16,7 +17,6 @@
 		template_name: '',
 		files: undefined
 	};
-	let hideModal = false;
 	let alertModal = false;
 
 	// function to transform project_name to template_name
@@ -24,7 +24,6 @@
 
 	export async function onCreateProjectSubmit(): Promise<void> {
 		modalStore.close();
-		hideModal = true;
 
 		let name = formData.project_name;
 		let currentUsername;
@@ -36,26 +35,22 @@
 			name = `${name}-${currentUsername}`;
 		}
 
-		const variables1 = {
-			project: { name }
-		};
-
-		const responseCreateProject: { createProject: Project } = await requestGraphQLClient(
-			createProjectMutation,
-			variables1
-		);
-		const projectCreatedMessageModal: ModalSettings = {
-			type: 'alert',
-			title: 'New project created&#10024;!',
-			body: `New project ID: ${responseCreateProject?.createProject?.id}`
-		};
-		alertModal = true;
-		modalStore.trigger(projectCreatedMessageModal);
-		await new Promise((resolve) => setTimeout(resolve, 1500));
-		modalStore.close();
-		modalStore.clear();
 		const files = formData.files as unknown as FileList;
 		const template_text = await files?.[0]?.text();
+		try {
+			if(!template_text)
+				throw new Error('No workflow description found!');
+			const responseCreateProject: { createProject: Project } = await requestGraphQLClient(
+				createProjectMutation,
+				{
+					project: { name }
+				}
+			);
+			const title = 'New project created&#10024;!';
+			const body = `New project ID: ${responseCreateProject?.createProject?.id}`;
+			await displayAlert(title, body);
+			alertModal = true;
+		
 		if (template_text != '') {
 			let template: JSON;
 			// check if template is in JSON/YAML format, if YAML convert to JSON
@@ -74,16 +69,22 @@
 			await requestGraphQLClient(createWorkflowTemplateMutation, variables2);
 		}
 		// update the project list after addition
-		const responseAllProjects: { projects: Project[] } = await requestGraphQLClient(
+		const responseAllProjects: AllProjectsResponse = await requestGraphQLClient(
 			allProjectsQuery
 		);
-		$projectsList = [];
 		$projectsList = responseAllProjects.projects;
+			
+		} catch(error) {
+			const title = 'Error creating project❌!';
+			const body = (error as Error).message;
+			await displayAlert(title, body);
+			alertModal = true;
+		}
+		
 	}
 </script>
 
-<!-- {#if $modalStore[0]} -->
-{#if !hideModal && $modalStore[0]}
+{#if $modalStore[0]}
 	<div class="modal-example-form {cBase}">
 		<header class={cHeader}>{$modalStore[0].title ?? '(title missing)'}</header>
 		<article>{$modalStore[0].body ?? '(body missing)'}</article>

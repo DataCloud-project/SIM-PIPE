@@ -195,7 +195,7 @@
 		});
 		showPredictions = true;
 	};
-	let valueforPrediction: number = 11000;
+	let valueforPrediction: number;
 	let showPredictions = false;
 	let validFileSizes = true;
 	let maxCpuPredictions: number[];
@@ -229,7 +229,7 @@
 						class="input"
 						type="text"
 						bind:value={valueforPrediction}
-						placeholder="Enter name..."
+						placeholder="Enter filesize in bytes..."
 					/>
 				</div></label
 			>

@@ -67,11 +67,11 @@
 					project: { dryRuns: Record<string, undefined>[] };
 				}>(allDryRunsQuery, project_variables);
 				response_dry_runs.project.dryRuns.forEach(async (dry_run: Record<string, undefined>) => {
-					const response_delete_dry_run = await requestGraphQLClient(deleteDryRunMutation, {
+					await requestGraphQLClient(deleteDryRunMutation, {
 						dryRunId: dry_run.id
 					});
 				});
-				const delete_workflow_template = await requestGraphQLClient(
+				await requestGraphQLClient(
 					deleteWorkflowTemplateMutation,
 					{
 						name: element
@@ -82,7 +82,7 @@
 					alertTitle = 'Delete workflow template failed!';
 					alertMessage = error.message;
 				});
-				const delete_project_response = await requestGraphQLClient(
+				await requestGraphQLClient(
 					deleteProjectMutation,
 					project_variables
 				);

@@ -105,8 +105,6 @@ const changeResourceFormat = (
 		type: 'scatter',
 		name: `${resourceType} ${truncateString(stepName, 15)}`
 	};
-	// }
-	// return {};
 };
 
 const findMax = (input: number[]) => {
