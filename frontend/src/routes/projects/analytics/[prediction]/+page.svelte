@@ -43,7 +43,7 @@
 			modalStore.trigger(createDryRunMessageModal);
 			await new Promise((resolve) => setTimeout(resolve, 2500));
 			modalStore.close();
-			goto(`/projects/project_id/${$selectedProject?.id}`);
+			goto(`/projects/dryruns/${$selectedProject?.id}`);
 			return { slope: 0, intercept: 0 };
 		}
 		const n = x.length;
@@ -119,7 +119,7 @@
 				modalStore.trigger(createDryRunMessageModal);
 				await new Promise((resolve) => setTimeout(resolve, 2500));
 				modalStore.close();
-				goto(`/projects/project_id/${$selectedProject?.id}`);
+				goto(`/projects/dryruns/${$selectedProject?.id}`);
 			}
 		});
 
@@ -213,7 +213,7 @@
 				<button
 					type="button"
 					class="justify-end btn btn-sm variant-filled"
-					on:click={() => goto(`/projects/project_id/${$selectedProject?.id}`)}
+					on:click={() => goto(`/projects/dryruns/${$selectedProject?.id}`)}
 				>
 					<span>Back to dry runs</span>
 				</button>

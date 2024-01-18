@@ -60,7 +60,7 @@
 					<button
 						type="button"
 						class="btn btn-sm variant-filled"
-						on:click={() => goto(`/projects/project_id/${$clickedProjectId}`)}
+						on:click={() => goto(`/projects/dryruns/${$clickedProjectId}`)}
 					>
 						Go to dry runs <ArrowRightIcon size="1x" />
 					</button>

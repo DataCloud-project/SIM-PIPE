@@ -92,7 +92,7 @@
 
 	function dryRunOnClick(dryRunId: string) {
 		const resource = dryRunId;
-		goto(`/projects/project_id/${dryRunId}/${resource}`);
+		goto(`/projects/dryruns/${dryRunId}/${resource}`);
 	}
 
 	// to disable onclick propogation for checkbox input
