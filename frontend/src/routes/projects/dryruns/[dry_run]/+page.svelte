@@ -100,7 +100,6 @@
 		event.stopPropagation();
 	};
 	$: reactiveProjectDetails = $selectedProject;
-
 </script>
 
 <!-- Page Header -->

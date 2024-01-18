@@ -56,7 +56,7 @@
 				getDryRunMetricsQuery,
 				dryrun_variables
 			);
-			return response?.dryRun?.nodes.filter(node => Object.keys(node).length > 0);
+			return response?.dryRun?.nodes.filter((node) => Object.keys(node).length > 0);
 		} catch (error) {
 			// internal server error from graphql API when requesting logs for dry runs which has no logs
 			if ((error as Error).message.includes('No logs found:')) {
@@ -65,7 +65,7 @@
 					getDryRunNoLogsMetricsQuery,
 					dryrun_variables
 				);
-				return response?.dryRun?.nodes.filter(node => Object.keys(node).length > 0);;
+				return response?.dryRun?.nodes.filter((node) => Object.keys(node).length > 0);
 			}
 		}
 	};

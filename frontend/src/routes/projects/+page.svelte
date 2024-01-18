@@ -71,21 +71,15 @@
 						dryRunId: dry_run.id
 					});
 				});
-				await requestGraphQLClient(
-					deleteWorkflowTemplateMutation,
-					{
-						name: element
-					}
-				).catch((error) => {
+				await requestGraphQLClient(deleteWorkflowTemplateMutation, {
+					name: element
+				}).catch((error) => {
 					console.log(error);
 					visibleAlert = true;
 					alertTitle = 'Delete workflow template failed!';
 					alertMessage = error.message;
 				});
-				await requestGraphQLClient(
-					deleteProjectMutation,
-					project_variables
-				);
+				await requestGraphQLClient(deleteProjectMutation, project_variables);
 			});
 		const projectDeletedMessageModal: ModalSettings = {
 			type: 'alert',

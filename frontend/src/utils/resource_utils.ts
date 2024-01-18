@@ -30,7 +30,7 @@ function timestampsToDatetime(startedAt: string, input_array: number[]) {
 	return timeseries;
 }
 
-export function displayStepDuration(step: DryRunMetrics) {	
+export function displayStepDuration(step: DryRunMetrics) {
 	const duration = step.duration == null ? '-' : step.duration;
 	return duration;
 }
@@ -62,16 +62,15 @@ export const getMetricsResponse = async (dryRunId: string) => {
 			nodes: [];
 		};
 	} = await requestGraphQLClient(getDryRunNoLogsMetricsQuery, { dryRunId });
-	return metrics_response?.dryRun?.nodes.filter(node => Object.keys(node).length > 0);;
+	return metrics_response?.dryRun?.nodes.filter((node) => Object.keys(node).length > 0);
 };
 
-
-export const printReadableBytes = (bytes: number|undefined) => {	
-	return (!bytes || isNaN(bytes) || bytes == -1) ? '-' : filesize(bytes*1024000);
+export const printReadableBytes = (bytes: number | undefined) => {
+	return !bytes || isNaN(bytes) || bytes == -1 ? '-' : filesize(bytes * 1024000);
 };
 
-export const printReadablePercent = (value: number|undefined) => {	
-	return (!value || isNaN(value) || value == -1) ? '-' : value;
+export const printReadablePercent = (value: number | undefined) => {
+	return !value || isNaN(value) || value == -1 ? '-' : value;
 };
 
 const calculateMean = (input: number[]) => {
@@ -85,13 +84,14 @@ const changeResourceFormat = (
 	resourceType = ''
 ) => {
 	let resourceValues;
-	if(resourceType == 'cpu') {
+	if (resourceType == 'cpu') {
 		resourceValues = argoUsageBytes.map((item: { value: string }) => Number(item.value));
 		resourceType = '';
-	}
-	else {
+	} else {
 		// convert bytes to megabytes
-		resourceValues = argoUsageBytes.map((item: { value: string }) => Number(item.value)/1024000.0);
+		resourceValues = argoUsageBytes.map(
+			(item: { value: string }) => Number(item.value) / 1024000.0
+		);
 	}
 	const resourceTimestamps = timestampsToDatetime(
 		startedAt,
@@ -112,8 +112,10 @@ const findMax = (input: number[]) => {
 	return Math.max(...input);
 };
 
-export const calculateDuration = (metrics: DryRunMetrics[]) => {	
-	const duration = metrics?.filter(metric => metric.type === "Steps")[0]?.duration || metrics?.filter(metric => metric.type === "DAG")[0]?.duration;	
+export const calculateDuration = (metrics: DryRunMetrics[]) => {
+	const duration =
+		metrics?.filter((metric) => metric.type === 'Steps')[0]?.duration ||
+		metrics?.filter((metric) => metric.type === 'DAG')[0]?.duration;
 	return duration == null ? '-' : duration;
 };
 
@@ -127,42 +129,44 @@ export async function getMetricsUsageUtils(
 ): Promise<{ showMax: boolean; allStepNames: string[] }> {
 	const allStepNames: string[] = [];
 
-	metrics?.filter(metric => metric.type === "Pod").forEach((node: DryRunMetrics) => {
-		if (Object.keys(node).length != 0) {
-			allStepNames.push(node.displayName);
-			if (node.log) {
-				logs[node.displayName] = node.log.join('\n');
+	metrics
+		?.filter((metric) => metric.type === 'Pod')
+		.forEach((node: DryRunMetrics) => {
+			if (Object.keys(node).length != 0) {
+				allStepNames.push(node.displayName);
+				if (node.log) {
+					logs[node.displayName] = node.log.join('\n');
+				}
+				cpuData[node.displayName] = changeResourceFormat(
+					node.startedAt,
+					node.metrics.cpuUsageSecondsTotal,
+					node.displayName,
+					'cpu'
+				);
+				memoryData[node.displayName] = changeResourceFormat(
+					node.startedAt,
+					node.metrics.memoryUsageBytes,
+					node.displayName
+				);
+				if (!networkDataCombined[node.displayName]) networkDataCombined[node.displayName] = [];
+				networkDataCombined[node.displayName].push(
+					changeResourceFormat(
+						node.startedAt,
+						node.metrics.networkReceiveBytesTotal,
+						node.displayName,
+						'Received'
+					)
+				);
+				networkDataCombined[node.displayName].push(
+					changeResourceFormat(
+						node.startedAt,
+						node.metrics.networkTransmitBytesTotal,
+						node.displayName,
+						'Transmitted'
+					)
+				);
 			}
-			cpuData[node.displayName] = changeResourceFormat(
-				node.startedAt,
-				node.metrics.cpuUsageSecondsTotal,
-				node.displayName,
-				'cpu'
-			);
-			memoryData[node.displayName] = changeResourceFormat(
-				node.startedAt,
-				node.metrics.memoryUsageBytes,
-				node.displayName
-			);
-			if (!networkDataCombined[node.displayName]) networkDataCombined[node.displayName] = [];
-			networkDataCombined[node.displayName].push(
-				changeResourceFormat(
-					node.startedAt,
-					node.metrics.networkReceiveBytesTotal,
-					node.displayName,
-					'Received'
-				)
-			);
-			networkDataCombined[node.displayName].push(
-				changeResourceFormat(
-					node.startedAt,
-					node.metrics.networkTransmitBytesTotal,
-					node.displayName,
-					'Transmitted'
-				)
-			);
-		}
-	});
+		});
 
 	return { showMax, allStepNames };
 }
@@ -181,9 +185,7 @@ export async function getMetricsAnalyticsUtils(
 		pipelineMetricsAnalytics[name].CPU.avg = calculateMean(cpuData[name].y);
 		pipelineMetricsAnalytics[name].Memory.max = findMax(memoryData[name].y);
 		pipelineMetricsAnalytics[name].Memory.avg = calculateMean(memoryData[name].y);
-		pipelineMetricsAnalytics[name].Network_received.max = findMax(
-			networkDataCombined[name][0].y
-		);
+		pipelineMetricsAnalytics[name].Network_received.max = findMax(networkDataCombined[name][0].y);
 		pipelineMetricsAnalytics[name].Network_received.avg = calculateMean(
 			networkDataCombined[name][0].y
 		);
@@ -214,6 +216,8 @@ export async function getMetricsAnalyticsUtils(
 		?.forEach((step) => {
 			pipelineMetricsAnalytics[step.displayName].Duration = step.duration;
 		});
-	pipelineMetricsAnalytics['Total'].Duration = metrics?.filter(metric => metric.type === "Steps")[0]?.duration || metrics?.filter(metric => metric.type === "DAG")[0]?.duration;
+	pipelineMetricsAnalytics['Total'].Duration =
+		metrics?.filter((metric) => metric.type === 'Steps')[0]?.duration ||
+		metrics?.filter((metric) => metric.type === 'DAG')[0]?.duration;
 	delete pipelineMetricsAnalytics['undefined'];
 }

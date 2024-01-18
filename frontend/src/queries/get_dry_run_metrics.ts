@@ -5,7 +5,7 @@ const getDryRunMetricsQuery = gql`
 		dryRun(dryRunId: $dryRunId) {
 			nodes {
 				duration
-        		phase
+				phase
 				type
 				... on DryRunNodePod {
 					displayName

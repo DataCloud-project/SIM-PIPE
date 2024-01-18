@@ -26,7 +26,6 @@ function parseSimPipeEnvironment(): {
 				} else {
 					graphqlUrl = 'http://localhost:9000/graphql';
 				}
-				
 			}
 		} else {
 			keycloakEnabled = keycloakEnabled === undefined ? true : keycloakEnabled === 'true';

@@ -138,9 +138,7 @@
 				metricSources.push(metric_source);
 			});
 		});
-		//console.log(metricSources);
 		const queryString = buildMetricQuery(metricSources);
-		//console.log(queryString);
 		const metricsQuery = gql`
 			${queryString}
 		`;
@@ -242,8 +240,7 @@
 				</button>
 				<span STYLE="font-size:14px">/ </span>
 				<button
-					on:click={() =>
-						goto(`/projects/dryruns/${$selectedProjectName}/${$selectedDryRunName}`)}
+					on:click={() => goto(`/projects/dryruns/${$selectedProjectName}/${$selectedDryRunName}`)}
 					>{$selectedDryRunName}
 				</button>
 				<span STYLE="font-size:14px">/ {$selectedMetricsType}</span>

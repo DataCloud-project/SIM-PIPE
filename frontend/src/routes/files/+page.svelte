@@ -2,7 +2,7 @@
 	import { Modal, ProgressBar, modalStore, type ModalSettings } from '@skeletonlabs/skeleton';
 	import { filesList } from '../../stores/stores.js';
 	import type { SampleFile } from '../../types.js';
-	import Timestamp from '../projects/project_id/[dry_run]/timestamp.svelte';
+	import Timestamp from '../projects/dryruns/[dry_run]/timestamp.svelte';
 	import ModalSubmitNewFile from './modal-submit-new-file.svelte';
 
 	const getProjectsList = async (): Promise<SampleFile[]> => {

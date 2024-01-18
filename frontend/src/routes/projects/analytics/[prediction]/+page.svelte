@@ -6,8 +6,7 @@
 		getMetricsUsageUtils,
 		printReadableBytes,
 		type MetricsAnalytics,
-		printReadablePercent,
-
+		printReadablePercent
 	} from '../../../../utils/resource_utils.js';
 	import { selectedProject } from '../../../../stores/stores.js';
 	import { goto } from '$app/navigation';
@@ -107,7 +106,7 @@
 				// TODO: change when filesize api is ready
 				return Number(response.dryRun.argoWorkflow.metadata.annotations.filesize);
 			} catch (error) {
-				console.log(error)
+				console.log(error);
 				// throw new Error(`Problem reading input filesizes for dry run - ${dryRunId}`);
 				validFileSizes = false;
 				let createDryRunMessageModal: ModalSettings;
@@ -137,8 +136,8 @@
 		);
 
 		// combine resource values for the selected dry runs
-		for(const dryrunId of dryruns_for_prediction) {
-			for(const stepName of [...allStepNames, 'Total']) {
+		for (const dryrunId of dryruns_for_prediction) {
+			for (const stepName of [...allStepNames, 'Total']) {
 				CpuCombined[stepName].max.push(collectedMetrics[dryrunId][stepName]?.CPU.max);
 				CpuCombined[stepName].avg.push(collectedMetrics[dryrunId][stepName]?.CPU.avg);
 				MemoryCombined[stepName].max.push(collectedMetrics[dryrunId][stepName]?.Memory.max);
@@ -169,13 +168,9 @@
 		maxMemPredictions = Array<number>(allStepNames.length + 1).fill(0);
 		[...allStepNames, 'Total'].forEach(async (stepName, i) => {
 			const r = await linearRegression(fileSizeData, MemoryCombined[stepName].max);
-			maxMemPredictions[i] = predictLinearRegression(
-				valueforPrediction,
-				r.slope,
-				r.intercept
-			);;
+			maxMemPredictions[i] = predictLinearRegression(valueforPrediction, r.slope, r.intercept);
 		});
-		
+
 		avgMemPredictions = Array<number>(allStepNames.length + 1).fill(0);
 		[...allStepNames, 'Total'].forEach(async (stepName, i) => {
 			const r = await linearRegression(fileSizeData, MemoryCombined[stepName].avg);
@@ -301,7 +296,8 @@
 									{/each}
 									<tr>
 										<td class="font-bold">Total</td>
-										<td class="font-bold">{printReadablePercent(avgCpuPredictions.slice(-1)[0])}</td>
+										<td class="font-bold">{printReadablePercent(avgCpuPredictions.slice(-1)[0])}</td
+										>
 									</tr>
 								</tbody>
 							</table>
@@ -345,7 +341,7 @@
 					</tr>
 				</tbody>
 			</table>
-		{/if}		
+		{/if}
 	</div>
 </div>
 

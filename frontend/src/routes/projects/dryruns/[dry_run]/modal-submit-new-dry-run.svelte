@@ -75,7 +75,8 @@
 	// modify workflow template from project to create a valid argoWorkflow input for create new dryrun
 	async function newWorkflowTemplate(template: { metadata: any; spec: any }) {
 		const newWorkflowTemplate = template;
-		if (Object.keys(input_artifacts).length != 0) {		// if pipeline has initial input files
+		if (Object.keys(input_artifacts).length != 0) {
+			// if pipeline has initial input files
 			try {
 				for (const [index, artifact] of input_artifacts[
 					initial_task_name

@@ -38,8 +38,7 @@
 		const files = formData.files as unknown as FileList;
 		const template_text = await files?.[0]?.text();
 		try {
-			if(!template_text)
-				throw new Error('No workflow description found!');
+			if (!template_text) throw new Error('No workflow description found!');
 			const responseCreateProject: { createProject: Project } = await requestGraphQLClient(
 				createProjectMutation,
 				{
@@ -50,37 +49,33 @@
 			const body = `New project ID: ${responseCreateProject?.createProject?.id}`;
 			await displayAlert(title, body);
 			alertModal = true;
-		
-		if (template_text != '') {
-			let template: JSON;
-			// check if template is in JSON/YAML format, if YAML convert to JSON
-			try {
-				template = JSON.parse(template_text);
-			} catch {
-				template = yaml.load(template_text) as JSON;
-			}
-			const variables2 = {
-				input: {
-					argoWorkflowTemplate: template,
-					name: formData.template_name,
-					projectId: responseCreateProject.createProject.id
+
+			if (template_text != '') {
+				let template: JSON;
+				// check if template is in JSON/YAML format, if YAML convert to JSON
+				try {
+					template = JSON.parse(template_text);
+				} catch {
+					template = yaml.load(template_text) as JSON;
 				}
-			};
-			await requestGraphQLClient(createWorkflowTemplateMutation, variables2);
-		}
-		// update the project list after addition
-		const responseAllProjects: AllProjectsResponse = await requestGraphQLClient(
-			allProjectsQuery
-		);
-		$projectsList = responseAllProjects.projects;
-			
-		} catch(error) {
+				const variables2 = {
+					input: {
+						argoWorkflowTemplate: template,
+						name: formData.template_name,
+						projectId: responseCreateProject.createProject.id
+					}
+				};
+				await requestGraphQLClient(createWorkflowTemplateMutation, variables2);
+			}
+			// update the project list after addition
+			const responseAllProjects: AllProjectsResponse = await requestGraphQLClient(allProjectsQuery);
+			$projectsList = responseAllProjects.projects;
+		} catch (error) {
 			const title = 'Error creating project❌!';
 			const body = (error as Error).message;
 			await displayAlert(title, body);
 			alertModal = true;
 		}
-		
 	}
 </script>
 
