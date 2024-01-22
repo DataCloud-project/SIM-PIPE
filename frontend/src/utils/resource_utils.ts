@@ -221,3 +221,21 @@ export async function getMetricsAnalyticsUtils(
 		metrics?.filter((metric) => metric.type === 'DAG')[0]?.duration;
 	delete pipelineMetricsAnalytics['undefined'];
 }
+
+// function to convert different units of memory to bytes
+export function convertToBytes(value: number, unit: string) {
+	switch (unit) {
+		case 'bytes':
+			return value;
+		case 'kilobytes':
+			return value * 1000;
+		case 'megabytes':
+			return value * 1000000;
+		case 'gigabytes':
+			return value * 1000000000000;
+		default:
+			return NaN; // Invalid unit
+	}
+}
+
+export const ALL_UNITS = ['bytes', 'kilobytes', 'megabytes', 'gigabytes'];

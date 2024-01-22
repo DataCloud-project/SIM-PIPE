@@ -6,7 +6,9 @@
 		getMetricsUsageUtils,
 		printReadableBytes,
 		type MetricsAnalytics,
-		printReadablePercent
+		printReadablePercent,
+		convertToBytes,
+		ALL_UNITS
 	} from '../../../../utils/resource_utils.js';
 	import { selectedProject } from '../../../../stores/stores.js';
 	import { goto } from '$app/navigation';
@@ -62,6 +64,7 @@
 
 	// for each selected dry run, get the resource analytics (avg, max) per step and per dry run level
 	export const getPredictionDetails = async (): Promise<void> => {
+		valueforPrediction = convertToBytes(inputValue, inputUnit);
 		dryruns_for_prediction.forEach(async (dryRunId) => {
 			collectedMetrics[dryRunId] = {};
 			var cpuData: { [key: string]: metricsWithTimeStamps } = {};
@@ -191,6 +194,8 @@
 		showPredictions = true;
 	};
 	let valueforPrediction: number;
+	let inputValue: number;
+	let inputUnit: string;
 	let showPredictions = false;
 	let validFileSizes = true;
 	let maxCpuPredictions: number[];
@@ -219,15 +224,22 @@
 		<form class="modal-form {cForm}">
 			<label class="label">
 				<span>Input filesize for prediction</span>
-				<div class="flex w-half">
+				<div class="flex">
 					<input
 						class="input"
 						type="text"
-						bind:value={valueforPrediction}
-						placeholder="Enter filesize in bytes..."
+						bind:value={inputValue}
+						placeholder="Enter filesize ..."
 					/>
-				</div></label
-			>
+				</div>
+				<div class="flex">
+					<select class="input" bind:value={inputUnit}>
+						{#each ALL_UNITS as unit}
+							<option value={unit}>{unit.charAt(0).toUpperCase() + unit.slice(1)}</option>
+						{/each}
+					</select>
+				</div>
+			</label>
 			<button type="button" class="btn btn-sm variant-filled" on:click={getPredictionDetails}>
 				<span>Predict</span>
 			</button>
