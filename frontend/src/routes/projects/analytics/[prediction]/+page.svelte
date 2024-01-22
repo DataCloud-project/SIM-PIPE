@@ -9,7 +9,8 @@
 		printReadablePercent,
 		convertToBytes,
 		ALL_UNITS,
-		linearRegression
+		linearRegression,
+		isFileSizeValid
 	} from '../../../../utils/resource_utils.js';
 	import { selectedProject } from '../../../../stores/stores.js';
 	import { goto } from '$app/navigation';
@@ -114,6 +115,7 @@
 		}
 
 		const fileSizeData = (await Promise.all(fileSizeDataPromise)) as number[];
+		await isFileSizeValid(fileSizeData);
 		// initialize var to store prediction estimates
 		maxCpuPredictions = Array<number>(allStepNames.length + 1).fill(0);
 		avgCpuPredictions = Array<number>(allStepNames.length + 1).fill(0);
@@ -121,7 +123,7 @@
 		avgMemPredictions = Array<number>(allStepNames.length + 1).fill(0);
 		durationPredictions = Array<string>(allStepNames.length + 1).fill('');
 		// make predictions with the combined resource values of all selected dry runs
-		[...allStepNames, 'Total'].forEach(async (stepName, i) => {
+		for (const [i, stepName] of [...allStepNames, 'Total'].entries()) {
 			maxCpuPredictions[i] = await linearRegression(
 				fileSizeData,
 				CpuCombined[stepName].max,
@@ -146,7 +148,7 @@
 				(await linearRegression(fileSizeData, DurationCombined[stepName], valueforPrediction)) *
 					1000
 			);
-		});
+		}
 		showPredictions = true;
 	};
 	let valueforPrediction: number;

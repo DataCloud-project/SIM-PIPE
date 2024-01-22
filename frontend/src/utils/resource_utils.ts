@@ -3,10 +3,10 @@ import getDryRunNoLogsMetricsQuery from '../queries/get_dry_run_all_metrics_no_l
 import { requestGraphQLClient } from '$lib/graphqlUtils';
 import type { DryRunMetrics } from '../types';
 import { filesize } from 'filesize';
-import { modalStore, type ModalSettings } from '@skeletonlabs/skeleton';
 import { goto } from '$app/navigation';
 import { get } from 'svelte/store';
 import { selectedProject } from '../stores/stores';
+import { displayAlert } from './alerts_utils';
 
 const datefmt = 'yyyy-MM-dd HH:mm:ss';
 
@@ -242,6 +242,17 @@ export function convertToBytes(value: number, unit: string) {
 	}
 }
 
+// function to check if the filesizes of the selected dry runs can be used for linear regression
+export async function isFileSizeValid(input: number[]) {
+	// Check if all values are the same
+	if (new Set(input).size == 1) {
+		const title = 'All filesize values are the same. Unable to perform linear regression';
+		const body = `Please choose other dryruns. You will be taken back to the dry runs list on close`;
+		await displayAlert(title, body);
+		goto(`/projects/dryruns/${get(selectedProject)?.id}`);
+	}
+}
+
 // function to do linear regression of filesizes and metrics and return the estimate for an input
 export async function linearRegression(
 	x: number[],
@@ -249,26 +260,18 @@ export async function linearRegression(
 	inputFileSize: number
 ): Promise<number> {
 	// Check if all x values are the same
-	if (new Set(x).size === 1) {
-		const createDryRunMessageModal: ModalSettings = {
-			type: 'alert',
-			title: 'All filesize values are the same. Unable to perform linear regression',
-			body: `Filesizes for prediction are ${x}. Please choose other filesizes. You will be taken back to the dry runs list on close`
-		};
-		modalStore.trigger(createDryRunMessageModal);
-		await new Promise((resolve) => setTimeout(resolve, 2500));
-		modalStore.close();
-		goto(`/projects/dryruns/${get(selectedProject)?.id}`);
-	}
-	const n = x.length;
-	const meanX = x.reduce((acc, val) => acc + val, 0) / n;
-	const meanY = y.reduce((acc, val) => acc + val, 0) / n;
-	const numerator = x.reduce((acc, xi, i) => acc + (xi - meanX) * (y[i] - meanY), 0);
-	const denominator = x.reduce((acc, xi) => acc + (xi - meanX) ** 2, 0);
+	if (new Set(x).size != 1) {
+		const n = x.length;
+		const meanX = x.reduce((acc, val) => acc + val, 0) / n;
+		const meanY = y.reduce((acc, val) => acc + val, 0) / n;
+		const numerator = x.reduce((acc, xi, i) => acc + (xi - meanX) * (y[i] - meanY), 0);
+		const denominator = x.reduce((acc, xi) => acc + (xi - meanX) ** 2, 0);
 
-	const slope = numerator / denominator;
-	const intercept = meanY - slope * meanX;
-	return (slope * inputFileSize + intercept).toFixed(3) as unknown as number;
+		const slope = numerator / denominator;
+		const intercept = meanY - slope * meanX;
+		return (slope * inputFileSize + intercept).toFixed(3) as unknown as number;
+	}
+	return -1;
 }
 
 export const ALL_UNITS = ['bytes', 'kilobytes', 'megabytes', 'gigabytes'];
