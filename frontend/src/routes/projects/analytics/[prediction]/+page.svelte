@@ -8,7 +8,8 @@
 		type MetricsAnalytics,
 		printReadablePercent,
 		convertToBytes,
-		ALL_UNITS
+		ALL_UNITS,
+		linearRegression
 	} from '../../../../utils/resource_utils.js';
 	import { selectedProject } from '../../../../stores/stores.js';
 	import { goto } from '$app/navigation';
@@ -26,41 +27,6 @@
 	var collectedMetrics: {
 		[key: string]: MetricsAnalytics;
 	} = {};
-
-	async function linearRegression(
-		x: number[],
-		y: number[]
-	): Promise<{ slope: number; intercept: number }> {
-		// Check if all x values are the same
-		if (new Set(x).size === 1) {
-			// throw new Error(`All filesize values are the same. Unable to perform linear regression.\n Filesizes for prediction are ${x}`);
-			validFileSizes = false;
-			let createDryRunMessageModal: ModalSettings;
-			createDryRunMessageModal = {
-				type: 'alert',
-				title: 'All filesize values are the same. Unable to perform linear regression',
-				body: `Filesizes for prediction are ${x}. Please choose other filesizes. You will be taken back to the dry runs list on close`
-			};
-			modalStore.trigger(createDryRunMessageModal);
-			await new Promise((resolve) => setTimeout(resolve, 2500));
-			modalStore.close();
-			goto(`/projects/dryruns/${$selectedProject?.id}`);
-			return { slope: 0, intercept: 0 };
-		}
-		const n = x.length;
-		const meanX = x.reduce((acc, val) => acc + val, 0) / n;
-		const meanY = y.reduce((acc, val) => acc + val, 0) / n;
-		const numerator = x.reduce((acc, xi, i) => acc + (xi - meanX) * (y[i] - meanY), 0);
-		const denominator = x.reduce((acc, xi) => acc + (xi - meanX) ** 2, 0);
-
-		const slope = numerator / denominator;
-		const intercept = meanY - slope * meanX;
-		return { slope, intercept };
-	}
-
-	function predictLinearRegression(fileSize: number, slope: number, intercept: number): number {
-		return slope * fileSize + intercept;
-	}
 
 	// for each selected dry run, get the resource analytics (avg, max) per step and per dry run level
 	export const getPredictionDetails = async (): Promise<void> => {
@@ -110,8 +76,6 @@
 				return Number(response.dryRun.argoWorkflow.metadata.annotations.filesize);
 			} catch (error) {
 				console.log(error);
-				// throw new Error(`Problem reading input filesizes for dry run - ${dryRunId}`);
-				validFileSizes = false;
 				let createDryRunMessageModal: ModalSettings;
 				createDryRunMessageModal = {
 					type: 'alert',
@@ -138,7 +102,7 @@
 			[...allStepNames, 'Total'].map((name) => [name, []])
 		);
 
-		// combine resource values for the selected dry runs
+		// combine resource values for the selected dry runs for each metric to be predicted
 		for (const dryrunId of dryruns_for_prediction) {
 			for (const stepName of [...allStepNames, 'Total']) {
 				CpuCombined[stepName].max.push(collectedMetrics[dryrunId][stepName]?.CPU.max);
@@ -148,47 +112,39 @@
 				DurationCombined[stepName].push(collectedMetrics[dryrunId][stepName]?.Duration);
 			}
 		}
-		const fileSizeData = (await Promise.all(fileSizeDataPromise)) as number[];
-		// make predictions with the combined resource values of all selected dry runs
-		maxCpuPredictions = Array<number>(allStepNames.length + 1).fill(0);
-		[...allStepNames, 'Total'].forEach(async (stepName, i) => {
-			const r = await linearRegression(fileSizeData, CpuCombined[stepName].max);
-			maxCpuPredictions[i] = predictLinearRegression(
-				valueforPrediction,
-				r.slope,
-				r.intercept
-			).toFixed(3) as unknown as number;
-		});
-		avgCpuPredictions = Array<number>(allStepNames.length + 1).fill(0);
-		[...allStepNames, 'Total'].forEach(async (stepName, i) => {
-			const r = await linearRegression(fileSizeData, CpuCombined[stepName].avg);
-			avgCpuPredictions[i] = predictLinearRegression(
-				valueforPrediction,
-				r.slope,
-				r.intercept
-			).toFixed(3) as unknown as number;
-		});
-		maxMemPredictions = Array<number>(allStepNames.length + 1).fill(0);
-		[...allStepNames, 'Total'].forEach(async (stepName, i) => {
-			const r = await linearRegression(fileSizeData, MemoryCombined[stepName].max);
-			maxMemPredictions[i] = predictLinearRegression(valueforPrediction, r.slope, r.intercept);
-		});
 
+		const fileSizeData = (await Promise.all(fileSizeDataPromise)) as number[];
+		// initialize var to store prediction estimates
+		maxCpuPredictions = Array<number>(allStepNames.length + 1).fill(0);
+		avgCpuPredictions = Array<number>(allStepNames.length + 1).fill(0);
+		maxMemPredictions = Array<number>(allStepNames.length + 1).fill(0);
 		avgMemPredictions = Array<number>(allStepNames.length + 1).fill(0);
-		[...allStepNames, 'Total'].forEach(async (stepName, i) => {
-			const r = await linearRegression(fileSizeData, MemoryCombined[stepName].avg);
-			avgMemPredictions[i] = predictLinearRegression(
-				valueforPrediction,
-				r.slope,
-				r.intercept
-			).toFixed(3) as unknown as number;
-		});
 		durationPredictions = Array<string>(allStepNames.length + 1).fill('');
+		// make predictions with the combined resource values of all selected dry runs
 		[...allStepNames, 'Total'].forEach(async (stepName, i) => {
-			const r = await linearRegression(fileSizeData, DurationCombined[stepName]);
+			maxCpuPredictions[i] = await linearRegression(
+				fileSizeData,
+				CpuCombined[stepName].max,
+				valueforPrediction
+			);
+			avgCpuPredictions[i] = await linearRegression(
+				fileSizeData,
+				CpuCombined[stepName].avg,
+				valueforPrediction
+			);
+			maxMemPredictions[i] = await linearRegression(
+				fileSizeData,
+				MemoryCombined[stepName].max,
+				valueforPrediction
+			);
+			avgMemPredictions[i] = await linearRegression(
+				fileSizeData,
+				MemoryCombined[stepName].avg,
+				valueforPrediction
+			);
 			durationPredictions[i] = readable_time(
-				(predictLinearRegression(valueforPrediction, r.slope, r.intercept) *
-					1000) as unknown as number
+				(await linearRegression(fileSizeData, DurationCombined[stepName], valueforPrediction)) *
+					1000
 			);
 		});
 		showPredictions = true;
@@ -197,7 +153,6 @@
 	let inputValue: number;
 	let inputUnit: string;
 	let showPredictions = false;
-	let validFileSizes = true;
 	let maxCpuPredictions: number[];
 	let avgCpuPredictions: number[];
 	let maxMemPredictions: number[];
