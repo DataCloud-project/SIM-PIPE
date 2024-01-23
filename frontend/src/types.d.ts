@@ -126,4 +126,22 @@ interface Template {
 	dag?: any;
 }
 
+interface Templates {
+	name?: string;
+	inputs?: Record<string, any>;
+	outputs?: Record<string, any>;
+	metadata?: Record<string, any>;
+	dag?: {
+		tasks?: Partial<Task>[]; // Making tasks and its properties optional
+	};
+	container?: Partial<{
+		name: string;
+		image: string;
+		command: string[];
+		args: string[];
+		env: { name: string; value: string }[];
+		resources: Record<string, any>;
+	}>;
+}
+
 // end: argo workflow template types
