@@ -12,6 +12,7 @@ services = [
     {"name": "sftpgo", "ports": [8083, 80], "enabled": True},
     {"name": "argo", "ports": [8084, 2746], "fullname": "argo-workflows-server"},
     {"name": "minio", "ports": [8085, 9000]},
+    {"name": "minio", "ports": [9001, 9001], "enabled": True},
     {
         "name": "prometheus",
         "ports": [8086, 9090],
