@@ -26,7 +26,7 @@ import { SIMPIPE_PROJECT_LABEL } from '../k8s/label.js';
 import {
   createProject, deleteProject, getProject, projects, renameProject,
 } from '../k8s/projects.js';
-import { computePresignedGetUrl, computePresignedPutUrl } from '../minio/minio.js';
+import { computePresignedGetUrl, computePresignedPutUrl, getObjectSize } from '../minio/minio.js';
 import { assertPrometheusIsHealthy } from '../prometheus/prometheus.js';
 import queryPrometheusResolver from '../prometheus/query-prometheus-resolver.js';
 import { NotFoundError, PingError } from './apollo-errors.js';
@@ -34,10 +34,10 @@ import type { ArgoWorkflow, ArgoWorkflowTemplate } from '../argo/argo-client.js'
 import type ArgoWorkflowClient from '../argo/argo-client.js';
 import type K8sClient from '../k8s/k8s-client.js';
 import type {
+  Artifact,
   DryRun,
   DryRunNode,
   DryRunNodeArgs as DryRunNodeArguments,
-  DryRunNodeArtifact,
   DryRunNodeMetrics,
   DryRunNodeMetricsCpuSystemSecondsTotalArgs as DryRunNodeMetricsCpuSystemSecondsTotalArguments,
   DryRunNodePod, DryRunNodePodLogArgs as DryRunNodePodLogArguments,
@@ -159,6 +159,13 @@ const resolvers = {
       const { argoClient, user } = context;
       const { sub } = user;
       return await getWorkflowTemplate(name, argoClient, sub);
+    },
+    async artifacts(
+      _p: EmptyParent, _a: EmptyArguments, context: AuthenticatedContext,
+    ): Promise<Query['artifacts']> {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { argoClient } = context;
+      return [];
     },
   } as Required<QueryResolvers<AuthenticatedContext, EmptyParent>>,
   Mutation: {
@@ -547,15 +554,24 @@ const resolvers = {
     threadsMax: queryPrometheusResolver.bind(undefined, 'simpipe_threads_max', 'main'),
     ulimitsSoft: queryPrometheusResolver.bind(undefined, 'simpipe_ulimits_soft', 'main'),
   },
-  DryRunNodeArtifact: {
+  Artifact: {
     async url(
-      dryRunNodeArtifact: DryRunNodeArtifact,
-    ): Promise<DryRunNodeArtifact['url']> {
-      const { key } = dryRunNodeArtifact;
+      artifact: Artifact,
+    ): Promise<Artifact['url']> {
+      const { key } = artifact;
       if (!key) {
         return undefined;
       }
       return await computePresignedGetUrl(key);
+    },
+    async size(
+      artifact: Artifact,
+    ): Promise<Artifact['size']> {
+      const { key } = artifact;
+      if (!key) {
+        return undefined;
+      }
+      return await getObjectSize(key);
     },
   },
   WorkflowTemplate: {

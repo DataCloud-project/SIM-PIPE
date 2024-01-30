@@ -36,3 +36,8 @@ export async function computePresignedGetUrl(objectName: string): Promise<string
   const expire = 3600;
   return await minioClient.presignedGetObject(minioBucketName, objectName, expire);
 }
+
+export async function getObjectSize(objectName: string): Promise<number> {
+  const stat = await minioClient.statObject(minioBucketName, objectName);
+  return stat.size;
+}
