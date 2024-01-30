@@ -220,9 +220,7 @@ export async function getMetricsAnalyticsUtils(
 		?.forEach((step) => {
 			pipelineMetricsAnalytics[step.displayName].Duration = step.duration;
 		});
-	pipelineMetricsAnalytics['Total'].Duration =
-		metrics?.filter((metric) => metric.type === 'Steps')[0]?.duration ||
-		metrics?.filter((metric) => metric.type === 'DAG')[0]?.duration;
+	pipelineMetricsAnalytics['Total'].Duration = metrics[0].duration;
 	delete pipelineMetricsAnalytics['undefined'];
 }
 
