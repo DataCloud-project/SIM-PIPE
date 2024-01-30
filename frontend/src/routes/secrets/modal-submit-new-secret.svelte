@@ -5,12 +5,13 @@
 	import allCredentialsQuery from '../../queries/get_all_credentials.js';
 	import type { DockerRegistryCredential } from '../../types.js';
 	export let parent: any;
-	import { modalStore } from '@skeletonlabs/skeleton';
+	//import { modalStore } from '@skeletonlabs/skeleton'; // old v1 skeletonlabs
 	import { requestGraphQLClient } from '$lib/graphqlUtils.js';
-	import { popup } from '@skeletonlabs/skeleton';
 	import type { PopupSettings } from '@skeletonlabs/skeleton';
 	import { error } from '@sveltejs/kit';
-	import th from 'date-fns/locale/th';
+	import { getModalStore } from '@skeletonlabs/skeleton';
+
+	const modalStore = getModalStore();
 
 	// Form Data
 	const formData = {

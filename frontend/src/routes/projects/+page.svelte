@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Modal, modalStore, ProgressBar } from '@skeletonlabs/skeleton';
+	import { Modal, getModalStore, ProgressBar } from '@skeletonlabs/skeleton';
 	import type { ModalSettings } from '@skeletonlabs/skeleton';
 	import ModalSubmitNewProject from './modal-submit-new-project.svelte';
 	import { projectsList, clickedProjectId } from '../../stores/stores.js';
@@ -14,6 +14,8 @@
 	import allDryRunsQuery from '../../queries/get_all_dryruns';
 	import deleteDryRunMutation from '../../queries/delete_dry_run.js';
 	import deleteWorkflowTemplateMutation from '../../queries/delete_workflow_template.js';
+
+	const modalStore = getModalStore();
 
 	export let visibleAlert = false;
 	export let alertTitle = 'Alert!';

@@ -5,9 +5,12 @@
 	import allProjectsQuery from '../../queries/get_all_projects.js';
 	import createWorkflowTemplateMutation from '../../queries/create_workflow_template.js';
 	import type { Project } from '../../types.js';
-	import { modalStore, type ModalSettings, Modal } from '@skeletonlabs/skeleton';
+	//import { modalStore, type ModalSettings, Modal } from '@skeletonlabs/skeleton'; -- old v1 skeletonlabs
 	import yaml from 'js-yaml';
 	import { requestGraphQLClient } from '$lib/graphqlUtils.js';
+	import { getModalStore } from '@skeletonlabs/skeleton';
+
+	const modalStore = getModalStore();
 
 	export let parent: any;
 
@@ -118,8 +121,4 @@
 			<button class="btn {parent.buttonPositive}" on:click={onCreateProjectSubmit}>Submit</button>
 		</footer>
 	</div>
-{/if}
-
-{#if alertModal}
-	<Modal />
 {/if}

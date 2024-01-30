@@ -3,9 +3,12 @@
 	import { projectsList } from '../../stores/stores.js';
 	import allProjectsQuery from '../../queries/get_all_projects.js';
 	import type { Project } from '../../types.js';
-	import { modalStore, type ModalSettings, Modal } from '@skeletonlabs/skeleton';
+	//import { modalStore, type ModalSettings, Modal } from '@skeletonlabs/skeleton'; -- old v1 skeletonlabs 
 	import { requestGraphQLClient } from '$lib/graphqlUtils.js';
 	import renameProjectMutation from '../../queries/rename_project.js';
+	import { getModalStore } from '@skeletonlabs/skeleton';
+
+	const modalStore = getModalStore();
 
 	export let parent: any;
 	const project: { projectId: string; projectName: string } = $modalStore[0]?.valueAttr as {
@@ -73,8 +76,4 @@
 			<button class="btn {parent.buttonPositive}" on:click={onRenameProjectSubmit}>Submit</button>
 		</footer>
 	</div>
-{/if}
-
-{#if alertModal}
-	<Modal />
 {/if}

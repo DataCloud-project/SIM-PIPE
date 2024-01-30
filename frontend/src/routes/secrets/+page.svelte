@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { Modal, modalStore, ProgressBar } from '@skeletonlabs/skeleton';
+	//import { Modal, modalStore, ProgressBar } from '@skeletonlabs/skeleton'; // old v1 skeletonlabs
+	import { Modal, getModalStore, ProgressBar } from '@skeletonlabs/skeleton';
 	import type { ModalSettings, ModalComponent } from '@skeletonlabs/skeleton';
 	import ModalSubmitNewSecret from './modal-submit-new-secret.svelte';
 	import allCredentialsQuery from '../../queries/get_all_credentials.js';
@@ -8,6 +9,8 @@
 	import { credentialsList, selectedCredential } from '../../stores/stores.js';
 	import { requestGraphQLClient } from '$lib/graphqlUtils';
 	import { goto } from '$app/navigation';
+
+	const modalStore = getModalStore();
 
 	const modalComponent: ModalComponent = {
 		ref: ModalSubmitNewSecret
