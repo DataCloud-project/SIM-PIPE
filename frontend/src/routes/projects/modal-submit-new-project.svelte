@@ -9,6 +9,7 @@
 	import yaml from 'js-yaml';
 	import { requestGraphQLClient } from '$lib/graphqlUtils.js';
 	import { displayAlert } from '../../utils/alerts_utils.js';
+	import { validateYAML } from '../../utils/argo_utils.js';
 
 	export let parent: any;
 
@@ -22,7 +23,7 @@
 	// function to transform project_name to template_name
 	$: formData.template_name = formData.project_name.replace(/\s+/g, '-').toLowerCase();
 
-	export async function onCreateProjectSubmit(): Promise<void> {
+	async function onCreateProjectSubmit(): Promise<void> {
 		modalStore.close();
 
 		let name = formData.project_name;
@@ -37,8 +38,15 @@
 
 		const files = formData.files as unknown as FileList;
 		const template_text = await files?.[0]?.text();
+
 		try {
 			if (!template_text) throw new Error('No workflow description found!');
+			// TODO: add argo workflow template checking later when backend api is extended
+			if (!validateYAML(template_text).valid) {
+				throw new Error(`Error parsing argo workflow template input
+				<br><br>
+				Description: ${validateYAML(template_text).message as string}`);
+			}
 			const responseCreateProject: { createProject: Project } = await requestGraphQLClient(
 				createProjectMutation,
 				{
@@ -73,7 +81,7 @@
 		} catch (error) {
 			const title = 'Error creating project❌!';
 			const body = (error as Error).message;
-			await displayAlert(title, body);
+			await displayAlert(title, body, 10000);
 			alertModal = true;
 		}
 	}
