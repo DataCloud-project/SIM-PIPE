@@ -3,7 +3,6 @@
 	import { ProgressBar } from '@skeletonlabs/skeleton';
 	import type { DryRunMetrics, DryRun } from '../../../../../types';
 	import getDryRunMetricsQuery from '../../../../../queries/get_dry_run_metrics.js';
-	import getDryRunNoLogsMetricsQuery from '../../../../../queries/get_dry_run_metrics_no_logs.js';
 	import getProjectQuery from '../../../../../queries/get_project';
 	import getDryRunPhaseResultsQuery from '../../../../../queries/get_dry_run_phase_results';
 	import getDryRunQuery from '../../../../../queries/get_selected_project';
@@ -24,6 +23,7 @@
 		displayStepDuration
 	} from '../../../../../utils/resource_utils';
 	import type { MetricsAnalytics } from '../../../../../utils/resource_utils';
+	import { displayAlert } from '../../../../../utils/alerts_utils';
 
 	export let data;
 	let workflow: { workflowTemplates: { argoWorkflowTemplate: { spec: { templates: any[] } } }[] };
@@ -35,7 +35,6 @@
 	let diagram: string;
 	$: diagram = diagram;
 	let selectedProject: { name: string; id: string };
-	let showLogs = true;
 	let logs: { [x: string]: string } = {};
 
 	var cpuData: { [key: string]: { x: string[]; y: number[]; type: string; name: string } } = {};
@@ -47,26 +46,20 @@
 	let pipelineMetricsAnalytics: MetricsAnalytics = {};
 
 	let showMax = true;
+	let dryRunPhaseMessage: string | null;
 	const getMetricsResponse = async () => {
 		const dryrun_variables = {
 			dryRunId: data.resource
 		};
 		try {
-			const response: { dryRun: { nodes: [] } } = await requestGraphQLClient(
-				getDryRunMetricsQuery,
-				dryrun_variables
-			);
+			const response: { dryRun: { nodes: []; status: { message: string } } } =
+				await requestGraphQLClient(getDryRunMetricsQuery, dryrun_variables);
+			dryRunPhaseMessage = response?.dryRun?.status?.message;
 			return response?.dryRun?.nodes.filter((node) => Object.keys(node).length > 0);
 		} catch (error) {
-			// internal server error from graphql API when requesting logs for dry runs which has no logs
-			if ((error as Error).message.includes('No logs found:')) {
-				showLogs = false;
-				const response: { dryRun: { nodes: [] } } = await requestGraphQLClient(
-					getDryRunNoLogsMetricsQuery,
-					dryrun_variables
-				);
-				return response?.dryRun?.nodes.filter((node) => Object.keys(node).length > 0);
-			}
+			const title = 'Internal error!';
+			const body = `${(error as Error).message}`;
+			await displayAlert(title, body, 10000);
 		}
 	};
 
@@ -374,12 +367,14 @@
 				</div>
 			</div>
 			<div class="grid grid-rows-4 grid-cols-2 gap-5 h-[80rem]">
-				<div class="card logcard row-span-4 p-5">
-					<header class="card-header"><h1>Logs</h1></header>
-					<section class="p-1">
-						<br />
-						<ul class="list">
-							{#if showLogs}
+				<!-- if the logs is empty, remove logs sections -->
+				{#if Object.values(logs).join('') !== ''}
+					<div class="card logcard row-span-4 p-5">
+						<header class="card-header"><h1>Logs</h1></header>
+						<section class="p-1">
+							<br />
+							<ul class="list">
+								{logs}
 								{#each getLogs() as key}
 									<li>
 										<h2>{key}</h2>
@@ -395,12 +390,21 @@
 									</li>
 									<br />
 								{/each}
-							{:else}
-								<p>No data</p>
-							{/if}
-						</ul>
-					</section>
-				</div>
+							</ul>
+						</section>
+					</div>
+				{/if}
+				<!-- display if the dryrun has a non-empty phase message from argo (usually null if no error) -->
+				{#if dryRunPhaseMessage != null}
+					<div class="card logcard row-span-4 p-5">
+						<h1>Message</h1>
+						<section class="p-1">
+							<div class="w-full">
+								<CodeBlock language="json" code={dryRunPhaseMessage} />
+							</div>
+						</section>
+					</div>
+				{/if}
 
 				{#if showMax}
 					<div class="card p-2">

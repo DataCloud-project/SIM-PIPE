@@ -3,6 +3,10 @@ import { gql } from 'graphql-request';
 const getDryRunMetricsQuery = gql`
 	query getDryRunMetrics($dryRunId: String!) {
 		dryRun(dryRunId: $dryRunId) {
+			status {
+				phase
+				message
+			}
 			nodes {
 				duration
 				phase

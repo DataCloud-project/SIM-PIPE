@@ -13,6 +13,7 @@ const allDryRunsQuery = gql`
 				createdAt
 				status {
 					phase
+					message
 				}
 				nodes {
 					startedAt
