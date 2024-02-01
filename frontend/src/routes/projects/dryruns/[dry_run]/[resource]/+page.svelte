@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { ProgressBar } from '@skeletonlabs/skeleton';
-	import type { DryRunMetrics, DryRun } from '../../../../../types';
+	import type { DryRunMetrics, DryRun, metricsWithTimeStamps } from '../../../../../types';
 	import getDryRunMetricsQuery from '../../../../../queries/get_dry_run_metrics.js';
 	import getProjectQuery from '../../../../../queries/get_project';
 	import getDryRunPhaseResultsQuery from '../../../../../queries/get_dry_run_phase_results';
@@ -37,15 +37,14 @@
 	let selectedProject: { name: string; id: string };
 	let logs: { [x: string]: string } = {};
 
-	var cpuData: { [key: string]: { x: string[]; y: number[]; type: string; name: string } } = {};
-	var memoryData: { [key: string]: { x: string[]; y: number[]; type: string; name: string } } = {};
-	var networkDataCombined: {
-		[key: string]: { x: string[]; y: number[]; type: string; name: string }[];
+	let cpuData: { [key: string]: metricsWithTimeStamps } = {};
+	let memoryData: { [key: string]: metricsWithTimeStamps } = {};
+	let networkDataCombined: {
+		[key: string]: metricsWithTimeStamps[];
 	} = {};
 
 	let pipelineMetricsAnalytics: MetricsAnalytics = {};
 
-	let showMax = true;
 	let dryRunPhaseMessage: string | null;
 	const getMetricsResponse = async () => {
 		const dryrun_variables = {
@@ -100,20 +99,15 @@
 
 		selectedProjectName.set;
 		workflow = workflow_response;
-		const result = await getMetricsUsageUtils(
-			showMax,
-			cpuData,
-			memoryData,
-			networkDataCombined,
-			logs,
-			metrics_response as unknown as DryRunMetrics[]
-		);
-		showMax = result.showMax;
+		const result = await getMetricsUsageUtils(metrics_response as unknown as DryRunMetrics[]);
 		allStepNames = result.allStepNames;
-		await getMetricsAnalyticsUtils(
+		cpuData = result.cpuData;
+		memoryData = result.memoryData;
+		networkDataCombined = result.networkDataCombined;
+		logs = result.logs;
+		pipelineMetricsAnalytics = await getMetricsAnalyticsUtils(
 			allStepNames,
 			metrics_response as unknown as DryRunMetrics[],
-			pipelineMetricsAnalytics,
 			cpuData,
 			memoryData,
 			networkDataCombined
@@ -374,13 +368,12 @@
 						<section class="p-1">
 							<br />
 							<ul class="list">
-								{logs}
 								{#each getLogs() as key}
 									<li>
 										<h2>{key}</h2>
 									</li>
 									<li>
-										{#if logs[key] != null}
+										{#if logs[key] != ''}
 											<div class="w-full">
 												<CodeBlock language="bash" code={getPartLogs(key, 20000)} />
 											</div>
@@ -406,49 +399,42 @@
 					</div>
 				{/if}
 
-				{#if showMax}
-					<div class="card p-2">
-						<table class="table table-interactive">
-							<thead>
+				<div class="card p-2">
+					<table class="table table-interactive">
+						<thead>
+							<tr>
+								<th>Resource</th>
+								<th>Average, Maximum usage</th>
+							</tr>
+						</thead>
+						<tbody>
+							{#each Object.keys(pipelineMetricsAnalytics[selectedStep]) as key}
 								<tr>
-									<th>Resource</th>
-									<th>Average, Maximum usage</th>
+									<td>{key}</td>
+									{#if key == 'CPU'}
+										<td>
+											{pipelineMetricsAnalytics[selectedStep][key].avg.toFixed(3)} %,
+											{pipelineMetricsAnalytics[selectedStep][key].max.toFixed(3)}
+											%
+										</td>
+										<!-- for eslint -->
+									{:else if key == 'Memory' || key == 'Network_received' || key == 'Network_transferred'}
+										<td
+											>{filesize(pipelineMetricsAnalytics[selectedStep][key].avg)},
+											{filesize(pipelineMetricsAnalytics[selectedStep][key].max)}</td
+										>
+										<!-- <td
+											>{pipelineMetricsAnalytics[selectedStep][key].avg},
+											{pipelineMetricsAnalytics[selectedStep][key].max}</td
+										> -->
+									{:else if key == 'Duration'}
+										<td> {pipelineMetricsAnalytics[selectedStep][key]}</td>
+									{/if}
 								</tr>
-							</thead>
-							<tbody>
-								{#each Object.keys(pipelineMetricsAnalytics[selectedStep]) as key}
-									<tr>
-										<td>{key}</td>
-										{#if key == 'CPU'}
-											<td>
-												{pipelineMetricsAnalytics[selectedStep][key].avg.toFixed(3)} %,
-												{pipelineMetricsAnalytics[selectedStep][key].max.toFixed(3)}
-												%
-											</td>
-											<!-- for eslint -->
-										{:else if key == 'Memory' || key == 'Network_received' || key == 'Network_transferred'}
-											<!-- <td
-												>{filesize(pipelineMetricsAnalytics[selectedStep][key].avg)},
-												{filesize(pipelineMetricsAnalytics[selectedStep][key].max)}</td
-											> -->
-											<td
-												>{pipelineMetricsAnalytics[selectedStep][key].avg},
-												{pipelineMetricsAnalytics[selectedStep][key].max}</td
-											>
-										{:else if key == 'Duration'}
-											<td> {pipelineMetricsAnalytics[selectedStep][key]}</td>
-										{/if}
-									</tr>
-								{/each}
-							</tbody>
-						</table>
-					</div>
-				{:else}
-					<div class="placeholder">
-						<p>No data</p>
-						<ProgressBar />
-					</div>
-				{/if}
+							{/each}
+						</tbody>
+					</table>
+				</div>
 
 				<div class="flex card p-2">
 					<div class="flex container h-full w-full">

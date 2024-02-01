@@ -18,10 +18,9 @@
 	import { requestGraphQLClient } from '$lib/graphqlUtils';
 	import { readable_time } from '$lib/time_difference.js';
 	import { cForm } from '../../../../styles/styles.js';
+	import type { metricsWithTimeStamps } from '../../../../types.js';
 
 	export let data;
-
-	type metricsWithTimeStamps = { x: string[]; y: number[]; type: string; name: string };
 
 	const dryruns_for_prediction = data.prediction.split(' ');
 	let allStepNames: string[];
@@ -34,31 +33,24 @@
 		valueforPrediction = convertToBytes(inputValue, inputUnit);
 		dryruns_for_prediction.forEach(async (dryRunId) => {
 			collectedMetrics[dryRunId] = {};
-			var cpuData: { [key: string]: metricsWithTimeStamps } = {};
-			var memoryData: { [key: string]: metricsWithTimeStamps } = {};
-			var networkDataCombined: {
+			let cpuData: { [key: string]: metricsWithTimeStamps } = {};
+			let memoryData: { [key: string]: metricsWithTimeStamps } = {};
+			let networkDataCombined: {
 				[key: string]: metricsWithTimeStamps[];
 			} = {};
 			const metrics = await getMetricsResponse(dryRunId);
-			const result = await getMetricsUsageUtils(
-				true,
-				cpuData,
-				memoryData,
-				networkDataCombined,
-				{},
-				metrics
-			);
-			let pipelineMetricsAnalytics: MetricsAnalytics = {};
-			await getMetricsAnalyticsUtils(
-				result.allStepNames,
+			const result = await getMetricsUsageUtils(metrics);
+			cpuData = result.cpuData;
+			memoryData = result.memoryData;
+			networkDataCombined = result.networkDataCombined;
+			allStepNames = result.allStepNames;
+			const pipelineMetricsAnalytics: MetricsAnalytics = await getMetricsAnalyticsUtils(
+				allStepNames,
 				metrics,
-				pipelineMetricsAnalytics,
 				cpuData,
 				memoryData,
 				networkDataCombined
 			);
-
-			allStepNames = result.allStepNames;
 			collectedMetrics[dryRunId] = pipelineMetricsAnalytics;
 		});
 		await new Promise((resolve) => setTimeout(resolve, 1500));

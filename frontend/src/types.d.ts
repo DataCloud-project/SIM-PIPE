@@ -9,6 +9,8 @@ export type SampleFile = {
 	size: number;
 };
 
+export type metricsWithTimeStamps = { x: string[]; y: number[]; type: string; name: string };
+
 // WIP argo data types
 
 export type Project = {

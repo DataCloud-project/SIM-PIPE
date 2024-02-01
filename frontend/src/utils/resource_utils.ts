@@ -1,7 +1,7 @@
 import { format } from 'date-fns';
 import getDryRunNoLogsMetricsQuery from '../queries/get_dry_run_all_metrics_no_logs';
 import { requestGraphQLClient } from '$lib/graphqlUtils';
-import type { DryRunMetrics } from '../types';
+import type { DryRunMetrics, metricsWithTimeStamps } from '../types';
 import { filesize } from 'filesize';
 import { goto } from '$app/navigation';
 import { get } from 'svelte/store';
@@ -70,7 +70,7 @@ export const getMetricsResponse = async (dryRunId: string) => {
 };
 
 export const printReadableBytes = (bytes: number | undefined) => {
-	return !bytes || isNaN(bytes) || bytes == -1 ? '-' : filesize(bytes * 1024000);
+	return !bytes || isNaN(bytes) || bytes == -1 ? '-' : filesize(bytes);
 };
 
 export const printReadablePercent = (value: number | undefined) => {
@@ -92,10 +92,7 @@ const changeResourceFormat = (
 		resourceValues = argoUsageBytes.map((item: { value: string }) => Number(item.value));
 		resourceType = '';
 	} else {
-		// convert bytes to megabytes
-		resourceValues = argoUsageBytes.map(
-			(item: { value: string }) => Number(item.value) / 1024000.0
-		);
+		resourceValues = argoUsageBytes.map((item: { value: string }) => Number(item.value));
 	}
 	const resourceTimestamps = timestampsToDatetime(
 		startedAt,
@@ -123,16 +120,20 @@ export const calculateDuration = (metrics: DryRunMetrics[]) => {
 	return duration == null ? '-' : duration;
 };
 
-export async function getMetricsUsageUtils(
-	showMax: boolean,
-	cpuData: { [x: string]: { x: string[]; y: number[]; type: string; name: string } },
-	memoryData: { [x: string]: { x: string[]; y: number[]; type: string; name: string } },
-	networkDataCombined: { [x: string]: { x: string[]; y: number[]; type: string; name: string }[] },
-	logs: { [x: string]: string },
-	metrics: DryRunMetrics[]
-): Promise<{ showMax: boolean; allStepNames: string[] }> {
+export async function getMetricsUsageUtils(metrics: DryRunMetrics[]): Promise<{
+	allStepNames: string[];
+	cpuData: any;
+	memoryData: any;
+	networkDataCombined: any;
+	logs: { [x: string]: string };
+}> {
 	const allStepNames: string[] = [];
-
+	const cpuData: { [key: string]: metricsWithTimeStamps } = {};
+	const memoryData: { [key: string]: metricsWithTimeStamps } = {};
+	const networkDataCombined: {
+		[key: string]: metricsWithTimeStamps[];
+	} = {};
+	const logs: { [x: string]: string } = {};
 	metrics
 		?.filter((metric) => metric.type === 'Pod')
 		.forEach((node: DryRunMetrics) => {
@@ -172,17 +173,18 @@ export async function getMetricsUsageUtils(
 			}
 		});
 
-	return { showMax, allStepNames };
+	return { allStepNames, cpuData, memoryData, networkDataCombined, logs };
 }
 
 export async function getMetricsAnalyticsUtils(
 	allStepNames: string[],
 	metrics: DryRunMetrics[],
-	pipelineMetricsAnalytics: MetricsAnalytics,
 	cpuData: { [x: string]: { x: string[]; y: number[]; type: string; name: string } },
 	memoryData: { [x: string]: { x: string[]; y: number[]; type: string; name: string } },
 	networkDataCombined: { [x: string]: { x: string[]; y: number[]; type: string; name: string }[] }
-): Promise<void> {
+): Promise<MetricsAnalytics> {
+	const pipelineMetricsAnalytics: MetricsAnalytics = {};
+
 	allStepNames.forEach((name) => {
 		pipelineMetricsAnalytics[name] = initMaxResourcePerStep();
 		pipelineMetricsAnalytics[name].CPU.max = findMax(cpuData[name].y);
@@ -222,6 +224,7 @@ export async function getMetricsAnalyticsUtils(
 		});
 	pipelineMetricsAnalytics['Total'].Duration = metrics[0].duration;
 	delete pipelineMetricsAnalytics['undefined'];
+	return pipelineMetricsAnalytics;
 }
 
 // function to convert different units of memory to bytes
