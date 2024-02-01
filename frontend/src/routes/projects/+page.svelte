@@ -18,9 +18,10 @@
 
 	const modalStore = getModalStore();
 
-	export let visibleAlert = false;
-	export let alertTitle = 'Alert!';
-	export let alertMessage = 'Alert!';
+	let visibleAlert = false;
+	let alertTitle = 'Alert!';
+	let alertMessage = 'Alert!';
+	let alertVariant: string = 'variant-ghost-surface';
 
 	const getProjectsList = async (): Promise<Project[]> => {
 		const response: { projects: Project[] } = await requestGraphQLClient(allProjectsQuery);
@@ -78,6 +79,7 @@
 					visibleAlert = true;
 					alertTitle = 'Delete workflow template failed!';
 					alertMessage = error.message;
+					alertVariant = 'variant-filled-error';
 				});
 				const delete_project_response = await requestGraphQLClient(
 					deleteProjectMutation,
@@ -135,18 +137,24 @@
 		createWorkflowResponse: { status: number, name: string }
 	) {
 		console.log(createProjectResponse, createWorkflowResponse);
+		visibleAlert = true;
 		if (createProjectResponse.status === 200 && createWorkflowResponse.status === 200) {
 			await requestGraphQLClient<{projects: Project[]}>(allProjectsQuery).then((response) => {
 				reactiveProjectsList = $projectsList = response.projects; // TODO: not working! 
 			})
-			visibleAlert = true;
+			alertVariant = 'variant-ghost-success';
 			alertTitle = 'Project created!';
 			alertMessage = `Project ${createProjectResponse.project.name} created with id ${createProjectResponse.project.id}`;
+	} else if (createProjectResponse.status === 200 && createWorkflowResponse.status !== 200) {
+			alertVariant = 'variant-ghost-warning';
+			alertTitle = 'Project created, but workflow creation failed!';
+			alertMessage = `Try to create template manually`;
 	} else {
-			visibleAlert = true;
+			alertVariant = 'variant-filled-error';
 			alertTitle = 'Project creation failed!';
 			alertMessage = `Project creation failed with status ${createProjectResponse.status} and workflow template creation failed with status ${createWorkflowResponse.status}`;
-		}
+	}
+		
 	}
 	
 
@@ -267,7 +275,7 @@
 
 
 {#if visibleAlert}
-	<aside class="alert variant-ghost">
+	<aside class="alert {alertVariant}">
 		<!-- Icon -->
 		<div class="flex w-full justify-between">
 			<div><AlertTriangleIcon /></div>

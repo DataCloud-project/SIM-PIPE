@@ -45,11 +45,13 @@
 					projectId: project_id
 				}
 			};
-		return requestGraphQLClient<{name: string}>(
+		return requestGraphQLClient<{createWorkflowTemplate: {name: string}}>(
 			createWorkflowTemplateMutation,
 			variablesCreateWorkflowTemplateRequest
 		).then(data => {
-			return {status: 200, name: data.name}
+			console.log("createWorkflowTemplate response:")
+			console.log(data)
+			return {status: 200, name: data.createWorkflowTemplate.name}
 		}).catch(error => {
 			console.log(`createWorkflowTemplate error: ${error}`);
 			return {status: 500, name: 'none'}
@@ -76,7 +78,7 @@
 				console.log("Successfully created project")
 				createWorkflowTemplate(createProjectResponse.project.id, workflow_template).then(createWorkflowTemplateResponse => {
 					if (createWorkflowTemplateResponse.status == 200) {
-						console.log("Successfully created workflow template")
+						console.log(`Successfully created workflow template ${createWorkflowTemplateResponse.name}`)
 					} else {
 						Error(`Workflow template creation failed ${createWorkflowTemplateResponse}`);
 					}
