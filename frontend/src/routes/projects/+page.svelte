@@ -1,14 +1,15 @@
 <script lang="ts">
-	import { Modal, getModalStore, ProgressBar } from '@skeletonlabs/skeleton';
+	import { ProgressBar } from '@skeletonlabs/skeleton';
+	import { getModalStore } from '@skeletonlabs/skeleton';
 	import type { ModalSettings } from '@skeletonlabs/skeleton';
-	import ModalSubmitNewProject from './modal-submit-new-project.svelte';
+	import ModalSubmitNewProject from '../../modals/createNewProjectModal.svelte';
 	import { projectsList, clickedProjectId } from '../../stores/stores.js';
 	import type { Project } from '../../types.js';
 	import { goto } from '$app/navigation';
 	import Timestamp from './project_id/[dry_run]/timestamp.svelte';
 	import { requestGraphQLClient } from '$lib/graphqlUtils';
 	import { AlertTriangleIcon, EditIcon, FileTextIcon } from 'svelte-feather-icons';
-	import ModalRenameProject from './modal-rename-project.svelte';
+	import ModalRenameProject from '../../modals/renameProjectModal.svelte';
 	import allProjectsQuery from '../../queries/get_all_projects.js';
 	import deleteProjectMutation from '../../queries/delete_project.js';
 	import allDryRunsQuery from '../../queries/get_all_dryruns';
@@ -52,12 +53,6 @@
 			$projectsList = undefined;
 		});
 
-	const modal: ModalSettings = {
-		type: 'component',
-		component: { ref: ModalSubmitNewProject },
-		title: 'Add new project',
-		body: 'Enter details of project'
-	};
 	async function onDeleteSelected() {
 		Object.keys(checkboxes)
 			.filter((item) => checkboxes[item])
@@ -119,9 +114,43 @@
 		goto(`/projects/project_id/${dry_run}`);
 	}
 
-	function renameProject(event: any, project: Project) {
-		event.stopPropagation();
+	function onCreateNewProject() {
+		const modal: ModalSettings = {
+			type: 'component',
+			component: 'createNewProjectModal',
+			title: 'Add new project',
+			body: 'Enter details of project',
+			response: (r: {
+				createProjectResponse: { status: number, project: {name: string, id: string}}, 
+				createWorkflowResponse: { status: number, name: string } 
+			}) => {
+				handleOnCreateProjectResponse(r.createProjectResponse, r.createWorkflowResponse);
+			}
+		};
+		modalStore.trigger(modal);
+	}
 
+	async function handleOnCreateProjectResponse(
+		createProjectResponse: { status: number, project: {name: string, id: string}}, 
+		createWorkflowResponse: { status: number, name: string }
+	) {
+		console.log(createProjectResponse, createWorkflowResponse);
+		if (createProjectResponse.status === 200 && createWorkflowResponse.status === 200) {
+			await requestGraphQLClient<{projects: Project[]}>(allProjectsQuery).then((response) => {
+				reactiveProjectsList = $projectsList = response.projects; // TODO: not working! 
+			})
+			visibleAlert = true;
+			alertTitle = 'Project created!';
+			alertMessage = `Project ${createProjectResponse.project.name} created with id ${createProjectResponse.project.id}`;
+	} else {
+			visibleAlert = true;
+			alertTitle = 'Project creation failed!';
+			alertMessage = `Project creation failed with status ${createProjectResponse.status} and workflow template creation failed with status ${createWorkflowResponse.status}`;
+		}
+	}
+	
+
+	function renameProject(project: Project) {
 		const modal: ModalSettings = {
 			type: 'component',
 			component: { ref: ModalRenameProject },
@@ -133,9 +162,8 @@
 		modalStore.trigger(modal);
 	}
 
-	function showTemplate(event: any, project: Project) {
+	function showTemplate(project: Project) {
 		$clickedProjectId = project.id;
-		event.stopPropagation();
 		try {
 			const template = project.workflowTemplates[0].argoWorkflowTemplate;
 			const template_name = template?.metadata.name;
@@ -164,7 +192,7 @@
 					<button
 						type="button"
 						class="btn btn-sm variant-filled"
-						on:click={() => modalStore.trigger(modal)}
+						on:click={() => onCreateNewProject()}
 					>
 						<span>Create</span>
 					</button>
@@ -210,7 +238,7 @@
 								{dryRunCounts[project.id]}
 							</td>
 							<!-- svelte-ignore a11y-click-events-have-key-events -->
-							<td style="width:15%" on:click={(event) => showTemplate(event, project)}>
+							<td style="width:15%" on:click={() => showTemplate(project)}>
 								<div class="grid grid-rows-2 grid-cols-1 justify-items-center">
 									<div><FileTextIcon size="1x" /></div>
 									<div>
@@ -224,7 +252,7 @@
 									type="button"
 									title="Rename project"
 									class="btn-icon btn-icon-sm variant-soft"
-									on:click={() => renameProject(event, project)}
+									on:click={() => renameProject(project)}
 								>
 									<EditIcon size="20" />
 								</button>
@@ -237,9 +265,6 @@
 	</div>
 </div>
 
-{#if $modalStore[0]}
-	<Modal />
-{/if}
 
 {#if visibleAlert}
 	<aside class="alert variant-ghost">

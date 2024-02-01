@@ -1,11 +1,11 @@
 <script lang="ts">
-	import { cBase, cHeader, cForm } from '../../styles/styles.js';
-	import { projectsList } from '../../stores/stores.js';
-	import allProjectsQuery from '../../queries/get_all_projects.js';
-	import type { Project } from '../../types.js';
+	import { cBase, cHeader, cForm } from '../styles/styles.js';
+	import { projectsList } from '../stores/stores.js';
+	import allProjectsQuery from '../queries/get_all_projects.js';
+	import type { Project } from '../types.js';
 	//import { modalStore, type ModalSettings, Modal } from '@skeletonlabs/skeleton'; -- old v1 skeletonlabs 
 	import { requestGraphQLClient } from '$lib/graphqlUtils.js';
-	import renameProjectMutation from '../../queries/rename_project.js';
+	import renameProjectMutation from '../queries/rename_project.js';
 	import { getModalStore } from '@skeletonlabs/skeleton';
 
 	const modalStore = getModalStore();

@@ -6,6 +6,7 @@
 	import '@fontsource/ibm-plex-sans/400.css';
 	import '@fontsource/ibm-plex-sans/600.css';
 	import '../app.postcss';
+	import { page } from '$app/stores';
 	import { AppShell, AppBar, AppRail, AppRailAnchor } from '@skeletonlabs/skeleton';
 	import { LightSwitch } from '@skeletonlabs/skeleton';
 
@@ -26,11 +27,13 @@
 
 	import UploadFileModal from '../modals/uploadFileModal.svelte';
 	import ProvideTextInputModal from '../modals/provideTextInputModal.svelte';
+	import CreateNewProjectModal from '../modals/createNewProjectModal.svelte';
 
 	const modalRegistry: Record<string, ModalComponent> = {
 		// Set a unique modal ID, then pass the component reference
 		uploadFileModal: { ref: UploadFileModal },
 		provideTextInputModal: { ref: ProvideTextInputModal },
+		createNewProjectModal: { ref: CreateNewProjectModal },
 	};
 
 
@@ -87,7 +90,7 @@
 	<!-- (sidebarLeft) -->
 	<svelte:fragment slot="sidebarLeft">
 		<AppRail>
-			<AppRailAnchor label="Projects" href="/projects">
+			<AppRailAnchor label="Projects" href="/projects" selected={$page.url.pathname === '/projects'} >
 				<div class="flex flex-col items-center justify-center">
 					<div>
 						<BookOpenIcon size="1.5x" />
@@ -97,7 +100,7 @@
 					</div>
 				</div>
 			</AppRailAnchor>
-			<AppRailAnchor label="Artifacts" href="/artifacts">
+			<AppRailAnchor label="Artifacts" href="/artifacts" selected={$page.url.pathname === '/artifacts'} >
 				<div class="flex flex-col items-center justify-center">
 					<div>
 						<FolderIcon size="1.5x" />
@@ -107,7 +110,7 @@
 					</div>
 				</div>
 			</AppRailAnchor>
-			<AppRailAnchor label="Registry Key Vault" href="/secrets">
+			<AppRailAnchor label="Registry Key Vault" href="/secrets" selected={$page.url.pathname === '/secrets'}>
 				<div class="flex flex-col items-center justify-center">
 					<div>
 						<LockIcon size="1.5x" />
