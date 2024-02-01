@@ -169,17 +169,19 @@
 		modalStore.trigger(modal);
 	}
 
-	function showTemplate(project: Project) {
+	function gotoTemplate(project: Project) {
 		$clickedProjectId = project.id;
+		console.log("showTemplate", project.id, $clickedProjectId)
 		try {
 			const template = project.workflowTemplates[0].argoWorkflowTemplate;
 			const template_name = template?.metadata.name;
-			goto(`/templates/${template_name}`);
-			throw new Error('Template not found!');
+			console.log(template_name)
+			goto(`/templates/${template_name}`); // TODO: redirecting to template page does not work. why?
 		} catch (error) {
 			visibleAlert = true;
 			alertTitle = 'Template not found!';
 			alertMessage = `Workflow template does not exist for this project: ${clickedProjectId}`;
+			alertVariant = 'variant-ghost-warning';
 		}
 	}
 	$: reactiveProjectsList = $projectsList;
@@ -245,7 +247,7 @@
 								{dryRunCounts[project.id]}
 							</td>
 							<!-- svelte-ignore a11y-click-events-have-key-events -->
-							<td style="width:15%" on:click={() => showTemplate(project)}>
+							<td style="width:15%" on:click={() => gotoTemplate(project)}>
 								<div class="grid grid-rows-2 grid-cols-1 justify-items-center">
 									<div><FileTextIcon size="1x" /></div>
 									<div>
