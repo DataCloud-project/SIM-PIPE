@@ -2,7 +2,6 @@
 	import { ProgressBar } from '@skeletonlabs/skeleton';
 	import { getModalStore } from '@skeletonlabs/skeleton';
 	import type { ModalSettings } from '@skeletonlabs/skeleton';
-	import ModalSubmitNewProject from '../../modals/createNewProjectModal.svelte';
 	import { projectsList, clickedProjectId } from '../../stores/stores.js';
 	import type { Project } from '../../types.js';
 	import { goto } from '$app/navigation';
@@ -140,7 +139,7 @@
 		visibleAlert = true;
 		if (createProjectResponse.status === 200 && createWorkflowResponse.status === 200) {
 			await requestGraphQLClient<{projects: Project[]}>(allProjectsQuery).then((response) => {
-				reactiveProjectsList = $projectsList = response.projects; // TODO: not working! 
+				reactiveProjectsList = $projectsList = response.projects;
 			})
 			alertVariant = 'variant-ghost-success';
 			alertTitle = 'Project created!';
