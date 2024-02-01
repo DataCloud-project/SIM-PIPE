@@ -28,12 +28,14 @@
 	import UploadFileModal from '../modals/uploadFileModal.svelte';
 	import ProvideTextInputModal from '../modals/provideTextInputModal.svelte';
 	import CreateNewProjectModal from '../modals/createNewProjectModal.svelte';
+	import SubmitNewDryRunModal from '../modals/submitNewDryRunModal.svelte';
 
 	const modalRegistry: Record<string, ModalComponent> = {
 		// Set a unique modal ID, then pass the component reference
 		uploadFileModal: { ref: UploadFileModal },
 		provideTextInputModal: { ref: ProvideTextInputModal },
 		createNewProjectModal: { ref: CreateNewProjectModal },
+		submitNewDryRunModal: { ref: SubmitNewDryRunModal }
 	};
 
 

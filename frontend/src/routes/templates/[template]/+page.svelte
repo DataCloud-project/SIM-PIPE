@@ -10,7 +10,7 @@
 
 	export let data;
 
-	$: language = 'yaml';
+	$: language = 'yaml'; // default format of workflow template
 
 	const getWorkflowTemplate = async (): Promise<any> => {
 		const variables = {

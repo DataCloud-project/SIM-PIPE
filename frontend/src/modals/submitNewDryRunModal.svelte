@@ -1,14 +1,19 @@
 <script lang="ts">
-	import { cBase, cHeader, cForm, optional } from '../../../../styles/styles.js';
-	import { Modal, modalStore, type ModalSettings } from '@skeletonlabs/skeleton';
-	import { selectedProject } from '../../../../stores/stores.js';
-	import createDryRunMutation from '../../../../queries/create_dry_run.js';
-	import allDryRunsQuery from '../../../../queries/get_all_dryruns.js';
-	import type { Project } from '../../../../types.js';
-	import refreshProjectDetails from '../../../../lib/refresh_runs.js';
+	import { cBase, cHeader, cForm, optional } from '../styles/styles.js';
+	//import { Modal, modalStore, type ModalSettings } from '@skeletonlabs/skeleton'; // old v1 skeletonlabs
+	import { getModalStore } from '@skeletonlabs/skeleton';
+	import type { ModalSettings } from '@skeletonlabs/skeleton';
+	import { selectedProject } from '../stores/stores.js';
+	import createDryRunMutation from '../queries/create_dry_run.js';
+	import allDryRunsQuery from '../queries/get_all_dryruns.js';
+	import type { Project } from '../types.js';
+	import refreshProjectDetails from '../lib/refresh_runs.js';
 	import { requestGraphQLClient } from '$lib/graphqlUtils.js';
 
+	const modalStore = getModalStore();
+
 	export let parent: any;
+	
 	type Parameters = {
 		name: string;
 		value: string;
@@ -236,8 +241,4 @@
 			<button class="btn {parent.buttonPositive}" on:click={onCreateDryRunSubmit}>Submit</button>
 		</footer>
 	</div>
-{/if}
-
-{#if alertModal}
-	<Modal />
 {/if}

@@ -3,9 +3,10 @@
 	import { selectedProject, clickedProjectId } from '../../../../stores/stores.js';
 	import SymbolForRunResult from './symbol-for-run-result.svelte';
 	import SymbolForAction from './symbol-for-action.svelte';
-	import { Modal, modalStore } from '@skeletonlabs/skeleton';
+	//import { Modal, modalStore } from '@skeletonlabs/skeleton'; // old v1 skeletonlabs
+	import { getModalStore } from '@skeletonlabs/skeleton';
 	import type { ModalSettings } from '@skeletonlabs/skeleton';
-	import ModalSubmitNewDryRun from './modal-submit-new-dry-run.svelte';
+	//import ModalSubmitNewDryRun from '../../../../modals/submitNewDryRunModal.svelte';
 	import type { DryRun, DryRunMetrics, Project } from '../../../../types.js';
 	import allDryRunsQuery from '../../../../queries/get_all_dryruns.js';
 	import deleteDryRunMutation from '../../../../queries/delete_dry_run.js';
@@ -13,6 +14,8 @@
 	import Timestamp from './timestamp.svelte';
 	import { requestGraphQLClient } from '$lib/graphqlUtils.js';
 	import { time_difference } from '$lib/time_difference.js';
+
+	const modalStore = getModalStore();
 
 	export let data;
 
@@ -81,7 +84,7 @@
 	async function onCreateSelected() {
 		const modal: ModalSettings = {
 			type: 'component',
-			component: { ref: ModalSubmitNewDryRun },
+			component: 'submitNewDryRunModal',
 			title: 'Add new dry run',
 			body: 'Enter details of dry run'
 		};
@@ -201,9 +204,6 @@
 	</div>
 </div>
 
-{#if $modalStore[0]}
-	<Modal />
-{/if}
 
 <style>
 	.table.table {

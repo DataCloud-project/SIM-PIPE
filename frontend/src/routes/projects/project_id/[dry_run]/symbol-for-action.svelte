@@ -11,8 +11,12 @@
 	import suspendDryRunMutation from '../../../../queries/suspend_dry_run.js';
 	import resumeDryRunMutation from '../../../../queries/resume_dry_run.js';
 	import { pausedDryRuns } from '../../../../stores/stores.js';
-	import { modalStore, type ModalSettings } from '@skeletonlabs/skeleton';
+	//import { modalStore, type ModalSettings } from '@skeletonlabs/skeleton'; // old v1 skeletonlabs
+	import { getModalStore } from '@skeletonlabs/skeleton';
+	import type { ModalSettings } from '@skeletonlabs/skeleton';
 	import { requestGraphQLClient } from '$lib/graphqlUtils.js';
+
+	const modalStore = getModalStore();
 
 	export let action: string, dryRunId: string;
 	$: paused = $pausedDryRuns?.includes(dryRunId);
