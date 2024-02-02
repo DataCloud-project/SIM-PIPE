@@ -267,7 +267,6 @@ export async function linearRegression(
 		const meanY = y.reduce((acc, val) => acc + val, 0) / n;
 		const numerator = x.reduce((acc, xi, i) => acc + (xi - meanX) * (y[i] - meanY), 0);
 		const denominator = x.reduce((acc, xi) => acc + (xi - meanX) ** 2, 0);
-
 		const slope = numerator / denominator;
 		const intercept = meanY - slope * meanX;
 		return (slope * inputFileSize + intercept).toFixed(3) as unknown as number;

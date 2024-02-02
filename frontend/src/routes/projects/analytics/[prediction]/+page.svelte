@@ -19,6 +19,8 @@
 	import { readable_time } from '$lib/time_difference.js';
 	import { cForm } from '../../../../styles/styles.js';
 	import type { metricsWithTimeStamps } from '../../../../types.js';
+	import getDryRunProjectIDQuery from '../../../../queries/get_dry_run_project_id.js';
+	import { displayAlert } from '../../../../utils/alerts_utils.js';
 
 	export let data;
 
@@ -27,6 +29,22 @@
 	var collectedMetrics: {
 		[key: string]: MetricsAnalytics;
 	} = {};
+
+	async function gotoDryRuns() {
+		let projectId = '';
+		if ($selectedProject?.id) projectId = $selectedProject?.id;
+		// if selectedproject in store is null, get the project id from any of the selected runs
+		else {
+			const dryRunId = dryruns_for_prediction[0];
+			const result: {
+				dryRun: {
+					project: { id: string };
+				};
+			} = await requestGraphQLClient(getDryRunProjectIDQuery, { dryRunId });
+			projectId = result.dryRun.project.id;
+		}
+		goto(`/projects/dryruns/${projectId}`);
+	}
 
 	// for each selected dry run, get the resource analytics (avg, max) per step and per dry run level
 	export const getPredictionDetails = async (): Promise<void> => {
@@ -69,15 +87,9 @@
 				return Number(response.dryRun.argoWorkflow.metadata.annotations.filesize);
 			} catch (error) {
 				console.log(error);
-				let createDryRunMessageModal: ModalSettings;
-				createDryRunMessageModal = {
-					type: 'alert',
-					title: 'Error reading input filesizes for dry run - ${dryRunId}',
-					body: 'You will be taken back to the dry runs list on close'
-				};
-				modalStore.trigger(createDryRunMessageModal);
-				await new Promise((resolve) => setTimeout(resolve, 2500));
-				modalStore.close();
+				const title = 'Error reading input filesizes for dry run - ${dryRunId}';
+				const body = 'You will be taken back to the dry runs list on close';
+				await displayAlert(title, body, 2500);
 				goto(`/projects/dryruns/${$selectedProject?.id}`);
 			}
 		});
@@ -159,11 +171,7 @@
 		<h1 class="flex justify-between items-center" STYLE="font-size:24px">
 			Estimations based on dryruns {dryruns_for_prediction.join(', ')}
 			<span>
-				<button
-					type="button"
-					class="justify-end btn btn-sm variant-filled"
-					on:click={() => goto(`/projects/dryruns/${$selectedProject?.id}`)}
-				>
+				<button type="button" class="justify-end btn btn-sm variant-filled" on:click={gotoDryRuns}>
 					<span>Back to dry runs</span>
 				</button>
 			</span>
