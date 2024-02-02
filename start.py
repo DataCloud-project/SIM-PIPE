@@ -13,6 +13,14 @@ from install import main as install_main
 
 def start_colima(cpu, memory):
     print("⏳ Starting colima...")
+    arch = platform.machine()
+
+    if arch == "arm64":
+        arch = "aarch64"
+    elif arch != "x86_64":
+        print("❌ Unsupported architecture: " + arch)
+        sys.exit(1)
+
     subprocess.run(
         [
             "colima",
@@ -21,6 +29,7 @@ def start_colima(cpu, memory):
             # Uncomment the following line if you want to use the MacOS VM framework
             # instead of qemu.
             # "--vm-type=vz",
+            # "--vz-rosetta",
             # If using the MacOS VM framework, the following line will ignore IPv6
             # as IPv6 is problematic on some networks.
             # See https://github.com/abiosoft/colima/issues/648
@@ -31,6 +40,8 @@ def start_colima(cpu, memory):
             str(memory),
             # set the current docker/kubernetes context
             "--activate",
+            "--arch",
+            arch,
             "simpipe",
         ],
         check=True,
