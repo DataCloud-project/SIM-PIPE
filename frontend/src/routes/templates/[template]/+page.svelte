@@ -7,6 +7,7 @@
 	import { goto } from '$app/navigation';
 	import { requestGraphQLClient } from '$lib/graphqlUtils';
 	import { ArrowRightIcon } from 'svelte-feather-icons';
+	import type { WorkflowTemplate } from '../../types.d.ts'
 
 	export let data;
 
@@ -16,7 +17,8 @@
 		const variables = {
 			name: data.template
 		};
-		const response = await requestGraphQLClient(getWorkflowQuery, variables);
+		const response = await requestGraphQLClient<{argoWorkflowTemplate: WorkflowTemplate}>(getWorkflowQuery, variables);
+		console.log(response);
 		return response;
 	};
 
