@@ -1,10 +1,9 @@
 <script lang="ts">
 	import { cBase, cHeader, cForm } from '../styles/styles.js';
-	import { projectsList, username } from '../stores/stores.js';
+	import { username } from '../stores/stores.js';
 	import createProjectMutation from '../queries/create_project.js';
-	import allProjectsQuery from '../queries/get_all_projects.js';
 	import createWorkflowTemplateMutation from '../queries/create_workflow_template.js';
-	import type { Project } from '../types.js';
+	import updateWorkflowTemplateMutation from '../queries/update_workflow_template.js';
 	//import { modalStore, type ModalSettings, Modal } from '@skeletonlabs/skeleton'; -- old v1 skeletonlabs
 	import yaml from 'js-yaml';
 	import { requestGraphQLClient } from '$lib/graphqlUtils.js';
@@ -45,6 +44,7 @@
 					projectId: project_id
 				}
 			};
+		console.log(variablesCreateWorkflowTemplateRequest);
 		return requestGraphQLClient<{createWorkflowTemplate: {name: string}}>(
 			createWorkflowTemplateMutation,
 			variablesCreateWorkflowTemplateRequest
@@ -58,33 +58,69 @@
 		});
 	}
 
+	async function updateWorkflowTemplate(template_name: string, project_id: string, workflow_template: string): Promise<{status: number, name: string, project_id: string}> {
+		const variablesUpdateWorkflowTemplateRequest = {
+				input: {
+					argoWorkflowTemplate: workflow_template,
+					name: template_name,
+					projectId: project_id
+				}
+			};
+		console.log(variablesUpdateWorkflowTemplateRequest);
+		return requestGraphQLClient<{updateWorkflowTemplate: {name: string, project: {name: string, id: string}}}>(
+			createWorkflowTemplateMutation,
+			variablesUpdateWorkflowTemplateRequest
+		).then(data => {
+			console.log("updateWorkflowTemplate response:")
+			console.log(data)
+			return {status: 200, name: data.updateWorkflowTemplate.name, project_id: data.updateWorkflowTemplate.project.id}
+		}).catch(error => {
+			console.log(`updateWorkflowTemplate error: ${error}`);
+			return {status: 500, name: 'none', project_id: 'none'}
+		});
+	}
+
 	async function handleInputFile(file: FileList): Promise<string> {
-		const file_text = await file[0].text();
-		if (file_text != '') {
-			let template: JSON;
-			try {
-				template = JSON.parse(file_text);
-			} catch {
-				template = yaml.load(file_text) as JSON;
+		try {
+			const file_text = await file[0].text();
+			if (file_text != '') {
+				let template: JSON;
+				try {
+					template = JSON.parse(file_text);
+				} catch {
+					template = yaml.load(file_text) as JSON;
+				}
 			}
+			return file_text;
+		} catch (error) {
+			console.log(`handleInputFile error: ${error}`);
+			return '';
 		}
-		return file_text;
 	}
 
 	async function onSubmit() {
 		const workflow_template = await handleInputFile(input_file);
+		//console.log("hello world!")
+		console.log(workflow_template)
 		createProject(project_name).then(createProjectResponse => {
 			if (createProjectResponse.status == 200 && createProjectResponse.project.id != 'none') {
 				console.log("Successfully created project")
-				createWorkflowTemplate(createProjectResponse.project.id, workflow_template).then(createWorkflowTemplateResponse => {
-					if (createWorkflowTemplateResponse.status == 200) {
-						console.log(`Successfully created workflow template ${createWorkflowTemplateResponse.name}`)
-					} else {
-						Error(`Workflow template creation failed ${createWorkflowTemplateResponse}`);
-					}
-					$modalStore[0].response({createProjectResponse: createProjectResponse, createWorkflowResponse: createWorkflowTemplateResponse});
+				if (workflow_template == '') {
+					console.log("No workflow template provided")
+					$modalStore[0].response({createProjectResponse: createProjectResponse, createWorkflowResponse: {status: 500, name: 'none'}});
 					modalStore.close();
-				});
+					return;
+				} else {
+					createWorkflowTemplate(createProjectResponse.project.id, workflow_template).then(createWorkflowTemplateResponse => {
+						if (createWorkflowTemplateResponse.status == 200) {
+							console.log(`Successfully created workflow template ${createWorkflowTemplateResponse.name}`)
+						} else {
+							Error(`Workflow template creation failed ${createWorkflowTemplateResponse}`);
+						}
+						$modalStore[0].response({createProjectResponse: createProjectResponse, createWorkflowResponse: createWorkflowTemplateResponse});
+						modalStore.close();
+					});
+				}
 			} else {
 				Error(`Project creation failed ${createProjectResponse}`);
 			}
