@@ -7,19 +7,20 @@
 	import { goto } from '$app/navigation';
 	import Timestamp from './project_id/[dry_run]/timestamp.svelte';
 	import { requestGraphQLClient } from '$lib/graphqlUtils';
-	import { AlertTriangleIcon, EditIcon, FileTextIcon } from 'svelte-feather-icons';
+	import { EditIcon, FileTextIcon } from 'svelte-feather-icons';
 	import ModalRenameProject from '../../modals/renameProjectModal.svelte';
 	import allProjectsQuery from '../../queries/get_all_projects.js';
 	import deleteProjectMutation from '../../queries/delete_project.js';
 	import allDryRunsQuery from '../../queries/get_all_dryruns';
 	import deleteDryRunMutation from '../../queries/delete_dry_run.js';
 	import deleteWorkflowTemplateMutation from '../../queries/delete_workflow_template.js';
+	import Alert from '$lib/modules/Alert.svelte'
 
 	const modalStore = getModalStore();
 
-	let visibleAlert = false;
-	let alertTitle = 'Alert!';
-	let alertMessage = 'Alert!';
+	let visibleAlert: boolean = false;
+	let alertTitle: string = 'Alert!';
+	let alertMessage: string = 'Alert!';
 	let alertVariant: string = 'variant-ghost-surface';
 
 	const getProjectsList = async (): Promise<Project[]> => {
@@ -143,11 +144,11 @@
 			})
 			alertVariant = 'variant-ghost-success';
 			alertTitle = 'Project created!';
-			alertMessage = `Project ${createProjectResponse.project.name} created with id ${createProjectResponse.project.id}`;
+			alertMessage = `Project ${createProjectResponse.project.name} created with id ${createProjectResponse.project.id} and workflow template ${createWorkflowResponse.name} created`;
 	} else if (createProjectResponse.status === 200 && createWorkflowResponse.status !== 200) {
 			alertVariant = 'variant-ghost-warning';
-			alertTitle = 'Project created, but workflow creation failed!';
-			alertMessage = `Try to create template manually`;
+			alertTitle = 'Project created! However, workflow creation failed!';
+			alertMessage = `Create template manually`;
 	} else {
 			alertVariant = 'variant-filled-error';
 			alertTitle = 'Project creation failed!';
@@ -175,8 +176,9 @@
 		try {
 			const template = project.workflowTemplates[0].argoWorkflowTemplate;
 			const template_name = template?.metadata.name;
-			console.log(template_name)
-			goto(`/templates/${template_name}`); // TODO: redirecting to template page does not work. why?
+			const relative_url = `/templates/${template_name}`
+			console.log(relative_url)
+			goto(relative_url); // TODO: redirecting to template page does not work. why?
 		} catch (error) {
 			visibleAlert = true;
 			alertTitle = 'Template not found!';
@@ -274,29 +276,8 @@
 	</div>
 </div>
 
+<Alert bind:visibleAlert bind:alertTitle bind:alertMessage bind:alertVariant />
 
-{#if visibleAlert}
-	<aside class="alert {alertVariant}">
-		<!-- Icon -->
-		<div class="flex w-full justify-between">
-			<div><AlertTriangleIcon /></div>
-			<div class="alert-actions">
-				<button
-					type="button"
-					class="btn btn-sm variant-filled"
-					on:click={() => {
-						visibleAlert = false;
-					}}>OK</button
-				>
-			</div>
-		</div>
-		<!-- Message -->
-		<div class="alert-message">
-			<h3 class="h3">{alertTitle}</h3>
-			<p>{alertMessage}</p>
-		</div>
-	</aside>
-{/if}
 
 <style>
 	.table.table {
