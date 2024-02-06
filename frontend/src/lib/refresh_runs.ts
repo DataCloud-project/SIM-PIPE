@@ -36,7 +36,6 @@ export default async function refreshProjectDetails(): Promise<void> {
 				refreshActiveRunsPromise = undefined;
 				return;
 			}
-			console.log('refresh', activeDryRuns);
 		} while (activeDryRuns);
 	})();
 }

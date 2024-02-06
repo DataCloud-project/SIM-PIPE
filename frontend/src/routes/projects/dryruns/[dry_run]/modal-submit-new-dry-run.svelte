@@ -7,6 +7,7 @@
 	import type { Project, Template, Task, Templates } from '../../../../types.js';
 	import refreshProjectDetails from '../../../../lib/refresh_runs.js';
 	import { requestGraphQLClient } from '$lib/graphqlUtils.js';
+	import { displayAlert } from '../../../../utils/alerts_utils.js';
 
 	export let parent: any;
 
@@ -138,38 +139,17 @@
 				projectId: $selectedProject?.id
 			});
 			$selectedProject = response.project;
-			const createDryRunMessageModal: ModalSettings = {
-				type: 'alert',
-				title: 'New dry run created&#10024;!',
-				body: `New dry run ID: ${responseCreateDryRun?.createDryRun?.id}`
-			};
-			modalStore.trigger(createDryRunMessageModal);
+			const title = 'New dry run created&#10024;!';
+			const body = `New dry run ID: ${responseCreateDryRun?.createDryRun?.id}`;
 			alertModal = true;
-			await new Promise((resolve) => setTimeout(resolve, 1500));
-			modalStore.close();
+			await displayAlert(title, body, 2000);
 			await refreshProjectDetails();
-			modalStore.clear();
 		} catch (error) {
 			console.log(error);
-			const message = (error as Error).message;
-			let createDryRunMessageModal: ModalSettings;
-			if (message.includes('PayloadTooLargeError')) {
-				createDryRunMessageModal = {
-					type: 'alert',
-					title: 'Failed!',
-					body: 'Input file size exceeded limit (90KB)!'
-				};
-			} else {
-				createDryRunMessageModal = {
-					type: 'alert',
-					title: 'Failed to create dry run!',
-					body: `${message}`
-				};
-			}
-			modalStore.trigger(createDryRunMessageModal);
+			const title = 'Error creating dry run❌!';
+			const body = `${(error as Error).message}`;
 			alertModal = true;
-			await new Promise((resolve) => setTimeout(resolve, 2500));
-			modalStore.close();
+			await displayAlert(title, body, 10000);
 		}
 	}
 </script>

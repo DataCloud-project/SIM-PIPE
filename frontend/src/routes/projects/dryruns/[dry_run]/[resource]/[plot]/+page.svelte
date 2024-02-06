@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { ProgressBar } from '@skeletonlabs/skeleton';
+	import { Modal, ProgressBar } from '@skeletonlabs/skeleton';
 	import {
 		selectedProjectName,
 		selectedDryRunName,
@@ -10,6 +10,7 @@
 	import { requestGraphQLClient } from '$lib/graphqlUtils';
 	import Plot from '../Plot.svelte';
 	import { gql } from 'graphql-request';
+	import { displayAlert } from '../../../../../../utils/alerts_utils';
 
 	const datefmt = 'yyyy-MM-dd HH:mm:ss';
 	const defaultMetricsType = 'All';
@@ -190,8 +191,12 @@
 				}
 			);
 		})
-		.catch((error) => {
+		.catch(async (error) => {
 			console.log(error);
+			const title = 'Error reading resource consumption of dry run❌!';
+			const body = `${(error as Error).message}`;
+			await displayAlert(title, body, 10000);
+			goto(`/projects/dryruns/${$selectedProjectName}/${$selectedDryRunName}`);
 		});
 
 	// TODO: These functions are the same as in [resource].svelte
@@ -287,3 +292,5 @@
 		{/await}
 	</div>
 </div>
+
+<Modal />

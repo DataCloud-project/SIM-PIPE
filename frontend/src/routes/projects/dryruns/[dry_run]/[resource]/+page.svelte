@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { ProgressBar } from '@skeletonlabs/skeleton';
+	import { Modal, ProgressBar } from '@skeletonlabs/skeleton';
 	import type { DryRunMetrics, DryRun, metricsWithTimeStamps } from '../../../../../types';
 	import getDryRunMetricsQuery from '../../../../../queries/get_dry_run_metrics.js';
 	import getProjectQuery from '../../../../../queries/get_project';
@@ -145,12 +145,16 @@
 	function buildDiagram() {
 		mermaidCode = []; // clear mermaidCode
 		mermaidCode.push(`graph ${graphOrientation};`);
-		workflow.workflowTemplates[0]?.argoWorkflowTemplate.spec.templates.forEach((template) => {
+		workflow.workflowTemplates[0]?.argoWorkflowTemplate.spec.templates.forEach(async (template) => {
 			try {
 				if (template.dag) argoDAGtoMermaid(template.dag);
 				else if (template.steps) argoStepsToMermaid(template.steps);
 			} catch (error) {
 				console.log(error);
+				const title = 'Error displaying dry run step diagram❌!';
+				const body = `${(error as Error).message}`;
+				await displayAlert(title, body, 5000);
+				goto(`/projects/dryruns/${selectedProject?.id}`);
 			}
 		});
 		diagram = mermaidCode.join('\n');
@@ -477,6 +481,8 @@
 		{/await}
 	</div>
 </div>
+
+<Modal />
 
 <style>
 	.card {

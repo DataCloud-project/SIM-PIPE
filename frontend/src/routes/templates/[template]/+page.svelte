@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { ProgressBar } from '@skeletonlabs/skeleton';
+	import { Modal, ProgressBar } from '@skeletonlabs/skeleton';
 	import { clickedProjectId } from '../../../stores/stores';
 	import getWorkflowQuery from '../../../queries/get_workflow_template';
 	import { CodeBlock } from '@skeletonlabs/skeleton';
@@ -7,6 +7,7 @@
 	import { goto } from '$app/navigation';
 	import { requestGraphQLClient } from '$lib/graphqlUtils';
 	import { ArrowRightIcon } from 'svelte-feather-icons';
+	import { displayAlert } from '../../../utils/alerts_utils';
 
 	export let data;
 
@@ -27,8 +28,11 @@
 		.then((data) => {
 			workflow = data;
 		})
-		.catch((error) => {
-			console.log(error);
+		.catch(async (error) => {
+			const title = 'Error displaying workflow template❌!';
+			const body = `${(error as Error).message}`;
+			await displayAlert(title, body, 10000);
+			goto('/projects/');
 		});
 
 	function switchLanguage() {
@@ -76,6 +80,8 @@
 		{/await}
 	</div>
 </div>
+
+<Modal />
 
 <style>
 	.code {
