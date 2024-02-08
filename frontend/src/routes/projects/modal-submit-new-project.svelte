@@ -81,7 +81,7 @@
 		} catch (error) {
 			const title = 'Error creating project❌!';
 			const body = (error as Error).message;
-			await displayAlert(title, body, 10000);
+			await displayAlert(title, body, 7000);
 			alertModal = true;
 		}
 	}

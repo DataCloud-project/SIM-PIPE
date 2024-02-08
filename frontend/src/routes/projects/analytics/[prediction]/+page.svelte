@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { type ModalSettings, modalStore, Modal } from '@skeletonlabs/skeleton';
+	import { Modal } from '@skeletonlabs/skeleton';
 	import {
 		getMetricsAnalyticsUtils,
 		getMetricsResponse,

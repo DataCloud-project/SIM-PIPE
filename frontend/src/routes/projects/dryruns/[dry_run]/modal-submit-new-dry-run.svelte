@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { cBase, cHeader, cForm, optional } from '../../../../styles/styles.js';
-	import { Modal, modalStore, type ModalSettings } from '@skeletonlabs/skeleton';
+	import { Modal, modalStore } from '@skeletonlabs/skeleton';
 	import { selectedProject } from '../../../../stores/stores.js';
 	import createDryRunMutation from '../../../../queries/create_dry_run.js';
 	import allDryRunsQuery from '../../../../queries/get_all_dryruns.js';
