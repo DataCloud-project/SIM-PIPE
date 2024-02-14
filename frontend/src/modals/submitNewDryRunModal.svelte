@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { cBase, cHeader, cForm, optional } from '../styles/styles.js';
-	//import { Modal, modalStore, type ModalSettings } from '@skeletonlabs/skeleton'; // old v1 skeletonlabs
 	import { getModalStore } from '@skeletonlabs/skeleton';
 	import type { ModalSettings } from '@skeletonlabs/skeleton';
 	import { selectedProject } from '../stores/stores.js';

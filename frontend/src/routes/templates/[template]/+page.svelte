@@ -7,7 +7,7 @@
 	import { goto } from '$app/navigation';
 	import { requestGraphQLClient } from '$lib/graphqlUtils';
 	import { ArrowRightIcon } from 'svelte-feather-icons';
-	import type { WorkflowTemplate } from '../../types.d.ts'
+	import type { WorkflowTemplate } from '../../../types.d.ts'
 
 	export let data;
 

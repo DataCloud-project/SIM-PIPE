@@ -5,16 +5,15 @@
 	import { projectsList, clickedProjectId } from '../../stores/stores.js';
 	import type { Project } from '../../types.js';
 	import { goto } from '$app/navigation';
-	import Timestamp from './project_id/[dry_run]/timestamp.svelte';
 	import { requestGraphQLClient } from '$lib/graphqlUtils';
 	import { EditIcon, FileTextIcon } from 'svelte-feather-icons';
-	import ModalRenameProject from '../../modals/renameProjectModal.svelte';
 	import allProjectsQuery from '../../queries/get_all_projects.js';
 	import deleteProjectMutation from '../../queries/delete_project.js';
-	import allDryRunsQuery from '../../queries/get_all_dryruns';
+	import allDryRunsQuery from '../../queries/get_all_dryruns.js';
 	import deleteDryRunMutation from '../../queries/delete_dry_run.js';
 	import deleteWorkflowTemplateMutation from '../../queries/delete_workflow_template.js';
 	import Alert from '$lib/modules/Alert.svelte'
+	import Timestamp from './project_id/[dry_run]/timestamp.svelte';
 
 	const modalStore = getModalStore();
 
@@ -117,14 +116,15 @@
 	}
 
 	function onCreateNewProject() {
+		console.log("onCreateNewProject");
 		const modal: ModalSettings = {
 			type: 'component',
 			component: 'createNewProjectModal',
 			title: 'Add new project',
 			body: 'Enter details of project',
 			response: (r: {
-				createProjectResponse: { status: number, project: {name: string, id: string}}, 
-				createWorkflowResponse: { status: number, name: string } 
+				createProjectResponse: { status: number, error: string, project: {name: string, id: string}}, 
+				createWorkflowResponse: { status: number, error: string, name: string} 
 			}) => {
 				handleOnCreateProjectResponse(r.createProjectResponse, r.createWorkflowResponse);
 			}
@@ -133,27 +133,32 @@
 	}
 
 	async function handleOnCreateProjectResponse(
-		createProjectResponse: { status: number, project: {name: string, id: string}}, 
-		createWorkflowResponse: { status: number, name: string }
+		createProjectResponse: { status: number, project: {name: string, id: string}, error: string}, 
+		createWorkflowResponse: { status: number, name: string, error: string}
 	) {
-		console.log(createProjectResponse, createWorkflowResponse);
+		console.log("hello world!")
+		console.log(createProjectResponse);
+		console.log(createWorkflowResponse);
+		console.log("world says hello!")
 		visibleAlert = true;
-		if (createProjectResponse.status === 200 && createWorkflowResponse.status === 200) {
+		if (createProjectResponse.status === 200) {
 			await requestGraphQLClient<{projects: Project[]}>(allProjectsQuery).then((response) => {
 				reactiveProjectsList = $projectsList = response.projects;
 			})
-			alertVariant = 'variant-ghost-success';
-			alertTitle = 'Project created!';
-			alertMessage = `Project ${createProjectResponse.project.name} created with id ${createProjectResponse.project.id} and workflow template ${createWorkflowResponse.name} created`;
-	} else if (createProjectResponse.status === 200 && createWorkflowResponse.status !== 200) {
-			alertVariant = 'variant-ghost-warning';
-			alertTitle = 'Project created! However, workflow creation failed!';
-			alertMessage = `Create template manually`;
-	} else {
+			if (createWorkflowResponse.status === 200) {
+				alertVariant = 'variant-ghost-success';
+				alertTitle = 'Project created!';
+				alertMessage = `Project ${createProjectResponse.project.name} created with id ${createProjectResponse.project.id} and workflow template ${createWorkflowResponse.name} created`;
+			} else {
+				alertVariant = 'variant-ghost-warning';
+				alertTitle = 'Project created! However, workflow creation failed!';
+				alertMessage = `Create template manually: ${createWorkflowResponse.error}`;
+			}
+		} else {
 			alertVariant = 'variant-filled-error';
 			alertTitle = 'Project creation failed!';
-			alertMessage = `Project creation failed with status ${createProjectResponse.status} and workflow template creation failed with status ${createWorkflowResponse.status}`;
-	}
+			alertMessage = `Project creation failed with status ${createProjectResponse.status}: ${createProjectResponse.error} and workflow template creation failed with status ${createWorkflowResponse.status}: ${createWorkflowResponse.error}`;
+		}
 		
 	}
 	
@@ -161,7 +166,7 @@
 	function renameProject(project: Project) {
 		const modal: ModalSettings = {
 			type: 'component',
-			component: { ref: ModalRenameProject },
+			component: 'renameProjectModal',
 			title: 'Rename project',
 			body: 'Enter the new name',
 			valueAttr: { projectId: project.id, projectName: project.name }
@@ -173,10 +178,11 @@
 	function gotoTemplate(project: Project) {
 		$clickedProjectId = project.id;
 		console.log("showTemplate", project.id, $clickedProjectId)
+		
 		try {
 			const template = project.workflowTemplates[0].argoWorkflowTemplate;
 			const template_name = template?.metadata.name;
-			const relative_url = `/templates/${template_name}`
+			const relative_url = `templates/${template_name}`
 			console.log(relative_url)
 			goto(relative_url); // TODO: redirecting to template page does not work. why?
 		} catch (error) {
