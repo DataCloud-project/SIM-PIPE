@@ -85,18 +85,18 @@
 					project_variables
 				);
 			});
-		const projectDeletedMessageModal: ModalSettings = {
-			type: 'alert',
-			title: 'Project deleted🗑️!',
-			body: `Deleted projects: ${Object.keys(checkboxes).filter((item) => checkboxes[item])}`
-		};
-		modalStore.trigger(projectDeletedMessageModal);
-		await new Promise((resolve) => setTimeout(resolve, 1500));
-		modalStore.close();
+
+		// show warning alert
+		visibleAlert = true;
+		alertTitle = 'Projects deleted🗑️!';
+		alertMessage = `${Object.keys(checkboxes).filter((item) => checkboxes[item])} deleted successfully`;
+		alertVariant = 'variant-ghost-warning';
+
 		// reset checkboxes
 		$projectsList?.forEach((element) => {
 			checkboxes[element.id] = false;
 		});
+		
 		// inserting a small delay because sometimes delete mutation returns true, but all projects query returns the deleted project as well
 		await new Promise((resolve) => setTimeout(resolve, 150));
 
