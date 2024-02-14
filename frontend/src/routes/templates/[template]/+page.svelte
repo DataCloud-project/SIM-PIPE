@@ -7,27 +7,33 @@
 	import { goto } from '$app/navigation';
 	import { requestGraphQLClient } from '$lib/graphqlUtils';
 	import { ArrowRightIcon } from 'svelte-feather-icons';
-	import type { WorkflowTemplate } from '../../../types.d.ts'
+	import type { Project, WorkflowTemplate } from '../../../types.d.ts'
 
 	export let data;
 
 	$: language = 'yaml'; // default format of workflow template
 
-	const getWorkflowTemplate = async (): Promise<any> => {
+	const getWorkflowTemplate = async (): Promise<{workflowTemplate: WorkflowTemplate}> => {
 		const variables = {
 			name: data.template
 		};
-		const response = await requestGraphQLClient<{argoWorkflowTemplate: WorkflowTemplate}>(getWorkflowQuery, variables);
+		const response = await requestGraphQLClient<{workflowTemplate: WorkflowTemplate}>(getWorkflowQuery, variables);
 		console.log(response);
 		return response;
 	};
 
 	const workflowPromise = getWorkflowTemplate();
 	var workflow = {};
+	var workflow_name: string;
+	var project: Project;
 
 	workflowPromise
 		.then((data) => {
-			workflow = data;
+			workflow = data.workflowTemplate;
+			workflow_name = data.workflowTemplate.name
+			project = data.workflowTemplate.project
+			//console.log(project)
+			//console.log(workflow_name)
 		})
 		.catch((error) => {
 			console.log(error);
