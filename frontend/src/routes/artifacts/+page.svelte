@@ -6,13 +6,19 @@
     import type { ModalSettings } from '@skeletonlabs/skeleton';
     import { getModalStore } from '@skeletonlabs/skeleton';
     import { reactiveArtifacts } from '$lib/folders_types';
-    import type { ArtifactType } from '$lib/folders_types';
+    import { reactiveBuckets } from '$lib/folders_types';
+    import type { ArtifactType, BucketType, Bucket } from '$lib/folders_types';
 	  import { onMount } from 'svelte';
-    import { default_bucket_name } from '$lib/folders_types';
+    import { writable } from 'svelte/store';
+
+    //import { default_bucket_name } from '$lib/folders_types'; // TODO: remove when not needed anymore
 
     const modalStore = getModalStore();
 
-    let artifacts: ArtifactType[];
+    //let buckets: Bucket[] = [];
+    //let artifacts: ArtifactType[];    
+    const buckets = writable<Bucket[]>([]);
+    let requestsComplete = false;
 
     let requestError: boolean = false;
     let alertVisible: boolean = false;
@@ -20,19 +26,19 @@
     let alertMessage: string = 'Alert Message';
     let alertVariant: string = 'variant-ghost-surface';
 
-    let bucketName: string = default_bucket_name; //TODO: default bucket name (for now)
+    //let bucketName: string = default_bucket_name; //TODO: default bucket name (for now)
 
-    async function getArtifacts(): Promise<ArtifactType[]> {
-      console.log("fetching artifacts");
+    async function getBuckets(): Promise<{response: BucketType[]}> {
+      console.log("fetching buckets");
       try {
-        const response = await fetch(`api/minio/buckets/objects`);
+        const response = await fetch(`/api/minio/buckets`);
         if (!response.ok) {
           const data = await response.json();
           throw Error(`Request error! Failed to load data! ${response.statusText} ${data.data}`);
         }
         const data = await response.json();
-        console.log(data);
-        return data.data;
+        console.log('getBuckets:', data);
+        return data;
       } catch (error) {
         requestError = true;
         alertVisible = true;
@@ -40,7 +46,29 @@
         alertMessage = `${error}`;
         alertVariant = 'variant-filled-error';
         console.error(error);
-        return []; 
+        return {response: []}; 
+      }
+    }
+
+    async function getArtifacts(bucket: string): Promise<{response: ArtifactType[]}> {
+      console.log("fetching artifacts");
+      try {
+        const response = await fetch(`/api/minio/buckets/objects?bucketName=${bucket}`);
+        if (!response.ok) {
+          const data = await response.json();
+          throw Error(`Request error! Failed to load data! ${response.statusText} ${data.data}`);
+        }
+        const data = await response.json();
+        console.log('getArtifacts:', data);
+        return data;
+      } catch (error) {
+        requestError = true;
+        alertVisible = true;
+        alertTitle = 'Request Error';
+        alertMessage = `${error}`;
+        alertVariant = 'variant-filled-error';
+        console.error(error);
+        return {response: []};
       }
     }
 
@@ -256,12 +284,30 @@
       return paths;
     }    
 
+    
     onMount(async () => {
-        console.log('onMount');
-        artifacts = await getArtifacts();
+      // fetch all buckets
+      $reactiveBuckets = []; // clear buckets on refresh
+      const bucketsList = await getBuckets();
+      const requests = bucketsList.response.map(async (bucket) => {
+        const artifacts = await getArtifacts(bucket.name);
+        return {bucket, artifacts};
+      });
+      // Update the buckets store inside the Promise.all().then() callback
+      Promise.all(requests).then(results => {
+        buckets.set(results.map(result => ({bucket: result.bucket, artifacts: result.artifacts.response})) as { bucket: BucketType; artifacts: ArtifactType[]; }[]);
+        requestsComplete = true;
+      }).catch(error => {
+        console.error('A promise was rejected:', error);
+      });
+      //console.log('buckets:', $buckets);
+      //$buckets = $buckets;
     });
 
-    $: console.log('artifacts', artifacts);
+    //$: console.log('artifacts', artifacts);
+    $: console.log('buckets:', $buckets);
+    $: console.log('requests completed: ', requestsComplete);
+    //$: console.log('request error:', requestError);
 
 </script>
   
@@ -308,15 +354,17 @@
               </button>
             </div>                   
           </div>
-        {#if requestError === false && artifacts}
-          <FolderStructure {artifacts} />
-        {:else}
-          {#if requestError}
-            <p>Request Error!</p>
-          {:else}
-            <ProgressBar />
-          {/if}
-        {/if}
+          <div class="p-2">
+            <div>
+              <h1>Buckets</h1>
+              {#if !requestsComplete }
+                <ProgressBar />
+              {:else}
+                <div class="p-2">
+                  <FolderStructure buckets={$buckets} />
+                </div>
+              {/if}
+          </div>
       </div>
     </div>
 </main>

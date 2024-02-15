@@ -1,10 +1,14 @@
 <script lang="ts">
 	import Artifact from "./Artifact.svelte";
-  import { reactiveArtifacts, type ArtifactHierarchyType } from '$lib/folders_types';
-  import type { StructureType, ArtifactType } from '$lib/folders_types';
+  import SymbolForBucket from "./symbol-for-bucket.svelte";
+  import { reactiveArtifacts } from '$lib/folders_types';
+  import { reactiveBuckets } from '$lib/folders_types';
+  import type { StructureType, ArtifactType, ArtifactHierarchyType, Bucket, BucketHierarchyType } from '$lib/folders_types';
 
-  export let artifacts: ArtifactType[];
-  let currentLevel: { [key: string]: any } = {};
+  export let buckets: Bucket[];
+  //export let bucket: string;
+  //export let artifacts: ArtifactType[];
+  //let currentLevel: { [key: string]: any } = {};
 
   function buildFolderStructure(artifacts: ArtifactType[]): StructureType {
   const structure: StructureType = { path: '', children: {} };
@@ -29,6 +33,7 @@
     for (let key in structure.children) {
       let subfolders = Object.keys(structure.children[key].children).length > 0 ? renderFolderStructure(structure.children[key], depth + 1) : [];
       folder = {
+        id: key + '-' + Math.floor(Math.random() * 10 ** 10).toString(),
         name: key, 
         subfolders: subfolders, 
         isExpanded: false,
@@ -40,11 +45,52 @@
     return folders;
   }
 
+  function toggleOpenBucket(bucket: BucketHierarchyType) {
+        bucket.isExpanded = !bucket.isExpanded;
+        //$reactiveArtifacts = [...$reactiveArtifacts]; // Trigger a re-render
+        $reactiveBuckets = [...$reactiveBuckets]; // Trigger a re-render
+    }
 
-  let folders = renderFolderStructure(buildFolderStructure(artifacts));
-  $: reactiveArtifacts.set(folders);
+  for (let bucket of buckets) {
+    console.log(bucket.bucket.name);
+    let artifacts = bucket.artifacts;
+    let structure = buildFolderStructure(artifacts);
+    let folders = renderFolderStructure(structure);
+    //$reactiveArtifacts = [...$reactiveArtifacts, ...folders];
+    let new_bucket = { bucket: bucket.bucket.name, isExpanded: false, isSelected: false, artifacts: folders };
+    $reactiveBuckets = [...$reactiveBuckets, new_bucket];
+  }
+  //let folders;
+  //$: folders = renderFolderStructure(buildFolderStructure(artifacts));
+  //$: reactiveArtifacts = folders;
+
+  //$reactiveArtifacts = [...$reactiveArtifacts, ...folders];
+  //$: console.log(artifacts);
+
+  $: console.log($reactiveBuckets);
 
 </script>
+
+<div class="flex artifact-structure">
+  <div class="grid grid-cols-1 justify-items-start pl-5">
+    {#each $reactiveBuckets as bucket (bucket.bucket)}
+      <div class="justify-self-start">
+        <div>
+            <button
+                on:dblclick={() => toggleOpenBucket(bucket)}>
+                <SymbolForBucket bucket={bucket} />
+                <span class="bucket-name">{bucket.bucket}</span>
+            </button>
+        </div>
+      </div>
+      {#if bucket.isExpanded}
+        {#each bucket.artifacts as artifact (artifact.id)}
+          <Artifact {artifact} />
+        {/each}
+      {/if}
+    {/each}
+  </div>
+</div>
 
 <style>
   .artifact-structure {
@@ -56,12 +102,20 @@
     overflow-x: scroll;
     width: 100%;
   }
+  .bucket-name {
+      margin-left: 2px;
+      font-size: 20px;
+  }
 </style>
 
+
+<!-- 
 <div class="flex artifact-structure">
   <div class="grid grid-cols-1 justify-items-start pl-5">
-    {#each $reactiveArtifacts as artifact (artifact.name)}
+    {#each $reactiveArtifacts as artifact (artifact.id)}
       <Artifact {artifact} />
     {/each}
   </div>
 </div>
+ -->
+

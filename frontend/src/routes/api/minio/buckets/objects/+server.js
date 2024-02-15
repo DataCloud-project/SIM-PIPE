@@ -14,9 +14,7 @@ export const GET = async ({ request }) => {
         bucketName = paramsObject.bucketName;
     }
 
-    var data = [];
-
-    data = await listObjectsAsync(minioClient, bucketName);
+    const response = await listObjectsAsync(minioClient, bucketName);
     
     /*
     try {
@@ -29,7 +27,7 @@ export const GET = async ({ request }) => {
     }
     */
 
-    return new Response(JSON.stringify({ data: data }));
+    return new Response(JSON.stringify({ response }), {status: 200});
 };
 
 // Utility function to promisify listObjects

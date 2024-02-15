@@ -2,7 +2,7 @@ import { minioClient } from "$lib/minio_client.server";
 //import { check_authorization } from "../check_authorization.server";
 
 // GET /api/minio/buckets
-export const GET = async ({ request }) => {
+export const GET = async () => {
     //if (!check_authorization(request)) {
     //    return new Response(JSON.stringify({message: "access denied"}), { status: 401 });
     //}

@@ -8,6 +8,18 @@ export type StructureType = {
     children: { [key: string]: StructureType} 
   }
 
+// Minio buckets are of the form:
+export type BucketType = {
+    name: string,
+    creationDate: string
+}
+
+// Bucket with artifacts
+export type Bucket = {
+  bucket: BucketType,
+  artifacts: ArtifactType[]
+}
+
 // Minio artifacts are of the form:
 export type ArtifactType = {
     name: string,
@@ -16,17 +28,29 @@ export type ArtifactType = {
     size: number
   }
 
-// Define a type for the artifact hierarchy object
+// Artifact hierarchy object
 export type ArtifactHierarchyType = {
+    id: string;
     name: string;
+    path: string;
     subfolders: ArtifactHierarchyType[];
     isExpanded: boolean;
     isSelected: boolean;
-    path: string;
   };
-  
-// Use the FolderType for the reactiveFolders store
+
+// Bucket hierarchy
+export type BucketHierarchyType = {
+  bucket: string;
+  isExpanded: boolean;
+  isSelected: boolean;
+  artifacts: ArtifactHierarchyType[]
+}
+
+// Use the FolderType for the reactiveFolders store // TODO: remove if not used
 export const reactiveArtifacts = writable<ArtifactHierarchyType[]>([]);
 
+// Use the BucketHierarchyType for the reactiveBuckets store
+export const reactiveBuckets = writable<BucketHierarchyType[]>([]);
+
 // Default bucket name
-export const default_bucket_name: string = 'useruploads';
+export const default_bucket_name = 'useruploads';
