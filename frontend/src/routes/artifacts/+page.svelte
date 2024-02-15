@@ -1,8 +1,8 @@
 <script lang="ts"> 
     import { ProgressBar } from '@skeletonlabs/skeleton';
-    import type { ArtifactHierarchyType } from '$lib/folders_types';
+    import type { ArtifactHierarchyType, BucketHierarchyType } from '$lib/folders_types';
     import FolderStructure from './ArtifactStructure.svelte';
-    import { AlertTriangleIcon, FilePlusIcon, Trash2Icon, XSquareIcon } from 'svelte-feather-icons';
+    import { AlertTriangleIcon, FilePlusIcon, Trash2Icon, XSquareIcon, DownloadIcon } from 'svelte-feather-icons';
     import type { ModalSettings } from '@skeletonlabs/skeleton';
     import { getModalStore } from '@skeletonlabs/skeleton';
     import { reactiveArtifacts } from '$lib/folders_types';
@@ -235,10 +235,7 @@
           });
     }
 
-
-    function unselectAll() {
-      console.log('Unselect All');
-      function unselectArtifacts(artifacts: ArtifactHierarchyType[]) {
+    function unselectArtifacts(artifacts: ArtifactHierarchyType[]) {
         artifacts.forEach(artifact => {
           artifact.isSelected = false;
           if (artifact.subfolders.length > 0) {
@@ -246,8 +243,20 @@
           }
         });
       }
-      unselectArtifacts($reactiveArtifacts);
-      $reactiveArtifacts = [...$reactiveArtifacts]; // Trigger a re-render
+
+    function unselectBuckets(buckets: BucketHierarchyType[]) {
+        buckets.forEach(bucket => {
+          bucket.isSelected = false;
+        });
+      }
+
+    function unselectAll() {
+      console.log('Unselect All');
+      unselectBuckets($reactiveBuckets);
+      for (let bucket of $reactiveBuckets) {
+        unselectArtifacts(bucket.artifacts);
+      }
+      $reactiveBuckets = [...$reactiveBuckets]; // Trigger a re-render
     }
 
     function getSelectedArtifacts(artifacts: ArtifactHierarchyType[]): ArtifactHierarchyType[] {
@@ -343,6 +352,14 @@
                   <XSquareIcon size="1.5x"/>
                   </button>                
               </div>
+              <div>
+                <button 
+                on:click={() => console.log('Download Artifacts')}
+                title="Download Artifacts"
+                >
+                <DownloadIcon size="1.5x"/>
+                </button>                
+            </div>              
             </div>
             <div class="place-self-end">
               <button
