@@ -25,3 +25,6 @@ export const pausedDryRuns = writable<string[]>([]);
 
 export const username = writable<string | undefined>(undefined);
 export const usertoken = writable<string | undefined>(undefined);
+
+// selected bucket
+export const selectedBucket = writable<string | undefined>(undefined);

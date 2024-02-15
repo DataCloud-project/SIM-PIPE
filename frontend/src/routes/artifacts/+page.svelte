@@ -7,6 +7,7 @@
     import { getModalStore } from '@skeletonlabs/skeleton';
     import { reactiveArtifacts } from '$lib/folders_types';
     import { reactiveBuckets } from '$lib/folders_types';
+    import { selectedBucket } from '../../stores/stores';
     import type { ArtifactType, BucketType, Bucket } from '$lib/folders_types';
 	  import { onMount } from 'svelte';
     import { writable } from 'svelte/store';
@@ -15,18 +16,15 @@
 
     const modalStore = getModalStore();
 
-    //let buckets: Bucket[] = [];
-    //let artifacts: ArtifactType[];    
     const buckets = writable<Bucket[]>([]);
     let requestsComplete = false;
+    //let bucketName: string = default_bucket_name; //TODO: default bucket name (for now)
 
     let requestError: boolean = false;
     let alertVisible: boolean = false;
     let alertTitle: string = 'Alert Title';
     let alertMessage: string = 'Alert Message';
     let alertVariant: string = 'variant-ghost-surface';
-
-    //let bucketName: string = default_bucket_name; //TODO: default bucket name (for now)
 
     async function getBuckets(): Promise<{response: BucketType[]}> {
       console.log("fetching buckets");
@@ -316,6 +314,7 @@
     //$: console.log('artifacts', artifacts);
     $: console.log('buckets:', $buckets);
     $: console.log('requests completed: ', requestsComplete);
+    $: console.log('selected bucket:', $selectedBucket);
     //$: console.log('request error:', requestError);
 
 </script>
