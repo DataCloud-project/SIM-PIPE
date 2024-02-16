@@ -71,7 +71,7 @@
     }
 
     async function onUploadArtifact() {
-      let selectedPaths: ArtifactHierarchyType[] = getSelectedArtifacts($reactiveArtifacts).filter(f => (f.isSelected && !f.name.includes('.'))); // TODO: is there a better way?
+      let selectedPaths: ArtifactHierarchyType[] = getSelectedArtifacts($reactiveBuckets).filter(f => (f.isSelected && !f.name.includes('.'))); // TODO: is there a better way?
       if (selectedPaths.length == 0) {
             alertVisible = false;
             selectedPaths.push({name: '', path: '', isSelected: true, isExpanded: true, subfolders: []});
