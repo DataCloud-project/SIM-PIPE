@@ -11,8 +11,12 @@
     const modalStore = getModalStore();
 
     // Upload path
-    let path: string = $modalStore[0].meta.path;
+    let path: string = $modalStore[0].meta.path; // artifact path
+    let selected_bucket: string = $modalStore[0].meta.bucket; // currently selected bucket name
+    let bucketsList: string[] = $modalStore[0].meta.buckets; // list of all buckets
     $: path_placeholder = path != '' ? path : '(optional)';
+    $: console.log('selected bucket:', selected_bucket);
+    $: console.log('path:', path);
 
     // Files list
     let files: FileList;
@@ -20,16 +24,9 @@
     // Handle form submission
     function onFormSubmit(): void {
         filterPath();
-        /*
-        console.log(path);
-        console.log(files);
-        Array.prototype.forEach.call(files, (file: File) => {
-            console.log(file);
-        });
-        */
         if (files && files.length > 0) {
             if ($modalStore[0].response) {
-                $modalStore[0].response({path: path, files: files});
+                $modalStore[0].response({bucket: selected_bucket, path: path, files: files});
             }
         }
 
@@ -66,8 +63,19 @@
 {#if $modalStore[0]}
     <div class="modal-upload-files {cBase}">
         <header class={cHeader}>{$modalStore[0].title ?? '(title mising)'}</header>
-        <input class="input" type="text" placeholder="Upload path: {path_placeholder}" bind:value={path}>
-        <!--<input class="input" type="file" id="file-input" multiple>-->
+        <div>
+            <span>Bucket:</span>
+            <select class="select">
+                {#each bucketsList as bucket}
+                    <option value={bucket} selected={bucket === selected_bucket}>{bucket}</option>
+                {/each}
+            </select>
+        </div>
+        <div>
+            <span>Path:</span>
+            <input class="input" type="text" placeholder="Upload path: {path_placeholder}" bind:value={path}>
+        </div>
+            <!--<input class="input" type="file" id="file-input" multiple>-->
         <FileDropzone name="files" bind:files={files} multiple>
             <div class="flex justify-center items-center" slot="lead">
                 <div class="place-self-center"><FilePlusIcon /></div>

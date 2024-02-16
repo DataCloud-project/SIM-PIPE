@@ -9,9 +9,17 @@
     async function toggleSelected(bucket: BucketHierarchyType) {
         bucket.isSelected = !bucket.isSelected;
         if (bucket.isSelected) {
+            // set name of currently selected bucket
             $selectedBucket = bucket.bucket;
         }
-        $reactiveBuckets = [...$reactiveBuckets]; // Trigger a re-render
+        // Unset all other buckets
+        for (let bucket of $reactiveBuckets) {
+            if (bucket.bucket !== $selectedBucket) {
+                bucket.isSelected = false;
+            }
+        }
+        // Trigger a re-render
+        $reactiveBuckets = [...$reactiveBuckets];
     }
 
 </script>

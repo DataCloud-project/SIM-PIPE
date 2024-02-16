@@ -33,6 +33,7 @@ export type ArtifactHierarchyType = {
     id: string;
     name: string;
     path: string;
+    bucket: string;
     subfolders: ArtifactHierarchyType[];
     isExpanded: boolean;
     isSelected: boolean;

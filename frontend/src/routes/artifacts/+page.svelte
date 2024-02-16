@@ -11,6 +11,7 @@
     import type { ArtifactType, BucketType, Bucket } from '$lib/folders_types';
 	  import { onMount } from 'svelte';
     import { writable } from 'svelte/store';
+	import { request } from 'http';
 
     //import { default_bucket_name } from '$lib/folders_types'; // TODO: remove when not needed anymore
 
@@ -71,10 +72,21 @@
     }
 
     async function onUploadArtifact() {
-      let selectedPaths: ArtifactHierarchyType[] = getSelectedArtifacts($reactiveBuckets).filter(f => (f.isSelected && !f.name.includes('.'))); // TODO: is there a better way?
+      // only one bucket can be selected upon upload
+      if (selectedBucket === undefined) {
+            alertTitle = '👎 Error';
+            alertMessage = 'Select a bucket to upload artifacts to.';
+            alertVariant = 'variant-filled-error';
+            alertVisible = true;
+            return;
+      }
+      let bucket = $reactiveBuckets.find(b => b.bucket === $selectedBucket);
+      let bucketsList: string[] = $reactiveBuckets.map(b => b.bucket);
+      console.log(bucketsList);
+      let selectedPaths: ArtifactHierarchyType[] = bucket ? getSelectedArtifacts(bucket.artifacts).filter(f => (f.isSelected && !f.name.includes('.'))) : []; // TODO: is there a better way?
       if (selectedPaths.length == 0) {
             alertVisible = false;
-            selectedPaths.push({name: '', path: '', isSelected: true, isExpanded: true, subfolders: []});
+            selectedPaths.push({id: '', name: '', path: '', isSelected: true, isExpanded: true, subfolders: []});
       }
       if (selectedPaths.length == 1) {
             alertVisible = false;
@@ -90,14 +102,14 @@
             type: 'component',
             component: 'uploadFileModal',
             title: 'Upload Artifacts',
-            meta: {path: selectedPaths[0].path},            
-            response: (r: {path: string, files: FileList}) => { 
-              uploadArtifactsToPath(r.files, r.path); }
+            meta: {path: selectedPaths[0].path, bucket: $selectedBucket as string, buckets: bucketsList},            
+            response: (r: {bucket: string, path: string, files: FileList}) => { 
+              uploadArtifactsToPath(r.bucket, r.files, r.path); }
         };
       modalStore.trigger(modal);
     }
 
-    async function uploadArtifactsToPath(artifactsToUpload: FileList, uploadPath: string) {
+    async function uploadArtifactsToPath(bucket: string, artifactsToUpload: FileList, uploadPath: string) {
         let artifactUploadPath: string = '';
         console.log(uploadPath);
         console.log(artifactsToUpload);
@@ -110,7 +122,7 @@
             }
             console.log(`Uploading ${artifact.name} to ${artifactUploadPath}`);
             const formData = new FormData();
-            formData.append('bucketName', bucketName);
+            formData.append('bucketName', bucket);
             formData.append('objectPath', artifactUploadPath);
             const fileText = await artifact.text();
             formData.append('objectDataText', fileText);
@@ -128,7 +140,7 @@
                 });
             });
         }
-      //artifacts = await getArtifacts(); // TODO: refresh artifacts - this is not working atm.
+        //loadData();
     }
     
 
@@ -219,7 +231,7 @@
                         alertTitle = '👍 Create bucket';
                         alertMessage = data.message;
                         alertVariant = 'variant-ghost-success';
-                        bucketName = name;
+                        //loadData();
                     }
                     else {
                         alertTitle = '👎 Create bucket failed';
@@ -273,7 +285,6 @@
           selectedArtifacts.push(...findselectedArtifacts(artifact.subfolders));
         }
       });
-      //selectedArtifacs = selectedArtifacs.filter(f => (f.isSelected && !f.name.includes('.')));
       return selectedArtifacts;
     }
 
@@ -291,9 +302,9 @@
       return paths;
     }    
 
-    
-    onMount(async () => {
+    async function loadData() {
       // fetch all buckets
+      requestsComplete = false;
       $reactiveBuckets = []; // clear buckets on refresh
       const bucketsList = await getBuckets();
       const requests = bucketsList.response.map(async (bucket) => {
@@ -309,6 +320,10 @@
       });
       //console.log('buckets:', $buckets);
       //$buckets = $buckets;
+    }
+    
+    onMount(async () => {
+      loadData();
     });
 
     //$: console.log('artifacts', artifacts);
