@@ -360,6 +360,9 @@
       //console.log('buckets:', $buckets);
       //$buckets = $buckets;
     }
+
+    // TODO: implement the downloadArtifacts function
+    // this requires a new API endpoint to be implemented in the api routes
     
     onMount(async () => {
       loadData();
@@ -383,14 +386,6 @@
             <div class="header flex space-x-2 place-self-start">
               <div>
                   <button 
-                      on:click={() => onUploadArtifact()}
-                      title="Upload Artifact"
-                      >
-                      <UploadIcon size="1.5x"/>
-                  </button>
-              </div>
-              <div>
-                  <button 
                   on:click={() => onDeleteArtifacts()}
                   title="Delete Artifacts"
                   >
@@ -407,8 +402,16 @@
               </div>
               <div>
                 <button 
-                on:click={() => console.log('Download Artifacts')}
-                title="Download Artifacts"
+                    on:click={() => onUploadArtifact()}
+                    title="Upload Artifact"
+                    >
+                    <UploadIcon size="1.5x"/>
+                </button>
+            </div>
+              <div>
+                <button 
+                on:click={() => console.log('Download Artifacts ... not implemented yet!')}
+                title="Download Artifacts ... not implemented yet!"
                 >
                 <DownloadIcon size="1.5x"/>
                 </button>                
