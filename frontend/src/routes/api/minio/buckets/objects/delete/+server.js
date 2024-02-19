@@ -5,7 +5,7 @@ import { default_bucket_name } from "$lib/folders_types";
 export const POST = async ({ request }) => {
     const formData = await request.formData();
     let body = {
-        bucketName: default_bucket_name,
+        bucketName: formData.get('bucketName') || default_bucket_name,
         objectsList: JSON.parse(formData.get('objectsList')),
     };
 

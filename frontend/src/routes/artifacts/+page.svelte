@@ -2,24 +2,20 @@
     import { ProgressBar } from '@skeletonlabs/skeleton';
     import type { ArtifactHierarchyType, BucketHierarchyType } from '$lib/folders_types';
     import FolderStructure from './ArtifactStructure.svelte';
-    import { AlertTriangleIcon, FilePlusIcon, Trash2Icon, XSquareIcon, DownloadIcon } from 'svelte-feather-icons';
+    import { UploadIcon, Trash2Icon, XSquareIcon, DownloadIcon } from 'svelte-feather-icons';
     import type { ModalSettings } from '@skeletonlabs/skeleton';
     import { getModalStore } from '@skeletonlabs/skeleton';
-    import { reactiveArtifacts } from '$lib/folders_types';
     import { reactiveBuckets } from '$lib/folders_types';
     import { selectedBucket } from '../../stores/stores';
     import type { ArtifactType, BucketType, Bucket } from '$lib/folders_types';
 	  import { onMount } from 'svelte';
     import { writable } from 'svelte/store';
-	import { request } from 'http';
-
-    //import { default_bucket_name } from '$lib/folders_types'; // TODO: remove when not needed anymore
+    import Alert from '$lib/modules/Alert.svelte';
 
     const modalStore = getModalStore();
 
     const buckets = writable<Bucket[]>([]);
     let requestsComplete = false;
-    //let bucketName: string = default_bucket_name; //TODO: default bucket name (for now)
 
     let requestError: boolean = false;
     let alertVisible: boolean = false;
@@ -83,10 +79,11 @@
       let bucket = $reactiveBuckets.find(b => b.bucket === $selectedBucket);
       let bucketsList: string[] = $reactiveBuckets.map(b => b.bucket);
       console.log(bucketsList);
-      let selectedPaths: ArtifactHierarchyType[] = bucket ? getSelectedArtifacts(bucket.artifacts).filter(f => (f.isSelected && !f.name.includes('.'))) : []; // TODO: is there a better way?
+      // TODO: is there a better way to get paths for selected artifacts?
+      let selectedPaths: ArtifactHierarchyType[] = bucket ? getSelectedArtifacts().filter(f => (f.isSelected && !f.name.includes('.'))) : [];
       if (selectedPaths.length == 0) {
             alertVisible = false;
-            selectedPaths.push({id: '', name: '', path: '', isSelected: true, isExpanded: true, subfolders: []});
+            selectedPaths.push({id: '', bucket: '', name: '', path: '', isSelected: true, isExpanded: true, subfolders: []});
       }
       if (selectedPaths.length == 1) {
             alertVisible = false;
@@ -144,36 +141,50 @@
     }
     
 
-    async function onDeleteArtifacts(artifactsToDelete: ArtifactHierarchyType[]) {
+    async function onDeleteArtifacts() {
       console.log('Delete Artifacts');
-      const selected = getSelectedArtifacts(artifactsToDelete);
+      const selected = getSelectedArtifacts();
+      console.log('selected:', selected);
       if (selected.length > 0) {
-            const response = await deleteArtifacts(selected);
-            alertVisible = true;
-            if (response.status === 200) {
-                alertTitle = '👍 Delete artifacts';
-                alertVariant = 'variant-ghost-success';
-                const deletedObjectsList = JSON.stringify(response.message.data.objectsList);
-                alertMessage = `Deleted ${deletedObjectsList} in bucket ${response.message.data.bucketName}`;
-                //artifacts = await getArtifacts(); TODO: refresh artifacts - this is not working atm.
+            const responses = await deleteArtifactsPerBucket(selected);
+            alertVisible = true; // make the alert visible
+            let allSuccess = true;
+            let someFailed = false;
+            alertMessage = '<div><ul class="list">';
+            for (let response of responses) {
+              alertMessage += `<li>${response.bucket}</li>`;
+              alertMessage += `<ul class="list">${(response.paths).map(path => `<li>${path}</li>`).join('')}</ul>`;
+              if (response.status !== 200) {
+                allSuccess = false;
+                alertMessage += `<div><strong>${typeof response.message === 'object' ? JSON.stringify(response.message) : response.message}</strong></div>`;
+                if (response.status !== 500) {
+                  someFailed = true;
+                }
+              }
             }
-            else {
-                alertTitle = '👎 Delete artifacts failed';
-                alertVariant = 'variant-filled-error';
-                alertMessage = response.message;
+            alertMessage += '</ul></div>';
+            if (allSuccess) {
+              alertTitle = '👍 Deleted artifacts';
+              alertVariant = 'variant-ghost-success';
+            } else if (someFailed) {
+              //alert("Some artifacts failed to delete");
+              alertTitle = '👎 Some artifacts failed to delete';
+            } else {
+              //alert("All artifacts failed to delete");
+              alertTitle = '👎 All artifacts failed to delete';
             }
       }
     }
 
-
-    async function deleteArtifacts(artifacts: ArtifactHierarchyType[]): Promise<{message: string, status: number}> {
-      const artifactsPathsList = getAllArtifactPaths(artifacts);
-      console.log(artifactsPathsList);
+    async function deleteArtifacts(bucketName: string, artifactPathsList: string[]): Promise<{message: string, status: number, bucket: string, paths: string[]}> {
+      
+      let bucket = bucketName;
+      let paths = artifactPathsList;
+      console.log(`Request to delete ${paths} in bucket: ${bucket}`)
 
       const formData = new FormData();
-      formData.append('bucketName', bucketName);
-      formData.append('objectsList', JSON.stringify(artifactsPathsList));
-      
+      formData.append('bucketName', bucket as string);
+      formData.append('objectsList', JSON.stringify(paths));
       try {
         const response = await fetch(`/api/minio/buckets/objects/delete`, {
           method: 'POST',
@@ -182,11 +193,37 @@
         const data = await response.json();
         console.log(' response', response);
         console.log(' response data', data);
-        return {message: data, status: response.status};
+        return {message: data, status: response.status, bucket: bucket, paths: paths};
       } catch (err) {
         console.log(' error', err);
-        return {message: (err as Error).toString(), status: 500};
+        return {message: (err as Error).toString(), status: 500, bucket: bucket, paths: paths};
       }
+    }
+
+
+    async function deleteArtifactsPerBucket(artifacts: ArtifactHierarchyType[]): Promise<{message: string, status: number, bucket: string, paths: string[]}[]> {
+
+      // find buckets for selected artifacts
+      let bucketsList: string[] = [];
+      for (const artifact of artifacts) {
+        if (artifact.bucket in bucketsList) {
+          continue;
+        }
+        else {
+          bucketsList.push(artifact.bucket);
+        }
+      }
+      console.log(`Buckets: ${bucketsList}`);
+      // for each bucket, delete its artifacts
+      let responses: {message: string, status: number, bucket: string, paths: string[]}[] = [];
+      for (const bucket of bucketsList) {
+        console.log(`Deleting artifacts in bucket: ${bucket}`);
+        const bucketArtifacts = artifacts.filter(artifact => artifact.bucket === bucket);
+        const artifactsPathsList = getAllArtifactPaths(bucketArtifacts); 
+        console.log(`Artifacts: ${artifactsPathsList}`)
+        responses.push(await deleteArtifacts(bucket, artifactsPathsList));
+      }
+      return responses;
     }
 
     async function onCreateNewBucket() {
@@ -229,15 +266,14 @@
                     });
                     if (words[0] === 'Successfully') {
                         alertTitle = '👍 Create bucket';
-                        alertMessage = data.message;
                         alertVariant = 'variant-ghost-success';
                         //loadData();
                     }
                     else {
                         alertTitle = '👎 Create bucket failed';
-                        alertMessage = data.message;
                         alertVariant = 'variant-filled-error';
                     }
+                    alertMessage = `<div>${data.message}</div>`;
                     alertVisible = true;
                 }).catch(err => {
                     console.log(' error', err);
@@ -269,9 +305,12 @@
       $reactiveBuckets = [...$reactiveBuckets]; // Trigger a re-render
     }
 
-    function getSelectedArtifacts(artifacts: ArtifactHierarchyType[]): ArtifactHierarchyType[] {
+    function getSelectedArtifacts(): ArtifactHierarchyType[] {
       //console.log('Get Selected Artifacts');
-      let selectedArtifacts: ArtifactHierarchyType[] = findselectedArtifacts(artifacts);
+      let selectedArtifacts: ArtifactHierarchyType[] = [];
+      for (let bucket of $reactiveBuckets) {
+        selectedArtifacts.push(...findselectedArtifacts(bucket.artifacts));
+      }
       return selectedArtifacts;
     }
 
@@ -347,12 +386,12 @@
                       on:click={() => onUploadArtifact()}
                       title="Upload Artifact"
                       >
-                      <FilePlusIcon size="1.5x"/>
+                      <UploadIcon size="1.5x"/>
                   </button>
               </div>
               <div>
                   <button 
-                  on:click={() => onDeleteArtifacts($reactiveArtifacts)}
+                  on:click={() => onDeleteArtifacts()}
                   title="Delete Artifacts"
                   >
                   <Trash2Icon size="1.5x"/>
@@ -400,27 +439,9 @@
     </div>
 </main>
 
-{#if alertVisible}
-    <aside class="alert {alertVariant}">
-        <!-- Icon -->
-        <div class="flex w-full grid grid-cols-2 grid-rows-2 justify-start">
-        <div class="col-span-2"><AlertTriangleIcon /></div>
-        <!-- Message -->
-        <div class="alert-message">
-            <h3 class="h3">{alertTitle}</h3>
-            <p>{alertMessage}</p>
-        </div>
-        <!-- Actions -->
-        <div class="alert-actions place-self-end">
-          <button
-            type="button"
-            class="btn btn-sm variant-filled"
-            on:click={() => alertVisible = false}
-            >
-            <span>OK</span>
-          </button>
-        </div>        
-    </aside>
-{/if}
-            
-
+<Alert 
+  visibleAlert={alertVisible} 
+  alertTitle={alertTitle} 
+  alertMessage={alertMessage} 
+  alertVariant={alertVariant}
+/>
