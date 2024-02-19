@@ -1,8 +1,7 @@
 <script lang="ts">
-	//import { Modal, modalStore, ProgressBar } from '@skeletonlabs/skeleton'; // old v1 skeletonlabs
-	import { Modal, getModalStore, ProgressBar } from '@skeletonlabs/skeleton';
-	import type { ModalSettings, ModalComponent } from '@skeletonlabs/skeleton';
-	import ModalSubmitNewSecret from './modal-submit-new-secret.svelte';
+	import { getModalStore } from '@skeletonlabs/skeleton';
+	import type { ModalSettings } from '@skeletonlabs/skeleton';
+	import { ProgressBar } from '@skeletonlabs/skeleton';
 	import allCredentialsQuery from '../../queries/get_all_credentials.js';
 	import deleteCredentialMutation from '../../queries/delete_credential.js';
 	import type { DockerRegistryCredential } from '../../types.js';
@@ -10,17 +9,17 @@
 	import { requestGraphQLClient } from '$lib/graphqlUtils';
 	import { goto } from '$app/navigation';
 
+
 	const modalStore = getModalStore();
 
-	const modalComponent: ModalComponent = {
-		ref: ModalSubmitNewSecret
-	};
-
-	const modal: ModalSettings = {
-		type: 'component',
-		component: modalComponent,
-		title: 'Add new secret',
-		body: 'Provide a name and username for the new secret at given host.\nSecret will be automatically generated.'
+	async function onSubmitNewSecret() {
+		const modal: ModalSettings = {
+			type: 'component',
+			component: 'submitNewSecretModal',
+			title: 'Add new secret',
+			body: 'Provide a name and username for the new secret at given host.\nSecret will be automatically generated.'
+		};
+		modalStore.trigger(modal);
 	};
 
 	const getCredentialsList = async (): Promise<DockerRegistryCredential[]> => {
@@ -78,6 +77,24 @@
 	$: reactiveCredentialsList = $credentialsList;
 </script>
 
+<style>
+	.table.table {
+		max-height: 80vh;
+		overflow-y: auto;
+		overflow-x: scroll;
+		display: block;
+		border-collapse: collapse;
+		margin-left: auto;
+		margin-right: auto;
+		table-layout: auto;
+		width: 100%;
+	}
+	thead {
+		position: sticky;
+		top: 0;
+	}
+</style>
+
 <!-- Page Header -->
 <div class="flex w-full content-center p-10">
 	<div class="table-container">
@@ -91,7 +108,7 @@
 					<button
 						type="button"
 						class="btn btn-sm variant-filled"
-						on:click={() => modalStore.trigger(modal)}
+						on:click={() => onSubmitNewSecret()}
 					>
 						<span>Create</span>
 					</button>
@@ -137,23 +154,3 @@
 		{/await}
 	</div>
 </div>
-
-<Modal />
-
-<style>
-	.table.table {
-		max-height: 80vh;
-		overflow-y: auto;
-		overflow-x: scroll;
-		display: block;
-		border-collapse: collapse;
-		margin-left: auto;
-		margin-right: auto;
-		table-layout: auto;
-		width: 100%;
-	}
-	thead {
-		position: sticky;
-		top: 0;
-	}
-</style>

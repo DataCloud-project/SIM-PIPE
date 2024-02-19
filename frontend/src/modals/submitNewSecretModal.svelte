@@ -1,11 +1,10 @@
 <script lang="ts">
-	import { cBase, cHeader, cForm } from '../../styles/styles.js';
-	import createCredentialMutation from '../../queries/create_credential.js';
-	import { credentialsList } from '../../stores/stores.js';
-	import allCredentialsQuery from '../../queries/get_all_credentials.js';
-	import type { DockerRegistryCredential } from '../../types.js';
+	import { cBase, cHeader, cForm } from '../styles/styles.js';
+	import createCredentialMutation from '../queries/create_credential.js';
+	import { credentialsList } from '../stores/stores.js';
+	import allCredentialsQuery from '../queries/get_all_credentials.js';
+	import type { DockerRegistryCredential } from '../types.js';
 	export let parent: any;
-	//import { modalStore } from '@skeletonlabs/skeleton'; // old v1 skeletonlabs
 	import { requestGraphQLClient } from '$lib/graphqlUtils.js';
 	import type { PopupSettings } from '@skeletonlabs/skeleton';
 	import { error } from '@sveltejs/kit';

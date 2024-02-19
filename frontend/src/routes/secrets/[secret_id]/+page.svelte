@@ -7,11 +7,12 @@
 	import { ProgressBar } from '@skeletonlabs/skeleton';
 	import { error } from '@sveltejs/kit';
 	import updateCredentialMutation from '../../../queries/update_workflow_template';
-	import { modalStore, type ModalSettings, Modal } from '@skeletonlabs/skeleton';
+	import { Modal, getModalStore } from '@skeletonlabs/skeleton';
+	import type { ModalSettings } from '@skeletonlabs/skeleton';
 	import { goto } from '$app/navigation';
 
-	let hideModal = false;
-	let alertModal = false;
+	const modalStore = getModalStore();
+
 
 	const getProjectsList = async (): Promise<Project[]> => {
 		const response: { projects: Project[] } = await requestGraphQLClient(allProjectsQuery);
@@ -27,6 +28,20 @@
 
 	let template: any;
 	let submit_response: any;
+
+	async function triggerWorkflowUpdatedMessageModal() {
+		let project_name = $selectedProject.name ? $selectedProject.name : 'undefined';
+		let registry_server = $selectedCredential.server ? $selectedCredential.server : 'undefined';
+		const workflowTemplateUpdatedMessageModal: ModalSettings = {
+					type: 'alert',
+					title: 'Secret added to project workflow! 🎉',
+					body: `<p>Project: ${project_name}</p><p>Now uses registry: ${registry_server}</p>`
+				};
+		modalStore.trigger(workflowTemplateUpdatedMessageModal);
+		await new Promise((resolve) => setTimeout(resolve, 3000));
+		modalStore.close();
+		modalStore.clear();
+	}
 
 	async function onSubmitForm() {
 		console.log('submitting form');
@@ -71,16 +86,7 @@
 				if (!$selectedProject) {
 					throw error(404, 'Project not found / project undefined');
 				}
-				const workflowTemplateUpdatedMessageModal: ModalSettings = {
-					type: 'alert',
-					title: 'Secret added to project workflow! 🎉',
-					body: `<p>Project: ${$selectedProject.name}</p><p>Now uses registry: ${$selectedCredential.server}</p>`
-				};
-				alertModal = true;
-				modalStore.trigger(workflowTemplateUpdatedMessageModal);
-				await new Promise((resolve) => setTimeout(resolve, 3000));
-				modalStore.close();
-				modalStore.clear();
+				triggerWorkflowUpdatedMessageModal();
 				goto(`/templates/${$selectedProject.name}`);
 			});
 	}
@@ -124,5 +130,3 @@
 		{/await}
 	</div>
 </div>
-
-<Modal />
