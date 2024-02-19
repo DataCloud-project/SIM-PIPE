@@ -22,7 +22,7 @@
 						<h3 class="h3">{alertTitle}</h3>
 					</div>
 					<div>
-						<p>{alertMessage}</p>
+						{@html alertMessage}
 					</div>
 				</div>
 				<div class="alert-actions row-span-2 place-content-end">
