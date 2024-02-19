@@ -8,8 +8,10 @@
 	import { requestGraphQLClient } from '$lib/graphqlUtils';
 	import { ArrowRightIcon } from 'svelte-feather-icons';
 	import type { Project, WorkflowTemplate } from '../../../types.d.ts'
+	import { onMount } from 'svelte';
 
 	export let data;
+	let requestsComplete = false;
 
 	$: language = 'yaml'; // default format of workflow template
 
@@ -18,26 +20,14 @@
 			name: data.template
 		};
 		const response = await requestGraphQLClient<{workflowTemplate: WorkflowTemplate}>(getWorkflowQuery, variables);
-		console.log(response);
+		//console.log(response);
 		return response;
 	};
 
-	const workflowPromise = getWorkflowTemplate();
-	var workflow = {};
-	var workflow_name: string;
-	var project: Project;
+	let workflow = {};
+	let workflow_name: string;
+	let project: Project;
 
-	workflowPromise
-		.then((data) => {
-			workflow = data.workflowTemplate;
-			workflow_name = data.workflowTemplate.name
-			project = data.workflowTemplate.project
-			//console.log(project)
-			//console.log(workflow_name)
-		})
-		.catch((error) => {
-			console.log(error);
-		});
 
 	function switchLanguage() {
 		if (language === 'yaml') {
@@ -46,14 +36,33 @@
 			language = 'yaml';
 		}
 	}
+
+	onMount( async () =>{
+		try {
+			let data = await getWorkflowTemplate()
+			workflow = data.workflowTemplate;
+			workflow_name = data.workflowTemplate.name
+			project = data.workflowTemplate.project
+			requestsComplete = true;
+		} catch (error) {
+			console.log("failed to fetch workflow template data: ", error);
+			goto('/404');
+		}
+	});
 </script>
+
+<style>
+	.code {
+		max-height: 80vh;
+	}
+</style>
 
 <div class="flex w-full content-center p-10">
 	<div class="table-container">
-		{#await workflowPromise}
+		{#if !requestsComplete}
 			<p style="font-size:20px;">Loading...</p>
 			<ProgressBar />
-		{:then workflow}
+		{:else}
 			<h1>
 				<a href="/projects">Projects</a>
 				/ templates / {data.template}
@@ -81,12 +90,6 @@
 					<CodeBlock {language} code={YAML.stringify(workflow, null, 2)} text="text-xs" />
 				{/if}
 			</div>
-		{/await}
+		{/if}
 	</div>
 </div>
-
-<style>
-	.code {
-		max-height: 80vh;
-	}
-</style>
