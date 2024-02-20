@@ -5,6 +5,7 @@
 	import { projectsList, clickedProjectId } from '../../stores/stores.js';
 	import type { Project } from '../../types.js';
 	import { goto } from '$app/navigation';
+	import Timestamp from './dryruns/[dry_run]/timestamp.svelte';
 	import { requestGraphQLClient } from '$lib/graphqlUtils';
 	import { EditIcon, FileTextIcon } from 'svelte-feather-icons';
 	import allProjectsQuery from '../../queries/get_all_projects.js';
@@ -12,8 +13,7 @@
 	import allDryRunsQuery from '../../queries/get_all_dryruns.js';
 	import deleteDryRunMutation from '../../queries/delete_dry_run.js';
 	import deleteWorkflowTemplateMutation from '../../queries/delete_workflow_template.js';
-	import Alert from '$lib/modules/Alert.svelte'
-	import Timestamp from './project_id/[dry_run]/timestamp.svelte';
+	import { displayAlert } from '../../utils/alerts_utils';
 
 	const modalStore = getModalStore();
 
@@ -53,56 +53,61 @@
 			$projectsList = undefined;
 		});
 
+	const modal: ModalSettings = {
+		type: 'component',
+		component: { ref: ModalSubmitNewProject },
+		title: 'Add new project',
+		body: 'Enter details of project'
+	};
+
 	async function onDeleteSelected() {
-		Object.keys(checkboxes)
-			.filter((item) => checkboxes[item])
-			.forEach(async (element) => {
-				const project_variables = {
-					projectId: element
-				};
-				const response_dry_runs = await requestGraphQLClient<{
-					project: { dryRuns: Record<string, undefined>[] };
-				}>(allDryRunsQuery, project_variables);
-				response_dry_runs.project.dryRuns.forEach(async (dry_run: Record<string, undefined>) => {
-					const response_delete_dry_run = await requestGraphQLClient(deleteDryRunMutation, {
-						dryRunId: dry_run.id
+		try {
+			Object.keys(checkboxes)
+				.filter((item) => checkboxes[item])
+				.forEach(async (element) => {
+					const project_variables = {
+						projectId: element
+					};
+					const response_dry_runs = await requestGraphQLClient<{
+						project: { dryRuns: Record<string, undefined>[] };
+					}>(allDryRunsQuery, project_variables);
+					response_dry_runs.project.dryRuns.forEach(async (dry_run: Record<string, undefined>) => {
+						await requestGraphQLClient(deleteDryRunMutation, {
+							dryRunId: dry_run.id
+						});
 					});
-				});
-				const delete_workflow_template = await requestGraphQLClient(
-					deleteWorkflowTemplateMutation,
-					{
+					await requestGraphQLClient(deleteWorkflowTemplateMutation, {
 						name: element
-					}
-				).catch((error) => {
-					console.log(error);
-					visibleAlert = true;
-					alertTitle = 'Delete workflow template failed!';
-					alertMessage = error.message;
-					alertVariant = 'variant-filled-error';
+					}).catch((error) => {
+						console.log(error);
+						visibleAlert = true;
+						alertTitle = 'Delete workflow template failed!';
+						alertMessage = error.message;
+					});
+					await requestGraphQLClient(deleteProjectMutation, project_variables);
 				});
-				const delete_project_response = await requestGraphQLClient(
-					deleteProjectMutation,
-					project_variables
-				);
+			const title = 'Project deleted🗑️!';
+			const body = `Deleted projects: ${Object.keys(checkboxes).filter(
+				(item) => checkboxes[item]
+			)}`;
+			await displayAlert(title, body);
+			// inserting a small delay because sometimes delete mutation returns true, but all projects query returns the deleted project as well
+			await new Promise((resolve) => setTimeout(resolve, 150));
+
+			// update the project list after deletion
+			let responseAllProjects: { projects: Project[] } =
+				await requestGraphQLClient(allProjectsQuery);
+			projectsList.set(responseAllProjects.projects);
+		} catch (error) {
+			const title = 'Error deleting project❌!';
+			const body = `${(error as Error).message}`;
+			await displayAlert(title, body, 4000);
+		} finally {
+			// reset checkboxes
+			$projectsList?.forEach((element) => {
+				checkboxes[element.id] = false;
 			});
-
-		// show warning alert
-		visibleAlert = true;
-		alertTitle = 'Projects deleted🗑️!';
-		alertMessage = `${Object.keys(checkboxes).filter((item) => checkboxes[item])} deleted successfully`;
-		alertVariant = 'variant-ghost-warning';
-
-		// reset checkboxes
-		$projectsList?.forEach((element) => {
-			checkboxes[element.id] = false;
-		});
-		
-		// inserting a small delay because sometimes delete mutation returns true, but all projects query returns the deleted project as well
-		await new Promise((resolve) => setTimeout(resolve, 150));
-
-		// update the project list after deletion
-		let responseAllProjects: { projects: Project[] } = await requestGraphQLClient(allProjectsQuery);
-		projectsList.set(responseAllProjects.projects);
+		}
 	}
 
 	// to disable onclick propogation for checkbox input
@@ -112,19 +117,23 @@
 
 	function gotodryruns(dry_run: string) {
 		clickedProjectId.set(dry_run);
-		goto(`/projects/project_id/${dry_run}`);
+		goto(`/projects/dryruns/${dry_run}`);
 	}
 
 	function onCreateNewProject() {
-		console.log("onCreateNewProject");
+		console.log('onCreateNewProject');
 		const modal: ModalSettings = {
 			type: 'component',
 			component: 'createNewProjectModal',
 			title: 'Add new project',
 			body: 'Enter details of project',
 			response: (r: {
-				createProjectResponse: { status: number, error: string, project: {name: string, id: string}}, 
-				createWorkflowResponse: { status: number, error: string, name: string} 
+				createProjectResponse: {
+					status: number;
+					error: string;
+					project: { name: string; id: string };
+				};
+				createWorkflowResponse: { status: number; error: string; name: string };
 			}) => {
 				handleOnCreateProjectResponse(r.createProjectResponse, r.createWorkflowResponse);
 			}
@@ -133,18 +142,18 @@
 	}
 
 	async function handleOnCreateProjectResponse(
-		createProjectResponse: { status: number, project: {name: string, id: string}, error: string}, 
-		createWorkflowResponse: { status: number, name: string, error: string}
+		createProjectResponse: { status: number; project: { name: string; id: string }; error: string },
+		createWorkflowResponse: { status: number; name: string; error: string }
 	) {
-		console.log("hello world!")
+		console.log('hello world!');
 		console.log(createProjectResponse);
 		console.log(createWorkflowResponse);
-		console.log("world says hello!")
+		console.log('world says hello!');
 		visibleAlert = true;
 		if (createProjectResponse.status === 200) {
-			await requestGraphQLClient<{projects: Project[]}>(allProjectsQuery).then((response) => {
+			await requestGraphQLClient<{ projects: Project[] }>(allProjectsQuery).then((response) => {
 				reactiveProjectsList = $projectsList = response.projects;
-			})
+			});
 			if (createWorkflowResponse.status === 200) {
 				alertVariant = 'variant-ghost-success';
 				alertTitle = 'Project created!';
@@ -159,9 +168,7 @@
 			alertTitle = 'Project creation failed!';
 			alertMessage = `Project creation failed with status ${createProjectResponse.status}: ${createProjectResponse.error} and workflow template creation failed with status ${createWorkflowResponse.status}: ${createWorkflowResponse.error}`;
 		}
-		
 	}
-	
 
 	function renameProject(project: Project) {
 		const modal: ModalSettings = {
@@ -178,9 +185,9 @@
 	function gotoTemplate(project: Project) {
 		$clickedProjectId = project.id;
 		let template = project.workflowTemplates[0].argoWorkflowTemplate;
-		let template_name = template?.metadata.name;		
+		let template_name = template?.metadata.name;
 		let url = `/templates/${template_name}`;
-  		console.log(`Navigating to: ${url}`);		
+		console.log(`Navigating to: ${url}`);
 		goto(url);
 	}
 	$: reactiveProjectsList = $projectsList;
@@ -193,7 +200,7 @@
 		{#await projectsPromise}
 			<p style="font-size:20px;">Loading projects...</p>
 			<ProgressBar />
-		{:then projectsList}
+		{:then}
 			<h1>Projects</h1>
 			<div class="flex flex-row justify-end p-5 space-x-1">
 				<div>
@@ -274,7 +281,6 @@
 </div>
 
 <Alert bind:visibleAlert bind:alertTitle bind:alertMessage bind:alertVariant />
-
 
 <style>
 	.table.table {

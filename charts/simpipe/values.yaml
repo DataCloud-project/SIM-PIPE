@@ -22,7 +22,8 @@ controller:
 
   minio:
     # Configured by default for the localhost port forwarding in forwarding.py
-    url: http://localhost:8085
+    publicUrl: http://localhost:8085
+    internalUrl: http://simpipe-minio.default.svc.cluster.local:9000
     accessKey: simpipe
     secretKey: simpipe1234
     bucketName: artifacts

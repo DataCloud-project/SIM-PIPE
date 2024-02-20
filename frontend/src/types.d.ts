@@ -1,13 +1,6 @@
-export type _Project = {
-	project_id: string;
-	name: string;
-	created: string;
-	// TODO:change when argo storage format is ready
-	dry_run_count?: number;
-	simulations_count?: number;
-	// dry_runs?: DryRun[];
-	// pipeline_description?: PipelineDescription;
-};
+export interface AllProjectsResponse {
+	projects: Project[];
+}
 
 export type SampleFile = {
 	id: string;
@@ -15,6 +8,8 @@ export type SampleFile = {
 	created: string;
 	size: number;
 };
+
+export type metricsWithTimeStamps = { x: string[]; y: number[]; type: string; name: string };
 
 // WIP argo data types
 
@@ -115,3 +110,40 @@ export type DockerRegistryCredentialInput = {
 	password: string;
 	server: string;
 };
+
+// start: argo workflow template types
+type Parameters = {
+	name: string;
+	value: string;
+}[];
+
+type Task = {
+	name: string;
+	template: string;
+	arguments: { parameters: Parameters };
+	dependencies?: string[];
+};
+
+interface Template {
+	dag?: any;
+}
+
+interface Templates {
+	name?: string;
+	inputs?: Record<string, any>;
+	outputs?: Record<string, any>;
+	metadata?: Record<string, any>;
+	dag?: {
+		tasks?: Partial<Task>[]; // Making tasks and its properties optional
+	};
+	container?: Partial<{
+		name: string;
+		image: string;
+		command: string[];
+		args: string[];
+		env: { name: string; value: string }[];
+		resources: Record<string, any>;
+	}>;
+}
+
+// end: argo workflow template types

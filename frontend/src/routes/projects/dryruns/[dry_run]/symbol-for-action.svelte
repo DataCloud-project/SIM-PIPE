@@ -11,37 +11,25 @@
 	import suspendDryRunMutation from '../../../../queries/suspend_dry_run.js';
 	import resumeDryRunMutation from '../../../../queries/resume_dry_run.js';
 	import { pausedDryRuns } from '../../../../stores/stores.js';
-	//import { modalStore, type ModalSettings } from '@skeletonlabs/skeleton'; // old v1 skeletonlabs
-	import { getModalStore } from '@skeletonlabs/skeleton';
-	import type { ModalSettings } from '@skeletonlabs/skeleton';
 	import { requestGraphQLClient } from '$lib/graphqlUtils.js';
+	import { displayAlert } from '../../../../utils/alerts_utils.js';
 
 	const modalStore = getModalStore();
 
 	export let action: string, dryRunId: string;
 	$: paused = $pausedDryRuns?.includes(dryRunId);
 
-	async function displayAlert(title: string, body: string) {
-		const alertModal: ModalSettings = {
-			type: 'alert',
-			title: title,
-			body: body
-		};
-		modalStore.trigger(alertModal);
-		await new Promise((resolve) => setTimeout(resolve, 1000));
-		modalStore.close();
-		modalStore.clear();
-	}
-
 	async function stopRun(event: any) {
 		try {
 			event.stopPropagation();
 			await requestGraphQLClient(stopDryRunMutation, { dryRunId: dryRunId, terminate: false });
-			displayAlert('Stopping dry run..', `ID: ${dryRunId}`);
+			const title = 'Stopping dry run..';
+			const body = `ID: ${dryRunId}`;
+			await displayAlert(title, body);
 		} catch (error) {
-			// TODO: handle error
-			console.log('Error! to be handled');
-			console.log(error);
+			const title = 'Error stopping dry run❌!';
+			const body = `${(error as Error).message}`;
+			await displayAlert(title, body, 10000);
 		}
 	}
 	async function pauseRun(event: any) {
@@ -50,11 +38,13 @@
 			await requestGraphQLClient(suspendDryRunMutation, { dryRunId: dryRunId, terminate: false });
 			paused = true;
 			$pausedDryRuns.push(dryRunId);
-			displayAlert('Pausing dry run..', `ID: ${dryRunId}`);
+			const title = 'Pausing dry run..';
+			const body = `ID: ${dryRunId}`;
+			await displayAlert(title, body);
 		} catch (error) {
-			// TODO: handle error
-			console.log('Error! to be handled');
-			console.log(error);
+			const title = 'Error pausing dry run❌!';
+			const body = `${(error as Error).message}`;
+			await displayAlert(title, body, 10000);
 		}
 	}
 	async function resumeRun(event: any) {
@@ -63,11 +53,13 @@
 			await requestGraphQLClient(resumeDryRunMutation, { dryRunId: dryRunId, terminate: false });
 			paused = false;
 			$pausedDryRuns.filter((item) => item !== dryRunId);
-			displayAlert('Resuming dry run..', `ID: ${dryRunId}`);
+			const title = 'Resuming dry run..';
+			const body = `ID: ${dryRunId}`;
+			await displayAlert(title, body);
 		} catch (error) {
-			// TODO: handle error
-			console.log('Error! to be handled');
-			console.log(error);
+			const title = 'Error resuming dry run❌!';
+			const body = `${(error as Error).message}`;
+			await displayAlert(title, body, 10000);
 		}
 	}
 </script>

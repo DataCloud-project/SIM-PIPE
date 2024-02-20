@@ -1,14 +1,12 @@
 <script lang="ts">
-	import { cBase, cHeader, cForm } from '../styles/styles.js';
-	import { projectsList } from '../stores/stores.js';
-	import allProjectsQuery from '../queries/get_all_projects.js';
-	import type { Project } from '../types.js';
-	//import { modalStore, type ModalSettings, Modal } from '@skeletonlabs/skeleton'; -- old v1 skeletonlabs 
+	import { cBase, cHeader, cForm } from '../../styles/styles.js';
+	import { projectsList } from '../../stores/stores.js';
+	import allProjectsQuery from '../../queries/get_all_projects.js';
+	import type { AllProjectsResponse } from '../../types.js';
+	import { modalStore, Modal } from '@skeletonlabs/skeleton';
 	import { requestGraphQLClient } from '$lib/graphqlUtils.js';
-	import renameProjectMutation from '../queries/rename_project.js';
-	import { getModalStore } from '@skeletonlabs/skeleton';
-
-	const modalStore = getModalStore();
+	import renameProjectMutation from '../../queries/rename_project.js';
+	import { displayAlert } from '../../utils/alerts_utils.js';
 
 	export let parent: any;
 	const project: { projectId: string; projectName: string } = $modalStore[0]?.valueAttr as {
@@ -18,39 +16,35 @@
 	const formData = {
 		name: ''
 	};
-	let hideModal = false;
 	let alertModal = false;
 
 	async function onRenameProjectSubmit(): Promise<void> {
-		hideModal = true;
-		const variables1 = {
+		const variables = {
 			projectId: project.projectId,
 			name: formData.name
 		};
 		modalStore.close();
+		try {
+			await requestGraphQLClient(renameProjectMutation, variables);
 
-		await requestGraphQLClient(renameProjectMutation, variables1);
-		const projectRenamedMessageModal: ModalSettings = {
-			type: 'alert',
-			title: 'Project renamed &#10024;!',
-			body: `New name: ${formData.name}`
-		};
-		alertModal = true;
-		modalStore.trigger(projectRenamedMessageModal);
-		await new Promise((resolve) => setTimeout(resolve, 1500));
-		modalStore.close();
-		modalStore.clear();
+			const title = 'Project renamed &#10024;!';
+			const body = `New name: ${formData.name}`;
+			await displayAlert(title, body);
+			alertModal = true;
 
-		// update the project list after addition
-		const responseAllProjects: { projects: Project[] } = await requestGraphQLClient(
-			allProjectsQuery
-		);
-		$projectsList = [];
-		$projectsList = responseAllProjects.projects;
+			// update the project list after addition
+			const responseAllProjects: AllProjectsResponse = await requestGraphQLClient(allProjectsQuery);
+			$projectsList = responseAllProjects.projects;
+		} catch (error) {
+			const title = 'Error renaming project❌!';
+			const body = (error as Error).message;
+			await displayAlert(title, body);
+			alertModal = true;
+		}
 	}
 </script>
 
-{#if !hideModal}
+{#if $modalStore[0]}
 	<div class="modal-example-form {cBase}">
 		<header class={cHeader}>{$modalStore[0].title ?? '(title missing)'}</header>
 		<article>{$modalStore[0].body ?? '(body missing)'}</article>

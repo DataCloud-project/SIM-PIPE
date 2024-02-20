@@ -7,19 +7,21 @@
 	import { goto } from '$app/navigation';
 	import { requestGraphQLClient } from '$lib/graphqlUtils';
 	import { ArrowRightIcon } from 'svelte-feather-icons';
-	import type { Project, WorkflowTemplate } from '../../../types.d.ts'
-	import { onMount } from 'svelte';
+	import { displayAlert } from '../../../utils/alerts_utils';
 
 	export let data;
 	let requestsComplete = false;
 
 	$: language = 'yaml'; // default format of workflow template
 
-	const getWorkflowTemplate = async (): Promise<{workflowTemplate: WorkflowTemplate}> => {
+	const getWorkflowTemplate = async (): Promise<{ workflowTemplate: WorkflowTemplate }> => {
 		const variables = {
 			name: data.template
 		};
-		const response = await requestGraphQLClient<{workflowTemplate: WorkflowTemplate}>(getWorkflowQuery, variables);
+		const response = await requestGraphQLClient<{ workflowTemplate: WorkflowTemplate }>(
+			getWorkflowQuery,
+			variables
+		);
 		//console.log(response);
 		return response;
 	};
@@ -28,6 +30,16 @@
 	let workflow_name: string;
 	let project: Project;
 
+	workflowPromise
+		.then((data) => {
+			workflow = data;
+		})
+		.catch(async (error) => {
+			const title = 'Error displaying workflow template❌!';
+			const body = `${(error as Error).message}`;
+			await displayAlert(title, body, 10000);
+			goto('/projects/');
+		});
 
 	function switchLanguage() {
 		if (language === 'yaml') {
@@ -37,25 +49,19 @@
 		}
 	}
 
-	onMount( async () =>{
+	onMount(async () => {
 		try {
-			let data = await getWorkflowTemplate()
+			let data = await getWorkflowTemplate();
 			workflow = data.workflowTemplate;
-			workflow_name = data.workflowTemplate.name
-			project = data.workflowTemplate.project
+			workflow_name = data.workflowTemplate.name;
+			project = data.workflowTemplate.project;
 			requestsComplete = true;
 		} catch (error) {
-			console.log("failed to fetch workflow template data: ", error);
+			console.log('failed to fetch workflow template data: ', error);
 			goto('/404');
 		}
 	});
 </script>
-
-<style>
-	.code {
-		max-height: 80vh;
-	}
-</style>
 
 <div class="flex w-full content-center p-10">
 	<div class="table-container">
@@ -77,7 +83,7 @@
 					<button
 						type="button"
 						class="btn btn-sm variant-filled"
-						on:click={() => goto(`/projects/project_id/${$clickedProjectId}`)}
+						on:click={() => goto(`/projects/dryruns/${$clickedProjectId}`)}
 					>
 						Go to dry runs <ArrowRightIcon size="1x" />
 					</button>
@@ -93,3 +99,9 @@
 		{/if}
 	</div>
 </div>
+
+<style>
+	.code {
+		max-height: 80vh;
+	}
+</style>
