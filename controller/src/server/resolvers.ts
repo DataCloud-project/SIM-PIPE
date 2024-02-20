@@ -26,7 +26,9 @@ import { SIMPIPE_PROJECT_LABEL } from '../k8s/label.js';
 import {
   createProject, deleteProject, getProject, projects, renameProject,
 } from '../k8s/projects.js';
-import { computePresignedGetUrl, computePresignedPutUrl, getObjectSize } from '../minio/minio.js';
+import {
+  computePresignedGetUrl, computePresignedPutUrl, getAllObjects, getObjectSize,
+} from '../minio/minio.js';
 import { assertPrometheusIsHealthy } from '../prometheus/prometheus.js';
 import queryPrometheusResolver from '../prometheus/query-prometheus-resolver.js';
 import { NotFoundError, PingError } from './apollo-errors.js';
@@ -160,12 +162,13 @@ const resolvers = {
       const { sub } = user;
       return await getWorkflowTemplate(name, argoClient, sub);
     },
-    async artifacts(
-      _p: EmptyParent, _a: EmptyArguments, context: AuthenticatedContext,
-    ): Promise<Query['artifacts']> {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { argoClient } = context;
-      return [];
+    async artifacts(): Promise<Query['artifacts']> {
+      const objects = await getAllObjects();
+      return objects.map(({ name, size }) => ({
+        name,
+        key: name,
+        size,
+      }));
     },
   } as Required<QueryResolvers<AuthenticatedContext, EmptyParent>>,
   Mutation: {
