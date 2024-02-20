@@ -14,6 +14,7 @@
 	import deleteDryRunMutation from '../../queries/delete_dry_run.js';
 	import deleteWorkflowTemplateMutation from '../../queries/delete_workflow_template.js';
 	import { displayAlert } from '../../utils/alerts_utils';
+	import Alert from '$lib/modules/Alert.svelte';
 
 	const modalStore = getModalStore();
 
@@ -55,7 +56,7 @@
 
 	const modal: ModalSettings = {
 		type: 'component',
-		component: { ref: ModalSubmitNewProject },
+		component: 'submitNewProjectModal',
 		title: 'Add new project',
 		body: 'Enter details of project'
 	};
@@ -145,10 +146,8 @@
 		createProjectResponse: { status: number; project: { name: string; id: string }; error: string },
 		createWorkflowResponse: { status: number; name: string; error: string }
 	) {
-		console.log('hello world!');
-		console.log(createProjectResponse);
-		console.log(createWorkflowResponse);
-		console.log('world says hello!');
+		console.log('createProjectResponse:', createProjectResponse);
+		console.log('createWorkflowResponse:', createWorkflowResponse);
 		visibleAlert = true;
 		if (createProjectResponse.status === 200) {
 			await requestGraphQLClient<{ projects: Project[] }>(allProjectsQuery).then((response) => {

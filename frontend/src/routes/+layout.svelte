@@ -25,11 +25,11 @@
 
 	initializeStores();
 
-	import UploadFileModal from '../modals/uploadFileModal.svelte';
-	import ProvideTextInputModal from '../modals/provideTextInputModal.svelte';
-	import SubmitNewProjectModal from '../modals/submitNewProjectModal.svelte';
-	import SubmitNewDryRunModal from '../modals/submitNewDryRunModal.svelte';
-	import SubmitNewSecretModal from '../modals/submitNewSecretModal.svelte';
+	import UploadFileModal from '../modals/upload_file_modal.svelte';
+	import ProvideTextInputModal from '../modals/text_input_modal.svelte';
+	import SubmitNewProjectModal from '../modals/submit_new_project_modal.svelte';
+	import SubmitNewDryRunModal from '../modals/submit_new_dry_run_modal.svelte';
+	import SubmitNewSecretModal from '../modals/submit_new_secret_modal.svelte';
 
 	const modalRegistry: Record<string, ModalComponent> = {
 		// Set a unique modal ID, then pass the component reference

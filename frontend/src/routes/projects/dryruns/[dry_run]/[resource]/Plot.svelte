@@ -1,5 +1,6 @@
 <script lang="ts">
-	import Plot, { type Data } from 'svelte-plotly.js';
+	import Plot from 'svelte-plotly.js';
+	//import type { Data } from 'svelte-plotly.js';
 
 	import { modeCurrent } from '@skeletonlabs/skeleton';
 

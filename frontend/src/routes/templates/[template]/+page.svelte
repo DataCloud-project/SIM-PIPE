@@ -7,7 +7,8 @@
 	import { goto } from '$app/navigation';
 	import { requestGraphQLClient } from '$lib/graphqlUtils';
 	import { ArrowRightIcon } from 'svelte-feather-icons';
-	import { displayAlert } from '../../../utils/alerts_utils';
+	import type { WorkflowTemplate, Project } from '../../../types';
+	import { onMount } from 'svelte';
 
 	export let data;
 	let requestsComplete = false;
@@ -29,17 +30,6 @@
 	let workflow = {};
 	let workflow_name: string;
 	let project: Project;
-
-	workflowPromise
-		.then((data) => {
-			workflow = data;
-		})
-		.catch(async (error) => {
-			const title = 'Error displaying workflow template❌!';
-			const body = `${(error as Error).message}`;
-			await displayAlert(title, body, 10000);
-			goto('/projects/');
-		});
 
 	function switchLanguage() {
 		if (language === 'yaml') {

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Modal, ProgressBar } from '@skeletonlabs/skeleton';
+	import { ProgressBar } from '@skeletonlabs/skeleton';
 	import {
 		selectedProjectName,
 		selectedDryRunName,
