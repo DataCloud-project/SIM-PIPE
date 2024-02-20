@@ -13,12 +13,16 @@ const allDryRunsQuery = gql`
 				createdAt
 				status {
 					phase
+					message
 				}
 				nodes {
 					startedAt
 					finishedAt
+					duration
+					type
 					... on DryRunNodePod {
 						displayName
+						type
 						startedAt
 						finishedAt
 						duration

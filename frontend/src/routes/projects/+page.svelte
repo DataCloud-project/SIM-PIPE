@@ -5,7 +5,7 @@
 	import { projectsList, clickedProjectId } from '../../stores/stores.js';
 	import type { Project } from '../../types.js';
 	import { goto } from '$app/navigation';
-	import Timestamp from './project_id/[dry_run]/timestamp.svelte';
+	import Timestamp from './dryruns/[dry_run]/timestamp.svelte';
 	import { requestGraphQLClient } from '$lib/graphqlUtils';
 	import { AlertTriangleIcon, EditIcon, FileTextIcon } from 'svelte-feather-icons';
 	import ModalRenameProject from './modal-rename-project.svelte';
@@ -14,6 +14,7 @@
 	import allDryRunsQuery from '../../queries/get_all_dryruns';
 	import deleteDryRunMutation from '../../queries/delete_dry_run.js';
 	import deleteWorkflowTemplateMutation from '../../queries/delete_workflow_template.js';
+	import { displayAlert } from '../../utils/alerts_utils';
 
 	export let visibleAlert = false;
 	export let alertTitle = 'Alert!';
@@ -56,55 +57,56 @@
 		title: 'Add new project',
 		body: 'Enter details of project'
 	};
-	async function onDeleteSelected() {
-		Object.keys(checkboxes)
-			.filter((item) => checkboxes[item])
-			.forEach(async (element) => {
-				const project_variables = {
-					projectId: element
-				};
-				const response_dry_runs = await requestGraphQLClient<{
-					project: { dryRuns: Record<string, undefined>[] };
-				}>(allDryRunsQuery, project_variables);
-				response_dry_runs.project.dryRuns.forEach(async (dry_run: Record<string, undefined>) => {
-					const response_delete_dry_run = await requestGraphQLClient(deleteDryRunMutation, {
-						dryRunId: dry_run.id
-					});
-				});
-				const delete_workflow_template = await requestGraphQLClient(
-					deleteWorkflowTemplateMutation,
-					{
-						name: element
-					}
-				).catch((error) => {
-					console.log(error);
-					visibleAlert = true;
-					alertTitle = 'Delete workflow template failed!';
-					alertMessage = error.message;
-				});
-				const delete_project_response = await requestGraphQLClient(
-					deleteProjectMutation,
-					project_variables
-				);
-			});
-		const projectDeletedMessageModal: ModalSettings = {
-			type: 'alert',
-			title: 'Project deleted🗑️!',
-			body: `Deleted projects: ${Object.keys(checkboxes).filter((item) => checkboxes[item])}`
-		};
-		modalStore.trigger(projectDeletedMessageModal);
-		await new Promise((resolve) => setTimeout(resolve, 1500));
-		modalStore.close();
-		// reset checkboxes
-		$projectsList?.forEach((element) => {
-			checkboxes[element.id] = false;
-		});
-		// inserting a small delay because sometimes delete mutation returns true, but all projects query returns the deleted project as well
-		await new Promise((resolve) => setTimeout(resolve, 150));
 
-		// update the project list after deletion
-		let responseAllProjects: { projects: Project[] } = await requestGraphQLClient(allProjectsQuery);
-		projectsList.set(responseAllProjects.projects);
+	async function onDeleteSelected() {
+		try {
+			Object.keys(checkboxes)
+				.filter((item) => checkboxes[item])
+				.forEach(async (element) => {
+					const project_variables = {
+						projectId: element
+					};
+					const response_dry_runs = await requestGraphQLClient<{
+						project: { dryRuns: Record<string, undefined>[] };
+					}>(allDryRunsQuery, project_variables);
+					response_dry_runs.project.dryRuns.forEach(async (dry_run: Record<string, undefined>) => {
+						await requestGraphQLClient(deleteDryRunMutation, {
+							dryRunId: dry_run.id
+						});
+					});
+					await requestGraphQLClient(deleteWorkflowTemplateMutation, {
+						name: element
+					}).catch((error) => {
+						console.log(error);
+						visibleAlert = true;
+						alertTitle = 'Delete workflow template failed!';
+						alertMessage = error.message;
+					});
+					await requestGraphQLClient(deleteProjectMutation, project_variables);
+				});
+			const title = 'Project deleted🗑️!';
+			const body = `Deleted projects: ${Object.keys(checkboxes).filter(
+				(item) => checkboxes[item]
+			)}`;
+			await displayAlert(title, body);
+			// inserting a small delay because sometimes delete mutation returns true, but all projects query returns the deleted project as well
+			await new Promise((resolve) => setTimeout(resolve, 150));
+
+			// update the project list after deletion
+			let responseAllProjects: { projects: Project[] } = await requestGraphQLClient(
+				allProjectsQuery
+			);
+			projectsList.set(responseAllProjects.projects);
+		} catch (error) {
+			const title = 'Error deleting project❌!';
+			const body = `${(error as Error).message}`;
+			await displayAlert(title, body, 4000);
+		} finally {
+			// reset checkboxes
+			$projectsList?.forEach((element) => {
+				checkboxes[element.id] = false;
+			});
+		}
 	}
 
 	// to disable onclick propogation for checkbox input
@@ -114,7 +116,7 @@
 
 	function gotodryruns(dry_run: string) {
 		clickedProjectId.set(dry_run);
-		goto(`/projects/project_id/${dry_run}`);
+		goto(`/projects/dryruns/${dry_run}`);
 	}
 
 	function renameProject(event: any, project: Project) {
@@ -155,7 +157,7 @@
 		{#await projectsPromise}
 			<p style="font-size:20px;">Loading projects...</p>
 			<ProgressBar />
-		{:then projectsList}
+		{:then}
 			<h1>Projects</h1>
 			<div class="flex flex-row justify-end p-5 space-x-1">
 				<div>

@@ -5,7 +5,7 @@ import {
 import { DryRunNodePhase, DryRunNodeType, DryRunPhase } from '../server/schema.js';
 import getPodName from './get-pod-name.js';
 import type {
-  DryRun, DryRunNode, DryRunNodeArtifact, DryRunNodePod,
+  Artifact, DryRun, DryRunNode, DryRunNodePod,
 } from '../server/schema.js';
 import type { ArgoClientActionNames, ArgoNode, ArgoWorkflow } from './argo-client.js';
 import type ArgoWorkflowClient from './argo-client.js';
@@ -125,8 +125,8 @@ export function convertArgoWorkflowNode(node: ArgoNode, argoWorkflow: ArgoWorkfl
   const type = convertArgoNodeType(node.type);
 
   let podName: string | undefined;
-  let inputArtifacts: DryRunNodeArtifact[] | undefined;
-  let outputArtifacts: DryRunNodeArtifact[] | undefined;
+  let inputArtifacts: Artifact[] | undefined;
+  let outputArtifacts: Artifact[] | undefined;
 
   if (type === DryRunNodeType.Pod) {
     podName = getPodName(node, argoWorkflow);

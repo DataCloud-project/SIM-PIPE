@@ -1,10 +1,8 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { ProgressBar } from '@skeletonlabs/skeleton';
-	import type { DryRunMetrics, DryRun } from '../../../../../types';
+	import { Modal, ProgressBar } from '@skeletonlabs/skeleton';
+	import type { DryRunMetrics, DryRun, metricsWithTimeStamps } from '../../../../../types';
 	import getDryRunMetricsQuery from '../../../../../queries/get_dry_run_metrics.js';
-	import getDryRunNoLogsMetricsQuery from '../../../../../queries/get_dry_run_metrics_no_logs.js';
-	import { format } from 'date-fns';
 	import getProjectQuery from '../../../../../queries/get_project';
 	import getDryRunPhaseResultsQuery from '../../../../../queries/get_dry_run_phase_results';
 	import getDryRunQuery from '../../../../../queries/get_selected_project';
@@ -12,17 +10,24 @@
 	import { goto } from '$app/navigation';
 	import Plot from './Plot.svelte';
 	import Mermaid from './Mermaid.svelte';
-	import { colors, maxValuesFormat } from './Config.js';
+	import { colors } from './Config.js';
 	import { stepsList } from '../../../../../stores/stores';
 	import Legend from './Legend.svelte';
 	import { ZoomInIcon } from 'svelte-feather-icons';
 	import { CodeBlock } from '@skeletonlabs/skeleton';
 	import { selectedProjectName, selectedDryRunName } from '../../../../../stores/stores';
+	import { filesize } from 'filesize';
+	import {
+		getMetricsUsageUtils,
+		getMetricsAnalyticsUtils,
+		displayStepDuration
+	} from '../../../../../utils/resource_utils';
+	import type { MetricsAnalytics } from '../../../../../utils/resource_utils';
+	import { displayAlert } from '../../../../../utils/alerts_utils';
 
 	export let data;
 	let workflow: { workflowTemplates: { argoWorkflowTemplate: { spec: { templates: any[] } } }[] };
-	let dryrun_results: { dryRun: { nodes: any[] } };
-	let selectStepName = '';
+	let selectStepName = 'Total';
 	let dryRunPhases: { [x: string]: string } = {};
 	const graphOrientation = 'LR';
 
@@ -30,39 +35,30 @@
 	let diagram: string;
 	$: diagram = diagram;
 	let selectedProject: { name: string; id: string };
-	const datefmt = 'yyyy-MM-dd HH:mm:ss';
-	let showLogs = true;
 	let logs: { [x: string]: string } = {};
 
-	var cpuData: { [key: string]: { x: string[]; y: number[]; type: string; name: string } } = {};
-	var memoryData: { [key: string]: { x: string[]; y: number[]; type: string; name: string } } = {};
-	var networkDataCombined: {
-		[key: string]: { x: string[]; y: number[]; type: string; name: string }[];
+	let cpuData: { [key: string]: metricsWithTimeStamps } = {};
+	let memoryData: { [key: string]: metricsWithTimeStamps } = {};
+	let networkDataCombined: {
+		[key: string]: metricsWithTimeStamps[];
 	} = {};
 
-	const maxValues: { [key: string]: { value: number; unit: string } } = maxValuesFormat;
-	let showMax = false;
+	let pipelineMetricsAnalytics: MetricsAnalytics = {};
 
+	let dryRunPhaseMessage: string | null;
 	const getMetricsResponse = async () => {
 		const dryrun_variables = {
 			dryRunId: data.resource
 		};
 		try {
-			const metrics_response: { dryRun: { nodes: [] } } = await requestGraphQLClient(
-				getDryRunMetricsQuery,
-				dryrun_variables
-			);
-			return metrics_response?.dryRun?.nodes;
+			const response: { dryRun: { nodes: []; status: { message: string } } } =
+				await requestGraphQLClient(getDryRunMetricsQuery, dryrun_variables);
+			dryRunPhaseMessage = response?.dryRun?.status?.message;
+			return response?.dryRun?.nodes.filter((node) => Object.keys(node).length > 0);
 		} catch (error) {
-			// internal server error from graphql API when requesting logs for dry runs which has no logs
-			if ((error as Error).message.includes('No logs found:')) {
-				showLogs = false;
-				const metrics_response: { dryRun: { nodes: [] } } = await requestGraphQLClient(
-					getDryRunNoLogsMetricsQuery,
-					dryrun_variables
-				);
-				return metrics_response?.dryRun?.nodes;
-			}
+			const title = 'Internal error!';
+			const body = `${(error as Error).message}`;
+			await displayAlert(title, body, 10000);
 		}
 	};
 
@@ -94,13 +90,28 @@
 		// set stepsList as nodes
 		$stepsList = dryrun_response.dryRun.nodes;
 		// filter out all nodes which are not of type Pod
-		$stepsList = $stepsList.filter((entry) => entry.type === 'Pod');
+		$stepsList = $stepsList.filter((item) => item.type === 'Pod');
 		dryrun_response.dryRun.nodes.forEach((node: DryRunMetrics) => {
 			dryRunPhases[node.displayName] = node.phase;
 		});
 
 		const metrics_response = await getMetricsResponse();
 
+		selectedProjectName.set;
+		workflow = workflow_response;
+		const result = await getMetricsUsageUtils(metrics_response as unknown as DryRunMetrics[]);
+		allStepNames = result.allStepNames;
+		cpuData = result.cpuData;
+		memoryData = result.memoryData;
+		networkDataCombined = result.networkDataCombined;
+		logs = result.logs;
+		pipelineMetricsAnalytics = await getMetricsAnalyticsUtils(
+			allStepNames,
+			metrics_response as unknown as DryRunMetrics[],
+			cpuData,
+			memoryData,
+			networkDataCombined
+		);
 		const responses = {
 			workflow: workflow_response,
 			dryrun: dryrun_response,
@@ -116,134 +127,8 @@
 		}
 		return word;
 	}
+
 	let allStepNames: string[] = [];
-	getDataPromise
-		.then((data: { workflow: any; dryrun: any; metrics: any }) => {
-			selectedProjectName.set;
-			workflow = data.workflow;
-			dryrun_results = data.dryrun;
-			data.metrics?.forEach(
-				(node: {
-					log: string;
-					displayName: string | number;
-					startedAt: string;
-					metrics: {
-						cpuUsageSecondsTotal: any[];
-						memoryUsageBytes: any[];
-						networkReceiveBytesTotal: any[];
-						networkTransmitBytesTotal: any[];
-					};
-				}) => {
-					// TODO: make more efficient if data missing?
-					if (isEmpty(node) === false) {
-						allStepNames.push(node.displayName as string);
-						if (node.log) {
-							//logs[node.displayName] = node.log;
-							logs[node.displayName] = node.log;
-						}
-						let cpuTimestamps = timestampsToDatetime(
-							node.startedAt,
-							node.metrics.cpuUsageSecondsTotal.map((item: { timestamp: any }) => item.timestamp)
-						);
-						let memTimestamps = timestampsToDatetime(
-							node.startedAt,
-							node.metrics.memoryUsageBytes.map((item: { timestamp: any }) => item.timestamp)
-						);
-						let nrcTimestamps = timestampsToDatetime(
-							node.startedAt,
-							node.metrics.networkReceiveBytesTotal.map(
-								(item: { timestamp: any }) => item.timestamp
-							)
-						);
-						let ntrTimestamps = timestampsToDatetime(
-							node.startedAt,
-							node.metrics.networkTransmitBytesTotal.map(
-								(item: { timestamp: any }) => item.timestamp
-							)
-						);
-						let cpuValues = node.metrics.cpuUsageSecondsTotal.map((item: { value: string }) =>
-							Number(item.value)
-						);
-
-						let memValues = node.metrics.memoryUsageBytes.map((item: { value: string }) =>
-							Number(item.value)
-						);
-						let nrcValues = node.metrics.networkReceiveBytesTotal.map((item: { value: string }) =>
-							Number(item.value)
-						);
-						let ntrValues = node.metrics.networkTransmitBytesTotal.map((item: { value: string }) =>
-							Number(item.value)
-						);
-						var cpuUsage = {
-							x: cpuTimestamps,
-							y: cpuValues,
-							type: 'scatter',
-							name: truncateString(node.displayName as string, 15)
-						};
-						var memoryUsage = {
-							x: memTimestamps,
-							y: memValues,
-							type: 'scatter',
-							name: truncateString(node.displayName as string, 15)
-						};
-						var networkReceiveBytesTotal = {
-							x: nrcTimestamps,
-							y: nrcValues,
-							type: 'scatter',
-							name: `Received ${truncateString(node.displayName as string, 15)}`
-						};
-						var networkTransmitBytesTotal = {
-							x: ntrTimestamps,
-							y: ntrValues,
-							type: 'scatter',
-							name: `Transmitted ${truncateString(node.displayName as string, 15)}`
-						};
-
-						if (cpuValues.length > 0) {
-							const temp = Math.max(...cpuValues);
-							if (temp > maxValues['CPU'].value) {
-								maxValues['CPU'].value = temp;
-							}
-							showMax = true;
-							cpuData[node.displayName as string] = cpuUsage;
-						}
-
-						if (memValues.length > 0) {
-							const temp = Math.max(...memValues);
-							if (temp > maxValues['Memory'].value) {
-								maxValues['Memory'].value = temp;
-							}
-							showMax = true;
-							memoryData[node.displayName as string] = memoryUsage;
-						}
-
-						if (nrcValues.length > 0) {
-							const temp = Math.max(...nrcValues);
-							if (temp > maxValues['Network received'].value) {
-								maxValues['Network received'].value = temp;
-							}
-							showMax = true;
-							if (!networkDataCombined[node.displayName as string])
-								networkDataCombined[node.displayName as string] = [];
-							networkDataCombined[node.displayName as string].push(networkReceiveBytesTotal);
-						}
-						if (ntrValues.length > 0) {
-							const temp = Math.max(...ntrValues);
-							if (temp > maxValues['Network transferred'].value) {
-								maxValues['Network transferred'].value = temp;
-							}
-							showMax = true;
-							if (!networkDataCombined[node.displayName as string])
-								networkDataCombined[node.displayName as string] = [];
-							networkDataCombined[node.displayName as string].push(networkTransmitBytesTotal);
-						}
-					}
-				}
-			);
-		})
-		.catch((error) => {
-			console.log(error);
-		});
 
 	function generateRandomString() {
 		let result = '';
@@ -260,36 +145,19 @@
 	function buildDiagram() {
 		mermaidCode = []; // clear mermaidCode
 		mermaidCode.push(`graph ${graphOrientation};`);
-		workflow.workflowTemplates[0]?.argoWorkflowTemplate.spec.templates.forEach((template) => {
+		workflow.workflowTemplates[0]?.argoWorkflowTemplate.spec.templates.forEach(async (template) => {
 			try {
 				if (template.dag) argoDAGtoMermaid(template.dag);
 				else if (template.steps) argoStepsToMermaid(template.steps);
 			} catch (error) {
 				console.log(error);
+				const title = 'Error displaying dry run step diagram❌!';
+				const body = `${(error as Error).message}`;
+				await displayAlert(title, body, 5000);
+				goto(`/projects/dryruns/${selectedProject?.id}`);
 			}
 		});
 		diagram = mermaidCode.join('\n');
-	}
-
-	function addSeconds(date: Date, seconds: number) {
-		date.setSeconds(date.getSeconds() + seconds);
-		let dateStr = format(date, datefmt);
-		return dateStr;
-	}
-
-	function timestampsToDatetime(startedAt: string, input_array: number[]) {
-		let date = new Date(startedAt);
-		let timeseries = [addSeconds(date, 0)];
-		for (let i = 0; i < input_array.length - 1; i++) {
-			let v = input_array[i + 1] - input_array[i];
-			let newDate = addSeconds(date, v);
-			timeseries.push(newDate);
-		}
-		return timeseries;
-	}
-
-	function isEmpty(obj: any) {
-		return Object.keys(obj).length === 0;
 	}
 
 	function argoStepsToMermaid(argoWorkflow: any) {
@@ -362,7 +230,7 @@
 	}
 
 	$: getLogs = () => {
-		if (selectedStep != '') {
+		if (selectedStep != 'Total') {
 			return [selectedStep];
 		}
 		return allStepNames;
@@ -392,7 +260,7 @@
 				});
 			});
 		}
-		if (selectedStep != '') {
+		if (selectedStep != 'Total') {
 			if (resource == 'network')
 				return {
 					title: `${selectedStep}`,
@@ -412,22 +280,15 @@
 	});
 	$: selectedStep = selectStepName;
 	$: reactiveStepsList = $stepsList;
-	$: reactiveMaxValues = maxValues;
 
 	function gotoOverview() {
-		selectedStep = '';
+		selectedStep = 'Total';
 	}
 
 	function getPartLogs(stepName: string, nmaxlinelength: number) {
 		let steplogs = logs[stepName];
-		let result = [];
-		for (let i = 0; i < steplogs.length; i++) {
-			if (steplogs[i].length > nmaxlinelength)
-				result.push(steplogs[i].slice(0, nmaxlinelength) + '...');
-			else result.push(steplogs[i]);
-			result.push();
-		}
-		return result.join('\n');
+		if (steplogs.length < nmaxlinelength) return steplogs;
+		else return steplogs.slice(0, nmaxlinelength) + '...';
 	}
 </script>
 
@@ -440,18 +301,18 @@
 			<h1>
 				<a href="/projects">Projects</a>
 				<span STYLE="font-size:14px">/ </span>
-				<button on:click={() => goto(`/projects/project_id/${selectedProject?.id}`)}
+				<button on:click={() => goto(`/projects/dryruns/${selectedProject?.id}`)}
 					>{selectedProject?.name}
 				</button>
 				<span STYLE="font-size:14px">/ </span>
 				<button on:click={() => gotoOverview()}>{data.resource} </button>
-				{#if selectStepName != ''}
+				{#if selectStepName != 'Total'}
 					<span STYLE="font-size:14px">/ </span>{selectStepName}
 				{/if}
 				<button
 					type="button"
 					class="btn-icon btn-icon-sm"
-					on:click={() => goto(`/projects/project_id/${data.resource}/${data.resource}/cpu`)}
+					on:click={() => goto(`/projects/dryruns/${data.resource}/${data.resource}/cpu`)}
 					><ZoomInIcon /></button
 				>
 			</h1>
@@ -469,6 +330,7 @@
 								<th>Name</th>
 								<th>Started</th>
 								<th>Finished</th>
+								<th>Duration</th>
 								<th>Status</th>
 								<th>Output</th>
 							</tr>
@@ -477,14 +339,15 @@
 							{#each reactiveStepsList || [] as step}
 								<tr on:click={() => stepOnClick(step.displayName, step.type)}>
 									<td style="width:15%">{step.displayName}</td>
-									<td style="width:35%">
+									<td style="width:20%">
 										{step.startedAt ? step.startedAt : '-'}
 									</td>
-									<td style="width:35%">
+									<td style="width:20%">
 										{step.finishedAt ? step.finishedAt : '-'}
 									</td>
+									<td style="width:15%">{displayStepDuration(step)}</td>
 									<td style="width:15%">{step.phase}</td>
-									<td style="width:10%">
+									<td style="width:15%">
 										{#if step.outputArtifacts?.length > 1}
 											{#each step.outputArtifacts as artifact}
 												{#if artifact.name != 'main-logs'}
@@ -502,18 +365,19 @@
 				</div>
 			</div>
 			<div class="grid grid-rows-4 grid-cols-2 gap-5 h-[80rem]">
-				<div class="card logcard row-span-4 p-5">
-					<header class="card-header"><h1>Logs</h1></header>
-					<section class="p-1">
-						<br />
-						<ul class="list">
-							{#if showLogs}
+				<!-- if the logs is empty, remove logs sections -->
+				{#if Object.values(logs).join('') !== ''}
+					<div class="card logcard row-span-4 p-5">
+						<header class="card-header"><h1>Logs</h1></header>
+						<section class="p-1">
+							<br />
+							<ul class="list">
 								{#each getLogs() as key}
 									<li>
 										<h2>{key}</h2>
 									</li>
 									<li>
-										{#if logs[key] != null}
+										{#if logs[key] != ''}
 											<div class="w-full">
 												<CodeBlock language="bash" code={getPartLogs(key, 20000)} />
 											</div>
@@ -523,42 +387,58 @@
 									</li>
 									<br />
 								{/each}
-							{:else}
-								<p>No data</p>
-							{/if}
-						</ul>
-					</section>
-				</div>
-
-				{#if showMax}
-					<div class="card p-2">
-						<table class="table table-interactive">
-							<thead>
-								<tr>
-									<th>Resource</th>
-									<th>Maximum usage</th>
-								</tr>
-							</thead>
-							<tbody>
-								{#each Object.keys(reactiveMaxValues) as key}
-									<tr>
-										<td>{key}</td>
-										{#if maxValues[key].value != -1}
-											<td>{maxValues[key].value.toFixed(2)}{maxValues[key].unit}</td>
-										{:else}
-											<td>-</td>
-										{/if}
-									</tr>
-								{/each}
-							</tbody>
-						</table>
-					</div>
-				{:else}
-					<div class="placeholder">
-						<p>No data</p>
-						<ProgressBar />
+							</ul>
+						</section>
 					</div>
 				{/if}
+				<!-- display if the dryrun has a non-empty phase message from argo (usually null if no error) -->
+				{#if dryRunPhaseMessage != null}
+					<div class="card logcard row-span-4 p-5">
+						<h1>Message</h1>
+						<section class="p-1">
+							<div class="w-full">
+								<CodeBlock language="json" code={dryRunPhaseMessage} />
+							</div>
+						</section>
+					</div>
+				{/if}
+
+				<div class="card p-2">
+					<table class="table table-interactive">
+						<thead>
+							<tr>
+								<th>Resource</th>
+								<th>Average, Maximum usage</th>
+							</tr>
+						</thead>
+						<tbody>
+							{#each Object.keys(pipelineMetricsAnalytics[selectedStep]) as key}
+								<tr>
+									<td>{key}</td>
+									{#if key == 'CPU'}
+										<td>
+											{pipelineMetricsAnalytics[selectedStep][key].avg.toFixed(3)} %,
+											{pipelineMetricsAnalytics[selectedStep][key].max.toFixed(3)}
+											%
+										</td>
+										<!-- for eslint -->
+									{:else if key == 'Memory' || key == 'Network_received' || key == 'Network_transferred'}
+										<td
+											>{filesize(pipelineMetricsAnalytics[selectedStep][key].avg)},
+											{filesize(pipelineMetricsAnalytics[selectedStep][key].max)}</td
+										>
+										<!-- <td
+											>{pipelineMetricsAnalytics[selectedStep][key].avg},
+											{pipelineMetricsAnalytics[selectedStep][key].max}</td
+										> -->
+									{:else if key == 'Duration'}
+										<td> {pipelineMetricsAnalytics[selectedStep][key]}</td>
+									{/if}
+								</tr>
+							{/each}
+						</tbody>
+					</table>
+				</div>
 
 				<div class="flex card p-2">
 					<div class="flex container h-full w-full">
@@ -601,6 +481,8 @@
 		{/await}
 	</div>
 </div>
+
+<Modal />
 
 <style>
 	.card {

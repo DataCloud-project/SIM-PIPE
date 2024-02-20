@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { ProgressBar } from '@skeletonlabs/skeleton';
+	import { Modal, ProgressBar } from '@skeletonlabs/skeleton';
 	import {
 		selectedProjectName,
 		selectedDryRunName,
@@ -10,6 +10,7 @@
 	import { requestGraphQLClient } from '$lib/graphqlUtils';
 	import Plot from '../Plot.svelte';
 	import { gql } from 'graphql-request';
+	import { displayAlert } from '../../../../../../utils/alerts_utils';
 
 	const datefmt = 'yyyy-MM-dd HH:mm:ss';
 	const defaultMetricsType = 'All';
@@ -138,9 +139,7 @@
 				metricSources.push(metric_source);
 			});
 		});
-		//console.log(metricSources);
 		const queryString = buildMetricQuery(metricSources);
-		//console.log(queryString);
 		const metricsQuery = gql`
 			${queryString}
 		`;
@@ -192,8 +191,12 @@
 				}
 			);
 		})
-		.catch((error) => {
+		.catch(async (error) => {
 			console.log(error);
+			const title = 'Error reading resource consumption of dry run❌!';
+			const body = `${(error as Error).message}`;
+			await displayAlert(title, body, 10000);
+			goto(`/projects/dryruns/${$selectedProjectName}/${$selectedDryRunName}`);
 		});
 
 	// TODO: These functions are the same as in [resource].svelte
@@ -237,13 +240,12 @@
 			<h1>
 				<a href="/projects">Projects</a>
 				<span STYLE="font-size:14px">/ </span>
-				<button on:click={() => goto(`/projects/project_id/${$selectedProjectName}`)}
+				<button on:click={() => goto(`/projects/dryruns/${$selectedProjectName}`)}
 					>{$selectedProjectName}
 				</button>
 				<span STYLE="font-size:14px">/ </span>
 				<button
-					on:click={() =>
-						goto(`/projects/project_id/${$selectedProjectName}/${$selectedDryRunName}`)}
+					on:click={() => goto(`/projects/dryruns/${$selectedProjectName}/${$selectedDryRunName}`)}
 					>{$selectedDryRunName}
 				</button>
 				<span STYLE="font-size:14px">/ {$selectedMetricsType}</span>
@@ -290,3 +292,5 @@
 		{/await}
 	</div>
 </div>
+
+<Modal />

@@ -8,6 +8,8 @@
 	<CheckIcon size="20" />
 {:else if run_result == 'Failed'}
 	<XIcon size="20" />
+{:else if run_result == 'Error'}
+	<XIcon size="20" />
 {:else if run_result == 'Pending'}
 	<ClockIcon size="20" />
 {:else if run_result == 'Running'}

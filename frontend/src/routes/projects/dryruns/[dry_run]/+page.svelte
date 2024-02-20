@@ -12,7 +12,7 @@
 	import { goto } from '$app/navigation';
 	import Timestamp from './timestamp.svelte';
 	import { requestGraphQLClient } from '$lib/graphqlUtils.js';
-	import { time_difference } from '$lib/time_difference.js';
+	import { calculateDuration } from '../../../../utils/resource_utils.js';
 
 	export let data;
 
@@ -37,19 +37,6 @@
 		});
 
 	let checkboxes: Record<string, boolean> = {};
-
-	function transformSecondsToHoursMinutesSeconds(seconds_string: string) {
-		let seconds = Number(seconds_string);
-		let hours = Math.floor(seconds / 3600);
-		let minutes = Math.floor((seconds - hours * 3600) / 60);
-		let secondsLeft = seconds - hours * 3600 - minutes * 60;
-
-		let formattedHours = hours.toString().padStart(2, '0');
-		let formattedMinutes = minutes.toString().padStart(2, '0');
-		let formattedSeconds = secondsLeft.toString().padStart(2, '0');
-
-		return `${formattedHours}:${formattedMinutes}:${formattedSeconds}`;
-	}
 
 	async function onDeleteSelected() {
 		Object.keys(checkboxes)
@@ -78,6 +65,13 @@
 		});
 		$selectedProject = responseProjectDetails.project;
 	}
+	async function onPredictSelected() {
+		// TODO: later change to passing dry runs ids through some other means (not to have too long url)
+		const dryRunIsToCompared = Object.keys(checkboxes)
+			.filter((item) => checkboxes[item])
+			.join(' ');
+		goto(`/projects/analytics/${dryRunIsToCompared}`);
+	}
 	async function onCreateSelected() {
 		const modal: ModalSettings = {
 			type: 'component',
@@ -88,7 +82,6 @@
 		modalStore.trigger(modal);
 	}
 
-	// TODO: fill all possible phase values
 	function getDryRunAction(status: string): string {
 		if (status == 'Succeeded') return 'rerun';
 		else if (status == 'Running') return 'stop';
@@ -99,15 +92,9 @@
 
 	function dryRunOnClick(dryRunId: string) {
 		const resource = dryRunId;
-		goto(`/projects/project_id/${dryRunId}/${resource}`);
+		goto(`/projects/dryruns/${dryRunId}/${resource}`);
 	}
 
-	function displayDryRunDuration(status: string, nodes: DryRunMetrics[]) {
-		const firstNode = nodes ? nodes[0] : undefined;
-		if (firstNode && (status == 'Succeeded' || status == 'Failed' || status == 'Error'))
-			return time_difference(firstNode.startedAt, firstNode.finishedAt);
-		return '-';
-	}
 	// to disable onclick propogation for checkbox input
 	const handleCheckboxClick = (event: any) => {
 		event.stopPropagation();
@@ -148,6 +135,17 @@
 							<span>Delete</span>
 						</button>
 					</div>
+					{#if Object.values(checkboxes).some((value) => value)}
+						<div>
+							<button
+								type="button"
+								class="btn btn-sm variant-filled-primary"
+								on:click={onPredictSelected}
+							>
+								<span>Predict</span>
+							</button>
+						</div>
+					{/if}
 				</div>
 			</div>
 			{#if reactiveProjectDetails?.dryRuns?.length || 0 > 0}
@@ -180,7 +178,7 @@
 								</td>
 								<td style="width:20%">
 									<div>
-										{displayDryRunDuration(run.status.phase.toString(), run.nodes)}
+										{calculateDuration(run.nodes)}
 									</div>
 								</td>
 								<td style="width:20%">
