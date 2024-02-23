@@ -1,17 +1,17 @@
-import { minioClient } from "$lib/minio_client.server";
 import { default_bucket_name } from "$lib/folders_types";
-//import { check_authorization } from "../check_authorization.server";
+import { minioClient } from "$lib/minio_client.server";
+// import { check_authorization } from "../check_authorization.server";
 
 // GET /api/minio/buckets/objects - list all objects in a bucket
 export const GET = async ({ request }) => {
     const url = new URL(request.url);
-    const queryParams = new URLSearchParams(url.search);
-    const paramsObject = Object.fromEntries(queryParams.entries());
+    const rawQueryParameters = new URLSearchParams(url.search);
+    const queryParameters = Object.fromEntries(rawQueryParameters.entries());
 
     let bucketName = default_bucket_name;
 
-    if (paramsObject.bucketName) {
-        bucketName = paramsObject.bucketName;
+    if (queryParameters.bucketName) {
+        bucketName = queryParameters.bucketName;
     }
 
     const response = await listObjectsAsync(minioClient, bucketName);

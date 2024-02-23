@@ -11,6 +11,7 @@ tailwind.config.ts
 svelte.config.js
 postcss.config.cjs
 playwright.config.ts
+*.js
 
 # Ignore files for PNPM, NPM and YARN
 pnpm-lock.yaml

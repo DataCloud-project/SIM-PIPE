@@ -136,6 +136,16 @@
 					</div>
 				</div>
 			</AppRailAnchor>
+			<AppRailAnchor label="Testing" href="/testing" selected={$page.url.pathname === '/testing'}>
+				<div class="flex flex-col items-center justify-center">
+					<div>
+						<LockIcon size="1.5x" />
+					</div>
+					<div>
+						Testing
+					</div>
+				</div>
+			</AppRailAnchor>			
 		</AppRail>
 	</svelte:fragment>
 

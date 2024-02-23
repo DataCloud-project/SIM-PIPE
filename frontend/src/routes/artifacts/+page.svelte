@@ -1,73 +1,22 @@
-<script lang="ts"> 
-    import { ProgressBar } from '@skeletonlabs/skeleton';
-    import type { ArtifactHierarchyType, BucketHierarchyType } from '$lib/folders_types';
-    import FolderStructure from './ArtifactStructure.svelte';
-    import { UploadIcon, Trash2Icon, XSquareIcon, DownloadIcon } from 'svelte-feather-icons';
-    import type { ModalSettings } from '@skeletonlabs/skeleton';
+<script lang="ts">
     import { getModalStore } from '@skeletonlabs/skeleton';
+    import type { ModalSettings } from '@skeletonlabs/skeleton';    
+    import { DownloadIcon,Trash2Icon, UploadIcon, XSquareIcon } from 'svelte-feather-icons';
+    import Artifacts from './Artifacts.svelte';
     import { reactiveBuckets } from '$lib/folders_types';
     import { selectedBucket } from '../../stores/stores';
-    import type { ArtifactType, BucketType, Bucket } from '$lib/folders_types';
-	  import { onMount } from 'svelte';
-    import { writable } from 'svelte/store';
+    import type { ArtifactHierarchyType, BucketHierarchyType } from '$lib/folders_types';
     import Alert from '$lib/modules/Alert.svelte';
+    
+    let alertTitle: string = '';
+    let alertMessage: string = '';
+    let alertVariant: string = '';
+    let alertVisible: boolean = false;
 
+    // Modal store
     const modalStore = getModalStore();
 
-    const buckets = writable<Bucket[]>([]);
-    let requestsComplete = false;
-
-    let requestError: boolean = false;
-    let alertVisible: boolean = false;
-    let alertTitle: string = 'Alert Title';
-    let alertMessage: string = 'Alert Message';
-    let alertVariant: string = 'variant-ghost-surface';
-
-    async function getBuckets(): Promise<{response: BucketType[]}> {
-      console.log("fetching buckets");
-      try {
-        const response = await fetch(`/api/minio/buckets`);
-        if (!response.ok) {
-          const data = await response.json();
-          throw Error(`Request error! Failed to load data! ${response.statusText} ${data.data}`);
-        }
-        const data = await response.json();
-        console.log('getBuckets:', data);
-        return data;
-      } catch (error) {
-        requestError = true;
-        alertVisible = true;
-        alertTitle = 'Request Error';
-        alertMessage = `${error}`;
-        alertVariant = 'variant-filled-error';
-        console.error(error);
-        return {response: []}; 
-      }
-    }
-
-    async function getArtifacts(bucket: string): Promise<{response: ArtifactType[]}> {
-      console.log("fetching artifacts");
-      try {
-        const response = await fetch(`/api/minio/buckets/objects?bucketName=${bucket}`);
-        if (!response.ok) {
-          const data = await response.json();
-          throw Error(`Request error! Failed to load data! ${response.statusText} ${data.data}`);
-        }
-        const data = await response.json();
-        console.log('getArtifacts:', data);
-        return data;
-      } catch (error) {
-        requestError = true;
-        alertVisible = true;
-        alertTitle = 'Request Error';
-        alertMessage = `${error}`;
-        alertVariant = 'variant-filled-error';
-        console.error(error);
-        return {response: []};
-      }
-    }
-
-    async function onUploadArtifact() {
+    async function onUploadArtifact(): Promise<void> {
       // only one bucket can be selected upon upload
       if (selectedBucket === undefined) {
             alertTitle = '👎 Error';
@@ -76,16 +25,16 @@
             alertVisible = true;
             return;
       }
-      let bucket = $reactiveBuckets.find(b => b.bucket === $selectedBucket);
-      let bucketsList: string[] = $reactiveBuckets.map(b => b.bucket);
-      console.log(bucketsList);
+      const bucket = $reactiveBuckets.find(b => b.bucket === $selectedBucket);
+      const bucketsList: string[] = $reactiveBuckets.map(b => b.bucket);
+      console.log("bucketsList: %d", bucketsList.map(b => b));
       // TODO: is there a better way to get paths for selected artifacts?
-      let selectedPaths: ArtifactHierarchyType[] = bucket ? getSelectedArtifacts().filter(f => (f.isSelected && !f.name.includes('.'))) : [];
-      if (selectedPaths.length == 0) {
+      const selectedPaths: ArtifactHierarchyType[] = bucket ? getSelectedArtifacts().filter(f => (f.isSelected && !f.name.includes('.'))) : [];
+      if (selectedPaths.length === 0) {
             alertVisible = false;
             selectedPaths.push({id: '', bucket: '', name: '', path: '', isSelected: true, isExpanded: true, subfolders: []});
       }
-      if (selectedPaths.length == 1) {
+      if (selectedPaths.length === 1) {
             alertVisible = false;
       }
       else {
@@ -106,24 +55,28 @@
       modalStore.trigger(modal);
     }
 
-    async function uploadArtifactsToPath(bucket: string, artifactsToUpload: FileList, uploadPath: string) {
+    async function uploadArtifactsToPath(bucket: string, artifactsToUpload: FileList, uploadPath: string): Promise<void> {
         let artifactUploadPath: string = '';
         console.log(uploadPath);
         console.log(artifactsToUpload);
         for (const artifact of artifactsToUpload) {
+            // eslint did not like the tenary operator here, so sticking with if else
+            // eslint-disable-next-line unicorn/prefer-ternary
             if (uploadPath === '') {
                 artifactUploadPath = artifact.name;
-            }
-            else {
+            } else {
                 artifactUploadPath = `${uploadPath}/${artifact.name}`;
             }
             console.log(`Uploading ${artifact.name} to ${artifactUploadPath}`);
             const formData = new FormData();
             formData.append('bucketName', bucket);
             formData.append('objectPath', artifactUploadPath);
+            // We need to wait for the text to be read from the file.
+            // eslint-disable-next-line no-await-in-loop
             const fileText = await artifact.text();
             formData.append('objectDataText', fileText);
-            formData.append('objectDataSize', artifact.size.toString());            
+            formData.append('objectDataSize', artifact.size.toString());     
+            // eslint-disable-next-line no-await-in-loop
             await fetch(`/api/minio/buckets/objects/create`, {
                 method: 'POST',
                 body: formData
@@ -132,16 +85,15 @@
                 console.log(' response', response.clone().json());
                 response.json().then(data => {
                     console.log(' response data', data);
-                }).catch(err => {
-                    console.log(' error', err);
+                }).catch(error => {
+                    console.log(' error', error);
                 });
             });
         }
-        //loadData();
     }
     
 
-    async function onDeleteArtifacts() {
+    async function onDeleteArtifacts(): Promise<void> {
       console.log('Delete Artifacts');
       const selected = getSelectedArtifacts();
       console.log('selected:', selected);
@@ -151,7 +103,7 @@
             let allSuccess = true;
             let someFailed = false;
             alertMessage = '<div><ul class="list">';
-            for (let response of responses) {
+            for (const response of responses) {
               alertMessage += `<li>${response.bucket}</li>`;
               alertMessage += `<ul class="list">${(response.paths).map(path => `<li>${path}</li>`).join('')}</ul>`;
               if (response.status !== 200) {
@@ -167,10 +119,10 @@
               alertTitle = '👍 Deleted artifacts';
               alertVariant = 'variant-ghost-success';
             } else if (someFailed) {
-              //alert("Some artifacts failed to delete");
+              // alert("Some artifacts failed to delete");
               alertTitle = '👎 Some artifacts failed to delete';
             } else {
-              //alert("All artifacts failed to delete");
+              // alert("All artifacts failed to delete");
               alertTitle = '👎 All artifacts failed to delete';
             }
       }
@@ -178,55 +130,53 @@
 
     async function deleteArtifacts(bucketName: string, artifactPathsList: string[]): Promise<{message: string, status: number, bucket: string, paths: string[]}> {
       
-      let bucket = bucketName;
-      let paths = artifactPathsList;
-      console.log(`Request to delete ${paths} in bucket: ${bucket}`)
+      const bucket = bucketName;
+      const paths = artifactPathsList;
+    console.log(`Request to delete ${paths.join(', ')}in bucket: ${bucket}`);
 
       const formData = new FormData();
-      formData.append('bucketName', bucket as string);
+      formData.append('bucketName', bucket);
       formData.append('objectsList', JSON.stringify(paths));
       try {
         const response = await fetch(`/api/minio/buckets/objects/delete`, {
           method: 'POST',
           body: formData,
         });
-        const data = await response.json();
+        const data = await response.json() as JSON;
         console.log(' response', response);
         console.log(' response data', data);
-        return {message: data, status: response.status, bucket: bucket, paths: paths};
-      } catch (err) {
-        console.log(' error', err);
-        return {message: (err as Error).toString(), status: 500, bucket: bucket, paths: paths};
+        return {message: JSON.stringify(data), status: response.status, bucket, paths};
+      } catch (error) {
+        console.log(' error', error);
+        return {message: (error as Error).toString(), status: 500, bucket, paths};
       }
     }
 
 
     async function deleteArtifactsPerBucket(artifacts: ArtifactHierarchyType[]): Promise<{message: string, status: number, bucket: string, paths: string[]}[]> {
-
       // find buckets for selected artifacts
-      let bucketsList: string[] = [];
+      const bucketsList: string[] = [];
       for (const artifact of artifacts) {
-        if (artifact.bucket in bucketsList) {
-          continue;
-        }
-        else {
-          bucketsList.push(artifact.bucket);
+        if (!bucketsList.includes(artifact.bucket)) {
+            bucketsList.push(artifact.bucket);
         }
       }
-      console.log(`Buckets: ${bucketsList}`);
+      console.log(`Buckets: ${bucketsList.join(', ')}`);
       // for each bucket, delete its artifacts
-      let responses: {message: string, status: number, bucket: string, paths: string[]}[] = [];
+      const responses: {message: string, status: number, bucket: string, paths: string[]}[] = [];
       for (const bucket of bucketsList) {
         console.log(`Deleting artifacts in bucket: ${bucket}`);
         const bucketArtifacts = artifacts.filter(artifact => artifact.bucket === bucket);
         const artifactsPathsList = getAllArtifactPaths(bucketArtifacts); 
-        console.log(`Artifacts: ${artifactsPathsList}`)
+        console.log(`Artifacts: ${artifactsPathsList.join(', ')}`)
+        // I think we have to await here.
+        // eslint-disable-next-line no-await-in-loop
         responses.push(await deleteArtifacts(bucket, artifactsPathsList));
       }
       return responses;
     }
 
-    async function onCreateNewBucket() {
+    async function onCreateNewBucket(): Promise<void> {
       console.log('Trigger Create New Bucket modal');
       const modal: ModalSettings = {
             type: 'component',
@@ -238,84 +188,74 @@
             value: 'my-bucket',
             valueAttr: { type: 'text', minlength: 3, maxlength: 33, required: true },
             // Returns the updated response value
-            response: (r: string) => { 
-                if (!r) {
-                    console.log("No name provided. Operation cancelled.");
-                    return;
-                }
-                else {
-                    createNewBucket(r);
+            response: (response: string) => { 
+                    createNewBucket(response);
                 }
             }
-        };
         modalStore.trigger(modal);
     }
 
-    async function createNewBucket(name: string) {
+    async function createNewBucket(name: string): Promise<void> {
       console.log(`Creating bucket: ${name} ...`)
       await fetch(`/api/minio/buckets/create`, {
                 method: 'POST',
                 body: JSON.stringify({"bucketName": name}),
           }).then(response => {
-                console.log(' response', response.clone().json());
+                console.log('response:', response.clone().json());
                 response.json().then(data => {
-                    console.log(' response data', data);
-                    let words: string[] = [];
+                    console.log('response data:', data);
+                    const words: string[] = [];
+                    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
                     data.message.split(' ').forEach((word: string) => {
                         words.push(word);
                     });
                     if (words[0] === 'Successfully') {
                         alertTitle = '👍 Create bucket';
                         alertVariant = 'variant-ghost-success';
-                        //loadData();
                     }
                     else {
                         alertTitle = '👎 Create bucket failed';
                         alertVariant = 'variant-filled-error';
                     }
+                    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
                     alertMessage = `<div>${data.message}</div>`;
                     alertVisible = true;
-                }).catch(err => {
-                    console.log(' error', err);
+                }).catch(error => {
+                    console.log(' error', error);
                 });
           });
     }
 
+    // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
     function unselectArtifacts(artifacts: ArtifactHierarchyType[]) {
         artifacts.forEach(artifact => {
-          artifact.isSelected = false;
-          if (artifact.subfolders.length > 0) {
-            unselectArtifacts(artifact.subfolders);
-          }
-        });
-      }
+            // this is needed to traverse subfolders. Disable eslint rule for this line.
+            // eslint-disable-next-line no-param-reassign
+            artifact.isSelected = false;
+            if (artifact.subfolders.length > 0) {
+                unselectArtifacts(artifact.subfolders);
+            }
+        }); 
+    }
 
-    function unselectBuckets(buckets: BucketHierarchyType[]) {
-        buckets.forEach(bucket => {
-          bucket.isSelected = false;
+    function unselectBuckets(): void {
+        $reactiveBuckets.forEach(bucket => {
+            // eslint-disable-next-line no-param-reassign
+            bucket.isSelected = false;
         });
-      }
+    }
 
-    function unselectAll() {
+    function unselectAll(): void{
       console.log('Unselect All');
-      unselectBuckets($reactiveBuckets);
-      for (let bucket of $reactiveBuckets) {
+      unselectBuckets();
+      for (const bucket of $reactiveBuckets) {
         unselectArtifacts(bucket.artifacts);
       }
       $reactiveBuckets = [...$reactiveBuckets]; // Trigger a re-render
     }
 
-    function getSelectedArtifacts(): ArtifactHierarchyType[] {
-      //console.log('Get Selected Artifacts');
-      let selectedArtifacts: ArtifactHierarchyType[] = [];
-      for (let bucket of $reactiveBuckets) {
-        selectedArtifacts.push(...findselectedArtifacts(bucket.artifacts));
-      }
-      return selectedArtifacts;
-    }
-
     function findselectedArtifacts(artifacts: ArtifactHierarchyType[]): ArtifactHierarchyType[] {
-      let selectedArtifacts: ArtifactHierarchyType[] = [];
+      const selectedArtifacts: ArtifactHierarchyType[] = [];
       artifacts.forEach(artifact => {
         if (artifact.isSelected) {
           selectedArtifacts.push(artifact);
@@ -325,10 +265,19 @@
         }
       });
       return selectedArtifacts;
+    }    
+
+    function getSelectedArtifacts(): ArtifactHierarchyType[] {
+      // console.log('Get Selected Artifacts');
+      const selectedArtifacts: ArtifactHierarchyType[] = [];
+      for (const bucket of $reactiveBuckets) {
+        selectedArtifacts.push(...findselectedArtifacts(bucket.artifacts));
+      }
+      return selectedArtifacts;
     }
 
     function getAllArtifactPaths(artifacts: ArtifactHierarchyType[]): string[] {
-      let paths: string[] = [];
+      const paths: string[] = [];
 
       const traverse = (artifact: ArtifactHierarchyType) => {
           paths.push(artifact.path);
@@ -339,106 +288,65 @@
 
       artifacts.forEach(artifact => traverse(artifact));
       return paths;
-    }    
+    }      
 
-    async function loadData() {
-      // fetch all buckets
-      requestsComplete = false;
-      $reactiveBuckets = []; // clear buckets on refresh
-      const bucketsList = await getBuckets();
-      const requests = bucketsList.response.map(async (bucket) => {
-        const artifacts = await getArtifacts(bucket.name);
-        return {bucket, artifacts};
-      });
-      // Update the buckets store inside the Promise.all().then() callback
-      Promise.all(requests).then(results => {
-        buckets.set(results.map(result => ({bucket: result.bucket, artifacts: result.artifacts.response})) as { bucket: BucketType; artifacts: ArtifactType[]; }[]);
-        requestsComplete = true;
-      }).catch(error => {
-        console.error('A promise was rejected:', error);
-      });
-      //console.log('buckets:', $buckets);
-      //$buckets = $buckets;
-    }
+  </script>
 
-    // TODO: implement the downloadArtifacts function
-    // this requires a new API endpoint to be implemented in the api routes
-    
-    onMount(async () => {
-      loadData();
-    });
 
-    //$: console.log('artifacts', artifacts);
-    $: console.log('buckets:', $buckets);
-    $: console.log('requests completed: ', requestsComplete);
-    $: console.log('selected bucket:', $selectedBucket);
-    //$: console.log('request error:', requestError);
 
-</script>
-  
 <main>
     <div class="flex w-full content-center p-10">
       <div class="table-container">
         <h1>Artifact Browser</h1>
-          <!--<div class="header flex space-x-2 p-5">-->
-          <br>
-          <div class="grid grid-cols-2">
-            <div class="header flex space-x-2 place-self-start">
-              <div>
-                  <button 
-                  on:click={() => onDeleteArtifacts()}
-                  title="Delete Artifacts"
-                  >
-                  <Trash2Icon size="1.5x"/>
-                  </button>                
-              </div>
-              <div>
-                  <button 
-                  on:click={() => unselectAll()}
-                  title="Unselect All"
-                  >
-                  <XSquareIcon size="1.5x"/>
-                  </button>                
-              </div>
-              <div>
-                <button 
-                    on:click={() => onUploadArtifact()}
-                    title="Upload Artifact"
-                    >
-                    <UploadIcon size="1.5x"/>
-                </button>
-            </div>
-              <div>
-                <button 
-                on:click={() => console.log('Download Artifacts ... not implemented yet!')}
-                title="Download Artifacts ... not implemented yet!"
-                >
-                <DownloadIcon size="1.5x"/>
-                </button>                
-            </div>              
-            </div>
-            <div class="place-self-end">
-              <button
-                type="button"
-                class="btn btn-sm variant-filled"
-                on:click={() => onCreateNewBucket()}
-              >
-                <span>Create new bucket</span>
-              </button>
-            </div>                   
-          </div>
-          <div class="p-2">
-            <div>
-              <h1>Buckets</h1>
-              {#if !requestsComplete }
-                <ProgressBar />
-              {:else}
-                <div class="p-2">
-                  <FolderStructure buckets={$buckets} />
+            <br>
+            <div class="grid grid-cols-2">
+                <div class="header flex space-x-2 place-self-start">
+                    <div>
+                        <button 
+                        on:click={() => onDeleteArtifacts()}
+                        title="Delete Artifacts"
+                        >
+                        <Trash2Icon size="1.5x"/>
+                        </button>                
+                    </div>
+                    <div>
+                        <button 
+                        on:click={() => unselectAll()}
+                        title="Unselect All"
+                        >
+                        <XSquareIcon size="1.5x"/>
+                        </button>                
+                    </div>
+                    <div>
+                        <button 
+                            on:click={() => onUploadArtifact()}
+                            title="Upload Artifact"
+                            >
+                            <UploadIcon size="1.5x"/>
+                        </button>
+                    </div>
+                    <div>
+                        <button 
+                            on:click={() => console.log('Download Artifacts ... not implemented yet!')}
+                            title="Download Artifacts ... not implemented yet!"
+                            >
+                            <DownloadIcon size="1.5x"/>
+                        </button>                
+                    </div>              
                 </div>
-              {/if}
-          </div>
-      </div>
+                <div class="place-self-end">
+                    <button
+                        type="button"
+                        class="btn btn-sm variant-filled"
+                        on:click={() => onCreateNewBucket()}
+                        >
+                        <span>Create new bucket</span>
+                    </button>
+                </div>              
+            </div>
+        <div>
+            <Artifacts />
+        </div>
     </div>
 </main>
 

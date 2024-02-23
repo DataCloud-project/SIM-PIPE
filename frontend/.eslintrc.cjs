@@ -64,5 +64,13 @@ module.exports = {
 			prefer: 'type-imports',
 		}],
 		'unicorn/no-useless-undefined': 'off',
+		'unicorn/no-array-for-each': 'off',
+		'no-console': 'off',
+		'prefer-for-of': 'off',
+		'no-restricted-syntax': 'off',
+		'import/no-self-import': 'off',
+		'no-shadow': 'off',
+		'@typescript-eslint/no-shadow': 'off',
+		'simple-import-sort/imports': 'off',
 	}
 };

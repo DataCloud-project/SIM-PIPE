@@ -1,11 +1,13 @@
 <script lang="ts">
-	import { cBase, cHeader, cForm } from '../styles/styles.js';
+    import { getModalStore } from '@skeletonlabs/skeleton';
+	import yaml from 'js-yaml';
+	import type { SvelteComponent } from 'svelte';
+
+	import { requestGraphQLClient } from '$lib/graphqlUtils.js';
+
 	import createProjectMutation from '../queries/create_project.js';
 	import createWorkflowTemplateMutation from '../queries/create_workflow_template.js';
-	import yaml from 'js-yaml';
-	import { requestGraphQLClient } from '$lib/graphqlUtils.js';
-    import { getModalStore } from '@skeletonlabs/skeleton';
-	import type { SvelteComponent } from 'svelte';
+	import { cBase, cForm,cHeader } from '../styles/styles.js';
 
     // Props - Exposes parent props to this component
     export let parent: SvelteComponent;
@@ -14,80 +16,67 @@
     const modalStore = getModalStore();
 
     // variables
-    let project_name: string = '';
-    let project_id: string;
-    let input_files_list: FileList;
-    let workflow_template: JSON;
-	$: template_name = project_name.replace(/\s+/g, '-').toLowerCase();
+    let projectName: string = '';
+    let projectId: string;
+    let inputFilesList: FileList;
+    let workflowTemplate: JSON;
+	$: template_name = projectName.replaceAll(/\s+/g, '-').toLowerCase();
     
 
     // graphql request to create a new project
 	async function createProject(): Promise<{status: number, error: string, project: {name: string, id: string}}> {
-        let name = project_name;
+        const name = projectName;
 		const variablesCreateProjectRequest = {
 			project: { name }
 		};
 		return requestGraphQLClient<{createProject: {name: string, id: string}}>(
 			createProjectMutation,
 			variablesCreateProjectRequest
-		).then(data => {
-			return { status: 200, error: '', project: { name: data.createProject.name, id: data.createProject.id }};
-		}).catch(error => {
-			//console.log(`createProject error: ${error}`);
-            //throw new Error(`createProject error: ${error}`);
-			return { status: 500, error: error, project: { name: 'none', id: 'none' } };
-		});
+		).then(data => ({ status: 200, error: '', project: { name: data.createProject.name, id: data.createProject.id }})
+		).catch(error => ({ status: 500, error: error as string, project: { name: 'none', id: 'none' } })
+		);
 	}
 
     // graphql request to create a new workflow template
 	async function createWorkflowTemplate(): Promise<{status: number, error: string, name: string}> {
 
-        let projectId = project_id;
-        let name = template_name;
-        let argoWorkflowTemplate = workflow_template;
+        const id = projectId;
+        const name = template_name;
+        const argoWorkflowTemplate = workflowTemplate;
 
         const createTemplateVariables = {
                 input: {
                     argoWorkflowTemplate: argoWorkflowTemplate,
                     name: name,
-                    projectId: projectId
+                    projectId: id
             }
         };
 
 		return requestGraphQLClient<{createWorkflowTemplate: {name: string}}>(
 			createWorkflowTemplateMutation,
 			createTemplateVariables
-		).then(data => {
-			console.log("createWorkflowTemplate response:")
-			console.log(data)
-			return { status: 200, error: '', name: data.createWorkflowTemplate.name} ;
-		}).catch(error => {
-			//console.log(`createWorkflowTemplate error: ${error}`);
-            //throw new Error(`createWorkflowTemplate error: ${error}`);
-			return { status: 500, error: error, name: 'none' };
-		});
+		).then(data => 
+			({ status: 200, error: '', name: data.createWorkflowTemplate.name})
+		).catch(error =>
+			({ status: 500, error: error as string, name: 'none' })
+		);
 	}
 
     // handle input file
 	async function handleInputFile(): Promise<JSON> {
         let template: JSON = {} as JSON;
-		try {
-			const file_text = await input_files_list[0].text();
-			if (file_text != '') {
-				try {
-					template = JSON.parse(file_text);
-				} catch {
-					template = yaml.load(file_text) as JSON;
-				}
+		const fileText = await inputFilesList[0].text();
+		if (fileText !== '') {
+			try {
+				template = JSON.parse(fileText) as JSON;
+			} catch {
+				template = yaml.load(fileText) as JSON;
 			}
-		} catch (error) {
-            console.log(`handleInputFile error: ${error}`)
-            //throw new Error(`handleInputFile error: ${error}`);
 		}
         return template;
 	}
 
-    async function onClose(response: any) {
+    async function onClose(response): Promise<void> {
         if ($modalStore[0] && typeof $modalStore[0].response === 'function') {
                     $modalStore[0].response(response);
         }
@@ -103,26 +92,23 @@
         const [inputResponse, createProjectResponse] = await Promise.all([inputPromise, createProjectPromise]); 
 
         if (createProjectResponse.status === 200) {
-            project_id = createProjectResponse.project.id;
-            workflow_template = inputResponse;
-            console.log(`project_id: ${project_id} created`)
+            projectId = createProjectResponse.project.id;
+            workflowTemplate = inputResponse;
 
-            if (workflow_template !== {} as JSON) {
+            if (Object.keys(workflowTemplate).length > 0) {
                 
                 const createWorkflowPromise = createWorkflowTemplate();
                 const [createWorkflowResponse] = await Promise.all([createWorkflowPromise]);
 
-                onClose({createProjectResponse, createWorkflowResponse});
+                await onClose({createProjectResponse, createWorkflowResponse});
             } else {
-                console.log(`project_id: ${project_id} created without workflow template`)
                 const createWorkflowResponse = {status: 204, error: 'no workflow template provided', name: 'none'};
-                onClose({createProjectResponse, createWorkflowResponse});
+                await onClose({createProjectResponse, createWorkflowResponse});
      
             }
 
         } else {
-            console.log(`project ${project_name} creation failed`);
-            onClose({createProjectResponse, createWorkflowResponse: {status: 500, error: 'never created workflow template due to previous errors', name: 'none'}});
+            await onClose({createProjectResponse, createWorkflowResponse: {status: 500, error: 'never created workflow template due to previous errors', name: 'none'}});
         }
 
         // close the modal
@@ -144,7 +130,7 @@
 					<input
 						class="input"
 						type="text"
-						bind:value={project_name}
+						bind:value={projectName}
 						placeholder="Enter name..."
 					/>
 				</div>
@@ -152,7 +138,7 @@
 			<label class="label">
 				Upload project template
 				<span>
-					<input class="input" type="file" bind:files={input_files_list} />
+					<input class="input" type="file" bind:files={inputFilesList} />
 				</span>
 			</label>
 		</form>

@@ -1,30 +1,20 @@
 <script lang="ts">
-    import Artifact from './Artifact.svelte';
-    import type { ArtifactHierarchyType } from '$lib/folders_types';
-    //import { reactiveArtifacts } from '$lib/folders_types';
     import { reactiveBuckets } from '$lib/folders_types';
+    import type { ArtifactHierarchyType } from '$lib/folders_types';
+
+    import Artifact from './Artifact.svelte';
     import SymbolForArtifact from './symbol-for-artifact.svelte';
 
     export let artifact: ArtifactHierarchyType;
 
-    function toggleOpen(artifact: ArtifactHierarchyType) {
+    function toggleOpen(artifact: ArtifactHierarchyType): void {
         artifact.isExpanded = !artifact.isExpanded;
-        //$reactiveArtifacts = [...$reactiveArtifacts]; // Trigger a re-render
         $reactiveBuckets = [...$reactiveBuckets]; // Trigger a re-render
     }
 
-    function sleep(ms: number) {
-        return new Promise(resolve => setTimeout(resolve, ms));
+    function getArtifactHierarchyType(artifact: ArtifactHierarchyType): string {
+        return artifact.name.includes('.') ? 'file' : 'folder';
     }
-
-    function getArtifactHierarchyType(artifact: ArtifactHierarchyType) {
-        if (artifact.name.includes('.')) {
-            return 'file';
-        } else {
-            return 'folder';
-        }
-    }
-
 </script>
 
 <li>
