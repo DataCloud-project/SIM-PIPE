@@ -1,16 +1,20 @@
 <script lang="ts">
+	import { error } from '@sveltejs/kit';	
+	import { getModalStore } from '@skeletonlabs/skeleton';
+	import type { SvelteComponent } from 'svelte';
+	import type { PopupSettings } from '@skeletonlabs/skeleton';
 	import { cBase, cHeader, cForm } from '../styles/styles.js';
 	import createCredentialMutation from '../queries/create_credential.js';
 	import { credentialsList } from '../stores/stores.js';
 	import allCredentialsQuery from '../queries/get_all_credentials.js';
 	import type { DockerRegistryCredential } from '../types.js';
-	export let parent: any;
 	import { requestGraphQLClient } from '$lib/graphqlUtils.js';
-	import type { PopupSettings } from '@skeletonlabs/skeleton';
-	import { error } from '@sveltejs/kit';
-	import { getModalStore } from '@skeletonlabs/skeleton';
 
-	const modalStore = getModalStore();
+    // Props - Exposes parent props to this component
+    export let parent: SvelteComponent;
+
+    // modalStore is a store that is used to trigger modals
+    const modalStore = getModalStore();
 
 	// Form Data
 	const formData = {

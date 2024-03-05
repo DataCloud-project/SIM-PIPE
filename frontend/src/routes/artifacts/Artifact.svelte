@@ -2,12 +2,13 @@
     import { reactiveBuckets } from '$lib/folders_types';
     import type { ArtifactHierarchyType } from '$lib/folders_types';
 
-    import Artifact from './Artifact.svelte';
+    import Artifact from './artifact.svelte';
     import SymbolForArtifact from './symbol-for-artifact.svelte';
 
     export let artifact: ArtifactHierarchyType;
 
     function toggleOpen(artifact: ArtifactHierarchyType): void {
+        // eslint-disable-next-line no-param-reassign
         artifact.isExpanded = !artifact.isExpanded;
         $reactiveBuckets = [...$reactiveBuckets]; // Trigger a re-render
     }

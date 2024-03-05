@@ -2,11 +2,11 @@
     import { getModalStore } from '@skeletonlabs/skeleton';
     import type { ModalSettings } from '@skeletonlabs/skeleton';    
     import { DownloadIcon,Trash2Icon, UploadIcon, XSquareIcon } from 'svelte-feather-icons';
-    import Artifacts from './Artifacts.svelte';
+    import Artifacts from './artifacts.svelte';
     import { reactiveBuckets } from '$lib/folders_types';
     import { selectedBucket } from '../../stores/stores';
-    import type { ArtifactHierarchyType, BucketHierarchyType } from '$lib/folders_types';
-    import Alert from '$lib/modules/Alert.svelte';
+    import type { ArtifactHierarchyType } from '$lib/folders_types';
+    import Alert from '$lib/modules/alert.svelte';
     
     let alertTitle: string = '';
     let alertMessage: string = '';
@@ -16,45 +16,46 @@
     // Modal store
     const modalStore = getModalStore();
 
-    async function onUploadArtifact(): Promise<void> {
-      // only one bucket can be selected upon upload
-      if (selectedBucket === undefined) {
-            alertTitle = '👎 Error';
-            alertMessage = 'Select a bucket to upload artifacts to.';
-            alertVariant = 'variant-filled-error';
-            alertVisible = true;
-            return;
+    // Given list of artifacts, find selected artifacts - recursively loop through all subfolders
+    function findselectedArtifactsPerBucket(artifacts: ArtifactHierarchyType[]): ArtifactHierarchyType[] {
+      const selectedArtifacts: ArtifactHierarchyType[] = [];
+      artifacts.forEach(artifact => {
+        if (artifact.isSelected) {
+          selectedArtifacts.push(artifact);
+        }
+        if (artifact.subfolders.length > 0) {
+          selectedArtifacts.push(...findselectedArtifactsPerBucket(artifact.subfolders));
+        }
+      });
+      return selectedArtifacts;
+    }    
+
+    // Get selected artifacts - loop through all buckets
+    function getSelectedArtifactsAllBuckets(): ArtifactHierarchyType[] {
+      // console.log('Get Selected Artifacts');
+      const selectedArtifacts: ArtifactHierarchyType[] = [];
+      for (const bucket of $reactiveBuckets) {
+        selectedArtifacts.push(...findselectedArtifactsPerBucket(bucket.artifacts));
       }
-      const bucket = $reactiveBuckets.find(b => b.bucket === $selectedBucket);
-      const bucketsList: string[] = $reactiveBuckets.map(b => b.bucket);
-      console.log("bucketsList: %d", bucketsList.map(b => b));
-      // TODO: is there a better way to get paths for selected artifacts?
-      const selectedPaths: ArtifactHierarchyType[] = bucket ? getSelectedArtifacts().filter(f => (f.isSelected && !f.name.includes('.'))) : [];
-      if (selectedPaths.length === 0) {
-            alertVisible = false;
-            selectedPaths.push({id: '', bucket: '', name: '', path: '', isSelected: true, isExpanded: true, subfolders: []});
-      }
-      if (selectedPaths.length === 1) {
-            alertVisible = false;
-      }
-      else {
-            alertTitle = '👎 Error';
-            alertMessage = 'Select max one folder to upload artifacts to.';
-            alertVariant = 'variant-filled-error';
-            alertVisible = true;
-            return;        
-      }
-      const modal: ModalSettings = {
-            type: 'component',
-            component: 'uploadFileModal',
-            title: 'Upload Artifacts',
-            meta: {path: selectedPaths[0].path, bucket: $selectedBucket as string, buckets: bucketsList},            
-            response: (r: {bucket: string, path: string, files: FileList}) => { 
-              uploadArtifactsToPath(r.bucket, r.files, r.path); }
-        };
-      modalStore.trigger(modal);
+      return selectedArtifacts;
     }
 
+    // Get all full path for artifacts - recursively loop through all subfolders
+    function getAllArtifactPaths(artifacts: ArtifactHierarchyType[]): string[] {
+      const paths: string[] = [];
+
+      const traverse = (artifact: ArtifactHierarchyType) => {
+          paths.push(artifact.path);
+          if (artifact.subfolders) {
+              artifact.subfolders.forEach(child => traverse(child));
+          }
+      };
+
+      artifacts.forEach(artifact => traverse(artifact));
+      return paths;
+    }
+    
+    // Upload artifacts to a given path and a given bucket
     async function uploadArtifactsToPath(bucket: string, artifactsToUpload: FileList, uploadPath: string): Promise<void> {
         let artifactUploadPath: string = '';
         console.log(uploadPath);
@@ -90,12 +91,100 @@
                 });
             });
         }
+    }    
+
+    // On upload artifacts
+    async function onUploadArtifact(): Promise<void> {
+      // only one bucket can be selected upon upload
+      if (selectedBucket === undefined) {
+            alertTitle = '👎 Error';
+            alertMessage = 'Select a bucket to upload artifacts to.';
+            alertVariant = 'variant-filled-error';
+            alertVisible = true;
+            return;
+      }
+      const bucket = $reactiveBuckets.find(b => b.bucket === $selectedBucket);
+      const bucketsList: string[] = $reactiveBuckets.map(b => b.bucket);
+      console.log("bucketsList: %d", bucketsList.map(b => b));
+      // TODO: is there a better way to get paths for selected artifacts?
+      const selectedPaths: ArtifactHierarchyType[] = bucket ? getSelectedArtifactsAllBuckets().filter(f => (f.isSelected && !f.name.includes('.'))) : [];
+      if (selectedPaths.length === 0) {
+            alertVisible = false;
+            selectedPaths.push({id: '', bucket: '', name: '', path: '', isSelected: true, isExpanded: true, subfolders: []});
+      }
+      if (selectedPaths.length === 1) {
+            alertVisible = false;
+      }
+      else {
+            alertTitle = '👎 Error';
+            alertMessage = 'Select max one folder to upload artifacts to.';
+            alertVariant = 'variant-filled-error';
+            alertVisible = true;
+            return;        
+      }
+      const modal: ModalSettings = {
+            type: 'component',
+            component: 'uploadFileModal',
+            title: 'Upload Artifacts',
+            meta: {path: selectedPaths[0].path, bucket: $selectedBucket as string, buckets: bucketsList},            
+            response: (r: {bucket: string, path: string, files: FileList}) => { 
+              uploadArtifactsToPath(r.bucket, r.files, r.path); }
+        };
+      modalStore.trigger(modal);
     }
     
+    // Delete artifacts given a bucket and a list of artifact paths
+    async function deleteArtifacts(bucketName: string, artifactPathsList: string[]): Promise<{message: string, status: number, bucket: string, paths: string[]}> {
+      const bucket = bucketName;
+      const paths = artifactPathsList;
+      console.log(`Request to delete ${paths.join(', ')}in bucket: ${bucket}`);
 
+      const formData = new FormData();
+      formData.append('bucketName', bucket);
+      formData.append('objectsList', JSON.stringify(paths));
+      try {
+        const response = await fetch(`/api/minio/buckets/objects/delete`, {
+          method: 'POST',
+          body: formData,
+        });
+        const data = await response.json() as JSON;
+        console.log(' response', response);
+        console.log(' response data', data);
+        return {message: JSON.stringify(data), status: response.status, bucket, paths};
+      } catch (error) {
+        console.log(' error', error);
+        return {message: (error as Error).toString(), status: 500, bucket, paths};
+      }
+    }
+
+    // Delete artifacts per bucket
+    async function deleteArtifactsPerBucket(artifacts: ArtifactHierarchyType[]): Promise<{message: string, status: number, bucket: string, paths: string[]}[]> {
+      // find buckets for selected artifacts
+      const bucketsList: string[] = [];
+      for (const artifact of artifacts) {
+        if (!bucketsList.includes(artifact.bucket)) {
+            bucketsList.push(artifact.bucket);
+        }
+      }
+      console.log(`Buckets: ${bucketsList.join(', ')}`);
+      // for each bucket, delete its artifacts
+      const responses: {message: string, status: number, bucket: string, paths: string[]}[] = [];
+      for (const bucket of bucketsList) {
+        console.log(`Deleting artifacts in bucket: ${bucket}`);
+        const bucketArtifacts = artifacts.filter(artifact => artifact.bucket === bucket);
+        const artifactsPathsList = getAllArtifactPaths(bucketArtifacts); 
+        console.log(`Artifacts: ${artifactsPathsList.join(', ')}`)
+        // I think we have to await here.
+        // eslint-disable-next-line no-await-in-loop
+        responses.push(await deleteArtifacts(bucket, artifactsPathsList));
+      }
+      return responses;
+    }
+    
+    // On delete artifacts
     async function onDeleteArtifacts(): Promise<void> {
       console.log('Delete Artifacts');
-      const selected = getSelectedArtifacts();
+      const selected = getSelectedArtifactsAllBuckets();
       console.log('selected:', selected);
       if (selected.length > 0) {
             const responses = await deleteArtifactsPerBucket(selected);
@@ -128,79 +217,13 @@
       }
     }
 
-    async function deleteArtifacts(bucketName: string, artifactPathsList: string[]): Promise<{message: string, status: number, bucket: string, paths: string[]}> {
-      
-      const bucket = bucketName;
-      const paths = artifactPathsList;
-    console.log(`Request to delete ${paths.join(', ')}in bucket: ${bucket}`);
-
-      const formData = new FormData();
-      formData.append('bucketName', bucket);
-      formData.append('objectsList', JSON.stringify(paths));
-      try {
-        const response = await fetch(`/api/minio/buckets/objects/delete`, {
-          method: 'POST',
-          body: formData,
-        });
-        const data = await response.json() as JSON;
-        console.log(' response', response);
-        console.log(' response data', data);
-        return {message: JSON.stringify(data), status: response.status, bucket, paths};
-      } catch (error) {
-        console.log(' error', error);
-        return {message: (error as Error).toString(), status: 500, bucket, paths};
-      }
-    }
-
-
-    async function deleteArtifactsPerBucket(artifacts: ArtifactHierarchyType[]): Promise<{message: string, status: number, bucket: string, paths: string[]}[]> {
-      // find buckets for selected artifacts
-      const bucketsList: string[] = [];
-      for (const artifact of artifacts) {
-        if (!bucketsList.includes(artifact.bucket)) {
-            bucketsList.push(artifact.bucket);
-        }
-      }
-      console.log(`Buckets: ${bucketsList.join(', ')}`);
-      // for each bucket, delete its artifacts
-      const responses: {message: string, status: number, bucket: string, paths: string[]}[] = [];
-      for (const bucket of bucketsList) {
-        console.log(`Deleting artifacts in bucket: ${bucket}`);
-        const bucketArtifacts = artifacts.filter(artifact => artifact.bucket === bucket);
-        const artifactsPathsList = getAllArtifactPaths(bucketArtifacts); 
-        console.log(`Artifacts: ${artifactsPathsList.join(', ')}`)
-        // I think we have to await here.
-        // eslint-disable-next-line no-await-in-loop
-        responses.push(await deleteArtifacts(bucket, artifactsPathsList));
-      }
-      return responses;
-    }
-
-    async function onCreateNewBucket(): Promise<void> {
-      console.log('Trigger Create New Bucket modal');
-      const modal: ModalSettings = {
-            type: 'component',
-            title: 'Create New Bucket',
-            component: 'provideTextInputModal',
-            body: 'Provide a name for the new bucket',
-            meta: {input_name: 'my-bucket-name'},
-            // Populates the input value and attributes
-            value: 'my-bucket',
-            valueAttr: { type: 'text', minlength: 3, maxlength: 33, required: true },
-            // Returns the updated response value
-            response: (response: string) => { 
-                    createNewBucket(response);
-                }
-            }
-        modalStore.trigger(modal);
-    }
-
+    // Create a new bucket
     async function createNewBucket(name: string): Promise<void> {
-      console.log(`Creating bucket: ${name} ...`)
-      await fetch(`/api/minio/buckets/create`, {
+        console.log(`Creating bucket: ${name} ...`)
+        await fetch(`/api/minio/buckets/create`, {
                 method: 'POST',
                 body: JSON.stringify({"bucketName": name}),
-          }).then(response => {
+            }).then(response => {
                 console.log('response:', response.clone().json());
                 response.json().then(data => {
                     console.log('response data:', data);
@@ -223,8 +246,31 @@
                 }).catch(error => {
                     console.log(' error', error);
                 });
-          });
+            });
+        }    
+
+    // On create new bucket
+    async function onCreateNewBucket(): Promise<void> {
+      console.log('Trigger Create New Bucket modal');
+      const modal: ModalSettings = {
+            type: 'component',
+            title: 'Create New Bucket',
+            component: 'provideTextInputModal',
+            body: 'Provide a name for the new bucket',
+            meta: {input_name: 'my-bucket-name'},
+            // Populates the input value and attributes
+            value: 'my-bucket',
+            valueAttr: { type: 'text', minlength: 3, maxlength: 33, required: true },
+            // Returns the updated response value
+            response: (response: string) => { 
+                    createNewBucket(response).catch(error => {
+                        console.log(' error', error);
+                    });
+                }
+            }
+        modalStore.trigger(modal);
     }
+
 
     // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
     function unselectArtifacts(artifacts: ArtifactHierarchyType[]) {
@@ -238,6 +284,7 @@
         }); 
     }
 
+    // unselect all buckets
     function unselectBuckets(): void {
         $reactiveBuckets.forEach(bucket => {
             // eslint-disable-next-line no-param-reassign
@@ -245,6 +292,7 @@
         });
     }
 
+    // unselect all buckets and all artifacts
     function unselectAll(): void{
       console.log('Unselect All');
       unselectBuckets();
@@ -253,42 +301,6 @@
       }
       $reactiveBuckets = [...$reactiveBuckets]; // Trigger a re-render
     }
-
-    function findselectedArtifacts(artifacts: ArtifactHierarchyType[]): ArtifactHierarchyType[] {
-      const selectedArtifacts: ArtifactHierarchyType[] = [];
-      artifacts.forEach(artifact => {
-        if (artifact.isSelected) {
-          selectedArtifacts.push(artifact);
-        }
-        if (artifact.subfolders.length > 0) {
-          selectedArtifacts.push(...findselectedArtifacts(artifact.subfolders));
-        }
-      });
-      return selectedArtifacts;
-    }    
-
-    function getSelectedArtifacts(): ArtifactHierarchyType[] {
-      // console.log('Get Selected Artifacts');
-      const selectedArtifacts: ArtifactHierarchyType[] = [];
-      for (const bucket of $reactiveBuckets) {
-        selectedArtifacts.push(...findselectedArtifacts(bucket.artifacts));
-      }
-      return selectedArtifacts;
-    }
-
-    function getAllArtifactPaths(artifacts: ArtifactHierarchyType[]): string[] {
-      const paths: string[] = [];
-
-      const traverse = (artifact: ArtifactHierarchyType) => {
-          paths.push(artifact.path);
-          if (artifact.subfolders) {
-              artifact.subfolders.forEach(child => traverse(child));
-          }
-      };
-
-      artifacts.forEach(artifact => traverse(artifact));
-      return paths;
-    }      
 
   </script>
 

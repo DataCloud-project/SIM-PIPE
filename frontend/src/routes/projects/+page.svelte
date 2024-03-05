@@ -1,20 +1,19 @@
 <script lang="ts">
-	import { ProgressBar } from '@skeletonlabs/skeleton';
-	import { getModalStore } from '@skeletonlabs/skeleton';
+	import { getModalStore, ProgressBar } from '@skeletonlabs/skeleton';
 	import type { ModalSettings } from '@skeletonlabs/skeleton';
+	import { EditIcon, FileTextIcon } from 'svelte-feather-icons';	
 	import { projectsList, clickedProjectId } from '../../stores/stores.js';
 	import type { Project } from '../../types.js';
 	import { goto } from '$app/navigation';
 	import Timestamp from './dryruns/[dry_run]/timestamp.svelte';
 	import { requestGraphQLClient } from '$lib/graphqlUtils';
-	import { EditIcon, FileTextIcon } from 'svelte-feather-icons';
 	import allProjectsQuery from '../../queries/get_all_projects.js';
 	import deleteProjectMutation from '../../queries/delete_project.js';
 	import allDryRunsQuery from '../../queries/get_all_dryruns.js';
 	import deleteDryRunMutation from '../../queries/delete_dry_run.js';
 	import deleteWorkflowTemplateMutation from '../../queries/delete_workflow_template.js';
 	import { displayAlert } from '../../utils/alerts_utils';
-	import Alert from '$lib/modules/Alert.svelte';
+	import Alert from '$lib/modules/alert.svelte';
 
 	const modalStore = getModalStore();
 

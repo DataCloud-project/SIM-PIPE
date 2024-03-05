@@ -1,16 +1,15 @@
 <script lang="ts"> 
-    import { getModalStore, ProgressBar } from '@skeletonlabs/skeleton';
+    import { ProgressBar } from '@skeletonlabs/skeleton';
 	  import { onMount } from 'svelte';
     import { writable } from 'svelte/store';
 
     import { reactiveBuckets } from '$lib/folders_types';
-    import Alert from '$lib/modules/Alert.svelte';
+    import Alert from '$lib/modules/alert.svelte';
     import type { ArtifactType, Bucket, BucketType } from '$lib/folders_types';
 
     import { selectedBucket } from '../../stores/stores';
-    import FolderStructure from './ArtifactStructure.svelte';
+    import FolderStructure from './artifact-structure.svelte';
 
-    const modalStore = getModalStore();
 
     const buckets = writable<Bucket[]>([]);
     let requestsComplete = false;
@@ -40,7 +39,7 @@
       }
     }
 
-    async function getArtifacts(bucket: string): Promise<{response: ArtifactType[]}> {
+    async function getArtifacts(bucket: string): Promise<JSON> {
       // console.log("fetching artifacts");
       try {
         const response = await fetch(`/api/minio/buckets/objects?bucketName=${bucket}`);
@@ -57,7 +56,7 @@
         alertMessage = `${error as string}`;
         alertVariant = 'variant-filled-error';
         // console.error(error);
-        return {response: []};
+        return {} as JSON;
       }
     }
 

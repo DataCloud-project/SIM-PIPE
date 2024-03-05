@@ -8,12 +8,13 @@
     export let artifact: ArtifactHierarchyType;
     export let artifactType: string;
 
-    async function toggleSelected(artifact: ArtifactHierarchyType) {
+    async function toggleSelected(artifact: ArtifactHierarchyType): Promise<void> {
+        // eslint-disable-next-line no-param-reassign
         artifact.isSelected = !artifact.isSelected;
         // Set the selected bucket to the bucket of the selected artifact
         $selectedBucket = artifact.bucket
         // Deselect all other buckets
-        for (let bucket of $reactiveBuckets) {
+        for (const bucket of $reactiveBuckets) {
             if (bucket.bucket !== artifact.bucket) {
                 bucket.isSelected = false;
             }

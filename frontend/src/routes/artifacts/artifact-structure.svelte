@@ -1,13 +1,10 @@
 <script lang="ts">
-	import Artifact from "./Artifact.svelte";
+	import Artifact from "./artifact.svelte";
   import SymbolForBucket from "./symbol-for-bucket.svelte";
   import { reactiveBuckets } from '$lib/folders_types';
   import type { StructureType, ArtifactType, ArtifactHierarchyType, Bucket, BucketHierarchyType } from '$lib/folders_types';
 
   export let buckets: Bucket[];
-  //export let bucket: string;
-  //export let artifacts: ArtifactType[];
-  //let currentLevel: { [key: string]: any } = {};
 
   function buildFolderStructure(artifacts: ArtifactType[]): StructureType {
   const structure: StructureType = { path: '', children: {} };

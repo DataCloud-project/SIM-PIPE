@@ -3,7 +3,7 @@
 	import type { SvelteComponent } from 'svelte';
 
     import { cBase, cForm, cHeader } from '../../styles/styles.js';
-    import Artifacts from '../routes/artifacts/Artifacts.svelte'
+    import Artifacts from '../routes/artifacts/artifacts.svelte.js'
     
 
 	// Props - Exposes parent props to this component

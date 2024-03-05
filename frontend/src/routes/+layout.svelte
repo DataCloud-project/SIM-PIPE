@@ -1,35 +1,28 @@
 <script lang="ts">
 	// The ordering of these imports is critical to your app working properly
 	// If you have source.organizeImports set to true in VSCode, then it will auto change this ordering
-	//import '@skeletonlabs/skeleton/themes/theme-skeleton.css'; -- removed ref: https://github.com/skeletonlabs/skeleton/discussions/1947
-	//import '@skeletonlabs/skeleton/styles/skeleton.css'; -- removed ref: https://github.com/skeletonlabs/skeleton/discussions/1947
+	// import '@skeletonlabs/skeleton/themes/theme-skeleton.css'; -- removed ref: https://github.com/skeletonlabs/skeleton/discussions/1947
+	// import '@skeletonlabs/skeleton/styles/skeleton.css'; -- removed ref: https://github.com/skeletonlabs/skeleton/discussions/1947
 	import '@fontsource/ibm-plex-sans/400.css';
 	import '@fontsource/ibm-plex-sans/600.css';
 	import '../app.postcss';
-	import { page } from '$app/stores';
-	import { AppShell, AppBar, AppRail, AppRailAnchor } from '@skeletonlabs/skeleton';
-	import { LightSwitch } from '@skeletonlabs/skeleton';
-
-	import { LockIcon, BookOpenIcon, FileIcon, FolderIcon } from 'svelte-feather-icons';
 	import hljs from 'highlight.js';
 	import 'highlight.js/styles/github-dark.css'; // highlight.js theme
-	import { storeHighlightJs } from '@skeletonlabs/skeleton';
+	import { LockIcon, BookOpenIcon, FileIcon, FolderIcon } from 'svelte-feather-icons';
+	import { AppShell, AppBar, AppRail, AppRailAnchor, LightSwitch, storeHighlightJs, Modal, initializeStores } from '@skeletonlabs/skeleton';
+	import type { ModalComponent } from '@skeletonlabs/skeleton';
+	import { page } from '$app/stores';
 	import * as config from '../lib/config';
+	import { browser } from '$app/environment';	
 
-	import { browser } from '$app/environment';
-
-	import { Modal, getModalStore } from '@skeletonlabs/skeleton';
-	import type { ModalSettings, ModalComponent, ModalStore } from '@skeletonlabs/skeleton';
-
-	import { initializeStores } from '@skeletonlabs/skeleton';
 
 	initializeStores();
 
-	import UploadFileModal from '../modals/upload_file_modal.svelte';
-	import ProvideTextInputModal from '../modals/text_input_modal.svelte';
-	import SubmitNewProjectModal from '../modals/submit_new_project_modal.svelte';
-	import SubmitNewDryRunModal from '../modals/submit_new_dry_run_modal.svelte';
-	import SubmitNewSecretModal from '../modals/submit_new_secret_modal.svelte';
+	import UploadFileModal from '../modals/upload-file-modal.svelte';
+	import ProvideTextInputModal from '../modals/text-input-modal.svelte';
+	import SubmitNewProjectModal from '../modals/submit-new-project-modal.svelte';
+	import SubmitNewDryRunModal from '../modals/submit-new-dry-run-modal.svelte';
+	import SubmitNewSecretModal from '../modals/submit-new-secret-modal.svelte';
 
 	const modalRegistry: Record<string, ModalComponent> = {
 		// Set a unique modal ID, then pass the component reference
@@ -136,16 +129,6 @@
 					</div>
 				</div>
 			</AppRailAnchor>
-			<AppRailAnchor label="Testing" href="/testing" selected={$page.url.pathname === '/testing'}>
-				<div class="flex flex-col items-center justify-center">
-					<div>
-						<LockIcon size="1.5x" />
-					</div>
-					<div>
-						Testing
-					</div>
-				</div>
-			</AppRailAnchor>			
 		</AppRail>
 	</svelte:fragment>
 

@@ -6,14 +6,15 @@
 
     export let bucket: BucketHierarchyType;
 
-    async function toggleSelected(bucket: BucketHierarchyType) {
+    async function toggleSelected(bucket: BucketHierarchyType): Promise<void> {
+        // eslint-disable-next-line no-param-reassign
         bucket.isSelected = !bucket.isSelected;
         if (bucket.isSelected) {
             // set name of currently selected bucket
             $selectedBucket = bucket.bucket;
         }
         // Unset all other buckets
-        for (let bucket of $reactiveBuckets) {
+        for (const bucket of $reactiveBuckets) {
             if (bucket.bucket !== $selectedBucket) {
                 bucket.isSelected = false;
             }
