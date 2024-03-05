@@ -27,7 +27,7 @@ import {
   createProject, deleteProject, getProject, projects, renameProject,
 } from '../k8s/projects.js';
 import {
-  computePresignedGetUrl, computePresignedPutUrl, getAllObjects, getObjectSize,
+  computePresignedGetUrl, computePresignedPutUrl, listAllBuckets, listAllObjects, getObjectSize, createBucket, deleteBucket, deleteObjects,
 } from '../minio/minio.js';
 import { assertPrometheusIsHealthy } from '../prometheus/prometheus.js';
 import queryPrometheusResolver from '../prometheus/query-prometheus-resolver.js';
@@ -44,6 +44,7 @@ import type {
   DryRunNodeMetricsCpuSystemSecondsTotalArgs as DryRunNodeMetricsCpuSystemSecondsTotalArguments,
   DryRunNodePod, DryRunNodePodLogArgs as DryRunNodePodLogArguments,
   Mutation,
+  MutationCreateBucketArgs as MutationCreateBucketArguments,
   MutationAssignDryRunToProjectArgs as MutationAssignDryRunToProjectArguments,
   MutationComputeUploadPresignedUrlArgs as MutationComputeUploadPresignedUrlArguments,
   MutationCreateDockerRegistryCredentialArgs as MutationCreateDockerRegistryCredentialArguments,
@@ -63,8 +64,10 @@ import type {
   MutationSuspendDryRunArgs as MutationSuspendDryRunArguments,
   MutationUpdateDockerRegistryCredentialArgs as MutationUpdateDockerRegistryCredentialArguments,
   MutationUpdateWorkflowTemplateArgs as MutationUpdateWorkflowTemplateArguments,
+  MutationDeleteArtifactsArgs as MutationDeleteArtifactsArguments,
   Project,
   Query,
+  QueryArtifactsArgs as QueryArtifactsArguments,
   QueryDryRunArgs as QueryDryRunArguments,
   QueryProjectArgs as QueryProjectArguments,
   QueryResolvers,
@@ -86,6 +89,14 @@ export interface Context {
 
 interface AuthenticatedContext extends Context {
   user: ContextUser
+}
+
+// Example custom error class
+class NotAllowedError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'NotAllowedError';
+  }
 }
 
 // Create an assertion method for TypeScript that check that user is defined
@@ -162,16 +173,52 @@ const resolvers = {
       const { sub } = user;
       return await getWorkflowTemplate(name, argoClient, sub);
     },
-    async artifacts(): Promise<Query['artifacts']> {
-      const objects = await getAllObjects();
+    async buckets(
+      _p: EmptyParent, _a: EmptyArguments, context: AuthenticatedContext,
+    ): Promise<Query['buckets']> {
+      const buckets = await listAllBuckets();
+      return buckets.map(({ name }) => ({
+        name,
+      }));
+    },
+    async artifacts(
+      _p: EmptyParent, arguments_: QueryArtifactsArguments, context: AuthenticatedContext,
+    ): Promise<Query['artifacts']> {
+      const { bucketName } = arguments_;
+      // console.log(bucketName);
+      const objects = await listAllObjects(bucketName);
       return objects.map(({ name, size }) => ({
         name,
         key: name,
         size,
+        bucketName,
       }));
     },
   } as Required<QueryResolvers<AuthenticatedContext, EmptyParent>>,
   Mutation: {
+    async createBucket(
+      _p: EmptyParent, arguments_: MutationCreateBucketArguments, context: AuthenticatedContext,
+    ): Promise<Mutation['createBucket']> {
+      const { name } = arguments_;
+      // eslint-disable-next-line unicorn/prefer-ternary
+      if (['artifacts', 'logs', 'registry'].includes(name)) {
+        throw new NotAllowedError('Not allowed to create bucket with this name');
+      } else {
+        const returnedBucketName = createBucket(name);
+        return returnedBucketName;
+      }
+    },
+    async deleteBucket(
+      _p: EmptyParent, arguments_: MutationCreateBucketArguments, context: AuthenticatedContext,
+    ): Promise<Mutation['deleteBucket']> {
+      const { name } = arguments_;
+      // eslint-disable-next-line unicorn/prefer-ternary
+      if (['artifacts', 'logs', 'registry'].includes(name)) {
+        throw new NotAllowedError('Not allowed to delete bucket with this name');
+      } else {
+        return deleteBucket(name);
+      }
+    },
     async createDryRun(
       _p: EmptyParent,
       arguments_: MutationCreateDryRunArguments,
@@ -382,6 +429,15 @@ const resolvers = {
       await deleteWorkflowTemplate(name, argoClient);
       return true;
     },
+    async deleteArtifacts(
+      _p: EmptyParent,
+      arguments_: MutationDeleteArtifactsArguments,
+      _context: AuthenticatedContext,
+    ): Promise<Mutation['deleteArtifacts']> {
+      const { bucketName, artifacts } = arguments_;
+      const response = await deleteObjects(bucketName, artifacts);
+      return response;
+    }
   } as Required<MutationResolvers<AuthenticatedContext, EmptyParent>>,
   Project: {
     async dryRuns(
@@ -561,20 +617,20 @@ const resolvers = {
     async url(
       artifact: Artifact,
     ): Promise<Artifact['url']> {
-      const { key } = artifact;
+      const { key, bucketName } = artifact;
       if (!key) {
         return undefined;
       }
-      return await computePresignedGetUrl(key);
+      return await computePresignedGetUrl(key, bucketName);
     },
     async size(
       artifact: Artifact,
     ): Promise<Artifact['size']> {
-      const { key } = artifact;
+      const { key, bucketName } = artifact;
       if (!key) {
         return undefined;
       }
-      return await getObjectSize(key);
+      return await getObjectSize(key, bucketName);
     },
   },
   WorkflowTemplate: {
