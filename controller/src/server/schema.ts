@@ -761,7 +761,7 @@ export type MutationCreateWorkflowTemplateArgs = {
 
 
 export type MutationDeleteArtifactsArgs = {
-  artifacts: Array<Scalars['String']['input']>;
+  keys: Array<Scalars['String']['input']>;
   bucketName: Scalars['String']['input'];
 };
 

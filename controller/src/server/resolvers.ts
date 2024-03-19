@@ -450,8 +450,9 @@ const resolvers = {
       arguments_: MutationDeleteArtifactsArguments,
       _context: AuthenticatedContext,
     ): Promise<Mutation['deleteArtifacts']> {
-      const { bucketName, artifacts } = arguments_;
-      const response = await deleteObjects(bucketName, artifacts);
+      const { bucketName, keys } = arguments_;
+      console.log('Hello world!', keys)
+      const response = await deleteObjects(bucketName, keys);
       return response;
     }
   } as Required<MutationResolvers<AuthenticatedContext, EmptyParent>>,

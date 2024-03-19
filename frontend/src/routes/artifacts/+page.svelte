@@ -8,7 +8,8 @@
     import Alert from '$lib/modules/alert.svelte';
 	  import { requestGraphQLClient } from '$lib/graphqlUtils';
     import getUploadPresignedUrl from '$queries/get_presigned_url_upload';
-	import { responsePathAsArray } from 'graphql';
+    import deleteArtifactsMutation from '$queries/delete_artifacts';
+
 
     let alertTitle: string = '';
     let alertMessage: string = '';
@@ -58,7 +59,6 @@
     }
     
     // Upload artifacts to a given path and a given bucket
-    // TODO: rewrite this function to use presigned URLs
     async function uploadArtifactsToPath(bucket: string, artifactsToUpload: FileList, uploadPath: string): Promise<void> {
         let artifactUploadPath: string = '';
         console.log(uploadPath);
@@ -116,28 +116,25 @@
         };
       modalStore.trigger(modal);
     }
-    
+
+    //TODO: Delete bucket
+    /*
+    async function deleteBucket() {}
+    */
+
     // Delete artifacts given a bucket and a list of artifact paths
+    // TODO: Rewrite this function to use graphql mutation in stead
     async function deleteArtifacts(bucketName: string, artifactPathsList: string[]): Promise<{message: string, status: number, bucket: string, paths: string[]}> {
       const bucket = bucketName;
       const paths = artifactPathsList;
-      console.log(`Request to delete ${paths.join(', ')}in bucket: ${bucket}`);
+      console.log(`Request to delete ${paths.join(', ')}, in bucket: ${bucket}`);
 
-      const formData = new FormData();
-      formData.append('bucketName', bucket);
-      formData.append('objectsList', JSON.stringify(paths));
-      try {
-        const response = await fetch(`/api/minio/buckets/objects/delete`, {
-          method: 'POST',
-          body: formData,
-        });
-        const data = await response.json() as JSON;
-        console.log(' response', response);
-        console.log(' response data', data);
-        return {message: JSON.stringify(data), status: response.status, bucket, paths};
-      } catch (error) {
-        console.log(' error', error);
-        return {message: (error as Error).toString(), status: 500, bucket, paths};
+      const response = await requestGraphQLClient(deleteArtifactsMutation, { bucketName: bucket, keys: paths });
+      if (response) {
+        console.log('response:', response);
+        return {message: 'Successfully deleted artifacts', status: 200, bucket, paths};
+      } else {
+        return {message: 'Error deleting artifacts', status: 500, bucket, paths};
       }
     }
 

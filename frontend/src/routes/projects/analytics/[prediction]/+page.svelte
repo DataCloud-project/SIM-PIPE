@@ -88,7 +88,7 @@
 				console.log(error);
 				const title = `Error reading input filesizes for dry run - ${dryRunId}`;
 				const body = 'You will be taken back to the dry runs list on close';
-				await displayAlert(title, body, 3500);
+				//await displayAlert(title, body, 3500);
 				goto(`/projects/dryruns/${$selectedProject?.id}`);
 			}
 		});
