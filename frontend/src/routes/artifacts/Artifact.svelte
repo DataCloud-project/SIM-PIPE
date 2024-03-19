@@ -1,6 +1,6 @@
 <script lang="ts">
-    import { reactiveBuckets } from '$lib/folders_types';
-    import type { ArtifactHierarchyType } from '$lib/folders_types';
+    import { reactiveBuckets } from '$stores/stores';
+    import type { ArtifactHierarchyType } from '$typesdefinitions';
 
     import Artifact from './artifact.svelte';
     import SymbolForArtifact from './symbol-for-artifact.svelte';

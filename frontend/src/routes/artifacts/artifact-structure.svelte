@@ -1,27 +1,30 @@
 <script lang="ts">
+  //console.log('artifact-structure component instantiated');
 	import Artifact from "./artifact.svelte";
   import SymbolForBucket from "./symbol-for-bucket.svelte";
-  import { reactiveBuckets } from '$lib/folders_types';
-  import type { StructureType, ArtifactType, ArtifactHierarchyType, Bucket, BucketHierarchyType } from '$lib/folders_types';
+  import { reactiveBuckets } from '$stores/stores';
+  // TODO: consolidate types in the types.d.ts file
+  import type { StructureType, ArtifactType, Bucket } from '$lib/folders_types';
+  import type { ArtifactHierarchyType, BucketHierarchyType } from '$typesdefinitions';
 
   export let buckets: Bucket[];
 
   function buildFolderStructure(artifacts: ArtifactType[]): StructureType {
-  const structure: StructureType = { path: '', children: {} };
+    const structure: StructureType = { path: '', children: {} };
 
-  artifacts.forEach(entry => {
-    let currentLevel = structure;
-    const parts = entry.name.split('/');
+    artifacts.forEach(entry => {
+      let currentLevel = structure;
+      const parts = entry.name.split('/');
 
-    parts.forEach(part => {
-      if (!currentLevel.children[part]) {
-        currentLevel.children[part] = { path: `${currentLevel.path}/${part}`, children: {} };
-      }
-      currentLevel = currentLevel.children[part];
+      parts.forEach(part => {
+        if (!currentLevel.children[part]) {
+          currentLevel.children[part] = { path: `${currentLevel.path}/${part}`, children: {} };
+        }
+        currentLevel = currentLevel.children[part];
+      });
     });
-  });
-  return structure;
-}
+    return structure;
+  }
 
   function renderFolderStructure(structure: StructureType, bucketName: string, depth = 0): ArtifactHierarchyType[] {
     const folders: ArtifactHierarchyType[] = [];
@@ -48,16 +51,20 @@
     }
 
   for (let bucket of buckets) {
-    //console.log(bucket.bucket.name);
     let artifacts = bucket.artifacts;
     let structure = buildFolderStructure(artifacts);
     let folders = renderFolderStructure(structure, bucket.bucket.name);
     let new_bucket = { bucket: bucket.bucket.name, isExpanded: false, isSelected: false, artifacts: folders };
-    $reactiveBuckets = [...$reactiveBuckets, new_bucket];
+    // console.log('new bucket:', new_bucket);
+    // console.log(`${it} reactiveBuckets`, $reactiveBuckets);
+    // Only add the bucket if it is not already in the reactiveBuckets
+    if (!$reactiveBuckets.some(b => b.bucket === new_bucket.bucket)) {
+      $reactiveBuckets = [...$reactiveBuckets, new_bucket];
+    }
   }
 
   // log changes to reactiveBuckets
-  $: console.log($reactiveBuckets);
+  $: console.log('reactiveBuckets:', $reactiveBuckets);
 
 </script>
 

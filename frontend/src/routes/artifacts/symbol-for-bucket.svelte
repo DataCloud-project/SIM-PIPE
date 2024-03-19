@@ -1,8 +1,7 @@
 <script lang='ts'>
     import { PocketIcon } from 'svelte-feather-icons';
-    import { reactiveBuckets } from '$lib/folders_types';
-    import type { BucketHierarchyType } from '$lib/folders_types';
-    import { selectedBucket } from '../../stores/stores';
+    import type { BucketHierarchyType } from '$typesdefinitions';
+    import { selectedBucket, reactiveBuckets } from '$stores/stores';
 
     export let bucket: BucketHierarchyType;
 

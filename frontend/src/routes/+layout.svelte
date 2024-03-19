@@ -8,7 +8,7 @@
 	import '../app.postcss';
 	import hljs from 'highlight.js';
 	import 'highlight.js/styles/github-dark.css'; // highlight.js theme
-	import { LockIcon, BookOpenIcon, FileIcon, FolderIcon } from 'svelte-feather-icons';
+	import { LockIcon, BookOpenIcon, FileIcon, FolderIcon, StarIcon } from 'svelte-feather-icons';
 	import { AppShell, AppBar, AppRail, AppRailAnchor, LightSwitch, storeHighlightJs, Modal, initializeStores } from '@skeletonlabs/skeleton';
 	import type { ModalComponent } from '@skeletonlabs/skeleton';
 	import { page } from '$app/stores';
@@ -30,7 +30,7 @@
 		provideTextInputModal: { ref: ProvideTextInputModal },
 		createNewProjectModal: { ref: SubmitNewProjectModal },
 		submitNewDryRunModal: { ref: SubmitNewDryRunModal },
-		submitNewSecretModal: { ref: SubmitNewSecretModal }
+		submitNewSecretModal: { ref: SubmitNewSecretModal },
 	};
 
 
@@ -129,6 +129,16 @@
 					</div>
 				</div>
 			</AppRailAnchor>
+<!-- 			<AppRailAnchor label="Ideas" href="/ideas" selected={$page.url.pathname === '/ideas'} >
+				<div class="flex flex-col items-center justify-center">
+					<div>
+						<StarIcon size="1.5x" />
+					</div>
+					<div>
+						Ideas
+					</div>
+				</div>
+			</AppRailAnchor>			 -->
 		</AppRail>
 	</svelte:fragment>
 

@@ -1,13 +1,16 @@
 <script lang="ts">
     import { getModalStore } from '@skeletonlabs/skeleton';
     import type { ModalSettings } from '@skeletonlabs/skeleton';    
-    import { DownloadIcon,Trash2Icon, UploadIcon, XSquareIcon } from 'svelte-feather-icons';
+    import { DownloadIcon, Trash2Icon, UploadIcon, XSquareIcon } from 'svelte-feather-icons';
     import Artifacts from './artifacts.svelte';
-    import { reactiveBuckets } from '$lib/folders_types';
-    import { selectedBucket } from '../../stores/stores';
-    import type { ArtifactHierarchyType } from '$lib/folders_types';
+    import { reactiveBuckets, selectedBucket } from '$stores/stores';
+    import type { ArtifactHierarchyType } from '$typesdefinitions';
     import Alert from '$lib/modules/alert.svelte';
-    
+    // import { ProgressBar } from '@skeletonlabs/skeleton';
+	  // import type { PageData } from '../$types';
+
+    // export let data: PageData;
+
     let alertTitle: string = '';
     let alertMessage: string = '';
     let alertVariant: string = '';
@@ -357,7 +360,14 @@
                 </div>              
             </div>
         <div>
-            <Artifacts />
+          <Artifacts />
+<!--           {#await data}
+              <ProgressBar />
+          {:then loaded_data}
+              <Artifacts data={loaded_data} />
+          {:catch error}
+              <p>error loading data: {error.message}</p>
+          {/await} -->
         </div>
     </div>
 </main>

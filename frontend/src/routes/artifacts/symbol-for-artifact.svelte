@@ -1,8 +1,7 @@
 <script lang='ts'>
     import { FileIcon, FolderIcon } from 'svelte-feather-icons';
-    import type { ArtifactHierarchyType } from '$lib/folders_types';
-    import { reactiveBuckets } from '$lib/folders_types';
-    import { selectedBucket } from '../../stores/stores';
+    import type { ArtifactHierarchyType } from '$typesdefinitions';
+    import { reactiveBuckets, selectedBucket, selectedArtifact } from '$stores/stores';
 
 
     export let artifact: ArtifactHierarchyType;
@@ -11,6 +10,8 @@
     async function toggleSelected(artifact: ArtifactHierarchyType): Promise<void> {
         // eslint-disable-next-line no-param-reassign
         artifact.isSelected = !artifact.isSelected;
+        // Set the selected artifact to the selected artifact
+        selectedArtifact.set(artifact);
         // Set the selected bucket to the bucket of the selected artifact
         $selectedBucket = artifact.bucket
         // Deselect all other buckets

@@ -76,7 +76,7 @@
         return template;
 	}
 
-    async function onClose(response): Promise<void> {
+    async function onClose(response: any): Promise<void> {
         if ($modalStore[0] && typeof $modalStore[0].response === 'function') {
                     $modalStore[0].response(response);
         }

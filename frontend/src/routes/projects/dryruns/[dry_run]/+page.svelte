@@ -3,10 +3,8 @@
 	import { selectedProject, clickedProjectId } from '../../../../stores/stores.js';
 	import SymbolForRunResult from './symbol-for-run-result.svelte';
 	import SymbolForAction from './symbol-for-action.svelte';
-	//import { Modal, modalStore } from '@skeletonlabs/skeleton'; // old v1 skeletonlabs
 	import { getModalStore } from '@skeletonlabs/skeleton';
 	import type { ModalSettings } from '@skeletonlabs/skeleton';
-	//import ModalSubmitNewDryRun from '../../../../modals/submitNewDryRunModal.svelte';
 	import type { DryRun, DryRunMetrics, Project } from '../../../../types.js';
 	import allDryRunsQuery from '../../../../queries/get_all_dryruns.js';
 	import deleteDryRunMutation from '../../../../queries/delete_dry_run.js';
@@ -68,6 +66,7 @@
 		});
 		$selectedProject = responseProjectDetails.project;
 	}
+	
 	async function onPredictSelected() {
 		// TODO: later change to passing dry runs ids through some other means (not to have too long url)
 		const dryRunIsToCompared = Object.keys(checkboxes)
@@ -75,6 +74,7 @@
 			.join(' ');
 		goto(`/projects/analytics/${dryRunIsToCompared}`);
 	}
+
 	async function onCreateSelected() {
 		const modal: ModalSettings = {
 			type: 'component',

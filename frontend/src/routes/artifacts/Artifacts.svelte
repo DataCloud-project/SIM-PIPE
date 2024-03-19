@@ -1,17 +1,22 @@
 <script lang="ts"> 
     import { ProgressBar } from '@skeletonlabs/skeleton';
 	  import { onMount } from 'svelte';
-    import { writable } from 'svelte/store';
 
-    import { reactiveBuckets } from '$lib/folders_types';
+    import { selectedBucket, reactiveBuckets, buckets } from '$stores/stores';
     import Alert from '$lib/modules/alert.svelte';
-    import type { ArtifactType, Bucket, BucketType } from '$lib/folders_types';
+    
+    // TODO: consolidate types in the types.d.ts file
+    import type { ArtifactType, BucketType } from '$lib/folders_types';
 
-    import { selectedBucket } from '../../stores/stores';
     import FolderStructure from './artifact-structure.svelte';
 
+    // import type { PageData } from "./$types";
+    // export let data: PageData;
 
-    const buckets = writable<Bucket[]>([]);
+    // import type { BucketWithArtifacts } from '$typesdefinitions';
+    // import { reactiveBuckets, selectedBucket } from '$stores/stores'
+
+    // const buckets = writable<BucketWithArtifacts[]>([]);
     let requestsComplete = false;
 
     let alertTitle: string = '';
@@ -85,18 +90,29 @@
       // $buckets = $buckets;
     }
 
+    /*
+    async function loadData2(): Promise<void>{
+      // console.log('buckets:', data.buckets);
+      console.log('artifacts:', data.artifacts);
+      buckets.set(data.artifacts);
+    }
+    */
+
     // TODO: implement the downloadArtifacts function
     // this requires a new API endpoint to be implemented in the api routes
     
     onMount(async () => {
       await loadData();
+      //await loadData2();
+      console.log("artifacts mounted");
     });
 
     // $: console.log('artifacts', artifacts);
     /* eslint-disable no-console */
-    $: console.log('buckets:', $buckets);
+    $: console.log('buckets:', buckets);
     $: console.log('requests completed:', requestsComplete);
-    $: console.log('selected bucket:', $selectedBucket);
+    $: console.log('selected bucket:', selectedBucket);
+    // $: console.log('data', data);
     /* eslint-enable no-console */
 
 </script>

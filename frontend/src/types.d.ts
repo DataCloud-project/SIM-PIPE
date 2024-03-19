@@ -147,3 +147,47 @@ interface Templates {
 }
 
 // end: argo workflow template types
+
+// graphql returned types and their derivatives
+
+// graphql minio buckets
+export type Bucket = {
+	name: string;
+};
+
+// graphql minio artifacts
+export type Artifact = {
+	name: string;
+	url: string;
+	size: number;
+	bucketName: string;
+};
+
+// lists of buckets and artifacts
+export type Buckets = Buckets[];
+export type Artifacts = Artifacts[];
+
+// Bucket with artifacts
+export type BucketWithArtifacts = {
+	bucket: Bucket,
+	artifacts: Artifacts
+}
+
+// Bucket hierarchy
+export type BucketHierarchyType = {
+	bucket: string;
+	isExpanded: boolean;
+	isSelected: boolean;
+	artifacts: ArtifactHierarchyType[]
+}
+
+// Artifact hierarchy object
+export type ArtifactHierarchyType = {
+    id: string;
+    name: string;
+    path: string;
+    bucket: string;
+    subfolders: ArtifactHierarchyType[];
+    isExpanded: boolean;
+    isSelected: boolean;
+};
