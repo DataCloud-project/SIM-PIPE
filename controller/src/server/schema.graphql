@@ -507,7 +507,8 @@ type Mutation @auth {
   """ Compute a presigned URL for uploading a file using HTTP PUT. The mutation returns the URL to upload the file. """
   computeUploadPresignedUrl(
     """ The name of the file you wish to upload """
-    key: String): String!
+    key: String, 
+    bucketName: String): String!
 
   """ Create a new Argo workflow template """
   createWorkflowTemplate(

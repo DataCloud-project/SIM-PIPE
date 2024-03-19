@@ -41,7 +41,7 @@ const minioInternalClient = new MinioClient({
 
 // get presigned put url - for uploading object (artifact)
 export async function computePresignedPutUrl(
-  objectName: string, _bucketName: string): Promise<string> {
+  objectName: string, _bucketName?: string): Promise<string> {
   const bucketName = _bucketName || minioBucketName;
   const expire = 60 * 10; // 10 minutes before url expires
   return await minioPublicClient.presignedPutObject(bucketName, objectName, expire);

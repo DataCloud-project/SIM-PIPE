@@ -106,6 +106,10 @@ class NotAllowedError extends Error {
   }
 } */
 
+function isValidFilePath(key: string): boolean {
+  return /^[\w-/.]+$/i.test(key);
+}
+
 type EmptyArguments = Record<string, never>;
 type EmptyParent = Record<string, never>;
 
@@ -369,23 +373,35 @@ const resolvers = {
       _arguments: MutationComputeUploadPresignedUrlArguments,
       context: AuthenticatedContext,
     ): Promise<Mutation['computeUploadPresignedUrl']> {
+      /*
+      // TODO: I uncommented this for now due to conseqenses to uploading files using the artifact browser.
       const { sub } = context.user;
+      console.log('sub', sub);
       // Make sure the user is a filesystem safe string
       if (!/^[\w-]+$/i.test(sub)) {
         throw new Error('User identifier (sub) is unsupported for files');
       }
-
-      let { key } = _arguments;
+      */
+      let { key, bucketName } = _arguments;
+      //console.log('key', key);
       if (key) {
-        if (!/^[\w.-]+$/i.test(key)) {
+        //if (!/^[\w.-]+$/i.test(key)) {
+        if (!isValidFilePath(key)) {
           throw new Error('Key is unsupported for files');
         }
       } else {
         key = randomUUID();
       }
 
-      const objectName = `${sub}/${key}`;
-      return await computePresignedPutUrl(objectName);
+      //const objectName = `${sub}/${key}`;
+      const objectName = key;
+      // console.log('bucketName', bucketName);
+      // console.log('objectName', objectName);
+      if (bucketName !== null) {
+        return await computePresignedPutUrl(objectName, bucketName);
+      } else {
+        return await computePresignedPutUrl(objectName);
+      }
     },
     async createWorkflowTemplate(
       _p: EmptyParent,

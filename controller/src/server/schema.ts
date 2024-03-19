@@ -731,6 +731,7 @@ export type MutationAssignDryRunToProjectArgs = {
 
 export type MutationComputeUploadPresignedUrlArgs = {
   key?: InputMaybe<Scalars['String']['input']>;
+  bucketName?: InputMaybe<Scalars['String']['input']>;
 };
 
 
