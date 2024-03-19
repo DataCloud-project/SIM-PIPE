@@ -163,14 +163,10 @@ export type Artifact = {
 	bucketName: string;
 };
 
-// lists of buckets and artifacts
-export type Buckets = Buckets[];
-export type Artifacts = Artifacts[];
-
 // Bucket with artifacts
 export type BucketWithArtifacts = {
 	bucket: Bucket,
-	artifacts: Artifacts
+	artifacts: Artifact[]
 }
 
 // Bucket hierarchy
@@ -191,3 +187,9 @@ export type ArtifactHierarchyType = {
     isExpanded: boolean;
     isSelected: boolean;
 };
+
+// Folder stucture hierarchy object
+export type FolderStructure = {
+    path: string,
+    children: { [key: string]: FolderStructure} 
+}

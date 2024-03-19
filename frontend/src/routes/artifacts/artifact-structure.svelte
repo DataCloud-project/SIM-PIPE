@@ -1,16 +1,21 @@
 <script lang="ts">
   //console.log('artifact-structure component instantiated');
-	import Artifact from "./artifact.svelte";
+	import ArtifactModule from "./artifact.svelte";
   import SymbolForBucket from "./symbol-for-bucket.svelte";
   import { reactiveBuckets } from '$stores/stores';
   // TODO: consolidate types in the types.d.ts file
-  import type { StructureType, ArtifactType, Bucket } from '$lib/folders_types';
-  import type { ArtifactHierarchyType, BucketHierarchyType } from '$typesdefinitions';
+  // import type { StructureType, ArtifactType, Bucket } from '$lib/folders_types';
+  import type { 
+    FolderStructure, 
+    Artifact, 
+    ArtifactHierarchyType, 
+    BucketHierarchyType, 
+    BucketWithArtifacts } from '$typesdefinitions';
 
-  export let buckets: Bucket[];
+  export let buckets: BucketWithArtifacts[];
 
-  function buildFolderStructure(artifacts: ArtifactType[]): StructureType {
-    const structure: StructureType = { path: '', children: {} };
+  function buildFolderStructure(artifacts: Artifact[]): FolderStructure {
+    const structure: FolderStructure = { path: '', children: {} };
 
     artifacts.forEach(entry => {
       let currentLevel = structure;
@@ -26,7 +31,7 @@
     return structure;
   }
 
-  function renderFolderStructure(structure: StructureType, bucketName: string, depth = 0): ArtifactHierarchyType[] {
+  function renderFolderStructure(structure: FolderStructure, bucketName: string, depth = 0): ArtifactHierarchyType[] {
     const folders: ArtifactHierarchyType[] = [];
     let folder: ArtifactHierarchyType;
     for (let key in structure.children) {
@@ -55,8 +60,7 @@
     let structure = buildFolderStructure(artifacts);
     let folders = renderFolderStructure(structure, bucket.bucket.name);
     let new_bucket = { bucket: bucket.bucket.name, isExpanded: false, isSelected: false, artifacts: folders };
-    // console.log('new bucket:', new_bucket);
-    // console.log(`${it} reactiveBuckets`, $reactiveBuckets);
+
     // Only add the bucket if it is not already in the reactiveBuckets
     if (!$reactiveBuckets.some(b => b.bucket === new_bucket.bucket)) {
       $reactiveBuckets = [...$reactiveBuckets, new_bucket];
@@ -82,7 +86,7 @@
       </div>
       {#if bucket.isExpanded}
         {#each bucket.artifacts as artifact (artifact.id)}
-          <Artifact {artifact} />
+          <ArtifactModule {artifact} />
         {/each}
       {/if}
     {/each}

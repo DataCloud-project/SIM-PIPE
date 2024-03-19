@@ -6,10 +6,9 @@
     import { reactiveBuckets, selectedBucket } from '$stores/stores';
     import type { ArtifactHierarchyType } from '$typesdefinitions';
     import Alert from '$lib/modules/alert.svelte';
-    // import { ProgressBar } from '@skeletonlabs/skeleton';
-	  // import type { PageData } from '../$types';
-
-    // export let data: PageData;
+	  import { requestGraphQLClient } from '$lib/graphqlUtils';
+    import getUploadPresignedUrl from '$queries/get_presigned_url_upload';
+	import { responsePathAsArray } from 'graphql';
 
     let alertTitle: string = '';
     let alertMessage: string = '';
@@ -59,6 +58,7 @@
     }
     
     // Upload artifacts to a given path and a given bucket
+    // TODO: rewrite this function to use presigned URLs
     async function uploadArtifactsToPath(bucket: string, artifactsToUpload: FileList, uploadPath: string): Promise<void> {
         let artifactUploadPath: string = '';
         console.log(uploadPath);
@@ -72,29 +72,10 @@
                 artifactUploadPath = `${uploadPath}/${artifact.name}`;
             }
             console.log(`Uploading ${artifact.name} to ${artifactUploadPath}`);
-            const formData = new FormData();
-            formData.append('bucketName', bucket);
-            formData.append('objectPath', artifactUploadPath);
-            // We need to wait for the text to be read from the file.
-            // eslint-disable-next-line no-await-in-loop
-            const fileText = await artifact.text();
-            formData.append('objectDataText', fileText);
-            formData.append('objectDataSize', artifact.size.toString());     
-            // eslint-disable-next-line no-await-in-loop
-            await fetch(`/api/minio/buckets/objects/create`, {
-                method: 'POST',
-                body: formData
-            }).then(response => {
-                console.log(' response', response);
-                console.log(' response', response.clone().json());
-                response.json().then(data => {
-                    console.log(' response data', data);
-                }).catch(error => {
-                    console.log(' error', error);
-                });
-            });
+            const url: {computeUploadPresignedUrl: string} = await requestGraphQLClient(getUploadPresignedUrl, { bucketName: bucket, key: artifactUploadPath });
+            uploadFile(artifact, url.computeUploadPresignedUrl);
         }
-    }    
+    }
 
     // On upload artifacts
     async function onUploadArtifact(): Promise<void> {
@@ -303,6 +284,28 @@
         unselectArtifacts(bucket.artifacts);
       }
       $reactiveBuckets = [...$reactiveBuckets]; // Trigger a re-render
+    }
+
+    // Upload file using presigned url
+    function uploadFile(file: File, url: string) {
+      console.log('url:', url);
+      fetch(url, {
+            method: 'PUT',
+            body: file
+        }).then(response => 
+          response.text()).then(data => {
+            console.log('response:', data);
+            alertTitle = '👍 Success';
+            alertMessage = `Successfully uploaded file: ${file.name}`;
+            alertVariant = 'variant-ghost-success';
+            alertVisible = true;
+        }).catch((error) => {
+            console.error('error', error);
+            alertTitle = '👎 Error'
+            alertMessage = `Error uploading file: ${file.name}`;;
+            alertVariant = 'variant-filled-error';
+            alertVisible = true;
+        });
     }
 
   </script>

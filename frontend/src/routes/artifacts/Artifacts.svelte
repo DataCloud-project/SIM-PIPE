@@ -2,23 +2,21 @@
     import { ProgressBar } from '@skeletonlabs/skeleton';
 	  import { onMount } from 'svelte';
 
+    import { requestGraphQLClient } from '$lib/graphqlUtils';
+    import allBucketsQuery from '$queries/get_all_buckets';
+    import allArtifactsQuery from '$queries/get_all_artifacts';
+
     import { selectedBucket, reactiveBuckets, buckets } from '$stores/stores';
     import Alert from '$lib/modules/alert.svelte';
     
     // TODO: consolidate types in the types.d.ts file
-    import type { ArtifactType, BucketType } from '$lib/folders_types';
+    //import type { ArtifactType, BucketType } from '$lib/folders_types';
+    import type { Bucket, Artifact, BucketWithArtifacts } from '$typesdefinitions';
 
     import FolderStructure from './artifact-structure.svelte';
 
-    // import type { PageData } from "./$types";
-    // export let data: PageData;
 
-    // import type { BucketWithArtifacts } from '$typesdefinitions';
-    // import { reactiveBuckets, selectedBucket } from '$stores/stores'
-
-    // const buckets = writable<BucketWithArtifacts[]>([]);
     let requestsComplete = false;
-
     let alertTitle: string = '';
     let alertMessage: string = '';
     let alertVariant: string = '';
@@ -65,20 +63,16 @@
       }
     }
 
-   
+  
+    async function loadData2(): Promise<void>{
 
-    async function loadData(): Promise<void>{
-      // fetch all buckets
-      requestsComplete = false;
-      $reactiveBuckets = []; // clear buckets on refresh
-      const bucketsList = await getBuckets();
-      const requests = bucketsList.response.map(async (bucket) => {
-        const artifacts = await getArtifacts(bucket.name);
+      const buckets_response: { buckets: Bucket[] } = await requestGraphQLClient(allBucketsQuery);
+      const requests = buckets_response.buckets.map(async (bucket) => {
+        const artifacts: {artifacts: Artifact[]} = await requestGraphQLClient(allArtifactsQuery, { bucketName: bucket.name });
         return {bucket, artifacts};
       });
-      // Update the buckets store inside the Promise.all().then() callback
       Promise.all(requests).then(results => {
-        buckets.set(results.map(result => ({bucket: result.bucket, artifacts: result.artifacts.response})) as { bucket: BucketType; artifacts: ArtifactType[]; }[]);
+        buckets.set(results.map(result => ({bucket: result.bucket, artifacts: result.artifacts.artifacts})) as BucketWithArtifacts[]);
         requestsComplete = true;
       }).catch(error => {
         // console.error('A promise was rejected:', error);
@@ -86,28 +80,17 @@
         alertTitle = 'Request Error';
         alertMessage = `${error}`;
       });
-      // console.log('buckets:', $buckets);
-      // $buckets = $buckets;
     }
-
-    /*
-    async function loadData2(): Promise<void>{
-      // console.log('buckets:', data.buckets);
-      console.log('artifacts:', data.artifacts);
-      buckets.set(data.artifacts);
-    }
-    */
 
     // TODO: implement the downloadArtifacts function
     // this requires a new API endpoint to be implemented in the api routes
     
     onMount(async () => {
-      await loadData();
-      //await loadData2();
+      // await loadData();
+      await loadData2();
       console.log("artifacts mounted");
     });
 
-    // $: console.log('artifacts', artifacts);
     /* eslint-disable no-console */
     $: console.log('buckets:', buckets);
     $: console.log('requests completed:', requestsComplete);

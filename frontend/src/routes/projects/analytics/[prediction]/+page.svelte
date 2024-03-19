@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { Modal } from '@skeletonlabs/skeleton';
 	import {
 		getMetricsAnalyticsUtils,
 		getMetricsResponse,
@@ -87,9 +86,9 @@
 				return Number(response.dryRun.argoWorkflow.metadata.annotations.filesize);
 			} catch (error) {
 				console.log(error);
-				const title = 'Error reading input filesizes for dry run - ${dryRunId}';
+				const title = `Error reading input filesizes for dry run - ${dryRunId}`;
 				const body = 'You will be taken back to the dry runs list on close';
-				await displayAlert(title, body, 2500);
+				await displayAlert(title, body, 3500);
 				goto(`/projects/dryruns/${$selectedProject?.id}`);
 			}
 		});
@@ -157,7 +156,7 @@
 	};
 	let valueforPrediction: number;
 	let inputValue: number;
-	let inputUnit: string;
+	let inputUnit: string = ALL_UNITS[3];
 	let showPredictions = false;
 	let maxCpuPredictions: number[];
 	let avgCpuPredictions: number[];
