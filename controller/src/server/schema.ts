@@ -730,8 +730,8 @@ export type MutationAssignDryRunToProjectArgs = {
 
 
 export type MutationComputeUploadPresignedUrlArgs = {
-  key?: InputMaybe<Scalars['String']['input']>;
   bucketName?: InputMaybe<Scalars['String']['input']>;
+  key?: InputMaybe<Scalars['String']['input']>;
 };
 
 
@@ -761,8 +761,8 @@ export type MutationCreateWorkflowTemplateArgs = {
 
 
 export type MutationDeleteArtifactsArgs = {
-  keys: Array<Scalars['String']['input']>;
   bucketName: Scalars['String']['input'];
+  keys: Array<Scalars['String']['input']>;
 };
 
 
@@ -1216,7 +1216,7 @@ export type MutationResolvers<ContextType = any, ParentType extends ResolversPar
   createDryRun?: Resolver<ResolversTypes['DryRun'], ParentType, ContextType, RequireFields<MutationCreateDryRunArgs, 'input'>>;
   createProject?: Resolver<ResolversTypes['Project'], ParentType, ContextType, RequireFields<MutationCreateProjectArgs, 'project'>>;
   createWorkflowTemplate?: Resolver<ResolversTypes['WorkflowTemplate'], ParentType, ContextType, RequireFields<MutationCreateWorkflowTemplateArgs, 'input'>>;
-  deleteArtifacts?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationDeleteArtifactsArgs, 'artifacts' | 'bucketName'>>;
+  deleteArtifacts?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationDeleteArtifactsArgs, 'bucketName' | 'keys'>>;
   deleteBucket?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationDeleteBucketArgs, 'name'>>;
   deleteDockerRegistryCredential?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationDeleteDockerRegistryCredentialArgs, 'name'>>;
   deleteDryRun?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationDeleteDryRunArgs, 'dryRunId'>>;
