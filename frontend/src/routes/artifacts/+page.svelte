@@ -292,6 +292,7 @@
         }).then(response => 
           response.text()).then(data => {
             console.log('response:', data);
+            // TODO: these messages should stack somehow in stead of replacing each other.
             alertTitle = '👍 Success';
             alertMessage = `Successfully uploaded file: ${file.name}`;
             alertVariant = 'variant-ghost-success';
