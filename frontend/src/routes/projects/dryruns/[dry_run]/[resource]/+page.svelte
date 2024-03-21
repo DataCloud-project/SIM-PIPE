@@ -364,8 +364,8 @@
 					</table>
 				</div>
 			</div>
-			<div class="grid grid-rows-4 grid-cols-2 gap-5 h-[80rem]">
-				<!-- if the logs is empty, remove logs sections -->
+			<div class="grid grid-rows-4 grid-cols-2 gap-5 auto-rows-min">
+				<!-- if the logs are empty, remove logs sections -->
 				{#if Object.values(logs).join('') !== ''}
 					<div class="card logcard row-span-4 p-5">
 						<header class="card-header"><h1>Logs</h1></header>
@@ -403,7 +403,7 @@
 					</div>
 				{/if}
 
-				<div class="card p-2">
+				<div class="card resourcecard">
 					<table class="table table-interactive">
 						<thead>
 							<tr>
@@ -440,42 +440,29 @@
 					</table>
 				</div>
 
-				<div class="flex card p-2">
-					<div class="flex container h-full w-full">
-						<div class="place-content-center h-full w-full">
-							<Plot
-								data={getResource('cpu').data}
-								plot_title={`CPU Usage ${getResource('cpu').title}`}
-								xaxis_title="time"
-								yaxis_title="cpu usage"
-							/>
-						</div>
-					</div>
+				<div class="card plotcard">
+					<Plot
+						data={getResource('cpu').data}
+						plot_title={`CPU Usage ${getResource('cpu').title}`}
+						xaxis_title="time"
+						yaxis_title="cpu usage"
+					/>
 				</div>
-				<div class="flex card p-2">
-					<div class="flex container h-full w-full">
-						<div class="place-content-center h-full w-full">
-							<Plot
-								data={getResource('memory').data}
-								plot_title={`Memory Usage ${getResource('memory').title}`}
-								xaxis_title="time"
-								yaxis_title="bytes"
-							/>
-						</div>
-					</div>
+				<div class="card plotcard">
+					<Plot
+						data={getResource('memory').data}
+						plot_title={`Memory Usage ${getResource('memory').title}`}
+						xaxis_title="time"
+						yaxis_title="bytes"
+					/>
 				</div>
-
-				<div class="flex card p-2">
-					<div class="flex container h-full w-full">
-						<div class="place-content-center h-full w-full">
-							<Plot
-								data={getResource('network').data}
-								plot_title={`Network ${getResource('network').title}`}
-								xaxis_title="time"
-								yaxis_title="bytes"
-							/>
-						</div>
-					</div>
+				<div class="card plotcard">
+					<Plot
+						data={getResource('network').data}
+						plot_title={`Network ${getResource('network').title}`}
+						xaxis_title="time"
+						yaxis_title="bytes"
+					/>
 				</div>
 			</div>
 		{/await}
@@ -483,17 +470,22 @@
 </div>
 
 <style>
-	.card {
-		min-height: 10rem;
-		max-height: 30rem;
-		min-width: 10rem;
+	.card.plotcard {
+		display: grid;
+		place-items: start;
 	}
-	.logcard {
+	.card.resourcecard {
+		overflow-y: scroll;
+		overflow-x: scroll;
+		min-height: 25rem;
+		max-height: fit-content;
+	}
+	.card.logcard {
 		overflow-y: scroll;
 		max-height: fit-content;
 	}
 	ul {
-		max-height: 50vh;
+		max-height: 75vh;
 		max-height: fit-content;
 	}
 </style>
