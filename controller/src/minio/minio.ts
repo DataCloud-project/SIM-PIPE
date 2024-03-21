@@ -49,7 +49,7 @@ export async function computePresignedPutUrl(
 
 // get presigned get url - for downloading object (artifact)
 export async function computePresignedGetUrl(
-  objectName: string, _bucketName: string): Promise<string> {
+  objectName: string, _bucketName?: string): Promise<string> {
   const bucketName = _bucketName || minioBucketName;
   const expire = 60 * 10; // 10 minutes before url expires
   return await minioPublicClient.presignedGetObject(bucketName, objectName, expire);
@@ -88,7 +88,7 @@ export async function listAllObjects(
 */
 // get all objects (artifacts) in a bucket -- default bucket is minioBucketName
 export async function listAllObjects(
-  _bucketName: string): Promise<ArtifactItem[]> {
+  _bucketName?: string): Promise<ArtifactItem[]> {
   const bucketName = _bucketName || minioBucketName;
   // console.log("bucketName: ",bucketName);
   const stream = minioInternalClient.listObjectsV2(bucketName, '', true);
@@ -113,7 +113,7 @@ export async function listAllObjects(
 
 // get metadata about single object (artifact)
 export async function getObjectMetadata(
-  _bucketName: string, objectName: string): Promise<BucketItemStat> {
+  objectName: string, _bucketName?: string): Promise<BucketItemStat> {
   const bucketName = _bucketName || minioBucketName;
   const metadata = await minioInternalClient.statObject(bucketName, objectName);
   return metadata;
@@ -160,7 +160,7 @@ export async function deleteBucket(bucketName: string): Promise<boolean> {
 }
 
 // delete objects (artifacts) in a bucket
-export async function deleteObjects(bucketName: string, objects: string[]): Promise<boolean> {
+export async function deleteObjects(objects: string[], bucketName: string): Promise<boolean> {
   return new Promise((resolve, reject) => {
     minioInternalClient.removeObjects(bucketName, objects, (error) => {
       if (error) {
