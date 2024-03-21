@@ -82,10 +82,18 @@
 					};
 				} = await requestGraphQLClient(getDryRunInputFilesizeQuery, { dryRunId });
 				if (!$selectedProject) $selectedProject = response.dryRun.project.id;
-				console.log(dryRunId, response);
+				// console.log(dryRunId, response);
+				let totalFileSize = 0;
+				response.dryRun.nodes.forEach((node: any) => {
+					if (node.inputArtifacts) {
+						node.inputArtifacts.forEach((artifact: any) => {
+							totalFileSize += artifact.size;
+						});
+					}
+				});
 				// TODO: change when filesize api is ready
 				// return Number(response.dryRun.argoWorkflow.metadata.annotations.filesize); // There is no filesize in annotations!
-				return 123;
+				return totalFileSize;
 			} catch (error) {
 				console.log(error);
 				const title = `Error reading input filesizes for dry run - ${dryRunId}`;
