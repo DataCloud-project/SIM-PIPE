@@ -12,6 +12,7 @@
 	import Timestamp from './timestamp.svelte';
 	import { requestGraphQLClient } from '$lib/graphqlUtils.js';
 	import { calculateDuration } from '../../../../utils/resource_utils.js';
+	import { FileTextIcon } from 'svelte-feather-icons';
 
 	const modalStore = getModalStore();
 
@@ -98,6 +99,12 @@
 		goto(`/projects/dryruns/${dryRunId}/${resource}`);
 	}
 
+	function gotoTemplate(dryRunId: string) {
+		let url = `/templates/${dryRunId}`;
+		console.log(`Navigating to: ${url}`);
+		goto(url);
+	}
+
 	// to disable onclick propogation for checkbox input
 	const handleCheckboxClick = (event: any) => {
 		event.stopPropagation();
@@ -161,6 +168,7 @@
 							<th>Result</th>
 							<th>Run duration</th>
 							<th>Action</th>
+							<th>Template</th>
 							<th>Created</th>
 						</tr>
 					</thead>
@@ -192,6 +200,16 @@
 										/>
 									</button>
 								</td>
+								<!-- svelte-ignore a11y-click-events-have-key-events -->
+								<td style="width:15%" on:click|stopPropagation={(event) => gotoTemplate(run.id)}>
+									<div class="grid grid-rows-2 grid-cols-1 justify-items-center">
+										<div><FileTextIcon size="1x" /></div>
+										<div>
+											<p class="no-underline hover:underline">show</p>
+											<div />
+										</div>
+									</div></td
+								>
 								<td style="width:20%"><Timestamp timestamp={run.createdAt} /> </td>
 							</tr>
 						{/each}

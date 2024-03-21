@@ -1,13 +1,14 @@
 <script lang="ts">
 	import { ProgressBar } from '@skeletonlabs/skeleton';
-	import { clickedProjectId } from '../../../stores/stores';
-	import getWorkflowQuery from '../../../queries/get_workflow_template';
+	import { clickedProjectId } from '$stores/stores';
+	import getWorkflowQuery from '$queries/get_workflow_template';
+	import getWorkflowFromDryRunQuery from '$queries/get_workflow_template_from_dry_run';
 	import { CodeBlock } from '@skeletonlabs/skeleton';
 	import YAML from 'json-to-pretty-yaml';
 	import { goto } from '$app/navigation';
 	import { requestGraphQLClient } from '$lib/graphqlUtils';
 	import { ArrowRightIcon } from 'svelte-feather-icons';
-	import type { WorkflowTemplate, Project } from '../../../types';
+	import type { WorkflowTemplate, WorkflowTemplateFromDryRun, Project } from '$typesdefinitions';
 	import { onMount } from 'svelte';
 
 	export let data;
@@ -23,7 +24,19 @@
 			getWorkflowQuery,
 			variables
 		);
-		//console.log(response);
+		// console.log(response);
+		return response;
+	};
+
+	const getWorkflowTemplateFromDryRun = async (): Promise<WorkflowTemplateFromDryRun> => {
+		const variables = {
+			dryRunId: data.template
+		};
+		const response = await requestGraphQLClient<WorkflowTemplateFromDryRun>(
+			getWorkflowFromDryRunQuery,
+			variables
+		);
+		// console.log(response);
 		return response;
 	};
 
@@ -47,8 +60,17 @@
 			project = data.workflowTemplate.project;
 			requestsComplete = true;
 		} catch (error) {
-			console.log('failed to fetch workflow template data: ', error);
-			goto('/404');
+			console.log('failed to fetch workflow template data from project: ', error);
+			try {
+				let data = await getWorkflowTemplateFromDryRun();
+				workflow = data.dryRun.argoWorkflow
+				workflow_name = data.dryRun.id;
+				project = data.dryRun.project;
+				requestsComplete = true;
+			} catch (error) {
+				console.log('failed to fetch workflow template data from dry run: ', error);
+				goto('/404');
+			}
 		}
 	});
 </script>

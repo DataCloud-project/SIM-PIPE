@@ -27,6 +27,14 @@ export type WorkflowTemplate = {
 	argoWorkflowTemplate: ArgoWorkflowTemplate;
 };
 
+export type WorkflowTemplateFromDryRun = {
+	dryRun: {
+		id: string;
+		project: Project;
+		argoWorkflow: ArgoWorkflowTemplate;
+	}
+};
+
 export type DryRun = {
 	nodes: [DryRunMetrics];
 	id: string;
