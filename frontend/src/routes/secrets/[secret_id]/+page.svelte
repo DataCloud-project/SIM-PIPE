@@ -30,7 +30,10 @@
 	let submit_response: any;
 
 	async function triggerWorkflowUpdatedMessageModal() {
-		let project_name = $selectedProject.name ? $selectedProject.name : 'undefined';
+		let project_name = $selectedProject ? $selectedProject.name : 'undefined';
+		if (!$selectedProject) {
+			throw new Error('Project not found / project undefined');
+		}
 		let registry_server = $selectedCredential.server ? $selectedCredential.server : 'undefined';
 		const workflowTemplateUpdatedMessageModal: ModalSettings = {
 					type: 'alert',

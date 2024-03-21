@@ -4,12 +4,12 @@
 
 	import { requestGraphQLClient } from '$lib/graphqlUtils.js';
 
-	import allProjectsQuery from '../../queries/get_all_projects.js';
-	import renameProjectMutation from '../../queries/rename_project.js';
-	import { projectsList } from '../../stores/stores.js';
-	import { cBase, cForm,cHeader } from '../../styles/styles.js';
-	import { displayAlert } from '../../utils/alerts_utils.js';
-	import type { AllProjectsResponse } from '../../types.js';
+	import allProjectsQuery from '$queries/get_all_projects.js';
+	import renameProjectMutation from '$queries/rename_project.js';
+	import { projectsList } from '$stores/stores.js';
+	import { cBase, cForm,cHeader } from '$styles/styles.js';
+	import { displayAlert } from '$utils/alerts_utils.js';
+	import type { AllProjectsResponse } from '$typesdefinitions';
 
 	// Props - Exposes parent props to this component
 	const modalStore = getModalStore();

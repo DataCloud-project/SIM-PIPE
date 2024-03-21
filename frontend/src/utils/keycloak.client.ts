@@ -10,14 +10,16 @@ function parseSimPipeEnvironment(): {
 	keycloakEnabled: boolean;
 	graphqlUrl: string;
 } {
-	let keycloakEnabled = config.KEYCLOAK_ENABLED;
 	let graphqlUrl = config.SIM_PIPE_CONTROLLER_URL;
+	let keycloakEnabled = config.KEYCLOAK_ENABLED;
+	let isKeycloakEnabled = false;
+
 
 	if (keycloakEnabled === undefined || graphqlUrl === undefined) {
 		const localhostMatch = window.location.host.match(/^(localhost|127\.0\.0\.\d+|::1)(:\d+)?$/);
 
 		if (localhostMatch) {
-			keycloakEnabled = keycloakEnabled === undefined ? false : keycloakEnabled === 'true';
+			keycloakEnabled = keycloakEnabled === undefined ? 'false' : keycloakEnabled;
 			if (graphqlUrl === undefined) {
 				const port = localhostMatch[2];
 				// added 5173 to support deployment of frontend in dev mode
@@ -28,13 +30,15 @@ function parseSimPipeEnvironment(): {
 				}
 			}
 		} else {
-			keycloakEnabled = keycloakEnabled === undefined ? true : keycloakEnabled === 'true';
+			keycloakEnabled = keycloakEnabled === undefined ? 'true' : keycloakEnabled;
 			graphqlUrl = '/graphql';
 		}
 	}
 
+	isKeycloakEnabled = keycloakEnabled === 'true';
+
 	return {
-		keycloakEnabled,
+		keycloakEnabled: isKeycloakEnabled,
 		graphqlUrl
 	};
 }

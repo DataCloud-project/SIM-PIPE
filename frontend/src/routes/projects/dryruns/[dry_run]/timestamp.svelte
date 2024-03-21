@@ -48,7 +48,9 @@
 
 	// Cleanup interval when the component is destroyed
 	onDestroy(() => {
-		clearInterval(interval);
+		if (typeof interval === 'number') {
+			clearInterval(interval);
+		}
 	});
 </script>
 
