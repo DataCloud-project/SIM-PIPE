@@ -1,6 +1,6 @@
 import { Client as MinioClient } from 'minio';
 import { URL } from 'node:url';
-import type { BucketItem, BucketItemFromList } from 'minio';
+import type { BucketItem, BucketItemFromList, BucketItemStat } from 'minio';
 
 import {
   minioAccessKey,
@@ -109,6 +109,14 @@ export async function listAllObjects(
       reject(error);
     });
   });
+}
+
+// get metadata about single object (artifact)
+export async function getObjectMetadata(
+  _bucketName: string, objectName: string): Promise<BucketItemStat> {
+  const bucketName = _bucketName || minioBucketName;
+  const metadata = await minioInternalClient.statObject(bucketName, objectName);
+  return metadata;
 }
 
 // get buckets
