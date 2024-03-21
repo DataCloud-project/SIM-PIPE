@@ -74,6 +74,7 @@ import type {
   QueryWorkflowTemplateArgs as QueryWorkflowTemplateArguments,
   WorkflowTemplate,
 } from './schema.js';
+import { ArtifactItem } from '../minio/minio.js';
 
 interface ContextUser {
   sub: string
@@ -190,7 +191,12 @@ const resolvers = {
     ): Promise<Query['artifacts']> {
       const { bucketName } = arguments_;
       // console.log(bucketName);
-      const objects = await listAllObjects(bucketName);
+      let objects: ArtifactItem[];
+      if (!bucketName) {
+        objects = await listAllObjects(); // will use default bucket
+      } else {
+        objects = await listAllObjects(bucketName);
+      }
       return objects.map(({ name, size }) => ({
         name,
         key: name,
@@ -451,8 +457,7 @@ const resolvers = {
       _context: AuthenticatedContext,
     ): Promise<Mutation['deleteArtifacts']> {
       const { bucketName, keys } = arguments_;
-      console.log('Hello world!', keys)
-      const response = await deleteObjects(bucketName, keys);
+      const response = await deleteObjects(keys, bucketName);
       return response;
     }
   } as Required<MutationResolvers<AuthenticatedContext, EmptyParent>>,
@@ -638,7 +643,7 @@ const resolvers = {
       if (!key) {
         return undefined;
       }
-      return await computePresignedGetUrl(key, bucketName);
+      return await computePresignedGetUrl(key, bucketName as string);
     },
     async size(
       artifact: Artifact,
@@ -647,7 +652,7 @@ const resolvers = {
       if (!key) {
         return undefined;
       }
-      const filesize = await getObjectSize(key, bucketName);
+      const filesize = await getObjectSize(key, bucketName as string);
       // console.log('artifact size calc', filesize, key, bucketName, artifact)
       return filesize
     },
