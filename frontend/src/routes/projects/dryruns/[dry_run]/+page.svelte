@@ -168,7 +168,7 @@
 							<th>Result</th>
 							<th>Run duration</th>
 							<th>Action</th>
-							<th>Template</th>
+							<th style="text-align:center">Template</th>
 							<th>Created</th>
 						</tr>
 					</thead>
