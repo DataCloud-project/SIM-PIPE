@@ -3,7 +3,7 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci
 COPY vite.config.ts svelte.config.js ./
-COPY tailwind.config.cjs tailwind.config.cjs ./
+COPY tailwind.config.ts tailwind.config.ts ./
 COPY postcss.config.cjs postcss.config.cjs ./
 COPY ./static ./static
 COPY ./src ./src
