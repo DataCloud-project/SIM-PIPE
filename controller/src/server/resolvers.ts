@@ -647,7 +647,9 @@ const resolvers = {
       if (!key) {
         return undefined;
       }
-      return await getObjectSize(key, bucketName);
+      const filesize = await getObjectSize(key, bucketName);
+      // console.log('artifact size calc', filesize, key, bucketName, artifact)
+      return filesize
     },
   },
   WorkflowTemplate: {
