@@ -5,9 +5,9 @@
 
 	import { requestGraphQLClient } from '$lib/graphqlUtils.js';
 
-	import createProjectMutation from '../queries/create_project.js';
-	import createWorkflowTemplateMutation from '../queries/create_workflow_template.js';
-	import { cBase, cForm,cHeader } from '../styles/styles.js';
+	import createProjectMutation from '$queries/create_project.js';
+	import createWorkflowTemplateMutation from '$queries/create_workflow_template.js';
+	import { cBase, cForm,cHeader } from '$styles/styles.js';
 
     // Props - Exposes parent props to this component
     export let parent: SvelteComponent;

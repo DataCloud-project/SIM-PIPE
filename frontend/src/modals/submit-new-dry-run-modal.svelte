@@ -253,8 +253,6 @@
 
 
 	function parsetemplateTaskList() {
-		// only valid for dag format https://argoproj.github.io/argo-workflows/walk-through/dag/
-		
 		// disabling; could not resolve eslint error  Unsafe usage of optional chaining. If it short-circuits with 'undefined' the evaluation will throw TypeError  55:53  warning  Unexpected any. Specify a different type
 		/* eslint-disable */
 		const {
@@ -299,46 +297,6 @@
 		newWorkflowTemplate.metadata = { generateName: newWorkflowTemplate.metadata.generateName }
 		return newWorkflowTemplate;
 	}
-
-	// TODO: delete this outdated function!
-	// modify workflow template from project to create a valid argoWorkflow input for create new dryrun
-	/*
-	async function newWorkflowTemplate(template: { metadata: any; spec: any }) {
-		const newWorkflowTemplate = template;
-		if (formData.files.length != 0) {
-			newWorkflowTemplate.spec.templates.forEach(
-				async (template: { inputs: any; name: string }) => {
-					// find the initial step (currently assuming there is only 1 initial step)
-					let initial_task_name = '';
-					for (let task of templateTaskList) {
-						if (!task.dependencies) {
-							// initial step has no dependencies
-							initial_task_name = task.name;
-							break;
-						}
-					}
-					// change input files content in the template for the initial step
-					// if any files are uploaded
-					if (template.name == initial_task_name) {
-						templateContainerInputs[templateTaskList[0].name].artifacts.forEach(
-							async (artifact: { raw: { data: string } }, index: number) => {
-								const files = formData.files[index] as unknown as FileList;
-								if (files) {
-									let text = await files[0].text();
-									artifact.raw.data = `${text}`;
-								} else {
-									console.log('Input file not uploaded!');
-								}
-							}
-						);
-					}
-				}
-			);
-		}
-		
-		return newWorkflowTemplate;
-	}*/
-
 
 	async function onCreateDryRunSubmit(): Promise<void> {
 		modalStore.close();
