@@ -46,6 +46,19 @@ export type Artifact = {
   url?: Maybe<Scalars['String']['output']>;
 };
 
+/**  Artifact metadata  */
+export type ArtifactMetadata = {
+  __typename?: 'ArtifactMetadata';
+  /**  Unique identifier of the artifact  */
+  etag?: Maybe<Scalars['String']['output']>;
+  /**  Last modified date  */
+  lastModified?: Maybe<Scalars['String']['output']>;
+  /**  Artifact metadata  */
+  metaData?: Maybe<Scalars['String']['output']>;
+  /**  The artifact size  */
+  size?: Maybe<Scalars['Int']['output']>;
+};
+
 export type Bucket = {
   __typename?: 'Bucket';
   /**  The bucket name  */
@@ -855,6 +868,8 @@ export type PrometheusSample = {
 
 export type Query = {
   __typename?: 'Query';
+  /**  Artifact metadata  */
+  artifact?: Maybe<ArtifactMetadata>;
   /**  List of all the artifacts  */
   artifacts: Array<Artifact>;
   /**  List of all the buckets  */
@@ -873,6 +888,12 @@ export type Query = {
   username: Scalars['String']['output'];
   /**  Get an Argo  workflow template by name  */
   workflowTemplate?: Maybe<WorkflowTemplate>;
+};
+
+
+export type QueryArtifactArgs = {
+  bucketName: Scalars['String']['input'];
+  key: Scalars['String']['input'];
 };
 
 
@@ -994,6 +1015,7 @@ export type ResolversTypes = {
   ArgoWorkflow: ResolverTypeWrapper<Scalars['ArgoWorkflow']['output']>;
   ArgoWorkflowTemplate: ResolverTypeWrapper<Scalars['ArgoWorkflowTemplate']['output']>;
   Artifact: ResolverTypeWrapper<Artifact>;
+  ArtifactMetadata: ResolverTypeWrapper<ArtifactMetadata>;
   Boolean: ResolverTypeWrapper<Scalars['Boolean']['output']>;
   Bucket: ResolverTypeWrapper<Bucket>;
   CreateDryRunInput: CreateDryRunInput;
@@ -1028,6 +1050,7 @@ export type ResolversParentTypes = {
   ArgoWorkflow: Scalars['ArgoWorkflow']['output'];
   ArgoWorkflowTemplate: Scalars['ArgoWorkflowTemplate']['output'];
   Artifact: Artifact;
+  ArtifactMetadata: ArtifactMetadata;
   Boolean: Scalars['Boolean']['output'];
   Bucket: Bucket;
   CreateDryRunInput: CreateDryRunInput;
@@ -1068,6 +1091,14 @@ export type ArtifactResolvers<ContextType = any, ParentType extends ResolversPar
   name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   size?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
   url?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type ArtifactMetadataResolvers<ContextType = any, ParentType extends ResolversParentTypes['ArtifactMetadata'] = ResolversParentTypes['ArtifactMetadata']> = {
+  etag?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  lastModified?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  metaData?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  size?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -1252,6 +1283,7 @@ export interface PrometheusStringNumberScalarConfig extends GraphQLScalarTypeCon
 }
 
 export type QueryResolvers<ContextType = any, ParentType extends ResolversParentTypes['Query'] = ResolversParentTypes['Query']> = {
+  artifact?: Resolver<Maybe<ResolversTypes['ArtifactMetadata']>, ParentType, ContextType, RequireFields<QueryArtifactArgs, 'bucketName' | 'key'>>;
   artifacts?: Resolver<Array<ResolversTypes['Artifact']>, ParentType, ContextType, Partial<QueryArtifactsArgs>>;
   buckets?: Resolver<Array<ResolversTypes['Bucket']>, ParentType, ContextType>;
   dockerRegistryCredentials?: Resolver<Array<ResolversTypes['DockerRegistryCredential']>, ParentType, ContextType>;
@@ -1278,6 +1310,7 @@ export type Resolvers<ContextType = any> = {
   ArgoWorkflow?: GraphQLScalarType;
   ArgoWorkflowTemplate?: GraphQLScalarType;
   Artifact?: ArtifactResolvers<ContextType>;
+  ArtifactMetadata?: ArtifactMetadataResolvers<ContextType>;
   Bucket?: BucketResolvers<ContextType>;
   DockerRegistryCredential?: DockerRegistryCredentialResolvers<ContextType>;
   DryRun?: DryRunResolvers<ContextType>;

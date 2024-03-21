@@ -46,6 +46,13 @@ type Query {
     """ The name of the bucket """
     bucketName: String): [Artifact!]! @auth
 
+  """ Artifact metadata """
+  artifact(
+    """ The name of the bucket """
+    bucketName: String!,
+    """ The key of the artifact """
+    key: String!): ArtifactMetadata @auth
+
   """ List of all the buckets """
   buckets: [Bucket!]! @auth
 }
@@ -326,6 +333,18 @@ type Artifact {
   size: Int
   """ The name of the bucket that holds the artifact """
   bucketName: String
+}
+
+""" Artifact metadata """
+type ArtifactMetadata {
+  """ Unique identifier of the artifact """
+  etag: String
+  """ Last modified date """
+  lastModified: String
+  """ Artifact metadata """
+  metaData: String
+  """ The artifact size """
+  size: Int
 }
 
 """

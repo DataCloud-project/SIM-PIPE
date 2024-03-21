@@ -27,8 +27,17 @@ import {
   createProject, deleteProject, getProject, projects, renameProject,
 } from '../k8s/projects.js';
 import {
-  computePresignedGetUrl, computePresignedPutUrl, listAllBuckets, listAllObjects, getObjectSize, createBucket, deleteBucket, deleteObjects,
+  computePresignedGetUrl, 
+  computePresignedPutUrl, 
+  listAllBuckets, 
+  listAllObjects, 
+  getObjectSize, 
+  createBucket, 
+  deleteBucket, 
+  deleteObjects,
+  getObjectMetadata,
 } from '../minio/minio.js';
+import { ArtifactItem } from '../minio/minio.js';
 import { assertPrometheusIsHealthy } from '../prometheus/prometheus.js';
 import queryPrometheusResolver from '../prometheus/query-prometheus-resolver.js';
 import { NotFoundError, PingError } from './apollo-errors.js';
@@ -67,6 +76,7 @@ import type {
   MutationDeleteArtifactsArgs as MutationDeleteArtifactsArguments,
   Project,
   Query,
+  QueryArtifactArgs as QueryArtifactArguments,
   QueryArtifactsArgs as QueryArtifactsArguments,
   QueryDryRunArgs as QueryDryRunArguments,
   QueryProjectArgs as QueryProjectArguments,
@@ -74,7 +84,6 @@ import type {
   QueryWorkflowTemplateArgs as QueryWorkflowTemplateArguments,
   WorkflowTemplate,
 } from './schema.js';
-import { ArtifactItem } from '../minio/minio.js';
 
 interface ContextUser {
   sub: string
@@ -185,6 +194,19 @@ const resolvers = {
       return buckets.map(({ name }) => ({
         name,
       }));
+    },
+    async artifact(
+      _p: EmptyParent, arguments_: QueryArtifactArguments, context: AuthenticatedContext,
+    ): Promise<Query['artifact']> {
+      const { key, bucketName } = arguments_;
+      const object = await getObjectMetadata(key, bucketName);
+      let returnobject = {
+        etag: object.etag,
+        lastModified: object.lastModified.toISOString(),
+        size: object.size,
+        metadata: object.metaData,
+      };
+      return returnobject;
     },
     async artifacts(
       _p: EmptyParent, arguments_: QueryArtifactsArguments, context: AuthenticatedContext,

@@ -125,9 +125,11 @@ export async function listAllBuckets(): Promise<BucketItemFromList[]> {
 }
 
 // check if a bucket exists
+/* -- not currently used
 export async function bucketExists(bucketName: string): Promise<boolean> {
   return await minioInternalClient.bucketExists(bucketName);
 }
+*/
 
 // create bucket
 export async function createBucket(bucketName: string): Promise<string> {
