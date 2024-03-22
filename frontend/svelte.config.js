@@ -24,7 +24,8 @@ const config = {
 			$utils: './src/utils',
 			$queries: './src/queries',
 			$typesdefinitions: './src/types.d.ts',
-		},
+			$src: './src'
+		}
 	}
 };
 
