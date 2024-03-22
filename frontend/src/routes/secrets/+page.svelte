@@ -9,7 +9,6 @@
 	import { requestGraphQLClient } from '$lib/graphqlUtils';
 	import { goto } from '$app/navigation';
 
-
 	const modalStore = getModalStore();
 
 	async function onSubmitNewSecret() {
@@ -20,7 +19,7 @@
 			body: 'Provide a name and username for the new secret at given host.\nSecret will be automatically generated.'
 		};
 		modalStore.trigger(modal);
-	};
+	}
 
 	const getCredentialsList = async (): Promise<DockerRegistryCredential[]> => {
 		const response: { dockerRegistryCredentials: DockerRegistryCredential[] } =
@@ -76,24 +75,6 @@
 
 	$: reactiveCredentialsList = $credentialsList;
 </script>
-
-<style>
-	.table.table {
-		max-height: 80vh;
-		overflow-y: auto;
-		overflow-x: scroll;
-		display: block;
-		border-collapse: collapse;
-		margin-left: auto;
-		margin-right: auto;
-		table-layout: auto;
-		width: 100%;
-	}
-	thead {
-		position: sticky;
-		top: 0;
-	}
-</style>
 
 <!-- Page Header -->
 <div class="flex w-full content-center p-10">
@@ -154,3 +135,21 @@
 		{/await}
 	</div>
 </div>
+
+<style>
+	.table.table {
+		max-height: 80vh;
+		overflow-y: auto;
+		overflow-x: scroll;
+		display: block;
+		border-collapse: collapse;
+		margin-left: auto;
+		margin-right: auto;
+		table-layout: auto;
+		width: 100%;
+	}
+	thead {
+		position: sticky;
+		top: 0;
+	}
+</style>

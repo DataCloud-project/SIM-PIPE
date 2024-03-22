@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { getModalStore, ProgressBar } from '@skeletonlabs/skeleton';
 	import type { ModalSettings } from '@skeletonlabs/skeleton';
-	import { EditIcon, FileTextIcon } from 'svelte-feather-icons';	
+	import { EditIcon, FileTextIcon } from 'svelte-feather-icons';
 	import { projectsList, clickedProjectId } from '../../stores/stores.js';
 	import type { Project } from '../../types.js';
 	import { goto } from '$app/navigation';

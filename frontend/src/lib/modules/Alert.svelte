@@ -1,15 +1,14 @@
 <script lang="ts">
-    import { AlertTriangleIcon } from 'svelte-feather-icons';
-    
-    export let visibleAlert = false;
-    export let alertTitle = 'Alert!';
-    export let alertMessage = 'Alert!';
-    export let alertVariant: string = 'variant-ghost-surface';
+	import { AlertTriangleIcon } from 'svelte-feather-icons';
 
+	export let visibleAlert = false;
+	export let alertTitle = 'Alert!';
+	export let alertMessage = 'Alert!';
+	export let alertVariant: string = 'variant-ghost-surface';
 </script>
 
 {#if visibleAlert}
-	<div class="flex w-full content-center p-10"> 
+	<div class="flex w-full content-center p-10">
 		<aside class="alert {alertVariant} w-full">
 			<div class="flex">
 				<div class="row-span-2">

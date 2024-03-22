@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { error } from '@sveltejs/kit';	
+	import { error } from '@sveltejs/kit';
 	import { getModalStore } from '@skeletonlabs/skeleton';
 	import type { SvelteComponent } from 'svelte';
 	import type { PopupSettings } from '@skeletonlabs/skeleton';
@@ -10,11 +10,11 @@
 	import type { DockerRegistryCredential } from '../types.js';
 	import { requestGraphQLClient } from '$lib/graphqlUtils.js';
 
-    // Props - Exposes parent props to this component
-    export let parent: SvelteComponent;
+	// Props - Exposes parent props to this component
+	export let parent: SvelteComponent;
 
-    // modalStore is a store that is used to trigger modals
-    const modalStore = getModalStore();
+	// modalStore is a store that is used to trigger modals
+	const modalStore = getModalStore();
 
 	// Form Data
 	const formData = {

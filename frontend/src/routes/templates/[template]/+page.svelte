@@ -63,7 +63,7 @@
 			console.log('failed to fetch workflow template data from project: ', error);
 			try {
 				let data = await getWorkflowTemplateFromDryRun();
-				workflow = data.dryRun.argoWorkflow
+				workflow = data.dryRun.argoWorkflow;
 				workflow_name = data.dryRun.id;
 				project = data.dryRun.project;
 				requestsComplete = true;

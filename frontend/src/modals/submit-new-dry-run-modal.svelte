@@ -2,7 +2,7 @@
 	import { getModalStore } from '@skeletonlabs/skeleton';
 	import type { ModalSettings } from '@skeletonlabs/skeleton';
 	import { FileButton } from '@skeletonlabs/skeleton';
-    import type { SvelteComponent } from 'svelte';
+	import type { SvelteComponent } from 'svelte';
 
 	import { requestGraphQLClient } from '$lib/graphqlUtils.js';
 
@@ -13,7 +13,6 @@
 	import { cBase, cForm, cHeader, optional } from '../styles/styles.js';
 	import type { ArtifactHierarchyType, Project } from '$typesdefinitions';
 	import ArtifactBrowser from './artifact-browser.svelte';
-
 
 	let isOverlayOpen = false;
 	let selectedTemplateTaskName = '';
@@ -27,13 +26,14 @@
 	// Props - Exposes parent props to this component
 	export let parent: SvelteComponent;
 
-	// TODO: input artifacts are enriched with raw data from local files. 
+	// TODO: input artifacts are enriched with raw data from local files.
 	// That is, the local files text content is written directly into the template!!! This is risky and should be changed!
 	// templateContainerInputs contains argo workflow template container inputs.
 	const templateContainerInputs: any = {};
 
 	// holds information about selected input data (raw files and artifacts)
-	let inputdata: { [task_name: string]: { [template_task_artifact_index: number]: InputData } } = {};
+	let inputdata: { [task_name: string]: { [template_task_artifact_index: number]: InputData } } =
+		{};
 
 	let argoWorkflowTemplate = $selectedProject?.workflowTemplates[0].argoWorkflowTemplate;
 	let currentArgoWorkflowTemplates = argoWorkflowTemplate.spec.templates;
@@ -52,7 +52,7 @@
 	type ArtifactDataContent = {
 		artifact_path: string;
 		artifact_bucket: string;
-	}
+	};
 
 	type FileDataContent = {
 		filename: string;
@@ -67,7 +67,7 @@
 		path: string;
 		bucket: string;
 	};
-	
+
 	// We have been using raw input. Now we will use miniobrowser to select input files. Currently need to support both useRawInput and useMinio
 	// raw input comes from formData.files.
 	type Task = {
@@ -83,47 +83,51 @@
 	type TemplateContainerArtifactInput = {
 		artifacts: [
 			{
-			name: string, // the given name of the input artifact in the template container
-			path: string, // the path to the input artifact in the container
-			mode: 644,    // file mode (read-write for owner, read-only for group and others)
-			s3?: S3Input  // s3 input artifact details
+				name: string; // the given name of the input artifact in the template container
+				path: string; // the path to the input artifact in the container
+				mode: 644; // file mode (read-write for owner, read-only for group and others)
+				s3?: S3Input; // s3 input artifact details
 			}
-		]
+		];
 	};
 
 	type TemplateContainerRawInput = {
 		artifacts: [
 			{
-			name: string, // the given name of the input artifact in the template container
-			path: string, // the path to the input artifact in the container
-			mode: 644,    // file mode (read-write for owner, read-only for group and others)
-			raw: { data: string } // raw input artifact details
+				name: string; // the given name of the input artifact in the template container
+				path: string; // the path to the input artifact in the container
+				mode: 644; // file mode (read-write for owner, read-only for group and others)
+				raw: { data: string }; // raw input artifact details
 			}
-		]
+		];
 	};
 
 	type S3Input = {
-		key: string;		// path to minio object
-		endpoint: string,	// minio endpoint
-		bucket: string,		// minio bucket
-		insecure: true,
+		key: string; // path to minio object
+		endpoint: string; // minio endpoint
+		bucket: string; // minio bucket
+		insecure: true;
 		accessKeySecret: {
-			name: string,
-			key: string
-		},
+			name: string;
+			key: string;
+		};
 		secretKeySecret: {
-			name: string,
-			key: string
-		}
+			name: string;
+			key: string;
+		};
 	};
 
-	function openOverlay(template_task_name: string, artifact_name: string, task_artifact_index: number) {
+	function openOverlay(
+		template_task_name: string,
+		artifact_name: string,
+		task_artifact_index: number
+	) {
 		console.log('openOverlay');
 		selectedTemplateTaskName = template_task_name;
 		selectedTemplateTaskArtifactName = artifact_name;
 		selectedTaskArtifactIndex = task_artifact_index;
 		isOverlayOpen = true;
-	};
+	}
 
 	const closeOverlay = () => {
 		console.log('closeOverlay');
@@ -132,15 +136,25 @@
 	};
 
 	// Receives message from ArtifactBrowser - returns details of selected artifact and template task name
-	function handleMessage(event: { detail: { selected_artifact: ArtifactHierarchyType, template_task_name: string, template_task_artifact_name: string}}) {
+	function handleMessage(event: {
+		detail: {
+			selected_artifact: ArtifactHierarchyType;
+			template_task_name: string;
+			template_task_artifact_name: string;
+		};
+	}) {
 		console.log('triggerInsertArtifactInput');
-    	const selectedArtifact = event.detail.selected_artifact;
+		const selectedArtifact = event.detail.selected_artifact;
 		const selectedTemplateTaskName = event.detail.template_task_name;
 		const selectedTemplateTaskArtifactName = event.detail.template_task_artifact_name;
 		const selectedTemplateTaskArtifactIndex = selectedTaskArtifactIndex;
 
-		const template = currentArgoWorkflowTemplates.find((template: any) => template.name === selectedTemplateTaskName);
-		const input_artifact = template.inputs.artifacts.find((artifact: any) => artifact.name === selectedTemplateTaskArtifactName);
+		const template = currentArgoWorkflowTemplates.find(
+			(template: any) => template.name === selectedTemplateTaskName
+		);
+		const input_artifact = template.inputs.artifacts.find(
+			(artifact: any) => artifact.name === selectedTemplateTaskArtifactName
+		);
 		// pop input_artifact.raw
 		if ('raw' in input_artifact) {
 			delete input_artifact.raw;
@@ -148,30 +162,36 @@
 		input_artifact.s3 = createDefaultS3Input();
 		input_artifact.s3.key = selectedArtifact.path;
 		input_artifact.s3.bucket = selectedArtifact.bucket;
-		currentArgoWorkflowTemplates.find(
-			(template: any) => template.name === selectedTemplateTaskName).inputs.artifacts.find(
-				(artifact: any) => artifact.name === selectedTemplateTaskArtifactName).s3 = input_artifact.s3;
+		currentArgoWorkflowTemplates
+			.find((template: any) => template.name === selectedTemplateTaskName)
+			.inputs.artifacts.find(
+				(artifact: any) => artifact.name === selectedTemplateTaskArtifactName
+			).s3 = input_artifact.s3;
 
 		const inputdata_data: InputData = {
-			'template_task_name': selectedTemplateTaskName,
-			'template_artifact_name': selectedTemplateTaskArtifactName,
-			'template_task_artifact_index': selectedTemplateTaskArtifactIndex,
-			'is_raw': false,
-			'is_artifact': true,
-			'artifact': { 
+			template_task_name: selectedTemplateTaskName,
+			template_artifact_name: selectedTemplateTaskArtifactName,
+			template_task_artifact_index: selectedTemplateTaskArtifactIndex,
+			is_raw: false,
+			is_artifact: true,
+			artifact: {
 				artifact_path: selectedArtifact.path,
-				artifact_bucket: selectedArtifact.bucket }
+				artifact_bucket: selectedArtifact.bucket
+			}
 		};
 		if (!inputdata[selectedTemplateTaskName]) {
 			// initialize empty array
 			inputdata[selectedTemplateTaskName] = [];
-		}	
+		}
 		inputdata[selectedTemplateTaskName][selectedTemplateTaskArtifactIndex] = inputdata_data;
 		console.log('handleMessage inputdata', inputdata);
 	}
 
-
-	async function triggerInsertRawInput(template_task_name: string, template_artifact_name: string, task_artifact_index: number) {
+	async function triggerInsertRawInput(
+		template_task_name: string,
+		template_artifact_name: string,
+		task_artifact_index: number
+	) {
 		// when a file is uploaded, the raw input is updated similarly to handleMessage event from the ArtifactBrowser
 		console.log('triggerInsertRawInput');
 		const selectedTemplateTaskName = template_task_name;
@@ -182,12 +202,12 @@
 		const filename = files[0].name;
 
 		const inputdata_data: InputData = {
-			'template_task_name': selectedTemplateTaskName,
-			'template_artifact_name': selectedTemplateTaskArtifactName,
-			'template_task_artifact_index': task_artifact_index,
-			'is_raw': true,
-			'is_artifact': false,
-			'raw': { filename: filename }
+			template_task_name: selectedTemplateTaskName,
+			template_artifact_name: selectedTemplateTaskArtifactName,
+			template_task_artifact_index: task_artifact_index,
+			is_raw: true,
+			is_artifact: false,
+			raw: { filename: filename }
 		};
 		if (!inputdata[selectedTemplateTaskName]) {
 			// initialize empty array
@@ -195,62 +215,66 @@
 		}
 		inputdata[selectedTemplateTaskName][selectedTemplateTaskArtifactIndex] = inputdata_data;
 
-
-		const template = currentArgoWorkflowTemplates.find((template: any) => template.name === selectedTemplateTaskName);
-		const input_artifact = template.inputs.artifacts.find((artifact: any) => artifact.name === selectedTemplateTaskArtifactName);
+		const template = currentArgoWorkflowTemplates.find(
+			(template: any) => template.name === selectedTemplateTaskName
+		);
+		const input_artifact = template.inputs.artifacts.find(
+			(artifact: any) => artifact.name === selectedTemplateTaskArtifactName
+		);
 		// pop input_artifact.s3
 		if ('s3' in input_artifact) {
 			delete input_artifact.s3;
 		}
 		input_artifact.raw = { data: text };
-		currentArgoWorkflowTemplates.find(
-			(template: any) => template.name === selectedTemplateTaskName).inputs.artifacts.find(
-				(artifact: any) => artifact.name === selectedTemplateTaskArtifactName).raw = input_artifact.raw;
+		currentArgoWorkflowTemplates
+			.find((template: any) => template.name === selectedTemplateTaskName)
+			.inputs.artifacts.find(
+				(artifact: any) => artifact.name === selectedTemplateTaskArtifactName
+			).raw = input_artifact.raw;
 	}
 
 	function createDefaultTemplateContainerRawInput(): TemplateContainerRawInput {
 		return {
 			artifacts: [
 				{
-					name: '',		// the given name of the input artifact in the template container
-					path: '',		// the path to the input artifact in the container
-					mode: 644,		// file mode (read-write for owner, read-only for group and others)
-					raw: { data: '' }	// raw input artifact details
+					name: '', // the given name of the input artifact in the template container
+					path: '', // the path to the input artifact in the container
+					mode: 644, // file mode (read-write for owner, read-only for group and others)
+					raw: { data: '' } // raw input artifact details
 				}
 			]
 		};
-	};
+	}
 
 	function createDefaultTemplateContainerArtifactInput(): TemplateContainerArtifactInput {
 		return {
 			artifacts: [
 				{
-					name: '',		// the given name of the input artifact in the template container
-					path: '',		// the path to the input artifact in the container
-					mode: 644,		// file mode (read-write for owner, read-only for group and others)
+					name: '', // the given name of the input artifact in the template container
+					path: '', // the path to the input artifact in the container
+					mode: 644, // file mode (read-write for owner, read-only for group and others)
 					s3: createDefaultS3Input()
 				}
 			]
 		};
-	};
+	}
 
 	function createDefaultS3Input(): S3Input {
 		return {
-			key: '',							// path to minio object - e.g. /path/to/object - this must be provided from minio artifact browser
-			bucket: '',							// minio bucket - this must be provided from minio artifact browser
-			endpoint: "simpipe-minio:9000",
+			key: '', // path to minio object - e.g. /path/to/object - this must be provided from minio artifact browser
+			bucket: '', // minio bucket - this must be provided from minio artifact browser
+			endpoint: 'simpipe-minio:9000',
 			insecure: true,
 			accessKeySecret: {
-				name: "simpipe-minio",
-				key: "root-user"
+				name: 'simpipe-minio',
+				key: 'root-user'
 			},
 			secretKeySecret: {
-				name: "simpipe-minio",
-				key: "root-password"
+				name: 'simpipe-minio',
+				key: 'root-password'
 			}
 		};
-	};
-
+	}
 
 	function parsetemplateTaskList() {
 		// disabling; could not resolve eslint error  Unsafe usage of optional chaining. If it short-circuits with 'undefined' the evaluation will throw TypeError  55:53  warning  Unexpected any. Specify a different type
@@ -267,11 +291,10 @@
 		// console.log('steps', steps); array of arrays of tasks
 		let tasks: Task[] = [];
 		if (dag) {
-			console.log('dag', dag)
+			console.log('dag', dag);
 			tasks = dag.dag.tasks;
-
 		} else if (steps) {
-			console.log('steps', steps)
+			console.log('steps', steps);
 			tasks = steps.steps.reduce((acc: Task[], step: any) => {
 				acc.push(...step);
 				return acc;
@@ -294,7 +317,7 @@
 		newWorkflowTemplate.spec.templates = currentArgoWorkflowTemplates;
 		// console.log('originalWorkflowTemplate', argoWorkflowTemplate);
 		// console.log('newWorkflowTemplate', newWorkflowTemplate);
-		newWorkflowTemplate.metadata = { generateName: newWorkflowTemplate.metadata.generateName }
+		newWorkflowTemplate.metadata = { generateName: newWorkflowTemplate.metadata.generateName };
 		return newWorkflowTemplate;
 	}
 
@@ -360,7 +383,6 @@
 	}
 
 	$: console.log('inputdata', inputdata);
-
 </script>
 
 {#if $modalStore[0]}
@@ -411,23 +433,32 @@
 											</div>
 											<div>
 												{#if inputdata[task.name] && inputdata[task.name][k] && inputdata[task.name][k].is_artifact}
-													<span>{inputdata[task.name][k].artifact?.artifact_bucket} {inputdata[task.name][k].artifact?.artifact_path}</span>
+													<span
+														>{inputdata[task.name][k].artifact?.artifact_bucket}
+														{inputdata[task.name][k].artifact?.artifact_path}</span
+													>
 												{:else}
 													<span></span>
-												{/if}		
+												{/if}
 											</div>
 											<div></div>
 											<div>
-												<FileButton 
-													id={artifact.name} 
-													name={artifact.name} 
+												<FileButton
+													id={artifact.name}
+													name={artifact.name}
 													bind:files={currentinputfiles}
-													on:change={() => triggerInsertRawInput(task.name, artifact.name, k)}>
+													on:change={() => triggerInsertRawInput(task.name, artifact.name, k)}
+												>
 													Upload local file
 												</FileButton>
 											</div>
 											<div>
-												<button type="button" class="btn variant-soft-primary" on:click={() => openOverlay(task.name, artifact.name, k)}>Browse artifacts</button>
+												<button
+													type="button"
+													class="btn variant-soft-primary"
+													on:click={() => openOverlay(task.name, artifact.name, k)}
+													>Browse artifacts</button
+												>
 											</div>
 										</div>
 									</span>
@@ -454,16 +485,18 @@
 			{/if}
 		</form>
 		<footer class="modal-footer {parent.regionFooter}">
-			<button class="btn {parent.buttonNeutral}" on:click={parent.onClose}>{parent.buttonTextCancel}</button>
+			<button class="btn {parent.buttonNeutral}" on:click={parent.onClose}
+				>{parent.buttonTextCancel}</button
+			>
 			<button class="btn {parent.buttonPositive}" on:click={onCreateDryRunSubmit}>Submit</button>
 		</footer>
 	</div>
 {/if}
 
-
-<ArtifactBrowser 
-	templateTaskName={selectedTemplateTaskName} 
-	templateTaskArtifactName={selectedTemplateTaskArtifactName} 
-	isOpen={isOverlayOpen} 
-	close={closeOverlay} 
-	on:message={handleMessage} />
+<ArtifactBrowser
+	templateTaskName={selectedTemplateTaskName}
+	templateTaskArtifactName={selectedTemplateTaskArtifactName}
+	isOpen={isOverlayOpen}
+	close={closeOverlay}
+	on:message={handleMessage}
+/>

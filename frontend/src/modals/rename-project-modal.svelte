@@ -7,16 +7,15 @@
 	import allProjectsQuery from '$queries/get_all_projects.js';
 	import renameProjectMutation from '$queries/rename_project.js';
 	import { projectsList } from '$stores/stores.js';
-	import { cBase, cForm,cHeader } from '$styles/styles.js';
+	import { cBase, cForm, cHeader } from '$styles/styles.js';
 	import { displayAlert } from '$utils/alerts_utils.js';
 	import type { AllProjectsResponse } from '$typesdefinitions';
 
 	// Props - Exposes parent props to this component
 	const modalStore = getModalStore();
 
-    // Props - Exposes parent props to this component
-    export let parent: SvelteComponent;
-
+	// Props - Exposes parent props to this component
+	export let parent: SvelteComponent;
 
 	const project: { projectId: string; projectName: string } = $modalStore[0]?.valueAttr as {
 		projectId: string;

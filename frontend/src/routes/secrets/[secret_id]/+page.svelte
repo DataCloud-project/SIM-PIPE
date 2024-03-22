@@ -1,18 +1,17 @@
 <script lang="ts">
-	import { selectedCredential, selectedProject } from '../../../stores/stores';
+	import { selectedCredential, selectedProject } from '$stores/stores';
 	import { requestGraphQLClient } from '$lib/graphqlUtils';
-	import type { Project } from '../../../types';
-	import allProjectsQuery from '../../../queries/get_all_projects.js';
-	import getWorkflowQuery from '../../../queries/get_workflow_template.js';
+	import type { Project } from '$typesdefinitions';
+	import allProjectsQuery from '$queries/get_all_projects.js';
+	import getWorkflowQuery from '$queries/get_workflow_template.js';
 	import { ProgressBar } from '@skeletonlabs/skeleton';
 	import { error } from '@sveltejs/kit';
-	import updateCredentialMutation from '../../../queries/update_workflow_template';
+	import updateCredentialMutation from '$queries/update_workflow_template';
 	import { Modal, getModalStore } from '@skeletonlabs/skeleton';
 	import type { ModalSettings } from '@skeletonlabs/skeleton';
 	import { goto } from '$app/navigation';
 
 	const modalStore = getModalStore();
-
 
 	const getProjectsList = async (): Promise<Project[]> => {
 		const response: { projects: Project[] } = await requestGraphQLClient(allProjectsQuery);
@@ -36,10 +35,10 @@
 		}
 		let registry_server = $selectedCredential.server ? $selectedCredential.server : 'undefined';
 		const workflowTemplateUpdatedMessageModal: ModalSettings = {
-					type: 'alert',
-					title: 'Secret added to project workflow! 🎉',
-					body: `<p>Project: ${project_name}</p><p>Now uses registry: ${registry_server}</p>`
-				};
+			type: 'alert',
+			title: 'Secret added to project workflow! 🎉',
+			body: `<p>Project: ${project_name}</p><p>Now uses registry: ${registry_server}</p>`
+		};
 		modalStore.trigger(workflowTemplateUpdatedMessageModal);
 		await new Promise((resolve) => setTimeout(resolve, 3000));
 		modalStore.close();

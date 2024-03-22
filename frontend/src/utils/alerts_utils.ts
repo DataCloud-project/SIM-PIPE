@@ -2,9 +2,7 @@
 import { getModalStore } from '@skeletonlabs/skeleton';
 import type { ModalSettings } from '@skeletonlabs/skeleton';
 
-
 export const displayAlert = (title: string, body: string, timeout = 2000) => {
-	
 	const modalStore = getModalStore();
 
 	const alertModal: ModalSettings = {

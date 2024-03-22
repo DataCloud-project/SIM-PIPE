@@ -67,7 +67,7 @@
 		});
 		$selectedProject = responseProjectDetails.project;
 	}
-	
+
 	async function onPredictSelected() {
 		// TODO: later change to passing dry runs ids through some other means (not to have too long url)
 		const dryRunIsToCompared = Object.keys(checkboxes)
@@ -219,7 +219,6 @@
 		{/await}
 	</div>
 </div>
-
 
 <style>
 	.table.table {

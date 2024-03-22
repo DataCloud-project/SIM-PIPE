@@ -37,7 +37,7 @@ export const selectedBucket = writable<string | undefined>(undefined);
 import type { BucketWithArtifacts } from '$typesdefinitions';
 export const buckets = writable<BucketWithArtifacts[]>([]);
 
-// reactive buckets 
+// reactive buckets
 export const reactiveBuckets = writable<BucketHierarchyType[]>([]);
 
 // selected Artifact

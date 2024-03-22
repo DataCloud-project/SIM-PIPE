@@ -14,7 +14,6 @@ function parseSimPipeEnvironment(): {
 	let keycloakEnabled = config.KEYCLOAK_ENABLED;
 	let isKeycloakEnabled = false;
 
-
 	if (keycloakEnabled === undefined || graphqlUrl === undefined) {
 		const localhostMatch = window.location.host.match(/^(localhost|127\.0\.0\.\d+|::1)(:\d+)?$/);
 

@@ -32,7 +32,7 @@ export type WorkflowTemplateFromDryRun = {
 		id: string;
 		project: Project;
 		argoWorkflow: ArgoWorkflowTemplate;
-	}
+	};
 };
 
 export type DryRun = {
@@ -173,31 +173,31 @@ export type Artifact = {
 
 // Bucket with artifacts
 export type BucketWithArtifacts = {
-	bucket: Bucket,
-	artifacts: Artifact[]
-}
+	bucket: Bucket;
+	artifacts: Artifact[];
+};
 
 // Bucket hierarchy
 export type BucketHierarchyType = {
 	bucket: string;
 	isExpanded: boolean;
 	isSelected: boolean;
-	artifacts: ArtifactHierarchyType[]
-}
+	artifacts: ArtifactHierarchyType[];
+};
 
 // Artifact hierarchy object
 export type ArtifactHierarchyType = {
-    id: string;
-    name: string;
-    path: string;
-    bucket: string;
-    subfolders: ArtifactHierarchyType[];
-    isExpanded: boolean;
-    isSelected: boolean;
+	id: string;
+	name: string;
+	path: string;
+	bucket: string;
+	subfolders: ArtifactHierarchyType[];
+	isExpanded: boolean;
+	isSelected: boolean;
 };
 
 // Folder stucture hierarchy object
 export type FolderStructure = {
-    path: string,
-    children: { [key: string]: FolderStructure} 
-}
+	path: string;
+	children: { [key: string]: FolderStructure };
+};

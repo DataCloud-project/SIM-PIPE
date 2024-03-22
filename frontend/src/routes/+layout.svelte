@@ -9,12 +9,20 @@
 	import hljs from 'highlight.js';
 	import 'highlight.js/styles/github-dark.css'; // highlight.js theme
 	import { LockIcon, BookOpenIcon, FileIcon, FolderIcon, StarIcon } from 'svelte-feather-icons';
-	import { AppShell, AppBar, AppRail, AppRailAnchor, LightSwitch, storeHighlightJs, Modal, initializeStores } from '@skeletonlabs/skeleton';
+	import {
+		AppShell,
+		AppBar,
+		AppRail,
+		AppRailAnchor,
+		LightSwitch,
+		storeHighlightJs,
+		Modal,
+		initializeStores
+	} from '@skeletonlabs/skeleton';
 	import type { ModalComponent } from '@skeletonlabs/skeleton';
 	import { page } from '$app/stores';
 	import * as config from '../lib/config';
-	import { browser } from '$app/environment';	
-
+	import { browser } from '$app/environment';
 
 	initializeStores();
 
@@ -30,9 +38,8 @@
 		provideTextInputModal: { ref: ProvideTextInputModal },
 		createNewProjectModal: { ref: SubmitNewProjectModal },
 		submitNewDryRunModal: { ref: SubmitNewDryRunModal },
-		submitNewSecretModal: { ref: SubmitNewSecretModal },
+		submitNewSecretModal: { ref: SubmitNewSecretModal }
 	};
-
 
 	storeHighlightJs.set(hljs);
 
@@ -67,7 +74,6 @@
 	}
 </script>
 
-
 <Modal components={modalRegistry} />
 
 <AppShell>
@@ -87,49 +93,52 @@
 	<!-- (sidebarLeft) -->
 	<svelte:fragment slot="sidebarLeft">
 		<AppRail>
-			<AppRailAnchor label="Projects" href="/projects" selected={$page.url.pathname === '/projects'} >
+			<AppRailAnchor
+				label="Projects"
+				href="/projects"
+				selected={$page.url.pathname === '/projects'}
+			>
 				<div class="flex flex-col items-center justify-center">
 					<div>
 						<BookOpenIcon size="1.5x" />
 					</div>
-					<div>
-						Projects
-					</div>
+					<div>Projects</div>
 				</div>
 			</AppRailAnchor>
-			<AppRailAnchor label="Artifacts" href="/artifacts" selected={$page.url.pathname === '/artifacts'} >
+			<AppRailAnchor
+				label="Artifacts"
+				href="/artifacts"
+				selected={$page.url.pathname === '/artifacts'}
+			>
 				<div class="flex flex-col items-center justify-center">
 					<div>
 						<FolderIcon size="1.5x" />
 					</div>
-					<div>
-						Artifacts
-					</div>
+					<div>Artifacts</div>
 				</div>
 			</AppRailAnchor>
-			<AppRailAnchor label="Registry Key Vault" href="/secrets" selected={$page.url.pathname === '/secrets'}>
+			<AppRailAnchor
+				label="Registry Key Vault"
+				href="/secrets"
+				selected={$page.url.pathname === '/secrets'}
+			>
 				<div class="flex flex-col items-center justify-center">
 					<div>
 						<LockIcon size="1.5x" />
 					</div>
-					<div>
-						Registry
-					</div>
+					<div>Registry</div>
 				</div>
 			</AppRailAnchor>
 			<!-- TO DO: temporary redirect to sftp go web interface; will be replaced by files manager when api is ready -->
-			<AppRailAnchor label="Sample Files" href={generateServiceUrl()}
-				external={true}>
+			<AppRailAnchor label="Sample Files" href={generateServiceUrl()} external={true}>
 				<div class="flex flex-col items-center justify-center">
 					<div>
 						<FileIcon size="1.5x" />
 					</div>
-					<div>
-						Files
-					</div>
+					<div>Files</div>
 				</div>
 			</AppRailAnchor>
-<!-- 			<AppRailAnchor label="Ideas" href="/ideas" selected={$page.url.pathname === '/ideas'} >
+			<!-- 			<AppRailAnchor label="Ideas" href="/ideas" selected={$page.url.pathname === '/ideas'} >
 				<div class="flex flex-col items-center justify-center">
 					<div>
 						<StarIcon size="1.5x" />

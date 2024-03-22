@@ -44,25 +44,31 @@ module.exports = {
 		'import/newline-after-import': 'warn',
 		'import/no-duplicates': 'warn',
 		'import/no-extraneous-dependencies': 'off',
-		'simple-import-sort/imports': ['warn', {
-			groups: [
-				['^\\u0000'],
-				['^@?\\w', '^@?\\w.*\\u0000$'],
-				['(?<!\\u0000)$', '(?<=\\u0000)$'],
-				['^\\.', '^\\..*\\u0000$'],
-			],
-		}],
+		'simple-import-sort/imports': [
+			'warn',
+			{
+				groups: [
+					['^\\u0000'],
+					['^@?\\w', '^@?\\w.*\\u0000$'],
+					['(?<!\\u0000)$', '(?<=\\u0000)$'],
+					['^\\.', '^\\..*\\u0000$']
+				]
+			}
+		],
 		'import/prefer-default-export': 'off',
 		'import/no-mutable-exports': 'off',
 		'simple-import-sort/exports': 'warn',
 		'@typescript-eslint/explicit-function-return-type': 'error',
 		'no-return-await': 'off',
 		'@typescript-eslint/return-await': 'off',
-		'indent': 'off',
+		indent: 'off',
 		'function-paren-newline': 'off',
-		'@typescript-eslint/consistent-type-imports': ['warn', {
-			prefer: 'type-imports',
-		}],
+		'@typescript-eslint/consistent-type-imports': [
+			'warn',
+			{
+				prefer: 'type-imports'
+			}
+		],
 		'unicorn/no-useless-undefined': 'off',
 		'unicorn/no-array-for-each': 'off',
 		'no-console': 'off',
@@ -72,6 +78,6 @@ module.exports = {
 		'no-shadow': 'off',
 		'@typescript-eslint/no-shadow': 'off',
 		'simple-import-sort/imports': 'off',
-		'@typescript-eslint/explicit-function-return-type': [{'allowExpressions': true}],
+		'@typescript-eslint/explicit-function-return-type': [{ allowExpressions: true }]
 	}
 };
