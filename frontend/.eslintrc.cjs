@@ -78,6 +78,6 @@ module.exports = {
 		'no-shadow': 'off',
 		'@typescript-eslint/no-shadow': 'off',
 		'simple-import-sort/imports': 'off',
-		'@typescript-eslint/explicit-function-return-type': [{ allowExpressions: true }]
+		'@typescript-eslint/explicit-function-return-type': 'warn'
 	}
 };
