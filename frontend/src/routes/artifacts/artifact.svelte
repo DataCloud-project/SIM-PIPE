@@ -3,7 +3,9 @@
 	import type { ArtifactHierarchyType } from '$typesdefinitions';
 	import Artifact from './artifact.svelte';
 	import SymbolForArtifact from './symbol-for-artifact.svelte';
+
 	export let artifact: ArtifactHierarchyType;
+
 	function toggleOpen(artifact: ArtifactHierarchyType): void {
 		// eslint-disable-next-line no-param-reassign
 		artifact.isExpanded = !artifact.isExpanded;
