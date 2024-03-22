@@ -1,21 +1,45 @@
 <script lang="ts">
 	// The ordering of these imports is critical to your app working properly
-	import '@skeletonlabs/skeleton/themes/theme-skeleton.css';
 	// If you have source.organizeImports set to true in VSCode, then it will auto change this ordering
-	import '@skeletonlabs/skeleton/styles/skeleton.css';
+	// import '@skeletonlabs/skeleton/themes/theme-skeleton.css'; -- removed ref: https://github.com/skeletonlabs/skeleton/discussions/1947
+	// import '@skeletonlabs/skeleton/styles/skeleton.css'; -- removed ref: https://github.com/skeletonlabs/skeleton/discussions/1947
 	import '@fontsource/ibm-plex-sans/400.css';
 	import '@fontsource/ibm-plex-sans/600.css';
 	import '../app.postcss';
-	import { AppShell, AppBar, AppRail, AppRailTile } from '@skeletonlabs/skeleton';
-	import { LightSwitch } from '@skeletonlabs/skeleton';
-
-	import { LockIcon, BookOpenIcon, FileIcon } from 'svelte-feather-icons';
 	import hljs from 'highlight.js';
 	import 'highlight.js/styles/github-dark.css'; // highlight.js theme
-	import { storeHighlightJs } from '@skeletonlabs/skeleton';
+	import { LockIcon, BookOpenIcon, FileIcon, FolderIcon, StarIcon } from 'svelte-feather-icons';
+	import {
+		AppShell,
+		AppBar,
+		AppRail,
+		AppRailAnchor,
+		LightSwitch,
+		storeHighlightJs,
+		Modal,
+		initializeStores
+	} from '@skeletonlabs/skeleton';
+	import type { ModalComponent } from '@skeletonlabs/skeleton';
+	import { page } from '$app/stores';
 	import * as config from '../lib/config';
-
 	import { browser } from '$app/environment';
+
+	initializeStores();
+
+	import UploadFileModal from '../modals/upload-file-modal.svelte';
+	import ProvideTextInputModal from '../modals/text-input-modal.svelte';
+	import SubmitNewProjectModal from '../modals/submit-new-project-modal.svelte';
+	import SubmitNewDryRunModal from '../modals/submit-new-dry-run-modal.svelte';
+	import SubmitNewSecretModal from '../modals/submit-new-secret-modal.svelte';
+
+	const modalRegistry: Record<string, ModalComponent> = {
+		// Set a unique modal ID, then pass the component reference
+		uploadFileModal: { ref: UploadFileModal },
+		provideTextInputModal: { ref: ProvideTextInputModal },
+		createNewProjectModal: { ref: SubmitNewProjectModal },
+		submitNewDryRunModal: { ref: SubmitNewDryRunModal },
+		submitNewSecretModal: { ref: SubmitNewSecretModal }
+	};
 
 	storeHighlightJs.set(hljs);
 
@@ -50,6 +74,8 @@
 	}
 </script>
 
+<Modal components={modalRegistry} />
+
 <AppShell>
 	<!-- (header) -->
 	<svelte:fragment slot="header">
@@ -67,12 +93,61 @@
 	<!-- (sidebarLeft) -->
 	<svelte:fragment slot="sidebarLeft">
 		<AppRail>
-			<AppRailTile label="Projects" href="/projects"><BookOpenIcon size="1.5x" /></AppRailTile>
-			<AppRailTile label="Registry Key Vault" href="/secrets"><LockIcon size="1.5x" /></AppRailTile>
-			<!-- TO DO: temporary redirect to sftp go web interface; will be replaced by files manager when api is ready -->
-			<AppRailTile label="Sample Files" href={generateServiceUrl()}
-				><FileIcon size="1.5x" /></AppRailTile
+			<AppRailAnchor
+				label="Projects"
+				href="/projects"
+				selected={$page.url.pathname === '/projects'}
 			>
+				<div class="flex flex-col items-center justify-center">
+					<div>
+						<BookOpenIcon size="1.5x" />
+					</div>
+					<div>Projects</div>
+				</div>
+			</AppRailAnchor>
+			<AppRailAnchor
+				label="Artifacts"
+				href="/artifacts"
+				selected={$page.url.pathname === '/artifacts'}
+			>
+				<div class="flex flex-col items-center justify-center">
+					<div>
+						<FolderIcon size="1.5x" />
+					</div>
+					<div>Artifacts</div>
+				</div>
+			</AppRailAnchor>
+			<AppRailAnchor
+				label="Registry Key Vault"
+				href="/secrets"
+				selected={$page.url.pathname === '/secrets'}
+			>
+				<div class="flex flex-col items-center justify-center">
+					<div>
+						<LockIcon size="1.5x" />
+					</div>
+					<div>Registry</div>
+				</div>
+			</AppRailAnchor>
+			<!-- TO DO: temporary redirect to sftp go web interface; will be replaced by files manager when api is ready -->
+			<AppRailAnchor label="Sample Files" href={generateServiceUrl()} external={true}>
+				<div class="flex flex-col items-center justify-center">
+					<div>
+						<FileIcon size="1.5x" />
+					</div>
+					<div>Files</div>
+				</div>
+			</AppRailAnchor>
+			<!-- 			<AppRailAnchor label="Ideas" href="/ideas" selected={$page.url.pathname === '/ideas'} >
+				<div class="flex flex-col items-center justify-center">
+					<div>
+						<StarIcon size="1.5x" />
+					</div>
+					<div>
+						Ideas
+					</div>
+				</div>
+			</AppRailAnchor>			 -->
 		</AppRail>
 	</svelte:fragment>
 

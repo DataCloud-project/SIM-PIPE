@@ -1,24 +1,26 @@
 <script lang="ts">
-	import { Modal, modalStore, ProgressBar } from '@skeletonlabs/skeleton';
+	import { getModalStore, ProgressBar } from '@skeletonlabs/skeleton';
 	import type { ModalSettings } from '@skeletonlabs/skeleton';
-	import ModalSubmitNewProject from './modal-submit-new-project.svelte';
+	import { EditIcon, FileTextIcon } from 'svelte-feather-icons';
 	import { projectsList, clickedProjectId } from '../../stores/stores.js';
 	import type { Project } from '../../types.js';
 	import { goto } from '$app/navigation';
 	import Timestamp from './dryruns/[dry_run]/timestamp.svelte';
 	import { requestGraphQLClient } from '$lib/graphqlUtils';
-	import { AlertTriangleIcon, EditIcon, FileTextIcon } from 'svelte-feather-icons';
-	import ModalRenameProject from './modal-rename-project.svelte';
 	import allProjectsQuery from '../../queries/get_all_projects.js';
 	import deleteProjectMutation from '../../queries/delete_project.js';
-	import allDryRunsQuery from '../../queries/get_all_dryruns';
+	import allDryRunsQuery from '../../queries/get_all_dryruns.js';
 	import deleteDryRunMutation from '../../queries/delete_dry_run.js';
 	import deleteWorkflowTemplateMutation from '../../queries/delete_workflow_template.js';
 	import { displayAlert } from '../../utils/alerts_utils';
+	import Alert from '$lib/modules/alert.svelte';
 
-	export let visibleAlert = false;
-	export let alertTitle = 'Alert!';
-	export let alertMessage = 'Alert!';
+	const modalStore = getModalStore();
+
+	let visibleAlert: boolean = false;
+	let alertTitle: string = 'Alert!';
+	let alertMessage: string = 'Alert!';
+	let alertVariant: string = 'variant-ghost-surface';
 
 	const getProjectsList = async (): Promise<Project[]> => {
 		const response: { projects: Project[] } = await requestGraphQLClient(allProjectsQuery);
@@ -53,7 +55,7 @@
 
 	const modal: ModalSettings = {
 		type: 'component',
-		component: { ref: ModalSubmitNewProject },
+		component: 'submitNewProjectModal',
 		title: 'Add new project',
 		body: 'Enter details of project'
 	};
@@ -93,9 +95,8 @@
 			await new Promise((resolve) => setTimeout(resolve, 150));
 
 			// update the project list after deletion
-			let responseAllProjects: { projects: Project[] } = await requestGraphQLClient(
-				allProjectsQuery
-			);
+			let responseAllProjects: { projects: Project[] } =
+				await requestGraphQLClient(allProjectsQuery);
 			projectsList.set(responseAllProjects.projects);
 		} catch (error) {
 			const title = 'Error deleting project❌!';
@@ -119,12 +120,58 @@
 		goto(`/projects/dryruns/${dry_run}`);
 	}
 
-	function renameProject(event: any, project: Project) {
-		event.stopPropagation();
-
+	function onCreateNewProject() {
+		console.log('onCreateNewProject');
 		const modal: ModalSettings = {
 			type: 'component',
-			component: { ref: ModalRenameProject },
+			component: 'createNewProjectModal',
+			title: 'Add new project',
+			body: 'Enter details of project',
+			response: (r: {
+				createProjectResponse: {
+					status: number;
+					error: string;
+					project: { name: string; id: string };
+				};
+				createWorkflowResponse: { status: number; error: string; name: string };
+			}) => {
+				handleOnCreateProjectResponse(r.createProjectResponse, r.createWorkflowResponse);
+			}
+		};
+		modalStore.trigger(modal);
+	}
+
+	async function handleOnCreateProjectResponse(
+		createProjectResponse: { status: number; project: { name: string; id: string }; error: string },
+		createWorkflowResponse: { status: number; name: string; error: string }
+	) {
+		console.log('createProjectResponse:', createProjectResponse);
+		console.log('createWorkflowResponse:', createWorkflowResponse);
+		visibleAlert = true;
+		if (createProjectResponse.status === 200) {
+			await requestGraphQLClient<{ projects: Project[] }>(allProjectsQuery).then((response) => {
+				reactiveProjectsList = $projectsList = response.projects;
+			});
+			if (createWorkflowResponse.status === 200) {
+				alertVariant = 'variant-ghost-success';
+				alertTitle = 'Project created!';
+				alertMessage = `Project ${createProjectResponse.project.name} created with id ${createProjectResponse.project.id} and workflow template ${createWorkflowResponse.name} created`;
+			} else {
+				alertVariant = 'variant-ghost-warning';
+				alertTitle = 'Project created! However, workflow creation failed!';
+				alertMessage = `Create template manually: ${createWorkflowResponse.error}`;
+			}
+		} else {
+			alertVariant = 'variant-filled-error';
+			alertTitle = 'Project creation failed!';
+			alertMessage = `Project creation failed with status ${createProjectResponse.status}: ${createProjectResponse.error} and workflow template creation failed with status ${createWorkflowResponse.status}: ${createWorkflowResponse.error}`;
+		}
+	}
+
+	function renameProject(project: Project) {
+		const modal: ModalSettings = {
+			type: 'component',
+			component: 'renameProjectModal',
 			title: 'Rename project',
 			body: 'Enter the new name',
 			valueAttr: { projectId: project.id, projectName: project.name }
@@ -133,19 +180,13 @@
 		modalStore.trigger(modal);
 	}
 
-	function showTemplate(event: any, project: Project) {
+	function gotoTemplate(project: Project) {
 		$clickedProjectId = project.id;
-		event.stopPropagation();
-		try {
-			const template = project.workflowTemplates[0].argoWorkflowTemplate;
-			const template_name = template?.metadata.name;
-			goto(`/templates/${template_name}`);
-			throw new Error('Template not found!');
-		} catch (error) {
-			visibleAlert = true;
-			alertTitle = 'Template not found!';
-			alertMessage = `Workflow template does not exist for this project: ${clickedProjectId}`;
-		}
+		let template = project.workflowTemplates[0].argoWorkflowTemplate;
+		let template_name = template?.metadata.name;
+		let url = `/templates/${template_name}`;
+		console.log(`Navigating to: ${url}`);
+		goto(url);
 	}
 	$: reactiveProjectsList = $projectsList;
 	$: dryRunCounts = getDryRunCounts(reactiveProjectsList);
@@ -164,7 +205,7 @@
 					<button
 						type="button"
 						class="btn btn-sm variant-filled"
-						on:click={() => modalStore.trigger(modal)}
+						on:click={() => onCreateNewProject()}
 					>
 						<span>Create</span>
 					</button>
@@ -210,7 +251,7 @@
 								{dryRunCounts[project.id]}
 							</td>
 							<!-- svelte-ignore a11y-click-events-have-key-events -->
-							<td style="width:15%" on:click={(event) => showTemplate(event, project)}>
+							<td style="width:15%" on:click|stopPropagation={(event) => gotoTemplate(project)}>
 								<div class="grid grid-rows-2 grid-cols-1 justify-items-center">
 									<div><FileTextIcon size="1x" /></div>
 									<div>
@@ -224,7 +265,7 @@
 									type="button"
 									title="Rename project"
 									class="btn-icon btn-icon-sm variant-soft"
-									on:click={() => renameProject(event, project)}
+									on:click={() => renameProject(project)}
 								>
 									<EditIcon size="20" />
 								</button>
@@ -237,32 +278,7 @@
 	</div>
 </div>
 
-{#if $modalStore[0]}
-	<Modal />
-{/if}
-
-{#if visibleAlert}
-	<aside class="alert variant-ghost">
-		<!-- Icon -->
-		<div class="flex w-full justify-between">
-			<div><AlertTriangleIcon /></div>
-			<div class="alert-actions">
-				<button
-					type="button"
-					class="btn btn-sm variant-filled"
-					on:click={() => {
-						visibleAlert = false;
-					}}>OK</button
-				>
-			</div>
-		</div>
-		<!-- Message -->
-		<div class="alert-message">
-			<h3 class="h3">{alertTitle}</h3>
-			<p>{alertMessage}</p>
-		</div>
-	</aside>
-{/if}
+<Alert bind:visibleAlert bind:alertTitle bind:alertMessage bind:alertVariant />
 
 <style>
 	.table.table {

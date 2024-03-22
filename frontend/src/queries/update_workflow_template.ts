@@ -1,12 +1,15 @@
 import { gql } from 'graphql-request';
 
-const updateCredentialMutation = gql`
+const updateWorkflowTemplateMutation = gql`
 	mutation UpdateWorkflowTemplate($update: UpdateWorkflowTemplateInput!) {
 		updateWorkflowTemplate(update: $update) {
 			argoWorkflowTemplate
 			name
+			project {
+				id
+			}
 		}
 	}
 `;
 
-export default updateCredentialMutation;
+export default updateWorkflowTemplateMutation;

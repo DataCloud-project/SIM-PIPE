@@ -1,17 +1,17 @@
 <script lang="ts">
-	import { selectedCredential, selectedProject } from '../../../stores/stores';
+	import { selectedCredential, selectedProject } from '$stores/stores';
 	import { requestGraphQLClient } from '$lib/graphqlUtils';
-	import type { Project } from '../../../types';
-	import allProjectsQuery from '../../../queries/get_all_projects.js';
-	import getWorkflowQuery from '../../../queries/get_workflow_template.js';
+	import type { Project } from '$typesdefinitions';
+	import allProjectsQuery from '$queries/get_all_projects.js';
+	import getWorkflowQuery from '$queries/get_workflow_template.js';
 	import { ProgressBar } from '@skeletonlabs/skeleton';
 	import { error } from '@sveltejs/kit';
-	import updateCredentialMutation from '../../../queries/update_workflow_template';
-	import { modalStore, type ModalSettings, Modal } from '@skeletonlabs/skeleton';
+	import updateCredentialMutation from '$queries/update_workflow_template';
+	import { Modal, getModalStore } from '@skeletonlabs/skeleton';
+	import type { ModalSettings } from '@skeletonlabs/skeleton';
 	import { goto } from '$app/navigation';
 
-	let hideModal = false;
-	let alertModal = false;
+	const modalStore = getModalStore();
 
 	const getProjectsList = async (): Promise<Project[]> => {
 		const response: { projects: Project[] } = await requestGraphQLClient(allProjectsQuery);
@@ -27,6 +27,23 @@
 
 	let template: any;
 	let submit_response: any;
+
+	async function triggerWorkflowUpdatedMessageModal() {
+		let project_name = $selectedProject ? $selectedProject.name : 'undefined';
+		if (!$selectedProject) {
+			throw new Error('Project not found / project undefined');
+		}
+		let registry_server = $selectedCredential.server ? $selectedCredential.server : 'undefined';
+		const workflowTemplateUpdatedMessageModal: ModalSettings = {
+			type: 'alert',
+			title: 'Secret added to project workflow! 🎉',
+			body: `<p>Project: ${project_name}</p><p>Now uses registry: ${registry_server}</p>`
+		};
+		modalStore.trigger(workflowTemplateUpdatedMessageModal);
+		await new Promise((resolve) => setTimeout(resolve, 3000));
+		modalStore.close();
+		modalStore.clear();
+	}
 
 	async function onSubmitForm() {
 		console.log('submitting form');
@@ -71,16 +88,7 @@
 				if (!$selectedProject) {
 					throw error(404, 'Project not found / project undefined');
 				}
-				const workflowTemplateUpdatedMessageModal: ModalSettings = {
-					type: 'alert',
-					title: 'Secret added to project workflow! 🎉',
-					body: `<p>Project: ${$selectedProject.name}</p><p>Now uses registry: ${$selectedCredential.server}</p>`
-				};
-				alertModal = true;
-				modalStore.trigger(workflowTemplateUpdatedMessageModal);
-				await new Promise((resolve) => setTimeout(resolve, 3000));
-				modalStore.close();
-				modalStore.clear();
+				triggerWorkflowUpdatedMessageModal();
 				goto(`/templates/${$selectedProject.name}`);
 			});
 	}
@@ -124,5 +132,3 @@
 		{/await}
 	</div>
 </div>
-
-<Modal />

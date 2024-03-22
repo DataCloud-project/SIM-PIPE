@@ -1,39 +1,48 @@
 <script lang="ts">
-	import { Modal, ProgressBar } from '@skeletonlabs/skeleton';
-	import { clickedProjectId } from '../../../stores/stores';
-	import getWorkflowQuery from '../../../queries/get_workflow_template';
+	import { ProgressBar } from '@skeletonlabs/skeleton';
+	import { clickedProjectId } from '$stores/stores';
+	import getWorkflowQuery from '$queries/get_workflow_template';
+	import getWorkflowFromDryRunQuery from '$queries/get_workflow_template_from_dry_run';
 	import { CodeBlock } from '@skeletonlabs/skeleton';
 	import YAML from 'json-to-pretty-yaml';
 	import { goto } from '$app/navigation';
 	import { requestGraphQLClient } from '$lib/graphqlUtils';
 	import { ArrowRightIcon } from 'svelte-feather-icons';
-	import { displayAlert } from '../../../utils/alerts_utils';
+	import type { WorkflowTemplate, WorkflowTemplateFromDryRun, Project } from '$typesdefinitions';
+	import { onMount } from 'svelte';
 
 	export let data;
+	let requestsComplete = false;
 
-	$: language = 'yaml';
+	$: language = 'yaml'; // default format of workflow template
 
-	const getWorkflowTemplate = async (): Promise<any> => {
+	const getWorkflowTemplate = async (): Promise<{ workflowTemplate: WorkflowTemplate }> => {
 		const variables = {
 			name: data.template
 		};
-		const response = await requestGraphQLClient(getWorkflowQuery, variables);
+		const response = await requestGraphQLClient<{ workflowTemplate: WorkflowTemplate }>(
+			getWorkflowQuery,
+			variables
+		);
+		// console.log(response);
 		return response;
 	};
 
-	const workflowPromise = getWorkflowTemplate();
-	var workflow = {};
+	const getWorkflowTemplateFromDryRun = async (): Promise<WorkflowTemplateFromDryRun> => {
+		const variables = {
+			dryRunId: data.template
+		};
+		const response = await requestGraphQLClient<WorkflowTemplateFromDryRun>(
+			getWorkflowFromDryRunQuery,
+			variables
+		);
+		// console.log(response);
+		return response;
+	};
 
-	workflowPromise
-		.then((data) => {
-			workflow = data;
-		})
-		.catch(async (error) => {
-			const title = 'Error displaying workflow template❌!';
-			const body = `${(error as Error).message}`;
-			await displayAlert(title, body, 10000);
-			goto('/projects/');
-		});
+	let workflow = {};
+	let workflow_name: string;
+	let project: Project;
 
 	function switchLanguage() {
 		if (language === 'yaml') {
@@ -42,14 +51,36 @@
 			language = 'yaml';
 		}
 	}
+
+	onMount(async () => {
+		try {
+			let data = await getWorkflowTemplate();
+			workflow = data.workflowTemplate;
+			workflow_name = data.workflowTemplate.name;
+			project = data.workflowTemplate.project;
+			requestsComplete = true;
+		} catch (error) {
+			console.log('failed to fetch workflow template data from project: ', error);
+			try {
+				let data = await getWorkflowTemplateFromDryRun();
+				workflow = data.dryRun.argoWorkflow;
+				workflow_name = data.dryRun.id;
+				project = data.dryRun.project;
+				requestsComplete = true;
+			} catch (error) {
+				console.log('failed to fetch workflow template data from dry run: ', error);
+				goto('/404');
+			}
+		}
+	});
 </script>
 
 <div class="flex w-full content-center p-10">
 	<div class="table-container">
-		{#await workflowPromise}
+		{#if !requestsComplete}
 			<p style="font-size:20px;">Loading...</p>
 			<ProgressBar />
-		{:then workflow}
+		{:else}
 			<h1>
 				<a href="/projects">Projects</a>
 				/ templates / {data.template}
@@ -77,11 +108,9 @@
 					<CodeBlock {language} code={YAML.stringify(workflow, null, 2)} text="text-xs" />
 				{/if}
 			</div>
-		{/await}
+		{/if}
 	</div>
 </div>
-
-<Modal />
 
 <style>
 	.code {

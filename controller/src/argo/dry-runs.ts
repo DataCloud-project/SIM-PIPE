@@ -130,13 +130,17 @@ export function convertArgoWorkflowNode(node: ArgoNode, argoWorkflow: ArgoWorkfl
 
   if (type === DryRunNodeType.Pod) {
     podName = getPodName(node, argoWorkflow);
+    // node.inputs?.artifacts?.map(({ name, s3 }) => (console.log(`${name} s3`, s3)));
+    // console.log('node', node);
     inputArtifacts = node.inputs?.artifacts?.map(({ name, s3 }) => ({
       name,
       key: s3?.key,
+      bucketName: s3?.bucket,
     }));
     outputArtifacts = node.outputs?.artifacts?.map(({ name, s3 }) => ({
       name,
       key: s3?.key,
+      bucketName: s3?.bucket,
     }));
   }
 

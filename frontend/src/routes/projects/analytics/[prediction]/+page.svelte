@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { Modal } from '@skeletonlabs/skeleton';
 	import {
 		getMetricsAnalyticsUtils,
 		getMetricsResponse,
@@ -12,19 +11,19 @@
 		linearRegression,
 		isFileSizeValid
 	} from '../../../../utils/resource_utils.js';
-	import { selectedProject } from '../../../../stores/stores.js';
+	import { selectedProject } from '$stores/stores.js';
 	import { goto } from '$app/navigation';
-	import getDryRunInputFilesizeQuery from '../../../../queries/get_dry_run_input_filesizes.js';
+	import getDryRunInputFilesizeQuery from '$queries/get_dry_run_input_filesizes.js';
 	import { requestGraphQLClient } from '$lib/graphqlUtils';
 	import { readable_time } from '$lib/time_difference.js';
-	import { cForm } from '../../../../styles/styles.js';
-	import type { metricsWithTimeStamps } from '../../../../types.js';
-	import getDryRunProjectIDQuery from '../../../../queries/get_dry_run_project_id.js';
+	import { cForm } from '$styles/styles.js';
+	import type { metricsWithTimeStamps } from '$typesdefinitions';
+	import getDryRunProjectIDQuery from '$queries/get_dry_run_project_id.js';
 	import { displayAlert } from '../../../../utils/alerts_utils.js';
 
 	export let data;
 
-	const dryruns_for_prediction = data.prediction.split(' ');
+	const dryruns_for_prediction = data.prediction.split(' '); // get the name of the dry-runs to be predicted from the url [prediction]
 	let allStepNames: string[];
 	var collectedMetrics: {
 		[key: string]: MetricsAnalytics;
@@ -83,13 +82,23 @@
 					};
 				} = await requestGraphQLClient(getDryRunInputFilesizeQuery, { dryRunId });
 				if (!$selectedProject) $selectedProject = response.dryRun.project.id;
+				// console.log(dryRunId, response);
+				let totalFileSize = 0;
+				response.dryRun.nodes.forEach((node: any) => {
+					if (node.inputArtifacts) {
+						node.inputArtifacts.forEach((artifact: any) => {
+							totalFileSize += artifact.size;
+						});
+					}
+				});
 				// TODO: change when filesize api is ready
-				return Number(response.dryRun.argoWorkflow.metadata.annotations.filesize);
+				// return Number(response.dryRun.argoWorkflow.metadata.annotations.filesize); // There is no filesize in annotations!
+				return totalFileSize;
 			} catch (error) {
 				console.log(error);
-				const title = 'Error reading input filesizes for dry run - ${dryRunId}';
+				const title = `Error reading input filesizes for dry run - ${dryRunId}`;
 				const body = 'You will be taken back to the dry runs list on close';
-				await displayAlert(title, body, 2500);
+				//await displayAlert(title, body, 3500);
 				goto(`/projects/dryruns/${$selectedProject?.id}`);
 			}
 		});
@@ -119,7 +128,8 @@
 		}
 
 		const fileSizeData = (await Promise.all(fileSizeDataPromise)) as number[];
-		await isFileSizeValid(fileSizeData);
+		console.log('fileSizeData', fileSizeData);
+		// await isFileSizeValid(fileSizeData);
 		// initialize var to store prediction estimates
 		maxCpuPredictions = Array<number>(allStepNames.length + 1).fill(0);
 		avgCpuPredictions = Array<number>(allStepNames.length + 1).fill(0);
@@ -157,7 +167,7 @@
 	};
 	let valueforPrediction: number;
 	let inputValue: number;
-	let inputUnit: string;
+	let inputUnit: string = ALL_UNITS[3];
 	let showPredictions = false;
 	let maxCpuPredictions: number[];
 	let avgCpuPredictions: number[];
@@ -313,5 +323,3 @@
 		{/if}
 	</div>
 </div>
-
-<Modal />

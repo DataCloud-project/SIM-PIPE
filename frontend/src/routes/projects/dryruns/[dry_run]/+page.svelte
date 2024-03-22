@@ -3,9 +3,8 @@
 	import { selectedProject, clickedProjectId } from '../../../../stores/stores.js';
 	import SymbolForRunResult from './symbol-for-run-result.svelte';
 	import SymbolForAction from './symbol-for-action.svelte';
-	import { Modal, modalStore } from '@skeletonlabs/skeleton';
+	import { getModalStore } from '@skeletonlabs/skeleton';
 	import type { ModalSettings } from '@skeletonlabs/skeleton';
-	import ModalSubmitNewDryRun from './modal-submit-new-dry-run.svelte';
 	import type { DryRun, DryRunMetrics, Project } from '../../../../types.js';
 	import allDryRunsQuery from '../../../../queries/get_all_dryruns.js';
 	import deleteDryRunMutation from '../../../../queries/delete_dry_run.js';
@@ -13,6 +12,9 @@
 	import Timestamp from './timestamp.svelte';
 	import { requestGraphQLClient } from '$lib/graphqlUtils.js';
 	import { calculateDuration } from '../../../../utils/resource_utils.js';
+	import { FileTextIcon } from 'svelte-feather-icons';
+
+	const modalStore = getModalStore();
 
 	export let data;
 
@@ -65,6 +67,7 @@
 		});
 		$selectedProject = responseProjectDetails.project;
 	}
+
 	async function onPredictSelected() {
 		// TODO: later change to passing dry runs ids through some other means (not to have too long url)
 		const dryRunIsToCompared = Object.keys(checkboxes)
@@ -72,10 +75,11 @@
 			.join(' ');
 		goto(`/projects/analytics/${dryRunIsToCompared}`);
 	}
+
 	async function onCreateSelected() {
 		const modal: ModalSettings = {
 			type: 'component',
-			component: { ref: ModalSubmitNewDryRun },
+			component: 'submitNewDryRunModal',
 			title: 'Add new dry run',
 			body: 'Enter details of dry run'
 		};
@@ -93,6 +97,12 @@
 	function dryRunOnClick(dryRunId: string) {
 		const resource = dryRunId;
 		goto(`/projects/dryruns/${dryRunId}/${resource}`);
+	}
+
+	function gotoTemplate(dryRunId: string) {
+		let url = `/templates/${dryRunId}`;
+		console.log(`Navigating to: ${url}`);
+		goto(url);
 	}
 
 	// to disable onclick propogation for checkbox input
@@ -158,6 +168,7 @@
 							<th>Result</th>
 							<th>Run duration</th>
 							<th>Action</th>
+							<th style="text-align:center">Template</th>
 							<th>Created</th>
 						</tr>
 					</thead>
@@ -189,6 +200,16 @@
 										/>
 									</button>
 								</td>
+								<!-- svelte-ignore a11y-click-events-have-key-events -->
+								<td style="width:15%" on:click|stopPropagation={(event) => gotoTemplate(run.id)}>
+									<div class="grid grid-rows-2 grid-cols-1 justify-items-center">
+										<div><FileTextIcon size="1x" /></div>
+										<div>
+											<p class="no-underline hover:underline">show</p>
+											<div />
+										</div>
+									</div></td
+								>
 								<td style="width:20%"><Timestamp timestamp={run.createdAt} /> </td>
 							</tr>
 						{/each}
@@ -198,10 +219,6 @@
 		{/await}
 	</div>
 </div>
-
-{#if $modalStore[0]}
-	<Modal />
-{/if}
 
 <style>
 	.table.table {
