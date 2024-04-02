@@ -79,6 +79,6 @@ module.exports = {
 		'@typescript-eslint/no-shadow': 'off',
 		'simple-import-sort/imports': 'off',
 		'@typescript-eslint/explicit-function-return-type': 'warn',
-		'@typescript-eslint/no-explicit-any': 'off',
+		'@typescript-eslint/no-explicit-any': 'off'
 	}
 };

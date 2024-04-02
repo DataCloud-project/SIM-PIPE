@@ -12,12 +12,12 @@ const datefmt = 'yyyy-MM-dd HH:mm:ss';
 
 function truncateString(word: string, maxLength: number): string {
 	if (word.length > maxLength) {
-		return `${word.slice(0, maxLength)  }..`;
+		return `${word.slice(0, maxLength)}..`;
 	}
 	return word;
 }
 
-function addSeconds(date: Date, seconds: number): string{
+function addSeconds(date: Date, seconds: number): string {
 	date.setSeconds(date.getSeconds() + seconds);
 	const dateString = format(date, datefmt);
 	return dateString;
@@ -26,7 +26,7 @@ function addSeconds(date: Date, seconds: number): string{
 function timestampsToDatetime(startedAt: string, input_array: number[]): string[] {
 	const date = new Date(startedAt);
 	const timeseries = [addSeconds(date, 0)];
-	for (let index = 0; index < input_array.length - 1; index+=1) {
+	for (let index = 0; index < input_array.length - 1; index += 1) {
 		const v = input_array[index + 1] - input_array[index];
 		const newDate = addSeconds(date, v);
 		timeseries.push(newDate);
@@ -34,11 +34,10 @@ function timestampsToDatetime(startedAt: string, input_array: number[]): string[
 	return timeseries;
 }
 
-export function displayStepDuration(step: DryRunMetrics): number|string {
+export function displayStepDuration(step: DryRunMetrics): number | string {
 	const duration = step.duration === undefined ? '-' : step.duration;
 	return duration;
 }
-
 
 export type MetricsAnalyticsPerStep = {
 	CPU: { max: number; avg: number };
@@ -52,15 +51,13 @@ export type MetricsAnalytics = {
 	[step: string]: MetricsAnalyticsPerStep;
 };
 
-const initMaxResourcePerStep = (): MetricsAnalyticsPerStep => (
-	{
-		CPU: { max: 0, avg: 0 },
-		Memory: { max: 0, avg: 0 },
-		Network_received: { max: 0, avg: 0 },
-		Network_transferred: { max: 0, avg: 0 },
-		Duration: 0
-	}
-);
+const initMaxResourcePerStep = (): MetricsAnalyticsPerStep => ({
+	CPU: { max: 0, avg: 0 },
+	Memory: { max: 0, avg: 0 },
+	Network_received: { max: 0, avg: 0 },
+	Network_transferred: { max: 0, avg: 0 },
+	Duration: 0
+});
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export const getMetricsResponse = async (dryRunId: string) => {
@@ -74,7 +71,8 @@ export const getMetricsResponse = async (dryRunId: string) => {
 };
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-export const printReadableBytes = (bytes: number | undefined) => !bytes || Number.isNaN(bytes) || bytes === -1 ? '-' : filesize(bytes);
+export const printReadableBytes = (bytes: number | undefined) =>
+	!bytes || Number.isNaN(bytes) || bytes === -1 ? '-' : filesize(bytes);
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 const calculateMean = (input: number[]) => {
@@ -87,7 +85,7 @@ const changeResourceFormat = (
 	argoUsageBytes: any,
 	stepName: string,
 	resourceType = ''
-// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+	// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 ) => {
 	let resourceValues;
 	if (resourceType === 'cpu') {
@@ -118,7 +116,7 @@ const changeResourceFormat = (
 function findMax(input: number[]): number {
 	if (input?.length === 0) return 0;
 	return Math.max(...input);
-};
+}
 
 export const calculateDuration = (metrics: DryRunMetrics[]) => {
 	const duration =
@@ -167,8 +165,7 @@ export async function getMetricsUsageUtils(metrics: DryRunMetrics[]): Promise<{
 						node.metrics.networkReceiveBytesTotal,
 						node.displayName,
 						'Received'
-					)
-				, 
+					),
 					changeResourceFormat(
 						node.startedAt,
 						node.metrics.networkTransmitBytesTotal,
@@ -279,7 +276,10 @@ export async function linearRegression(
 		const n = x.length;
 		const meanX = x.reduce((accumulator, value) => accumulator + value, 0) / n;
 		const meanY = y.reduce((accumulator, value) => accumulator + value, 0) / n;
-		const numerator = x.reduce((accumulator, xi, index) => accumulator + (xi - meanX) * (y[index] - meanY), 0);
+		const numerator = x.reduce(
+			(accumulator, xi, index) => accumulator + (xi - meanX) * (y[index] - meanY),
+			0
+		);
 		const denominator = x.reduce((accumulator, xi) => accumulator + (xi - meanX) ** 2, 0);
 		const slope = numerator / denominator;
 		const intercept = meanY - slope * meanX;
