@@ -12,6 +12,7 @@ svelte.config.js
 postcss.config.cjs
 playwright.config.ts
 *.js
+plotly.js-dist.d.ts
 
 # Ignore files for PNPM, NPM and YARN
 pnpm-lock.yaml
