@@ -9,7 +9,7 @@
 
 	// Handle form submission
 	function onFormSubmit(): void {
-		const textInput = document.getElementById('text-input') as HTMLInputElement;
+		const textInput = document.querySelector('text-input') as HTMLInputElement;
 		console.log(textInput);
 		const text = textInput.value;
 
@@ -17,6 +17,8 @@
 			if ($modalStore[0].response) {
 				$modalStore[0].response(text);
 			}
+		} else {
+			throw new Error('No text input');
 		}
 
 		modalStore.close();

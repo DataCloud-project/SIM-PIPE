@@ -60,8 +60,8 @@
 
 		const createTemplateVariables = {
 			input: {
-				argoWorkflowTemplate: argoWorkflowTemplate,
-				name: name,
+				argoWorkflowTemplate,
+				name,
 				projectId: id
 			}
 		};

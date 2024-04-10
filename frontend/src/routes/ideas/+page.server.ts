@@ -1,12 +1,12 @@
-import type { PageServerLoad } from './$types';
 import { GraphQLClient } from 'graphql-request';
+import type { PageServerLoad } from './$types';
 import allArtifactsQuery from '$queries/get_all_artifacts';
 import allBucketsQuery from '$queries/get_all_buckets';
 import * as config from '$lib/config';
 
-const simpipe_endpoint = config.SIM_PIPE_CONTROLLER_URL as string;
+const simpipeEndpoint = config.SIM_PIPE_CONTROLLER_URL as string;
 
-const client = new GraphQLClient(simpipe_endpoint);
+const client = new GraphQLClient(simpipeEndpoint);
 
 type Bucket = {
 	name: string;
@@ -25,18 +25,18 @@ type Artifacts = {
 };
 
 export const load: PageServerLoad = async () => {
-	const buckets_response: { buckets: Bucket[] } = await client.request(allBucketsQuery);
+	const bucketsResponse: { buckets: Bucket[] } = await client.request(allBucketsQuery);
 
-	let artifacts_list: Artifacts[] = [];
-	for (const bucket of buckets_response.buckets) {
+	const artifactsList: Artifacts[] = [];
+	for (const bucket of bucketsResponse.buckets) {
 		const artifacts: { artifacts: Artifact[] } = await client.request(allArtifactsQuery, {
 			bucketName: bucket.name
 		});
-		artifacts_list.push({ bucketName: bucket.name, artifacts: artifacts.artifacts });
+		artifactsList.push({ bucketName: bucket.name, artifacts: artifacts.artifacts });
 	}
 
 	return {
-		buckets: buckets_response,
-		artifacts: artifacts_list
+		buckets: bucketsResponse,
+		artifacts: artifactsList
 	};
 };

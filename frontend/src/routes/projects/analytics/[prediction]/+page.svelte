@@ -8,33 +8,42 @@
 		printReadablePercent,
 		convertToBytes,
 		ALL_UNITS,
-		linearRegression,
-		isFileSizeValid
-	} from '../../../../utils/resource_utils.js';
+		linearRegression
+	} from '$utils/resource-utils.js';
 	import { selectedProject } from '$stores/stores.js';
 	import { goto } from '$app/navigation';
 	import getDryRunInputFilesizeQuery from '$queries/get_dry_run_input_filesizes.js';
 	import { requestGraphQLClient } from '$lib/graphqlUtils';
 	import { readable_time } from '$lib/time_difference.js';
 	import { cForm } from '$styles/styles.js';
-	import type { metricsWithTimeStamps } from '$typesdefinitions';
+	import type { MetricsWithTimeStamps } from '$typesdefinitions';
 	import getDryRunProjectIDQuery from '$queries/get_dry_run_project_id.js';
-	import { displayAlert } from '../../../../utils/alerts_utils.js';
+	import { displayAlert } from '$utils/alerts-utils.js';
 
 	export let data;
 
-	const dryruns_for_prediction = data.prediction.split(' '); // get the name of the dry-runs to be predicted from the url [prediction]
+	let valueforPrediction: number;
+	let inputValue: number;
+	let inputUnit: string = ALL_UNITS[3];
+	let showPredictions = false;
+	let maxCpuPredictions: number[];
+	let avgCpuPredictions: number[];
+	let maxMemPredictions: number[];
+	let avgMemPredictions: number[];
+	let durationPredictions: string[];
+
+	const dryrunsForPrediction = data.prediction.split(' '); // get the name of the dry-runs to be predicted from the url [prediction]
 	let allStepNames: string[];
-	var collectedMetrics: {
+	const collectedMetrics: {
 		[key: string]: MetricsAnalytics;
 	} = {};
 
-	async function gotoDryRuns() {
+	async function gotoDryRuns(): Promise<void> {
 		let projectId = '';
 		if ($selectedProject?.id) projectId = $selectedProject?.id;
 		// if selectedproject in store is null, get the project id from any of the selected runs
 		else {
-			const dryRunId = dryruns_for_prediction[0];
+			const dryRunId = dryrunsForPrediction[0];
 			const result: {
 				dryRun: {
 					project: { id: string };
@@ -42,18 +51,19 @@
 			} = await requestGraphQLClient(getDryRunProjectIDQuery, { dryRunId });
 			projectId = result.dryRun.project.id;
 		}
+		// eslint-disable-next-line @typescript-eslint/no-floating-promises
 		goto(`/projects/dryruns/${projectId}`);
 	}
 
 	// for each selected dry run, get the resource analytics (avg, max) per step and per dry run level
 	export const getPredictionDetails = async (): Promise<void> => {
 		valueforPrediction = convertToBytes(inputValue, inputUnit);
-		dryruns_for_prediction.forEach(async (dryRunId) => {
+		dryrunsForPrediction.forEach(async (dryRunId) => {
 			collectedMetrics[dryRunId] = {};
-			let cpuData: { [key: string]: metricsWithTimeStamps } = {};
-			let memoryData: { [key: string]: metricsWithTimeStamps } = {};
+			let cpuData: { [key: string]: MetricsWithTimeStamps } = {};
+			let memoryData: { [key: string]: MetricsWithTimeStamps } = {};
 			let networkDataCombined: {
-				[key: string]: metricsWithTimeStamps[];
+				[key: string]: MetricsWithTimeStamps[];
 			} = {};
 			const metrics = await getMetricsResponse(dryRunId);
 			const result = await getMetricsUsageUtils(metrics);
@@ -70,9 +80,11 @@
 			);
 			collectedMetrics[dryRunId] = pipelineMetricsAnalytics;
 		});
+		// eslint-disable-next-line no-promise-executor-return
 		await new Promise((resolve) => setTimeout(resolve, 1500));
 		// read and store filesizes stored in the annotations in argoworkflows of the selected dryruns
-		const fileSizeDataPromise = dryruns_for_prediction.map(async (dryRunId) => {
+		// eslint-disable-next-line consistent-return
+		const fileSizeDataPromise = dryrunsForPrediction.map(async (dryRunId) => {
 			try {
 				const response: {
 					dryRun: {
@@ -98,7 +110,8 @@
 				console.log(error);
 				const title = `Error reading input filesizes for dry run - ${dryRunId}`;
 				const body = 'You will be taken back to the dry runs list on close';
-				//await displayAlert(title, body, 3500);
+				await displayAlert(title, body, 3500);
+				// eslint-disable-next-line @typescript-eslint/no-floating-promises
 				goto(`/projects/dryruns/${$selectedProject?.id}`);
 			}
 		});
@@ -107,17 +120,19 @@
 		const CpuCombined: Record<string, { max: number[]; avg: number[] }> = [
 			...allStepNames,
 			'Total'
+			// eslint-disable-next-line unicorn/no-array-reduce, unicorn/prefer-object-from-entries
 		].reduce((acc, stepName) => ({ ...acc, [stepName]: { max: [], avg: [] } }), {});
 		const MemoryCombined: Record<string, { max: number[]; avg: number[] }> = [
 			...allStepNames,
 			'Total'
+			// eslint-disable-next-line unicorn/no-array-reduce, unicorn/prefer-object-from-entries
 		].reduce((acc, stepName) => ({ ...acc, [stepName]: { max: [], avg: [] } }), {});
 		const DurationCombined: { [key: string]: number[] } = Object.fromEntries(
 			[...allStepNames, 'Total'].map((name) => [name, []])
 		);
 
 		// combine resource values for the selected dry runs for each metric to be predicted
-		for (const dryrunId of dryruns_for_prediction) {
+		for (const dryrunId of dryrunsForPrediction) {
 			for (const stepName of [...allStepNames, 'Total']) {
 				CpuCombined[stepName].max.push(collectedMetrics[dryrunId][stepName]?.CPU.max);
 				CpuCombined[stepName].avg.push(collectedMetrics[dryrunId][stepName]?.CPU.avg);
@@ -165,21 +180,12 @@
 		}
 		showPredictions = true;
 	};
-	let valueforPrediction: number;
-	let inputValue: number;
-	let inputUnit: string = ALL_UNITS[3];
-	let showPredictions = false;
-	let maxCpuPredictions: number[];
-	let avgCpuPredictions: number[];
-	let maxMemPredictions: number[];
-	let avgMemPredictions: number[];
-	let durationPredictions: string[];
 </script>
 
 <div class="p-10">
 	<div class="table-container">
 		<h1 class="flex justify-between items-center" STYLE="font-size:24px">
-			Estimations based on dryruns {dryruns_for_prediction.join(', ')}
+			Estimations based on dryruns {dryrunsForPrediction.join(', ')}
 			<span>
 				<button type="button" class="justify-end btn btn-sm variant-filled" on:click={gotoDryRuns}>
 					<span>Back to dry runs</span>
@@ -275,8 +281,7 @@
 									{/each}
 									<tr>
 										<td class="font-bold">Total</td>
-										<td class="font-bold">{printReadablePercent(avgCpuPredictions.slice(-1)[0])}</td
-										>
+										<td class="font-bold">{printReadablePercent(avgCpuPredictions.at(-1))}</td>
 									</tr>
 								</tbody>
 							</table>

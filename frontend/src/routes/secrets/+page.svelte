@@ -1,7 +1,6 @@
 <script lang="ts">
-	import { getModalStore } from '@skeletonlabs/skeleton';
+	import { getModalStore, ProgressBar } from '@skeletonlabs/skeleton';
 	import type { ModalSettings } from '@skeletonlabs/skeleton';
-	import { ProgressBar } from '@skeletonlabs/skeleton';
 	import allCredentialsQuery from '../../queries/get_all_credentials.js';
 	import deleteCredentialMutation from '../../queries/delete_credential.js';
 	import type { DockerRegistryCredential } from '../../types.js';
@@ -11,7 +10,9 @@
 
 	const modalStore = getModalStore();
 
-	async function onSubmitNewSecret() {
+	$: reactiveCredentialsList = $credentialsList;
+
+	async function onSubmitNewSecret(): Promise<void> {
 		const modal: ModalSettings = {
 			type: 'component',
 			component: 'submitNewSecretModal',
@@ -28,7 +29,7 @@
 	};
 
 	const credentialsPromise = getCredentialsList();
-	let checkboxes: Record<string, boolean> = {};
+	const checkboxes: Record<string, boolean> = {};
 
 	// TODO: why do credentials not have an id? That is quite stupid!
 	credentialsPromise
@@ -43,15 +44,18 @@
 			$credentialsList = undefined;
 		});
 
-	async function onDeleteSelected() {
-		Object.keys(checkboxes)
+	async function onDeleteSelected(): Promise<void> {
+		const deletePromises = Object.keys(checkboxes)
 			.filter((item) => checkboxes[item])
-			.forEach(async (element) => {
+			.map((element) => {
 				const variables = {
 					name: element
 				};
-				const response = await requestGraphQLClient(deleteCredentialMutation, variables);
+				return requestGraphQLClient(deleteCredentialMutation, variables);
 			});
+
+		// wait for all promises to resolve
+		await Promise.all(deletePromises);
 		// reset checkboxes
 		$credentialsList?.forEach((element) => {
 			checkboxes[element.name] = false;
@@ -64,16 +68,16 @@
 	}
 
 	// to disable onclick propogation for checkbox input
-	const handleCheckboxClick = (event: any) => {
+	const handleCheckboxClick = (event: any): void => {
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
 		event.stopPropagation();
 	};
 
-	function gotosecret(secret: DockerRegistryCredential) {
+	function gotosecret(secret: DockerRegistryCredential): void {
 		selectedCredential.set(secret);
+		// eslint-disable-next-line @typescript-eslint/no-floating-promises
 		goto(`/secrets/${secret.name}`);
 	}
-
-	$: reactiveCredentialsList = $credentialsList;
 </script>
 
 <!-- Page Header -->
@@ -86,6 +90,7 @@
 			<h1>Secrets</h1>
 			<div class="flex flex-row justify-end p-5 space-x-1">
 				<div>
+					<!-- eslint-disable-next-line @typescript-eslint/explicit-function-return-type -->
 					<button
 						type="button"
 						class="btn btn-sm variant-filled"
@@ -95,6 +100,7 @@
 					</button>
 				</div>
 				<div>
+					<!-- eslint-disable-next-line @typescript-eslint/explicit-function-return-type -->
 					<button
 						type="button"
 						class="btn btn-sm variant-filled-warning"
@@ -116,8 +122,10 @@
 				</thead>
 				<tbody>
 					{#each reactiveCredentialsList || [] as secret}
+						<!-- eslint-disable-next-line @typescript-eslint/explicit-function-return-type -->
 						<tr id="clickable_row" on:click={() => gotosecret(secret)}>
 							<td style="width:10px">
+								<!-- eslint-disable-next-line @typescript-eslint/explicit-function-return-type -->
 								<input
 									type="checkbox"
 									class="checkbox"

@@ -1,35 +1,69 @@
 <script lang="ts">
 	import { ProgressBar } from '@skeletonlabs/skeleton';
-	import {
-		selectedProjectName,
-		selectedDryRunName,
-		selectedMetricsType
-	} from '../../../../../../stores/stores';
-	import { goto } from '$app/navigation';
 	import { format } from 'date-fns';
-	import { requestGraphQLClient } from '$lib/graphqlUtils';
-	import Plot from '../Plot.svelte';
 	import { gql } from 'graphql-request';
-	import { displayAlert } from '../../../../../../utils/alerts_utils';
+	import { selectedProjectName, selectedDryRunName, selectedMetricsType } from '$stores/stores';
+	import { goto } from '$app/navigation';
+	import { requestGraphQLClient } from '$lib/graphqlUtils';
+	import Plot from '../plot.svelte';
+	import { displayAlert } from '$utils/alerts-utils';
 
 	const datefmt = 'yyyy-MM-dd HH:mm:ss';
 	const defaultMetricsType = 'All';
 	selectedMetricsType.set(defaultMetricsType);
 
+	// TODO: These functions are the same as in [resource].svelte
+	// should be merged and moved into lib?
+	// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+	function isEmpty(obj: any) {
+		return Object.keys(obj).length === 0;
+	}
+
+	// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+	function truncateString(word: string, maxLength: number) {
+		if (word.length > maxLength) {
+			return `${word.slice(0, maxLength)}..`;
+		}
+		return word;
+	}
+
+	// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+	function addSeconds(date: Date, seconds: number) {
+		date.setSeconds(date.getSeconds() + seconds);
+		const dateStr = format(date, datefmt);
+		return dateStr;
+	}
+
+	// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+	function timestampsToDatetime(startedAt: string, input_array: number[]) {
+		const date = new Date(startedAt);
+		const timeseries = [addSeconds(date, 0)];
+		for (let index = 0; index < input_array.length - 1; index += 1) {
+			const v = input_array[index + 1] - input_array[index];
+			const newDate = addSeconds(date, v);
+			timeseries.push(newDate);
+		}
+		return timeseries;
+	}
+
 	// metrics
+	// eslint-disable-next-line @typescript-eslint/naming-convention
 	interface metrics {
 		x: string[];
 		y: number[];
 		type: string;
 		name: string;
 	}
+	// eslint-disable-next-line @typescript-eslint/naming-convention
 	interface allMetrics {
 		[metric: string]: metrics[];
 	}
+	// eslint-disable-next-line @typescript-eslint/naming-convention
 	interface metricMetadata {
 		[metric: string]: { metric_sources: string[]; ylabel: string; type: string };
 	}
 
+	// eslint-disable-next-line @typescript-eslint/naming-convention
 	const metric_metadata: metricMetadata = {
 		cpu: { metric_sources: ['cpuUsageSecondsTotal'], ylabel: 'cpu usage', type: 'scatter' },
 		'cpu-system': {
@@ -102,19 +136,19 @@
 			type: 'scatter'
 		}
 	};
-	var metricsData: allMetrics = {};
-	var metricSources: string[] = [];
+	const metricsData: allMetrics = {};
+	const metricSources: string[] = [];
 
-	function buildMetricQuery(metrics: string[]) {
-		let metric_string = ``;
-		for (let i = 0; i < metrics.length; i++) {
-			metric_string += `${metrics[i]} {
+	function buildMetricQuery(metrics: string[]): string {
+		let metricString = ``;
+		for (const metric of metrics) {
+			metricString += `${metric} {
 			timestamp
 			value
 			}
 		`;
 		}
-		let metricq = `query getDryRunAllMetrics($dryRunId: String!) {
+		const metricq = `query getDryRunAllMetrics($dryRunId: String!) {
 		dryRun(dryRunId: $dryRunId) {
 			nodes {
 				... on DryRunNodePod {
@@ -122,7 +156,7 @@
 					startedAt
 					duration
 					metrics {
-						${metric_string}
+						${metricString}
 						}
 					}
 				}
@@ -135,6 +169,7 @@
 	const getMetricsResponse = async () => {
 		Object.keys(metric_metadata).forEach((metric) => {
 			metricsData[metric] = [];
+			// eslint-disable-next-line @typescript-eslint/dot-notation
 			metric_metadata[metric]['metric_sources'].forEach((metric_source) => {
 				metricSources.push(metric_source);
 			});
@@ -143,20 +178,21 @@
 		const metricsQuery = gql`
 			${queryString}
 		`;
-		const dryrun_variables = {
+		const dryrunVariables = {
 			dryRunId: $selectedDryRunName
 		};
-		const metrics_response: { dryRun: { nodes: [] } } = await requestGraphQLClient(
+		const metricsResponse: { dryRun: { nodes: [] } } = await requestGraphQLClient(
 			metricsQuery,
-			dryrun_variables
+			dryrunVariables
 		);
-		return metrics_response?.dryRun?.nodes;
+		return metricsResponse?.dryRun?.nodes;
 	};
 
 	const getDataPromise = getMetricsResponse();
 
 	getDataPromise
 		.then((data: any) => {
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
 			data?.forEach(
 				(node: {
 					displayName: string | number;
@@ -167,23 +203,26 @@
 				}) => {
 					if (isEmpty(node) === false) {
 						Object.keys(metric_metadata).forEach((metric) => {
-							let metric_sources = metric_metadata[metric]['metric_sources'];
-							metric_sources.forEach((metric_source) => {
-								let timestamps = timestampsToDatetime(
+							// eslint-disable-next-line @typescript-eslint/dot-notation
+							const metricSources = metric_metadata[metric]['metric_sources'];
+							metricSources.forEach((metric_source) => {
+								const timestamps = timestampsToDatetime(
 									node.startedAt,
+									// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
 									node.metrics[metric_source].map((item: { timestamp: any }) => item.timestamp)
 								);
-								let values = node.metrics[metric_source].map((item: { value: string }) =>
+								const values = node.metrics[metric_source].map((item: { value: string }) =>
 									Number(item.value)
 								);
-								var metric_data = {
+								const metricData = {
 									x: timestamps,
 									y: values,
+									// eslint-disable-next-line @typescript-eslint/dot-notation
 									type: metric_metadata[metric]['type'],
 									name: truncateString(node.displayName as string, 15)
 								};
 								if (values.length > 0) {
-									metricsData[metric].push(metric_data);
+									metricsData[metric].push(metricData);
 								}
 							});
 						});
@@ -195,40 +234,10 @@
 			console.log(error);
 			const title = 'Error reading resource consumption of dry run❌!';
 			const body = `${(error as Error).message}`;
-			await displayAlert(title, body, 10000);
+			await displayAlert(title, body, 10_000);
+			// eslint-disable-next-line @typescript-eslint/no-floating-promises
 			goto(`/projects/dryruns/${$selectedProjectName}/${$selectedDryRunName}`);
 		});
-
-	// TODO: These functions are the same as in [resource].svelte
-	// should be merged and moved into lib?
-
-	function isEmpty(obj: any) {
-		return Object.keys(obj).length === 0;
-	}
-
-	function truncateString(word: string, maxLength: number) {
-		if (word.length > maxLength) {
-			return word.slice(0, maxLength) + '..';
-		}
-		return word;
-	}
-
-	function addSeconds(date: Date, seconds: number) {
-		date.setSeconds(date.getSeconds() + seconds);
-		let dateStr = format(date, datefmt);
-		return dateStr;
-	}
-
-	function timestampsToDatetime(startedAt: string, input_array: number[]) {
-		let date = new Date(startedAt);
-		let timeseries = [addSeconds(date, 0)];
-		for (let i = 0; i < input_array.length - 1; i++) {
-			let v = input_array[i + 1] - input_array[i];
-			let newDate = addSeconds(date, v);
-			timeseries.push(newDate);
-		}
-		return timeseries;
-	}
 </script>
 
 <div class="flex w-full content-center p-10">
@@ -269,9 +278,9 @@
 							<div class="place-self-center h-full w-full">
 								<Plot
 									data={metricsData[metric]}
-									plot_title={metric}
-									xaxis_title="time"
-									yaxis_title={metric_metadata[metric].ylabel}
+									plotTitle={metric}
+									xaxisTitle="time"
+									yaxisTitle={metric_metadata[metric].ylabel}
 								/>
 							</div>
 						</div>
@@ -282,9 +291,9 @@
 					<div class="place-self-center h-full w-full">
 						<Plot
 							data={metricsData[$selectedMetricsType]}
-							plot_title={$selectedMetricsType}
-							xaxis_title="time"
-							yaxis_title={metric_metadata[$selectedMetricsType].ylabel}
+							plotTitle={$selectedMetricsType}
+							xaxisTitle="time"
+							yaxisTitle={metric_metadata[$selectedMetricsType].ylabel}
 						/>
 					</div>
 				</div>

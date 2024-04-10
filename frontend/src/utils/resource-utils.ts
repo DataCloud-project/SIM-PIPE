@@ -6,7 +6,7 @@ import { requestGraphQLClient } from '$lib/graphqlUtils';
 import type { DryRunMetrics, metricsWithTimeStamps } from '$typesdefinitions';
 import { goto } from '$app/navigation';
 import { selectedProject } from '$stores/stores';
-import { displayAlert } from './alerts_utils';
+import { displayAlert } from './alerts-utils';
 
 const datefmt = 'yyyy-MM-dd HH:mm:ss';
 
@@ -75,6 +75,10 @@ export const printReadableBytes = (bytes: number | undefined) =>
 	!bytes || Number.isNaN(bytes) || bytes === -1 ? '-' : filesize(bytes);
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+export const printReadablePercent = (value: number | undefined) =>
+	!value || Number.isNaN(value) || value === -1 ? '-' : value;
+
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 const calculateMean = (input: number[]) => {
 	if (input?.length === 0) return 0;
 	return input.reduce((a, b) => a + b, 0) / input.length;
@@ -118,6 +122,7 @@ function findMax(input: number[]): number {
 	return Math.max(...input);
 }
 
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export const calculateDuration = (metrics: DryRunMetrics[]) => {
 	const duration =
 		metrics?.filter((metric) => metric.type === 'Steps')[0]?.duration ||
@@ -256,7 +261,7 @@ export function convertToBytes(value: number, unit: string) {
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export async function isFileSizeValid(input: number[]) {
 	// Check if all values are the same
-	if (new Set(input).size == 1) {
+	if (new Set(input).size !== 1) {
 		const title = 'All filesize values are the same. Unable to perform linear regression';
 		const body = `Please choose other dryruns. You will be taken back to the dry runs list on close`;
 		await displayAlert(title, body);

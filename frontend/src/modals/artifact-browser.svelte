@@ -3,11 +3,15 @@
 	import Artifacts from '$src/routes/artifacts/artifacts.svelte';
 	import { selectedArtifact, reactiveBuckets } from '$stores/stores';
 	import type { ArtifactHierarchyType } from '$typesdefinitions';
+
 	export let templateTaskName = '';
 	export let templateTaskArtifactName = '';
 	export let isOpen = false;
 
-	export let close = () => {
+	// Button becomes active when an artifact is selected
+	let isActiveButton = false;
+
+	export let close = (): void => {
 		isOpen = false;
 		isActiveButton = false;
 	};
@@ -20,6 +24,7 @@
 			// this is needed to traverse subfolders. Disable eslint rule for this line.
 			// eslint-disable-next-line no-param-reassign
 			if (artifact.name !== except_artifact_name) {
+				// eslint-disable-next-line no-param-reassign
 				artifact.isSelected = false;
 			}
 			if (artifact.subfolders.length > 0) {
@@ -36,24 +41,21 @@
 		}
 	}
 
-	// Button becomes active when an artifact is selected
-	let isActiveButton = false;
-
-	function cancel() {
+	function cancel(): void {
 		console.log('cancel');
 		close();
 	}
 
 	selectedArtifact.subscribe((value) => {
-		const artifact_name = value?.name;
+		const artifactName = value?.name;
 		console.log('subscribe selectedArtifact', value);
 		if ($selectedArtifact) {
 			isActiveButton = true;
-			unselectOtherArtifacts(artifact_name as string);
+			unselectOtherArtifacts(artifactName as string);
 		}
 	});
 
-	const submit = () => {
+	const submit = (): void => {
 		const selectedArtifactData = $selectedArtifact;
 		dispatch('message', {
 			selected_artifact: selectedArtifactData,

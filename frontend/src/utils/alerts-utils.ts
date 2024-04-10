@@ -2,6 +2,7 @@
 import { getModalStore } from '@skeletonlabs/skeleton';
 import type { ModalSettings } from '@skeletonlabs/skeleton';
 
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export const displayAlert = (title: string, body: string, timeout = 2000) => {
 	const modalStore = getModalStore();
 
@@ -13,7 +14,9 @@ export const displayAlert = (title: string, body: string, timeout = 2000) => {
 
 	modalStore.trigger(alertModal);
 
-	return new Promise((resolve) => setTimeout(resolve, timeout)).then(() => {
+	return new Promise((resolve) => {
+		setTimeout(resolve, timeout);
+	}).then(() => {
 		modalStore.close();
 		modalStore.clear();
 	});

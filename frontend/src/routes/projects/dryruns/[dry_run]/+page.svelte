@@ -1,22 +1,25 @@
 <script lang="ts">
-	import { ProgressBar } from '@skeletonlabs/skeleton';
-	import { selectedProject, clickedProjectId } from '../../../../stores/stores.js';
+	import { getModalStore, ProgressBar } from '@skeletonlabs/skeleton';
+	import type { ModalSettings } from '@skeletonlabs/skeleton';
+	import { FileTextIcon } from 'svelte-feather-icons';
+	import { selectedProject, clickedProjectId } from '$stores/stores.js';
 	import SymbolForRunResult from './symbol-for-run-result.svelte';
 	import SymbolForAction from './symbol-for-action.svelte';
-	import { getModalStore } from '@skeletonlabs/skeleton';
-	import type { ModalSettings } from '@skeletonlabs/skeleton';
-	import type { DryRun, DryRunMetrics, Project } from '../../../../types.js';
-	import allDryRunsQuery from '../../../../queries/get_all_dryruns.js';
-	import deleteDryRunMutation from '../../../../queries/delete_dry_run.js';
+	import type { DryRun, Project } from '$typesdefinitions';
+	import allDryRunsQuery from '$queries/get_all_dryruns.js';
+	import deleteDryRunMutation from '$queries/delete_dry_run.js';
 	import { goto } from '$app/navigation';
 	import Timestamp from './timestamp.svelte';
 	import { requestGraphQLClient } from '$lib/graphqlUtils.js';
-	import { calculateDuration } from '../../../../utils/resource_utils.js';
-	import { FileTextIcon } from 'svelte-feather-icons';
+	import { calculateDuration } from '$utils/resource-utils.js';
 
 	const modalStore = getModalStore();
 
 	export let data;
+
+	const checkboxes: Record<string, boolean> = {};
+
+	$: reactiveProjectDetails = $selectedProject;
 
 	export const getProjectDetails = async (): Promise<Project> => {
 		const variables = { projectId: data.dry_run };
@@ -38,20 +41,20 @@
 			reactiveProjectDetails = undefined;
 		});
 
-	let checkboxes: Record<string, boolean> = {};
-
-	async function onDeleteSelected() {
-		Object.keys(checkboxes)
+	async function onDeleteSelected(): Promise<void> {
+		const deletePromises = Object.keys(checkboxes)
 			.filter((item) => checkboxes[item])
-			.forEach(async (element) => {
-				const response = await requestGraphQLClient(deleteDryRunMutation, { dryRunId: element });
-			});
+			.map((element) => requestGraphQLClient(deleteDryRunMutation, { dryRunId: element }));
+
+		await Promise.all(deletePromises);
+
 		const dryRunDeletedMessageModal: ModalSettings = {
 			type: 'alert',
 			title: 'Dry run deleted🗑️!',
-			body: `Deleted dry runs: ${Object.keys(checkboxes).filter((item) => checkboxes[item])}`
+			body: `Deleted dry runs: ${Object.keys(checkboxes).join(', ')}`
 		};
 		modalStore.trigger(dryRunDeletedMessageModal);
+		// eslint-disable-next-line no-promise-executor-return
 		await new Promise((resolve) => setTimeout(resolve, 1500));
 		modalStore.close();
 		// reset checkboxes
@@ -59,24 +62,29 @@
 			checkboxes[element.id] = false;
 		});
 		// inserting a small delay because sometimes delete mutation returns true, but the deleted dry run is also returned in the query
+		// eslint-disable-next-line no-promise-executor-return
 		await new Promise((resolve) => setTimeout(resolve, 100));
 
 		// update the project list after deletion
-		let responseProjectDetails: { project: Project } = await requestGraphQLClient(allDryRunsQuery, {
-			projectId: $clickedProjectId
-		});
+		const responseProjectDetails: { project: Project } = await requestGraphQLClient(
+			allDryRunsQuery,
+			{
+				projectId: $clickedProjectId
+			}
+		);
 		$selectedProject = responseProjectDetails.project;
 	}
 
-	async function onPredictSelected() {
+	async function onPredictSelected(): Promise<void> {
 		// TODO: later change to passing dry runs ids through some other means (not to have too long url)
 		const dryRunIsToCompared = Object.keys(checkboxes)
 			.filter((item) => checkboxes[item])
 			.join(' ');
+		// eslint-disable-next-line @typescript-eslint/no-floating-promises
 		goto(`/projects/analytics/${dryRunIsToCompared}`);
 	}
 
-	async function onCreateSelected() {
+	async function onCreateSelected(): Promise<void> {
 		const modal: ModalSettings = {
 			type: 'component',
 			component: 'submitNewDryRunModal',
@@ -87,29 +95,52 @@
 	}
 
 	function getDryRunAction(status: string): string {
-		if (status == 'Succeeded') return 'rerun';
-		else if (status == 'Running') return 'stop';
-		else if (status == 'Pending' || status == 'Skipped' || status == 'Omitted') return 'run';
-		else if (status == 'Failed' || status == 'Error') return 'alert';
-		return 'unknown';
+		switch (status) {
+			case 'Succeeded': {
+				return 'rerun';
+			}
+			case 'Running': {
+				return 'stop';
+			}
+			case 'Pending': {
+				return 'run';
+			}
+			case 'Skipped': {
+				return 'run';
+			}
+			case 'Omitted': {
+				return 'run';
+			}
+			case 'Failed': {
+				return 'alert';
+			}
+			case 'Error': {
+				return 'alert';
+			}
+			default: {
+				return 'run';
+			}
+		}
 	}
 
-	function dryRunOnClick(dryRunId: string) {
+	function dryRunOnClick(dryRunId: string): void {
 		const resource = dryRunId;
+		// eslint-disable-next-line @typescript-eslint/no-floating-promises
 		goto(`/projects/dryruns/${dryRunId}/${resource}`);
 	}
 
-	function gotoTemplate(dryRunId: string) {
-		let url = `/templates/${dryRunId}`;
+	function gotoTemplate(dryRunId: string): void {
+		const url = `/templates/${dryRunId}`;
 		console.log(`Navigating to: ${url}`);
+		// eslint-disable-next-line @typescript-eslint/no-floating-promises
 		goto(url);
 	}
 
 	// to disable onclick propogation for checkbox input
+	// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 	const handleCheckboxClick = (event: any) => {
 		event.stopPropagation();
 	};
-	$: reactiveProjectDetails = $selectedProject;
 </script>
 
 <!-- Page Header -->
@@ -118,10 +149,12 @@
 		{#await projectDetailsPromise}
 			<p style="font-size:20px;">Loading all dry runs ....</p>
 			<ProgressBar />
+			<!-- eslint-disable-next-line @typescript-eslint/no-unused-vars -->
 		{:then response}
 			<h1>
 				<a href="/projects">Projects</a>
 				<span STYLE="font-size:14px">/ </span>
+				<!-- eslint-disable-next-line @typescript-eslint/explicit-function-return-type -->
 				<button on:click={() => goto(`/projects/${reactiveProjectDetails?.id}`)}
 					>{reactiveProjectDetails?.name}
 				</button>
@@ -145,7 +178,7 @@
 							<span>Delete</span>
 						</button>
 					</div>
-					{#if Object.values(checkboxes).some((value) => value)}
+					{#if Object.values(checkboxes).some(Boolean)}
 						<div>
 							<button
 								type="button"
@@ -158,7 +191,7 @@
 					{/if}
 				</div>
 			</div>
-			{#if reactiveProjectDetails?.dryRuns?.length || 0 > 0}
+			{#if reactiveProjectDetails?.dryRuns?.length}
 				<table class="table table-interactive">
 					<caption hidden>Dry runs</caption>
 					<thead>
@@ -174,6 +207,7 @@
 					</thead>
 					<tbody>
 						{#each reactiveProjectDetails?.dryRuns || [] as run}
+							<!-- eslint-disable-next-line @typescript-eslint/explicit-function-return-type -->
 							<tr on:click={() => dryRunOnClick(run.id)}>
 								<td style="width:25px">
 									<input
@@ -185,7 +219,7 @@
 								</td>
 								<td style="width:20%">{run.id}</td>
 								<td style="width:20%">
-									<div><SymbolForRunResult run_result={run.status.phase.toString()} /></div>
+									<div><SymbolForRunResult runResult={run.status.phase.toString()} /></div>
 								</td>
 								<td style="width:20%">
 									<div>
@@ -200,6 +234,7 @@
 										/>
 									</button>
 								</td>
+								<!-- eslint-disable-next-line svelte/no-unused-svelte-ignore runResult
 								<!-- svelte-ignore a11y-click-events-have-key-events -->
 								<td style="width:15%" on:click|stopPropagation={(event) => gotoTemplate(run.id)}>
 									<div class="grid grid-rows-2 grid-cols-1 justify-items-center">

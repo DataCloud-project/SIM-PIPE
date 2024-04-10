@@ -36,16 +36,17 @@
 	): ArtifactHierarchyType[] {
 		const folders: ArtifactHierarchyType[] = [];
 		let folder: ArtifactHierarchyType;
-		for (let key in structure.children) {
-			let subfolders =
+		// eslint-disable-next-line guard-for-in
+		for (const key in structure.children) {
+			const subfolders =
 				Object.keys(structure.children[key].children).length > 0
 					? renderFolderStructure(structure.children[key], bucketName, depth + 1)
 					: [];
 			folder = {
-				id: key + '-' + Math.floor(Math.random() * 10 ** 10).toString(),
+				id: `${key}-${Math.floor(Math.random() * 10 ** 10).toString()}`,
 				name: key,
 				bucket: bucketName,
-				subfolders: subfolders,
+				subfolders,
 				isExpanded: false,
 				isSelected: false,
 				path: structure.children[key].path
@@ -55,16 +56,17 @@
 		return folders;
 	}
 
-	function toggleOpenBucket(bucket: BucketHierarchyType) {
+	function toggleOpenBucket(bucket: BucketHierarchyType): void {
+		// eslint-disable-next-line no-param-reassign
 		bucket.isExpanded = !bucket.isExpanded;
 		$reactiveBuckets = [...$reactiveBuckets]; // Trigger a re-render
 	}
 
-	for (let bucket of buckets) {
-		let artifacts = bucket.artifacts;
-		let structure = buildFolderStructure(artifacts);
-		let folders = renderFolderStructure(structure, bucket.bucket.name);
-		let new_bucket = {
+	for (const bucket of buckets) {
+		const { artifacts } = bucket;
+		const structure = buildFolderStructure(artifacts);
+		const folders = renderFolderStructure(structure, bucket.bucket.name);
+		const newBucket = {
 			bucket: bucket.bucket.name,
 			isExpanded: false,
 			isSelected: false,
@@ -72,8 +74,8 @@
 		};
 
 		// Only add the bucket if it is not already in the reactiveBuckets
-		if (!$reactiveBuckets.some((b) => b.bucket === new_bucket.bucket)) {
-			$reactiveBuckets = [...$reactiveBuckets, new_bucket];
+		if (!$reactiveBuckets.some((b) => b.bucket === newBucket.bucket)) {
+			$reactiveBuckets = [...$reactiveBuckets, newBucket];
 		}
 	}
 
@@ -86,6 +88,7 @@
 		{#each $reactiveBuckets as bucket (bucket.bucket)}
 			<div class="justify-self-start">
 				<div>
+					<!-- eslint-disable-next-line @typescript-eslint/explicit-function-return-type -->
 					<button on:dblclick={() => toggleOpenBucket(bucket)}>
 						<SymbolForBucket {bucket} />
 						<span class="bucket-name">{bucket.bucket}</span>

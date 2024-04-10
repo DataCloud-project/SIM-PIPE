@@ -10,6 +10,11 @@ import type {
 	ArtifactHierarchyType
 } from '../types.js';
 
+// raw buckets
+// import type { Bucket } from '$lib/folders_types'; // TODO: consolidate types to types.d.ts
+// export const buckets = writable<Bucket[]>([]);
+import type { BucketWithArtifacts } from '$typesdefinitions';
+
 export const graphQLClient = writable<GraphQLClient>();
 export const filesList = writable<SampleFile[] | undefined>();
 export const stepsList = writable<DryRunMetrics[] | undefined>();
@@ -30,11 +35,6 @@ export const usertoken = writable<string | undefined>(undefined);
 
 // selected bucket
 export const selectedBucket = writable<string | undefined>(undefined);
-
-// raw buckets
-// import type { Bucket } from '$lib/folders_types'; // TODO: consolidate types to types.d.ts
-// export const buckets = writable<Bucket[]>([]);
-import type { BucketWithArtifacts } from '$typesdefinitions';
 export const buckets = writable<BucketWithArtifacts[]>([]);
 
 // reactive buckets

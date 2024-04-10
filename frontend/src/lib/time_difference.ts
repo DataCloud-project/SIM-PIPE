@@ -1,9 +1,5 @@
-export function readable_time_difference(started: string, finished: string) {
-	const timeDifferenceMilliseconds = new Date(finished).getTime() - new Date(started).getTime();
-	return readable_time(timeDifferenceMilliseconds);
-}
-
-export function readable_time(milliseconds: number) {
+// eslint-disable-next-line @typescript-eslint/naming-convention
+export function readable_time(milliseconds: number): string {
 	const hours = Math.floor(milliseconds / (1000 * 60 * 60));
 	const minutes = Math.floor((milliseconds % (1000 * 60 * 60)) / (1000 * 60));
 	const seconds = Math.floor((milliseconds % (1000 * 60)) / 1000);
@@ -28,6 +24,12 @@ export function readable_time(milliseconds: number) {
 		timeDifferenceString += `${seconds} second${seconds > 1 ? 's' : ''}`;
 	}
 
-	if (timeDifferenceString == '') return (milliseconds / 1000.0).toFixed(3);
+	if (timeDifferenceString === '') return (milliseconds / 1000).toFixed(3);
 	return timeDifferenceString;
+}
+
+// eslint-disable-next-line @typescript-eslint/naming-convention
+export function readable_time_difference(started: string, finished: string): string {
+	const timeDifferenceMilliseconds = new Date(finished).getTime() - new Date(started).getTime();
+	return readable_time(timeDifferenceMilliseconds);
 }

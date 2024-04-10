@@ -12,7 +12,7 @@
 	import allDryRunsQuery from '../../queries/get_all_dryruns.js';
 	import deleteDryRunMutation from '../../queries/delete_dry_run.js';
 	import deleteWorkflowTemplateMutation from '../../queries/delete_workflow_template.js';
-	import { displayAlert } from '../../utils/alerts_utils';
+	import { displayAlert } from '../../utils/alerts-utils.js';
 	import Alert from '$lib/modules/alert.svelte';
 
 	const modalStore = getModalStore();
@@ -21,6 +21,11 @@
 	let alertTitle: string = 'Alert!';
 	let alertMessage: string = 'Alert!';
 	let alertVariant: string = 'variant-ghost-surface';
+
+	$: reactiveProjectsList = $projectsList;
+
+	const checkboxes: Record<string, boolean> = {};
+	let dryRunCounts: Record<string, number> = {};
 
 	const getProjectsList = async (): Promise<Project[]> => {
 		const response: { projects: Project[] } = await requestGraphQLClient(allProjectsQuery);
@@ -38,9 +43,9 @@
 		return dryRunCounts;
 	}
 
+	$: dryRunCounts = getDryRunCounts(reactiveProjectsList);
+
 	const projectsPromise = getProjectsList();
-	let checkboxes: Record<string, boolean> = {};
-	let dryRunCounts: Record<string, number> = {};
 
 	// TODO: move to lib or utils
 	projectsPromise
@@ -49,29 +54,32 @@
 			reactiveProjectsList = value;
 			dryRunCounts = getDryRunCounts($projectsList);
 		})
+		// eslint-disable-next-line unicorn/prefer-top-level-await
 		.catch(() => {
 			$projectsList = undefined;
 		});
 
-	const modal: ModalSettings = {
+	/* const modal: ModalSettings = {
 		type: 'component',
 		component: 'submitNewProjectModal',
 		title: 'Add new project',
 		body: 'Enter details of project'
-	};
+	}; */
 
-	async function onDeleteSelected() {
+	async function onDeleteSelected(): Promise<void> {
 		try {
 			Object.keys(checkboxes)
 				.filter((item) => checkboxes[item])
+				// eslint-disable-next-line @typescript-eslint/no-misused-promises
 				.forEach(async (element) => {
-					const project_variables = {
+					const projectVariables = {
 						projectId: element
 					};
-					const response_dry_runs = await requestGraphQLClient<{
+					const responseDryRuns = await requestGraphQLClient<{
 						project: { dryRuns: Record<string, undefined>[] };
-					}>(allDryRunsQuery, project_variables);
-					response_dry_runs.project.dryRuns.forEach(async (dry_run: Record<string, undefined>) => {
+					}>(allDryRunsQuery, projectVariables);
+					// eslint-disable-next-line @typescript-eslint/no-misused-promises
+					responseDryRuns.project.dryRuns.forEach(async (dry_run: Record<string, undefined>) => {
 						await requestGraphQLClient(deleteDryRunMutation, {
 							dryRunId: dry_run.id
 						});
@@ -84,18 +92,22 @@
 						alertTitle = 'Delete workflow template failed!';
 						alertMessage = error.message;
 					});
-					await requestGraphQLClient(deleteProjectMutation, project_variables);
+					await requestGraphQLClient(deleteProjectMutation, projectVariables);
 				});
+
+			// TODO: wait for all delete promises to complete change to Promise.all - no-misused-promises
+			// await Promise.all(deletePromises);
+
 			const title = 'Project deleted🗑️!';
-			const body = `Deleted projects: ${Object.keys(checkboxes).filter(
-				(item) => checkboxes[item]
-			)}`;
+			const body = `Deleted projects: ${Object.keys(checkboxes).join(', ')}`;
+
 			await displayAlert(title, body);
 			// inserting a small delay because sometimes delete mutation returns true, but all projects query returns the deleted project as well
+			// eslint-disable-next-line no-promise-executor-return
 			await new Promise((resolve) => setTimeout(resolve, 150));
 
 			// update the project list after deletion
-			let responseAllProjects: { projects: Project[] } =
+			const responseAllProjects: { projects: Project[] } =
 				await requestGraphQLClient(allProjectsQuery);
 			projectsList.set(responseAllProjects.projects);
 		} catch (error) {
@@ -111,64 +123,78 @@
 	}
 
 	// to disable onclick propogation for checkbox input
+	// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 	const handleCheckboxClick = (event: any) => {
 		event.stopPropagation();
 	};
 
-	function gotodryruns(dry_run: string) {
+	function gotodryruns(dry_run: string): void {
 		clickedProjectId.set(dry_run);
+		// eslint-disable-next-line @typescript-eslint/no-floating-promises
 		goto(`/projects/dryruns/${dry_run}`);
-	}
-
-	function onCreateNewProject() {
-		console.log('onCreateNewProject');
-		const modal: ModalSettings = {
-			type: 'component',
-			component: 'createNewProjectModal',
-			title: 'Add new project',
-			body: 'Enter details of project',
-			response: (r: {
-				createProjectResponse: {
-					status: number;
-					error: string;
-					project: { name: string; id: string };
-				};
-				createWorkflowResponse: { status: number; error: string; name: string };
-			}) => {
-				handleOnCreateProjectResponse(r.createProjectResponse, r.createWorkflowResponse);
-			}
-		};
-		modalStore.trigger(modal);
 	}
 
 	async function handleOnCreateProjectResponse(
 		createProjectResponse: { status: number; project: { name: string; id: string }; error: string },
 		createWorkflowResponse: { status: number; name: string; error: string }
-	) {
+	): Promise<boolean> {
 		console.log('createProjectResponse:', createProjectResponse);
 		console.log('createWorkflowResponse:', createWorkflowResponse);
 		visibleAlert = true;
+		let hasErrors = false;
 		if (createProjectResponse.status === 200) {
 			await requestGraphQLClient<{ projects: Project[] }>(allProjectsQuery).then((response) => {
-				reactiveProjectsList = $projectsList = response.projects;
+				reactiveProjectsList = response.projects;
+				$projectsList = response.projects;
 			});
 			if (createWorkflowResponse.status === 200) {
 				alertVariant = 'variant-ghost-success';
 				alertTitle = 'Project created!';
 				alertMessage = `Project ${createProjectResponse.project.name} created with id ${createProjectResponse.project.id} and workflow template ${createWorkflowResponse.name} created`;
 			} else {
+				hasErrors = true;
 				alertVariant = 'variant-ghost-warning';
 				alertTitle = 'Project created! However, workflow creation failed!';
 				alertMessage = `Create template manually: ${createWorkflowResponse.error}`;
 			}
 		} else {
+			hasErrors = true;
 			alertVariant = 'variant-filled-error';
 			alertTitle = 'Project creation failed!';
 			alertMessage = `Project creation failed with status ${createProjectResponse.status}: ${createProjectResponse.error} and workflow template creation failed with status ${createWorkflowResponse.status}: ${createWorkflowResponse.error}`;
 		}
+		return hasErrors;
 	}
 
-	function renameProject(project: Project) {
+	function onCreateNewProject(): void {
+		console.log('onCreateNewProject');
+		const modalPromise = new Promise<boolean>((resolve) => {
+			const modal: ModalSettings = {
+				type: 'component',
+				component: 'createNewProjectModal',
+				title: 'Add new project',
+				body: 'Enter details of project',
+				response: (r: {
+					createProjectResponse: {
+						status: number;
+						error: string;
+						project: { name: string; id: string };
+					};
+					createWorkflowResponse: { status: number; error: string; name: string };
+				}) => {
+					resolve(handleOnCreateProjectResponse(r.createProjectResponse, r.createWorkflowResponse));
+				}
+			};
+			modalStore.trigger(modal);
+		}).then(() => {
+			console.log('onCreateNewProject promise resolved');
+		});
+		modalPromise.catch((error) => {
+			console.log('onCreateNewProject promise error:', error);
+		});
+	}
+
+	function renameProject(project: Project): void {
 		const modal: ModalSettings = {
 			type: 'component',
 			component: 'renameProjectModal',
@@ -180,16 +206,15 @@
 		modalStore.trigger(modal);
 	}
 
-	function gotoTemplate(project: Project) {
+	function gotoTemplate(project: Project): void {
 		$clickedProjectId = project.id;
-		let template = project.workflowTemplates[0].argoWorkflowTemplate;
-		let template_name = template?.metadata.name;
-		let url = `/templates/${template_name}`;
+		const template = project.workflowTemplates[0].argoWorkflowTemplate;
+		const templateName = template?.metadata.name;
+		const url = `/templates/${templateName}`;
 		console.log(`Navigating to: ${url}`);
+		// eslint-disable-next-line @typescript-eslint/no-floating-promises
 		goto(url);
 	}
-	$: reactiveProjectsList = $projectsList;
-	$: dryRunCounts = getDryRunCounts(reactiveProjectsList);
 </script>
 
 <!-- svelte-ignore missing-declaration -->
@@ -234,6 +259,7 @@
 				</thead>
 				<tbody>
 					{#each reactiveProjectsList || [] as project}
+						<!-- eslint-disable-next-line @typescript-eslint/explicit-function-return-type -->
 						<tr on:click={() => gotodryruns(project.id)}>
 							<td style="width:25px;">
 								<input
@@ -250,7 +276,9 @@
 							<td style="width:25%">
 								{dryRunCounts[project.id]}
 							</td>
+							<!-- eslint-disable-next-line svelte/no-unused-svelte-ignore -->
 							<!-- svelte-ignore a11y-click-events-have-key-events -->
+							<!-- eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/explicit-function-return-type -->
 							<td style="width:15%" on:click|stopPropagation={(event) => gotoTemplate(project)}>
 								<div class="grid grid-rows-2 grid-cols-1 justify-items-center">
 									<div><FileTextIcon size="1x" /></div>

@@ -1,7 +1,6 @@
 <script lang="ts">
-	import { getModalStore } from '@skeletonlabs/skeleton';
+	import { getModalStore, FileButton } from '@skeletonlabs/skeleton';
 	import type { ModalSettings } from '@skeletonlabs/skeleton';
-	import { FileButton } from '@skeletonlabs/skeleton';
 	import type { SvelteComponent } from 'svelte';
 
 	import { requestGraphQLClient } from '$lib/graphqlUtils.js';
@@ -10,7 +9,7 @@
 	import createDryRunMutation from '$queries/create_dry_run.js';
 	import allDryRunsQuery from '$queries/get_all_dryruns.js';
 	import { selectedArtifact, selectedProject } from '$stores/stores.js';
-	import { cBase, cForm, cHeader, optional } from '../styles/styles.js';
+	import { cBase, cForm, cHeader } from '../styles/styles.js';
 	import type { ArtifactHierarchyType, Project } from '$typesdefinitions';
 	import ArtifactBrowser from './artifact-browser.svelte';
 
@@ -32,11 +31,11 @@
 	const templateContainerInputs: any = {};
 
 	// holds information about selected input data (raw files and artifacts)
-	let inputdata: { [task_name: string]: { [template_task_artifact_index: number]: InputData } } =
+	const inputdata: { [task_name: string]: { [template_task_artifact_index: number]: InputData } } =
 		{};
 
-	let argoWorkflowTemplate = $selectedProject?.workflowTemplates[0].argoWorkflowTemplate;
-	let currentArgoWorkflowTemplates = argoWorkflowTemplate.spec.templates;
+	const argoWorkflowTemplate = $selectedProject?.workflowTemplates[0].argoWorkflowTemplate;
+	const currentArgoWorkflowTemplates = argoWorkflowTemplate.spec.templates;
 	$: console.log('currentArgoWorkflowTemplate', currentArgoWorkflowTemplates);
 
 	type InputData = {
@@ -121,7 +120,7 @@
 		template_task_name: string,
 		artifact_name: string,
 		task_artifact_index: number
-	) {
+	): void {
 		console.log('openOverlay');
 		selectedTemplateTaskName = template_task_name;
 		selectedTemplateTaskArtifactName = artifact_name;
@@ -129,11 +128,28 @@
 		isOverlayOpen = true;
 	}
 
-	const closeOverlay = () => {
+	const closeOverlay = (): void => {
 		console.log('closeOverlay');
 		isOverlayOpen = false;
 		$selectedArtifact = undefined;
 	};
+
+	function createDefaultS3Input(): S3Input {
+		return {
+			key: '', // path to minio object - e.g. /path/to/object - this must be provided from minio artifact browser
+			bucket: '', // minio bucket - this must be provided from minio artifact browser
+			endpoint: 'simpipe-minio:9000',
+			insecure: true,
+			accessKeySecret: {
+				name: 'simpipe-minio',
+				key: 'root-user'
+			},
+			secretKeySecret: {
+				name: 'simpipe-minio',
+				key: 'root-password'
+			}
+		};
+	}
 
 	// Receives message from ArtifactBrowser - returns details of selected artifact and template task name
 	function handleMessage(event: {
@@ -142,7 +158,7 @@
 			template_task_name: string;
 			template_task_artifact_name: string;
 		};
-	}) {
+	}): void {
 		console.log('triggerInsertArtifactInput');
 		const selectedArtifact = event.detail.selected_artifact;
 		const selectedTemplateTaskName = event.detail.template_task_name;
@@ -152,23 +168,23 @@
 		const template = currentArgoWorkflowTemplates.find(
 			(template: any) => template.name === selectedTemplateTaskName
 		);
-		const input_artifact = template.inputs.artifacts.find(
+		const inputArtifact = template.inputs.artifacts.find(
 			(artifact: any) => artifact.name === selectedTemplateTaskArtifactName
 		);
-		// pop input_artifact.raw
-		if ('raw' in input_artifact) {
-			delete input_artifact.raw;
+		// pop inputArtifact.raw
+		if ('raw' in inputArtifact) {
+			delete inputArtifact.raw;
 		}
-		input_artifact.s3 = createDefaultS3Input();
-		input_artifact.s3.key = selectedArtifact.path;
-		input_artifact.s3.bucket = selectedArtifact.bucket;
+		inputArtifact.s3 = createDefaultS3Input();
+		inputArtifact.s3.key = selectedArtifact.path;
+		inputArtifact.s3.bucket = selectedArtifact.bucket;
 		currentArgoWorkflowTemplates
 			.find((template: any) => template.name === selectedTemplateTaskName)
 			.inputs.artifacts.find(
 				(artifact: any) => artifact.name === selectedTemplateTaskArtifactName
-			).s3 = input_artifact.s3;
+			).s3 = inputArtifact.s3;
 
-		const inputdata_data: InputData = {
+		const inputdataData: InputData = {
 			template_task_name: selectedTemplateTaskName,
 			template_artifact_name: selectedTemplateTaskArtifactName,
 			template_task_artifact_index: selectedTemplateTaskArtifactIndex,
@@ -183,7 +199,7 @@
 			// initialize empty array
 			inputdata[selectedTemplateTaskName] = [];
 		}
-		inputdata[selectedTemplateTaskName][selectedTemplateTaskArtifactIndex] = inputdata_data;
+		inputdata[selectedTemplateTaskName][selectedTemplateTaskArtifactIndex] = inputdataData;
 		console.log('handleMessage inputdata', inputdata);
 	}
 
@@ -191,7 +207,7 @@
 		template_task_name: string,
 		template_artifact_name: string,
 		task_artifact_index: number
-	) {
+	): Promise<void> {
 		// when a file is uploaded, the raw input is updated similarly to handleMessage event from the ArtifactBrowser
 		console.log('triggerInsertRawInput');
 		const selectedTemplateTaskName = template_task_name;
@@ -201,38 +217,39 @@
 		const text = await files[0].text();
 		const filename = files[0].name;
 
-		const inputdata_data: InputData = {
+		const inputdataData: InputData = {
 			template_task_name: selectedTemplateTaskName,
 			template_artifact_name: selectedTemplateTaskArtifactName,
 			template_task_artifact_index: task_artifact_index,
 			is_raw: true,
 			is_artifact: false,
-			raw: { filename: filename }
+			raw: { filename }
 		};
 		if (!inputdata[selectedTemplateTaskName]) {
 			// initialize empty array
 			inputdata[selectedTemplateTaskName] = [];
 		}
-		inputdata[selectedTemplateTaskName][selectedTemplateTaskArtifactIndex] = inputdata_data;
+		inputdata[selectedTemplateTaskName][selectedTemplateTaskArtifactIndex] = inputdataData;
 
 		const template = currentArgoWorkflowTemplates.find(
 			(template: any) => template.name === selectedTemplateTaskName
 		);
-		const input_artifact = template.inputs.artifacts.find(
+		const inputArtifact = template.inputs.artifacts.find(
 			(artifact: any) => artifact.name === selectedTemplateTaskArtifactName
 		);
-		// pop input_artifact.s3
-		if ('s3' in input_artifact) {
-			delete input_artifact.s3;
+		// pop inputArtifact.s3
+		if ('s3' in inputArtifact) {
+			delete inputArtifact.s3;
 		}
-		input_artifact.raw = { data: text };
+		inputArtifact.raw = { data: text };
 		currentArgoWorkflowTemplates
 			.find((template: any) => template.name === selectedTemplateTaskName)
 			.inputs.artifacts.find(
 				(artifact: any) => artifact.name === selectedTemplateTaskArtifactName
-			).raw = input_artifact.raw;
+			).raw = inputArtifact.raw;
 	}
 
+	/* 
 	function createDefaultTemplateContainerRawInput(): TemplateContainerRawInput {
 		return {
 			artifacts: [
@@ -257,32 +274,13 @@
 				}
 			]
 		};
-	}
+	} */
 
-	function createDefaultS3Input(): S3Input {
-		return {
-			key: '', // path to minio object - e.g. /path/to/object - this must be provided from minio artifact browser
-			bucket: '', // minio bucket - this must be provided from minio artifact browser
-			endpoint: 'simpipe-minio:9000',
-			insecure: true,
-			accessKeySecret: {
-				name: 'simpipe-minio',
-				key: 'root-user'
-			},
-			secretKeySecret: {
-				name: 'simpipe-minio',
-				key: 'root-password'
-			}
-		};
-	}
-
-	function parsetemplateTaskList() {
+	function parsetemplateTaskList(): Task[] {
 		// disabling; could not resolve eslint error  Unsafe usage of optional chaining. If it short-circuits with 'undefined' the evaluation will throw TypeError  55:53  warning  Unexpected any. Specify a different type
-		/* eslint-disable */
 		const {
 			spec: { templates }
 		} = $selectedProject?.workflowTemplates[0]?.argoWorkflowTemplate;
-		/* eslint-disable */
 		// console.log(templates);
 		// dag or steps?
 		const dag = templates.find((template: any) => template.dag);
@@ -295,10 +293,10 @@
 			tasks = dag.dag.tasks;
 		} else if (steps) {
 			console.log('steps', steps);
-			tasks = steps.steps.reduce((acc: Task[], step: any) => {
-				acc.push(...step);
-				return acc;
-			}, []);
+			const tasks = [];
+			for (const step of steps.steps) {
+				tasks.push(...step);
+			}
 		}
 		// extract input artifacts from template
 		templates.forEach((template: { name: string; inputs: any }) => {
@@ -309,11 +307,10 @@
 		return tasks;
 	}
 	const templateTaskList = parsetemplateTaskList() || [];
-	let alertModal = false;
 
 	// get modified workflow template with updated template inputs
-	function getModifiedWorkflowTemplate2() {
-		let newWorkflowTemplate = argoWorkflowTemplate;
+	function getModifiedWorkflowTemplate2(): any {
+		const newWorkflowTemplate = argoWorkflowTemplate;
 		newWorkflowTemplate.spec.templates = currentArgoWorkflowTemplates;
 		// console.log('originalWorkflowTemplate', argoWorkflowTemplate);
 		// console.log('newWorkflowTemplate', newWorkflowTemplate);
@@ -335,6 +332,7 @@
 		};
 
 		// TODO: why is this here? Can this following line be removed?
+		// eslint-disable-next-line no-promise-executor-return
 		await new Promise((resolve) => setTimeout(resolve, 1500));
 
 		try {
@@ -353,7 +351,8 @@
 				body: `New dry run ID: ${responseCreateDryRun?.createDryRun?.id}`
 			};
 			modalStore.trigger(createDryRunMessageModal);
-			alertModal = true;
+
+			// eslint-disable-next-line no-promise-executor-return
 			await new Promise((resolve) => setTimeout(resolve, 1500));
 			modalStore.close();
 			await refreshProjectDetails();
@@ -362,6 +361,7 @@
 			// TODO: handle error
 			console.error('Failed to create dry run', error);
 			let createDryRunMessageModal: ModalSettings;
+			// eslint-disable-next-line unicorn/prefer-ternary
 			if ((error as Error).message.includes('PayloadTooLargeError')) {
 				createDryRunMessageModal = {
 					type: 'alert',
@@ -376,7 +376,8 @@
 				};
 			}
 			modalStore.trigger(createDryRunMessageModal);
-			alertModal = true;
+
+			// eslint-disable-next-line no-promise-executor-return
 			await new Promise((resolve) => setTimeout(resolve, 2500));
 			modalStore.close();
 		}
@@ -412,12 +413,11 @@
 								</span></label
 							>
 						{/if}
-						{#if Object.keys(templateContainerInputs[task.name]).length != 0}
+						{#if Object.keys(templateContainerInputs[task.name]).length > 0}
 							<br />
 							<!-- svelte-ignore a11y-label-has-associated-control -->
 							<label>Upload Input files </label>
 							{#each templateContainerInputs[task.name].artifacts || [] as artifact, k}
-								<!-- svelte-ignore a11y-label-has-associated-control -->
 								<label for={artifact.name}>
 									<span>
 										<div class="grid grid-rows-2 grid-cols-3 justify-items-center items-center">

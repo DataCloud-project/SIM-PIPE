@@ -1,5 +1,5 @@
 // Helper function to format file size in a human-readable format
-export function formatBytes(bytes: number, decimals: number = 2) {
+export function formatBytes(bytes: number, decimals: number = 2): string {
 	if (bytes === 0) return '0 Bytes';
 
 	const k = 1024;
@@ -8,5 +8,5 @@ export function formatBytes(bytes: number, decimals: number = 2) {
 
 	const i = Math.floor(Math.log(bytes) / Math.log(k));
 
-	return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+	return `${Number.parseFloat((bytes / k ** i).toFixed(dm))} ${sizes[i]}`;
 }

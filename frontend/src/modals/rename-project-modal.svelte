@@ -8,7 +8,7 @@
 	import renameProjectMutation from '$queries/rename_project.js';
 	import { projectsList } from '$stores/stores.js';
 	import { cBase, cForm, cHeader } from '$styles/styles.js';
-	import { displayAlert } from '$utils/alerts_utils.js';
+	import { displayAlert } from '$utils/alerts-utils.js';
 	import type { AllProjectsResponse } from '$typesdefinitions';
 
 	// Props - Exposes parent props to this component

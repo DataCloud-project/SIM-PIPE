@@ -59,6 +59,31 @@
 		return paths;
 	}
 
+	// Upload file using presigned url
+	function uploadFile(file: File, url: string): void {
+		console.log('url:', url);
+		fetch(url, {
+			method: 'PUT',
+			body: file
+		})
+			.then((response) => response.text())
+			.then((data) => {
+				console.log('response:', data);
+				// TODO: these messages should stack somehow in stead of replacing each other.
+				alertTitle = '👍 Success';
+				alertMessage = `Successfully uploaded file: ${file.name}`;
+				alertVariant = 'variant-ghost-success';
+				alertVisible = true;
+			})
+			.catch((error) => {
+				console.error('error', error);
+				alertTitle = '👎 Error';
+				alertMessage = `Error uploading file: ${file.name}`;
+				alertVariant = 'variant-filled-error';
+				alertVisible = true;
+			});
+	}
+
 	// Upload artifacts to a given path and a given bucket
 	async function uploadArtifactsToPath(
 		bucket: string,
@@ -126,23 +151,30 @@
 			alertVisible = true;
 			return;
 		}
-		const modal: ModalSettings = {
-			type: 'component',
-			component: 'uploadFileModal',
-			title: 'Upload Artifacts',
-			meta: {
-				path: selectedPaths[0].path,
-				bucket: $selectedBucket as string,
-				buckets: bucketsList
-			},
-			response: (r: { bucket: string; path: string; files: FileList }) => {
-				uploadArtifactsToPath(r.bucket, r.files, r.path);
-			}
-		};
-		modalStore.trigger(modal);
+		const modalPromise = new Promise((resolve) => {
+			const modal: ModalSettings = {
+				type: 'component',
+				component: 'uploadFileModal',
+				title: 'Upload Artifacts',
+				meta: {
+					path: selectedPaths[0].path,
+					bucket: $selectedBucket as string,
+					buckets: bucketsList
+				},
+				response: (r: { bucket: string; path: string; files: FileList }) => {
+					resolve(uploadArtifactsToPath(r.bucket, r.files, r.path));
+				}
+			};
+			modalStore.trigger(modal);
+		}).then(() => {
+			console.log('uploadFile promise resolved');
+		});
+		modalPromise.catch((error) => {
+			console.log('uploadFile promise error:', error);
+		});
 	}
 
-	//TODO: Delete bucket
+	// TODO: Delete bucket
 	/*
     async function deleteBucket() {}
     */
@@ -161,12 +193,13 @@
 			bucketName: bucket,
 			keys: paths
 		});
+
 		if (response) {
 			console.log('response:', response);
 			return { message: 'Successfully deleted artifacts', status: 200, bucket, paths };
-		} else {
-			return { message: 'Error deleting artifacts', status: 500, bucket, paths };
 		}
+
+		return { message: 'Error deleting artifacts', status: 500, bucket, paths };
 	}
 
 	// Delete artifacts per bucket
@@ -315,31 +348,6 @@
 			unselectArtifacts(bucket.artifacts);
 		}
 		$reactiveBuckets = [...$reactiveBuckets]; // Trigger a re-render
-	}
-
-	// Upload file using presigned url
-	function uploadFile(file: File, url: string) {
-		console.log('url:', url);
-		fetch(url, {
-			method: 'PUT',
-			body: file
-		})
-			.then((response) => response.text())
-			.then((data) => {
-				console.log('response:', data);
-				// TODO: these messages should stack somehow in stead of replacing each other.
-				alertTitle = '👍 Success';
-				alertMessage = `Successfully uploaded file: ${file.name}`;
-				alertVariant = 'variant-ghost-success';
-				alertVisible = true;
-			})
-			.catch((error) => {
-				console.error('error', error);
-				alertTitle = '👎 Error';
-				alertMessage = `Error uploading file: ${file.name}`;
-				alertVariant = 'variant-filled-error';
-				alertVisible = true;
-			});
 	}
 </script>
 

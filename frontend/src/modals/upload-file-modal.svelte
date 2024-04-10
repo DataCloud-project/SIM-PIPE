@@ -11,37 +11,42 @@
 	const modalStore = getModalStore();
 
 	// Upload path
+	// eslint-disable-next-line prefer-destructuring
 	let path: string = $modalStore[0].meta.path; // artifact path
-	let selected_bucket: string = $modalStore[0].meta.bucket; // currently selected bucket name
-	let bucketsList: string[] = $modalStore[0].meta.buckets; // list of all buckets
-	$: path_placeholder = path != '' ? path : '(optional)';
-	$: console.log('selected bucket:', selected_bucket);
+	const selectedBucket: string = $modalStore[0].meta.bucket; // currently selected bucket name
+	const bucketsList: string[] = $modalStore[0].meta.buckets; // list of all buckets
+	// eslint-disable-next-line unicorn/no-negated-condition
+	$: path_placeholder = path !== '' ? path : '(optional)';
+	$: console.log('selected bucket:', selectedBucket);
 	$: console.log('path:', path);
 
 	// Files list
 	let files: FileList;
+
+	// Filter path
+	function filterPath(): void {
+		path = path.trim();
+		if (path.startsWith('/')) {
+			path = path.slice(1);
+		}
+		if (path.endsWith('/')) {
+			path = path.slice(0, -1);
+		}
+		path = path.replace(' ', '');
+	}
 
 	// Handle form submission
 	function onFormSubmit(): void {
 		filterPath();
 		if (files && files.length > 0) {
 			if ($modalStore[0].response) {
-				$modalStore[0].response({ bucket: selected_bucket, path: path, files: files });
+				$modalStore[0].response({ bucket: selectedBucket, path, files });
 			}
+		} else {
+			throw new Error('No files selected');
 		}
 
 		modalStore.close();
-	}
-
-	function filterPath(): void {
-		path = path.trim();
-		if (path.startsWith('/')) {
-			path = path.substring(1);
-		}
-		if (path.endsWith('/')) {
-			path = path.substring(0, path.length - 1);
-		}
-		path = path.replace(' ', '');
 	}
 
 	/*     on:change={onChangeHandler}
@@ -66,7 +71,7 @@
 			<span>Bucket:</span>
 			<select class="select">
 				{#each bucketsList as bucket}
-					<option value={bucket} selected={bucket === selected_bucket}>{bucket}</option>
+					<option value={bucket} selected={bucket === selectedBucket}>{bucket}</option>
 				{/each}
 			</select>
 		</div>
