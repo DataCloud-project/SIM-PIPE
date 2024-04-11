@@ -9,6 +9,8 @@
 	import { requestGraphQLClient } from '$lib/graphqlUtils';
 	import getUploadPresignedUrl from '$queries/get_presigned_url_upload';
 	import deleteArtifactsMutation from '$queries/delete_artifacts';
+	import createBucketMutation from '$queries/create_bucket';
+	import deleteBucketMutation from '$queries/delete_bucket';
 
 	let alertTitle: string = '';
 	let alertMessage: string = '';
@@ -175,9 +177,35 @@
 	}
 
 	// TODO: Delete bucket
-	/*
-    async function deleteBucket() {}
-    */
+
+	async function onDeleteBucket(): Promise<void> {
+		const selectedBucket = $reactiveBuckets.find((bucket) => bucket.isSelected);
+		if (selectedBucket) {
+			try {
+				const deleteSelectedBucketResponse: { deleteBucket: string } = await requestGraphQLClient(
+					deleteBucketMutation,
+					{
+						bucketName: selectedBucket.bucket
+					}
+				);
+				alertTitle = '👍 Success';
+				alertMessage = `Bucket deleted: ${deleteSelectedBucketResponse.deleteBucket}`;
+				alertVariant = 'variant-ghost-success';
+				alertVisible = true;
+			} catch (error) {
+				console.error('Error deleting bucket:', error);
+				alertTitle = `👎 Error deleting bucket ${selectedBucket.bucket}`;
+				alertMessage = `${(error as any).response.errors[0].message || ''}`;
+				alertVariant = 'variant-filled-error';
+				alertVisible = true;
+			}
+		} else {
+			alertTitle = '👎 Error';
+			alertMessage = 'Select a bucket to delete.';
+			alertVariant = 'variant-filled-error';
+			alertVisible = true;
+		}
+	}
 
 	// Delete artifacts given a bucket and a list of artifact paths
 	// TODO: Rewrite this function to use graphql mutation in stead
@@ -267,35 +295,26 @@
 	// Create a new bucket
 	async function createNewBucket(name: string): Promise<void> {
 		console.log(`Creating bucket: ${name} ...`);
-		await fetch(`/api/minio/buckets/create`, {
-			method: 'POST',
-			body: JSON.stringify({ bucketName: name })
-		}).then((response) => {
-			console.log('response:', response.clone().json());
-			response
-				.json()
-				.then((data) => {
-					console.log('response data:', data);
-					const words: string[] = [];
-					// eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-					data.message.split(' ').forEach((word: string) => {
-						words.push(word);
-					});
-					if (words[0] === 'Successfully') {
-						alertTitle = '👍 Create bucket';
-						alertVariant = 'variant-ghost-success';
-					} else {
-						alertTitle = '👎 Create bucket failed';
-						alertVariant = 'variant-filled-error';
-					}
-					// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-					alertMessage = `<div>${data.message}</div>`;
-					alertVisible = true;
-				})
-				.catch((error) => {
-					console.log(' error', error);
-				});
-		});
+
+		try {
+			const createNewBucketResponse: { createBucket: string } = await requestGraphQLClient(
+				createBucketMutation,
+				{
+					bucketName: name
+				}
+			);
+			console.log('Bucket created:', createNewBucketResponse.createBucket);
+			alertTitle = '👍 Success';
+			alertMessage = `Bucket created: ${createNewBucketResponse.createBucket}`;
+			alertVariant = 'variant-ghost-success';
+			alertVisible = true;
+		} catch (error) {
+			console.error('Error creating bucket:', error);
+			alertTitle = `👎 Error creating bucket ${name}`;
+			alertMessage = `${(error as any).response.errors[0].message || ''}`;
+			alertVariant = 'variant-filled-error';
+			alertVisible = true;
+		}
 	}
 
 	// On create new bucket
@@ -389,6 +408,13 @@
 						on:click={() => onCreateNewBucket()}
 					>
 						<span>Create new bucket</span>
+					</button>
+					<button
+						type="button"
+						class="btn btn-sm variant-filled-warning"
+						on:click={() => onDeleteBucket()}
+					>
+						<span>Delete bucket</span>
 					</button>
 				</div>
 			</div>

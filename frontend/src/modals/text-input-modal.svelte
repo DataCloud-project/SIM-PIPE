@@ -9,7 +9,8 @@
 
 	// Handle form submission
 	function onFormSubmit(): void {
-		const textInput = document.querySelector('text-input') as HTMLInputElement;
+		// eslint-disable-next-line unicorn/prefer-query-selector
+		const textInput = document.getElementById('text-input') as HTMLInputElement;
 		console.log(textInput);
 		const text = textInput.value;
 
