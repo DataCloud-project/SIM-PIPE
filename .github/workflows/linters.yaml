@@ -19,7 +19,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
-      - name: Use Node.js 21
+      - name: Use Node.js 20
         uses: actions/setup-node@v3
         with:
           node-version: 21
@@ -43,10 +43,10 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
-      - name: Use Node.js 18
+      - name: Use Node.js 20
         uses: actions/setup-node@v3
         with:
-          node-version: 18
+          node-version: 20
           cache: "npm"
           cache-dependency-path: "./frontend/package-lock.json"
 
