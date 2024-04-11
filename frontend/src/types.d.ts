@@ -9,7 +9,7 @@ export type SampleFile = {
 	size: number;
 };
 
-export type metricsWithTimeStamps = { x: string[]; y: number[]; type: string; name: string };
+export type MetricsWithTimeStamps = { x: string[]; y: number[]; type: string; name: string };
 
 // WIP argo data types
 
@@ -25,6 +25,14 @@ export type WorkflowTemplate = {
 	name: string;
 	project: Project;
 	argoWorkflowTemplate: ArgoWorkflowTemplate;
+};
+
+export type WorkflowTemplateFromDryRun = {
+	dryRun: {
+		id: string;
+		project: Project;
+		argoWorkflow: ArgoWorkflowTemplate;
+	};
 };
 
 export type DryRun = {
@@ -147,3 +155,49 @@ interface Templates {
 }
 
 // end: argo workflow template types
+
+// graphql returned types and their derivatives
+
+// graphql minio buckets
+export type Bucket = {
+	name: string;
+};
+
+// graphql minio artifacts
+export type Artifact = {
+	name: string;
+	url: string;
+	size: number;
+	bucketName: string;
+};
+
+// Bucket with artifacts
+export type BucketWithArtifacts = {
+	bucket: Bucket;
+	artifacts: Artifact[];
+};
+
+// Bucket hierarchy
+export type BucketHierarchyType = {
+	bucket: string;
+	isExpanded: boolean;
+	isSelected: boolean;
+	artifacts: ArtifactHierarchyType[];
+};
+
+// Artifact hierarchy object
+export type ArtifactHierarchyType = {
+	id: string;
+	name: string;
+	path: string;
+	bucket: string;
+	subfolders: ArtifactHierarchyType[];
+	isExpanded: boolean;
+	isSelected: boolean;
+};
+
+// Folder stucture hierarchy object
+export type FolderStructure = {
+	path: string;
+	children: { [key: string]: FolderStructure };
+};

@@ -10,17 +10,19 @@ function parseSimPipeEnvironment(): {
 	keycloakEnabled: boolean;
 	graphqlUrl: string;
 } {
-	let keycloakEnabled = config.KEYCLOAK_ENABLED;
 	let graphqlUrl = config.SIM_PIPE_CONTROLLER_URL;
+	let keycloakEnabled = config.KEYCLOAK_ENABLED;
+	let isKeycloakEnabled = false;
 
 	if (keycloakEnabled === undefined || graphqlUrl === undefined) {
 		const localhostMatch = window.location.host.match(/^(localhost|127\.0\.0\.\d+|::1)(:\d+)?$/);
 
 		if (localhostMatch) {
-			keycloakEnabled = keycloakEnabled === undefined ? false : keycloakEnabled === 'true';
+			keycloakEnabled = keycloakEnabled === undefined ? 'false' : keycloakEnabled;
 			if (graphqlUrl === undefined) {
 				const port = localhostMatch[2];
 				// added 5173 to support deployment of frontend in dev mode
+				// eslint-disable-next-line unicorn/prefer-ternary
 				if (port === ':8088' || port === ':5173') {
 					graphqlUrl = 'http://localhost:8087/graphql';
 				} else {
@@ -28,13 +30,15 @@ function parseSimPipeEnvironment(): {
 				}
 			}
 		} else {
-			keycloakEnabled = keycloakEnabled === undefined ? true : keycloakEnabled === 'true';
+			keycloakEnabled = keycloakEnabled === undefined ? 'true' : keycloakEnabled;
 			graphqlUrl = '/graphql';
 		}
 	}
 
+	isKeycloakEnabled = keycloakEnabled === 'true';
+
 	return {
-		keycloakEnabled,
+		keycloakEnabled: isKeycloakEnabled,
 		graphqlUrl
 	};
 }
@@ -46,7 +50,7 @@ async function internalInitKeycloak(graphqlUrl: string): Promise<void> {
 	if (existingToken) {
 		const existingExp = sessionStorage.getItem('keycloak-exp');
 		if (existingExp) {
-			const exp = parseInt(existingExp, 10);
+			const exp = Number.parseInt(existingExp, 10);
 			// If expire in less than 10 minutes, ignore it
 			if (exp - Date.now() / 1000 > 10 * 60) {
 				usertoken.set(existingToken);
@@ -75,15 +79,17 @@ async function internalInitKeycloak(graphqlUrl: string): Promise<void> {
 		throw new Error("Keycloak didn't return a valid token");
 	}
 
-	const token = keycloak.token;
+	const { token } = keycloak;
 
 	const exp = keycloak.tokenParsed?.exp ?? 0;
 	console.log('Token expires at', new Date(exp * 1000).toISOString());
 
+	// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 	const usernameFromKeycloak = keycloak.idTokenParsed?.preferred_username ?? '';
 
 	window.sessionStorage.setItem('keycloak-token', token);
 	window.sessionStorage.setItem('keycloak-exp', exp.toString());
+	// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
 	window.sessionStorage.setItem('keycloak-username', usernameFromKeycloak);
 
 	// console.log('User is authenticated');
@@ -98,6 +104,7 @@ async function internalInitKeycloak(graphqlUrl: string): Promise<void> {
 		throw new TypeError("Keycloak didn't return a valid preferred_username");
 	}
 	usertoken.set(token);
+	// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
 	username.set(usernameFromKeycloak);
 
 	graphQLClient.set(

@@ -35,13 +35,26 @@ type Query {
     """ ID of the dry run to be fetched """
     dryRunId: String!): DryRun! @auth
 
+
   """ Get an Argo  workflow template by name """
   workflowTemplate(
     """ Name of the Argo workflow template to be fetched """
     name: String!): WorkflowTemplate @auth
 
   """ List of all the artifacts """
-  artifacts: [Artifact!]! @auth
+  artifacts(
+    """ The name of the bucket """
+    bucketName: String): [Artifact!]! @auth
+
+  """ Artifact metadata """
+  artifact(
+    """ The name of the bucket """
+    bucketName: String!,
+    """ The key of the artifact """
+    key: String!): ArtifactMetadata @auth
+
+  """ List of all the buckets """
+  buckets: [Bucket!]! @auth
 }
 
 """ Project is the high level concept for a specific pipeline in SIM-PIPE. It contains all the previous dry runs of the pipeline and its results. """
@@ -303,6 +316,11 @@ type DryRunNodeMetrics {
   ulimitsSoft(start: TimeStamp, end: TimeStamp, step: Int): [PrometheusSample!]
 }
 
+type Bucket {
+  """ The bucket name """
+  name: String!
+}
+
 """ Contains information about files produced during a dry run execution """
 type Artifact {
   """ The artifact name """
@@ -311,6 +329,20 @@ type Artifact {
   key: String
   """ URL to download the artifact using an HTTP GET."""
   url: String
+  """ The artifact size """
+  size: Int
+  """ The name of the bucket that holds the artifact """
+  bucketName: String
+}
+
+""" Artifact metadata """
+type ArtifactMetadata {
+  """ Unique identifier of the artifact """
+  etag: String
+  """ Last modified date """
+  lastModified: String
+  """ Artifact metadata """
+  metaData: String
   """ The artifact size """
   size: Int
 }
@@ -493,8 +525,10 @@ type Mutation @auth {
 
   """ Compute a presigned URL for uploading a file using HTTP PUT. The mutation returns the URL to upload the file. """
   computeUploadPresignedUrl(
-    """ The name of the file you wish to upload """
-    key: String): String!
+    """ The name/path of the file you wish to upload """
+    key: String, 
+    """ The name of the bucket to upload the file to """
+    bucketName: String): String!
 
   """ Create a new Argo workflow template """
   createWorkflowTemplate(
@@ -510,4 +544,19 @@ type Mutation @auth {
   deleteWorkflowTemplate(
     """ Name of the Argo workflow template to be deleted """
     name: String!): Boolean!
+
+  """ Buckets """
+  createBucket(
+    """ Create new bucket by name, return the bucket upon successful creation"""
+    name: String!): String!
+
+  """ Delete an existing bucket. The mutation returns true if the deletion was successful. """
+  deleteBucket(
+    """ The name of the bucket to be deleted """
+    name: String!): Boolean!
+
+  deleteArtifacts(
+    """ The name of the bucket to be deleted """
+    bucketName: String!,
+    keys: [String!]!): Boolean!
 }

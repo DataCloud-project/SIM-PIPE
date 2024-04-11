@@ -1,8 +1,9 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
+	import { goto } from '$app/navigation';
 
 	onMount(() => {
+		// eslint-disable-next-line @typescript-eslint/no-floating-promises
 		goto('/projects');
 	});
 </script>

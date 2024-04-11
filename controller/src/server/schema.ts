@@ -34,6 +34,8 @@ export type Scalars = {
 /**  Contains information about files produced during a dry run execution  */
 export type Artifact = {
   __typename?: 'Artifact';
+  /**  The name of the bucket that holds the artifact  */
+  bucketName?: Maybe<Scalars['String']['output']>;
   /**  The artifact path  */
   key?: Maybe<Scalars['String']['output']>;
   /**  The artifact name  */
@@ -42,6 +44,25 @@ export type Artifact = {
   size?: Maybe<Scalars['Int']['output']>;
   /**  URL to download the artifact using an HTTP GET. */
   url?: Maybe<Scalars['String']['output']>;
+};
+
+/**  Artifact metadata  */
+export type ArtifactMetadata = {
+  __typename?: 'ArtifactMetadata';
+  /**  Unique identifier of the artifact  */
+  etag?: Maybe<Scalars['String']['output']>;
+  /**  Last modified date  */
+  lastModified?: Maybe<Scalars['String']['output']>;
+  /**  Artifact metadata  */
+  metaData?: Maybe<Scalars['String']['output']>;
+  /**  The artifact size  */
+  size?: Maybe<Scalars['Int']['output']>;
+};
+
+export type Bucket = {
+  __typename?: 'Bucket';
+  /**  The bucket name  */
+  name: Scalars['String']['output'];
 };
 
 /**  The input data to create a new dry run  */
@@ -669,6 +690,8 @@ export type Mutation = {
   assignDryRunToProject: DryRun;
   /**  Compute a presigned URL for uploading a file using HTTP PUT. The mutation returns the URL to upload the file.  */
   computeUploadPresignedUrl: Scalars['String']['output'];
+  /**  Buckets  */
+  createBucket: Scalars['String']['output'];
   /**  Create a new docker registry credential  */
   createDockerRegistryCredential: DockerRegistryCredential;
   /**
@@ -683,6 +706,9 @@ export type Mutation = {
   createProject: Project;
   /**  Create a new Argo workflow template  */
   createWorkflowTemplate: WorkflowTemplate;
+  deleteArtifacts: Scalars['Boolean']['output'];
+  /**  Delete an existing bucket. The mutation returns true if the deletion was successful.  */
+  deleteBucket: Scalars['Boolean']['output'];
   /**  Delete an existing docker registry credential. The mutation returns true if the deletion was successful.  */
   deleteDockerRegistryCredential: Scalars['Boolean']['output'];
   /**  Delete an existing dry run. The mutation returns true if the deletion was successful.  */
@@ -717,7 +743,13 @@ export type MutationAssignDryRunToProjectArgs = {
 
 
 export type MutationComputeUploadPresignedUrlArgs = {
+  bucketName?: InputMaybe<Scalars['String']['input']>;
   key?: InputMaybe<Scalars['String']['input']>;
+};
+
+
+export type MutationCreateBucketArgs = {
+  name: Scalars['String']['input'];
 };
 
 
@@ -738,6 +770,17 @@ export type MutationCreateProjectArgs = {
 
 export type MutationCreateWorkflowTemplateArgs = {
   input: CreateWorkflowTemplateInput;
+};
+
+
+export type MutationDeleteArtifactsArgs = {
+  bucketName: Scalars['String']['input'];
+  keys: Array<Scalars['String']['input']>;
+};
+
+
+export type MutationDeleteBucketArgs = {
+  name: Scalars['String']['input'];
 };
 
 
@@ -825,8 +868,12 @@ export type PrometheusSample = {
 
 export type Query = {
   __typename?: 'Query';
+  /**  Artifact metadata  */
+  artifact?: Maybe<ArtifactMetadata>;
   /**  List of all the artifacts  */
   artifacts: Array<Artifact>;
+  /**  List of all the buckets  */
+  buckets: Array<Bucket>;
   /**  List of all docker registry credentials  */
   dockerRegistryCredentials: Array<DockerRegistryCredential>;
   /**  Get a dry run by ID  */
@@ -841,6 +888,17 @@ export type Query = {
   username: Scalars['String']['output'];
   /**  Get an Argo  workflow template by name  */
   workflowTemplate?: Maybe<WorkflowTemplate>;
+};
+
+
+export type QueryArtifactArgs = {
+  bucketName: Scalars['String']['input'];
+  key: Scalars['String']['input'];
+};
+
+
+export type QueryArtifactsArgs = {
+  bucketName?: InputMaybe<Scalars['String']['input']>;
 };
 
 
@@ -957,7 +1015,9 @@ export type ResolversTypes = {
   ArgoWorkflow: ResolverTypeWrapper<Scalars['ArgoWorkflow']['output']>;
   ArgoWorkflowTemplate: ResolverTypeWrapper<Scalars['ArgoWorkflowTemplate']['output']>;
   Artifact: ResolverTypeWrapper<Artifact>;
+  ArtifactMetadata: ResolverTypeWrapper<ArtifactMetadata>;
   Boolean: ResolverTypeWrapper<Scalars['Boolean']['output']>;
+  Bucket: ResolverTypeWrapper<Bucket>;
   CreateDryRunInput: CreateDryRunInput;
   CreateProjectInput: CreateProjectInput;
   CreateWorkflowTemplateInput: CreateWorkflowTemplateInput;
@@ -990,7 +1050,9 @@ export type ResolversParentTypes = {
   ArgoWorkflow: Scalars['ArgoWorkflow']['output'];
   ArgoWorkflowTemplate: Scalars['ArgoWorkflowTemplate']['output'];
   Artifact: Artifact;
+  ArtifactMetadata: ArtifactMetadata;
   Boolean: Scalars['Boolean']['output'];
+  Bucket: Bucket;
   CreateDryRunInput: CreateDryRunInput;
   CreateProjectInput: CreateProjectInput;
   CreateWorkflowTemplateInput: CreateWorkflowTemplateInput;
@@ -1024,10 +1086,24 @@ export interface ArgoWorkflowTemplateScalarConfig extends GraphQLScalarTypeConfi
 }
 
 export type ArtifactResolvers<ContextType = any, ParentType extends ResolversParentTypes['Artifact'] = ResolversParentTypes['Artifact']> = {
+  bucketName?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   key?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   size?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
   url?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type ArtifactMetadataResolvers<ContextType = any, ParentType extends ResolversParentTypes['ArtifactMetadata'] = ResolversParentTypes['ArtifactMetadata']> = {
+  etag?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  lastModified?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  metaData?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  size?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type BucketResolvers<ContextType = any, ParentType extends ResolversParentTypes['Bucket'] = ResolversParentTypes['Bucket']> = {
+  name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -1166,10 +1242,13 @@ export type DryRunStatusResolvers<ContextType = any, ParentType extends Resolver
 export type MutationResolvers<ContextType = any, ParentType extends ResolversParentTypes['Mutation'] = ResolversParentTypes['Mutation']> = {
   assignDryRunToProject?: Resolver<ResolversTypes['DryRun'], ParentType, ContextType, RequireFields<MutationAssignDryRunToProjectArgs, 'dryRunId' | 'projectId'>>;
   computeUploadPresignedUrl?: Resolver<ResolversTypes['String'], ParentType, ContextType, Partial<MutationComputeUploadPresignedUrlArgs>>;
+  createBucket?: Resolver<ResolversTypes['String'], ParentType, ContextType, RequireFields<MutationCreateBucketArgs, 'name'>>;
   createDockerRegistryCredential?: Resolver<ResolversTypes['DockerRegistryCredential'], ParentType, ContextType, RequireFields<MutationCreateDockerRegistryCredentialArgs, 'credential'>>;
   createDryRun?: Resolver<ResolversTypes['DryRun'], ParentType, ContextType, RequireFields<MutationCreateDryRunArgs, 'input'>>;
   createProject?: Resolver<ResolversTypes['Project'], ParentType, ContextType, RequireFields<MutationCreateProjectArgs, 'project'>>;
   createWorkflowTemplate?: Resolver<ResolversTypes['WorkflowTemplate'], ParentType, ContextType, RequireFields<MutationCreateWorkflowTemplateArgs, 'input'>>;
+  deleteArtifacts?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationDeleteArtifactsArgs, 'bucketName' | 'keys'>>;
+  deleteBucket?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationDeleteBucketArgs, 'name'>>;
   deleteDockerRegistryCredential?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationDeleteDockerRegistryCredentialArgs, 'name'>>;
   deleteDryRun?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationDeleteDryRunArgs, 'dryRunId'>>;
   deleteProject?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationDeleteProjectArgs, 'projectId'>>;
@@ -1204,7 +1283,9 @@ export interface PrometheusStringNumberScalarConfig extends GraphQLScalarTypeCon
 }
 
 export type QueryResolvers<ContextType = any, ParentType extends ResolversParentTypes['Query'] = ResolversParentTypes['Query']> = {
-  artifacts?: Resolver<Array<ResolversTypes['Artifact']>, ParentType, ContextType>;
+  artifact?: Resolver<Maybe<ResolversTypes['ArtifactMetadata']>, ParentType, ContextType, RequireFields<QueryArtifactArgs, 'bucketName' | 'key'>>;
+  artifacts?: Resolver<Array<ResolversTypes['Artifact']>, ParentType, ContextType, Partial<QueryArtifactsArgs>>;
+  buckets?: Resolver<Array<ResolversTypes['Bucket']>, ParentType, ContextType>;
   dockerRegistryCredentials?: Resolver<Array<ResolversTypes['DockerRegistryCredential']>, ParentType, ContextType>;
   dryRun?: Resolver<ResolversTypes['DryRun'], ParentType, ContextType, RequireFields<QueryDryRunArgs, 'dryRunId'>>;
   ping?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
@@ -1229,6 +1310,8 @@ export type Resolvers<ContextType = any> = {
   ArgoWorkflow?: GraphQLScalarType;
   ArgoWorkflowTemplate?: GraphQLScalarType;
   Artifact?: ArtifactResolvers<ContextType>;
+  ArtifactMetadata?: ArtifactMetadataResolvers<ContextType>;
+  Bucket?: BucketResolvers<ContextType>;
   DockerRegistryCredential?: DockerRegistryCredentialResolvers<ContextType>;
   DryRun?: DryRunResolvers<ContextType>;
   DryRunNode?: DryRunNodeResolvers<ContextType>;

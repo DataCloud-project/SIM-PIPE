@@ -26,7 +26,18 @@ import { SIMPIPE_PROJECT_LABEL } from '../k8s/label.js';
 import {
   createProject, deleteProject, getProject, projects, renameProject,
 } from '../k8s/projects.js';
-import { computePresignedGetUrl, computePresignedPutUrl, getObjectSize } from '../minio/minio.js';
+import {
+  computePresignedGetUrl, 
+  computePresignedPutUrl, 
+  listAllBuckets, 
+  listAllObjects, 
+  getObjectSize, 
+  createBucket, 
+  deleteBucket, 
+  deleteObjects,
+  getObjectMetadata,
+} from '../minio/minio.js';
+import { ArtifactItem } from '../minio/minio.js';
 import { assertPrometheusIsHealthy } from '../prometheus/prometheus.js';
 import queryPrometheusResolver from '../prometheus/query-prometheus-resolver.js';
 import { NotFoundError, PingError } from './apollo-errors.js';
@@ -42,6 +53,7 @@ import type {
   DryRunNodeMetricsCpuSystemSecondsTotalArgs as DryRunNodeMetricsCpuSystemSecondsTotalArguments,
   DryRunNodePod, DryRunNodePodLogArgs as DryRunNodePodLogArguments,
   Mutation,
+  MutationCreateBucketArgs as MutationCreateBucketArguments,
   MutationAssignDryRunToProjectArgs as MutationAssignDryRunToProjectArguments,
   MutationComputeUploadPresignedUrlArgs as MutationComputeUploadPresignedUrlArguments,
   MutationCreateDockerRegistryCredentialArgs as MutationCreateDockerRegistryCredentialArguments,
@@ -61,8 +73,11 @@ import type {
   MutationSuspendDryRunArgs as MutationSuspendDryRunArguments,
   MutationUpdateDockerRegistryCredentialArgs as MutationUpdateDockerRegistryCredentialArguments,
   MutationUpdateWorkflowTemplateArgs as MutationUpdateWorkflowTemplateArguments,
+  MutationDeleteArtifactsArgs as MutationDeleteArtifactsArguments,
   Project,
   Query,
+  QueryArtifactArgs as QueryArtifactArguments,
+  QueryArtifactsArgs as QueryArtifactsArguments,
   QueryDryRunArgs as QueryDryRunArguments,
   QueryProjectArgs as QueryProjectArguments,
   QueryResolvers,
@@ -86,12 +101,24 @@ interface AuthenticatedContext extends Context {
   user: ContextUser
 }
 
+// Example custom error class
+class NotAllowedError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'NotAllowedError';
+  }
+}
+
 // Create an assertion method for TypeScript that check that user is defined
 /* function assertAuthenticated(context: Context): asserts context is AuthenticatedContext {
   if (context.user === undefined) {
     throw new Error('🎌 User is not defined');
   }
 } */
+
+function isValidFilePath(key: string): boolean {
+  return /^[\w-/.]+$/i.test(key);
+}
 
 type EmptyArguments = Record<string, never>;
 type EmptyParent = Record<string, never>;
@@ -160,15 +187,70 @@ const resolvers = {
       const { sub } = user;
       return await getWorkflowTemplate(name, argoClient, sub);
     },
-    async artifacts(
+    async buckets(
       _p: EmptyParent, _a: EmptyArguments, context: AuthenticatedContext,
+    ): Promise<Query['buckets']> {
+      const buckets = await listAllBuckets();
+      return buckets.map(({ name }) => ({
+        name,
+      }));
+    },
+    async artifact(
+      _p: EmptyParent, arguments_: QueryArtifactArguments, context: AuthenticatedContext,
+    ): Promise<Query['artifact']> {
+      const { key, bucketName } = arguments_;
+      const object = await getObjectMetadata(key, bucketName);
+      let returnobject = {
+        etag: object.etag,
+        lastModified: object.lastModified.toISOString(),
+        size: object.size,
+        metadata: object.metaData,
+      };
+      return returnobject;
+    },
+    async artifacts(
+      _p: EmptyParent, arguments_: QueryArtifactsArguments, context: AuthenticatedContext,
     ): Promise<Query['artifacts']> {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { argoClient } = context;
-      return [];
+      const { bucketName } = arguments_;
+      // console.log(bucketName);
+      let objects: ArtifactItem[];
+      if (!bucketName) {
+        objects = await listAllObjects(); // will use default bucket
+      } else {
+        objects = await listAllObjects(bucketName);
+      }
+      return objects.map(({ name, size }) => ({
+        name,
+        key: name,
+        size,
+        bucketName,
+      }));
     },
   } as Required<QueryResolvers<AuthenticatedContext, EmptyParent>>,
   Mutation: {
+    async createBucket(
+      _p: EmptyParent, arguments_: MutationCreateBucketArguments, context: AuthenticatedContext,
+    ): Promise<Mutation['createBucket']> {
+      const { name } = arguments_;
+      // eslint-disable-next-line unicorn/prefer-ternary
+      if (['artifacts', 'logs', 'registry'].includes(name)) {
+        throw new NotAllowedError('Not allowed to create bucket with this name');
+      } else {
+        const returnedBucketName = createBucket(name);
+        return returnedBucketName;
+      }
+    },
+    async deleteBucket(
+      _p: EmptyParent, arguments_: MutationCreateBucketArguments, context: AuthenticatedContext,
+    ): Promise<Mutation['deleteBucket']> {
+      const { name } = arguments_;
+      // eslint-disable-next-line unicorn/prefer-ternary
+      if (['artifacts', 'logs', 'registry'].includes(name)) {
+        throw new NotAllowedError('Not allowed to delete bucket with this name');
+      } else {
+        return deleteBucket(name);
+      }
+    },
     async createDryRun(
       _p: EmptyParent,
       arguments_: MutationCreateDryRunArguments,
@@ -319,23 +401,35 @@ const resolvers = {
       _arguments: MutationComputeUploadPresignedUrlArguments,
       context: AuthenticatedContext,
     ): Promise<Mutation['computeUploadPresignedUrl']> {
+      /*
+      // TODO: I uncommented this for now due to conseqenses to uploading files using the artifact browser.
       const { sub } = context.user;
+      console.log('sub', sub);
       // Make sure the user is a filesystem safe string
       if (!/^[\w-]+$/i.test(sub)) {
         throw new Error('User identifier (sub) is unsupported for files');
       }
-
-      let { key } = _arguments;
+      */
+      let { key, bucketName } = _arguments;
+      //console.log('key', key);
       if (key) {
-        if (!/^[\w.-]+$/i.test(key)) {
+        //if (!/^[\w.-]+$/i.test(key)) {
+        if (!isValidFilePath(key)) {
           throw new Error('Key is unsupported for files');
         }
       } else {
         key = randomUUID();
       }
 
-      const objectName = `${sub}/${key}`;
-      return await computePresignedPutUrl(objectName);
+      //const objectName = `${sub}/${key}`;
+      const objectName = key;
+      // console.log('bucketName', bucketName);
+      // console.log('objectName', objectName);
+      if (bucketName !== null) {
+        return await computePresignedPutUrl(objectName, bucketName);
+      } else {
+        return await computePresignedPutUrl(objectName);
+      }
     },
     async createWorkflowTemplate(
       _p: EmptyParent,
@@ -379,6 +473,15 @@ const resolvers = {
       await deleteWorkflowTemplate(name, argoClient);
       return true;
     },
+    async deleteArtifacts(
+      _p: EmptyParent,
+      arguments_: MutationDeleteArtifactsArguments,
+      _context: AuthenticatedContext,
+    ): Promise<Mutation['deleteArtifacts']> {
+      const { bucketName, keys } = arguments_;
+      const response = await deleteObjects(keys, bucketName);
+      return response;
+    }
   } as Required<MutationResolvers<AuthenticatedContext, EmptyParent>>,
   Project: {
     async dryRuns(
@@ -558,20 +661,22 @@ const resolvers = {
     async url(
       artifact: Artifact,
     ): Promise<Artifact['url']> {
-      const { key } = artifact;
+      const { key, bucketName } = artifact;
       if (!key) {
         return undefined;
       }
-      return await computePresignedGetUrl(key);
+      return await computePresignedGetUrl(key, bucketName as string);
     },
     async size(
       artifact: Artifact,
     ): Promise<Artifact['size']> {
-      const { key } = artifact;
+      const { key, bucketName } = artifact;
       if (!key) {
         return undefined;
       }
-      return await getObjectSize(key);
+      const filesize = await getObjectSize(key, bucketName as string);
+      // console.log('artifact size calc', filesize, key, bucketName, artifact)
+      return filesize
     },
   },
   WorkflowTemplate: {

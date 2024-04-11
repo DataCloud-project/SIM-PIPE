@@ -1,3 +1,4 @@
+// TODO: this is legacy eslintrc file: See the typescript-eslint docs for more info: https://typescript-eslint.io/linting/troubleshooting#i-get-errors-telling-me-eslint-was-configured-to-run--however-that-tsconfig-does-not--none-of-those-tsconfigs-include-this-file
 module.exports = {
   env: {
     es2021: true,

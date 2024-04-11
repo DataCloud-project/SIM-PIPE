@@ -1,7 +1,6 @@
 <script lang="ts">
-	import { Modal, modalStore, ProgressBar } from '@skeletonlabs/skeleton';
-	import type { ModalSettings, ModalComponent } from '@skeletonlabs/skeleton';
-	import ModalSubmitNewSecret from './modal-submit-new-secret.svelte';
+	import { getModalStore, ProgressBar } from '@skeletonlabs/skeleton';
+	import type { ModalSettings } from '@skeletonlabs/skeleton';
 	import allCredentialsQuery from '../../queries/get_all_credentials.js';
 	import deleteCredentialMutation from '../../queries/delete_credential.js';
 	import type { DockerRegistryCredential } from '../../types.js';
@@ -9,16 +8,19 @@
 	import { requestGraphQLClient } from '$lib/graphqlUtils';
 	import { goto } from '$app/navigation';
 
-	const modalComponent: ModalComponent = {
-		ref: ModalSubmitNewSecret
-	};
+	const modalStore = getModalStore();
 
-	const modal: ModalSettings = {
-		type: 'component',
-		component: modalComponent,
-		title: 'Add new secret',
-		body: 'Provide a name and username for the new secret at given host.\nSecret will be automatically generated.'
-	};
+	$: reactiveCredentialsList = $credentialsList;
+
+	async function onSubmitNewSecret(): Promise<void> {
+		const modal: ModalSettings = {
+			type: 'component',
+			component: 'submitNewSecretModal',
+			title: 'Add new secret',
+			body: 'Provide a name and username for the new secret at given host.\nSecret will be automatically generated.'
+		};
+		modalStore.trigger(modal);
+	}
 
 	const getCredentialsList = async (): Promise<DockerRegistryCredential[]> => {
 		const response: { dockerRegistryCredentials: DockerRegistryCredential[] } =
@@ -27,7 +29,7 @@
 	};
 
 	const credentialsPromise = getCredentialsList();
-	let checkboxes: Record<string, boolean> = {};
+	const checkboxes: Record<string, boolean> = {};
 
 	// TODO: why do credentials not have an id? That is quite stupid!
 	credentialsPromise
@@ -42,15 +44,18 @@
 			$credentialsList = undefined;
 		});
 
-	async function onDeleteSelected() {
-		Object.keys(checkboxes)
+	async function onDeleteSelected(): Promise<void> {
+		const deletePromises = Object.keys(checkboxes)
 			.filter((item) => checkboxes[item])
-			.forEach(async (element) => {
+			.map((element) => {
 				const variables = {
 					name: element
 				};
-				const response = await requestGraphQLClient(deleteCredentialMutation, variables);
+				return requestGraphQLClient(deleteCredentialMutation, variables);
 			});
+
+		// wait for all promises to resolve
+		await Promise.all(deletePromises);
 		// reset checkboxes
 		$credentialsList?.forEach((element) => {
 			checkboxes[element.name] = false;
@@ -63,16 +68,16 @@
 	}
 
 	// to disable onclick propogation for checkbox input
-	const handleCheckboxClick = (event: any) => {
+	const handleCheckboxClick = (event: any): void => {
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
 		event.stopPropagation();
 	};
 
-	function gotosecret(secret: DockerRegistryCredential) {
+	function gotosecret(secret: DockerRegistryCredential): void {
 		selectedCredential.set(secret);
+		// eslint-disable-next-line @typescript-eslint/no-floating-promises
 		goto(`/secrets/${secret.name}`);
 	}
-
-	$: reactiveCredentialsList = $credentialsList;
 </script>
 
 <!-- Page Header -->
@@ -85,15 +90,17 @@
 			<h1>Secrets</h1>
 			<div class="flex flex-row justify-end p-5 space-x-1">
 				<div>
+					<!-- eslint-disable-next-line @typescript-eslint/explicit-function-return-type -->
 					<button
 						type="button"
 						class="btn btn-sm variant-filled"
-						on:click={() => modalStore.trigger(modal)}
+						on:click={() => onSubmitNewSecret()}
 					>
 						<span>Create</span>
 					</button>
 				</div>
 				<div>
+					<!-- eslint-disable-next-line @typescript-eslint/explicit-function-return-type -->
 					<button
 						type="button"
 						class="btn btn-sm variant-filled-warning"
@@ -115,8 +122,10 @@
 				</thead>
 				<tbody>
 					{#each reactiveCredentialsList || [] as secret}
+						<!-- eslint-disable-next-line @typescript-eslint/explicit-function-return-type -->
 						<tr id="clickable_row" on:click={() => gotosecret(secret)}>
 							<td style="width:10px">
+								<!-- eslint-disable-next-line @typescript-eslint/explicit-function-return-type -->
 								<input
 									type="checkbox"
 									class="checkbox"
@@ -134,8 +143,6 @@
 		{/await}
 	</div>
 </div>
-
-<Modal />
 
 <style>
 	.table.table {

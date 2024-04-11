@@ -1,14 +1,22 @@
 <script lang="ts">
-	import { cBase, cHeader, cForm } from '../../styles/styles.js';
-	import { projectsList } from '../../stores/stores.js';
-	import allProjectsQuery from '../../queries/get_all_projects.js';
-	import type { AllProjectsResponse } from '../../types.js';
-	import { modalStore, Modal } from '@skeletonlabs/skeleton';
-	import { requestGraphQLClient } from '$lib/graphqlUtils.js';
-	import renameProjectMutation from '../../queries/rename_project.js';
-	import { displayAlert } from '../../utils/alerts_utils.js';
+	import { getModalStore } from '@skeletonlabs/skeleton';
+	import type { SvelteComponent } from 'svelte';
 
-	export let parent: any;
+	import { requestGraphQLClient } from '$lib/graphqlUtils.js';
+
+	import allProjectsQuery from '$queries/get_all_projects.js';
+	import renameProjectMutation from '$queries/rename_project.js';
+	import { projectsList } from '$stores/stores.js';
+	import { cBase, cForm, cHeader } from '$styles/styles.js';
+	import { displayAlert } from '$utils/alerts-utils.js';
+	import type { AllProjectsResponse } from '$typesdefinitions';
+
+	// Props - Exposes parent props to this component
+	const modalStore = getModalStore();
+
+	// Props - Exposes parent props to this component
+	export let parent: SvelteComponent;
+
 	const project: { projectId: string; projectName: string } = $modalStore[0]?.valueAttr as {
 		projectId: string;
 		projectName: string;
@@ -70,8 +78,4 @@
 			<button class="btn {parent.buttonPositive}" on:click={onRenameProjectSubmit}>Submit</button>
 		</footer>
 	</div>
-{/if}
-
-{#if alertModal}
-	<Modal />
 {/if}

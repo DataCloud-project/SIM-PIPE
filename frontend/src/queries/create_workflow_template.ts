@@ -4,10 +4,6 @@ const createWorkflowTemplateMutation = gql`
 	mutation Mutation($input: CreateWorkflowTemplateInput!) {
 		createWorkflowTemplate(input: $input) {
 			name
-			project {
-				id
-				name
-			}
 		}
 	}
 `;
