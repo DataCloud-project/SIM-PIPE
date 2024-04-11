@@ -3,7 +3,7 @@ import { filesize } from 'filesize';
 import { get } from 'svelte/store';
 import getDryRunNoLogsMetricsQuery from '$queries/get_dry_run_all_metrics_no_logs';
 import { requestGraphQLClient } from '$lib/graphqlUtils';
-import type { DryRunMetrics, metricsWithTimeStamps } from '$typesdefinitions';
+import type { DryRunMetrics, MetricsWithTimeStamps } from '$typesdefinitions';
 import { goto } from '$app/navigation';
 import { selectedProject } from '$stores/stores';
 import { displayAlert } from './alerts-utils';
@@ -138,10 +138,10 @@ export async function getMetricsUsageUtils(metrics: DryRunMetrics[]): Promise<{
 	logs: { [x: string]: string };
 }> {
 	const allStepNames: string[] = [];
-	const cpuData: { [key: string]: metricsWithTimeStamps } = {};
-	const memoryData: { [key: string]: metricsWithTimeStamps } = {};
+	const cpuData: { [key: string]: MetricsWithTimeStamps } = {};
+	const memoryData: { [key: string]: MetricsWithTimeStamps } = {};
 	const networkDataCombined: {
-		[key: string]: metricsWithTimeStamps[];
+		[key: string]: MetricsWithTimeStamps[];
 	} = {};
 	const logs: { [x: string]: string } = {};
 	metrics
