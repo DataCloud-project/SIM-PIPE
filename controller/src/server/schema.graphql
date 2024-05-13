@@ -55,6 +55,7 @@ type Query {
 
   """ List of all the buckets """
   buckets: [Bucket!]! @auth
+  
 }
 
 """ Project is the high level concept for a specific pipeline in SIM-PIPE. It contains all the previous dry runs of the pipeline and its results. """
@@ -441,6 +442,7 @@ input UpdateWorkflowTemplateInput {
   argoWorkflowTemplate: ArgoWorkflowTemplate!
 }
 
+
 type Mutation @auth {
   """ Create a new project """
   createProject(
@@ -559,4 +561,10 @@ type Mutation @auth {
     """ The name of the bucket to be deleted """
     bucketName: String!,
     keys: [String!]!): Boolean!
+
+  """ Compute scaling law for a set of dry runs """
+  computeScalingLaw(
+    """ The list of dry run ids """
+    dryRunIds: [String]!): String!
+
 }

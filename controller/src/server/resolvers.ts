@@ -40,6 +40,7 @@ import {
 import { ArtifactItem } from '../minio/minio.js';
 import { assertPrometheusIsHealthy } from '../prometheus/prometheus.js';
 import queryPrometheusResolver from '../prometheus/query-prometheus-resolver.js';
+import myFunction from '../curve_fitting/dry-run-data.js';
 import { NotFoundError, PingError } from './apollo-errors.js';
 import type { ArgoWorkflow, ArgoWorkflowTemplate } from '../argo/argo-client.js';
 import type ArgoWorkflowClient from '../argo/argo-client.js';
@@ -74,6 +75,7 @@ import type {
   MutationUpdateDockerRegistryCredentialArgs as MutationUpdateDockerRegistryCredentialArguments,
   MutationUpdateWorkflowTemplateArgs as MutationUpdateWorkflowTemplateArguments,
   MutationDeleteArtifactsArgs as MutationDeleteArtifactsArguments,
+  MutationComputeScalingLawArgs as MutationComputeScalingLawArguments,
   Project,
   Query,
   QueryArtifactArgs as QueryArtifactArguments,
@@ -228,6 +230,13 @@ const resolvers = {
     },
   } as Required<QueryResolvers<AuthenticatedContext, EmptyParent>>,
   Mutation: {
+    async computeScalingLaw(_p: EmptyParent, arguments_: MutationComputeScalingLawArguments, context: AuthenticatedContext,
+    ): Promise<Mutation['computeScalingLaw']> {
+      const containerName = 'main'
+      const dryRynIds: string[] = arguments_.dryRunIds as string[];
+      const result = myFunction(dryRynIds, containerName, context.argoClient);
+      return JSON.stringify(result);
+    },
     async createBucket(
       _p: EmptyParent, arguments_: MutationCreateBucketArguments, context: AuthenticatedContext,
     ): Promise<Mutation['createBucket']> {

@@ -688,6 +688,8 @@ export type Mutation = {
   __typename?: 'Mutation';
   /**  Assign a dry run to a project  */
   assignDryRunToProject: DryRun;
+  /**  Compute scaling law for a set of dry runs  */
+  computeScalingLaw: Scalars['String']['output'];
   /**  Compute a presigned URL for uploading a file using HTTP PUT. The mutation returns the URL to upload the file.  */
   computeUploadPresignedUrl: Scalars['String']['output'];
   /**  Buckets  */
@@ -739,6 +741,11 @@ export type Mutation = {
 export type MutationAssignDryRunToProjectArgs = {
   dryRunId: Scalars['String']['input'];
   projectId: Scalars['String']['input'];
+};
+
+
+export type MutationComputeScalingLawArgs = {
+  dryRunIds: Array<InputMaybe<Scalars['String']['input']>>;
 };
 
 
@@ -1241,6 +1248,7 @@ export type DryRunStatusResolvers<ContextType = any, ParentType extends Resolver
 
 export type MutationResolvers<ContextType = any, ParentType extends ResolversParentTypes['Mutation'] = ResolversParentTypes['Mutation']> = {
   assignDryRunToProject?: Resolver<ResolversTypes['DryRun'], ParentType, ContextType, RequireFields<MutationAssignDryRunToProjectArgs, 'dryRunId' | 'projectId'>>;
+  computeScalingLaw?: Resolver<ResolversTypes['String'], ParentType, ContextType, RequireFields<MutationComputeScalingLawArgs, 'dryRunIds'>>;
   computeUploadPresignedUrl?: Resolver<ResolversTypes['String'], ParentType, ContextType, Partial<MutationComputeUploadPresignedUrlArgs>>;
   createBucket?: Resolver<ResolversTypes['String'], ParentType, ContextType, RequireFields<MutationCreateBucketArgs, 'name'>>;
   createDockerRegistryCredential?: Resolver<ResolversTypes['DockerRegistryCredential'], ParentType, ContextType, RequireFields<MutationCreateDockerRegistryCredentialArgs, 'credential'>>;

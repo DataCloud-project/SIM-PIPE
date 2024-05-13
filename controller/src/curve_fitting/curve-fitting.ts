@@ -5,7 +5,7 @@
 interface CurveFitReturnType { coeffs: number[], type: string, r2: number }
 
 function round(number: number, precision: number): number {
-  // Round a number to a certain number of decimal places
+  // Round a number to a certain number of decimal places given by precision
   const factor = 10 ** precision;
   return Math.round(number * factor) / factor;
 }
@@ -16,7 +16,7 @@ function powerFunction(x: number, a: number, b: number, precision: number): numb
 }
 
 function determinationCoefficient(data_y: number[], data_y_predicted: number[]): number {
-  // R^2 value of the power law curve fitting // coefficient of determination
+  // Coefficient of determination (R^2) for power law curve fitting
   const predictions = data_y_predicted.map((prediction) => prediction);
   const observations = data_y.map((y) => y);
 
@@ -43,7 +43,7 @@ function determinationCoefficient(data_y: number[], data_y_predicted: number[]):
 }
 
 function power(data_x: number[], data_y: number[], precision: number): CurveFitReturnType {
-  // Perform the power regression of power law data a * x ^ b
+  // Power law regression a * x ^ b
   const sum = [0, 0, 0, 0, 0];
   const nvalues = data_x.length;
   for (let n = 0; n < nvalues; n += 1) {
@@ -71,7 +71,7 @@ function power(data_x: number[], data_y: number[], precision: number): CurveFitR
 function linear(
   data_x: number[],
   data_y: number[]): CurveFitReturnType {
-  // linear regression
+  // Linear regression a + (b * x)
   const x1 = data_x[0];
   const x2 = data_x[1];
   const y1 = data_y[0];
@@ -85,11 +85,13 @@ function linear(
   };
 }
 
-// Curve fitting of power law data a * x ^ b
 export default function curveFitting(
   data_x: number[],
   data_y: number[],
   precision = 4): CurveFitReturnType {
+  // Curve fitting function
+  // Linear regression for 2 data points
+  // Power law regression for more than 2 data points
   let results = {
     coeffs: [0, 0], type: '', r2: 0,
   };
