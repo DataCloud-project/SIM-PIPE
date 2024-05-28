@@ -1,6 +1,6 @@
 import bodyParser from 'body-parser';
 import cors from 'cors';
-import express from 'express';
+import express, { response } from 'express';
 import helmet from 'helmet';
 import morgan from 'morgan';
 
@@ -9,6 +9,8 @@ import authJwtMiddleware from './auth-jwt-middleware.js';
 import createRouter from './routes.js';
 import type ArgoWorkflowClient from '../argo/argo-client.js';
 import type K8sClient from '../k8s/k8s-client.js';
+// import eventsServer from '../k8s/events.js';
+import eventsServer from '../k8s/events2.js';
 
 /**
  * Create and start the Express server.
@@ -30,6 +32,8 @@ export default async function startSecureServer({
 
   // Setup logging middleware with morgan
   app.use(morgan('combined'));
+
+  await eventsServer();
 
   // Load the router
   app.use(createRouter());
