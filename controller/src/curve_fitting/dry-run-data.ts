@@ -1,21 +1,28 @@
+import type { DryRunNode, PrometheusSample } from 'server/schema.js';
+
 import { convertArgoWorkflowNode, getDryRun } from '../argo/dry-runs.js';
+import { getObjectSize } from '../minio/minio.js';
 import queryPrometheusResolver from '../prometheus/query-prometheus-resolver.js';
 import type { ArgoWorkflow } from '../argo/argo-client.js';
 import type ArgoWorkflowClient from '../argo/argo-client.js';
-import { PrometheusSample } from 'server/schema.js';
-import { getObjectSize } from '../minio/minio.js';
+import type { DryRunNodeMetrics, DryRunNodePod } from '../server/schema.js';
+
+/* interface DryRunNodeMetrics {
+  // other properties...
+  metrics: MetricsType; // replace MetricsType with the actual type
+} */
 
 interface NodeData {
-  dryRunId: string[];
-  inputFileSize: number[];
-  cpuSystemSecondsTotal: number[];
-  memoryUsageBytes: number[];
+  nodeName: string;
+  data: {
+    cpu: [number];
+    nodeId: [string];
+  }
 }
 
-interface NodeInfo {
-  nodeDisplayName: string;
-  data: NodeData
-}
+
+
+type NodesDataMap = Map<string, NodeData>;
 
 function computeDuration(values: PrometheusSample[]): number {
   if (!values || values.length === 0) {
@@ -51,15 +58,15 @@ function computeMax(values: PrometheusSample[]): number {
 export default async function myFunction(
   dryRunIds: string[],
   containerName: string,
-  argoClient: ArgoWorkflowClient): Promise<string | undefined> {
+  argoClient: ArgoWorkflowClient): Promise<NodesDataMap> {
   // dictionary of NodeInfo
-  const nodeData: Record<string, NodeInfo> = {};
+  const nodesData: NodesDataMap = new Map<string, NodeData>();
   for (const dryRunId of dryRunIds) {
     // eslint-disable-next-line no-await-in-loop
     const dryRun = await getDryRun(dryRunId, argoClient);
     const { argoWorkflow } = dryRun as { argoWorkflow?: ArgoWorkflow };
     if (!argoWorkflow?.status?.nodes) {
-      return undefined;
+      throw new Error(`Argo workflow ${dryRunId} has no nodes`);
     }
     const nodes = Object.values(argoWorkflow.status.nodes)
       .map((node) => convertArgoWorkflowNode(node, argoWorkflow))
@@ -68,7 +75,7 @@ export default async function myFunction(
       let cpu = 0;
       let mem = 0;
       let fileSize = 0;
-      let {duration, inputArtifacts} = dryRunNode;
+      let { duration, inputArtifacts } = dryRunNode;
       // eslint-disable-next-line no-await-in-loop
       const cpuSystemSecondsTotal = await queryPrometheusResolver('simpipe_cpu_system_seconds_total', containerName, { dryRunNode }, {});
       // eslint-disable-next-line no-await-in-loop
@@ -93,9 +100,34 @@ export default async function myFunction(
       } else {
         fileSize = 0;
       }
-      console.log(dryRunId, dryRunNode.id, dryRunNode.displayName, cpu, mem, fileSize);
+      // console.log(dryRunId, dryRunNode.id, dryRunNode.displayName, cpu, mem, fileSize);
+      /*       const dryRunNodeData = {
+        dryRunNodeId: dryRunNode.id,
+        dryRunId: dryRunId,
+        nodeName: dryRunNode.displayName,
+        durationSeconds: duration,
+        cpuSystemSeconds: cpu,
+        memoryUsageBytes: mem,
+        inputFileSizeBytes: fileSize,
+      }; */
+      // console.log(dryRunNodeData);
+      if (nodesData.has(dryRunNode.displayName)) {
+        const nodeData = nodesData.get(dryRunNode.displayName);
+        if (nodeData) {
+          nodeData.data.cpu.push(cpu);
+          nodeData.data.nodeId.push(dryRunNode.id);
+        }
+      } else {
+        nodesData.set(dryRunNode.displayName, {
+          nodeName: dryRunNode.displayName,
+          data: {
+            cpu: [cpu],
+            nodeId: [dryRunNode.id],
+          },
+        });
+      }
     }
   }
-  return JSON.stringify(nodeData);
+  // return JSON.stringify(Object.fromEntries(nodesData));
+  return nodesData;
 }
-

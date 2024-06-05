@@ -234,8 +234,8 @@ const resolvers = {
     ): Promise<Mutation['computeScalingLaw']> {
       const containerName = 'main'
       const dryRynIds: string[] = arguments_.dryRunIds as string[];
-      const result = myFunction(dryRynIds, containerName, context.argoClient);
-      return JSON.stringify(result);
+      const nodesData = await myFunction(dryRynIds, containerName, context.argoClient);
+      return JSON.stringify(Object.fromEntries(nodesData));
     },
     async createBucket(
       _p: EmptyParent, arguments_: MutationCreateBucketArguments, context: AuthenticatedContext,
