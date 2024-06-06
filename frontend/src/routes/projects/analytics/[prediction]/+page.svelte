@@ -67,9 +67,9 @@
 			} = {};
 			const metrics = await getMetricsResponse(dryRunId);
 			const result = await getMetricsUsageUtils(metrics);
-			cpuData = result.cpuData;
+			cpuData = result.cumulativeCpuData;
 			memoryData = result.memoryData;
-			networkDataCombined = result.networkDataCombined;
+			networkDataCombined = result.cumulativeNetworkData;
 			allStepNames = result.allStepNames;
 			const pipelineMetricsAnalytics: MetricsAnalytics = await getMetricsAnalyticsUtils(
 				allStepNames,

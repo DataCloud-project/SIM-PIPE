@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { ProgressBar, CodeBlock } from '@skeletonlabs/skeleton';
-	import { ZoomInIcon } from 'svelte-feather-icons';
+	import { AlertTriangleIcon, ZoomInIcon } from 'svelte-feather-icons';
 	import { filesize } from 'filesize';
 	import getDryRunMetricsQuery from '$queries/get_dry_run_metrics.js';
 	import getProjectQuery from '$queries/get_project';
@@ -36,9 +36,13 @@
 	let selectedProject: { name: string; id: string };
 	let logs: { [x: string]: string } = {};
 
-	let cpuData: { [key: string]: MetricsWithTimeStamps } = {};
+	let cumulativeCpuData: { [key: string]: MetricsWithTimeStamps } = {};
+	let currentCpuData: { [key: string]: MetricsWithTimeStamps } = {};
 	let memoryData: { [key: string]: MetricsWithTimeStamps } = {};
-	let networkDataCombined: {
+	let cumulativeNetworkData: {
+		[key: string]: MetricsWithTimeStamps[];
+	} = {};
+	let currentNetworkData: {
 		[key: string]: MetricsWithTimeStamps[];
 	} = {};
 
@@ -119,16 +123,18 @@
 		const result = await getMetricsUsageUtils(metricsResponse as unknown as DryRunMetrics[]);
 		const { allStepNames } = result;
 		// console.log('allStepNames:', allStepNames);
-		cpuData = result.cpuData;
+		cumulativeCpuData = result.cumulativeCpuData;
+		currentCpuData = result.currentCpuData;
 		memoryData = result.memoryData;
-		networkDataCombined = result.networkDataCombined;
+		cumulativeNetworkData = result.cumulativeNetworkData;
+		currentNetworkData = result.currentNetworkData;
 		logs = result.logs;
 		pipelineMetricsAnalytics = await getMetricsAnalyticsUtils(
 			allStepNames,
 			metricsResponse as unknown as DryRunMetrics[],
-			cpuData,
+			cumulativeCpuData,
 			memoryData,
-			networkDataCombined
+			cumulativeNetworkData
 		);
 		const responses = {
 			workflow: workflowResponse.project,
@@ -260,41 +266,79 @@
 
 	// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 	$: getResource = (resource: string) => {
-		let resourceData;
-		let wholeData: { x: string[]; y: number[]; type: string; name: string }[] = [];
-		if (resource === 'cpu') {
-			resourceData = cpuData;
-			if (Object.keys(cpuData).length > 0)
-				allStepNames.forEach((step) => {
-					if (cpuData[step]) wholeData.push(cpuData[step]);
-				});
-		} else if (resource === 'memory') {
-			resourceData = memoryData;
-			if (Object.keys(memoryData).length > 0)
-				allStepNames.forEach((step) => {
-					if (memoryData[step]) wholeData.push(memoryData[step]);
-				});
-		} else {
-			resourceData = networkDataCombined;
-			wholeData = [];
-			allStepNames.forEach((step) => {
-				networkDataCombined[step]?.forEach((elem) => {
-					wholeData.push(elem);
-				});
-			});
+		const data: { x: string[]; y: number[]; type: string; name: string }[] = [];
+		switch (resource) {
+			case 'cpu-cumulative': {
+				if (Object.keys(cumulativeCpuData).length > 0) {
+					if (selectedStep === 'Total') {
+						allStepNames.forEach((step) => {
+							if (cumulativeCpuData[step]) data.push(cumulativeCpuData[step]);
+						});
+					} else {
+						data.push(cumulativeCpuData[selectedStep]);
+					}
+				}
+				break;
+			}
+			case 'cpu-current': {
+				if (Object.keys(currentCpuData).length > 0)
+					if (selectedStep === 'Total') {
+						allStepNames.forEach((step) => {
+							if (currentCpuData[step]) data.push(currentCpuData[step]);
+						});
+					} else {
+						data.push(currentCpuData[selectedStep]);
+					}
+				break;
+			}
+			case 'memory': {
+				if (Object.keys(memoryData).length > 0)
+					if (selectedStep === 'Total') {
+						allStepNames.forEach((step) => {
+							if (memoryData[step]) data.push(memoryData[step]);
+						});
+					} else {
+						data.push(memoryData[selectedStep]);
+					}
+				break;
+			}
+			case 'network-cumulative': {
+				if (Object.keys(cumulativeNetworkData).length > 0)
+					if (selectedStep === 'Total') {
+						allStepNames.forEach((step) => {
+							cumulativeNetworkData[step].forEach((networkData) => {
+								data.push(networkData);
+							});
+						});
+					} else {
+						cumulativeNetworkData[selectedStep].forEach((networkData) => {
+							data.push(networkData);
+						});
+					}
+				break;
+			}
+			case 'network-current': {
+				if (Object.keys(currentNetworkData).length > 0)
+					if (selectedStep === 'Total') {
+						allStepNames.forEach((step) => {
+							currentNetworkData[step].forEach((networkData) => {
+								data.push(networkData);
+							});
+						});
+					} else {
+						currentNetworkData[selectedStep].forEach((networkData) => {
+							data.push(networkData);
+						});
+					}
+				break;
+			}
+			default: {
+				throw new Error('Invalid resource');
+			}
 		}
-		if (selectedStep !== 'Total') {
-			if (resource === 'network')
-				return {
-					title: `${selectedStep}`,
-					data: resourceData[selectedStep] ? resourceData[selectedStep] : []
-				};
-			return {
-				title: `${selectedStep}`,
-				data: resourceData[selectedStep] ? [resourceData[selectedStep]] : []
-			};
-		}
-		return { title: `- entire dry run`, data: wholeData };
+		return selectedStep === 'Total'
+			? { title: `- entire dry run`, data }
+			: { title: `${selectedStep}`, data };
 	};
 
 	onMount(async () => {
@@ -368,10 +412,10 @@
 								<tr on:click={() => stepOnClick(step.displayName)}>
 									<td style="width:15%">{step.displayName}</td>
 									<td style="width:20%">
-										{step.startedAt ? step.startedAt : '-'}
+										{step.startedAt ?? '-'}
 									</td>
 									<td style="width:20%">
-										{step.finishedAt ? step.finishedAt : '-'}
+										{step.finishedAt ?? '-'}
 									</td>
 									<td style="width:15%">{displayStepDuration(step)}</td>
 									<td style="width:15%">{step.phase}</td>
@@ -396,6 +440,20 @@
 				<!-- if the logs are empty, remove logs sections -->
 				{#if Object.values(logs).join('') !== ''}
 					<div class="card logcard row-span-4 p-5">
+						<!-- display if the dryrun has a non-empty phase message from argo (usually null if no error) -->
+						{#if dryRunPhaseMessage}
+							<div class="card logcard row-span-1 p-5">
+								<div style="display: flex; align-items: center; color: red; gap: 5px">
+									<AlertTriangleIcon />
+									<h1>Error Message</h1>
+								</div>
+								<section class="p-1">
+									<div class="w-full">
+										<CodeBlock language="json" code={dryRunPhaseMessage} />
+									</div>
+								</section>
+							</div>
+						{/if}
 						<header class="card-header"><h1>Logs</h1></header>
 						<section class="p-1">
 							<br />
@@ -406,7 +464,7 @@
 									</li>
 									<li>
 										{#if logs[key] && getPartLogs(key, 20_000)}
-											<div class="w-full">
+											<div class="logbox w-full">
 												<CodeBlock language="bash" code={getPartLogs(key, 20_000)} />
 											</div>
 										{:else}
@@ -416,17 +474,6 @@
 									<br />
 								{/each}
 							</ul>
-						</section>
-					</div>
-				{/if}
-				<!-- display if the dryrun has a non-empty phase message from argo (usually null if no error) -->
-				{#if dryRunPhaseMessage}
-					<div class="card logcard row-span-4 p-5">
-						<h1>Message</h1>
-						<section class="p-1">
-							<div class="w-full">
-								<CodeBlock language="json" code={dryRunPhaseMessage} />
-							</div>
 						</section>
 					</div>
 				{/if}
@@ -470,10 +517,10 @@
 
 				<div class="card plotcard">
 					<Plot
-						data={getResource('cpu').data}
-						plotTitle={`CPU Usage ${getResource('cpu').title}`}
+						data={getResource('cpu-current').data}
+						plotTitle={`CPU Utilization ${getResource('cpu-current').title}`}
 						xaxisTitle="time"
-						yaxisTitle="cpu usage"
+						yaxisTitle="cpu utilization %"
 					/>
 				</div>
 				<div class="card plotcard">
@@ -486,8 +533,8 @@
 				</div>
 				<div class="card plotcard">
 					<Plot
-						data={getResource('network').data}
-						plotTitle={`Network ${getResource('network').title}`}
+						data={getResource('network-current').data}
+						plotTitle={`Network ${getResource('network-current').title}`}
 						xaxisTitle="time"
 						yaxisTitle="bytes"
 					/>
@@ -511,6 +558,10 @@
 	.card.logcard {
 		overflow-y: scroll;
 		max-height: fit-content;
+	}
+	.logbox {
+		overflow-y: scroll;
+		max-height: 100vh;
 	}
 	ul {
 		max-height: 75vh;

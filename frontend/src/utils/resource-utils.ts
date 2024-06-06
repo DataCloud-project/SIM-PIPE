@@ -122,6 +122,21 @@ function findMax(input: number[]): number {
 	return Math.max(...input);
 }
 
+function cumulativeToCurrent(
+	inputData: { timestamp: number; value: number }[]
+): { timestamp: number; value: number }[] {
+	let previousValue = 0;
+	const current: { timestamp: number; value: number }[] = [];
+	inputData.forEach((entry) => {
+		const updatedValue = entry.value - previousValue;
+		if (updatedValue) {
+			previousValue = entry.value;
+			current.push({ timestamp: entry.timestamp, value: updatedValue });
+		}
+	});
+	return current;
+}
+
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export const calculateDuration = (metrics: DryRunMetrics[]) => {
 	const duration =
@@ -132,15 +147,21 @@ export const calculateDuration = (metrics: DryRunMetrics[]) => {
 
 export async function getMetricsUsageUtils(metrics: DryRunMetrics[]): Promise<{
 	allStepNames: string[];
-	cpuData: any;
+	cumulativeCpuData: any;
+	currentCpuData: any;
 	memoryData: any;
-	networkDataCombined: any;
+	cumulativeNetworkData: any;
+	currentNetworkData: any;
 	logs: { [x: string]: string };
 }> {
 	const allStepNames: string[] = [];
-	const cpuData: { [key: string]: MetricsWithTimeStamps } = {};
+	const cumulativeCpuData: { [key: string]: MetricsWithTimeStamps } = {};
+	const currentCpuData: { [key: string]: MetricsWithTimeStamps } = {};
 	const memoryData: { [key: string]: MetricsWithTimeStamps } = {};
-	const networkDataCombined: {
+	const cumulativeNetworkData: {
+		[key: string]: MetricsWithTimeStamps[];
+	} = {};
+	const currentNetworkData: {
 		[key: string]: MetricsWithTimeStamps[];
 	} = {};
 	const logs: { [x: string]: string } = {};
@@ -152,77 +173,111 @@ export async function getMetricsUsageUtils(metrics: DryRunMetrics[]): Promise<{
 				if (node.log) {
 					logs[node.displayName] = node.log.join('\n');
 				}
-				cpuData[node.displayName] = changeResourceFormat(
+				// HOTFIX (a.k.a. hack) to display absolute CPU usage instead of cumulative usage in seconds
+				const cpuCurrent: { timestamp: number; value: number }[] = cumulativeToCurrent(
+					node.metrics.cpuUsageSecondsTotal
+				);
+
+				currentCpuData[node.displayName] = changeResourceFormat(
+					node.startedAt,
+					cpuCurrent,
+					node.displayName,
+					'cpu-current'
+				);
+				cumulativeCpuData[node.displayName] = changeResourceFormat(
 					node.startedAt,
 					node.metrics.cpuUsageSecondsTotal,
 					node.displayName,
-					'cpu'
+					'cpu-cumulative'
 				);
 				memoryData[node.displayName] = changeResourceFormat(
 					node.startedAt,
 					node.metrics.memoryUsageBytes,
 					node.displayName
 				);
-				if (!networkDataCombined[node.displayName]) networkDataCombined[node.displayName] = [];
-				networkDataCombined[node.displayName].push(
+				if (!cumulativeNetworkData[node.displayName]) cumulativeNetworkData[node.displayName] = [];
+				cumulativeNetworkData[node.displayName].push(
 					changeResourceFormat(
 						node.startedAt,
 						node.metrics.networkReceiveBytesTotal,
 						node.displayName,
-						'Received'
+						'network-received-cumulative'
 					),
 					changeResourceFormat(
 						node.startedAt,
 						node.metrics.networkTransmitBytesTotal,
 						node.displayName,
-						'Transmitted'
+						'network-transmitted-cumulative'
+					)
+				);
+				if (!currentNetworkData[node.displayName]) currentNetworkData[node.displayName] = [];
+				currentNetworkData[node.displayName].push(
+					changeResourceFormat(
+						node.startedAt,
+						cumulativeToCurrent(node.metrics.networkReceiveBytesTotal),
+						node.displayName,
+						'network-received-current'
+					),
+					changeResourceFormat(
+						node.startedAt,
+						cumulativeToCurrent(node.metrics.networkTransmitBytesTotal),
+						node.displayName,
+						'network-transmitted-current'
 					)
 				);
 			}
 		});
 
-	return { allStepNames, cpuData, memoryData, networkDataCombined, logs };
+	return {
+		allStepNames,
+		cumulativeCpuData,
+		currentCpuData,
+		memoryData,
+		cumulativeNetworkData,
+		currentNetworkData,
+		logs
+	};
 }
 
 export async function getMetricsAnalyticsUtils(
 	allStepNames: string[],
 	metrics: DryRunMetrics[],
-	cpuData: { [x: string]: { x: string[]; y: number[]; type: string; name: string } },
+	cumulativeCpuData: { [x: string]: { x: string[]; y: number[]; type: string; name: string } },
 	memoryData: { [x: string]: { x: string[]; y: number[]; type: string; name: string } },
-	networkDataCombined: { [x: string]: { x: string[]; y: number[]; type: string; name: string }[] }
+	cumulativeNetworkData: { [x: string]: { x: string[]; y: number[]; type: string; name: string }[] }
 ): Promise<MetricsAnalytics> {
 	const pipelineMetricsAnalytics: MetricsAnalytics = {};
 
 	allStepNames.forEach((name) => {
 		pipelineMetricsAnalytics[name] = initMaxResourcePerStep();
-		pipelineMetricsAnalytics[name].CPU.max = findMax(cpuData[name].y);
-		pipelineMetricsAnalytics[name].CPU.avg = calculateMean(cpuData[name].y);
+		pipelineMetricsAnalytics[name].CPU.max = findMax(cumulativeCpuData[name].y);
+		pipelineMetricsAnalytics[name].CPU.avg = calculateMean(cumulativeCpuData[name].y);
 		pipelineMetricsAnalytics[name].Memory.max = findMax(memoryData[name].y);
 		pipelineMetricsAnalytics[name].Memory.avg = calculateMean(memoryData[name].y);
-		pipelineMetricsAnalytics[name].Network_received.max = findMax(networkDataCombined[name][0].y);
+		pipelineMetricsAnalytics[name].Network_received.max = findMax(cumulativeNetworkData[name][0].y);
 		pipelineMetricsAnalytics[name].Network_received.avg = calculateMean(
-			networkDataCombined[name][0].y
+			cumulativeNetworkData[name][0].y
 		);
 		pipelineMetricsAnalytics[name].Network_transferred.max = findMax(
-			networkDataCombined[name][1].y
+			cumulativeNetworkData[name][1].y
 		);
 		pipelineMetricsAnalytics[name].Network_transferred.avg = calculateMean(
-			networkDataCombined[name][1].y
+			cumulativeNetworkData[name][1].y
 		);
 	});
 
 	// calculate for total dry run
 	pipelineMetricsAnalytics.Total = initMaxResourcePerStep();
-	let allValues = allStepNames.flatMap((name) => cpuData[name].y);
+	let allValues = allStepNames.flatMap((name) => cumulativeCpuData[name].y);
 	pipelineMetricsAnalytics.Total.CPU.max = findMax(allValues);
 	pipelineMetricsAnalytics.Total.CPU.avg += calculateMean(allValues);
 	allValues = allStepNames.flatMap((name) => memoryData[name].y);
 	pipelineMetricsAnalytics.Total.Memory.max = findMax(allValues);
 	pipelineMetricsAnalytics.Total.Memory.avg += calculateMean(allValues);
-	allValues = allStepNames.flatMap((name) => networkDataCombined[name][0].y);
+	allValues = allStepNames.flatMap((name) => cumulativeNetworkData[name][0].y);
 	pipelineMetricsAnalytics.Total.Network_received.max = findMax(allValues);
 	pipelineMetricsAnalytics.Total.Network_received.avg += calculateMean(allValues);
-	allValues = allStepNames.flatMap((name) => networkDataCombined[name][1].y);
+	allValues = allStepNames.flatMap((name) => cumulativeNetworkData[name][1].y);
 	pipelineMetricsAnalytics.Total.Network_transferred.max = findMax(allValues);
 	pipelineMetricsAnalytics.Total.Network_transferred.avg += calculateMean(allValues);
 	metrics
