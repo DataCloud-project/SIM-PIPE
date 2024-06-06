@@ -266,58 +266,77 @@
 
 	// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 	$: getResource = (resource: string) => {
-		let resourceData;
-		let wholeData: { x: string[]; y: number[]; type: string; name: string }[] = [];
+		const data: { x: string[]; y: number[]; type: string; name: string }[] = [];
 		switch (resource) {
 		case 'cpu-cumulative': {
-			resourceData = cumulativeCpuData;
-			if (Object.keys(cumulativeCpuData).length > 0)
-				allStepNames.forEach((step) => {
-					if (cumulativeCpuData[step]) wholeData.push(cumulativeCpuData[step]);
-				});
-		
+			if (Object.keys(cumulativeCpuData).length > 0) {
+				if (selectedStep === 'Total') {
+					allStepNames.forEach((step) => {
+						if (cumulativeCpuData[step]) data.push(cumulativeCpuData[step]);
+					});
+				} else {
+					data.push(cumulativeCpuData[selectedStep]);
+				}
+			}
 		break;
 		}
 		case 'cpu-current': {
-			resourceData = currentCpuData;
 			if (Object.keys(currentCpuData).length > 0)
-				allStepNames.forEach((step) => {
-					if (currentCpuData[step]) wholeData.push(currentCpuData[step]);
-				});
-		
+				if (selectedStep === 'Total') {
+					allStepNames.forEach((step) => {
+						if (currentCpuData[step]) data.push(currentCpuData[step]);
+					});
+				} else {
+					data.push(currentCpuData[selectedStep]);
+				}
 		break;
 		}
 		case 'memory': {
-			resourceData = memoryData;
 			if (Object.keys(memoryData).length > 0)
-				allStepNames.forEach((step) => {
-					if (memoryData[step]) wholeData.push(memoryData[step]);
-				});
-		
+				if (selectedStep === 'Total') {
+					allStepNames.forEach((step) => {
+						if (memoryData[step]) data.push(memoryData[step]);
+					});
+				} else {
+					data.push(memoryData[selectedStep]);
+				}
 		break;
 		}
+		case 'network-cumulative': {
+			if (Object.keys(cumulativeNetworkData).length > 0)
+				if (selectedStep === 'Total') {
+					allStepNames.forEach((step) => {
+						cumulativeNetworkData[step].forEach((networkData) => {
+							data.push(networkData);
+						});
+					});
+				} else {
+					cumulativeNetworkData[selectedStep].forEach((networkData) => {
+						data.push(networkData);
+					});
+				}
+		break;
+		}
+		case 'network-current': {
+			if (Object.keys(currentNetworkData).length > 0)
+				if (selectedStep === 'Total') {
+					allStepNames.forEach((step) => {
+						currentNetworkData[step].forEach((networkData) => {
+							data.push(networkData);
+						});
+					});
+				} else {
+					currentNetworkData[selectedStep].forEach((networkData) => {
+						data.push(networkData);
+					});
+				}
+		break;
+		}		
 		default: {
-			resourceData = currentNetworkData;
-			wholeData = [];
-			allStepNames.forEach((step) => {
-				currentNetworkData[step]?.forEach((elem) => {
-					wholeData.push(elem);
-				});
-			});
+			throw new Error('Invalid resource');
 		}
 		}
-		if (selectedStep !== 'Total') {
-			if (resource === 'network')
-				return {
-					title: `${selectedStep}`,
-					data: resourceData[selectedStep] ?? []
-				};
-			return {
-				title: `${selectedStep}`,
-				data: resourceData[selectedStep] ?? []
-			};
-		}
-		return { title: `- entire dry run`, data: wholeData };
+		return selectedStep === 'Total' ? { title: `- entire dry run`, data } : { title: `${selectedStep}`, data };
 	};
 
 	onMount(async () => {
@@ -512,8 +531,8 @@
 				</div>
 				<div class="card plotcard">
 					<Plot
-						data={getResource('network').data}
-						plotTitle={`Network ${getResource('network').title}`}
+						data={getResource('network-current').data}
+						plotTitle={`Network ${getResource('network-current').title}`}
 						xaxisTitle="time"
 						yaxisTitle="bytes"
 					/>
