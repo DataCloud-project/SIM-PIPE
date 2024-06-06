@@ -122,15 +122,16 @@ function findMax(input: number[]): number {
 	return Math.max(...input);
 }
 
-function cumulativeToCurrent(inputData: {timestamp: number, value: number}[]): { timestamp: number; value: number }[] {
+function cumulativeToCurrent(
+	inputData: { timestamp: number; value: number }[]
+): { timestamp: number; value: number }[] {
 	let previousValue = 0;
 	const current: { timestamp: number; value: number }[] = [];
 	inputData.forEach((entry) => {
 		const updatedValue = entry.value - previousValue;
 		if (updatedValue) {
 			previousValue = entry.value;
-			current.push({timestamp: entry.timestamp, value: updatedValue});
-			
+			current.push({ timestamp: entry.timestamp, value: updatedValue });
 		}
 	});
 	return current;
@@ -162,7 +163,7 @@ export async function getMetricsUsageUtils(metrics: DryRunMetrics[]): Promise<{
 	} = {};
 	const currentNetworkData: {
 		[key: string]: MetricsWithTimeStamps[];
-	} = {};	
+	} = {};
 	const logs: { [x: string]: string } = {};
 	metrics
 		?.filter((metric) => metric.type === 'Pod')
@@ -173,7 +174,9 @@ export async function getMetricsUsageUtils(metrics: DryRunMetrics[]): Promise<{
 					logs[node.displayName] = node.log.join('\n');
 				}
 				// HOTFIX (a.k.a. hack) to display absolute CPU usage instead of cumulative usage in seconds
-				const cpuCurrent: { timestamp: number; value: number }[] = cumulativeToCurrent(node.metrics.cpuUsageSecondsTotal);
+				const cpuCurrent: { timestamp: number; value: number }[] = cumulativeToCurrent(
+					node.metrics.cpuUsageSecondsTotal
+				);
 
 				currentCpuData[node.displayName] = changeResourceFormat(
 					node.startedAt,
@@ -206,7 +209,7 @@ export async function getMetricsUsageUtils(metrics: DryRunMetrics[]): Promise<{
 						node.displayName,
 						'network-transmitted-cumulative'
 					)
-				)
+				);
 				if (!currentNetworkData[node.displayName]) currentNetworkData[node.displayName] = [];
 				currentNetworkData[node.displayName].push(
 					changeResourceFormat(
@@ -221,11 +224,19 @@ export async function getMetricsUsageUtils(metrics: DryRunMetrics[]): Promise<{
 						node.displayName,
 						'network-transmitted-current'
 					)
-				);		
+				);
 			}
 		});
 
-	return { allStepNames, cumulativeCpuData, currentCpuData, memoryData, cumulativeNetworkData, currentNetworkData, logs };
+	return {
+		allStepNames,
+		cumulativeCpuData,
+		currentCpuData,
+		memoryData,
+		cumulativeNetworkData,
+		currentNetworkData,
+		logs
+	};
 }
 
 export async function getMetricsAnalyticsUtils(

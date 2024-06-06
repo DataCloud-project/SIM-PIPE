@@ -268,75 +268,77 @@
 	$: getResource = (resource: string) => {
 		const data: { x: string[]; y: number[]; type: string; name: string }[] = [];
 		switch (resource) {
-		case 'cpu-cumulative': {
-			if (Object.keys(cumulativeCpuData).length > 0) {
-				if (selectedStep === 'Total') {
-					allStepNames.forEach((step) => {
-						if (cumulativeCpuData[step]) data.push(cumulativeCpuData[step]);
-					});
-				} else {
-					data.push(cumulativeCpuData[selectedStep]);
+			case 'cpu-cumulative': {
+				if (Object.keys(cumulativeCpuData).length > 0) {
+					if (selectedStep === 'Total') {
+						allStepNames.forEach((step) => {
+							if (cumulativeCpuData[step]) data.push(cumulativeCpuData[step]);
+						});
+					} else {
+						data.push(cumulativeCpuData[selectedStep]);
+					}
 				}
+				break;
 			}
-		break;
-		}
-		case 'cpu-current': {
-			if (Object.keys(currentCpuData).length > 0)
-				if (selectedStep === 'Total') {
-					allStepNames.forEach((step) => {
-						if (currentCpuData[step]) data.push(currentCpuData[step]);
-					});
-				} else {
-					data.push(currentCpuData[selectedStep]);
-				}
-		break;
-		}
-		case 'memory': {
-			if (Object.keys(memoryData).length > 0)
-				if (selectedStep === 'Total') {
-					allStepNames.forEach((step) => {
-						if (memoryData[step]) data.push(memoryData[step]);
-					});
-				} else {
-					data.push(memoryData[selectedStep]);
-				}
-		break;
-		}
-		case 'network-cumulative': {
-			if (Object.keys(cumulativeNetworkData).length > 0)
-				if (selectedStep === 'Total') {
-					allStepNames.forEach((step) => {
-						cumulativeNetworkData[step].forEach((networkData) => {
+			case 'cpu-current': {
+				if (Object.keys(currentCpuData).length > 0)
+					if (selectedStep === 'Total') {
+						allStepNames.forEach((step) => {
+							if (currentCpuData[step]) data.push(currentCpuData[step]);
+						});
+					} else {
+						data.push(currentCpuData[selectedStep]);
+					}
+				break;
+			}
+			case 'memory': {
+				if (Object.keys(memoryData).length > 0)
+					if (selectedStep === 'Total') {
+						allStepNames.forEach((step) => {
+							if (memoryData[step]) data.push(memoryData[step]);
+						});
+					} else {
+						data.push(memoryData[selectedStep]);
+					}
+				break;
+			}
+			case 'network-cumulative': {
+				if (Object.keys(cumulativeNetworkData).length > 0)
+					if (selectedStep === 'Total') {
+						allStepNames.forEach((step) => {
+							cumulativeNetworkData[step].forEach((networkData) => {
+								data.push(networkData);
+							});
+						});
+					} else {
+						cumulativeNetworkData[selectedStep].forEach((networkData) => {
 							data.push(networkData);
 						});
-					});
-				} else {
-					cumulativeNetworkData[selectedStep].forEach((networkData) => {
-						data.push(networkData);
-					});
-				}
-		break;
-		}
-		case 'network-current': {
-			if (Object.keys(currentNetworkData).length > 0)
-				if (selectedStep === 'Total') {
-					allStepNames.forEach((step) => {
-						currentNetworkData[step].forEach((networkData) => {
+					}
+				break;
+			}
+			case 'network-current': {
+				if (Object.keys(currentNetworkData).length > 0)
+					if (selectedStep === 'Total') {
+						allStepNames.forEach((step) => {
+							currentNetworkData[step].forEach((networkData) => {
+								data.push(networkData);
+							});
+						});
+					} else {
+						currentNetworkData[selectedStep].forEach((networkData) => {
 							data.push(networkData);
 						});
-					});
-				} else {
-					currentNetworkData[selectedStep].forEach((networkData) => {
-						data.push(networkData);
-					});
-				}
-		break;
-		}		
-		default: {
-			throw new Error('Invalid resource');
+					}
+				break;
+			}
+			default: {
+				throw new Error('Invalid resource');
+			}
 		}
-		}
-		return selectedStep === 'Total' ? { title: `- entire dry run`, data } : { title: `${selectedStep}`, data };
+		return selectedStep === 'Total'
+			? { title: `- entire dry run`, data }
+			: { title: `${selectedStep}`, data };
 	};
 
 	onMount(async () => {
@@ -440,18 +442,18 @@
 					<div class="card logcard row-span-4 p-5">
 						<!-- display if the dryrun has a non-empty phase message from argo (usually null if no error) -->
 						{#if dryRunPhaseMessage}
-						<div class="card logcard row-span-1 p-5">
-							<div style="display: flex; align-items: center; color: red; gap: 5px">
-								<AlertTriangleIcon />
-								<h1>Error Message</h1>
-							</div>
-							<section class="p-1">
-								<div class="w-full">
-									<CodeBlock language="json" code={dryRunPhaseMessage} />
+							<div class="card logcard row-span-1 p-5">
+								<div style="display: flex; align-items: center; color: red; gap: 5px">
+									<AlertTriangleIcon />
+									<h1>Error Message</h1>
 								</div>
-							</section>
-						</div>
-						{/if}				
+								<section class="p-1">
+									<div class="w-full">
+										<CodeBlock language="json" code={dryRunPhaseMessage} />
+									</div>
+								</section>
+							</div>
+						{/if}
 						<header class="card-header"><h1>Logs</h1></header>
 						<section class="p-1">
 							<br />
