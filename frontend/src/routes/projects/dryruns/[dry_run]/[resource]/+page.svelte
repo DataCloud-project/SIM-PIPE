@@ -330,9 +330,9 @@
 								maxCpuList.push(findMax(currentCpuData[step].y));
 								avgCpulist.push(computeAverage(currentCpuData[step].y));
 							}
-							maxCpu = findMax(maxCpuList).toFixed(2).toString();
-							averageCpu = computeAverage(avgCpulist).toFixed(2).toString();
 						});
+						maxCpu = findMax(maxCpuList).toFixed(2).toString();
+						averageCpu = computeAverage(avgCpulist).toFixed(2).toString();						
 					} else {
 						data.push(currentCpuData[selectedStep]);
 						maxCpu = findMax(currentCpuData[selectedStep].y).toFixed(2).toString();
@@ -351,12 +351,13 @@
 								maxMemoryList.push(findMax(memoryData[step].y));
 								avgMemoryList.push(computeAverage(memoryData[step].y));
 							}
-							maxMemory = filesize(findMax(maxMemoryList), { round: 2 });
-							averageMemory = filesize(computeAverage(avgMemoryList), { round: 2 });
 						});
+						maxMemory = filesize(findMax(maxMemoryList), { round: 2 });
+						averageMemory = filesize(computeAverage(avgMemoryList), { round: 2 });						
 					} else {
 						data.push(memoryData[selectedStep]);
 						maxMemory = filesize(findMax(memoryData[selectedStep].y), { round: 2 });
+						averageMemory = filesize(computeAverage(memoryData[selectedStep].y), { round: 2 });
 					}
 				break;
 			}
@@ -525,7 +526,7 @@
 			<div class="grid grid-rows-4 grid-cols-2 gap-5 auto-rows-min">
 				<!-- if the logs are empty, remove logs sections -->
 				{#if Object.values(logs).join('') !== ''}
-					<div class="card logcard row-span-4 p-5">
+					<div class="card mainlogcard row-span-4 p-5">
 						<!-- display if the dryrun has a non-empty phase message from argo (usually null if no error) -->
 						{#if dryRunPhaseMessage}
 							<div class="card logcard row-span-1 p-5">
@@ -630,12 +631,18 @@
 	.card.plotcard {
 		display: grid;
 		place-items: start;
+		max-height: 50vh;
 	}
 	.card.resourcecard {
 		overflow-y: scroll;
 		overflow-x: scroll;
 		min-height: 25rem;
 		max-height: fit-content;
+	}
+	.card.mainlogcard {
+		overflow-y: scroll;
+		overflow-x: scroll;
+		max-height: 200vh;
 	}
 	.card.logcard {
 		overflow-y: scroll;
