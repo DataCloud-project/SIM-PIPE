@@ -332,7 +332,7 @@
 							}
 						});
 						maxCpu = findMax(maxCpuList).toFixed(2).toString();
-						averageCpu = computeAverage(avgCpulist).toFixed(2).toString();						
+						averageCpu = computeAverage(avgCpulist).toFixed(2).toString();
 					} else {
 						data.push(currentCpuData[selectedStep]);
 						maxCpu = findMax(currentCpuData[selectedStep].y).toFixed(2).toString();
@@ -353,7 +353,7 @@
 							}
 						});
 						maxMemory = filesize(findMax(maxMemoryList), { round: 2 });
-						averageMemory = filesize(computeAverage(avgMemoryList), { round: 2 });						
+						averageMemory = filesize(computeAverage(avgMemoryList), { round: 2 });
 					} else {
 						data.push(memoryData[selectedStep]);
 						maxMemory = filesize(findMax(memoryData[selectedStep].y), { round: 2 });
