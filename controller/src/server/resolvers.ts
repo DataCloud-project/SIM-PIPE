@@ -40,7 +40,7 @@ import {
 import { ArtifactItem } from '../minio/minio.js';
 import { assertPrometheusIsHealthy } from '../prometheus/prometheus.js';
 import queryPrometheusResolver from '../prometheus/query-prometheus-resolver.js';
-import myFunction from '../curve_fitting/dry-run-data.js';
+import consolidateData, { computeScalingLaw } from '../curve_fitting/dry-run-data.js';
 import { NotFoundError, PingError } from './apollo-errors.js';
 import type { ArgoWorkflow, ArgoWorkflowTemplate } from '../argo/argo-client.js';
 import type ArgoWorkflowClient from '../argo/argo-client.js';
@@ -233,8 +233,10 @@ const resolvers = {
     async computeScalingLaw(_p: EmptyParent, arguments_: MutationComputeScalingLawArguments, context: AuthenticatedContext,
     ): Promise<Mutation['computeScalingLaw']> {
       const containerName = 'main'
+      const aggregateFunctionType = 'average'
       const dryRynIds: string[] = arguments_.dryRunIds as string[];
-      const nodesData = await myFunction(dryRynIds, containerName, context.argoClient);
+      const nodesData = await consolidateData(dryRynIds, containerName, context.argoClient, aggregateFunctionType);
+      const scalingLawData = await computeScalingLaw(nodesData, [1, 2, 3]);
       return JSON.stringify(Object.fromEntries(nodesData));
     },
     async createBucket(

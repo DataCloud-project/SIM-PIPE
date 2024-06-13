@@ -316,22 +316,6 @@ type DryRunNodeMetrics {
   threadsMax(start: TimeStamp, end: TimeStamp, step: Int): [PrometheusSample!]
   ulimitsSoft(start: TimeStamp, end: TimeStamp, step: Int): [PrometheusSample!]
 }
-type NodeData = {
-  nodeName: String!
-  data: {
-    cpu: [Number]
-    nodeId: [String]
-  }
-}
-
-type NodeDataMapEntry = {
-  nodeName: String!
-  nodeData: NodeData! 
-}
-
-type NodeDataMap = {
-  entries: [NodeDataMapEntry!]!
-}
 
 
 type Bucket {
