@@ -1,5 +1,6 @@
-/* eslint-disable unicorn/consistent-destructuring */
-import type { DryRunNode, PrometheusSample } from 'server/schema.js';
+import type { PrometheusSample } from 'server/schema.js';
+import type { NodesAggregatedNodeMetrics } from 'server/schema.js';
+import type { NodesScalingLaws } from 'server/schema.js';
 
 import { convertArgoWorkflowNode, getDryRun } from '../argo/dry-runs.js';
 import { getObjectSize } from '../minio/minio.js';
@@ -7,25 +8,7 @@ import queryPrometheusResolver from '../prometheus/query-prometheus-resolver.js'
 import curveFitting from './curve-fitting.js';
 import type { ArgoWorkflow } from '../argo/argo-client.js';
 import type ArgoWorkflowClient from '../argo/argo-client.js';
-// import type { DryRunNodeMetrics, DryRunNodePod } from '../server/schema.js';
 
-/* interface DryRunNodeMetrics {
-  // other properties...
-  metrics: MetricsType; // replace MetricsType with the actual type
-} */
-
-interface NodeData {
-  nodeName: string;
-  data: {
-    cpu: [number];
-    mem: [number];
-    fileSize: [number];
-    duration: [number];
-    nodeId: [string];
-  }
-}
-
-type NodesDataMap = Map<string, NodeData>;
 
 function computeAverage(values: PrometheusSample[]): number {
   if (!values || values.length === 0) {
@@ -77,13 +60,13 @@ function cumulativeToCurrent(
   return current;
 }
 
-export default async function consolidateData(
+// eslint-disable-next-line import/prefer-default-export
+export async function aggregatedNodesMetrics(
   dryRunIds: string[],
   containerName: string,
   argoClient: ArgoWorkflowClient,
-  aggregateFunctionType: string): Promise<NodesDataMap> {
-  // dictionary of NodeInfo
-  const nodesData: NodesDataMap = new Map<string, NodeData>();
+  aggregateFunctionType: string): Promise<NodesAggregatedNodeMetrics[]> {
+  const nodesData: NodesAggregatedNodeMetrics[] = [];
   let aggregateFunction;
   switch (aggregateFunctionType) {
     case 'average': {
@@ -118,6 +101,7 @@ export default async function consolidateData(
       let fileSize = 0;
       let { duration } = dryRunNode;
       const { inputArtifacts } = dryRunNode;
+      const { displayName } = dryRunNode;
       // eslint-disable-next-line no-await-in-loop
       const cpuSystemSecondsTotal = await queryPrometheusResolver('simpipe_cpu_system_seconds_total', containerName, { dryRunNode }, {});
       // eslint-disable-next-line no-await-in-loop
@@ -145,20 +129,30 @@ export default async function consolidateData(
       } else {
         fileSize = 0;
       }
-      if (dryRunNode.displayName === undefined) {
+      /* eslint-disable unicorn/consistent-destructuring */
+      if (displayName === undefined) {
         throw new Error('displayName is undefined');
       }
-      if (nodesData.has(dryRunNode.displayName as string)) {
-        const nodeData = nodesData.get(dryRunNode.displayName as string);
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      if (nodesData.some((node) => node.nodeName === displayName)) {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        const nodeData = nodesData.find(
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+          (node: NodesAggregatedNodeMetrics) => node.nodeName === displayName);
         if (nodeData) {
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
           nodeData.data.cpu.push(cpu);
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
           nodeData.data.mem.push(mem);
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
           nodeData.data.fileSize.push(fileSize);
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
           nodeData.data.duration.push(duration);
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
           nodeData.data.nodeId.push(dryRunNode.id);
         }
       } else {
-        nodesData.set(dryRunNode.displayName as string, {
+        const data: NodesAggregatedNodeMetrics = {
           nodeName: dryRunNode.displayName as string,
           data: {
             cpu: [cpu],
@@ -167,48 +161,33 @@ export default async function consolidateData(
             duration: [duration],
             nodeId: [dryRunNode.id],
           },
-        });
+        };
+        nodesData.push(data);
       }
+      /* eslint-enable unicorn/consistent-destructuring */
     }
   }
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-return
   return nodesData;
 }
 
-interface scalingLaws {
-  cpu: {
-    coeffs: number[],
-    type: string,
-    r2: number
-  },
-  mem: {
-    coeffs: number[],
-    type: string,
-    r2: number
-  },
-  duration: {
-    coeffs: number[],
-    type: string,
-    r2: number
-  }
-}
 
-interface nodesScalingLaws {
-  nodeName: string,
-  scalingLaws: scalingLaws
-}
-
-export async function computeScalingLaw(nodesData: NodesDataMap, data_y: number[]) {
+export async function computeScalingLaws(
+  nodesData: NodesAggregatedNodeMetrics[], data_x: number[]): Promise<NodesScalingLaws[]> {
   // compute scaling laws for each node.
-  let nodesScalingLaws: nodesScalingLaws[] = [];
-  console.log('computeScalingLaw');
-  for (const [nodeName, nodeData] of Object.entries(nodesData)) {
-    console.log(nodeName, nodeData)
-    if (nodeData.data.nodeId.length === 0) {
-      throw new Error('No data points for node' + node.nodeName);
-    }
-    if (node.data.cpu.length === data_y.length) {
-      throw new Error('data_y and node data need to be same lengths. data_y = ' + data_y.length + ' node data = ' + node.data.cpu.length);
-    }
-    const cpuScalingLaw = curveFitting(node.data.cpu, data_y);
+  const nodesScalingLaws: NodesScalingLaws[] = [];
+  for (const node of nodesData) {
+    nodesScalingLaws.push({
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment
+      nodeName: node.nodeName,
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access
+      cpu: curveFitting(data_x, node.data.cpu),
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access      
+      mem: curveFitting(data_x, node.data.mem),
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access      
+      duration: curveFitting(data_x, node.data.duration),
+    });
   }
+  // eslint-disable-next-line  @typescript-eslint/no-unsafe-return
+  return nodesScalingLaws;
 }

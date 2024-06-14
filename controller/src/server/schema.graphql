@@ -266,6 +266,31 @@ type DryRunNodeMisc implements DryRunNode {
   children: [DryRunNode!]
 }
 
+type AggregatedNodeMetrics {
+  cpu: [Float!]!
+  mem: [Float!]!
+  fileSize: [Float!]!
+  duration: [Float!]!
+  nodeId: [String!]!
+}
+
+type NodesAggregatedNodeMetrics {
+  nodeName: String!
+  data: AggregatedNodeMetrics!
+}
+
+type ScalingLawData {
+  coeffs: [Float]!
+  type: String!
+  r2: Float!
+}
+type NodesScalingLaws {
+  nodeName: String!
+  cpu: ScalingLawData!
+  mem: ScalingLawData!
+  duration: ScalingLawData!
+}
+
 
 type PrometheusSample {
   timestamp: TimeStamp!
@@ -563,9 +588,17 @@ type Mutation @auth {
     bucketName: String!,
     keys: [String!]!): Boolean!
 
-  """ Compute scaling law for a set of dry runs """
-  computeScalingLaw(
+  """ Compute aggregated resource metrics for a set of dry runs """
+  getAggregatedNodesMetrics(
     """ The list of dry run ids """
-    dryRunIds: [String]!): String!
+    dryRunIds: [String]!
+    aggregateMethod: String): [NodesAggregatedNodeMetrics]!
+
+  """ Compute scaling laws for a set of dry runs """
+  computeScalingLawsFromNodesMetrics(
+    """ The list of dry run ids """
+    dryRunIds: [String],
+    nodesAggregatedNodeMetrics: [NodesAggregatedNodeMetrics],
+    data_x: [Float]): [NodesScalingLaws]!
 
 }

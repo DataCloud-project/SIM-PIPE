@@ -31,6 +31,15 @@ export type Scalars = {
   TimeStamp: { input: number; output: number; }
 };
 
+export type AggregatedNodeMetrics = {
+  __typename?: 'AggregatedNodeMetrics';
+  cpu: Array<Scalars['Float']['output']>;
+  duration: Array<Scalars['Float']['output']>;
+  fileSize: Array<Scalars['Float']['output']>;
+  mem: Array<Scalars['Float']['output']>;
+  nodeId: Array<Scalars['String']['output']>;
+};
+
 /**  Contains information about files produced during a dry run execution  */
 export type Artifact = {
   __typename?: 'Artifact';
@@ -688,8 +697,8 @@ export type Mutation = {
   __typename?: 'Mutation';
   /**  Assign a dry run to a project  */
   assignDryRunToProject: DryRun;
-  /**  Compute scaling law for a set of dry runs  */
-  computeScalingLaw: Scalars['String']['output'];
+  /**  Compute scaling laws for a set of dry runs  */
+  computeScalingLawsFromNodesMetrics: Array<Maybe<NodesScalingLaws>>;
   /**  Compute a presigned URL for uploading a file using HTTP PUT. The mutation returns the URL to upload the file.  */
   computeUploadPresignedUrl: Scalars['String']['output'];
   /**  Buckets  */
@@ -719,6 +728,8 @@ export type Mutation = {
   deleteProject: Scalars['Boolean']['output'];
   /**  Delete an existing Argo workflow template. The mutation returns true if the deletion was successful.  */
   deleteWorkflowTemplate: Scalars['Boolean']['output'];
+  /**  Compute aggregated resource metrics for a set of dry runs  */
+  getAggregatedNodesMetrics: Array<Maybe<NodesAggregatedNodeMetrics>>;
   /**  Rename an existing project  */
   renameProject: Project;
   /**  Resubmit a dry run. Create a copy of the current dry run and starts its execution. */
@@ -744,8 +755,10 @@ export type MutationAssignDryRunToProjectArgs = {
 };
 
 
-export type MutationComputeScalingLawArgs = {
-  dryRunIds: Array<InputMaybe<Scalars['String']['input']>>;
+export type MutationComputeScalingLawsFromNodesMetricsArgs = {
+  data_x?: InputMaybe<Array<InputMaybe<Scalars['Float']['input']>>>;
+  dryRunIds?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>;
+  nodesAggregatedNodeMetrics?: InputMaybe<Array<InputMaybe<NodesAggregatedNodeMetrics>>>;
 };
 
 
@@ -811,6 +824,12 @@ export type MutationDeleteWorkflowTemplateArgs = {
 };
 
 
+export type MutationGetAggregatedNodesMetricsArgs = {
+  aggregateMethod?: InputMaybe<Scalars['String']['input']>;
+  dryRunIds: Array<InputMaybe<Scalars['String']['input']>>;
+};
+
+
 export type MutationRenameProjectArgs = {
   name: Scalars['String']['input'];
   projectId: Scalars['String']['input'];
@@ -850,6 +869,20 @@ export type MutationUpdateDockerRegistryCredentialArgs = {
 
 export type MutationUpdateWorkflowTemplateArgs = {
   update: UpdateWorkflowTemplateInput;
+};
+
+export type NodesAggregatedNodeMetrics = {
+  __typename?: 'NodesAggregatedNodeMetrics';
+  data: AggregatedNodeMetrics;
+  nodeName: Scalars['String']['output'];
+};
+
+export type NodesScalingLaws = {
+  __typename?: 'NodesScalingLaws';
+  cpu: ScalingLawData;
+  duration: ScalingLawData;
+  mem: ScalingLawData;
+  nodeName: Scalars['String']['output'];
 };
 
 /**  Project is the high level concept for a specific pipeline in SIM-PIPE. It contains all the previous dry runs of the pipeline and its results.  */
@@ -921,6 +954,13 @@ export type QueryProjectArgs = {
 
 export type QueryWorkflowTemplateArgs = {
   name: Scalars['String']['input'];
+};
+
+export type ScalingLawData = {
+  __typename?: 'ScalingLawData';
+  coeffs: Array<Maybe<Scalars['Float']['output']>>;
+  r2: Scalars['Float']['output'];
+  type: Scalars['String']['output'];
 };
 
 /**  The input data to update a workflow template  */
@@ -1019,6 +1059,7 @@ export type ResolversInterfaceTypes<RefType extends Record<string, unknown>> = {
 
 /** Mapping between all available schema types and the resolvers types */
 export type ResolversTypes = {
+  AggregatedNodeMetrics: ResolverTypeWrapper<AggregatedNodeMetrics>;
   ArgoWorkflow: ResolverTypeWrapper<Scalars['ArgoWorkflow']['output']>;
   ArgoWorkflowTemplate: ResolverTypeWrapper<Scalars['ArgoWorkflowTemplate']['output']>;
   Artifact: ResolverTypeWrapper<Artifact>;
@@ -1040,12 +1081,16 @@ export type ResolversTypes = {
   DryRunNodeType: DryRunNodeType;
   DryRunPhase: DryRunPhase;
   DryRunStatus: ResolverTypeWrapper<DryRunStatus>;
+  Float: ResolverTypeWrapper<Scalars['Float']['output']>;
   Int: ResolverTypeWrapper<Scalars['Int']['output']>;
   Mutation: ResolverTypeWrapper<{}>;
+  NodesAggregatedNodeMetrics: ResolverTypeWrapper<NodesAggregatedNodeMetrics>;
+  NodesScalingLaws: ResolverTypeWrapper<NodesScalingLaws>;
   Project: ResolverTypeWrapper<Project>;
   PrometheusSample: ResolverTypeWrapper<PrometheusSample>;
   PrometheusStringNumber: ResolverTypeWrapper<Scalars['PrometheusStringNumber']['output']>;
   Query: ResolverTypeWrapper<{}>;
+  ScalingLawData: ResolverTypeWrapper<ScalingLawData>;
   String: ResolverTypeWrapper<Scalars['String']['output']>;
   TimeStamp: ResolverTypeWrapper<Scalars['TimeStamp']['output']>;
   UpdateWorkflowTemplateInput: UpdateWorkflowTemplateInput;
@@ -1054,6 +1099,7 @@ export type ResolversTypes = {
 
 /** Mapping between all available schema types and the resolvers parents */
 export type ResolversParentTypes = {
+  AggregatedNodeMetrics: AggregatedNodeMetrics;
   ArgoWorkflow: Scalars['ArgoWorkflow']['output'];
   ArgoWorkflowTemplate: Scalars['ArgoWorkflowTemplate']['output'];
   Artifact: Artifact;
@@ -1072,16 +1118,29 @@ export type ResolversParentTypes = {
   DryRunNodePod: DryRunNodePod;
   DryRunNodeResourceDuration: DryRunNodeResourceDuration;
   DryRunStatus: DryRunStatus;
+  Float: Scalars['Float']['output'];
   Int: Scalars['Int']['output'];
   Mutation: {};
+  NodesAggregatedNodeMetrics: NodesAggregatedNodeMetrics;
+  NodesScalingLaws: NodesScalingLaws;
   Project: Project;
   PrometheusSample: PrometheusSample;
   PrometheusStringNumber: Scalars['PrometheusStringNumber']['output'];
   Query: {};
+  ScalingLawData: ScalingLawData;
   String: Scalars['String']['output'];
   TimeStamp: Scalars['TimeStamp']['output'];
   UpdateWorkflowTemplateInput: UpdateWorkflowTemplateInput;
   WorkflowTemplate: WorkflowTemplate;
+};
+
+export type AggregatedNodeMetricsResolvers<ContextType = any, ParentType extends ResolversParentTypes['AggregatedNodeMetrics'] = ResolversParentTypes['AggregatedNodeMetrics']> = {
+  cpu?: Resolver<Array<ResolversTypes['Float']>, ParentType, ContextType>;
+  duration?: Resolver<Array<ResolversTypes['Float']>, ParentType, ContextType>;
+  fileSize?: Resolver<Array<ResolversTypes['Float']>, ParentType, ContextType>;
+  mem?: Resolver<Array<ResolversTypes['Float']>, ParentType, ContextType>;
+  nodeId?: Resolver<Array<ResolversTypes['String']>, ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
 export interface ArgoWorkflowScalarConfig extends GraphQLScalarTypeConfig<ResolversTypes['ArgoWorkflow'], any> {
@@ -1248,7 +1307,7 @@ export type DryRunStatusResolvers<ContextType = any, ParentType extends Resolver
 
 export type MutationResolvers<ContextType = any, ParentType extends ResolversParentTypes['Mutation'] = ResolversParentTypes['Mutation']> = {
   assignDryRunToProject?: Resolver<ResolversTypes['DryRun'], ParentType, ContextType, RequireFields<MutationAssignDryRunToProjectArgs, 'dryRunId' | 'projectId'>>;
-  computeScalingLaw?: Resolver<ResolversTypes['String'], ParentType, ContextType, RequireFields<MutationComputeScalingLawArgs, 'dryRunIds'>>;
+  computeScalingLawsFromNodesMetrics?: Resolver<Array<Maybe<ResolversTypes['NodesScalingLaws']>>, ParentType, ContextType, Partial<MutationComputeScalingLawsFromNodesMetricsArgs>>;
   computeUploadPresignedUrl?: Resolver<ResolversTypes['String'], ParentType, ContextType, Partial<MutationComputeUploadPresignedUrlArgs>>;
   createBucket?: Resolver<ResolversTypes['String'], ParentType, ContextType, RequireFields<MutationCreateBucketArgs, 'name'>>;
   createDockerRegistryCredential?: Resolver<ResolversTypes['DockerRegistryCredential'], ParentType, ContextType, RequireFields<MutationCreateDockerRegistryCredentialArgs, 'credential'>>;
@@ -1261,6 +1320,7 @@ export type MutationResolvers<ContextType = any, ParentType extends ResolversPar
   deleteDryRun?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationDeleteDryRunArgs, 'dryRunId'>>;
   deleteProject?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationDeleteProjectArgs, 'projectId'>>;
   deleteWorkflowTemplate?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationDeleteWorkflowTemplateArgs, 'name'>>;
+  getAggregatedNodesMetrics?: Resolver<Array<Maybe<ResolversTypes['NodesAggregatedNodeMetrics']>>, ParentType, ContextType, RequireFields<MutationGetAggregatedNodesMetricsArgs, 'dryRunIds'>>;
   renameProject?: Resolver<ResolversTypes['Project'], ParentType, ContextType, RequireFields<MutationRenameProjectArgs, 'name' | 'projectId'>>;
   resubmitDryRun?: Resolver<ResolversTypes['DryRun'], ParentType, ContextType, RequireFields<MutationResubmitDryRunArgs, 'dryRunId'>>;
   resumeDryRun?: Resolver<ResolversTypes['DryRun'], ParentType, ContextType, RequireFields<MutationResumeDryRunArgs, 'dryRunId'>>;
@@ -1269,6 +1329,20 @@ export type MutationResolvers<ContextType = any, ParentType extends ResolversPar
   suspendDryRun?: Resolver<ResolversTypes['DryRun'], ParentType, ContextType, RequireFields<MutationSuspendDryRunArgs, 'dryRunId'>>;
   updateDockerRegistryCredential?: Resolver<ResolversTypes['DockerRegistryCredential'], ParentType, ContextType, RequireFields<MutationUpdateDockerRegistryCredentialArgs, 'credential'>>;
   updateWorkflowTemplate?: Resolver<ResolversTypes['WorkflowTemplate'], ParentType, ContextType, RequireFields<MutationUpdateWorkflowTemplateArgs, 'update'>>;
+};
+
+export type NodesAggregatedNodeMetricsResolvers<ContextType = any, ParentType extends ResolversParentTypes['NodesAggregatedNodeMetrics'] = ResolversParentTypes['NodesAggregatedNodeMetrics']> = {
+  data?: Resolver<ResolversTypes['AggregatedNodeMetrics'], ParentType, ContextType>;
+  nodeName?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type NodesScalingLawsResolvers<ContextType = any, ParentType extends ResolversParentTypes['NodesScalingLaws'] = ResolversParentTypes['NodesScalingLaws']> = {
+  cpu?: Resolver<ResolversTypes['ScalingLawData'], ParentType, ContextType>;
+  duration?: Resolver<ResolversTypes['ScalingLawData'], ParentType, ContextType>;
+  mem?: Resolver<ResolversTypes['ScalingLawData'], ParentType, ContextType>;
+  nodeName?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
 export type ProjectResolvers<ContextType = any, ParentType extends ResolversParentTypes['Project'] = ResolversParentTypes['Project']> = {
@@ -1303,6 +1377,13 @@ export type QueryResolvers<ContextType = any, ParentType extends ResolversParent
   workflowTemplate?: Resolver<Maybe<ResolversTypes['WorkflowTemplate']>, ParentType, ContextType, RequireFields<QueryWorkflowTemplateArgs, 'name'>>;
 };
 
+export type ScalingLawDataResolvers<ContextType = any, ParentType extends ResolversParentTypes['ScalingLawData'] = ResolversParentTypes['ScalingLawData']> = {
+  coeffs?: Resolver<Array<Maybe<ResolversTypes['Float']>>, ParentType, ContextType>;
+  r2?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
+  type?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
 export interface TimeStampScalarConfig extends GraphQLScalarTypeConfig<ResolversTypes['TimeStamp'], any> {
   name: 'TimeStamp';
 }
@@ -1315,6 +1396,7 @@ export type WorkflowTemplateResolvers<ContextType = any, ParentType extends Reso
 };
 
 export type Resolvers<ContextType = any> = {
+  AggregatedNodeMetrics?: AggregatedNodeMetricsResolvers<ContextType>;
   ArgoWorkflow?: GraphQLScalarType;
   ArgoWorkflowTemplate?: GraphQLScalarType;
   Artifact?: ArtifactResolvers<ContextType>;
@@ -1329,10 +1411,13 @@ export type Resolvers<ContextType = any> = {
   DryRunNodeResourceDuration?: DryRunNodeResourceDurationResolvers<ContextType>;
   DryRunStatus?: DryRunStatusResolvers<ContextType>;
   Mutation?: MutationResolvers<ContextType>;
+  NodesAggregatedNodeMetrics?: NodesAggregatedNodeMetricsResolvers<ContextType>;
+  NodesScalingLaws?: NodesScalingLawsResolvers<ContextType>;
   Project?: ProjectResolvers<ContextType>;
   PrometheusSample?: PrometheusSampleResolvers<ContextType>;
   PrometheusStringNumber?: GraphQLScalarType;
   Query?: QueryResolvers<ContextType>;
+  ScalingLawData?: ScalingLawDataResolvers<ContextType>;
   TimeStamp?: GraphQLScalarType;
   WorkflowTemplate?: WorkflowTemplateResolvers<ContextType>;
 };

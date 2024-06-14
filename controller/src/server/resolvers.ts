@@ -40,7 +40,7 @@ import {
 import { ArtifactItem } from '../minio/minio.js';
 import { assertPrometheusIsHealthy } from '../prometheus/prometheus.js';
 import queryPrometheusResolver from '../prometheus/query-prometheus-resolver.js';
-import consolidateData, { computeScalingLaw } from '../curve_fitting/dry-run-data.js';
+import { aggregatedNodesMetrics, computeScalingLaws } from '../curve_fitting/dry-run-data.js';
 import { NotFoundError, PingError } from './apollo-errors.js';
 import type { ArgoWorkflow, ArgoWorkflowTemplate } from '../argo/argo-client.js';
 import type ArgoWorkflowClient from '../argo/argo-client.js';
@@ -75,7 +75,8 @@ import type {
   MutationUpdateDockerRegistryCredentialArgs as MutationUpdateDockerRegistryCredentialArguments,
   MutationUpdateWorkflowTemplateArgs as MutationUpdateWorkflowTemplateArguments,
   MutationDeleteArtifactsArgs as MutationDeleteArtifactsArguments,
-  MutationComputeScalingLawArgs as MutationComputeScalingLawArguments,
+  MutationGetAggregatedNodesMetricsArgs as MutationGetNodesData,
+  MutationComputeScalingLawsFromNodesMetricsArgs as MutationComputeScalingLawsFromNodesMetricsArguments,
   Project,
   Query,
   QueryArtifactArgs as QueryArtifactArguments,
@@ -85,6 +86,8 @@ import type {
   QueryResolvers,
   QueryWorkflowTemplateArgs as QueryWorkflowTemplateArguments,
   WorkflowTemplate,
+  NodesAggregatedNodeMetrics,
+  NodesScalingLaws,
 } from './schema.js';
 
 interface ContextUser {
@@ -230,14 +233,47 @@ const resolvers = {
     },
   } as Required<QueryResolvers<AuthenticatedContext, EmptyParent>>,
   Mutation: {
-    async computeScalingLaw(_p: EmptyParent, arguments_: MutationComputeScalingLawArguments, context: AuthenticatedContext,
-    ): Promise<Mutation['computeScalingLaw']> {
+    async getAggregatedNodesMetrics(
+      _p: EmptyParent, arguments_: MutationGetNodesData, context: AuthenticatedContext
+    ): Promise<Mutation['getAggregatedNodesMetrics']> {
       const containerName = 'main'
-      const aggregateFunctionType = 'average'
+      let aggregateMethod = 'average' // default
+      if (arguments_.aggregateMethod) {
+        aggregateMethod = arguments_.aggregateMethod;
+      }
       const dryRynIds: string[] = arguments_.dryRunIds as string[];
-      const nodesData = await consolidateData(dryRynIds, containerName, context.argoClient, aggregateFunctionType);
-      const scalingLawData = await computeScalingLaw(nodesData, [1, 2, 3]);
-      return JSON.stringify(Object.fromEntries(nodesData));
+      const nodesAggregatedNodeMetrics = await aggregatedNodesMetrics(dryRynIds, containerName, context.argoClient, aggregateMethod);
+      return nodesAggregatedNodeMetrics;
+    },
+    async computeScalingLawsFromNodesMetrics(
+      _p: EmptyParent,
+      arguments_: MutationComputeScalingLawsFromNodesMetricsArguments,
+      context: AuthenticatedContext,
+    ): Promise<Mutation['computeScalingLawsFromNodesMetrics']> {
+      const { nodesAggregatedNodeMetrics, dryRunIds } = arguments_;
+      const containerName = 'main';
+      let aggregateMethod = 'average'; // default
+
+      let scalingLaws: NodesScalingLaws[] = [];
+
+      // TODO: This is a bit of a mess, we should probably refactor this
+      
+      if (!nodesAggregatedNodeMetrics && dryRunIds) {
+        const dryRunIds: string[] = arguments_.dryRunIds as string[];
+        const data_x: number[] = arguments_.data_x as number[];
+        const nodesAggregatedNodeMetrics = await aggregatedNodesMetrics(dryRunIds, containerName, context.argoClient, aggregateMethod);
+        scalingLaws = await computeScalingLaws(nodesAggregatedNodeMetrics, data_x);
+      }
+      if (nodesAggregatedNodeMetrics) {
+        const nodesAggregatedNodeMetrics = arguments_.nodesAggregatedNodeMetrics as NodesAggregatedNodeMetrics[];
+        const data_x: number[] = arguments_.data_x as number[];
+        scalingLaws = await computeScalingLaws(nodesAggregatedNodeMetrics, data_x);
+      }
+      else {
+        throw new Error('No data to compute scaling laws');
+      }
+
+      return scalingLaws;
     },
     async createBucket(
       _p: EmptyParent, arguments_: MutationCreateBucketArguments, context: AuthenticatedContext,
