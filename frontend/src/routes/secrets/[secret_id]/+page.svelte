@@ -98,7 +98,23 @@
 			imageRefFullName += `:${tag}`;
 		}
 		return imageRefFullName;
-	}	
+	}
+
+	/*
+	TODO: check theses cases:
+
+	let img1 = 'registry.com:5000/namespace/image:tag';
+let img2 = '/namespace/image';
+let img3 = 'organization/myimage:reftag';
+let img4 = 'image:tag';
+let img5 = 'image';
+
+console.log(getNewImageFullName(components = extractImageStringComponents(img1), finalRegistryUrl = 'yolo.com', finalPort = '999'));
+console.log(getNewImageFullName(components = extractImageStringComponents(img2), finalRegistryUrl = 'yolo.com', finalPort = '999'));
+console.log(getNewImageFullName(components = extractImageStringComponents(img3), finalRegistryUrl = 'yolo.com', finalPort = '999'));
+console.log(getNewImageFullName(components = extractImageStringComponents(img4), finalRegistryUrl = 'yolo.com', finalPort = '999'));
+console.log(getNewImageFullName(components = extractImageStringComponents(img5), finalRegistryUrl = 'yolo.com', finalPort = '999'));
+*/
 
 	async function onSubmitForm(): Promise<void> {
 		console.log('submitting form');
