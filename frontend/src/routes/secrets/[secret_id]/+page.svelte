@@ -21,6 +21,14 @@
 		};
 	}
 
+	interface ImageComponents {
+		registryUrl: string;
+		port: string;
+		namespace: string;
+		image: string;
+		tag: string;
+	}
+
 	const getProjectsList = async (): Promise<Project[]> => {
 		const response: { projects: Project[] } = await requestGraphQLClient(allProjectsQuery);
 		return response.projects;
@@ -53,6 +61,45 @@
 		modalStore.clear();
 	}
 
+	function extractImageStringComponents(imageRef: string): ImageComponents {
+		let registryUrl = '';
+		let port = '';
+		let namespace = '';
+		let image = '';
+		let tag = '';
+
+		if (imageRef.startsWith('/')) { imageRef = imageRef.substring(1)}
+
+		let parts = imageRef.split('/');
+
+		if (parts[0].includes(':')) {
+			// Case 1: registry-server-url/organization/image
+			let urlParts = parts[0].split(':');
+			registryUrl = urlParts[0];
+			port = urlParts[1];
+			namespace = parts[1];
+			[image, tag] = parts[2].split(':');
+		} else if (parts.length === 2) {
+			// Case 2: organization/image
+			namespace = parts[0];
+			[image, tag] = parts[1].split(':');
+		} else {
+			// Case 3: image
+			[image, tag] = parts[0].split(':');
+		}
+
+		return { registryUrl, port, namespace, image, tag };
+	}
+
+	function getNewImageFullName(components: ImageComponents, finalRegistryUrl: string, finalPort: string): string {
+		let { registryUrl, port, namespace, image, tag } = components;
+		let imageRefFullName = `${finalRegistryUrl}:${finalPort}/${namespace}/${image}`
+		if (tag) {
+			imageRefFullName += `:${tag}`;
+		}
+		return imageRefFullName;
+	}	
+
 	async function onSubmitForm(): Promise<void> {
 		console.log('submitting form');
 
@@ -78,6 +125,9 @@
 				let { image } = template.container;
 				// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
 				image = image.split('/').slice(-1);
+				img1 = registry.com:5000/namespace/image:tag
+				img2 = namespace/image:tag
+				img3 = image:tag
 				// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, no-param-reassign
 				template.container.image = `${$selectedCredential.server}/${image}`;
 			}
