@@ -16,10 +16,8 @@
 	// let template: any;
 
 	interface ResponseType {
-		data: {
-			workflowTemplate: {
-				argoWorkflowTemplate: any; // Replace 'any' with the actual type
-			};
+		workflowTemplate: {
+			argoWorkflowTemplate: any; // Replace 'any' with the actual type
 		};
 	}
 
@@ -68,7 +66,7 @@
 		});
 
 		// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
-		const template = response.data.workflowTemplate.argoWorkflowTemplate;
+		const template = response.workflowTemplate.argoWorkflowTemplate;
 		// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
 		template.spec.imagePullSecrets = [{ name: $selectedCredential.name }];
 		// update path of template images:
