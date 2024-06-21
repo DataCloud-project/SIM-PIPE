@@ -758,7 +758,7 @@ export type MutationAssignDryRunToProjectArgs = {
 export type MutationComputeScalingLawsFromNodesMetricsArgs = {
   data_x?: InputMaybe<Array<InputMaybe<Scalars['Float']['input']>>>;
   dryRunIds?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>;
-  nodesAggregatedNodeMetrics?: InputMaybe<Array<InputMaybe<NodesAggregatedNodeMetrics>>>;
+  nodesAggregatedNodeMetrics?: InputMaybe<Array<NodesAggregatedNodeMetricsInput>>;
 };
 
 
@@ -875,6 +875,11 @@ export type NodesAggregatedNodeMetrics = {
   __typename?: 'NodesAggregatedNodeMetrics';
   data: AggregatedNodeMetrics;
   nodeName: Scalars['String']['output'];
+};
+
+export type NodesAggregatedNodeMetricsInput = {
+  data: AggregatedNodeMetrics;
+  nodeName: Scalars['String']['input'];
 };
 
 export type NodesScalingLaws = {
@@ -1085,6 +1090,7 @@ export type ResolversTypes = {
   Int: ResolverTypeWrapper<Scalars['Int']['output']>;
   Mutation: ResolverTypeWrapper<{}>;
   NodesAggregatedNodeMetrics: ResolverTypeWrapper<NodesAggregatedNodeMetrics>;
+  NodesAggregatedNodeMetricsInput: NodesAggregatedNodeMetricsInput;
   NodesScalingLaws: ResolverTypeWrapper<NodesScalingLaws>;
   Project: ResolverTypeWrapper<Project>;
   PrometheusSample: ResolverTypeWrapper<PrometheusSample>;
@@ -1122,6 +1128,7 @@ export type ResolversParentTypes = {
   Int: Scalars['Int']['output'];
   Mutation: {};
   NodesAggregatedNodeMetrics: NodesAggregatedNodeMetrics;
+  NodesAggregatedNodeMetricsInput: NodesAggregatedNodeMetricsInput;
   NodesScalingLaws: NodesScalingLaws;
   Project: Project;
   PrometheusSample: PrometheusSample;

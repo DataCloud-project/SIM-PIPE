@@ -279,6 +279,11 @@ type NodesAggregatedNodeMetrics {
   data: AggregatedNodeMetrics!
 }
 
+input NodesAggregatedNodeMetricsInput {
+  nodeName: String!
+  data: AggregatedNodeMetrics!
+}
+
 type ScalingLawData {
   coeffs: [Float]!
   type: String!
@@ -598,7 +603,7 @@ type Mutation @auth {
   computeScalingLawsFromNodesMetrics(
     """ The list of dry run ids """
     dryRunIds: [String],
-    nodesAggregatedNodeMetrics: [NodesAggregatedNodeMetrics],
+    nodesAggregatedNodeMetrics: [NodesAggregatedNodeMetricsInput!],
     data_x: [Float]): [NodesScalingLaws]!
 
 }
