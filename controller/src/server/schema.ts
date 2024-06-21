@@ -40,6 +40,14 @@ export type AggregatedNodeMetrics = {
   nodeId: Array<Scalars['String']['output']>;
 };
 
+export type AggregatedNodeMetricsInput = {
+  cpu: Array<Scalars['Float']['input']>;
+  duration: Array<Scalars['Float']['input']>;
+  fileSize: Array<Scalars['Float']['input']>;
+  mem: Array<Scalars['Float']['input']>;
+  nodeId: Array<Scalars['String']['input']>;
+};
+
 /**  Contains information about files produced during a dry run execution  */
 export type Artifact = {
   __typename?: 'Artifact';
@@ -878,7 +886,7 @@ export type NodesAggregatedNodeMetrics = {
 };
 
 export type NodesAggregatedNodeMetricsInput = {
-  data: AggregatedNodeMetrics;
+  data: AggregatedNodeMetricsInput;
   nodeName: Scalars['String']['input'];
 };
 
@@ -1065,6 +1073,7 @@ export type ResolversInterfaceTypes<RefType extends Record<string, unknown>> = {
 /** Mapping between all available schema types and the resolvers types */
 export type ResolversTypes = {
   AggregatedNodeMetrics: ResolverTypeWrapper<AggregatedNodeMetrics>;
+  AggregatedNodeMetricsInput: AggregatedNodeMetricsInput;
   ArgoWorkflow: ResolverTypeWrapper<Scalars['ArgoWorkflow']['output']>;
   ArgoWorkflowTemplate: ResolverTypeWrapper<Scalars['ArgoWorkflowTemplate']['output']>;
   Artifact: ResolverTypeWrapper<Artifact>;
@@ -1106,6 +1115,7 @@ export type ResolversTypes = {
 /** Mapping between all available schema types and the resolvers parents */
 export type ResolversParentTypes = {
   AggregatedNodeMetrics: AggregatedNodeMetrics;
+  AggregatedNodeMetricsInput: AggregatedNodeMetricsInput;
   ArgoWorkflow: Scalars['ArgoWorkflow']['output'];
   ArgoWorkflowTemplate: Scalars['ArgoWorkflowTemplate']['output'];
   Artifact: Artifact;

@@ -258,19 +258,17 @@ const resolvers = {
 
       // TODO: This is a bit of a mess, we should probably refactor this
       
-      if (!nodesAggregatedNodeMetrics && dryRunIds) {
+      if (dryRunIds && !nodesAggregatedNodeMetrics) {
         const dryRunIds: string[] = arguments_.dryRunIds as string[];
         const data_x: number[] = arguments_.data_x as number[];
         const nodesAggregatedNodeMetrics = await aggregatedNodesMetrics(dryRunIds, containerName, context.argoClient, aggregateMethod);
         scalingLaws = await computeScalingLaws(nodesAggregatedNodeMetrics, data_x);
-      }
-      if (nodesAggregatedNodeMetrics) {
+      } else if (!dryRunIds && nodesAggregatedNodeMetrics) {
         const nodesAggregatedNodeMetrics = arguments_.nodesAggregatedNodeMetrics as NodesAggregatedNodeMetrics[];
         const data_x: number[] = arguments_.data_x as number[];
         scalingLaws = await computeScalingLaws(nodesAggregatedNodeMetrics, data_x);
-      }
-      else {
-        throw new Error('No data to compute scaling laws');
+      } else {
+        throw new Error('Provide either dryRunIds or nodesAggregatedNodeMetrics, and data_x.');
       }
 
       return scalingLaws;

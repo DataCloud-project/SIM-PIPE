@@ -274,6 +274,14 @@ type AggregatedNodeMetrics {
   nodeId: [String!]!
 }
 
+input AggregatedNodeMetricsInput {
+  cpu: [Float!]!
+  mem: [Float!]!
+  fileSize: [Float!]!
+  duration: [Float!]!
+  nodeId: [String!]!
+}
+
 type NodesAggregatedNodeMetrics {
   nodeName: String!
   data: AggregatedNodeMetrics!
@@ -281,7 +289,7 @@ type NodesAggregatedNodeMetrics {
 
 input NodesAggregatedNodeMetricsInput {
   nodeName: String!
-  data: AggregatedNodeMetrics!
+  data: AggregatedNodeMetricsInput!
 }
 
 type ScalingLawData {

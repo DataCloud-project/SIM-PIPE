@@ -9,7 +9,6 @@ import curveFitting from './curve-fitting.js';
 import type { ArgoWorkflow } from '../argo/argo-client.js';
 import type ArgoWorkflowClient from '../argo/argo-client.js';
 
-
 function computeAverage(values: PrometheusSample[]): number {
   if (!values || values.length === 0) {
     return 0;
@@ -171,7 +170,6 @@ export async function aggregatedNodesMetrics(
   return nodesData;
 }
 
-
 export async function computeScalingLaws(
   nodesData: NodesAggregatedNodeMetrics[], data_x: number[]): Promise<NodesScalingLaws[]> {
   // compute scaling laws for each node.
@@ -182,9 +180,9 @@ export async function computeScalingLaws(
       nodeName: node.nodeName,
       // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access
       cpu: curveFitting(data_x, node.data.cpu),
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access      
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access
       mem: curveFitting(data_x, node.data.mem),
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access      
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access
       duration: curveFitting(data_x, node.data.duration),
     });
   }
