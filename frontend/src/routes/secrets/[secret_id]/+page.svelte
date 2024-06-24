@@ -21,6 +21,11 @@
 		};
 	}
 
+	interface ImageComponents {
+		registryUrl: string;
+		imagePath: string;
+	}
+
 	const getProjectsList = async (): Promise<Project[]> => {
 		const response: { projects: Project[] } = await requestGraphQLClient(allProjectsQuery);
 		return response.projects;
@@ -53,6 +58,87 @@
 		modalStore.clear();
 	}
 
+	function extractImageStringComponents(imageReference: string): ImageComponents {
+		// imageReference = registryUrl/imagePath:tag
+		// where imagePath is a path with multiple parts separated by '/'
+		// Example cases:
+		// let img0 = 'https://registry.com/namespace/image:tag';
+		// let img1 = 'registry.com:5000/namespace/image:tag';
+		// let img2 = '/namespace/image';
+		// let img3 = 'organization/myimage:reftag';
+		// let img4 = 'image:tag';
+		// let img5 = 'image';
+
+		// input
+		const imageRef = imageReference;
+
+		// output
+		let registryUrl = '';
+		let imagePath = '';
+
+		if (imageRef.startsWith('http://') || imageRef.startsWith('https://')) {
+			const urlParts = imageRef.split('/');
+			// eslint-disable-next-line prefer-destructuring
+			registryUrl = urlParts[2];
+			imagePath = urlParts.slice(3).join('/');
+		} else {
+			const parts = imageRef.split('/');
+			const firstPart = parts[0];
+			if (firstPart.includes(':') || firstPart.includes('.')) {
+				if (parts.length > 1) {
+					// server.url:port/namespace/image:tag
+					// eslint-disable-next-line prefer-destructuring
+					registryUrl = firstPart;
+					imagePath = parts.slice(1).join('/');
+				} else {
+					// image:tag, there is no server url
+					// eslint-disable-next-line prefer-destructuring
+					imagePath = firstPart;
+				}
+			} else {
+				// remove leading / if present
+				imagePath = imageRef.startsWith('/') ? imageRef.slice(1) : imageRef;
+			}
+		}
+
+		return {
+			registryUrl,
+			imagePath
+		};
+	}
+
+	function getNewImageFullName(components: ImageComponents, registryReference: string): string {
+		// imageRefFullName = registryReference/namespace/image:tag
+		const { imagePath } = components;
+		const imageRefFullName = `${registryReference}/${imagePath}`;
+		return imageRefFullName;
+	}
+
+	/*
+	function testCases(registryReference: string) {
+		let img0 = 'https://registry.com/namespace/image:tag';
+		let img1 = 'registry.com:5000/namespace/image:tag';
+		let img2 = '/namespace/image';
+		let img3 = 'organization/myimage:reftag';
+		let img4 = 'image:tag';
+		let img5 = 'image';
+		let img6 = 'registry.com/namespace/image';
+		console.log('img0', getNewImageFullName(extractImageStringComponents(img0), registryReference));
+		console.log('img1', getNewImageFullName(extractImageStringComponents(img1), registryReference));
+		console.log('img2', getNewImageFullName(extractImageStringComponents(img2), registryReference));
+		console.log('img3', getNewImageFullName(extractImageStringComponents(img3), registryReference));
+		console.log('img4', getNewImageFullName(extractImageStringComponents(img4), registryReference));
+		console.log('img5', getNewImageFullName(extractImageStringComponents(img5), registryReference));
+		console.log('img6', getNewImageFullName(extractImageStringComponents(img6), registryReference));
+	}
+	*/
+
+	function getNewImageFullNameFromImageRef(imageRef: string, registryReference: string): string {
+		const imageComponents = extractImageStringComponents(imageRef);
+		// testCases(registryReference);
+		return getNewImageFullName(imageComponents, registryReference);
+	}
+
 	async function onSubmitForm(): Promise<void> {
 		console.log('submitting form');
 
@@ -75,11 +161,12 @@
 			// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
 			if (template.container) {
 				// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
-				let { image } = template.container;
+				const { image } = template.container;
 				// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-				image = image.split('/').slice(-1);
+				const newImageFullName = getNewImageFullNameFromImageRef(image, $selectedCredential.server);
+				console.log('newImageFullName', newImageFullName);
 				// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, no-param-reassign
-				template.container.image = `${$selectedCredential.server}/${image}`;
+				template.container.image = newImageFullName;
 			}
 		});
 
