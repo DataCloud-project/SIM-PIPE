@@ -23,10 +23,7 @@
 
 	interface ImageComponents {
 		registryUrl: string;
-		port: string;
-		namespace: string;
-		image: string;
-		tag: string;
+		imagePath: string;
 	}
 
 	const getProjectsList = async (): Promise<Project[]> => {
@@ -61,60 +58,86 @@
 		modalStore.clear();
 	}
 
-	function extractImageStringComponents(imageRef: string): ImageComponents {
+	function extractImageStringComponents(imageReference: string): ImageComponents {
+		// imageReference = registryUrl/imagePath:tag
+		// where imagePath is a path with multiple parts separated by '/'
+		// Example cases:
+		// let img0 = 'https://registry.com/namespace/image:tag';
+		// let img1 = 'registry.com:5000/namespace/image:tag';
+		// let img2 = '/namespace/image';
+		// let img3 = 'organization/myimage:reftag';
+		// let img4 = 'image:tag';
+		// let img5 = 'image';
+
+		// input
+		const imageRef = imageReference;
+
+		// output
 		let registryUrl = '';
-		let port = '';
-		let namespace = '';
-		let image = '';
-		let tag = '';
+		let imagePath = '';
 
-		if (imageRef.startsWith('/')) { imageRef = imageRef.substring(1)}
-
-		let parts = imageRef.split('/');
-
-		if (parts[0].includes(':')) {
-			// Case 1: registry-server-url/organization/image
-			let urlParts = parts[0].split(':');
-			registryUrl = urlParts[0];
-			port = urlParts[1];
-			namespace = parts[1];
-			[image, tag] = parts[2].split(':');
-		} else if (parts.length === 2) {
-			// Case 2: organization/image
-			namespace = parts[0];
-			[image, tag] = parts[1].split(':');
+		if (imageRef.startsWith('http://') || imageRef.startsWith('https://')) {
+			const urlParts = imageRef.split('/');
+			// eslint-disable-next-line prefer-destructuring
+			registryUrl = urlParts[2];
+			imagePath = urlParts.slice(3).join('/');
 		} else {
-			// Case 3: image
-			[image, tag] = parts[0].split(':');
+			const parts = imageRef.split('/');
+			const firstPart = parts[0];
+			if (firstPart.includes(':') || firstPart.includes('.')) {
+				if (parts.length > 1) {
+					// server.url:port/namespace/image:tag
+					// eslint-disable-next-line prefer-destructuring
+					registryUrl = firstPart;
+					imagePath = parts.slice(1).join('/');
+				} else {
+					// image:tag, there is no server url
+					// eslint-disable-next-line prefer-destructuring
+					imagePath = firstPart;
+				}
+			} else {
+				// remove leading / if present
+				imagePath = imageRef.startsWith('/') ? imageRef.slice(1) : imageRef;
+			}
 		}
 
-		return { registryUrl, port, namespace, image, tag };
+		return {
+			registryUrl,
+			imagePath
+		};
 	}
 
-	function getNewImageFullName(components: ImageComponents, finalRegistryUrl: string, finalPort: string): string {
-		let { registryUrl, port, namespace, image, tag } = components;
-		let imageRefFullName = `${finalRegistryUrl}:${finalPort}/${namespace}/${image}`
-		if (tag) {
-			imageRefFullName += `:${tag}`;
-		}
+	function getNewImageFullName(components: ImageComponents, registryReference: string): string {
+		// imageRefFullName = registryReference/namespace/image:tag
+		const { imagePath } = components;
+		const imageRefFullName = `${registryReference}/${imagePath}`;
 		return imageRefFullName;
 	}
 
 	/*
-	TODO: check theses cases:
+	function testCases(registryReference: string) {
+		let img0 = 'https://registry.com/namespace/image:tag';
+		let img1 = 'registry.com:5000/namespace/image:tag';
+		let img2 = '/namespace/image';
+		let img3 = 'organization/myimage:reftag';
+		let img4 = 'image:tag';
+		let img5 = 'image';
+		let img6 = 'registry.com/namespace/image';
+		console.log('img0', getNewImageFullName(extractImageStringComponents(img0), registryReference));
+		console.log('img1', getNewImageFullName(extractImageStringComponents(img1), registryReference));
+		console.log('img2', getNewImageFullName(extractImageStringComponents(img2), registryReference));
+		console.log('img3', getNewImageFullName(extractImageStringComponents(img3), registryReference));
+		console.log('img4', getNewImageFullName(extractImageStringComponents(img4), registryReference));
+		console.log('img5', getNewImageFullName(extractImageStringComponents(img5), registryReference));
+		console.log('img6', getNewImageFullName(extractImageStringComponents(img6), registryReference));
+	}
+	*/
 
-	let img1 = 'registry.com:5000/namespace/image:tag';
-let img2 = '/namespace/image';
-let img3 = 'organization/myimage:reftag';
-let img4 = 'image:tag';
-let img5 = 'image';
-
-console.log(getNewImageFullName(components = extractImageStringComponents(img1), finalRegistryUrl = 'yolo.com', finalPort = '999'));
-console.log(getNewImageFullName(components = extractImageStringComponents(img2), finalRegistryUrl = 'yolo.com', finalPort = '999'));
-console.log(getNewImageFullName(components = extractImageStringComponents(img3), finalRegistryUrl = 'yolo.com', finalPort = '999'));
-console.log(getNewImageFullName(components = extractImageStringComponents(img4), finalRegistryUrl = 'yolo.com', finalPort = '999'));
-console.log(getNewImageFullName(components = extractImageStringComponents(img5), finalRegistryUrl = 'yolo.com', finalPort = '999'));
-*/
+	function getNewImageFullNameFromImageRef(imageRef: string, registryReference: string): string {
+		const imageComponents = extractImageStringComponents(imageRef);
+		// testCases(registryReference);
+		return getNewImageFullName(imageComponents, registryReference);
+	}
 
 	async function onSubmitForm(): Promise<void> {
 		console.log('submitting form');
@@ -138,14 +161,12 @@ console.log(getNewImageFullName(components = extractImageStringComponents(img5),
 			// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
 			if (template.container) {
 				// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
-				let { image } = template.container;
+				const { image } = template.container;
 				// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-				image = image.split('/').slice(-1);
-				img1 = registry.com:5000/namespace/image:tag
-				img2 = namespace/image:tag
-				img3 = image:tag
+				const newImageFullName = getNewImageFullNameFromImageRef(image, $selectedCredential.server);
+				console.log('newImageFullName', newImageFullName);
 				// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, no-param-reassign
-				template.container.image = `${$selectedCredential.server}/${image}`;
+				template.container.image = newImageFullName;
 			}
 		});
 
