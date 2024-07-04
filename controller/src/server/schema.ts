@@ -701,6 +701,14 @@ export type DryRunStatus = {
   startedAt?: Maybe<Scalars['String']['output']>;
 };
 
+/**  Hardware metrics for the server  */
+export type HardwareMetrics = {
+  __typename?: 'HardwareMetrics';
+  cpuCores: Scalars['Int']['output'];
+  /**  CPU metrics  */
+  cpuCoresData?: Maybe<Array<CpuCoreData>>;
+};
+
 export type Mutation = {
   __typename?: 'Mutation';
   /**  Assign a dry run to a project  */
@@ -764,9 +772,11 @@ export type MutationAssignDryRunToProjectArgs = {
 
 
 export type MutationComputeScalingLawsFromNodesMetricsArgs = {
+  aggregateMethod?: InputMaybe<Scalars['String']['input']>;
   data_x?: InputMaybe<Array<InputMaybe<Scalars['Float']['input']>>>;
   dryRunIds?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>;
   nodesAggregatedNodeMetrics?: InputMaybe<Array<NodesAggregatedNodeMetricsInput>>;
+  regressionMethod?: InputMaybe<Scalars['String']['input']>;
 };
 
 
@@ -919,6 +929,7 @@ export type PrometheusSample = {
   value: Scalars['PrometheusStringNumber']['output'];
 };
 
+/**  The root query type. All queries that fetch data are defined here.  */
 export type Query = {
   __typename?: 'Query';
   /**  Artifact metadata  */
@@ -931,6 +942,8 @@ export type Query = {
   dockerRegistryCredentials: Array<DockerRegistryCredential>;
   /**  Get a dry run by ID  */
   dryRun: DryRun;
+  /**  Get hardware metrics server-side */
+  hardwaremetrics: HardwareMetrics;
   /**  Returns pong if the server is up and running.  */
   ping: Scalars['String']['output'];
   /**  Get a project by ID  */
@@ -944,27 +957,32 @@ export type Query = {
 };
 
 
+/**  The root query type. All queries that fetch data are defined here.  */
 export type QueryArtifactArgs = {
   bucketName: Scalars['String']['input'];
   key: Scalars['String']['input'];
 };
 
 
+/**  The root query type. All queries that fetch data are defined here.  */
 export type QueryArtifactsArgs = {
   bucketName?: InputMaybe<Scalars['String']['input']>;
 };
 
 
+/**  The root query type. All queries that fetch data are defined here.  */
 export type QueryDryRunArgs = {
   dryRunId: Scalars['String']['input'];
 };
 
 
+/**  The root query type. All queries that fetch data are defined here.  */
 export type QueryProjectArgs = {
   projectId: Scalars['String']['input'];
 };
 
 
+/**  The root query type. All queries that fetch data are defined here.  */
 export type QueryWorkflowTemplateArgs = {
   name: Scalars['String']['input'];
 };
@@ -995,6 +1013,24 @@ export type WorkflowTemplate = {
   name: Scalars['String']['output'];
   /**  The project to which the workflow template belongs  */
   project?: Maybe<Project>;
+};
+
+/**  CPU core data  */
+export type CpuCoreData = {
+  __typename?: 'cpuCoreData';
+  model?: Maybe<Scalars['String']['output']>;
+  speed?: Maybe<Scalars['Int']['output']>;
+  times?: Maybe<CpuTimes>;
+};
+
+/**  cpuTimes data  */
+export type CpuTimes = {
+  __typename?: 'cpuTimes';
+  idle?: Maybe<Scalars['Int']['output']>;
+  irq?: Maybe<Scalars['Int']['output']>;
+  nice?: Maybe<Scalars['Int']['output']>;
+  sys?: Maybe<Scalars['Int']['output']>;
+  user?: Maybe<Scalars['Int']['output']>;
 };
 
 
@@ -1096,6 +1132,7 @@ export type ResolversTypes = {
   DryRunPhase: DryRunPhase;
   DryRunStatus: ResolverTypeWrapper<DryRunStatus>;
   Float: ResolverTypeWrapper<Scalars['Float']['output']>;
+  HardwareMetrics: ResolverTypeWrapper<HardwareMetrics>;
   Int: ResolverTypeWrapper<Scalars['Int']['output']>;
   Mutation: ResolverTypeWrapper<{}>;
   NodesAggregatedNodeMetrics: ResolverTypeWrapper<NodesAggregatedNodeMetrics>;
@@ -1110,6 +1147,8 @@ export type ResolversTypes = {
   TimeStamp: ResolverTypeWrapper<Scalars['TimeStamp']['output']>;
   UpdateWorkflowTemplateInput: UpdateWorkflowTemplateInput;
   WorkflowTemplate: ResolverTypeWrapper<WorkflowTemplate>;
+  cpuCoreData: ResolverTypeWrapper<CpuCoreData>;
+  cpuTimes: ResolverTypeWrapper<CpuTimes>;
 };
 
 /** Mapping between all available schema types and the resolvers parents */
@@ -1135,6 +1174,7 @@ export type ResolversParentTypes = {
   DryRunNodeResourceDuration: DryRunNodeResourceDuration;
   DryRunStatus: DryRunStatus;
   Float: Scalars['Float']['output'];
+  HardwareMetrics: HardwareMetrics;
   Int: Scalars['Int']['output'];
   Mutation: {};
   NodesAggregatedNodeMetrics: NodesAggregatedNodeMetrics;
@@ -1149,6 +1189,8 @@ export type ResolversParentTypes = {
   TimeStamp: Scalars['TimeStamp']['output'];
   UpdateWorkflowTemplateInput: UpdateWorkflowTemplateInput;
   WorkflowTemplate: WorkflowTemplate;
+  cpuCoreData: CpuCoreData;
+  cpuTimes: CpuTimes;
 };
 
 export type AggregatedNodeMetricsResolvers<ContextType = any, ParentType extends ResolversParentTypes['AggregatedNodeMetrics'] = ResolversParentTypes['AggregatedNodeMetrics']> = {
@@ -1322,6 +1364,12 @@ export type DryRunStatusResolvers<ContextType = any, ParentType extends Resolver
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
+export type HardwareMetricsResolvers<ContextType = any, ParentType extends ResolversParentTypes['HardwareMetrics'] = ResolversParentTypes['HardwareMetrics']> = {
+  cpuCores?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
+  cpuCoresData?: Resolver<Maybe<Array<ResolversTypes['cpuCoreData']>>, ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
 export type MutationResolvers<ContextType = any, ParentType extends ResolversParentTypes['Mutation'] = ResolversParentTypes['Mutation']> = {
   assignDryRunToProject?: Resolver<ResolversTypes['DryRun'], ParentType, ContextType, RequireFields<MutationAssignDryRunToProjectArgs, 'dryRunId' | 'projectId'>>;
   computeScalingLawsFromNodesMetrics?: Resolver<Array<Maybe<ResolversTypes['NodesScalingLaws']>>, ParentType, ContextType, Partial<MutationComputeScalingLawsFromNodesMetricsArgs>>;
@@ -1387,6 +1435,7 @@ export type QueryResolvers<ContextType = any, ParentType extends ResolversParent
   buckets?: Resolver<Array<ResolversTypes['Bucket']>, ParentType, ContextType>;
   dockerRegistryCredentials?: Resolver<Array<ResolversTypes['DockerRegistryCredential']>, ParentType, ContextType>;
   dryRun?: Resolver<ResolversTypes['DryRun'], ParentType, ContextType, RequireFields<QueryDryRunArgs, 'dryRunId'>>;
+  hardwaremetrics?: Resolver<ResolversTypes['HardwareMetrics'], ParentType, ContextType>;
   ping?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   project?: Resolver<ResolversTypes['Project'], ParentType, ContextType, RequireFields<QueryProjectArgs, 'projectId'>>;
   projects?: Resolver<Array<ResolversTypes['Project']>, ParentType, ContextType>;
@@ -1412,6 +1461,22 @@ export type WorkflowTemplateResolvers<ContextType = any, ParentType extends Reso
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
+export type CpuCoreDataResolvers<ContextType = any, ParentType extends ResolversParentTypes['cpuCoreData'] = ResolversParentTypes['cpuCoreData']> = {
+  model?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  speed?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
+  times?: Resolver<Maybe<ResolversTypes['cpuTimes']>, ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type CpuTimesResolvers<ContextType = any, ParentType extends ResolversParentTypes['cpuTimes'] = ResolversParentTypes['cpuTimes']> = {
+  idle?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
+  irq?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
+  nice?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
+  sys?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
+  user?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
 export type Resolvers<ContextType = any> = {
   AggregatedNodeMetrics?: AggregatedNodeMetricsResolvers<ContextType>;
   ArgoWorkflow?: GraphQLScalarType;
@@ -1427,6 +1492,7 @@ export type Resolvers<ContextType = any> = {
   DryRunNodePod?: DryRunNodePodResolvers<ContextType>;
   DryRunNodeResourceDuration?: DryRunNodeResourceDurationResolvers<ContextType>;
   DryRunStatus?: DryRunStatusResolvers<ContextType>;
+  HardwareMetrics?: HardwareMetricsResolvers<ContextType>;
   Mutation?: MutationResolvers<ContextType>;
   NodesAggregatedNodeMetrics?: NodesAggregatedNodeMetricsResolvers<ContextType>;
   NodesScalingLaws?: NodesScalingLawsResolvers<ContextType>;
@@ -1437,5 +1503,7 @@ export type Resolvers<ContextType = any> = {
   ScalingLawData?: ScalingLawDataResolvers<ContextType>;
   TimeStamp?: GraphQLScalarType;
   WorkflowTemplate?: WorkflowTemplateResolvers<ContextType>;
+  cpuCoreData?: CpuCoreDataResolvers<ContextType>;
+  cpuTimes?: CpuTimesResolvers<ContextType>;
 };
 

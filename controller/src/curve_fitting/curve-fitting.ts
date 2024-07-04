@@ -88,10 +88,10 @@ function linear(
 export default function curveFitting(
   data_x: number[],
   data_y: number[],
+  method = 'linear',
   precision = 4): CurveFitReturnType {
-  // Curve fitting function
-  // Linear regression for 2 data points
-  // Power law regression for more than 2 data points
+  // Curve fitting
+  // method: 'power' or 'linear'. Default is 'linear'
   let results = {
     coeffs: [0, 0], type: '', r2: 0,
   };
@@ -99,17 +99,26 @@ export default function curveFitting(
   if (data_x.length !== data_y.length) {
     throw new Error('Input data arrays must have the same length');
   }
-  if (data_x.length < 2) {
-    throw new Error('Input data arrays must have at least 2 data points');
+
+  if (data_x.length === 0) {
+    throw new Error('Input data arrays must have at least one element');
   }
-  if (data_x.length === 2) {
-    // linear regression
-    results = linear(data_x, data_y);
+
+  let dataX: number[];
+  let dataY: number[];
+  if (data_x.length === 1) {
+    // single data point, use origo (0,0) as base.
+    dataX = [0, data_x[0]];
+    dataY = [0, data_y[0]];
+  } else {
+    dataX = data_x;
+    dataY = data_y;
   }
-  if (data_x.length > 2) {
-    // power law regression
-    // map data_x and data_y to data array of arrays
-    results = power(data_x, data_y, precision);
+
+  if (method === 'power') {
+    results = power(dataX, dataY, precision);
+  } else if (method === 'linear') {
+    results = linear(dataX, dataY);
   }
   return results;
 }

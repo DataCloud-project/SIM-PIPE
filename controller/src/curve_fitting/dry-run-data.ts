@@ -1,6 +1,4 @@
-import type { PrometheusSample } from 'server/schema.js';
-import type { NodesAggregatedNodeMetrics } from 'server/schema.js';
-import type { NodesScalingLaws } from 'server/schema.js';
+import type { NodesAggregatedNodeMetrics, NodesScalingLaws, PrometheusSample } from 'server/schema.js';
 
 import { convertArgoWorkflowNode, getDryRun } from '../argo/dry-runs.js';
 import { getObjectSize } from '../minio/minio.js';
@@ -171,19 +169,23 @@ export async function aggregatedNodesMetrics(
 }
 
 export async function computeScalingLaws(
-  nodesData: NodesAggregatedNodeMetrics[], data_x: number[]): Promise<NodesScalingLaws[]> {
+  nodesData: NodesAggregatedNodeMetrics[], data_x: number[], regression_method = 'linear'): Promise<NodesScalingLaws[]> {
   // compute scaling laws for each node.
   const nodesScalingLaws: NodesScalingLaws[] = [];
+
+  if (regression_method !== 'linear' && regression_method !== 'power') {
+    throw new Error(`Invalid regression method: ${regression_method}. Must be one of 'linear', 'power'`);
+  }
   for (const node of nodesData) {
     nodesScalingLaws.push({
       // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment
       nodeName: node.nodeName,
       // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access
-      cpu: curveFitting(data_x, node.data.cpu),
+      cpu: curveFitting(data_x, node.data.cpu, regression_method),
       // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access
-      mem: curveFitting(data_x, node.data.mem),
+      mem: curveFitting(data_x, node.data.mem, regression_method),
       // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access
-      duration: curveFitting(data_x, node.data.duration),
+      duration: curveFitting(data_x, node.data.duration, regression_method),
     });
   }
   // eslint-disable-next-line  @typescript-eslint/no-unsafe-return

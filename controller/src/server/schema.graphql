@@ -14,6 +14,30 @@ You will need to parse the string to a number in your application.
 """
 scalar PrometheusStringNumber
 
+""" cpuTimes data """
+type cpuTimes {
+  user: Int
+  nice: Int
+  sys: Int
+  idle: Int
+  irq: Int
+}
+
+""" CPU core data """
+type cpuCoreData {
+  model: String
+  speed: Int
+  times: cpuTimes
+}
+""" Hardware metrics for the server """
+type HardwareMetrics {
+  """ CPU metrics """
+  cpuCoresData: [cpuCoreData!]
+  cpuCores: Int!
+}
+
+""" The root query type. All queries that fetch data are defined here. """
+
 type Query {
   """ Fetches the username of the current user. """
   username: String! @auth
@@ -35,7 +59,6 @@ type Query {
     """ ID of the dry run to be fetched """
     dryRunId: String!): DryRun! @auth
 
-
   """ Get an Argo  workflow template by name """
   workflowTemplate(
     """ Name of the Argo workflow template to be fetched """
@@ -56,6 +79,8 @@ type Query {
   """ List of all the buckets """
   buckets: [Bucket!]! @auth
   
+  """ Get hardware metrics server-side"""
+  hardwaremetrics: HardwareMetrics! @auth
 }
 
 """ Project is the high level concept for a specific pipeline in SIM-PIPE. It contains all the previous dry runs of the pipeline and its results. """
@@ -605,13 +630,20 @@ type Mutation @auth {
   getAggregatedNodesMetrics(
     """ The list of dry run ids """
     dryRunIds: [String]!
+    """ Use average, median or max as the aggregation method. Defaults to average.""" 
     aggregateMethod: String): [NodesAggregatedNodeMetrics]!
 
   """ Compute scaling laws for a set of dry runs """
   computeScalingLawsFromNodesMetrics(
     """ The list of dry run ids """
     dryRunIds: [String],
+    """ The list of aggregated node metrics """
     nodesAggregatedNodeMetrics: [NodesAggregatedNodeMetricsInput!],
-    data_x: [Float]): [NodesScalingLaws]!
+    """ The list of x values """
+    data_x: [Float],
+        """ The regression method to use. Default is linear """
+    regressionMethod: String
+    """ Use average, median or max as the aggregation method. Defaults to average. Only used when dryRunIds is provided in stead of nodesAggregatedNodeMetrics"""
+    aggregateMethod: String): [NodesScalingLaws]!
 
 }

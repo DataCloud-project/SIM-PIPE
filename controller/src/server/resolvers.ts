@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-
+import cpuCoresData from '../hardwaremetrics/hardwaremetrics.js';
 import {
   assertDryRunNodeHasWorkflow,
   convertArgoWorkflowNode,
@@ -231,6 +231,16 @@ const resolvers = {
         bucketName,
       }));
     },
+    async hardwaremetrics(
+      _p: EmptyParent, _a: EmptyArguments, context: AuthenticatedContext,
+    ): Promise<Query['hardwaremetrics']> {
+      
+      const ncores = cpuCoresData.length;
+      const hardwaremetrics = {cpuCores: ncores, cpuCoresData: cpuCoresData};
+      
+      return hardwaremetrics;
+
+    }
   } as Required<QueryResolvers<AuthenticatedContext, EmptyParent>>,
   Mutation: {
     async getAggregatedNodesMetrics(
@@ -250,9 +260,10 @@ const resolvers = {
       arguments_: MutationComputeScalingLawsFromNodesMetricsArguments,
       context: AuthenticatedContext,
     ): Promise<Mutation['computeScalingLawsFromNodesMetrics']> {
-      const { nodesAggregatedNodeMetrics, dryRunIds } = arguments_;
+      const { nodesAggregatedNodeMetrics, dryRunIds, aggregateMethod, regressionMethod } = arguments_;
       const containerName = 'main';
-      let aggregateMethod = 'average'; // default
+      let aggregateMethodUsed = aggregateMethod ? aggregateMethod : 'average';
+      let regressionMethodUsed = regressionMethod ? regressionMethod : 'linear';
 
       let scalingLaws: NodesScalingLaws[] = [];
 
@@ -261,12 +272,12 @@ const resolvers = {
       if (dryRunIds && !nodesAggregatedNodeMetrics) {
         const dryRunIds: string[] = arguments_.dryRunIds as string[];
         const data_x: number[] = arguments_.data_x as number[];
-        const nodesAggregatedNodeMetrics = await aggregatedNodesMetrics(dryRunIds, containerName, context.argoClient, aggregateMethod);
-        scalingLaws = await computeScalingLaws(nodesAggregatedNodeMetrics, data_x);
+        const nodesAggregatedNodeMetrics = await aggregatedNodesMetrics(dryRunIds, containerName, context.argoClient, aggregateMethodUsed);
+        scalingLaws = await computeScalingLaws(nodesAggregatedNodeMetrics, data_x, regressionMethodUsed);
       } else if (!dryRunIds && nodesAggregatedNodeMetrics) {
         const nodesAggregatedNodeMetrics = arguments_.nodesAggregatedNodeMetrics as NodesAggregatedNodeMetrics[];
         const data_x: number[] = arguments_.data_x as number[];
-        scalingLaws = await computeScalingLaws(nodesAggregatedNodeMetrics, data_x);
+        scalingLaws = await computeScalingLaws(nodesAggregatedNodeMetrics, data_x, regressionMethodUsed);
       } else {
         throw new Error('Provide either dryRunIds or nodesAggregatedNodeMetrics, and data_x.');
       }
