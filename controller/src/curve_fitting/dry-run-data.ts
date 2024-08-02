@@ -3,7 +3,7 @@ import type { NodesAggregatedNodeMetrics, NodesScalingLaws, PrometheusSample } f
 import { convertArgoWorkflowNode, getDryRun } from '../argo/dry-runs.js';
 import { getObjectSize } from '../minio/minio.js';
 import queryPrometheusResolver from '../prometheus/query-prometheus-resolver.js';
-import curveFitting from './curve-fitting.js';
+import { curveFitting, extrapolate } from './curve-fitting.js';
 import type { ArgoWorkflow } from '../argo/argo-client.js';
 import type ArgoWorkflowClient from '../argo/argo-client.js';
 
@@ -178,16 +178,29 @@ export async function computeScalingLaws(
   }
   for (const node of nodesData) {
     nodesScalingLaws.push({
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
       nodeName: node.nodeName,
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
       cpu: curveFitting(data_x, node.data.cpu, regression_method),
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
       mem: curveFitting(data_x, node.data.mem, regression_method),
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
       duration: curveFitting(data_x, node.data.duration, regression_method),
     });
   }
   // eslint-disable-next-line  @typescript-eslint/no-unsafe-return
   return nodesScalingLaws;
+}
+
+export async function extrapolateFromScalingLaws(
+  nodesScalingLaws: NodesScalingLaws[],
+  data_x: number): Promise<{ cpu: number, mem: number, duration: number }> {
+  const predictedValues = { cpu: 0, mem: 0, duration: 0 };
+  for (const node of nodesScalingLaws) {
+    predictedValues.cpu += extrapolate(node.cpu.type, node.cpu.coeffs, data_x);
+    predictedValues.mem += extrapolate(node.mem.type, node.mem.coeffs, data_x);
+    predictedValues.duration += extrapolate(node.duration.type, node.duration.coeffs, data_x);
+  }
+  // eslint-disable-next-line  @typescript-eslint/no-unsafe-return
+  return predictedValues;
 }

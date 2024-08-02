@@ -40,7 +40,11 @@ import {
 import { ArtifactItem } from '../minio/minio.js';
 import { assertPrometheusIsHealthy } from '../prometheus/prometheus.js';
 import queryPrometheusResolver from '../prometheus/query-prometheus-resolver.js';
-import { aggregatedNodesMetrics, computeScalingLaws } from '../curve_fitting/dry-run-data.js';
+import { 
+  aggregatedNodesMetrics, 
+  computeScalingLaws, 
+  extrapolateFromScalingLaws,
+} from '../curve_fitting/dry-run-data.js';
 import { NotFoundError, PingError } from './apollo-errors.js';
 import type { ArgoWorkflow, ArgoWorkflowTemplate } from '../argo/argo-client.js';
 import type ArgoWorkflowClient from '../argo/argo-client.js';
@@ -77,6 +81,7 @@ import type {
   MutationDeleteArtifactsArgs as MutationDeleteArtifactsArguments,
   MutationGetAggregatedNodesMetricsArgs as MutationGetNodesData,
   MutationComputeScalingLawsFromNodesMetricsArgs as MutationComputeScalingLawsFromNodesMetricsArguments,
+  MutationPredictScalingArgs as MutationPredictScalingArguments,
   Project,
   Query,
   QueryArtifactArgs as QueryArtifactArguments,
@@ -88,6 +93,7 @@ import type {
   WorkflowTemplate,
   NodesAggregatedNodeMetrics,
   NodesScalingLaws,
+  ScalingPredictions,
 } from './schema.js';
 
 interface ContextUser {
@@ -283,6 +289,36 @@ const resolvers = {
       }
 
       return scalingLaws;
+    },
+    async predictScaling(
+      _p: EmptyParent,
+      arguments_: MutationPredictScalingArguments,
+      context: AuthenticatedContext,
+    ): Promise<Mutation['predictScaling']> {
+      const { nodesAggregatedNodeMetrics, dryRunIds, aggregateMethod, regressionMethod, data_x_to_predict } = arguments_;
+      const containerName = 'main';
+      let aggregateMethodUsed = aggregateMethod ? aggregateMethod : 'average';
+      let regressionMethodUsed = regressionMethod ? regressionMethod : 'linear';
+
+      let scalingLaws: NodesScalingLaws[] = [];
+
+      // TODO: This is a bit of a mess, we should probably refactor this
+      
+      if (dryRunIds && !nodesAggregatedNodeMetrics) {
+        const dryRunIds: string[] = arguments_.dryRunIds as string[];
+        const data_x: number[] = arguments_.data_x as number[];
+        const nodesAggregatedNodeMetrics = await aggregatedNodesMetrics(dryRunIds, containerName, context.argoClient, aggregateMethodUsed);
+        scalingLaws = await computeScalingLaws(nodesAggregatedNodeMetrics, data_x, regressionMethodUsed);
+      } else if (!dryRunIds && nodesAggregatedNodeMetrics) {
+        const nodesAggregatedNodeMetrics = arguments_.nodesAggregatedNodeMetrics as NodesAggregatedNodeMetrics[];
+        const data_x: number[] = arguments_.data_x as number[];
+        scalingLaws = await computeScalingLaws(nodesAggregatedNodeMetrics, data_x, regressionMethodUsed);
+      } else {
+        throw new Error('Provide either dryRunIds or nodesAggregatedNodeMetrics, and data_x.');
+      }
+
+      const scalingPredictions = await extrapolateFromScalingLaws(scalingLaws, data_x_to_predict);
+      return scalingPredictions;
     },
     async createBucket(
       _p: EmptyParent, arguments_: MutationCreateBucketArguments, context: AuthenticatedContext,

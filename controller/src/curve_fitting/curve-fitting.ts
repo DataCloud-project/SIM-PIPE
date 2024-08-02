@@ -85,7 +85,7 @@ function linear(
   };
 }
 
-export default function curveFitting(
+export function curveFitting(
   data_x: number[],
   data_y: number[],
   method = 'linear',
@@ -121,4 +121,18 @@ export default function curveFitting(
     results = linear(dataX, dataY);
   }
   return results;
+}
+
+export function extrapolate(
+  type: string,
+  coeffs: number[],
+  x: number): number {
+  // Extrapolate a value from a curve fit
+  if (type === 'power') {
+    return powerFunction(x, coeffs[0], coeffs[1], 4);
+  }
+  if (type === 'linear') {
+    return round(coeffs[0] + (coeffs[1] * x), 4);
+  }
+  throw new Error('Invalid curve fit type');
 }

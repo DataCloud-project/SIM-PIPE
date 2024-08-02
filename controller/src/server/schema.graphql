@@ -318,7 +318,7 @@ input NodesAggregatedNodeMetricsInput {
 }
 
 type ScalingLawData {
-  coeffs: [Float]!
+  coeffs: [Float!]!
   type: String!
   r2: Float!
 }
@@ -328,6 +328,14 @@ type NodesScalingLaws {
   mem: ScalingLawData!
   duration: ScalingLawData!
 }
+
+type ScalingPredictions {
+  cpu: Float!
+  mem: Float!
+  duration: Float!
+}
+
+""" Prometheus metrics for the node. """
 
 
 type PrometheusSample {
@@ -646,4 +654,11 @@ type Mutation @auth {
     """ Use average, median or max as the aggregation method. Defaults to average. Only used when dryRunIds is provided in stead of nodesAggregatedNodeMetrics"""
     aggregateMethod: String): [NodesScalingLaws]!
 
+  predictScaling(
+    data_x: [Float]!,
+    data_x_to_predict: Float!,    
+    dryRunIds: [String],
+    nodesAggregatedNodeMetrics: [NodesAggregatedNodeMetricsInput!],
+    regressionMethod: String,
+    aggregateMethod: String): ScalingPredictions!
 }

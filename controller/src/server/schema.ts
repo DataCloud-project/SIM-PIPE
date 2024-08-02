@@ -746,6 +746,7 @@ export type Mutation = {
   deleteWorkflowTemplate: Scalars['Boolean']['output'];
   /**  Compute aggregated resource metrics for a set of dry runs  */
   getAggregatedNodesMetrics: Array<Maybe<NodesAggregatedNodeMetrics>>;
+  predictScaling: ScalingPredictions;
   /**  Rename an existing project  */
   renameProject: Project;
   /**  Resubmit a dry run. Create a copy of the current dry run and starts its execution. */
@@ -848,6 +849,16 @@ export type MutationGetAggregatedNodesMetricsArgs = {
 };
 
 
+export type MutationPredictScalingArgs = {
+  aggregateMethod?: InputMaybe<Scalars['String']['input']>;
+  data_x: Array<InputMaybe<Scalars['Float']['input']>>;
+  data_x_to_predict: Scalars['Float']['input'];
+  dryRunIds?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>;
+  nodesAggregatedNodeMetrics?: InputMaybe<Array<NodesAggregatedNodeMetricsInput>>;
+  regressionMethod?: InputMaybe<Scalars['String']['input']>;
+};
+
+
 export type MutationRenameProjectArgs = {
   name: Scalars['String']['input'];
   projectId: Scalars['String']['input'];
@@ -923,6 +934,7 @@ export type Project = {
   workflowTemplates?: Maybe<Array<WorkflowTemplate>>;
 };
 
+/**  Prometheus metrics for the node.  */
 export type PrometheusSample = {
   __typename?: 'PrometheusSample';
   timestamp: Scalars['TimeStamp']['output'];
@@ -989,9 +1001,16 @@ export type QueryWorkflowTemplateArgs = {
 
 export type ScalingLawData = {
   __typename?: 'ScalingLawData';
-  coeffs: Array<Maybe<Scalars['Float']['output']>>;
+  coeffs: Array<Scalars['Float']['output']>;
   r2: Scalars['Float']['output'];
   type: Scalars['String']['output'];
+};
+
+export type ScalingPredictions = {
+  __typename?: 'ScalingPredictions';
+  cpu: Scalars['Float']['output'];
+  duration: Scalars['Float']['output'];
+  mem: Scalars['Float']['output'];
 };
 
 /**  The input data to update a workflow template  */
@@ -1143,6 +1162,7 @@ export type ResolversTypes = {
   PrometheusStringNumber: ResolverTypeWrapper<Scalars['PrometheusStringNumber']['output']>;
   Query: ResolverTypeWrapper<{}>;
   ScalingLawData: ResolverTypeWrapper<ScalingLawData>;
+  ScalingPredictions: ResolverTypeWrapper<ScalingPredictions>;
   String: ResolverTypeWrapper<Scalars['String']['output']>;
   TimeStamp: ResolverTypeWrapper<Scalars['TimeStamp']['output']>;
   UpdateWorkflowTemplateInput: UpdateWorkflowTemplateInput;
@@ -1185,6 +1205,7 @@ export type ResolversParentTypes = {
   PrometheusStringNumber: Scalars['PrometheusStringNumber']['output'];
   Query: {};
   ScalingLawData: ScalingLawData;
+  ScalingPredictions: ScalingPredictions;
   String: Scalars['String']['output'];
   TimeStamp: Scalars['TimeStamp']['output'];
   UpdateWorkflowTemplateInput: UpdateWorkflowTemplateInput;
@@ -1386,6 +1407,7 @@ export type MutationResolvers<ContextType = any, ParentType extends ResolversPar
   deleteProject?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationDeleteProjectArgs, 'projectId'>>;
   deleteWorkflowTemplate?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationDeleteWorkflowTemplateArgs, 'name'>>;
   getAggregatedNodesMetrics?: Resolver<Array<Maybe<ResolversTypes['NodesAggregatedNodeMetrics']>>, ParentType, ContextType, RequireFields<MutationGetAggregatedNodesMetricsArgs, 'dryRunIds'>>;
+  predictScaling?: Resolver<ResolversTypes['ScalingPredictions'], ParentType, ContextType, RequireFields<MutationPredictScalingArgs, 'data_x' | 'data_x_to_predict'>>;
   renameProject?: Resolver<ResolversTypes['Project'], ParentType, ContextType, RequireFields<MutationRenameProjectArgs, 'name' | 'projectId'>>;
   resubmitDryRun?: Resolver<ResolversTypes['DryRun'], ParentType, ContextType, RequireFields<MutationResubmitDryRunArgs, 'dryRunId'>>;
   resumeDryRun?: Resolver<ResolversTypes['DryRun'], ParentType, ContextType, RequireFields<MutationResumeDryRunArgs, 'dryRunId'>>;
@@ -1444,9 +1466,16 @@ export type QueryResolvers<ContextType = any, ParentType extends ResolversParent
 };
 
 export type ScalingLawDataResolvers<ContextType = any, ParentType extends ResolversParentTypes['ScalingLawData'] = ResolversParentTypes['ScalingLawData']> = {
-  coeffs?: Resolver<Array<Maybe<ResolversTypes['Float']>>, ParentType, ContextType>;
+  coeffs?: Resolver<Array<ResolversTypes['Float']>, ParentType, ContextType>;
   r2?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
   type?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type ScalingPredictionsResolvers<ContextType = any, ParentType extends ResolversParentTypes['ScalingPredictions'] = ResolversParentTypes['ScalingPredictions']> = {
+  cpu?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
+  duration?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
+  mem?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -1501,6 +1530,7 @@ export type Resolvers<ContextType = any> = {
   PrometheusStringNumber?: GraphQLScalarType;
   Query?: QueryResolvers<ContextType>;
   ScalingLawData?: ScalingLawDataResolvers<ContextType>;
+  ScalingPredictions?: ScalingPredictionsResolvers<ContextType>;
   TimeStamp?: GraphQLScalarType;
   WorkflowTemplate?: WorkflowTemplateResolvers<ContextType>;
   cpuCoreData?: CpuCoreDataResolvers<ContextType>;
