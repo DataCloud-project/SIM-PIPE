@@ -79,9 +79,6 @@ import type {
   MutationUpdateDockerRegistryCredentialArgs as MutationUpdateDockerRegistryCredentialArguments,
   MutationUpdateWorkflowTemplateArgs as MutationUpdateWorkflowTemplateArguments,
   MutationDeleteArtifactsArgs as MutationDeleteArtifactsArguments,
-  MutationGetAggregatedNodesMetricsArgs as MutationGetNodesData,
-  MutationComputeScalingLawsFromNodesMetricsArgs as MutationComputeScalingLawsFromNodesMetricsArguments,
-  MutationPredictScalingArgs as MutationPredictScalingArguments,
   Project,
   Query,
   QueryArtifactArgs as QueryArtifactArguments,
@@ -90,10 +87,12 @@ import type {
   QueryProjectArgs as QueryProjectArguments,
   QueryResolvers,
   QueryWorkflowTemplateArgs as QueryWorkflowTemplateArguments,
+  QueryComputeScalingLawsFromNodesMetricsArgs,
+  QueryPredictScalingArgs,
+  QueryGetAggregatedNodesMetricsArgs,
   WorkflowTemplate,
   NodesAggregatedNodeMetrics,
   NodesScalingLaws,
-  ScalingPredictions,
 } from './schema.js';
 
 interface ContextUser {
@@ -246,12 +245,10 @@ const resolvers = {
       
       return hardwaremetrics;
 
-    }
-  } as Required<QueryResolvers<AuthenticatedContext, EmptyParent>>,
-  Mutation: {
+    },
     async getAggregatedNodesMetrics(
-      _p: EmptyParent, arguments_: MutationGetNodesData, context: AuthenticatedContext
-    ): Promise<Mutation['getAggregatedNodesMetrics']> {
+      _p: EmptyParent, arguments_: QueryGetAggregatedNodesMetricsArgs, context: AuthenticatedContext
+    ): Promise<Query['getAggregatedNodesMetrics']> {
       const containerName = 'main'
       let aggregateMethod = 'average' // default
       if (arguments_.aggregateMethod) {
@@ -263,9 +260,9 @@ const resolvers = {
     },
     async computeScalingLawsFromNodesMetrics(
       _p: EmptyParent,
-      arguments_: MutationComputeScalingLawsFromNodesMetricsArguments,
+      arguments_: QueryComputeScalingLawsFromNodesMetricsArgs,
       context: AuthenticatedContext,
-    ): Promise<Mutation['computeScalingLawsFromNodesMetrics']> {
+    ): Promise<Query['computeScalingLawsFromNodesMetrics']> {
       const { nodesAggregatedNodeMetrics, dryRunIds, aggregateMethod, regressionMethod } = arguments_;
       const containerName = 'main';
       let aggregateMethodUsed = aggregateMethod ? aggregateMethod : 'average';
@@ -292,9 +289,9 @@ const resolvers = {
     },
     async predictScaling(
       _p: EmptyParent,
-      arguments_: MutationPredictScalingArguments,
+      arguments_: QueryPredictScalingArgs,
       context: AuthenticatedContext,
-    ): Promise<Mutation['predictScaling']> {
+    ): Promise<Query['predictScaling']> {
       const { nodesAggregatedNodeMetrics, dryRunIds, aggregateMethod, regressionMethod, data_x_to_predict } = arguments_;
       const containerName = 'main';
       let aggregateMethodUsed = aggregateMethod ? aggregateMethod : 'average';
@@ -319,7 +316,9 @@ const resolvers = {
 
       const scalingPredictions = await extrapolateFromScalingLaws(scalingLaws, data_x_to_predict);
       return scalingPredictions;
-    },
+    },    
+  } as Required<QueryResolvers<AuthenticatedContext, EmptyParent>>,
+  Mutation: {
     async createBucket(
       _p: EmptyParent, arguments_: MutationCreateBucketArguments, context: AuthenticatedContext,
     ): Promise<Mutation['createBucket']> {

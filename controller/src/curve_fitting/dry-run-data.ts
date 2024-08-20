@@ -186,6 +186,13 @@ export async function computeScalingLaws(
       mem: curveFitting(data_x, node.data.mem, regression_method),
       // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
       duration: curveFitting(data_x, node.data.duration, regression_method),
+      data: {
+        cpu: node.data.cpu,
+        mem: node.data.mem,
+        fileSize: node.data.fileSize,
+        duration: node.data.duration,
+        nodeId: node.data.nodeId,
+      },
     });
   }
   // eslint-disable-next-line  @typescript-eslint/no-unsafe-return

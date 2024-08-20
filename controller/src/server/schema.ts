@@ -713,8 +713,6 @@ export type Mutation = {
   __typename?: 'Mutation';
   /**  Assign a dry run to a project  */
   assignDryRunToProject: DryRun;
-  /**  Compute scaling laws for a set of dry runs  */
-  computeScalingLawsFromNodesMetrics: Array<Maybe<NodesScalingLaws>>;
   /**  Compute a presigned URL for uploading a file using HTTP PUT. The mutation returns the URL to upload the file.  */
   computeUploadPresignedUrl: Scalars['String']['output'];
   /**  Buckets  */
@@ -744,9 +742,6 @@ export type Mutation = {
   deleteProject: Scalars['Boolean']['output'];
   /**  Delete an existing Argo workflow template. The mutation returns true if the deletion was successful.  */
   deleteWorkflowTemplate: Scalars['Boolean']['output'];
-  /**  Compute aggregated resource metrics for a set of dry runs  */
-  getAggregatedNodesMetrics: Array<Maybe<NodesAggregatedNodeMetrics>>;
-  predictScaling: ScalingPredictions;
   /**  Rename an existing project  */
   renameProject: Project;
   /**  Resubmit a dry run. Create a copy of the current dry run and starts its execution. */
@@ -769,15 +764,6 @@ export type Mutation = {
 export type MutationAssignDryRunToProjectArgs = {
   dryRunId: Scalars['String']['input'];
   projectId: Scalars['String']['input'];
-};
-
-
-export type MutationComputeScalingLawsFromNodesMetricsArgs = {
-  aggregateMethod?: InputMaybe<Scalars['String']['input']>;
-  data_x?: InputMaybe<Array<InputMaybe<Scalars['Float']['input']>>>;
-  dryRunIds?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>;
-  nodesAggregatedNodeMetrics?: InputMaybe<Array<NodesAggregatedNodeMetricsInput>>;
-  regressionMethod?: InputMaybe<Scalars['String']['input']>;
 };
 
 
@@ -843,22 +829,6 @@ export type MutationDeleteWorkflowTemplateArgs = {
 };
 
 
-export type MutationGetAggregatedNodesMetricsArgs = {
-  aggregateMethod?: InputMaybe<Scalars['String']['input']>;
-  dryRunIds: Array<InputMaybe<Scalars['String']['input']>>;
-};
-
-
-export type MutationPredictScalingArgs = {
-  aggregateMethod?: InputMaybe<Scalars['String']['input']>;
-  data_x: Array<InputMaybe<Scalars['Float']['input']>>;
-  data_x_to_predict: Scalars['Float']['input'];
-  dryRunIds?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>;
-  nodesAggregatedNodeMetrics?: InputMaybe<Array<NodesAggregatedNodeMetricsInput>>;
-  regressionMethod?: InputMaybe<Scalars['String']['input']>;
-};
-
-
 export type MutationRenameProjectArgs = {
   name: Scalars['String']['input'];
   projectId: Scalars['String']['input'];
@@ -914,6 +884,7 @@ export type NodesAggregatedNodeMetricsInput = {
 export type NodesScalingLaws = {
   __typename?: 'NodesScalingLaws';
   cpu: ScalingLawData;
+  data: AggregatedNodeMetrics;
   duration: ScalingLawData;
   mem: ScalingLawData;
   nodeName: Scalars['String']['output'];
@@ -950,14 +921,19 @@ export type Query = {
   artifacts: Array<Artifact>;
   /**  List of all the buckets  */
   buckets: Array<Bucket>;
+  /**  Compute scaling laws for a set of dry runs  */
+  computeScalingLawsFromNodesMetrics: Array<Maybe<NodesScalingLaws>>;
   /**  List of all docker registry credentials  */
   dockerRegistryCredentials: Array<DockerRegistryCredential>;
   /**  Get a dry run by ID  */
   dryRun: DryRun;
+  /**  Compute aggregated resource metrics for a set of dry runs  */
+  getAggregatedNodesMetrics: Array<Maybe<NodesAggregatedNodeMetrics>>;
   /**  Get hardware metrics server-side */
   hardwaremetrics: HardwareMetrics;
   /**  Returns pong if the server is up and running.  */
   ping: Scalars['String']['output'];
+  predictScaling: ScalingPredictions;
   /**  Get a project by ID  */
   project: Project;
   /**  List of all projects  */
@@ -983,8 +959,36 @@ export type QueryArtifactsArgs = {
 
 
 /**  The root query type. All queries that fetch data are defined here.  */
+export type QueryComputeScalingLawsFromNodesMetricsArgs = {
+  aggregateMethod?: InputMaybe<Scalars['String']['input']>;
+  data_x?: InputMaybe<Array<InputMaybe<Scalars['Float']['input']>>>;
+  dryRunIds?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>;
+  nodesAggregatedNodeMetrics?: InputMaybe<Array<NodesAggregatedNodeMetricsInput>>;
+  regressionMethod?: InputMaybe<Scalars['String']['input']>;
+};
+
+
+/**  The root query type. All queries that fetch data are defined here.  */
 export type QueryDryRunArgs = {
   dryRunId: Scalars['String']['input'];
+};
+
+
+/**  The root query type. All queries that fetch data are defined here.  */
+export type QueryGetAggregatedNodesMetricsArgs = {
+  aggregateMethod?: InputMaybe<Scalars['String']['input']>;
+  dryRunIds: Array<InputMaybe<Scalars['String']['input']>>;
+};
+
+
+/**  The root query type. All queries that fetch data are defined here.  */
+export type QueryPredictScalingArgs = {
+  aggregateMethod?: InputMaybe<Scalars['String']['input']>;
+  data_x: Array<InputMaybe<Scalars['Float']['input']>>;
+  data_x_to_predict: Scalars['Float']['input'];
+  dryRunIds?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>;
+  nodesAggregatedNodeMetrics?: InputMaybe<Array<NodesAggregatedNodeMetricsInput>>;
+  regressionMethod?: InputMaybe<Scalars['String']['input']>;
 };
 
 
@@ -1393,7 +1397,6 @@ export type HardwareMetricsResolvers<ContextType = any, ParentType extends Resol
 
 export type MutationResolvers<ContextType = any, ParentType extends ResolversParentTypes['Mutation'] = ResolversParentTypes['Mutation']> = {
   assignDryRunToProject?: Resolver<ResolversTypes['DryRun'], ParentType, ContextType, RequireFields<MutationAssignDryRunToProjectArgs, 'dryRunId' | 'projectId'>>;
-  computeScalingLawsFromNodesMetrics?: Resolver<Array<Maybe<ResolversTypes['NodesScalingLaws']>>, ParentType, ContextType, Partial<MutationComputeScalingLawsFromNodesMetricsArgs>>;
   computeUploadPresignedUrl?: Resolver<ResolversTypes['String'], ParentType, ContextType, Partial<MutationComputeUploadPresignedUrlArgs>>;
   createBucket?: Resolver<ResolversTypes['String'], ParentType, ContextType, RequireFields<MutationCreateBucketArgs, 'name'>>;
   createDockerRegistryCredential?: Resolver<ResolversTypes['DockerRegistryCredential'], ParentType, ContextType, RequireFields<MutationCreateDockerRegistryCredentialArgs, 'credential'>>;
@@ -1406,8 +1409,6 @@ export type MutationResolvers<ContextType = any, ParentType extends ResolversPar
   deleteDryRun?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationDeleteDryRunArgs, 'dryRunId'>>;
   deleteProject?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationDeleteProjectArgs, 'projectId'>>;
   deleteWorkflowTemplate?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationDeleteWorkflowTemplateArgs, 'name'>>;
-  getAggregatedNodesMetrics?: Resolver<Array<Maybe<ResolversTypes['NodesAggregatedNodeMetrics']>>, ParentType, ContextType, RequireFields<MutationGetAggregatedNodesMetricsArgs, 'dryRunIds'>>;
-  predictScaling?: Resolver<ResolversTypes['ScalingPredictions'], ParentType, ContextType, RequireFields<MutationPredictScalingArgs, 'data_x' | 'data_x_to_predict'>>;
   renameProject?: Resolver<ResolversTypes['Project'], ParentType, ContextType, RequireFields<MutationRenameProjectArgs, 'name' | 'projectId'>>;
   resubmitDryRun?: Resolver<ResolversTypes['DryRun'], ParentType, ContextType, RequireFields<MutationResubmitDryRunArgs, 'dryRunId'>>;
   resumeDryRun?: Resolver<ResolversTypes['DryRun'], ParentType, ContextType, RequireFields<MutationResumeDryRunArgs, 'dryRunId'>>;
@@ -1426,6 +1427,7 @@ export type NodesAggregatedNodeMetricsResolvers<ContextType = any, ParentType ex
 
 export type NodesScalingLawsResolvers<ContextType = any, ParentType extends ResolversParentTypes['NodesScalingLaws'] = ResolversParentTypes['NodesScalingLaws']> = {
   cpu?: Resolver<ResolversTypes['ScalingLawData'], ParentType, ContextType>;
+  data?: Resolver<ResolversTypes['AggregatedNodeMetrics'], ParentType, ContextType>;
   duration?: Resolver<ResolversTypes['ScalingLawData'], ParentType, ContextType>;
   mem?: Resolver<ResolversTypes['ScalingLawData'], ParentType, ContextType>;
   nodeName?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
@@ -1455,10 +1457,13 @@ export type QueryResolvers<ContextType = any, ParentType extends ResolversParent
   artifact?: Resolver<Maybe<ResolversTypes['ArtifactMetadata']>, ParentType, ContextType, RequireFields<QueryArtifactArgs, 'bucketName' | 'key'>>;
   artifacts?: Resolver<Array<ResolversTypes['Artifact']>, ParentType, ContextType, Partial<QueryArtifactsArgs>>;
   buckets?: Resolver<Array<ResolversTypes['Bucket']>, ParentType, ContextType>;
+  computeScalingLawsFromNodesMetrics?: Resolver<Array<Maybe<ResolversTypes['NodesScalingLaws']>>, ParentType, ContextType, Partial<QueryComputeScalingLawsFromNodesMetricsArgs>>;
   dockerRegistryCredentials?: Resolver<Array<ResolversTypes['DockerRegistryCredential']>, ParentType, ContextType>;
   dryRun?: Resolver<ResolversTypes['DryRun'], ParentType, ContextType, RequireFields<QueryDryRunArgs, 'dryRunId'>>;
+  getAggregatedNodesMetrics?: Resolver<Array<Maybe<ResolversTypes['NodesAggregatedNodeMetrics']>>, ParentType, ContextType, RequireFields<QueryGetAggregatedNodesMetricsArgs, 'dryRunIds'>>;
   hardwaremetrics?: Resolver<ResolversTypes['HardwareMetrics'], ParentType, ContextType>;
   ping?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  predictScaling?: Resolver<ResolversTypes['ScalingPredictions'], ParentType, ContextType, RequireFields<QueryPredictScalingArgs, 'data_x' | 'data_x_to_predict'>>;
   project?: Resolver<ResolversTypes['Project'], ParentType, ContextType, RequireFields<QueryProjectArgs, 'projectId'>>;
   projects?: Resolver<Array<ResolversTypes['Project']>, ParentType, ContextType>;
   username?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
