@@ -4,16 +4,16 @@
 
 	export let width = 500; // width of the plot
 	export let height = 300; // height of the plot
-    export let xData = [0, 1, 2, 3] // default x data
-    export let yData = [0, 900, 2100, 3000] // default y data
-    export let labels = ['Point 1', 'Point 2', 'Point 3', 'Point 4'] // default labels for data points
+	export let xData = [0, 1, 2, 3]; // default x data
+	export let yData = [0, 900, 2100, 3000]; // default y data
+	export let labels = ['Point 1', 'Point 2', 'Point 3', 'Point 4']; // default labels for data points
 	export let coeffs = [0, 1000]; // coefficients for the regression line
 	export let regressionMethod = 'linear'; // 'linear' or 'power'
 	export let numberOfPoints = 10; // number of points for the regression line
 
 	let svgElement: SVGSVGElement;
 
-    const data = xData.map((x, i) => ({ x, y: yData[i], label: labels[i] })); // combine x, y, and labels into an array of objects
+	const data = xData.map((x, i) => ({ x, y: yData[i], label: labels[i] })); // combine x, y, and labels into an array of objects
 
 	onMount(() => {
 		// D3 code to create scatter plot

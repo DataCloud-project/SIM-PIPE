@@ -32,8 +32,6 @@
 		return { x1, y1 };
 	}
 
-
-
 	const popupHover: PopupSettings = {
 		event: 'hover',
 		target: 'popupHover',
@@ -45,13 +43,13 @@
 		console.log('Node hovered:', d.id, event.pageX, event.pageY);
 		const popupElement = document.querySelector(`[data-popup="popupHover"]`);
 		if (popupElement) {
-		popupElement.style.left = `${event.pageX}px`;
-		popupElement.style.top = `${event.pageY}px`;
-		popupElement.querySelector('p').innerText = `Node ID: ${d.id}`;
-		popupElement.classList.add('show');
-		console.log('Popup shown at:', popupElement.style.left, popupElement.style.top);
+			popupElement.style.left = `${event.pageX}px`;
+			popupElement.style.top = `${event.pageY}px`;
+			popupElement.querySelector('p').innerText = `Node ID: ${d.id}`;
+			popupElement.classList.add('show');
+			console.log('Popup shown at:', popupElement.style.left, popupElement.style.top);
 		} else {
-		console.error('Popup element not found');
+			console.error('Popup element not found');
 		}
 	}
 
@@ -59,10 +57,10 @@
 	function nodeMouseOut(event, d) {
 		const popupElement = document.querySelector(`[data-popup="popupHover"]`);
 		if (popupElement) {
-		popupElement.classList.remove('show');
-		console.log('Popup hidden');
+			popupElement.classList.remove('show');
+			console.log('Popup hidden');
 		} else {
-		console.error('Popup element not found');
+			console.error('Popup element not found');
 		}
 	}
 
@@ -139,7 +137,7 @@
 			.data(nodes)
 			.enter()
 			.append('g')
-			.call(d3.drag().on('start', dragstarted).on('drag', dragged).on('end', dragended))
+			.call(d3.drag().on('start', dragstarted).on('drag', dragged).on('end', dragended));
 
 		node
 			.append('rect')
@@ -167,12 +165,13 @@
 			.attr('x', 0)
 			.attr('y', 5);
 
-	    // Update rect dimensions after measuring text size
-		node.select('rect')
-            .attr('width', (d) => d.width)
-            .attr('height', (d) => d.height)
-            .attr('x', (d) => -d.width / 2)
-            .attr('y', (d) => -d.height / 2);
+		// Update rect dimensions after measuring text size
+		node
+			.select('rect')
+			.attr('width', (d) => d.width)
+			.attr('height', (d) => d.height)
+			.attr('x', (d) => -d.width / 2)
+			.attr('y', (d) => -d.height / 2);
 
 		// Add hover event listener
 		node.on('mouseover', nodeHover);
