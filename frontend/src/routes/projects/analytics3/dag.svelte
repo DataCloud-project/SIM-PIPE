@@ -1,47 +1,74 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import * as d3 from 'd3';
+	import type { Node, Link } from './helpers';
 	import { popup } from '@skeletonlabs/skeleton';
 	import type { PopupSettings } from '@skeletonlabs/skeleton';
 
-	export let nodes: { id: string; label: string }[];
-	export let links: { source: string; target: string }[];
+	export let nodes: Node[];
+	export let links: Link[];
 	export let width = 800;
 	export let height = 600;
 
 	let svgElement: SVGSVGElement;
 
-	const popupFeatured: PopupSettings = {
-		// Represents the type of event that opens/closed the popup
-		event: 'click',
-		// Matches the data-popup value on your popup element
-		target: 'popupFeatured',
-		// Defines which side of your trigger the popup will appear
-		placement: 'bottom'
+	// Helper function to calculate intersection points
+	function getLinkPosition(source, target): { x1: number; y1: number } {
+		const dx = target.x - source.x;
+		const dy = target.y - source.y;
+		const absDx = Math.abs(dx);
+		const absDy = Math.abs(dy);
+		let x1;
+		let y1;
+
+		if (absDx / source.width > absDy / source.height) {
+			x1 = source.x + (dx > 0 ? source.width / 2 : -source.width / 2);
+			y1 = source.y + (dy * source.width) / (2 * absDx);
+		} else {
+			x1 = source.x + (dx * source.height) / (2 * absDy);
+			y1 = source.y + (dy > 0 ? source.height / 2 : -source.height / 2);
+		}
+
+		return { x1, y1 };
+	}
+
+
+
+	const popupHover: PopupSettings = {
+		event: 'hover',
+		target: 'popupHover',
+		placement: 'top'
 	};
+
+	// Hover event handler
+	function nodeHover(event, d) {
+		console.log('Node hovered:', d.id, event.pageX, event.pageY);
+		const popupElement = document.querySelector(`[data-popup="popupHover"]`);
+		if (popupElement) {
+		popupElement.style.left = `${event.pageX}px`;
+		popupElement.style.top = `${event.pageY}px`;
+		popupElement.querySelector('p').innerText = `Node ID: ${d.id}`;
+		popupElement.classList.add('show');
+		console.log('Popup shown at:', popupElement.style.left, popupElement.style.top);
+		} else {
+		console.error('Popup element not found');
+		}
+	}
+
+	// Mouse out event handler
+	function nodeMouseOut(event, d) {
+		const popupElement = document.querySelector(`[data-popup="popupHover"]`);
+		if (popupElement) {
+		popupElement.classList.remove('show');
+		console.log('Popup hidden');
+		} else {
+		console.error('Popup element not found');
+		}
+	}
 
 	onMount(() => {
 		// Create the SVG container
 		const svg = d3.select(svgElement).attr('width', width).attr('height', height);
-
-		// Helper function to calculate intersection points
-		function getLinkPosition(source, target): { x1: number; y1: number } {
-			const dx = target.x - source.x;
-			const dy = target.y - source.y;
-			const absDx = Math.abs(dx);
-			const absDy = Math.abs(dy);
-			let x1, y1;
-
-			if (absDx / source.width > absDy / source.height) {
-				x1 = source.x + (dx > 0 ? source.width / 2 : -source.width / 2);
-				y1 = source.y + (dy * source.width) / (2 * absDx);
-			} else {
-				x1 = source.x + (dx * source.height) / (2 * absDy);
-				y1 = source.y + (dy > 0 ? source.height / 2 : -source.height / 2);
-			}
-
-			return { x1, y1 };
-		}
 
 		// Drag event handlers
 		function dragstarted(event, d): void {
@@ -59,16 +86,6 @@
 			if (!event.active) simulation.alphaTarget(0);
 			d.fx = null;
 			d.fy = null;
-		}
-
-		// Double-click event handler
-		function nodeDoubleClicked(event, d): void {
-			const popup = document.createElement('div');
-			popup.className = 'popup';
-			popup.style.left = `${event.pageX}px`;
-			popup.style.top = `${event.pageY}px`;
-			popup.innerHTML = `<p>Node ID: ${d.id}</p><button onclick="this.parentElement.remove()">Close</button>`;
-			document.body.append(popup);
 		}
 
 		// Create the simulation with nodes and links
@@ -123,7 +140,6 @@
 			.enter()
 			.append('g')
 			.call(d3.drag().on('start', dragstarted).on('drag', dragged).on('end', dragended))
-			.on('dblclick', nodeDoubleClicked);
 
 		node
 			.append('rect')
@@ -151,6 +167,17 @@
 			.attr('x', 0)
 			.attr('y', 5);
 
+	    // Update rect dimensions after measuring text size
+		node.select('rect')
+            .attr('width', (d) => d.width)
+            .attr('height', (d) => d.height)
+            .attr('x', (d) => -d.width / 2)
+            .attr('y', (d) => -d.height / 2);
+
+		// Add hover event listener
+		node.on('mouseover', nodeHover);
+		node.on('mouseout', nodeMouseOut);
+
 		// Update positions during the simulation
 		simulation.on('tick', () => {
 			link
@@ -166,6 +193,11 @@
 
 <svg bind:this={svgElement}></svg>
 
+<div class="card p-4 variant-filled-secondary" data-popup="popupHover">
+	<p>Hover Content</p>
+	<div class="arrow variant-filled-secondary" />
+</div>
+
 <style>
 	.nodes rect {
 		cursor: pointer;
@@ -179,11 +211,15 @@
 		stroke: black;
 		stroke-width: 2px;
 	}
-	.popup {
+	.card {
 		position: absolute;
-		background: white;
-		border: 1px solid black;
+		display: none;
+		background-color: white;
+		border: 1px solid #ccc;
 		padding: 10px;
 		z-index: 1000;
+	}
+	.card.show {
+		display: block;
 	}
 </style>

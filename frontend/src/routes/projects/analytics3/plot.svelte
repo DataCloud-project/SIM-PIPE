@@ -4,17 +4,16 @@
 
 	export let width = 500; // width of the plot
 	export let height = 300; // height of the plot
-	export let data = [
-		{ x: 0, y: 0, label: 'Point 1' },
-		{ x: 1, y: 900, label: 'Point 2' },
-		{ x: 2, y: 2100, label: 'Point 3' },
-		{ x: 3, y: 3000, label: 'Point 4' }
-	];
+    export let xData = [0, 1, 2, 3] // default x data
+    export let yData = [0, 900, 2100, 3000] // default y data
+    export let labels = ['Point 1', 'Point 2', 'Point 3', 'Point 4'] // default labels for data points
 	export let coeffs = [0, 1000]; // coefficients for the regression line
-	export let regressionType = 'linear'; // 'linear' or 'power'
+	export let regressionMethod = 'linear'; // 'linear' or 'power'
 	export let numberOfPoints = 10; // number of points for the regression line
 
 	let svgElement: SVGSVGElement;
+
+    const data = xData.map((x, i) => ({ x, y: yData[i], label: labels[i] })); // combine x, y, and labels into an array of objects
 
 	onMount(() => {
 		// D3 code to create scatter plot
@@ -82,7 +81,7 @@
 		// Define the line function
 		let line: d3.Line<{ x: number; y: number }>;
 		let lineData: { x: number; y: number }[];
-		if (regressionType === 'power') {
+		if (regressionMethod === 'power') {
 			line = d3
 				.line<{ x: number; y: number }>()
 				.x((d) => x(d.x))
@@ -98,7 +97,7 @@
 			for (let i = 0; i < numberOfPoints; i++) {
 				const xValue = d3.min(data, (d) => d.x) + i * step;
 				const yValue =
-					regressionType === 'power'
+					regressionMethod === 'power'
 						? coeffs[0] * xValue ** coeffs[1]
 						: coeffs[0] * xValue + coeffs[1];
 				lineData.push({ x: xValue, y: yValue });
