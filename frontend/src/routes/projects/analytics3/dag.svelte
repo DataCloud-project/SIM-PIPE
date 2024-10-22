@@ -1,9 +1,7 @@
-/* eslint-disable */
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import * as d3 from 'd3';
 	import type { Node, Link } from './helpers';
-
 
 	export let nodes: Node[];
 	export let links: Link[];
@@ -199,6 +197,7 @@
 	});
 </script>
 
+/* eslint-disable */
 <svg bind:this={svgElement}></svg>
 
 <div class="card p-4 variant-filled-secondary" data-popup="popupHover">

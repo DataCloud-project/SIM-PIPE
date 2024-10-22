@@ -71,8 +71,8 @@
 				tooltip.transition().duration(200).style('opacity', 0.9);
 				tooltip
 					.html(d.label)
-					.style('left', `${event.pageX + 5  }px`)
-					.style('top', `${event.pageY - 28  }px`);
+					.style('left', `${event.pageX + 5}px`)
+					.style('top', `${event.pageY - 28}px`);
 			})
 			.on('mouseout', () => {
 				tooltip.transition().duration(500).style('opacity', 0);
@@ -89,14 +89,17 @@
 
 			// Create the first point (min x, min y)
 			lineData = [
-				{ x: d3.min(data, (d) => d.x) ?? 0, y: coeffs[0] * (d3.min(data, (d) => d.x) ?? 0) ** coeffs[1] }
+				{
+					x: d3.min(data, (d) => d.x) ?? 0,
+					y: coeffs[0] * (d3.min(data, (d) => d.x) ?? 0) ** coeffs[1]
+				}
 			];
 
 			// Generate n points between the min and max
 			const maxX = d3.max(data, (d) => d.x);
 			const minX = d3.min(data, (d) => d.x);
 			const diff = (maxX ?? 0) - (minX ?? 0);
-			const step = ( diff ?? 0) / (numberOfPoints - 1);
+			const step = (diff ?? 0) / (numberOfPoints - 1);
 			for (let i = 0; i < numberOfPoints; i += 1) {
 				const minX = d3.min(data, (d) => d.x) ?? 0;
 				const xValue = minX + i * step;
@@ -122,8 +125,14 @@
 
 			// Generate the line data
 			lineData = [
-				{ x: (d3.min(data, (d) => d.x) ?? 0), y: coeffs[1] * (d3.min(data, (d) => d.x) ?? 0) + coeffs[0] },
-				{ x: (d3.max(data, (d) => d.x) ?? 0), y: coeffs[1] * (d3.max(data, (d) => d.x) ?? 0) + coeffs[0] }
+				{
+					x: d3.min(data, (d) => d.x) ?? 0,
+					y: coeffs[1] * (d3.min(data, (d) => d.x) ?? 0) + coeffs[0]
+				},
+				{
+					x: d3.max(data, (d) => d.x) ?? 0,
+					y: coeffs[1] * (d3.max(data, (d) => d.x) ?? 0) + coeffs[0]
+				}
 			];
 		}
 

@@ -17,7 +17,6 @@ export interface Node extends SimulationNodeDatum {
 	label: string;
 }
 
-
 function getWorkflowStructure(workflow: WorkflowTemplate): { hasDAG: boolean; hasSteps: boolean } {
 	let hasDAG = false;
 	let hasSteps = false;

@@ -16,10 +16,7 @@
 	const regressionMethod = 'linear';
 	// const regressionMethod = 'power';
 	let nodesMetrics: AggregatedNodesMetrics[] = [];
-	const dryRunIds = [
-		'health-data-pipeline-tsz25',
-		'health-data-pipeline-lgd6s',
-	];
+	const dryRunIds = ['health-data-pipeline-tsz25', 'health-data-pipeline-lgd6s'];
 
 	let nodesMetricsLoaded = false;
 	let pageWidthUpdated = false;
@@ -101,15 +98,26 @@
 		<div class="totals-box">
 			<div class="aggregated-item">
 				<h3>Total aggregated duration</h3>
-				<p>{nodesMetrics.reduce((sum, node) => sum + node.data.duration.reduce((a, b) => a + b, 0), 0)}</p>
+				<p>
+					{nodesMetrics.reduce(
+						(sum, node) => sum + node.data.duration.reduce((a, b) => a + b, 0),
+						0
+					)}
+				</p>
 			</div>
 			<div class="aggregated-item">
 				<h3>Average memory</h3>
-				<p>{nodesMetrics.reduce((sum, node) => sum + node.data.mem.reduce((a, b) => a + b, 0), 0) / nodesMetrics.length}</p>
+				<p>
+					{nodesMetrics.reduce((sum, node) => sum + node.data.mem.reduce((a, b) => a + b, 0), 0) /
+						nodesMetrics.length}
+				</p>
 			</div>
 			<div class="aggregated-item">
 				<h3>Average CPU</h3>
-				<p>{nodesMetrics.reduce((sum, node) => sum + node.data.cpu.reduce((a, b) => a + b, 0), 0) / nodesMetrics.length}</p>
+				<p>
+					{nodesMetrics.reduce((sum, node) => sum + node.data.cpu.reduce((a, b) => a + b, 0), 0) /
+						nodesMetrics.length}
+				</p>
 			</div>
 		</div>
 	</div>
