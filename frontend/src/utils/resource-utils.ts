@@ -6,7 +6,7 @@ import { requestGraphQLClient } from '$lib/graphqlUtils';
 import type { DryRunMetrics, MetricsWithTimeStamps } from '$typesdefinitions';
 import { goto } from '$app/navigation';
 import { selectedProject } from '$stores/stores';
-import { displayAlert } from './alerts-utils';
+// import { displayAlert } from './alerts-utils';
 
 const datefmt = 'yyyy-MM-dd HH:mm:ss';
 
@@ -264,7 +264,8 @@ export async function isFileSizeValid(input: number[]) {
 	if (new Set(input).size !== 1) {
 		const title = 'All filesize values are the same. Unable to perform linear regression';
 		const body = `Please choose other dryruns. You will be taken back to the dry runs list on close`;
-		await displayAlert(title, body);
+		// await displayAlert(title, body);
+		console.log(title, body);
 		// eslint-disable-next-line @typescript-eslint/no-floating-promises
 		goto(`/projects/dryruns/${get(selectedProject)?.id}`);
 	}

@@ -20,7 +20,7 @@
 		displayStepDuration
 	} from '$utils/resource-utils';
 	import type { MetricsAnalytics } from '$utils/resource-utils';
-	import { displayAlert } from '$utils/alerts-utils';
+	// import { displayAlert } from '$utils/alerts-utils';
 	import type { DryRunMetrics, DryRun, MetricsWithTimeStamps } from '$typesdefinitions';
 
 	export let data;
@@ -68,7 +68,8 @@
 		} catch (error) {
 			const title = 'Internal error!';
 			const body = `${(error as Error).message}`;
-			await displayAlert(title, body, 10_000);
+			// await displayAlert(title, body, 10_000);
+			console.log(title, body);
 		}
 	};
 
@@ -236,7 +237,8 @@
 					console.log(error);
 					const title = 'Error displaying dry run step diagram❌!';
 					const body = `${(error as Error).message}`;
-					await displayAlert(title, body, 5000);
+					// await displayAlert(title, body, 5000);
+					console.log(title, body);
 					// eslint-disable-next-line @typescript-eslint/no-floating-promises
 					goto(`/projects/dryruns/${selectedProject?.id}`);
 				}

@@ -8,7 +8,7 @@
 	import renameProjectMutation from '$queries/rename_project.js';
 	import { projectsList } from '$stores/stores.js';
 	import { cBase, cForm, cHeader } from '$styles/styles.js';
-	import { displayAlert } from '$utils/alerts-utils.js';
+	// import { displayAlert } from '$utils/alerts-utils.js';
 	import type { AllProjectsResponse } from '$typesdefinitions';
 
 	// Props - Exposes parent props to this component
@@ -37,7 +37,8 @@
 
 			const title = 'Project renamed &#10024;!';
 			const body = `New name: ${formData.name}`;
-			await displayAlert(title, body);
+			// await displayAlert(title, body);
+			console.log(title, body);
 			alertModal = true;
 
 			// update the project list after addition
@@ -46,7 +47,8 @@
 		} catch (error) {
 			const title = 'Error renaming project❌!';
 			const body = (error as Error).message;
-			await displayAlert(title, body);
+			// await displayAlert(title, body);
+			console.log(title, body);
 			alertModal = true;
 		}
 	}

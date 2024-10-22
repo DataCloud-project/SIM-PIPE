@@ -13,7 +13,7 @@
 	import resumeDryRunMutation from '$queries/resume_dry_run.js';
 	import { pausedDryRuns } from '$stores/stores.js';
 	import { requestGraphQLClient } from '$lib/graphqlUtils.js';
-	import { displayAlert } from '$utils/alerts-utils.js';
+	// import { displayAlert } from '$utils/alerts-utils.js';
 
 	// const modalStore = getModalStore();
 
@@ -29,11 +29,13 @@
 			await requestGraphQLClient(stopDryRunMutation, { dryRunId, terminate: false });
 			const title = 'Stopping dry run..';
 			const body = `ID: ${dryRunId}`;
-			await displayAlert(title, body);
+			// await displayAlert(title, body);
+			console.log(title, body);
 		} catch (error) {
 			const title = 'Error stopping dry run❌!';
 			const body = `${(error as Error).message}`;
-			await displayAlert(title, body, 10_000);
+			// await displayAlert(title, body, 10_000);
+			console.log(title, body);
 		}
 	}
 	async function pauseRun(event: any): Promise<void> {
@@ -45,11 +47,13 @@
 			$pausedDryRuns.push(dryRunId);
 			const title = 'Pausing dry run..';
 			const body = `ID: ${dryRunId}`;
-			await displayAlert(title, body);
+			// await displayAlert(title, body);
+			console.log(title, body);
 		} catch (error) {
 			const title = 'Error pausing dry run❌!';
 			const body = `${(error as Error).message}`;
-			await displayAlert(title, body, 10_000);
+			// await displayAlert(title, body, 10_000);
+			console.log(title, body);
 		}
 	}
 	async function resumeRun(event: any): Promise<void> {
@@ -61,11 +65,13 @@
 			$pausedDryRuns.filter((item) => item !== dryRunId);
 			const title = 'Resuming dry run..';
 			const body = `ID: ${dryRunId}`;
-			await displayAlert(title, body);
+			// await displayAlert(title, body);
+			console.log(title, body);
 		} catch (error) {
 			const title = 'Error resuming dry run❌!';
 			const body = `${(error as Error).message}`;
-			await displayAlert(title, body, 10_000);
+			// await displayAlert(title, body, 10_000);
+			console.log(title, body);
 		}
 	}
 </script>
