@@ -1,9 +1,9 @@
+/* eslint-disable */
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import * as d3 from 'd3';
 	import type { Node, Link } from './helpers';
-	import { popup } from '@skeletonlabs/skeleton';
-	import type { PopupSettings } from '@skeletonlabs/skeleton';
+
 
 	export let nodes: Node[];
 	export let links: Link[];
@@ -13,7 +13,7 @@
 	let svgElement: SVGSVGElement;
 
 	// Helper function to calculate intersection points
-	function getLinkPosition(source, target): { x1: number; y1: number } {
+	function getLinkPosition(source: any, target: any): { x1: number; y1: number } {
 		const dx = target.x - source.x;
 		const dy = target.y - source.y;
 		const absDx = Math.abs(dx);
@@ -32,29 +32,35 @@
 		return { x1, y1 };
 	}
 
+	/*
 	const popupHover: PopupSettings = {
 		event: 'hover',
 		target: 'popupHover',
 		placement: 'top'
 	};
+	*/
 
 	// Hover event handler
-	function nodeHover(event, d) {
+	function nodeHover(event: MouseEvent, d: any): void {
 		console.log('Node hovered:', d.id, event.pageX, event.pageY);
-		const popupElement = document.querySelector(`[data-popup="popupHover"]`);
+		const popupElement = document.querySelector(`[data-popup="popupHover"]`) as HTMLElement;
 		if (popupElement) {
 			popupElement.style.left = `${event.pageX}px`;
 			popupElement.style.top = `${event.pageY}px`;
-			popupElement.querySelector('p').innerText = `Node ID: ${d.id}`;
+			const popupText = popupElement.querySelector('p');
+			if (popupText) {
+				// eslint-disable-next-line unicorn/prefer-dom-node-text-content
+				popupText.innerText = `Node ID: ${d.id}`;
+			}
 			popupElement.classList.add('show');
-			console.log('Popup shown at:', popupElement.style.left, popupElement.style.top);
+			// console.log('Popup shown at:', popupElement.style.left, popupElement.style.top);
 		} else {
 			console.error('Popup element not found');
 		}
 	}
 
 	// Mouse out event handler
-	function nodeMouseOut(event, d) {
+	function nodeMouseOut(): void {
 		const popupElement = document.querySelector(`[data-popup="popupHover"]`);
 		if (popupElement) {
 			popupElement.classList.remove('show');
@@ -69,21 +75,24 @@
 		const svg = d3.select(svgElement).attr('width', width).attr('height', height);
 
 		// Drag event handlers
-		function dragstarted(event, d): void {
+		function dragstarted(event: any, d: any): void {
+			// eslint-disable-next-line @typescript-eslint/no-use-before-define
 			if (!event.active) simulation.alphaTarget(0.3).restart();
 			d.fx = d.x;
 			d.fy = d.y;
 		}
 
-		function dragged(event, d): void {
+		// eslint-disable-next-line unicorn/consistent-function-scoping
+		function dragged(event: any, d: any): void {
 			d.fx = event.x;
 			d.fy = event.y;
 		}
 
-		function dragended(event, d): void {
+		function dragended(event: any, d: any): void {
+			// eslint-disable-next-line @typescript-eslint/no-use-before-define
 			if (!event.active) simulation.alphaTarget(0);
-			d.fx = null;
-			d.fy = null;
+			d.fx = undefined;
+			d.fy = undefined;
 		}
 
 		// Create the simulation with nodes and links

@@ -1,21 +1,29 @@
+import type { SimulationNodeDatum } from 'd3';
 import type { WorkflowTemplate } from '$typesdefinitions';
 
+/*
 export type Node = {
-	id: string;
+	id: number;
 	label: string;
 };
-
+*/
 export type Link = {
 	source: string;
 	target: string;
 };
+
+export interface Node extends SimulationNodeDatum {
+	id: string;
+	label: string;
+}
+
 
 function getWorkflowStructure(workflow: WorkflowTemplate): { hasDAG: boolean; hasSteps: boolean } {
 	let hasDAG = false;
 	let hasSteps = false;
 	const workflowName = workflow.argoWorkflowTemplate.metadata.name;
 	// Iterate over the templates to find DAG or Steps structure
-	workflow.argoWorkflowTemplate.spec.templates.forEach((template) => {
+	workflow.argoWorkflowTemplate.spec.templates.forEach((template: any) => {
 		if (template.dag) {
 			hasDAG = true;
 		}
@@ -45,9 +53,9 @@ export function extractNodesAndLinks(workflowTemplate: WorkflowTemplate): {
 	const links: Link[] = [];
 
 	// Extract nodes from the templates
-	workflowTemplate.argoWorkflowTemplate.spec.templates.forEach((template) => {
+	workflowTemplate.argoWorkflowTemplate.spec.templates.forEach((template: any) => {
 		if (template.dag && template.dag.tasks) {
-			template.dag.tasks.forEach((task) => {
+			template.dag.tasks.forEach((task: any) => {
 				nodes.push({ id: task.name, label: task.template });
 			});
 		} else {
@@ -56,11 +64,11 @@ export function extractNodesAndLinks(workflowTemplate: WorkflowTemplate): {
 	});
 
 	// Extract links from the tasks in the DAG
-	workflowTemplate.argoWorkflowTemplate.spec.templates.forEach((template) => {
+	workflowTemplate.argoWorkflowTemplate.spec.templates.forEach((template: any) => {
 		if (template.dag && template.dag.tasks) {
-			template.dag.tasks.forEach((task) => {
+			template.dag.tasks.forEach((task: any) => {
 				if (task.dependencies) {
-					task.dependencies.forEach((dependency) => {
+					task.dependencies.forEach((dependency: any) => {
 						links.push({ source: dependency, target: task.name });
 					});
 				}
@@ -72,7 +80,7 @@ export function extractNodesAndLinks(workflowTemplate: WorkflowTemplate): {
 }
 
 // Function to parse the Argo Workflow YAML and extract nodes and links
-export function extractNodesAndLinks2(workflowTemplate): { nodes: Node[]; links: Link[] } {
+export function extractNodesAndLinks2(workflowTemplate: any): { nodes: Node[]; links: Link[] } {
 	const nodes: Node[] = [];
 	const links: Link[] = [];
 	const nodeIds = new Map(); // Map to store node name -> node id
@@ -82,7 +90,7 @@ export function extractNodesAndLinks2(workflowTemplate): { nodes: Node[]; links:
 	const { hasDAG, hasSteps } = getWorkflowStructure(workflowTemplate);
 
 	if (hasDAG) {
-		templates[0].dag.tasks.forEach((task, index) => {
+		templates[0].dag.tasks.forEach((task: any, index: number) => {
 			if (task.name) {
 				const nodeId = index + 1;
 				nodes.push({ id: nodeId, label: task.name });
@@ -91,11 +99,11 @@ export function extractNodesAndLinks2(workflowTemplate): { nodes: Node[]; links:
 		});
 
 		// Generate links from templates (using DAG structure)
-		templates.forEach((template) => {
+		templates.forEach((template: any) => {
 			if (template.dag && template.dag.tasks) {
-				template.dag.tasks.forEach((task) => {
+				template.dag.tasks.forEach((task: any) => {
 					if (task.dependencies) {
-						task.dependencies.forEach((dep) => {
+						task.dependencies.forEach((dep: any) => {
 							links.push({
 								source: nodeIds.get(dep),
 								target: nodeIds.get(task.name)
@@ -108,20 +116,21 @@ export function extractNodesAndLinks2(workflowTemplate): { nodes: Node[]; links:
 	} else if (hasSteps) {
 		let nodeIdCounter = 1;
 		// Iterate over the templates to find the Steps structure
-		templates.forEach((template) => {
+		templates.forEach((template: any) => {
 			if (template.steps) {
-				template.steps.forEach((stepGroup, groupIndex) => {
-					stepGroup.forEach((step) => {
-						const nodeId = nodeIdCounter++;
-						nodes.push({ id: nodeId, name: step.name });
+				template.steps.forEach((stepGroup: any, groupIndex: number) => {
+					stepGroup.forEach((step: any) => {
+						nodeIdCounter += 1;
+						const nodeId = nodeIdCounter;
+						nodes.push({ id: nodeId, label: step.name });
 						nodeIds.set(step.name, nodeId);
 
 						// Add edges based on the order of steps
 						if (groupIndex > 0) {
 							const previousStepGroup = template.steps[groupIndex - 1];
-							previousStepGroup.forEach((prevStep) => {
+							previousStepGroup.forEach((prevStep: any) => {
 								links.push({
-									source: nodeIds.get(prevStep.name),
+									source: nodeIds.get(prevStep.label),
 									target: nodeId.toString()
 								});
 							});
@@ -131,7 +140,7 @@ export function extractNodesAndLinks2(workflowTemplate): { nodes: Node[]; links:
 			}
 		});
 	} else {
-		throw new Error(`Neither DAG nor Steps structure found in workflow ${workflowName}`);
+		throw new Error(`Neither DAG nor Steps structure found in workflow ${workflowTemplate.label}`);
 	}
 
 	return { nodes, links };
