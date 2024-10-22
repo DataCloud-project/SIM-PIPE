@@ -1,3 +1,4 @@
+// eslint-disable-next-line unicorn/filename-case
 import { requestGraphQLClient } from '$lib/graphqlUtils';
 import getWorkflowQuery from '$queries/get_workflow_template';
 import getWorkflowFromDryRunQuery from '$queries/get_workflow_template_from_dry_run';
@@ -19,12 +20,12 @@ export async function getWorkflowTemplate(
 
 export async function getWorkflowTemplateFromDryRun(
 	template_name: string
-): Promise<{ workflowTemplate: WorkflowTemplateFromDryRun }> {
+): Promise<WorkflowTemplateFromDryRun> {
 	const variables = {
 		// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
 		dryRunId: template_name
 	};
-	const response = await requestGraphQLClient<{ workflowTemplate: WorkflowTemplateFromDryRun }>(
+	const response = await requestGraphQLClient<WorkflowTemplateFromDryRun>(
 		getWorkflowFromDryRunQuery,
 		variables
 	);

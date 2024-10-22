@@ -30,7 +30,7 @@
 			try {
 				const response = await getWorkflowTemplateFromDryRun(templateName);
 				// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-				console.log('response', response);
+				console.log('getWorkflowTemplateFromDryRun', response);
 				workflow = response.dryRun.argoWorkflow;
 				// workflow_name = data.dryRun.id;
 				// project = data.dryRun.project;
