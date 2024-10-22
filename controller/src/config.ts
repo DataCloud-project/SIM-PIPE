@@ -26,4 +26,4 @@ export const argoClientEndpoint = process.env.ARGO_CLIENT_ENDPOINT ?? 'http://lo
 export const kubernetesNamespace = process.env.KUBERNETES_NAMESPACE ?? 'default';
 
 // Prometheus endpoint
-export const prometheusServerUrl = process.env.PROMETHEUS_SERVER_URL ?? 'http://localhost:8089';
+export const prometheusServerUrl = process.env.PROMETHEUS_SERVER_URL ?? 'http://localhost:8086';
