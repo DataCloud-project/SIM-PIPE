@@ -13,6 +13,7 @@ postcss.config.cjs
 playwright.config.ts
 *.js
 plotly.js-dist.d.ts
+src/routes/projects/analytics3/*
 
 # Ignore files for PNPM, NPM and YARN
 pnpm-lock.yaml
