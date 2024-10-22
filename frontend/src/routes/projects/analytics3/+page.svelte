@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import { onMount, onDestroy } from 'svelte';
 	import DAG from './dag.svelte';
 	import Plot from './plot.svelte';
 	import { requestGraphQLClient } from '$lib/graphqlUtils';
@@ -12,13 +12,13 @@
 	const workflowName = 'rpm';
 	let nodes: Node[] = [];
 	let links: Link[] = [];
-	const dataX = [10, 25, 36]; // TODO: temporary data - to be replaced with fileSize as default.
-	const regressionMethod = 'power';
+	const dataX = [1, 2]; // TODO: temporary data - to be replaced with fileSize as default.
+	const regressionMethod = 'linear';
+	// const regressionMethod = 'power';
 	let nodesMetrics: AggregatedNodesMetrics[] = [];
 	const dryRunIds = [
-		'health-data-pipeline-mszt2',
-		'health-data-pipeline-7qtwj',
-		'health-data-pipeline-rl282'
+		'health-data-pipeline-tsz25',
+		'health-data-pipeline-lgd6s',
 	];
 
 	let nodesMetricsLoaded = false;
@@ -60,8 +60,6 @@
 		const workflow = await getWorkflowTemplate(workflowName);
 		console.log('workflow', workflow.workflowTemplate);
 		({ nodes, links } = extractNodesAndLinks2(workflow.workflowTemplate));
-		// console.log('nodes', nodes);
-		// console.log('links', links);
 
 		updatepageWidth();
 
@@ -70,9 +68,9 @@
 
 		window.addEventListener('resize', updatepageWidth);
 
-		return (): void => {
+		onDestroy(() => {
 			window.removeEventListener('resize', updatepageWidth);
-		};
+		});
 	});
 
 	$: if (pageWidthUpdated) {
@@ -98,6 +96,22 @@
 		{:else}
 			<p>Loading...</p>
 		{/if}
+	</div>
+	<div class="totals">
+		<div class="totals-box">
+			<div class="aggregated-item">
+				<h3>Total aggregated duration</h3>
+				<p>{nodesMetrics.reduce((sum, node) => sum + node.data.duration.reduce((a, b) => a + b, 0), 0)}</p>
+			</div>
+			<div class="aggregated-item">
+				<h3>Average memory</h3>
+				<p>{nodesMetrics.reduce((sum, node) => sum + node.data.mem.reduce((a, b) => a + b, 0), 0) / nodesMetrics.length}</p>
+			</div>
+			<div class="aggregated-item">
+				<h3>Average CPU</h3>
+				<p>{nodesMetrics.reduce((sum, node) => sum + node.data.cpu.reduce((a, b) => a + b, 0), 0) / nodesMetrics.length}</p>
+			</div>
+		</div>
 	</div>
 	<div class="metrics-container" style="height:{tableMetricsHeight}px">
 		{#if nodesMetricsLoaded}
@@ -182,5 +196,11 @@
 	.metrics-container {
 		width: 100%;
 		border: 1px solid white;
+	}
+	.totals {
+		display: flex;
+		flex-direction: row;
+		justify-content: space-between;
+		gap: 10px;
 	}
 </style>

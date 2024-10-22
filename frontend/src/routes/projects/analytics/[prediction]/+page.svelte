@@ -18,7 +18,7 @@
 	import { cForm } from '$styles/styles.js';
 	import type { MetricsWithTimeStamps } from '$typesdefinitions';
 	import getDryRunProjectIDQuery from '$queries/get_dry_run_project_id.js';
-	import { displayAlert } from '$utils/alerts-utils.js';
+	// import { displayAlert } from '$utils/alerts-utils.js';
 
 	export let data;
 
@@ -110,7 +110,8 @@
 				console.log(error);
 				const title = `Error reading input filesizes for dry run - ${dryRunId}`;
 				const body = 'You will be taken back to the dry runs list on close';
-				await displayAlert(title, body, 3500);
+				//await displayAlert(title, body, 3500);
+				console.log(title, body);
 				// eslint-disable-next-line @typescript-eslint/no-floating-promises
 				goto(`/projects/dryruns/${$selectedProject?.id}`);
 			}
