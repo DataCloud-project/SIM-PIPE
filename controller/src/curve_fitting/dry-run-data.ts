@@ -113,14 +113,13 @@ export async function aggregatedNodesMetrics(
 
       if (inputArtifacts) {
         for (const artifact of inputArtifacts) {
-          if (artifact.key === undefined) {
-            throw new Error('artifact.key is undefined');
-          }
-          // eslint-disable-next-line no-await-in-loop
-          const objectSize = await getObjectSize(
-            artifact.key as string, artifact.bucketName as string);
-          if (objectSize) {
-            fileSize += objectSize;
+          if (artifact.key) {
+            // eslint-disable-next-line no-await-in-loop
+            const objectSize = await getObjectSize(
+              artifact.key, artifact.bucketName as string);
+            if (objectSize) {
+              fileSize += objectSize;
+            }
           }
         }
       } else {
