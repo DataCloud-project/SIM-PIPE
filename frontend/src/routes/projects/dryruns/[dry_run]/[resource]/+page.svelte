@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { ProgressBar, CodeBlock } from '@skeletonlabs/skeleton';
-	import { ZoomInIcon } from 'svelte-feather-icons';
+	import { AlertTriangleIcon, ZoomInIcon } from 'svelte-feather-icons';
 	import { filesize } from 'filesize';
 	import getDryRunMetricsQuery from '$queries/get_dry_run_metrics.js';
 	import getProjectQuery from '$queries/get_project';
@@ -36,13 +36,15 @@
 	let selectedProject: { name: string; id: string };
 	let logs: { [x: string]: string } = {};
 
-	let cpuData: { [key: string]: MetricsWithTimeStamps } = {};
+	let cumulativeCpuData: { [key: string]: MetricsWithTimeStamps } = {};
+	let currentCpuData: { [key: string]: MetricsWithTimeStamps } = {};
 	let memoryData: { [key: string]: MetricsWithTimeStamps } = {};
-	let networkDataCombined: {
+	let cumulativeNetworkData: {
 		[key: string]: MetricsWithTimeStamps[];
 	} = {};
-
-	let pipelineMetricsAnalytics: MetricsAnalytics = {};
+	let currentNetworkData: {
+		[key: string]: MetricsWithTimeStamps[];
+	} = {};
 
 	let allStepNames: string[] = [];
 
@@ -51,6 +53,58 @@
 
 	function gotoOverview(): void {
 		selectedStep = 'Total';
+	}
+
+	let maxCpu = 'N/A';
+	let maxMemory = 'N/A';
+	function findMax(input: number[]): number {
+		if (input?.length === 0) return 0;
+		return Math.max(...input);
+	}
+
+	let averageCpu = 'N/A';
+	let averageMemory = 'N/A';
+	function computeAverage(input: number[]): number {
+		if (input?.length === 0) return 0;
+		return input.reduce((a, b) => a + b) / input.length;
+	}
+
+	let networkTotalReceived = 'N/A';
+	let networkTotalTransmitted = 'N/A';
+	let pipelineDuration = 'N/A';
+
+	function formatDuration(seconds: number): string {
+		const hours = Math.floor(seconds / 3600);
+		const minutes = Math.floor((seconds % 3600) / 60);
+		const remainingSeconds = seconds % 60;
+
+		let durationString = '';
+		if (hours > 0) {
+			durationString += `${hours}h `;
+		}
+		if (minutes > 0) {
+			durationString += `${minutes}m `;
+		}
+		if (remainingSeconds > 0) {
+			durationString += `${remainingSeconds}s`;
+		}
+
+		return durationString.trim();
+	}
+
+	function computePipelineDuration(): void {
+		let totalDuration = 0;
+		if (reactiveStepsList) {
+			if (selectedStep === 'Total') {
+				reactiveStepsList?.forEach((step) => {
+					totalDuration += step.duration;
+				});
+			} else {
+				totalDuration = reactiveStepsList.find((step) => step.displayName === selectedStep)
+					?.duration as number;
+			}
+		}
+		pipelineDuration = formatDuration(totalDuration);
 	}
 
 	let dryRunPhaseMessage: string | null;
@@ -120,17 +174,12 @@
 		const result = await getMetricsUsageUtils(metricsResponse as unknown as DryRunMetrics[]);
 		const { allStepNames } = result;
 		// console.log('allStepNames:', allStepNames);
-		cpuData = result.cpuData;
+		cumulativeCpuData = result.cumulativeCpuData;
+		currentCpuData = result.currentCpuData;
 		memoryData = result.memoryData;
-		networkDataCombined = result.networkDataCombined;
+		cumulativeNetworkData = result.cumulativeNetworkData;
+		currentNetworkData = result.currentNetworkData;
 		logs = result.logs;
-		pipelineMetricsAnalytics = await getMetricsAnalyticsUtils(
-			allStepNames,
-			metricsResponse as unknown as DryRunMetrics[],
-			cpuData,
-			memoryData,
-			networkDataCombined
-		);
 		const responses = {
 			workflow: workflowResponse.project,
 			dryrun: dryrunResponse,
@@ -251,6 +300,7 @@
 
 	function stepOnClick(stepName: string): void {
 		selectedStep = stepName;
+		computePipelineDuration();
 	}
 
 	// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
@@ -262,41 +312,126 @@
 
 	// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 	$: getResource = (resource: string) => {
-		let resourceData;
-		let wholeData: { x: string[]; y: number[]; type: string; name: string }[] = [];
-		if (resource === 'cpu') {
-			resourceData = cpuData;
-			if (Object.keys(cpuData).length > 0)
-				allStepNames.forEach((step) => {
-					if (cpuData[step]) wholeData.push(cpuData[step]);
-				});
-		} else if (resource === 'memory') {
-			resourceData = memoryData;
-			if (Object.keys(memoryData).length > 0)
-				allStepNames.forEach((step) => {
-					if (memoryData[step]) wholeData.push(memoryData[step]);
-				});
-		} else {
-			resourceData = networkDataCombined;
-			wholeData = [];
-			allStepNames.forEach((step) => {
-				networkDataCombined[step]?.forEach((elem) => {
-					wholeData.push(elem);
-				});
-			});
+		const data: { x: string[]; y: number[]; type: string; name: string }[] = [];
+		switch (resource) {
+			case 'cpu-cumulative': {
+				if (Object.keys(cumulativeCpuData).length > 0) {
+					if (selectedStep === 'Total') {
+						allStepNames.forEach((step) => {
+							if (cumulativeCpuData[step]) data.push(cumulativeCpuData[step]);
+						});
+					} else {
+						data.push(cumulativeCpuData[selectedStep]);
+					}
+				}
+				break;
+			}
+			case 'cpu-current': {
+				if (Object.keys(currentCpuData).length > 0)
+					if (selectedStep === 'Total') {
+						const maxCpuList: number[] = [];
+						const avgCpulist: number[] = [];
+						allStepNames.forEach((step) => {
+							if (currentCpuData[step]) {
+								data.push(currentCpuData[step]);
+								maxCpuList.push(findMax(currentCpuData[step].y));
+								avgCpulist.push(computeAverage(currentCpuData[step].y));
+							}
+						});
+						maxCpu = findMax(maxCpuList).toFixed(2).toString();
+						averageCpu = computeAverage(avgCpulist).toFixed(2).toString();
+					} else {
+						data.push(currentCpuData[selectedStep]);
+						maxCpu = findMax(currentCpuData[selectedStep].y).toFixed(2).toString();
+						averageCpu = computeAverage(currentCpuData[selectedStep].y).toFixed(2).toString();
+					}
+				break;
+			}
+			case 'memory': {
+				if (Object.keys(memoryData).length > 0)
+					if (selectedStep === 'Total') {
+						const maxMemoryList: number[] = [];
+						const avgMemoryList: number[] = [];
+						allStepNames.forEach((step) => {
+							if (memoryData[step]) {
+								data.push(memoryData[step]);
+								maxMemoryList.push(findMax(memoryData[step].y));
+								avgMemoryList.push(computeAverage(memoryData[step].y));
+							}
+						});
+						maxMemory = filesize(findMax(maxMemoryList), { round: 2 });
+						averageMemory = filesize(computeAverage(avgMemoryList), { round: 2 });
+					} else {
+						data.push(memoryData[selectedStep]);
+						maxMemory = filesize(findMax(memoryData[selectedStep].y), { round: 2 });
+						averageMemory = filesize(computeAverage(memoryData[selectedStep].y), { round: 2 });
+					}
+				break;
+			}
+			case 'network-cumulative': {
+				if (Object.keys(cumulativeNetworkData).length > 0)
+					if (selectedStep === 'Total') {
+						allStepNames.forEach((step) => {
+							cumulativeNetworkData[step].forEach((networkData) => {
+								data.push(networkData);
+							});
+						});
+					} else {
+						cumulativeNetworkData[selectedStep].forEach((networkData) => {
+							data.push(networkData);
+						});
+					}
+				break;
+			}
+			case 'network-current': {
+				if (Object.keys(currentNetworkData).length > 0) {
+					let networkReceived = 0;
+					let networkTransmitted = 0;
+					if (selectedStep === 'Total') {
+						allStepNames.forEach((step) => {
+							currentNetworkData[step].forEach((networkData) => {
+								data.push(networkData);
+								const networkSendReceiveType = networkData.name.split('-')[1];
+								if (networkSendReceiveType === 'received') {
+									networkData.y.forEach((value) => {
+										networkReceived += value;
+									});
+								}
+								if (networkSendReceiveType === 'transmitted') {
+									networkData.y.forEach((value) => {
+										networkTransmitted += value;
+									});
+								}
+							});
+						});
+					} else {
+						currentNetworkData[selectedStep].forEach((networkData) => {
+							data.push(networkData);
+							const networkSendReceiveType = networkData.name.split('-')[1];
+							if (networkSendReceiveType === 'received') {
+								networkData.y.forEach((value) => {
+									networkReceived += value;
+								});
+							}
+							if (networkSendReceiveType === 'transmitted') {
+								networkData.y.forEach((value) => {
+									networkTransmitted += value;
+								});
+							}
+						});
+					}
+					networkTotalReceived = filesize(networkReceived, { round: 2 });
+					networkTotalTransmitted = filesize(networkTransmitted, { round: 2 });
+				}
+				break;
+			}
+			default: {
+				throw new Error('Invalid resource');
+			}
 		}
-		if (selectedStep !== 'Total') {
-			if (resource === 'network')
-				return {
-					title: `${selectedStep}`,
-					data: resourceData[selectedStep] ? resourceData[selectedStep] : []
-				};
-			return {
-				title: `${selectedStep}`,
-				data: resourceData[selectedStep] ? [resourceData[selectedStep]] : []
-			};
-		}
-		return { title: `- entire dry run`, data: wholeData };
+		return selectedStep === 'Total'
+			? { title: `- entire dry run`, data }
+			: { title: `${selectedStep}`, data };
 	};
 
 	onMount(async () => {
@@ -304,13 +439,14 @@
 		workflow = getDataResponse.workflow;
 		allStepNames = getDataResponse.allstepnames;
 		await buildDiagram();
+		computePipelineDuration();
 		loadingFinished = true;
 	});
 
 	function getPartLogs(stepName: string, nmaxlinelength: number): string {
 		const steplogs = logs[stepName];
-		console.log('stepName:', stepName);
-		console.log('steplogs:', steplogs);
+		// console.log('stepName:', stepName);
+		// console.log('steplogs:', steplogs);
 		// eslint-disable-next-line unicorn/prefer-ternary
 		if (steplogs.length < nmaxlinelength) return steplogs;
 		// eslint-disable-next-line no-else-return
@@ -370,10 +506,10 @@
 								<tr on:click={() => stepOnClick(step.displayName)}>
 									<td style="width:15%">{step.displayName}</td>
 									<td style="width:20%">
-										{step.startedAt ? step.startedAt : '-'}
+										{step.startedAt ?? '-'}
 									</td>
 									<td style="width:20%">
-										{step.finishedAt ? step.finishedAt : '-'}
+										{step.finishedAt ?? '-'}
 									</td>
 									<td style="width:15%">{displayStepDuration(step)}</td>
 									<td style="width:15%">{step.phase}</td>
@@ -397,7 +533,21 @@
 			<div class="grid grid-rows-4 grid-cols-2 gap-5 auto-rows-min">
 				<!-- if the logs are empty, remove logs sections -->
 				{#if Object.values(logs).join('') !== ''}
-					<div class="card logcard row-span-4 p-5">
+					<div class="card mainlogcard row-span-4 p-5">
+						<!-- display if the dryrun has a non-empty phase message from argo (usually null if no error) -->
+						{#if dryRunPhaseMessage}
+							<div class="card logcard row-span-1 p-5">
+								<div style="display: flex; align-items: center; color: red; gap: 5px">
+									<AlertTriangleIcon />
+									<h1>Error Message</h1>
+								</div>
+								<section class="p-1">
+									<div class="w-full">
+										<CodeBlock language="json" code={dryRunPhaseMessage} />
+									</div>
+								</section>
+							</div>
+						{/if}
 						<header class="card-header"><h1>Logs</h1></header>
 						<section class="p-1">
 							<br />
@@ -408,7 +558,7 @@
 									</li>
 									<li>
 										{#if logs[key] && getPartLogs(key, 20_000)}
-											<div class="w-full">
+											<div class="logbox w-full">
 												<CodeBlock language="bash" code={getPartLogs(key, 20_000)} />
 											</div>
 										{:else}
@@ -421,61 +571,46 @@
 						</section>
 					</div>
 				{/if}
-				<!-- display if the dryrun has a non-empty phase message from argo (usually null if no error) -->
-				{#if dryRunPhaseMessage}
-					<div class="card logcard row-span-4 p-5">
-						<h1>Message</h1>
-						<section class="p-1">
-							<div class="w-full">
-								<CodeBlock language="json" code={dryRunPhaseMessage} />
-							</div>
-						</section>
-					</div>
-				{/if}
 
 				<div class="card resourcecard">
 					<table class="table table-interactive">
 						<thead>
 							<tr>
 								<th>Resource</th>
-								<th>Average, Maximum usage</th>
+								<th>Metrics</th>
 							</tr>
 						</thead>
 						<tbody>
-							{#each Object.keys(pipelineMetricsAnalytics[selectedStep]) as key}
-								<tr>
-									<td>{key}</td>
-									{#if key === 'CPU'}
-										<td>
-											{pipelineMetricsAnalytics[selectedStep][key].avg.toFixed(3)} %,
-											{pipelineMetricsAnalytics[selectedStep][key].max.toFixed(3)}
-											%
-										</td>
-										<!-- for eslint -->
-									{:else if key === 'Memory' || key === 'Network_received' || key === 'Network_transferred'}
-										<td
-											>{filesize(pipelineMetricsAnalytics[selectedStep][key].avg)},
-											{filesize(pipelineMetricsAnalytics[selectedStep][key].max)}</td
-										>
-										<!-- <td
-											>{pipelineMetricsAnalytics[selectedStep][key].avg},
-											{pipelineMetricsAnalytics[selectedStep][key].max}</td
-										> -->
-									{:else if key === 'Duration'}
-										<td> {pipelineMetricsAnalytics[selectedStep][key]}</td>
-									{/if}
-								</tr>
-							{/each}
-						</tbody>
+							<tr>
+								<td>CPU</td>
+								<td>{maxCpu} % [ max ] {averageCpu} % [ avg ]</td>
+							</tr>
+							<tr>
+								<td>Memory</td>
+								<td>{maxMemory} [ max ] {averageMemory} [ avg ]</td>
+							</tr>
+							<tr>
+								<td>Network received</td>
+								<td> {networkTotalReceived} </td>
+							</tr>
+							<tr>
+								<td>Network transmitted</td>
+								<td> {networkTotalTransmitted} </td>
+							</tr>
+							<tr>
+								<td>Duration</td>
+								<td> {pipelineDuration} </td>
+							</tr></tbody
+						>
 					</table>
 				</div>
 
 				<div class="card plotcard">
 					<Plot
-						data={getResource('cpu').data}
-						plotTitle={`CPU Usage ${getResource('cpu').title}`}
+						data={getResource('cpu-current').data}
+						plotTitle={`CPU Utilization ${getResource('cpu-current').title}`}
 						xaxisTitle="time"
-						yaxisTitle="cpu usage"
+						yaxisTitle="cpu utilization %"
 					/>
 				</div>
 				<div class="card plotcard">
@@ -488,8 +623,8 @@
 				</div>
 				<div class="card plotcard">
 					<Plot
-						data={getResource('network').data}
-						plotTitle={`Network ${getResource('network').title}`}
+						data={getResource('network-current').data}
+						plotTitle={`Network ${getResource('network-current').title}`}
 						xaxisTitle="time"
 						yaxisTitle="bytes"
 					/>
@@ -503,6 +638,7 @@
 	.card.plotcard {
 		display: grid;
 		place-items: start;
+		max-height: 50vh;
 	}
 	.card.resourcecard {
 		overflow-y: scroll;
@@ -510,9 +646,18 @@
 		min-height: 25rem;
 		max-height: fit-content;
 	}
+	.card.mainlogcard {
+		overflow-y: scroll;
+		overflow-x: scroll;
+		max-height: 200vh;
+	}
 	.card.logcard {
 		overflow-y: scroll;
 		max-height: fit-content;
+	}
+	.logbox {
+		overflow-y: scroll;
+		max-height: 50vh;
 	}
 	ul {
 		max-height: 75vh;
