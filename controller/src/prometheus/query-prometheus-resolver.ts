@@ -1,5 +1,5 @@
 import queryPrometheus from './prometheus.js';
-import type { DryRunNodeMetrics, DryRunNodePod } from '../server/schema.js';
+import type { DryRunNodeMetrics } from '../server/schema.js';
 
 type QueryPrometheusArguments = {
   end?: number | null;
@@ -13,13 +13,16 @@ export default async function queryPrometheusResolver<
 >(
   metric: string,
   containerName: string,
-  dryRunNodeMetrics: DryRunNodeMetrics & { dryRunNode: DryRunNodePod },
+  { dryRunNode: { startedAt, finishedAt, podName } }:
+  { dryRunNode: {
+    startedAt?: string | null,
+    finishedAt?: string | null,
+    podName: string | undefined
+  } },
   _arguments: QueryPrometheusArguments,
 ): Promise<DryRunNodeMetrics[M]> {
-  const { dryRunNode } = dryRunNodeMetrics;
   let { step } = _arguments;
-  const { startedAt, finishedAt, podName } = dryRunNode;
-  if (!startedAt) {
+  if (!startedAt || !podName) {
     return undefined;
   }
 

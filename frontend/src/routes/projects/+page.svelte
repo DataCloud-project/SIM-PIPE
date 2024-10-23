@@ -12,7 +12,7 @@
 	import allDryRunsQuery from '../../queries/get_all_dryruns.js';
 	import deleteDryRunMutation from '../../queries/delete_dry_run.js';
 	import deleteWorkflowTemplateMutation from '../../queries/delete_workflow_template.js';
-	import { displayAlert } from '../../utils/alerts-utils.js';
+	// import { displayAlert } from '../../utils/alerts-utils.js';
 	import Alert from '$lib/modules/alert.svelte';
 
 	const modalStore = getModalStore();
@@ -101,7 +101,8 @@
 			const title = 'Project deleted🗑️!';
 			const body = `Deleted projects: ${Object.keys(checkboxes).join(', ')}`;
 
-			await displayAlert(title, body);
+			// await displayAlert(title, body);
+			console.log(title, body);
 			// inserting a small delay because sometimes delete mutation returns true, but all projects query returns the deleted project as well
 			// eslint-disable-next-line no-promise-executor-return
 			await new Promise((resolve) => setTimeout(resolve, 150));
@@ -113,7 +114,8 @@
 		} catch (error) {
 			const title = 'Error deleting project❌!';
 			const body = `${(error as Error).message}`;
-			await displayAlert(title, body, 4000);
+			// await displayAlert(title, body, 4000);
+			console.log(title, body);
 		} finally {
 			// reset checkboxes
 			$projectsList?.forEach((element) => {

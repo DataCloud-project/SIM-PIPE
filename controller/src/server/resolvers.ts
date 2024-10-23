@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-
+import cpuCoresData from '../hardwaremetrics/hardwaremetrics.js';
 import {
   assertDryRunNodeHasWorkflow,
   convertArgoWorkflowNode,
@@ -40,6 +40,11 @@ import {
 import { ArtifactItem } from '../minio/minio.js';
 import { assertPrometheusIsHealthy } from '../prometheus/prometheus.js';
 import queryPrometheusResolver from '../prometheus/query-prometheus-resolver.js';
+import { 
+  aggregatedNodesMetrics, 
+  computeScalingLaws, 
+  extrapolateFromScalingLaws,
+} from '../curve_fitting/dry-run-data.js';
 import { NotFoundError, PingError } from './apollo-errors.js';
 import type { ArgoWorkflow, ArgoWorkflowTemplate } from '../argo/argo-client.js';
 import type ArgoWorkflowClient from '../argo/argo-client.js';
@@ -82,7 +87,12 @@ import type {
   QueryProjectArgs as QueryProjectArguments,
   QueryResolvers,
   QueryWorkflowTemplateArgs as QueryWorkflowTemplateArguments,
+  QueryComputeScalingLawsFromNodesMetricsArgs,
+  QueryPredictScalingArgs,
+  QueryGetAggregatedNodesMetricsArgs,
   WorkflowTemplate,
+  NodesAggregatedNodeMetrics,
+  NodesScalingLaws,
 } from './schema.js';
 
 interface ContextUser {
@@ -226,6 +236,87 @@ const resolvers = {
         bucketName,
       }));
     },
+    async hardwaremetrics(
+      _p: EmptyParent, _a: EmptyArguments, context: AuthenticatedContext,
+    ): Promise<Query['hardwaremetrics']> {
+      
+      const ncores = cpuCoresData.length;
+      const hardwaremetrics = {cpuCores: ncores, cpuCoresData: cpuCoresData};
+      
+      return hardwaremetrics;
+
+    },
+    async getAggregatedNodesMetrics(
+      _p: EmptyParent, arguments_: QueryGetAggregatedNodesMetricsArgs, context: AuthenticatedContext
+    ): Promise<Query['getAggregatedNodesMetrics']> {
+      const containerName = 'main'
+      let aggregateMethod = 'average' // default
+      if (arguments_.aggregateMethod) {
+        aggregateMethod = arguments_.aggregateMethod;
+      }
+      const dryRynIds: string[] = arguments_.dryRunIds as string[];
+      const nodesAggregatedNodeMetrics = await aggregatedNodesMetrics(dryRynIds, containerName, context.argoClient, aggregateMethod);
+      return nodesAggregatedNodeMetrics;
+    },
+    async computeScalingLawsFromNodesMetrics(
+      _p: EmptyParent,
+      arguments_: QueryComputeScalingLawsFromNodesMetricsArgs,
+      context: AuthenticatedContext,
+    ): Promise<Query['computeScalingLawsFromNodesMetrics']> {
+      const { nodesAggregatedNodeMetrics, dryRunIds, aggregateMethod, regressionMethod } = arguments_;
+      const containerName = 'main';
+      let aggregateMethodUsed = aggregateMethod ? aggregateMethod : 'average';
+      let regressionMethodUsed = regressionMethod ? regressionMethod : 'linear';
+
+      let scalingLaws: NodesScalingLaws[] = [];
+
+      // TODO: This is a bit of a mess, we should probably refactor this
+      
+      if (dryRunIds && !nodesAggregatedNodeMetrics) {
+        const dryRunIds: string[] = arguments_.dryRunIds as string[];
+        const data_x: number[] = arguments_.data_x as number[];
+        const nodesAggregatedNodeMetrics = await aggregatedNodesMetrics(dryRunIds, containerName, context.argoClient, aggregateMethodUsed);
+        scalingLaws = await computeScalingLaws(nodesAggregatedNodeMetrics, data_x, regressionMethodUsed);
+      } else if (!dryRunIds && nodesAggregatedNodeMetrics) {
+        const nodesAggregatedNodeMetrics = arguments_.nodesAggregatedNodeMetrics as NodesAggregatedNodeMetrics[];
+        const data_x: number[] = arguments_.data_x as number[];
+        scalingLaws = await computeScalingLaws(nodesAggregatedNodeMetrics, data_x, regressionMethodUsed);
+      } else {
+        throw new Error('Provide either dryRunIds or nodesAggregatedNodeMetrics, and data_x.');
+      }
+
+      return scalingLaws;
+    },
+    async predictScaling(
+      _p: EmptyParent,
+      arguments_: QueryPredictScalingArgs,
+      context: AuthenticatedContext,
+    ): Promise<Query['predictScaling']> {
+      const { nodesAggregatedNodeMetrics, dryRunIds, aggregateMethod, regressionMethod, data_x_to_predict } = arguments_;
+      const containerName = 'main';
+      let aggregateMethodUsed = aggregateMethod ? aggregateMethod : 'average';
+      let regressionMethodUsed = regressionMethod ? regressionMethod : 'linear';
+
+      let scalingLaws: NodesScalingLaws[] = [];
+
+      // TODO: This is a bit of a mess, we should probably refactor this
+      
+      if (dryRunIds && !nodesAggregatedNodeMetrics) {
+        const dryRunIds: string[] = arguments_.dryRunIds as string[];
+        const data_x: number[] = arguments_.data_x as number[];
+        const nodesAggregatedNodeMetrics = await aggregatedNodesMetrics(dryRunIds, containerName, context.argoClient, aggregateMethodUsed);
+        scalingLaws = await computeScalingLaws(nodesAggregatedNodeMetrics, data_x, regressionMethodUsed);
+      } else if (!dryRunIds && nodesAggregatedNodeMetrics) {
+        const nodesAggregatedNodeMetrics = arguments_.nodesAggregatedNodeMetrics as NodesAggregatedNodeMetrics[];
+        const data_x: number[] = arguments_.data_x as number[];
+        scalingLaws = await computeScalingLaws(nodesAggregatedNodeMetrics, data_x, regressionMethodUsed);
+      } else {
+        throw new Error('Provide either dryRunIds or nodesAggregatedNodeMetrics, and data_x.');
+      }
+
+      const scalingPredictions = await extrapolateFromScalingLaws(scalingLaws, data_x_to_predict);
+      return scalingPredictions;
+    },    
   } as Required<QueryResolvers<AuthenticatedContext, EmptyParent>>,
   Mutation: {
     async createBucket(

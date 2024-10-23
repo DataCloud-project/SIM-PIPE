@@ -6,7 +6,7 @@
 	import { goto } from '$app/navigation';
 	import { requestGraphQLClient } from '$lib/graphqlUtils';
 	import Plot from '../plot.svelte';
-	import { displayAlert } from '$utils/alerts-utils';
+	// import { displayAlert } from '$utils/alerts-utils';
 
 	const datefmt = 'yyyy-MM-dd HH:mm:ss';
 	const defaultMetricsType = 'All';
@@ -234,7 +234,8 @@
 			console.log(error);
 			const title = 'Error reading resource consumption of dry run❌!';
 			const body = `${(error as Error).message}`;
-			await displayAlert(title, body, 10_000);
+			// await displayAlert(title, body, 10_000);
+			console.log(title, body);
 			// eslint-disable-next-line @typescript-eslint/no-floating-promises
 			goto(`/projects/dryruns/${$selectedProjectName}/${$selectedDryRunName}`);
 		});

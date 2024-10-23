@@ -54,6 +54,7 @@
 	"dependencies": {
 		"@fontsource/ibm-plex-sans": "^5.0.18",
 		"babel-plugin-prismjs": "^2.1.0",
+		"d3": "^7.9.0",
 		"date-fns": "^3.3.1",
 		"filesize": "^10.1.0",
 		"graphql-request": "^6.1.0",

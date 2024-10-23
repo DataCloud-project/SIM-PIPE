@@ -24,7 +24,7 @@ function parseSimPipeEnvironment(): {
 				// added 5173 to support deployment of frontend in dev mode
 				// eslint-disable-next-line unicorn/prefer-ternary
 				if (port === ':8088' || port === ':5173') {
-					graphqlUrl = 'http://localhost:8087/graphql';
+					graphqlUrl = 'http://localhost:9000/graphql';
 				} else {
 					graphqlUrl = 'http://localhost:9000/graphql';
 				}

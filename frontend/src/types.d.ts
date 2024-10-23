@@ -201,3 +201,24 @@ export type FolderStructure = {
 	path: string;
 	children: { [key: string]: FolderStructure };
 };
+
+type ScalingLawMetric = {
+	coeffs: number[];
+	type: string;
+	r2: number;
+};
+
+// Nodes metrics
+export type AggregatedNodesMetrics = {
+	nodeName: string;
+	cpu: ScalingLawMetric;
+	mem: ScalingLawMetric;
+	duration: ScalingLawMetric;
+	data: {
+		cpu: number[];
+		mem: number[];
+		duration: number[];
+		fileSize: number[];
+		nodeId: string[];
+	};
+};

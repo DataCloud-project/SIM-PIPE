@@ -4,15 +4,13 @@
 	import { ArrowRightIcon } from 'svelte-feather-icons';
 	import { onMount } from 'svelte';
 	import { clickedProjectId } from '$stores/stores';
-	import getWorkflowQuery from '$queries/get_workflow_template';
-	import getWorkflowFromDryRunQuery from '$queries/get_workflow_template_from_dry_run';
+	import { getWorkflowTemplate, getWorkflowTemplateFromDryRun } from '$lib/getWorkflowTemplate';
 	import { goto } from '$app/navigation';
-	import { requestGraphQLClient } from '$lib/graphqlUtils';
-	import type { WorkflowTemplate, WorkflowTemplateFromDryRun } from '$typesdefinitions';
 
 	export let data;
 	let workflow = {};
 	let requestsComplete = false;
+	const templateName = data.template;
 
 	$: language = 'yaml'; // default format of workflow template
 
@@ -20,45 +18,20 @@
 		language = language === 'yaml' ? 'json' : 'yaml';
 	}
 
-	const getWorkflowTemplate = async (): Promise<{ workflowTemplate: WorkflowTemplate }> => {
-		const variables = {
-			// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
-			name: data.template
-		};
-		const response = await requestGraphQLClient<{ workflowTemplate: WorkflowTemplate }>(
-			getWorkflowQuery,
-			variables
-		);
-		// console.log(response);
-		return response;
-	};
-
-	const getWorkflowTemplateFromDryRun = async (): Promise<WorkflowTemplateFromDryRun> => {
-		const variables = {
-			// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
-			dryRunId: data.template
-		};
-		const response = await requestGraphQLClient<WorkflowTemplateFromDryRun>(
-			getWorkflowFromDryRunQuery,
-			variables
-		);
-		// console.log(response);
-		return response;
-	};
-
 	onMount(async () => {
 		try {
-			const data = await getWorkflowTemplate();
-			workflow = data.workflowTemplate;
+			const response = await getWorkflowTemplate(templateName);
+			workflow = response.workflowTemplate;
 			// workflowName = data.workflowTemplate.name;
 			// project = data.workflowTemplate.project;
 			requestsComplete = true;
 		} catch (error) {
 			console.log('failed to fetch workflow template data from project:', error);
 			try {
-				const data = await getWorkflowTemplateFromDryRun();
+				const response = await getWorkflowTemplateFromDryRun(templateName);
 				// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-				workflow = data.dryRun.argoWorkflow;
+				console.log('getWorkflowTemplateFromDryRun', response);
+				workflow = response.dryRun.argoWorkflow;
 				// workflow_name = data.dryRun.id;
 				// project = data.dryRun.project;
 				requestsComplete = true;
