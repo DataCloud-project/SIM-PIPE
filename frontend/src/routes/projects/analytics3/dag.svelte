@@ -197,7 +197,6 @@
 	});
 </script>
 
-/* eslint-disable */
 <svg bind:this={svgElement}></svg>
 
 <div class="card p-4 variant-filled-secondary" data-popup="popupHover">
