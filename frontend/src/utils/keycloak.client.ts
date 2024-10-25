@@ -23,10 +23,16 @@ function parseSimPipeEnvironment(): {
 				const port = localhostMatch[2];
 				// added 5173 to support deployment of frontend in dev mode
 				// eslint-disable-next-line unicorn/prefer-ternary
-				if (port === ':8088' || port === ':5173') {
+				if (port === ':8088') {
+					console.log('localhost:', localhostMatch[1], 'port:', port);
+					graphqlUrl = 'http://localhost:8086/graphql';
+				} else if (port === ':5173') {
+					console.log('localhost:', localhostMatch[1], 'port:', port);
 					graphqlUrl = 'http://localhost:9000/graphql';
 				} else {
+					console.log("localhost match didn't match any known port", port);
 					graphqlUrl = 'http://localhost:9000/graphql';
+					console.log('Using default graphqlUrl', graphqlUrl);
 				}
 			}
 		} else {
