@@ -25,7 +25,7 @@ function parseSimPipeEnvironment(): {
 				// eslint-disable-next-line unicorn/prefer-ternary
 				if (port === ':8088') {
 					console.log('localhost:', localhostMatch[1], 'port:', port);
-					graphqlUrl = 'http://localhost:8086/graphql';
+					graphqlUrl = 'http://localhost:8087/graphql';
 				} else if (port === ':5173') {
 					console.log('localhost:', localhostMatch[1], 'port:', port);
 					graphqlUrl = 'http://localhost:9000/graphql';
