@@ -1,8 +1,7 @@
 #!/bin/bash
 
 # Parameters
-K3S_SERVER_URL=${1:-"https://172.18.107.219:6443"}  # Default K3S server URL
-K3S_SERVER_URL=${1:-"https://$(hostname -I | awk '{print $1}'):6443"}  # Default K3S server URL
+K3S_SERVER_URL=${1:-"https://$(hostname -I | cut -d' ' -f1):6443"}  # Default K3S server URL
 K3S_TOKEN=${2:-$(sudo cat /var/lib/rancher/k3s/server/node-token)}  # Retrieve K3S token
 NODE_NAME=${3:-"kube-node"}  # Default node name
 OS_IMAGE_URL="https://cloud-images.ubuntu.com/focal/current/focal-server-cloudimg-amd64.img"  # Ubuntu OS image
@@ -37,17 +36,13 @@ check_command cloud-localds
 
 # Step 1: Create user-data file for cloud-init
 log_message "INFO" "Creating user-data file for cloud-init..."
-# cat <<EOF > user-data
-# #cloud-config
-# runcmd:
-#   - export K3S_URL=$K3S_SERVER_URL
-#   - export K3S_TOKEN=$K3S_TOKEN
-#   - curl -sfL https://get.k3s.io | sh -
-# EOF
 cat <<EOF > user-data
-#cloud-config
+users:
+  - name: ubuntu
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    groups: sudo,containerd,cni
 runcmd:
-  - curl -sfL https://get.k3s.io | K3S_URL=$K3S_SERVER_URL K3S_TOKEN=$K3S_TOKEN sh -
+  - curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="agent" K3S_URL="$K3S_SERVER_URL" K3S_TOKEN="$K3S_TOKEN" sh -
 EOF
 
 # Step 2: Create meta-data file for cloud-init
@@ -61,6 +56,8 @@ EOF
 # Step 3: Create cloud-init ISO
 log_message "INFO" "Creating cloud-init ISO..."
 cloud-localds $CLOUD_INIT_ISO user-data meta-data
+
+# wget $OS_IMAGE_URL -O $QCOW2_IMAGE_FILE && qemu-img resize $QCOW2_IMAGE_FILE 10G
 
 # Step 4: Download and prepare the OS image
 if [ ! -f "$QCOW2_IMAGE_FILE" ]; then
@@ -106,4 +103,23 @@ log_message "INFO" "Assigning worker role to the new node..."
 kubectl label node $NODE_NAME node-role.kubernetes.io/worker=worker
 
 log_message "SUCCESS" "New node $NODE_NAME has been successfully added to the cluster!"
+# Step 8: Deploy and Test Nginx with 2 Replicas (TODO:remove after testing)
+log_message "INFO" "Deploying Nginx with 2 replicas..."
+kubectl create deployment nginx --image=nginx --replicas=2
+
+log_message "INFO" "Waiting for Nginx pods to become ready..."
+kubectl wait --for=condition=ready pod -l app=nginx --timeout=120s
+kga
+log_message "INFO" "Verifying that Nginx pods are running on both nodes..."
+PODS_ON_MASTER=$(kubectl get pods -o wide --field-selector spec.nodeName=$(hostname) -l app=nginx | grep -c Running)
+PODS_ON_WORKER=$(kubectl get pods -o wide --field-selector spec.nodeName=$NODE_NAME -l app=nginx | grep -c Running)
+
+if [[ $PODS_ON_MASTER -gt 0 && $PODS_ON_WORKER -gt 0 ]]; then
+  log_message "SUCCESS" "Nginx pods are running correctly: $PODS_ON_MASTER on master, $PODS_ON_WORKER on worker."
+else
+  log_message "ERROR" "Nginx pods are not running correctly. Master: $PODS_ON_MASTER, Worker: $PODS_ON_WORKER."
+  exit 1
+fi
+
+log_message "SUCCESS" "Test passed: Nginx pods are running correctly on both nodes."
 log_message "INFO" "Use the cleanup script to remove the node when it is no longer needed."
