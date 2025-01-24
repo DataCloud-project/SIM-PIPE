@@ -8,11 +8,12 @@ NODE_NAME=${3}
 MEMORY=${4}
 CPUS=${5}
 TIMEOUT=${6}
-OS_IMAGE_URL=${7}
-OS=${8}
+OS=${7}
 
-QCOW2_IMAGE_FILE=${9}  
-CLOUD_INIT_ISO=${10}  
+QCOW2_IMAGE_FILE=${8}  
+CLOUD_INIT_ISO=${9}  
+
+OS_IMAGE_URL=''
 
 # Function: Log a message with timestamp and level
 log_message() {
