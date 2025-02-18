@@ -1,0 +1,85 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  generateName: nhrf-pipeline-
+spec:
+  entrypoint: nhrf-pipeline
+  volumes:
+    - name: out-volume
+      emptyDir: {}
+  env:
+    - name: KNOWN_SITES_VCF
+      value: dbsnp_146.hg38.vcf.gz
+    - name: TUMOR_FASTQ1
+      value: tumor_R1.fastq.gz
+    - name: TUMOR_FASTQ2
+      value: tumor_R2.fastq.gz
+    - name: NORMAL_FASTQ1
+      value: normal_R1.fastq.gz
+    - name: NORMAL_FASTQ2
+      value: normal_R2.fastq.gz
+    - name: REF_GENOME
+      value: s3://ngi-igenomes/igenomes/Homo_sapiens/GATK/GRCh38/Sequence/WholeGenomeFasta/Homo_sapiens_assembly38.fasta
+
+  templates:
+    - name: nhrf-pipeline
+      dag:
+        tasks:
+          - name: fast-qc-quality-control
+            template: fast-qc-quality-control
+            parameters:
+            - name: tumor-fastq1
+              value: tumor_R1.fastq.gz
+            - name: tumor-fastq2
+              value: tumor_R2.fastq.gz
+            - name: normal-fastq1
+              value: normal_R1.fastq.gz
+            - name: normal-fastq2
+              value: normal_R2.fastq.gz
+
+    - name: fast-qc-quality-control
+      inputs:
+        artifacts:
+        - name: Input
+          path: input/data
+          s3:
+            bucket: nhrf
+            endpoint: s3.amazonaws.com
+            region: eu-west-1
+            key: TubularAdenoma_Data_for_running/Test_TubAde.csv
+            accessKeySecret:
+              name: s3-nhrf
+              key: accessKey
+            secretKeySecret:
+              name: s3-nhrf
+              key: secretKey
+        parameters:
+          - name: tumor-fastq1
+            value: tumor_R1.fastq.gz
+          - name: tumor-fastq2
+            value: tumor_R2.fastq.gz
+          - name: normal-fastq1
+            value: normal_R1.fastq.gz
+          - name: normal-fastq2
+            value: normal_R2.fastq.gz
+      container:
+        image: quay.io/biocontainers/fastqc:0.12.1--hdfd78af_0
+        env:
+          - name: TUMOR_FASTQ1
+            value: "{{inputs.parameters.tumor-fastq1}}"
+          - name: TUMOR_FASTQ2
+            value: "{{inputs.parameters.tumor-fastq2}}"
+          - name: NORMAL_FASTQ1
+            value: "{{inputs.parameters.normal-fastq1}}"
+          - name: NORMAL_FASTQ2
+            value: "{{inputs.parameters.normal-fastq2}}"
+        command: ["sh", "-c", "mkdir -p out/fastqc_results && fastqc ${TUMOR_FASTQ1} ${TUMOR_FASTQ2} ${NORMAL_FASTQ1} ${NORMAL_FASTQ2} -o out/fastqc_results/"]
+        volumeMounts:
+          - name: out-volume
+            mountPath: /out
+      outputs:
+        artifacts:
+        - name: fastqc-results
+          path: /out/fastqc_results
+          archive:
+            none: {}

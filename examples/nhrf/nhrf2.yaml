@@ -1,0 +1,43 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  generateName: s3-dag-step-
+spec:
+  entrypoint: dag-example
+  templates:
+  - name: dag-example
+    dag:
+      tasks:
+      - name: s3-step
+        template: s3-template
+        arguments:
+          artifacts:
+          - name: input1
+            s3:
+              endpoint: s3.amazonaws.com
+              bucket: your-bucket-name
+              key: path/to/your/object1
+          - name: input2
+            s3:
+              endpoint: s3.amazonaws.com
+              bucket: your-bucket-name
+              key: path/to/your/object2
+          - name: input3
+            s3:
+              endpoint: s3.amazonaws.com
+              bucket: your-bucket-name
+              key: path/to/your/object3
+
+  - name: s3-template
+    inputs:
+      artifacts:
+      - name: input1
+        path: /inputs/input1
+      - name: input2
+        path: /inputs/input2
+      - name: input3
+        path: /inputs/input3
+    container:
+      image: your-docker-image
+      command: ["/bin/sh", "-c"]
+      args: ["your-command /inputs/input1 /inputs/input2 /inputs/input3"]
