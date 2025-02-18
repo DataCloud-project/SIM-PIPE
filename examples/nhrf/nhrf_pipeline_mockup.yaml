@@ -1,0 +1,148 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  generateName: nhrf-pipeline-
+spec:
+  entrypoint: nhrf-pipeline
+  templates:
+  - name: nhrf-pipeline
+    dag:
+      tasks:
+      - name: get-data
+        template: get-data
+      - name: quality-control
+        dependencies: [get-data]
+        template: quality-control
+        arguments:
+          artifacts:
+            - name: data
+              from: "{{tasks.get-data.outputs.artifacts.data}}"        
+      - name: trimming
+        dependencies: [get-data]
+        template: trimming
+        arguments:
+          artifacts:
+            - name: data
+              from: "{{tasks.get-data.outputs.artifacts.data}}"
+      - name: alignment-bwa
+        dependencies: [trimming]
+        template: alignment-bwa
+        arguments:
+          artifacts:
+            - name: trimming-results
+              from: "{{tasks.trimming.outputs.artifacts.trimming-results}}"
+      - name: alignment-samtools
+        dependencies: [alignment-bwa]
+        template: alignment-samtools
+        arguments:
+          artifacts:
+            - name: alignment-results
+              from: "{{tasks.alignment-bwa.outputs.artifacts.alignment-results}}"
+      - name: mark-duplicates
+        dependencies: [alignment-samtools]
+        template: mark-duplicates
+        arguments:
+          artifacts:
+            - name: alignment-results
+              from: "{{tasks.alignment-samtools.outputs.artifacts.alignment-results}}"
+      - name: base-quality-score
+        dependencies: [mark-duplicates]
+        template: base-quality-score
+        arguments:
+          artifacts:
+            - name: mark-duplicates-results
+              from: "{{tasks.mark-duplicates.outputs.artifacts.mark-duplicates-results}}"
+
+  - name: get-data
+    container:
+      image: minio/mc:latest
+      command: ["/bin/sh", "-c"]
+      args: ["mc --help && mkdir -p /data && echo 'Getting data' > /data/data.txt"]
+    outputs:
+      artifacts:
+        - name: data
+          path: /data
+
+  - name: quality-control
+    container:
+      image: quay.io/biocontainers/fastqc:0.12.1--hdfd78af_0
+      command: ["/bin/sh", "-c"]
+      args: ["echo /data/data.txt && mkdir -p /data/fastqc_results && echo 'Quality control' > /data/fastqc_results/fastqc_results.txt"]
+    inputs:
+      artifacts:
+        - name: data
+          path: /data
+    outputs:
+      artifacts:
+        - name: fastqc-results
+          path: /data/fastqc_results
+
+  - name: trimming
+    container:
+      image: quay.io/biocontainers/fastp:0.23.4--h125f33a_4
+      command: ["/bin/sh", "-c"]
+      args: ["mkdir -p /data/trimmed_data && echo 'Trimming data' > /data/trimmed_data/trimmed_data.txt"]
+    inputs:
+      artifacts:
+        - name: data
+          path: /data
+    outputs:
+      artifacts:
+        - name: trimming-results
+          path: /data/trimmed_data
+
+  - name: alignment-bwa
+    container:
+      image: quay.io/biocontainers/bwa:0.7.13--1
+      command: ["/bin/sh", "-c"]
+      args: ["mkdir -p /data/alignment_results && echo 'Aligning data' > /data/alignment_results/alignment_results.txt"]
+    inputs:
+      artifacts:
+        - name: trimming-results
+          path: /data/trimming_data
+    outputs:
+      artifacts:
+        - name: alignment-results
+          path: /data/alignment_results
+
+  - name: alignment-samtools
+    container:
+      image: quay.io/biocontainers/samtools:0.1.19--2
+      command: ["/bin/sh", "-c"]
+      args: ["echo 'Aligning data' > /data/alignment_results/samtools.txt"]
+    inputs:
+      artifacts:
+        - name: alignment-results
+          path: /data/alignment_results
+    outputs:
+      artifacts:
+        - name: alignment-results
+          path: /data/alignment_results
+
+  - name: mark-duplicates
+    container:
+      image: quay.io/biocontainers/gatk4:4.5.0.0--py36hdfd78af_0
+      command: ["/bin/sh", "-c"]
+      args: ["mkdir -p /data/mark_duplicates && echo 'Marking duplicates' > /data/mark_duplicates/mark_duplicates.txt"]
+    inputs:
+      artifacts:
+        - name: alignment-results
+          path: /data/alignment_results
+    outputs:
+      artifacts:
+        - name: mark-duplicates-results
+          path: /data/mark_duplicates
+
+  - name: base-quality-score
+    container:
+      image: quay.io/biocontainers/gatk4:4.5.0.0--py36hdfd78af_0
+      command: ["/bin/sh", "-c"]
+      args: ["mkdir -p /data/final_results && echo 'Finalizing pipeline' > /data/final_results/final_results.txt"]
+    inputs:
+      artifacts:
+        - name: mark-duplicates-results
+          path: /data/mark_duplicates
+    outputs:
+      artifacts:
+        - name: final-results
+          path: /data/final_results
