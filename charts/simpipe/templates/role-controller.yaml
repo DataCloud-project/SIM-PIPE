@@ -14,3 +14,6 @@ rules:
 - apiGroups: ["argoproj.io"]
   resources: ["workflows", "workflowtemplates", "cronworkflows"]
   verbs: ["get", "list", "create", "update", "delete"]
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get", "list", "watch", "create", "update", "delete"]  # Added this rule for getting access to pods and nodes
