@@ -34,8 +34,8 @@
 	const inputdata: { [task_name: string]: { [template_task_artifact_index: number]: InputData } } =
 		{};
 
-	const argoWorkflowTemplate = $selectedProject?.workflowTemplates[0].argoWorkflowTemplate;
-	const currentArgoWorkflowTemplates = argoWorkflowTemplate.spec.templates;
+	const argoWorkflowTemplate = $selectedProject?.workflowTemplates[0]?.argoWorkflowTemplate;
+	const currentArgoWorkflowTemplates = argoWorkflowTemplate?.spec?.templates;
 	$: console.log('currentArgoWorkflowTemplate', currentArgoWorkflowTemplates);
 
 	type InputData = {
