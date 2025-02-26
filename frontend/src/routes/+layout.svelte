@@ -8,7 +8,7 @@
 	import '../app.postcss';
 	import hljs from 'highlight.js';
 	import 'highlight.js/styles/github-dark.css'; // highlight.js theme
-	import { LockIcon, BookOpenIcon, FileIcon, FolderIcon, StarIcon } from 'svelte-feather-icons';
+	import { LockIcon, BookOpenIcon, FileIcon, FolderIcon,CodepenIcon } from 'svelte-feather-icons';
 	import {
 		AppShell,
 		AppBar,
@@ -29,6 +29,7 @@
 	import UploadFileModal from '../modals/upload-file-modal.svelte';
 	import ProvideTextInputModal from '../modals/text-input-modal.svelte';
 	import SubmitNewProjectModal from '../modals/submit-new-project-modal.svelte';
+	import SubmitNewResourceModal from '../modals/submit-new-resource-modal.svelte';
 	import SubmitNewDryRunModal from '../modals/submit-new-dry-run-modal.svelte';
 	import SubmitNewSecretModal from '../modals/submit-new-secret-modal.svelte';
 
@@ -37,6 +38,7 @@
 		uploadFileModal: { ref: UploadFileModal },
 		provideTextInputModal: { ref: ProvideTextInputModal },
 		createNewProjectModal: { ref: SubmitNewProjectModal },
+		createNewResourceModal: { ref: SubmitNewResourceModal },
 		submitNewDryRunModal: { ref: SubmitNewDryRunModal },
 		submitNewSecretModal: { ref: SubmitNewSecretModal }
 	};
@@ -127,6 +129,19 @@
 						<LockIcon size="1.5x" />
 					</div>
 					<div>Registry</div>
+				</div>
+			</AppRailAnchor>
+			<!-- new section for managing resources for emulation -->
+			<AppRailAnchor
+				label="Resources for deployment"
+				href="/resources"
+				selected={$page.url.pathname === '/resources'}
+			>
+				<div class="flex flex-col items-center justify-center">
+					<div>
+						<CodepenIcon size="1.5x" />
+					</div>
+					<div>Resources</div>
 				</div>
 			</AppRailAnchor>
 			<!-- TO DO: temporary redirect to sftp go web interface; will be replaced by files manager when api is ready -->
