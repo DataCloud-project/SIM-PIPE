@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import cpuCoresData from '../hardwaremetrics/hardwaremetrics.js';
+
 import {
   assertDryRunNodeHasWorkflow,
   convertArgoWorkflowNode,
@@ -8,6 +8,7 @@ import {
   getDryRun, getDryRunNodeLog, resubmitDryRun, resumeDryRun,
   retryDryRun, stopDryRun, suspendDryRun,
 } from '../argo/dry-runs.js';
+import createKubeNode from '../argo/test.js';
 import {
   createWorkflowTemplate,
   deleteWorkflowTemplate,
@@ -15,6 +16,12 @@ import {
   updateWorkflowTemplate,
   workflowTemplatesForProject,
 } from '../argo/workflow-template.js';
+import {
+  aggregatedNodesMetrics,
+  computeScalingLaws,
+  extrapolateFromScalingLaws,
+} from '../curve_fitting/dry-run-data.js';
+import cpuCoresData from '../hardwaremetrics/hardwaremetrics.js';
 import assignArgoWorkflowToProject from '../k8s/assign-argoworkflow-to-project.js';
 import {
   createDockerRegistryCredential,
@@ -27,28 +34,23 @@ import {
   createProject, deleteProject, getProject, projects, renameProject,
 } from '../k8s/projects.js';
 import {
-  computePresignedGetUrl, 
-  computePresignedPutUrl, 
-  listAllBuckets, 
-  listAllObjects, 
-  getObjectSize, 
-  createBucket, 
-  deleteBucket, 
+  computePresignedGetUrl,
+  computePresignedPutUrl,
+  createBucket,
+  deleteBucket,
   deleteObjects,
   getObjectMetadata,
+  getObjectSize,
+  listAllBuckets,
+  listAllObjects,
 } from '../minio/minio.js';
-import { ArtifactItem } from '../minio/minio.js';
 import { assertPrometheusIsHealthy } from '../prometheus/prometheus.js';
 import queryPrometheusResolver from '../prometheus/query-prometheus-resolver.js';
-import { 
-  aggregatedNodesMetrics, 
-  computeScalingLaws, 
-  extrapolateFromScalingLaws,
-} from '../curve_fitting/dry-run-data.js';
 import { NotFoundError, PingError } from './apollo-errors.js';
 import type { ArgoWorkflow, ArgoWorkflowTemplate } from '../argo/argo-client.js';
 import type ArgoWorkflowClient from '../argo/argo-client.js';
 import type K8sClient from '../k8s/k8s-client.js';
+import type { ArtifactItem } from '../minio/minio.js';
 import type {
   Artifact,
   DryRun,
@@ -58,13 +60,15 @@ import type {
   DryRunNodeMetricsCpuSystemSecondsTotalArgs as DryRunNodeMetricsCpuSystemSecondsTotalArguments,
   DryRunNodePod, DryRunNodePodLogArgs as DryRunNodePodLogArguments,
   Mutation,
-  MutationCreateBucketArgs as MutationCreateBucketArguments,
   MutationAssignDryRunToProjectArgs as MutationAssignDryRunToProjectArguments,
   MutationComputeUploadPresignedUrlArgs as MutationComputeUploadPresignedUrlArguments,
+  MutationCreateBucketArgs as MutationCreateBucketArguments,
   MutationCreateDockerRegistryCredentialArgs as MutationCreateDockerRegistryCredentialArguments,
   MutationCreateDryRunArgs as MutationCreateDryRunArguments,
   MutationCreateProjectArgs as MutationCreateProjectArguments,
+  MutationCreateResourceArgs as MutationCreateResourceArguments,
   MutationCreateWorkflowTemplateArgs as MutationCreateWorkflowTemplateArguments,
+  MutationDeleteArtifactsArgs as MutationDeleteArtifactsArguments,
   MutationDeleteDockerRegistryCredentialArgs as MutationDeleteDockerRegistryCredentialArguments,
   MutationDeleteDryRunArgs as MutationDeleteDryRunArguments,
   MutationDeleteProjectArgs as MutationDeleteProjectArguments,
@@ -78,21 +82,20 @@ import type {
   MutationSuspendDryRunArgs as MutationSuspendDryRunArguments,
   MutationUpdateDockerRegistryCredentialArgs as MutationUpdateDockerRegistryCredentialArguments,
   MutationUpdateWorkflowTemplateArgs as MutationUpdateWorkflowTemplateArguments,
-  MutationDeleteArtifactsArgs as MutationDeleteArtifactsArguments,
+  NodesAggregatedNodeMetrics,
+  NodesScalingLaws,
   Project,
   Query,
   QueryArtifactArgs as QueryArtifactArguments,
   QueryArtifactsArgs as QueryArtifactsArguments,
+  QueryComputeScalingLawsFromNodesMetricsArgs as QueryComputeScalingLawsFromNodesMetricsArguments,
   QueryDryRunArgs as QueryDryRunArguments,
+  QueryGetAggregatedNodesMetricsArgs as QueryGetAggregatedNodesMetricsArguments,
+  QueryPredictScalingArgs as QueryPredictScalingArguments,
   QueryProjectArgs as QueryProjectArguments,
   QueryResolvers,
   QueryWorkflowTemplateArgs as QueryWorkflowTemplateArguments,
-  QueryComputeScalingLawsFromNodesMetricsArgs,
-  QueryPredictScalingArgs,
-  QueryGetAggregatedNodesMetricsArgs,
   WorkflowTemplate,
-  NodesAggregatedNodeMetrics,
-  NodesScalingLaws,
 } from './schema.js';
 
 interface ContextUser {
@@ -205,12 +208,19 @@ const resolvers = {
         name,
       }));
     },
+    async resources(
+      _p: EmptyParent, _a: EmptyArguments, context: AuthenticatedContext,
+    ): Promise<Query['resources']> {
+      return [{
+        name: 'resource1', os: 'linux', cpus: '4', memory: '16Gi', id: 'resource1',
+      }];
+    },
     async artifact(
       _p: EmptyParent, arguments_: QueryArtifactArguments, context: AuthenticatedContext,
     ): Promise<Query['artifact']> {
       const { key, bucketName } = arguments_;
       const object = await getObjectMetadata(key, bucketName);
-      let returnobject = {
+      const returnobject = {
         etag: object.etag,
         lastModified: object.lastModified.toISOString(),
         size: object.size,
@@ -224,10 +234,10 @@ const resolvers = {
       const { bucketName } = arguments_;
       // console.log(bucketName);
       let objects: ArtifactItem[];
-      if (!bucketName) {
-        objects = await listAllObjects(); // will use default bucket
-      } else {
+      if (bucketName) {
         objects = await listAllObjects(bucketName);
+      } else {
+        objects = await listAllObjects(); // will use default bucket
       }
       return objects.map(({ name, size }) => ({
         name,
@@ -239,18 +249,16 @@ const resolvers = {
     async hardwaremetrics(
       _p: EmptyParent, _a: EmptyArguments, context: AuthenticatedContext,
     ): Promise<Query['hardwaremetrics']> {
-      
       const ncores = cpuCoresData.length;
-      const hardwaremetrics = {cpuCores: ncores, cpuCoresData: cpuCoresData};
-      
-      return hardwaremetrics;
+      const hardwaremetrics = { cpuCores: ncores, cpuCoresData };
 
+      return hardwaremetrics;
     },
     async getAggregatedNodesMetrics(
-      _p: EmptyParent, arguments_: QueryGetAggregatedNodesMetricsArgs, context: AuthenticatedContext
+      _p: EmptyParent, arguments_: QueryGetAggregatedNodesMetricsArguments, context: AuthenticatedContext,
     ): Promise<Query['getAggregatedNodesMetrics']> {
-      const containerName = 'main'
-      let aggregateMethod = 'average' // default
+      const containerName = 'main';
+      let aggregateMethod = 'average'; // default
       if (arguments_.aggregateMethod) {
         aggregateMethod = arguments_.aggregateMethod;
       }
@@ -260,18 +268,20 @@ const resolvers = {
     },
     async computeScalingLawsFromNodesMetrics(
       _p: EmptyParent,
-      arguments_: QueryComputeScalingLawsFromNodesMetricsArgs,
+      arguments_: QueryComputeScalingLawsFromNodesMetricsArguments,
       context: AuthenticatedContext,
     ): Promise<Query['computeScalingLawsFromNodesMetrics']> {
-      const { nodesAggregatedNodeMetrics, dryRunIds, aggregateMethod, regressionMethod } = arguments_;
+      const {
+        nodesAggregatedNodeMetrics, dryRunIds, aggregateMethod, regressionMethod,
+      } = arguments_;
       const containerName = 'main';
-      let aggregateMethodUsed = aggregateMethod ? aggregateMethod : 'average';
-      let regressionMethodUsed = regressionMethod ? regressionMethod : 'linear';
+      const aggregateMethodUsed = aggregateMethod || 'average';
+      const regressionMethodUsed = regressionMethod || 'linear';
 
       let scalingLaws: NodesScalingLaws[] = [];
 
       // TODO: This is a bit of a mess, we should probably refactor this
-      
+
       if (dryRunIds && !nodesAggregatedNodeMetrics) {
         const dryRunIds: string[] = arguments_.dryRunIds as string[];
         const data_x: number[] = arguments_.data_x as number[];
@@ -289,18 +299,20 @@ const resolvers = {
     },
     async predictScaling(
       _p: EmptyParent,
-      arguments_: QueryPredictScalingArgs,
+      arguments_: QueryPredictScalingArguments,
       context: AuthenticatedContext,
     ): Promise<Query['predictScaling']> {
-      const { nodesAggregatedNodeMetrics, dryRunIds, aggregateMethod, regressionMethod, data_x_to_predict } = arguments_;
+      const {
+        nodesAggregatedNodeMetrics, dryRunIds, aggregateMethod, regressionMethod, data_x_to_predict,
+      } = arguments_;
       const containerName = 'main';
-      let aggregateMethodUsed = aggregateMethod ? aggregateMethod : 'average';
-      let regressionMethodUsed = regressionMethod ? regressionMethod : 'linear';
+      const aggregateMethodUsed = aggregateMethod || 'average';
+      const regressionMethodUsed = regressionMethod || 'linear';
 
       let scalingLaws: NodesScalingLaws[] = [];
 
       // TODO: This is a bit of a mess, we should probably refactor this
-      
+
       if (dryRunIds && !nodesAggregatedNodeMetrics) {
         const dryRunIds: string[] = arguments_.dryRunIds as string[];
         const data_x: number[] = arguments_.data_x as number[];
@@ -316,7 +328,7 @@ const resolvers = {
 
       const scalingPredictions = await extrapolateFromScalingLaws(scalingLaws, data_x_to_predict);
       return scalingPredictions;
-    },    
+    },
   } as Required<QueryResolvers<AuthenticatedContext, EmptyParent>>,
   Mutation: {
     async createBucket(
@@ -349,7 +361,7 @@ const resolvers = {
     ): Promise<Mutation['createDryRun']> {
       const { input } = arguments_;
       const { argoWorkflow, dryRunId, projectId } = input;
-      const { argoClient } = context;
+            const { argoClient } = context;
       return await createDryRun({
         argoWorkflow: argoWorkflow as ArgoWorkflow,
         projectId: projectId ?? undefined,
@@ -432,6 +444,35 @@ const resolvers = {
       );
       return convertArgoWorkflowToDryRun(workflow);
     },
+    async createResource(
+      _p: EmptyParent,
+      arguments_: MutationCreateResourceArguments,
+    ): Promise<Mutation['createResource']> {
+      const {
+        input: {
+          name, os, cpus, memory,
+        },
+      } = arguments_;
+      try {
+        // Call the existing createKubeNode function
+        await createKubeNode(
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+          name,
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+          memory,
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+          cpus,
+          '600', // Default timeout, adjust as needed
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+          os,
+        );
+        // todo: persist to a database 
+        return 'ok';
+      } catch (error) {
+        console.error('Error creating resource:', error);
+        throw new Error('Failed to create resource');
+      }
+    },
     async createDockerRegistryCredential(
       _p: EmptyParent,
       arguments_: MutationCreateDockerRegistryCredentialArguments,
@@ -502,9 +543,9 @@ const resolvers = {
       }
       */
       let { key, bucketName } = _arguments;
-      //console.log('key', key);
+      // console.log('key', key);
       if (key) {
-        //if (!/^[\w.-]+$/i.test(key)) {
+        // if (!/^[\w.-]+$/i.test(key)) {
         if (!isValidFilePath(key)) {
           throw new Error('Key is unsupported for files');
         }
@@ -512,15 +553,14 @@ const resolvers = {
         key = randomUUID();
       }
 
-      //const objectName = `${sub}/${key}`;
+      // const objectName = `${sub}/${key}`;
       const objectName = key;
       // console.log('bucketName', bucketName);
       // console.log('objectName', objectName);
       if (bucketName !== null) {
         return await computePresignedPutUrl(objectName, bucketName);
-      } else {
-        return await computePresignedPutUrl(objectName);
       }
+      return await computePresignedPutUrl(objectName);
     },
     async createWorkflowTemplate(
       _p: EmptyParent,
@@ -572,7 +612,7 @@ const resolvers = {
       const { bucketName, keys } = arguments_;
       const response = await deleteObjects(keys, bucketName);
       return response;
-    }
+    },
   } as Required<MutationResolvers<AuthenticatedContext, EmptyParent>>,
   Project: {
     async dryRuns(
@@ -767,7 +807,7 @@ const resolvers = {
       }
       const filesize = await getObjectSize(key, bucketName as string);
       // console.log('artifact size calc', filesize, key, bucketName, artifact)
-      return filesize
+      return filesize;
     },
   },
   WorkflowTemplate: {

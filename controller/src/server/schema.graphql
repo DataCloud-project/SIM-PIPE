@@ -64,6 +64,9 @@ type Query {
     """ Name of the Argo workflow template to be fetched """
     name: String!): WorkflowTemplate @auth
 
+  """ List of all resources """
+  resources: [Resource!]! @auth
+
   """ List of all the artifacts """
   artifacts(
     """ The name of the bucket """
@@ -130,6 +133,14 @@ type Project {
   workflowTemplates: [WorkflowTemplate!]
 }
 
+""" Resources are nodes created to emulate pipeline execution on a specific hardware. """
+type Resource {
+  id: String!
+  name: String!
+  os: String!
+  cpus: String!
+  memory: String!
+}
 
 """ Dry runs are created under a project which represents an executable instance of the pipeline. """
 type DryRun {
@@ -501,6 +512,21 @@ input CreateProjectInput {
   id: String
 }
 
+""" The input data to create a new resource. """
+input CreateResourceInput {
+  """ The name of the new resource """
+  name: String!
+
+  """ The os type name of the new resource """
+  os: String!
+
+  """ The cpus for the new resource """
+  cpus: String!
+  
+  """ The memory for the new resource """
+  memory: String!
+}
+
 """ The input data to create a new dry run """
 input CreateDryRunInput {
   """ The project to which this dry run belongs (optional).
@@ -610,6 +636,12 @@ type Mutation @auth {
     dryRunId: String!,
     """ ID of the target project """
     projectId: String!): DryRun!
+
+  # TODO: add types correctly
+  """ Create a new resource """
+  createResource(
+  """ Input to create the new dry run """
+  input: CreateResourceInput!): String!
 
   """ Create a new docker registry credential """
   createDockerRegistryCredential(

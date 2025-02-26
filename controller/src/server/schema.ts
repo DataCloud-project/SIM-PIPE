@@ -108,6 +108,18 @@ export type CreateProjectInput = {
   name: Scalars['String']['input'];
 };
 
+/**  The input data to create a new resource.  */
+export type CreateResourceInput = {
+  /**  The cpus for the new resource  */
+  cpus: Scalars['String']['input'];
+  /**  The memory for the new resource  */
+  memory: Scalars['String']['input'];
+  /**  The name of the new resource  */
+  name: Scalars['String']['input'];
+  /**  The os type name of the new resource  */
+  os: Scalars['String']['input'];
+};
+
 /**  The input data to create a workflow template  */
 export type CreateWorkflowTemplateInput = {
   /**  The raw Argo workflow document  */
@@ -729,6 +741,8 @@ export type Mutation = {
   createDryRun: DryRun;
   /**  Create a new project  */
   createProject: Project;
+  /**  Create a new resource  */
+  createResource: Scalars['String']['output'];
   /**  Create a new Argo workflow template  */
   createWorkflowTemplate: WorkflowTemplate;
   deleteArtifacts: Scalars['Boolean']['output'];
@@ -790,6 +804,11 @@ export type MutationCreateDryRunArgs = {
 
 export type MutationCreateProjectArgs = {
   project: CreateProjectInput;
+};
+
+
+export type MutationCreateResourceArgs = {
+  input: CreateResourceInput;
 };
 
 
@@ -938,6 +957,8 @@ export type Query = {
   project: Project;
   /**  List of all projects  */
   projects: Array<Project>;
+  /**  List of all resources  */
+  resources: Array<Resource>;
   /**  Fetches the username of the current user.  */
   username: Scalars['String']['output'];
   /**  Get an Argo  workflow template by name  */
@@ -1001,6 +1022,16 @@ export type QueryProjectArgs = {
 /**  The root query type. All queries that fetch data are defined here.  */
 export type QueryWorkflowTemplateArgs = {
   name: Scalars['String']['input'];
+};
+
+/**  Dry runs are created under a project which represents an executable instance of the pipeline.  */
+export type Resource = {
+  __typename?: 'Resource';
+  cpus: Scalars['String']['output'];
+  id: Scalars['String']['output'];
+  memory: Scalars['String']['output'];
+  name: Scalars['String']['output'];
+  os: Scalars['String']['output'];
 };
 
 export type ScalingLawData = {
@@ -1141,6 +1172,7 @@ export type ResolversTypes = {
   Bucket: ResolverTypeWrapper<Bucket>;
   CreateDryRunInput: CreateDryRunInput;
   CreateProjectInput: CreateProjectInput;
+  CreateResourceInput: CreateResourceInput;
   CreateWorkflowTemplateInput: CreateWorkflowTemplateInput;
   DockerRegistryCredential: ResolverTypeWrapper<DockerRegistryCredential>;
   DockerRegistryCredentialInput: DockerRegistryCredentialInput;
@@ -1165,6 +1197,7 @@ export type ResolversTypes = {
   PrometheusSample: ResolverTypeWrapper<PrometheusSample>;
   PrometheusStringNumber: ResolverTypeWrapper<Scalars['PrometheusStringNumber']['output']>;
   Query: ResolverTypeWrapper<{}>;
+  Resource: ResolverTypeWrapper<Resource>;
   ScalingLawData: ResolverTypeWrapper<ScalingLawData>;
   ScalingPredictions: ResolverTypeWrapper<ScalingPredictions>;
   String: ResolverTypeWrapper<Scalars['String']['output']>;
@@ -1187,6 +1220,7 @@ export type ResolversParentTypes = {
   Bucket: Bucket;
   CreateDryRunInput: CreateDryRunInput;
   CreateProjectInput: CreateProjectInput;
+  CreateResourceInput: CreateResourceInput;
   CreateWorkflowTemplateInput: CreateWorkflowTemplateInput;
   DockerRegistryCredential: DockerRegistryCredential;
   DockerRegistryCredentialInput: DockerRegistryCredentialInput;
@@ -1208,6 +1242,7 @@ export type ResolversParentTypes = {
   PrometheusSample: PrometheusSample;
   PrometheusStringNumber: Scalars['PrometheusStringNumber']['output'];
   Query: {};
+  Resource: Resource;
   ScalingLawData: ScalingLawData;
   ScalingPredictions: ScalingPredictions;
   String: Scalars['String']['output'];
@@ -1402,6 +1437,7 @@ export type MutationResolvers<ContextType = any, ParentType extends ResolversPar
   createDockerRegistryCredential?: Resolver<ResolversTypes['DockerRegistryCredential'], ParentType, ContextType, RequireFields<MutationCreateDockerRegistryCredentialArgs, 'credential'>>;
   createDryRun?: Resolver<ResolversTypes['DryRun'], ParentType, ContextType, RequireFields<MutationCreateDryRunArgs, 'input'>>;
   createProject?: Resolver<ResolversTypes['Project'], ParentType, ContextType, RequireFields<MutationCreateProjectArgs, 'project'>>;
+  createResource?: Resolver<ResolversTypes['String'], ParentType, ContextType, RequireFields<MutationCreateResourceArgs, 'input'>>;
   createWorkflowTemplate?: Resolver<ResolversTypes['WorkflowTemplate'], ParentType, ContextType, RequireFields<MutationCreateWorkflowTemplateArgs, 'input'>>;
   deleteArtifacts?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationDeleteArtifactsArgs, 'bucketName' | 'keys'>>;
   deleteBucket?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationDeleteBucketArgs, 'name'>>;
@@ -1466,8 +1502,18 @@ export type QueryResolvers<ContextType = any, ParentType extends ResolversParent
   predictScaling?: Resolver<ResolversTypes['ScalingPredictions'], ParentType, ContextType, RequireFields<QueryPredictScalingArgs, 'data_x' | 'data_x_to_predict'>>;
   project?: Resolver<ResolversTypes['Project'], ParentType, ContextType, RequireFields<QueryProjectArgs, 'projectId'>>;
   projects?: Resolver<Array<ResolversTypes['Project']>, ParentType, ContextType>;
+  resources?: Resolver<Array<ResolversTypes['Resource']>, ParentType, ContextType>;
   username?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   workflowTemplate?: Resolver<Maybe<ResolversTypes['WorkflowTemplate']>, ParentType, ContextType, RequireFields<QueryWorkflowTemplateArgs, 'name'>>;
+};
+
+export type ResourceResolvers<ContextType = any, ParentType extends ResolversParentTypes['Resource'] = ResolversParentTypes['Resource']> = {
+  cpus?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  id?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  memory?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  os?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
 export type ScalingLawDataResolvers<ContextType = any, ParentType extends ResolversParentTypes['ScalingLawData'] = ResolversParentTypes['ScalingLawData']> = {
@@ -1534,6 +1580,7 @@ export type Resolvers<ContextType = any> = {
   PrometheusSample?: PrometheusSampleResolvers<ContextType>;
   PrometheusStringNumber?: GraphQLScalarType;
   Query?: QueryResolvers<ContextType>;
+  Resource?: ResourceResolvers<ContextType>;
   ScalingLawData?: ScalingLawDataResolvers<ContextType>;
   ScalingPredictions?: ScalingPredictionsResolvers<ContextType>;
   TimeStamp?: GraphQLScalarType;
