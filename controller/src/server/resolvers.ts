@@ -8,7 +8,7 @@ import {
   getDryRun, getDryRunNodeLog, resubmitDryRun, resumeDryRun,
   retryDryRun, stopDryRun, suspendDryRun,
 } from '../argo/dry-runs.js';
-import createKubeNode from '../argo/test.js';
+import createKubeNode from '../argo/test-emulation.js';
 import {
   createWorkflowTemplate,
   deleteWorkflowTemplate,

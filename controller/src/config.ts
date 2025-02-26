@@ -27,3 +27,6 @@ export const kubernetesNamespace = process.env.KUBERNETES_NAMESPACE ?? 'default'
 
 // Prometheus endpoint
 export const prometheusServerUrl = process.env.PROMETHEUS_SERVER_URL ?? 'http://localhost:8086';
+
+// K3S Cluster Secret
+export const k3sClusterSecret = process.env.K3S_Cluster_SECRET ?? 'k3s-cluster-secret';

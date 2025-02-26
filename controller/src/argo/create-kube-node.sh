@@ -96,7 +96,7 @@ instance-id: $NODE_NAME
 local-hostname: $NODE_NAME
 EOF
 
-bash /bin/cloud-localds "$CLOUD_INIT_ISO" user-data meta-data
+bash cloud-localds "$CLOUD_INIT_ISO" user-data meta-data
 
 # Step 2: Prepare OS image
 prepare_os_image
