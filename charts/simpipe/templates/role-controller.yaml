@@ -6,7 +6,7 @@ metadata:
     {{- include "simpipeController.labels" . | nindent 4 }}
 rules:
 - apiGroups: ["simpipe.sct.sintef.no"]
-  resources: ["projects"]
+  resources: ["projects", "resources"]  # added resources to manage new cluster nodes
   verbs: ["get", "list", "create", "update", "delete"]
 - apiGroups: [""]
   resources: ["secrets"]
@@ -16,4 +16,4 @@ rules:
   verbs: ["get", "list", "create", "update", "delete"]
 - apiGroups: [""]
   resources: ["pods"]
-  verbs: ["get", "list", "watch", "create", "update", "delete"]  # Added this rule for getting access to pods and nodes
+  verbs: ["get", "list", "watch", "create", "drain", "update", "delete"]  # Added this rule for getting access to pods and nodes

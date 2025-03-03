@@ -6,4 +6,10 @@ metadata:
 rules:
 - apiGroups: [""]
   resources: ["nodes"]
-  verbs: ["get", "list", "watch", "patch"]
+  verbs: ["get", "list", "delete", "patch"]
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get", "list"]  # For draining pods before deleting worker nodes after emulation
+- apiGroups: ["simpipe.sct.sintef.no"]
+  resources: ["resources", "projects"]
+  verbs: ["get", "list", "create", "update", "delete"]
