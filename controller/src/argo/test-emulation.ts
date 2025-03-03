@@ -2,7 +2,8 @@ import { spawn } from "child_process";
 import { k3sClusterSecret } from "../config.js";
 
 // Constants TODO: move to a config file or environment variables
-const SCRIPTPATH = "./create-kube-node.sh";
+const CREATESCRIPTPATH = "./create-kube-node.sh";
+const DELETE_SCRIPT_PATH = "./shutdown-kube-node.sh";
 const QCOW2_IMAGE_FILE = "os.qcow2";
 const CLOUD_INIT_FILE = "cloud-init.iso";
 
@@ -20,7 +21,7 @@ export default function createKubeNode(
     console.log(`[INFO] Starting Kubernetes node creation: ${nodeName}`);
 
     const script = spawn("sh", [
-      SCRIPTPATH,
+      CREATESCRIPTPATH,
       K3S_TOKEN_SECRET,
       nodeName,
       memory,
@@ -56,6 +57,43 @@ export default function createKubeNode(
     script.stderr.on("data", (data) => {
       const errorOutput = data.toString().trim();
       stderrData += errorOutput + '\n';
+      console.error(`[STDERR] ${errorOutput}`);
+    });
+  });
+}
+
+// Function to delete a Kubernetes node
+export function deleteKubeNode(nodeName: string): Promise<string> {
+  return new Promise((resolve, reject) => {
+    console.log(`[INFO] Starting Kubernetes node deletion: ${nodeName}`);
+
+    const script = spawn('sh', [
+      DELETE_SCRIPT_PATH,
+      nodeName,
+    ]);
+
+    script.stdout.on('data', (data: { toString: () => string }) => {
+      console.log(`${data.toString().trim()}`);
+    });
+
+    script.stderr.on('data', (data: { toString: () => string }) => {
+      console.error(`${data.toString().trim()}`);
+    });
+
+    script.on('close', (code) => {
+      if (code === 0) {
+        console.log(`[SUCCESS] Node ${nodeName} deleted successfully.`);
+        resolve(`Node ${nodeName} deleted successfully.`);
+      } else {
+        console.error(`[ERROR] Script exited with code ${code}`);
+        reject(new Error(`[ERROR] Script exited with code ${code}`));
+      }
+    });
+
+    let stderrData = '';
+    script.stderr.on('data', (data) => {
+      const errorOutput = data.toString().trim();
+      stderrData += `${errorOutput}\n`;
       console.error(`[STDERR] ${errorOutput}`);
     });
   });
