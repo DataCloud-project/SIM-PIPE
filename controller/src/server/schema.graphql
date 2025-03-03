@@ -637,11 +637,15 @@ type Mutation @auth {
     """ ID of the target project """
     projectId: String!): DryRun!
 
-  # TODO: add types correctly
   """ Create a new resource """
   createResource(
   """ Input to create the new dry run """
-  input: CreateResourceInput!): String!
+  input: CreateResourceInput!): Resource!
+
+ """ Delete an existing resource. The mutation returns true if the deletion was successful. """
+  deleteResource(
+    """ ID of the resource to be deleted """
+    resourceId: String!): Boolean!
 
   """ Create a new docker registry credential """
   createDockerRegistryCredential(

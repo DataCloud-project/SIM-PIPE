@@ -742,7 +742,7 @@ export type Mutation = {
   /**  Create a new project  */
   createProject: Project;
   /**  Create a new resource  */
-  createResource: Scalars['String']['output'];
+  createResource: Resource;
   /**  Create a new Argo workflow template  */
   createWorkflowTemplate: WorkflowTemplate;
   deleteArtifacts: Scalars['Boolean']['output'];
@@ -754,6 +754,8 @@ export type Mutation = {
   deleteDryRun: Scalars['Boolean']['output'];
   /**  Delete an existing project. The mutation returns true if the deletion was successful.  */
   deleteProject: Scalars['Boolean']['output'];
+  /**  Delete an existing resource. The mutation returns true if the deletion was successful.  */
+  deleteResource: Scalars['Boolean']['output'];
   /**  Delete an existing Argo workflow template. The mutation returns true if the deletion was successful.  */
   deleteWorkflowTemplate: Scalars['Boolean']['output'];
   /**  Rename an existing project  */
@@ -840,6 +842,11 @@ export type MutationDeleteDryRunArgs = {
 
 export type MutationDeleteProjectArgs = {
   projectId: Scalars['String']['input'];
+};
+
+
+export type MutationDeleteResourceArgs = {
+  resourceId: Scalars['String']['input'];
 };
 
 
@@ -1024,7 +1031,7 @@ export type QueryWorkflowTemplateArgs = {
   name: Scalars['String']['input'];
 };
 
-/**  Dry runs are created under a project which represents an executable instance of the pipeline.  */
+/**  Resources are nodes created to emulate pipeline execution on a specific hardware.  */
 export type Resource = {
   __typename?: 'Resource';
   cpus: Scalars['String']['output'];
@@ -1437,13 +1444,14 @@ export type MutationResolvers<ContextType = any, ParentType extends ResolversPar
   createDockerRegistryCredential?: Resolver<ResolversTypes['DockerRegistryCredential'], ParentType, ContextType, RequireFields<MutationCreateDockerRegistryCredentialArgs, 'credential'>>;
   createDryRun?: Resolver<ResolversTypes['DryRun'], ParentType, ContextType, RequireFields<MutationCreateDryRunArgs, 'input'>>;
   createProject?: Resolver<ResolversTypes['Project'], ParentType, ContextType, RequireFields<MutationCreateProjectArgs, 'project'>>;
-  createResource?: Resolver<ResolversTypes['String'], ParentType, ContextType, RequireFields<MutationCreateResourceArgs, 'input'>>;
+  createResource?: Resolver<ResolversTypes['Resource'], ParentType, ContextType, RequireFields<MutationCreateResourceArgs, 'input'>>;
   createWorkflowTemplate?: Resolver<ResolversTypes['WorkflowTemplate'], ParentType, ContextType, RequireFields<MutationCreateWorkflowTemplateArgs, 'input'>>;
   deleteArtifacts?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationDeleteArtifactsArgs, 'bucketName' | 'keys'>>;
   deleteBucket?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationDeleteBucketArgs, 'name'>>;
   deleteDockerRegistryCredential?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationDeleteDockerRegistryCredentialArgs, 'name'>>;
   deleteDryRun?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationDeleteDryRunArgs, 'dryRunId'>>;
   deleteProject?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationDeleteProjectArgs, 'projectId'>>;
+  deleteResource?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationDeleteResourceArgs, 'resourceId'>>;
   deleteWorkflowTemplate?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationDeleteWorkflowTemplateArgs, 'name'>>;
   renameProject?: Resolver<ResolversTypes['Project'], ParentType, ContextType, RequireFields<MutationRenameProjectArgs, 'name' | 'projectId'>>;
   resubmitDryRun?: Resolver<ResolversTypes['DryRun'], ParentType, ContextType, RequireFields<MutationResubmitDryRunArgs, 'dryRunId'>>;

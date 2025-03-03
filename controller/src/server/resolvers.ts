@@ -8,7 +8,6 @@ import {
   getDryRun, getDryRunNodeLog, resubmitDryRun, resumeDryRun,
   retryDryRun, stopDryRun, suspendDryRun,
 } from '../argo/dry-runs.js';
-import createKubeNode from '../argo/test-emulation.js';
 import {
   createWorkflowTemplate,
   deleteWorkflowTemplate,
@@ -33,6 +32,7 @@ import { SIMPIPE_PROJECT_LABEL } from '../k8s/label.js';
 import {
   createProject, deleteProject, getProject, projects, renameProject,
 } from '../k8s/projects.js';
+import { createResource, deleteResource, resources } from '../k8s/resources.js';
 import {
   computePresignedGetUrl,
   computePresignedPutUrl,
@@ -72,6 +72,7 @@ import type {
   MutationDeleteDockerRegistryCredentialArgs as MutationDeleteDockerRegistryCredentialArguments,
   MutationDeleteDryRunArgs as MutationDeleteDryRunArguments,
   MutationDeleteProjectArgs as MutationDeleteProjectArguments,
+  MutationDeleteResourceArgs,
   MutationDeleteWorkflowTemplateArgs as MutationDeleteWorkflowTemplateArguments,
   MutationRenameProjectArgs as MutationRenameProjectArguments,
   MutationResolvers,
@@ -211,9 +212,9 @@ const resolvers = {
     async resources(
       _p: EmptyParent, _a: EmptyArguments, context: AuthenticatedContext,
     ): Promise<Query['resources']> {
-      return [{
-        name: 'resource1', os: 'linux', cpus: '4', memory: '16Gi', id: 'resource1',
-      }];
+      const { k8sClient, k8sNamespace, user } = context;
+      const { sub } = user;
+      return await resources(k8sClient, k8sNamespace, sub);
     },
     async artifact(
       _p: EmptyParent, arguments_: QueryArtifactArguments, context: AuthenticatedContext,
@@ -361,7 +362,7 @@ const resolvers = {
     ): Promise<Mutation['createDryRun']> {
       const { input } = arguments_;
       const { argoWorkflow, dryRunId, projectId } = input;
-            const { argoClient } = context;
+      const { argoClient } = context;
       return await createDryRun({
         argoWorkflow: argoWorkflow as ArgoWorkflow,
         projectId: projectId ?? undefined,
@@ -447,31 +448,21 @@ const resolvers = {
     async createResource(
       _p: EmptyParent,
       arguments_: MutationCreateResourceArguments,
+      context: AuthenticatedContext,
     ): Promise<Mutation['createResource']> {
-      const {
-        input: {
-          name, os, cpus, memory,
-        },
-      } = arguments_;
-      try {
-        // Call the existing createKubeNode function
-        await createKubeNode(
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-          name,
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-          memory,
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-          cpus,
-          '600', // Default timeout, adjust as needed
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-          os,
-        );
-        // todo: persist to a database 
-        return 'ok';
-      } catch (error) {
-        console.error('Error creating resource:', error);
-        throw new Error('Failed to create resource');
-      }
+      const { input } = arguments_;
+      const { k8sClient, k8sNamespace, user } = context;
+      const { sub } = user;
+      return await createResource(input, k8sClient, k8sNamespace, sub);
+    },
+    async deleteResource(
+      _p: EmptyParent,
+      arguments_: MutationDeleteResourceArgs,
+      context: AuthenticatedContext,
+    ): Promise<Mutation['deleteResource']> {
+      const { resourceId } = arguments_;
+      const { k8sClient, k8sNamespace } = context;
+      return await deleteResource(resourceId, k8sClient, k8sNamespace);
     },
     async createDockerRegistryCredential(
       _p: EmptyParent,
