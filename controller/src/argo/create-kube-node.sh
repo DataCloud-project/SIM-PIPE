@@ -37,18 +37,17 @@ fetch_k3s_details() {
   K3S_SERVER_URL="https://${K3S_SERVER_IP}:6443"
 }
 
-# Function: Download and prepare OS image
-prepare_os_image() {
+# Function: Select pre-downloaded OS image
+select_os_image() {
+  log_message "INFO" "Selecting pre-downloaded OS image for $OS..."
   case "$OS" in
-    "ubuntu-18") OS_IMAGE_URL="https://cloud-images.ubuntu.com/bionic/current/bionic-server-cloudimg-amd64.img" ;;
-    "ubuntu-20") OS_IMAGE_URL="https://cloud-images.ubuntu.com/focal/current/focal-server-cloudimg-amd64.img" ;;
-    "ubuntu-22") OS_IMAGE_URL="https://cloud-images.ubuntu.com/jammy/current/jammy-server-cloudimg-amd64.img" ;;
-    "ubuntu-24") OS_IMAGE_URL="https://cloud-images.ubuntu.com/noble/current/noble-server-cloudimg-amd64.img" ;;
+    "ubuntu-18") cp /app/images/ubuntu-18.qcow2 "$QCOW2_IMAGE_FILE" ;;
+    "ubuntu-20") cp /app/images/ubuntu-20.qcow2 "$QCOW2_IMAGE_FILE" ;;
+    "ubuntu-22") cp /app/images/ubuntu-22.qcow2 "$QCOW2_IMAGE_FILE" ;;
+    "ubuntu-24") cp /app/images/ubuntu-24.qcow2 "$QCOW2_IMAGE_FILE" ;;
     *) log_message "ERROR" "Unsupported OS type: $OS"; exit 1 ;;
   esac
-
-  log_message "INFO" "Downloading and preparing OS image..."
-  wget --quiet "$OS_IMAGE_URL" -O "$QCOW2_IMAGE_FILE" && qemu-img resize "$QCOW2_IMAGE_FILE" 10G
+  qemu-img resize "$QCOW2_IMAGE_FILE" 10G
 }
 
 # Function: Check if required commands are installed
@@ -98,8 +97,8 @@ EOF
 
 bash cloud-localds "$CLOUD_INIT_ISO" user-data meta-data
 
-# Step 2: Prepare OS image
-prepare_os_image
+# Step 2: Select OS image
+select_os_image
 
 # Step 3: Start the VM
 log_message "INFO" "Starting VM: $NODE_NAME..."
@@ -109,6 +108,10 @@ nohup qemu-system-x86_64 -m "$MEMORY" -smp "$CPUS" \
   -netdev user,id=mynet0 \
   -device e1000,netdev=mynet0 \
   -nographic -serial none -monitor none -bios /usr/share/qemu/bios-256k.bin > ./log.txt 2>&1 &
+QEMU_PID=$!
+
+# Save PID to a file named after the node
+echo "$QEMU_PID" > "/tmp/qemu-$NODE_NAME.pid"
 
 sleep 60  # Initial wait time before checking node readiness
 
