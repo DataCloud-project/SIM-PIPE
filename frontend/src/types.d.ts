@@ -21,6 +21,14 @@ export type Project = {
 	workflowTemplates: [WorkflowTemplate];
 };
 
+export type Resource = {
+	name: string;
+	id: string;
+	os: string;
+	cpus: string;
+	memory: string;
+};
+
 export type WorkflowTemplate = {
 	name: string;
 	project: Project;
