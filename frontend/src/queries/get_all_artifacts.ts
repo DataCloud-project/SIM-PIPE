@@ -5,7 +5,6 @@ const allArtifactsQuery = gql`
 		artifacts(bucketName: $bucketName) {
 			name
 			url
-			size
 			bucketName
 		}
 	}
