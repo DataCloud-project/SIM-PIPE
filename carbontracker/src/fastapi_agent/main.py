@@ -31,3 +31,6 @@ async def delete_carbontracker_logs():
     except Exception as e:
         print(f"Error deleting temporary data: {e}")
 
+@app.get("/health")
+async def health_check():
+    return {"status": "ok"}
