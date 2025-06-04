@@ -1,0 +1,20 @@
+# File: pyproject.toml
+[build-system]
+requires = ["setuptools>=61.0", "setuptools_scm[toml]>=6.2"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "fastapi-agent"
+version = "0.1.0"
+requires-python = ">=3.13"
+dependencies = [
+    "fastapi",
+    "uvicorn[standard]"
+]
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+packages = ["fastapi_agent"]
+
+[project.scripts]
+fastapi-agent = "main:app"
