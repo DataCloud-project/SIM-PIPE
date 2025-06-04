@@ -381,3 +381,32 @@ cadvisor:
 
   #nodeSelector:
   #  node-role.kubernetes.io/worker: worker
+
+carbontracker:
+  enabled: true
+  image:
+    repository: ghcr.io/datacloud-project/sim-pipe-carbontracker
+    pullPolicy: Always
+    tag: "carbontracker"
+
+  imagePullSecrets: []
+  nameOverride: ""
+  fullnameOverride: ""
+
+  serviceAccount:
+    create: true
+    annotations: {}
+    name: ""
+
+  podAnnotations: {}
+
+  podSecurityContext: {}
+
+  securityContext: {}
+
+  service:
+    type: ClusterIP
+    port: 8000
+
+  ingress:
+    enabled: false

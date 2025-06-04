@@ -1,0 +1,66 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "simpipeCarbontracker.fullname" . }}
+  labels:
+    {{- include "simpipeCarbontracker.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.carbontracker.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "simpipeCarbontracker.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.carbontracker.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "simpipeCarbontracker.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.carbontracker.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "simpipeCarbontracker.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.carbontracker.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.carbontracker.securityContext | nindent 12 }}
+          image: "{{ .Values.carbontracker.image.repository }}:{{ .Values.carbontracker.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.carbontracker.image.pullPolicy }}
+          env:
+            - name: KUBERNETES_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: NODE_ENV
+              value: development
+          ports:
+            - name: http
+              containerPort: {{ .Values.carbontracker.service.port }}
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+          resources:
+            {{- toYaml .Values.carbontracker.resources | nindent 12 }}
+      {{- with .Values.carbontracker.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.carbontracker.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.carbontracker.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
