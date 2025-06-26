@@ -42,14 +42,32 @@ spec:
             - name: http
               containerPort: {{ .Values.carbontracker.service.port }}
               protocol: TCP
+          {{- if .Values.carbontracker.livenessProbe }}
+          livenessProbe:
+            {{- toYaml .Values.carbontracker.livenessProbe | nindent 12 }}
+          {{- else }}
           livenessProbe:
             httpGet:
               path: /health
               port: http
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          {{- end }}
+          {{- if .Values.carbontracker.readinessProbe }}
+          readinessProbe:
+            {{- toYaml .Values.carbontracker.readinessProbe | nindent 12 }}
+          {{- else }}
           readinessProbe:
             httpGet:
               path: /health
               port: http
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 3
+          {{- end }}
           resources:
             {{- toYaml .Values.carbontracker.resources | nindent 12 }}
       {{- with .Values.carbontracker.nodeSelector }}

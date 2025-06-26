@@ -32,6 +32,8 @@ controller:
     endpoint: http://simpipe-argo-workflows-server:2746/
   prometheus:
     serverUrl: http://prometheus-operated:9090
+  carbontracker:
+    endpoint: http://simpipe-carbontracker:8000
 
   serviceAccount:
     # Annotations to add to the service account
@@ -384,6 +386,8 @@ cadvisor:
 
 carbontracker:
   enabled: true
+  replicaCount: 1
+
   image:
     repository: ghcr.io/datacloud-project/sim-pipe-carbontracker
     pullPolicy: Always
@@ -407,6 +411,40 @@ carbontracker:
   service:
     type: ClusterIP
     port: 8000
+
+  # Probe configuration for health checks
+  livenessProbe:
+    httpGet:
+      path: /health
+      port: http
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+
+  readinessProbe:
+    httpGet:
+      path: /health
+      port: http
+    initialDelaySeconds: 10
+    periodSeconds: 5
+    timeoutSeconds: 3
+    failureThreshold: 3
+
+  # Resource limits and requests
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+
+  nodeSelector: {}
+
+  tolerations: []
+
+  affinity: {}
 
   ingress:
     enabled: false
