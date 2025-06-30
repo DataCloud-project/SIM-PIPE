@@ -78,7 +78,7 @@ type Query {
 
   """ List of all the buckets """
   buckets: [Bucket!]! @auth
-  
+
   """ Get hardware metrics server-side"""
   hardwaremetrics: HardwareMetrics! @auth
 
@@ -86,7 +86,7 @@ type Query {
   getAggregatedNodesMetrics(
     """ The list of dry run ids """
     dryRunIds: [String]!
-    """ Use average, median or max as the aggregation method. Defaults to average.""" 
+    """ Use average, median or max as the aggregation method. Defaults to average."""
     aggregateMethod: String): [NodesAggregatedNodeMetrics]!
 
   """ Compute scaling laws for a set of dry runs """
@@ -104,11 +104,16 @@ type Query {
 
   predictScaling(
     data_x: [Float]!,
-    data_x_to_predict: Float!,    
+    data_x_to_predict: Float!,
     dryRunIds: [String],
     nodesAggregatedNodeMetrics: [NodesAggregatedNodeMetricsInput!],
     regressionMethod: String,
     aggregateMethod: String): ScalingPredictions!
+
+  """ Fetch carbon tracker data from CPU usage metrics """
+  fetchCarbontrackerData(
+    """ Input data containing CPU usage metrics """
+    input: CarbonTrackerInput!): CarbonTrackerData! @auth
 }
 
 """ Project is the high level concept for a specific pipeline in SIM-PIPE. It contains all the previous dry runs of the pipeline and its results. """
@@ -365,11 +370,69 @@ type ScalingPredictions {
 }
 
 """ Prometheus metrics for the node. """
-
-
 type PrometheusSample {
   timestamp: TimeStamp!
   value: PrometheusStringNumber!
+}
+
+""" Carbon tracker data input for processing CPU usage data """
+input CarbonTrackerInput {
+  """ CPU usage data from prometheus metrics """
+  data: CarbonTrackerDryRunInput!
+}
+
+input CarbonTrackerDryRunInput {
+  dryRun: CarbonTrackerNodeInput!
+}
+
+input CarbonTrackerNodeInput {
+  node: CarbonTrackerMetricsInput!
+}
+
+input CarbonTrackerMetricsInput {
+  metrics: CarbonTrackerCpuUsageInput!
+}
+
+input CarbonTrackerCpuUsageInput {
+  cpuUsageSecondsTotal: [PrometheusSampleInput!]!
+}
+
+""" Input type for Prometheus sample data """
+input PrometheusSampleInput {
+  timestamp: TimeStamp!
+  value: PrometheusStringNumber!
+}
+
+""" Carbon tracker data response """
+type CarbonTrackerData {
+  """ Duration of the computation in seconds """
+  duration: Float!
+  """ CPU model information """
+  cpuModel: String!
+  """ CPU power data """
+  cpuPowerData: String!
+  """ Average power usage value """
+  averagePowerUsage: Float!
+  """ Average power usage unit """
+  averagePowerUsageUnit: String!
+  """ Energy usage value """
+  energyUsage: Float!
+  """ Energy usage unit """
+  energyUsageUnit: String!
+  """ Location information """
+  location: String!
+  """ Carbon intensity value """
+  carbonIntensity: Float!
+  """ Carbon intensity unit """
+  carbonIntensityUnit: String!
+  """ Energy consumption value """
+  energy: Float!
+  """ Energy consumption unit """
+  energyUnit: String!
+  """ CO2 equivalent value """
+  co2eq: Float!
+  """ CO2 equivalent unit """
+  co2eqUnit: String!
 }
 
 """ Prometheus metrics for the node. """
@@ -629,7 +692,7 @@ type Mutation @auth {
   """ Compute a presigned URL for uploading a file using HTTP PUT. The mutation returns the URL to upload the file. """
   computeUploadPresignedUrl(
     """ The name/path of the file you wish to upload """
-    key: String, 
+    key: String,
     """ The name of the bucket to upload the file to """
     bucketName: String): String!
 

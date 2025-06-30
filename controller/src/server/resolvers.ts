@@ -27,24 +27,25 @@ import {
   createProject, deleteProject, getProject, projects, renameProject,
 } from '../k8s/projects.js';
 import {
-  computePresignedGetUrl, 
-  computePresignedPutUrl, 
-  listAllBuckets, 
-  listAllObjects, 
-  getObjectSize, 
-  createBucket, 
-  deleteBucket, 
+  computePresignedGetUrl,
+  computePresignedPutUrl,
+  listAllBuckets,
+  listAllObjects,
+  getObjectSize,
+  createBucket,
+  deleteBucket,
   deleteObjects,
   getObjectMetadata,
 } from '../minio/minio.js';
 import { ArtifactItem } from '../minio/minio.js';
 import { assertPrometheusIsHealthy } from '../prometheus/prometheus.js';
 import queryPrometheusResolver from '../prometheus/query-prometheus-resolver.js';
-import { 
-  aggregatedNodesMetrics, 
-  computeScalingLaws, 
+import {
+  aggregatedNodesMetrics,
+  computeScalingLaws,
   extrapolateFromScalingLaws,
 } from '../curve_fitting/dry-run-data.js';
+import fetchCarbontrackerData from '../carbontracker/carbontracker.js';
 import { NotFoundError, PingError } from './apollo-errors.js';
 import type { ArgoWorkflow, ArgoWorkflowTemplate } from '../argo/argo-client.js';
 import type ArgoWorkflowClient from '../argo/argo-client.js';
@@ -90,6 +91,7 @@ import type {
   QueryComputeScalingLawsFromNodesMetricsArgs,
   QueryPredictScalingArgs,
   QueryGetAggregatedNodesMetricsArgs,
+  QueryFetchCarbontrackerDataArgs as QueryFetchCarbontrackerDataArguments,
   WorkflowTemplate,
   NodesAggregatedNodeMetrics,
   NodesScalingLaws,
@@ -239,10 +241,10 @@ const resolvers = {
     async hardwaremetrics(
       _p: EmptyParent, _a: EmptyArguments, context: AuthenticatedContext,
     ): Promise<Query['hardwaremetrics']> {
-      
+
       const ncores = cpuCoresData.length;
       const hardwaremetrics = {cpuCores: ncores, cpuCoresData: cpuCoresData};
-      
+
       return hardwaremetrics;
 
     },
@@ -271,7 +273,7 @@ const resolvers = {
       let scalingLaws: NodesScalingLaws[] = [];
 
       // TODO: This is a bit of a mess, we should probably refactor this
-      
+
       if (dryRunIds && !nodesAggregatedNodeMetrics) {
         const dryRunIds: string[] = arguments_.dryRunIds as string[];
         const data_x: number[] = arguments_.data_x as number[];
@@ -300,7 +302,7 @@ const resolvers = {
       let scalingLaws: NodesScalingLaws[] = [];
 
       // TODO: This is a bit of a mess, we should probably refactor this
-      
+
       if (dryRunIds && !nodesAggregatedNodeMetrics) {
         const dryRunIds: string[] = arguments_.dryRunIds as string[];
         const data_x: number[] = arguments_.data_x as number[];
@@ -316,7 +318,16 @@ const resolvers = {
 
       const scalingPredictions = await extrapolateFromScalingLaws(scalingLaws, data_x_to_predict);
       return scalingPredictions;
-    },    
+    },
+    async fetchCarbontrackerData(
+      _p: EmptyParent,
+      arguments_: QueryFetchCarbontrackerDataArguments,
+      _context: AuthenticatedContext,
+    ): Promise<Query['fetchCarbontrackerData']> {
+      const { input } = arguments_;
+
+      return await fetchCarbontrackerData(input);
+    },
   } as Required<QueryResolvers<AuthenticatedContext, EmptyParent>>,
   Mutation: {
     async createBucket(

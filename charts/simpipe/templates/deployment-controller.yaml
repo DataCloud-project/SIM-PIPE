@@ -60,6 +60,8 @@ spec:
                   fieldPath: metadata.namespace
             - name: PROMETHEUS_SERVER_URL
               value: {{ .Values.controller.prometheus.serverUrl | quote }}
+            - name: CARBONTRACKER_ENDPOINT
+              value: {{ .Values.controller.carbontracker.endpoint | quote }}
             - name: NODE_ENV
               value: development
           ports:
