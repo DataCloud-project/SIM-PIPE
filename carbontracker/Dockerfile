@@ -3,9 +3,16 @@ FROM python:3.13-slim
 
 WORKDIR /app
 
-# Install uv (faster than pip)
+# Install system dependencies for reportlab and other packages
 RUN apt-get update && \
-    apt-get install -y git && \
+    apt-get install -y \
+        git \
+        build-essential \
+        libfreetype6-dev \
+        libjpeg-dev \
+        libpng-dev \
+        zlib1g-dev \
+        libffi-dev && \
     pip install uv && \
     rm -rf /var/lib/apt/lists/*
 
