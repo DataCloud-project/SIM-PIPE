@@ -1,2 +1,2 @@
-# Carbontracker
+# Carbontracker (tags: greenr)
 git+https://github.com/lfwa/carbontracker.git@greenr
