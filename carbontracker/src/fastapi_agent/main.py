@@ -11,8 +11,14 @@ class InputData(BaseModel):
     data: str
 
 @app.post("/process")
-async def process(data: InputData):
+async def process(
+    data: InputData, 
+    sim_cpu: str = None, sim_cpu_tdp: str = None, sim_cpu_util: str = None,
+    sim_gpu: str = None, sim_gpu_watts: str = None, sim_gpu_util: str = None):
     store_data_temporarily(data.data) # is stored as data.json
+    command = ["uv", "run", "carbontracker", "--simpipe", "data.json"]
+    if sim_cpu:
+        command.extend(["--sim-cpu", sim_cpu]) # Not working yet (CLI option not implemented?)
     completed_process = subprocess.run(
         ["uv", "run", "carbontracker", "--simpipe", "data.json"],
         check=True,
