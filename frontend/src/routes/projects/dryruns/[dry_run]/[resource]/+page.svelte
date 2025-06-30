@@ -7,6 +7,7 @@
 	import getProjectQuery from '$queries/get_project';
 	import getDryRunPhaseResultsQuery from '$queries/get_dry_run_phase_results';
 	import getDryRunQuery from '$queries/get_selected_project';
+	import getCarbontrackerDataQuery from '$queries/get_carbontracker_metrics';
 	import { requestGraphQLClient } from '$lib/graphqlUtils';
 	import { goto } from '$app/navigation';
 	import Plot from './plot.svelte';
@@ -127,6 +128,34 @@
 		}
 	};
 
+	async function getCarbontrackerDataResponse(input: any): Promise<any> {
+		const inputData = {
+			input: {
+				data: {
+					dryRun: {
+						node: {
+							metrics: {
+								cpuUsageSecondsTotal: input,
+							}
+						}
+					}
+				}
+			}
+		};
+		console.log('inputData:', inputData);
+		try {
+			const response = await requestGraphQLClient(getCarbontrackerDataQuery, inputData);
+			return response;
+		} catch (error) {
+			const title = 'Internal error!';
+			const body = `${(error as Error).message}`;
+			// await displayAlert(title, body, 10_000);
+			console.log(title, body);
+			return undefined;
+		}
+	}
+
+
 	const getData = async (): Promise<{
 		workflow: any;
 		dryrun: any;
@@ -180,12 +209,38 @@
 		cumulativeNetworkData = result.cumulativeNetworkData;
 		currentNetworkData = result.currentNetworkData;
 		logs = result.logs;
+		//console.log('dryRunId:', $selectedDryRunName);
+		const carbontracker_data = [];
+		for (const step of metricsResponse) {
+			if (step.type === 'Pod') {
+				const carbonResponse = await getCarbontrackerDataResponse(step.metrics.cpuUsageSecondsTotal);
+				carbontracker_data.push({
+					nodeId: step.id,
+					stepName: step.displayName,
+					carbonData: carbonResponse
+				});
+
+			}
+		}
+
+		// Merge carbontracker data with stepsList
+		$stepsList = $stepsList.map(step => {
+			const carbonData = carbontracker_data.find(carbon => carbon.nodeId === step.id);
+			return {
+				...step,
+				carbontracker: carbonData ? carbonData.carbonData : null
+			};
+		});
+
 		const responses = {
 			workflow: workflowResponse.project,
 			dryrun: dryrunResponse,
 			metrics: metricsResponse,
-			allstepnames: allStepNames
+			allstepnames: allStepNames,
+			selectedDryRunName: $selectedDryRunName,
+			carbontracker_data
 		};
+		console.log('responses:', responses);
 		return responses;
 	};
 
@@ -496,6 +551,8 @@
 								<th>Started</th>
 								<th>Finished</th>
 								<th>Duration</th>
+								<th>CO2 [<span class="lowercase">g</span>]</th>
+								<th>Energy [<span class="lowercase">k</span>Wh]</th>
 								<th>Status</th>
 								<th>Output</th>
 							</tr>
@@ -505,14 +562,28 @@
 								<!-- eslint-disable-next-line @typescript-eslint/explicit-function-return-type -->
 								<tr on:click={() => stepOnClick(step.displayName)}>
 									<td style="width:15%">{step.displayName}</td>
-									<td style="width:20%">
+									<td style="width:15%">
 										{step.startedAt ?? '-'}
 									</td>
-									<td style="width:20%">
+									<td style="width:15%">
 										{step.finishedAt ?? '-'}
 									</td>
-									<td style="width:15%">{displayStepDuration(step)}</td>
-									<td style="width:15%">{step.phase}</td>
+									<td style="width:10%">{displayStepDuration(step)}</td>
+									<td style="width:10%">
+										{#if step.carbontracker?.fetchCarbontrackerData?.co2eq}
+											{step.carbontracker.fetchCarbontrackerData.co2eq.toFixed(3)}
+										{:else}
+											-
+										{/if}
+									</td>
+									<td style="width:10%">
+										{#if step.carbontracker?.fetchCarbontrackerData?.energy}
+											{step.carbontracker.fetchCarbontrackerData.energy.toFixed(6)}
+										{:else}
+											-
+										{/if}
+									</td>
+									<td style="width:10%">{step.phase}</td>
 									<td style="width:15%">
 										{#if step.outputArtifacts?.length > 1}
 											{#each step.outputArtifacts as artifact}
