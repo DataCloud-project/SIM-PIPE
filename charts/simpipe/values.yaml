@@ -391,7 +391,7 @@ carbontracker:
   image:
     repository: ghcr.io/datacloud-project/sim-pipe-carbontracker
     pullPolicy: Always
-    tag: "carbontracker"
+    #tag: "carbontracker"
 
   imagePullSecrets: []
   nameOverride: ""
