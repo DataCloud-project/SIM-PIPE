@@ -168,19 +168,22 @@
 		}
 	};
 
-	async function getCarbontrackerDataResponse(input: any): Promise<{
-		fetchCarbontrackerData?: {
-			co2eq: number;
-			energy: number;
-		};
-	} | undefined> {
+	async function getCarbontrackerDataResponse(input: any): Promise<
+		| {
+				fetchCarbontrackerData?: {
+					co2eq: number;
+					energy: number;
+				};
+		  }
+		| undefined
+	> {
 		const inputData = {
 			input: {
 				data: {
 					dryRun: {
 						node: {
 							metrics: {
-								cpuUsageSecondsTotal: input,
+								cpuUsageSecondsTotal: input
 							}
 						}
 					}
@@ -204,7 +207,6 @@
 			return undefined;
 		}
 	}
-
 
 	const getData = async (): Promise<{
 		workflow: any;
@@ -266,19 +268,20 @@
 		}> = [];
 		for (const step of metricsResponse) {
 			if (step.type === 'Pod') {
-				const carbonResponse = await getCarbontrackerDataResponse(step.metrics.cpuUsageSecondsTotal);
+				const carbonResponse = await getCarbontrackerDataResponse(
+					step.metrics.cpuUsageSecondsTotal
+				);
 				carbontrackerData.push({
 					nodeId: step.id,
 					stepName: step.displayName,
 					carbonData: carbonResponse
 				});
-
 			}
 		}
 
 		// Merge carbontracker data with stepsList
-		$stepsList = $stepsList.map(step => {
-			const carbonData = carbontrackerData.find(carbon => carbon.nodeId === step.id);
+		$stepsList = $stepsList.map((step) => {
+			const carbonData = carbontrackerData.find((carbon) => carbon.nodeId === step.id);
 			return {
 				...step,
 				carbontracker: carbonData ? carbonData.carbonData : undefined
