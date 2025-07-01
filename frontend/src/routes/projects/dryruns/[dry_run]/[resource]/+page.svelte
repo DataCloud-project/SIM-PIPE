@@ -24,6 +24,16 @@
 	// import { displayAlert } from '$utils/alerts-utils';
 	import type { DryRunMetrics, DryRun, MetricsWithTimeStamps } from '$typesdefinitions';
 
+	// Extended type to include carbontracker data
+	interface ExtendedDryRunMetrics extends DryRunMetrics {
+		carbontracker?: {
+			fetchCarbontrackerData?: {
+				co2eq: number;
+				energy: number;
+			};
+		};
+	}
+
 	export let data;
 
 	let loadingFinished = false;
@@ -50,7 +60,8 @@
 	let allStepNames: string[] = [];
 
 	$: selectedStep = 'Total';
-	$: reactiveStepsList = $stepsList;
+	let reactiveStepsList: ExtendedDryRunMetrics[];
+	$: reactiveStepsList = ($stepsList as ExtendedDryRunMetrics[]) || [];
 
 	function gotoOverview(): void {
 		selectedStep = 'Total';
@@ -73,6 +84,8 @@
 	let networkTotalReceived = 'N/A';
 	let networkTotalTransmitted = 'N/A';
 	let pipelineDuration = 'N/A';
+	let totalCO2 = 'N/A';
+	let totalEnergy = 'N/A';
 
 	function formatDuration(seconds: number): string {
 		const hours = Math.floor(seconds / 3600);
@@ -108,9 +121,35 @@
 		pipelineDuration = formatDuration(totalDuration);
 	}
 
+	function computeTotalCarbonMetrics(): void {
+		let co2Sum = 0;
+		let energySum = 0;
+
+		if (reactiveStepsList) {
+			reactiveStepsList.forEach((step) => {
+				if (step.carbontracker?.fetchCarbontrackerData) {
+					if (step.carbontracker.fetchCarbontrackerData.co2eq) {
+						co2Sum += step.carbontracker.fetchCarbontrackerData.co2eq;
+					}
+					if (step.carbontracker.fetchCarbontrackerData.energy) {
+						energySum += step.carbontracker.fetchCarbontrackerData.energy;
+					}
+				}
+			});
+		}
+
+		totalCO2 = co2Sum > 0 ? co2Sum.toFixed(3) : 'N/A';
+		totalEnergy = energySum > 0 ? energySum.toFixed(6) : 'N/A';
+	}
+
+	// Reactive statement to compute carbon metrics when reactiveStepsList changes
+	$: if (reactiveStepsList && reactiveStepsList.length > 0) {
+		computeTotalCarbonMetrics();
+	}
+
 	let dryRunPhaseMessage: string | null;
 	// eslint-disable-next-line @typescript-eslint/explicit-function-return-type, consistent-return
-	const getMetricsResponse = async () => {
+	const getMetricsResponse = async (): Promise<DryRunMetrics[]> => {
 		const dryrunVariables = {
 			// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 			dryRunId: data.resource
@@ -125,10 +164,16 @@
 			const body = `${(error as Error).message}`;
 			// await displayAlert(title, body, 10_000);
 			console.log(title, body);
+			return [];
 		}
 	};
 
-	async function getCarbontrackerDataResponse(input: any): Promise<any> {
+	async function getCarbontrackerDataResponse(input: any): Promise<{
+		fetchCarbontrackerData?: {
+			co2eq: number;
+			energy: number;
+		};
+	} | undefined> {
 		const inputData = {
 			input: {
 				data: {
@@ -145,7 +190,12 @@
 		console.log('inputData:', inputData);
 		try {
 			const response = await requestGraphQLClient(getCarbontrackerDataQuery, inputData);
-			return response;
+			return response as {
+				fetchCarbontrackerData?: {
+					co2eq: number;
+					energy: number;
+				};
+			};
 		} catch (error) {
 			const title = 'Internal error!';
 			const body = `${(error as Error).message}`;
@@ -209,12 +259,15 @@
 		cumulativeNetworkData = result.cumulativeNetworkData;
 		currentNetworkData = result.currentNetworkData;
 		logs = result.logs;
-		//console.log('dryRunId:', $selectedDryRunName);
-		const carbontracker_data = [];
+		const carbontrackerData: Array<{
+			nodeId: string;
+			stepName: string;
+			carbonData: { fetchCarbontrackerData?: { co2eq: number; energy: number } } | undefined;
+		}> = [];
 		for (const step of metricsResponse) {
 			if (step.type === 'Pod') {
 				const carbonResponse = await getCarbontrackerDataResponse(step.metrics.cpuUsageSecondsTotal);
-				carbontracker_data.push({
+				carbontrackerData.push({
 					nodeId: step.id,
 					stepName: step.displayName,
 					carbonData: carbonResponse
@@ -225,10 +278,10 @@
 
 		// Merge carbontracker data with stepsList
 		$stepsList = $stepsList.map(step => {
-			const carbonData = carbontracker_data.find(carbon => carbon.nodeId === step.id);
+			const carbonData = carbontrackerData.find(carbon => carbon.nodeId === step.id);
 			return {
 				...step,
-				carbontracker: carbonData ? carbonData.carbonData : null
+				carbontracker: carbonData ? carbonData.carbonData : undefined
 			};
 		});
 
@@ -238,8 +291,9 @@
 			metrics: metricsResponse,
 			allstepnames: allStepNames,
 			selectedDryRunName: $selectedDryRunName,
-			carbontracker_data
+			carbontrackerData
 		};
+
 		console.log('responses:', responses);
 		return responses;
 	};
@@ -671,8 +725,16 @@
 							<tr>
 								<td>Duration</td>
 								<td> {pipelineDuration} </td>
-							</tr></tbody
-						>
+							</tr>
+							<tr>
+								<td>Total CO2</td>
+								<td> {totalCO2} g </td>
+							</tr>
+							<tr>
+								<td>Total Energy</td>
+								<td> {totalEnergy} kWh </td>
+							</tr>
+						</tbody>
 					</table>
 				</div>
 
