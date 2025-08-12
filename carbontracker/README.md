@@ -40,3 +40,68 @@ will print:
  'Energy': '0.000005 kWh',
  'CO2eq': '0.000 g'}
  ```
+
+## sample_simpipe_metrics.json
+Sample input data for carbontracker:
+```json
+{
+  "data": {
+    "dryRun": {
+      "node": {
+        "metrics": {
+          "cpuUsageSecondsTotal": [
+            {
+              "timestamp": 1741614169,
+              "value": "0.034612"
+            },
+            {
+              "timestamp": 1741614170,
+              "value": "0.034612"
+            },
+            {
+              "timestamp": 1741614171,
+              "value": "0.034612"
+            },
+            {
+              "timestamp": 1741614172,
+              "value": "0.034612"
+            },
+            {
+              "timestamp": 1741614173,
+              "value": "0.034612"
+            },
+            {
+              "timestamp": 1741614174,
+              "value": "0.034612"
+            },
+            {
+              "timestamp": 1741614175,
+              "value": "1.25155"
+            },
+            {
+              "timestamp": 1741614176,
+              "value": "1.25155"
+            },
+            {
+              "timestamp": 1741614177,
+              "value": "1.25155"
+            },
+            {
+              "timestamp": 1741614178,
+              "value": "2.483712"
+            },
+            {
+              "timestamp": 1741614179,
+              "value": "2.483712"
+            },
+            {
+              "timestamp": 1741614180,
+              "value": "2.483712"
+            }
+          ]
+        }
+      }
+    }
+  }
+}
+```
