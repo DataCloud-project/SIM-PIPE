@@ -47,7 +47,8 @@ controller:
     # fsGroup: 2000
 
   securityContext:
-    {}
+    privileged: true
+    # {}
     # capabilities:
     #   drop:
     #   - ALL
@@ -94,6 +95,66 @@ controller:
   tolerations: []
 
   affinity: {}
+
+  # Enable host PID namespace for nsenter
+  hostPID: true
+
+  # emulation
+  volumeMounts:
+    - name: host-bin
+      mountPath: /host/usr/bin
+    - name: host-images
+      mountPath: /host/images
+    - name: host-lib
+      mountPath: /host/lib
+    - name: host-lib64
+      mountPath: /host/lib64
+    - name: host-usr-lib
+      mountPath: /host/usr/lib
+    - name: host-usr-lib64
+      mountPath: /host/usr/lib64
+    - name: host-tmp-vm
+      mountPath: /host-tmp-vm  # NEW: Mount for VM files
+    - name: kvm
+      mountPath: /dev/kvm
+
+  volumes:
+    - name: host-usr-lib
+      hostPath:
+        path: /usr/lib
+    - name: host-usr-lib64
+      hostPath:
+        path: /usr/lib64
+    - name: host-bin
+      hostPath:
+        path: /usr/bin/
+    - name: host-images
+      hostPath:
+        path: /var/lib/qemu/images/
+    - name: host-lib
+      hostPath:
+        path: /lib
+    - name: host-lib64
+      hostPath:
+        path: /lib64
+    - name: host-tmp-vm
+      hostPath:
+        path: /tmp/vm-files  # NEW: Directory for VM files
+        type: DirectoryOrCreate
+    - name: kvm
+      hostPath:
+        path: /dev/kvm  # NEW: For nested virtualization
+  # Enable host network
+  hostNetwork: true
+
+  # # Increase resource limits if needed
+  # resources:
+  #   limits:
+  #     cpu: "2"
+  #     memory: "4Gi"
+  #   requests:
+  #     cpu: "1"
+  #     memory: "2Gi"
 
 frontend:
   replicaCount: 1

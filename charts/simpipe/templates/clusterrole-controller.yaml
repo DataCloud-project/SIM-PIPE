@@ -13,3 +13,6 @@ rules:
 - apiGroups: ["simpipe.sct.sintef.no"]
   resources: ["resources", "projects"]
   verbs: ["get", "list", "create", "update", "delete"]
+- apiGroups: ["kubevirt.io"]
+  resources: ["virtualmachines"]
+  verbs: ["get", "list", "create", "update", "patch", "delete"]  # Add permissions for virtualmachines

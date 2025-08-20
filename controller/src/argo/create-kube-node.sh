@@ -41,13 +41,13 @@ fetch_k3s_details() {
 select_os_image() {
   log_message "INFO" "Selecting pre-downloaded OS image for $OS..."
   case "$OS" in
-    "ubuntu-18") cp /app/images/ubuntu-18.qcow2 "$QCOW2_IMAGE_FILE" ;;
-    "ubuntu-20") cp /app/images/ubuntu-20.qcow2 "$QCOW2_IMAGE_FILE" ;;
-    "ubuntu-22") cp /app/images/ubuntu-22.qcow2 "$QCOW2_IMAGE_FILE" ;;
-    "ubuntu-24") cp /app/images/ubuntu-24.qcow2 "$QCOW2_IMAGE_FILE" ;;
+    "ubuntu-18") cp /host/images/ubuntu-18.qcow2 /host/images/$QCOW2_IMAGE_FILE ;;
+    # "ubuntu-20") cp /host/images/ubuntu-20.qcow2 /host/images/$QCOW2_IMAGE_FILE ;;
+    # "ubuntu-22") cp /host/images/ubuntu-22.qcow2 /host/images/$QCOW2_IMAGE_FILE ;;
+    # "ubuntu-24") cp /host/images/ubuntu-24.qcow2 /host/images/$QCOW2_IMAGE_FILE ;;
     *) log_message "ERROR" "Unsupported OS type: $OS"; exit 1 ;;
   esac
-  qemu-img resize "$QCOW2_IMAGE_FILE" 10G
+  qemu-img resize "/host/images/$QCOW2_IMAGE_FILE" 10G
 }
 
 # Function: Check if required commands are installed
@@ -86,8 +86,18 @@ users:
   - name: ubuntu
     sudo: ALL=(ALL) NOPASSWD:ALL
     groups: sudo,containerd,cni
+    ssh_authorized_keys:
+      - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICddu3IPxH0wQ5WIs9BEzVaabVEvrho/p4nzduq8tLee at
+chpasswd:
+  list: |
+    ubuntu:ubuntu
+  expire: False
+packages:
+  - openssh-server
 runcmd:
-  - curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="agent" K3S_URL=$K3S_SERVER_URL K3S_TOKEN=$K3S_TOKEN sh -
+  - systemctl enable ssh
+  - systemctl start ssh
+  - curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="agent" K3S_URL=$K3S_SERVER_URL K3S_TOKEN=$K3S_TOKEN sh -s - agent --node-name $NODE_NAME
 EOF
 
 cat <<EOF > meta-data
@@ -95,30 +105,37 @@ instance-id: $NODE_NAME
 local-hostname: $NODE_NAME
 EOF
 
-bash cloud-localds "$CLOUD_INIT_ISO" user-data meta-data
+bash cloud-localds "/host/images/$CLOUD_INIT_ISO" user-data meta-data
 
 # Step 2: Select OS image
 select_os_image
-
-# Step 3: Start the VM
+# exit 0
 log_message "INFO" "Starting VM: $NODE_NAME..."
-nohup qemu-system-x86_64 -m "$MEMORY" -smp "$CPUS" \
-  -drive file="$QCOW2_IMAGE_FILE",if=virtio \
-  -drive file="$CLOUD_INIT_ISO",format=raw,if=virtio \
-  -netdev user,id=mynet0 \
-  -device e1000,netdev=mynet0 \
-  -nographic -serial none -monitor none -bios /usr/share/qemu/bios-256k.bin > ./log.txt 2>&1 &
-QEMU_PID=$!
+
+echo $$QCOW2_IMAGE_FILE
+echo $CLOUD_INIT_ISO
+
+# user mode networking
+# /host/qemu/qemu-system-x86_64 -m "$MEMORY" -smp "$CPUS" \
+qemu-system-x86_64 -m "$MEMORY" -smp "$CPUS" \
+  -drive file="/host/images/$QCOW2_IMAGE_FILE",if=virtio \
+  -drive file="/host/images/$CLOUD_INIT_ISO",format=raw,if=virtio \
+  -netdev user,id=mynet0,hostfwd=tcp::2222-:22,hostfwd=tcp::6443-:6443 \ \
+  -device virtio-net-pci,netdev=mynet0 \
+  -nographic -bios /usr/share/qemu/bios-256k.bin 
+  # -device e1000,netdev=mynet0 \
+
+# QEMU_PID=$!
 
 # Save PID to a file named after the node
 echo "$QEMU_PID" > "/tmp/qemu-$NODE_NAME.pid"
 
 sleep 60  # Initial wait time before checking node readiness
 
-# Step 4: Verify node readiness
+# Step 3: Verify node readiness
 wait_for_node_ready
 
-# Step 5: Label the new node as a worker
+# Step 4: Label the new node as a worker
 log_message "INFO" "Labeling node $NODE_NAME as worker..."
 kubectl label node "$NODE_NAME" node-role.kubernetes.io/worker=worker
 

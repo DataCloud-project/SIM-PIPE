@@ -1,4 +1,4 @@
-FROM node:18-alpine as builder
+FROM node:18-alpine AS builder
 WORKDIR /app
 COPY package.json package-lock.json tsconfig.json ./
 # Install necessary packages for create-kube-node.sh and shutdown-kube-node.sh
@@ -43,6 +43,8 @@ COPY --from=builder /usr/bin/curl /usr/bin/curl
 COPY --from=builder /app/dist/ ./
 COPY src/argo/create-kube-node.sh /app/create-kube-node.sh
 COPY src/argo/shutdown-kube-node.sh /app/shutdown-kube-node.sh
+
+COPY src/argo/create-kube-node_qemu.sh /app/create-kube-node_qemu.sh
 
 EXPOSE 9000
 CMD ["--experimental-specifier-resolution=node", "index.js"]
