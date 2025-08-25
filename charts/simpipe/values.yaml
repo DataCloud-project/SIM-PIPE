@@ -96,9 +96,6 @@ controller:
 
   affinity: {}
 
-  # Enable host PID namespace for nsenter
-  hostPID: true
-
   # emulation
   volumeMounts:
     - name: host-bin
@@ -114,7 +111,7 @@ controller:
     - name: host-usr-lib64
       mountPath: /host/usr/lib64
     - name: host-tmp-vm
-      mountPath: /host-tmp-vm  # NEW: Mount for VM files
+      mountPath: /host-tmp-vm
     - name: kvm
       mountPath: /dev/kvm
 
@@ -144,8 +141,11 @@ controller:
     - name: kvm
       hostPath:
         path: /dev/kvm  # NEW: For nested virtualization
+ 
   # Enable host network
   hostNetwork: true
+  # Enable host PID namespace for nsenter
+  hostPID: true
 
   # # Increase resource limits if needed
   # resources:

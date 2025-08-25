@@ -4,19 +4,14 @@ set -e # Exit immediately if a command exits with a non-zero status
 
 # Input arguments
 
-K3S_TOKEN_SECRET=${1}
-NODE_NAME=${2}
-MEMORY=${3}
-CPUS=${4}
-TIMEOUT=${5}
-OS=${6}
-QCOW2_IMAGE_FILE=${7}
-CLOUD_INIT_ISO=${8}
-
-# Validate input arguments
-if [ $# -ne 8 ]; then  
- exit 1
-fi
+K3S_TOKEN_SECRET=${1:-"k3s-cluster-secret"}
+NODE_NAME=${2:-"node21"}
+MEMORY=${3:-4096}
+CPUS=${4:-2}
+TIMEOUT=${5:-600}
+OS=${6:-"ubuntu-20"}
+QCOW2_IMAGE_FILE=${7:-"os.qcow2"}
+CLOUD_INIT_ISO=${8:-"cloud.iso"}
 
 # Function: Log messages with timestamp
 log_message() {
@@ -87,26 +82,22 @@ fetch_k3s_details
 log_message "INFO" "Generating cloud-init configuration..."
 cat <<EOF > user-data
 #cloud-config
-
 users:
- - name: ubuntu
- sudo: ALL=(ALL) NOPASSWD:ALL
- groups: sudo,containerd,cni
- ssh_authorized_keys:
- - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICddu3IPxH0wQ5WIs9BEzVaabVEvrho/p4nzduq8tLee at
-
+  - name: ubuntu
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    groups: sudo,containerd,cni
+    ssh_authorized_keys:
+      - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHkddvi88YIJiniQwd7aUlvvFm85HRO2qAGAvCRxjDwu sshkeys
 chpasswd:
- list: |
- ubuntu:ubuntu
- expire: False
-
+  list: |
+    ubuntu:ubuntu
+  expire: False
 packages:
- - openssh-server
-
+  - openssh-server
 runcmd:
- - systemctl enable ssh
- - systemctl start ssh
- - curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="agent" K3S_URL=$K3S_SERVER_URL K3S_TOKEN=$K3S_TOKEN sh -s - agent --node-name $NODE_NAME
+  - systemctl enable ssh
+  - systemctl start ssh
+  - curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="agent" K3S_URL=$K3S_SERVER_URL K3S_TOKEN=$K3S_TOKEN sh -s - agent --node-name $NODE_NAME
 
 EOF
 
