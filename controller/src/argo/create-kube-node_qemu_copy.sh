@@ -1,0 +1,366 @@
+#!/bin/sh
+
+set -e # Exit immediately if a command exits with a non-zero status
+
+# Input arguments
+
+K3S_TOKEN_SECRET=${1:-"k3s-cluster-secret"}
+NODE_NAME=${2:-"node21"}
+MEMORY=${3:-4096}
+CPUS=${4:-2}
+TIMEOUT=${5:-600}
+OS=${6:-"ubuntu-20"}
+QCOW2_IMAGE_FILE=${7:-"os.qcow2"}
+CLOUD_INIT_ISO=${8:-"cloud.iso"}
+
+# Function: Log messages with timestamp
+log_message() {
+ echo "$(date +'%Y-%m-%d %H:%M:%S') [$1] $2"
+}
+
+# Function: Fetch K3S cluster details
+fetch_k3s_details() {
+ log_message "INFO" "Fetching Kubernetes cluster details..."
+ K3S_SERVER_IP=$(kubectl get secret "$K3S_TOKEN_SECRET" -o jsonpath='{.data.K3S_SERVER_IP}' | base64 -d)
+ K3S_TOKEN=$(kubectl get secret "$K3S_TOKEN_SECRET" -o jsonpath='{.data.token}' | base64 -d)
+
+ if [ -z "$K3S_TOKEN" ]; then
+ log_message "ERROR" "Failed to retrieve K3S token."
+ exit 1
+ fi
+
+ K3S_SERVER_URL="https://${K3S_SERVER_IP}:6443"
+
+}
+
+# Function: Select pre-downloaded OS image
+
+select_os_image() {
+ log_message "INFO" "Selecting pre-downloaded OS image for $OS..."
+ case "$OS" in
+"ubuntu-18") cp /app/images/ubuntu-18.qcow2 "$QCOW2_IMAGE_FILE" ;;
+"ubuntu-20") cp /app/images/ubuntu-20.qcow2 "$QCOW2_IMAGE_FILE" ;;
+"ubuntu-22") cp /app/images/ubuntu-22.qcow2 "$QCOW2_IMAGE_FILE" ;;
+"ubuntu-24") cp /app/images/ubuntu-24.qcow2 "$QCOW2_IMAGE_FILE" ;;
+ *) log_message "ERROR" "Unsupported OS type: $OS"; exit 1 ;;
+ esac
+ qemu-img resize "$QCOW2_IMAGE_FILE" 10G
+
+}
+
+# Function: Check if required commands are installed
+
+check_dependencies() {
+ log_message "INFO" "Verifying required commands..."
+ for cmd in wget qemu-img qemu-system-x86_64 kubectl cloud-localds; do
+ command -v "$cmd" >/dev/null 2>&1 || { log_message "ERROR" "$cmd not found. Install it before proceeding."; exit 1; }
+ done
+
+}
+
+# Function: Wait for Kubernetes node readiness
+
+wait_for_node_ready() {
+ log_message "INFO" "Waiting for node $NODE_NAME to be ready..."
+ START_TIME=$(date +%s)
+
+ while ! kubectl get nodes "$NODE_NAME" 2>/dev/null | grep -q " Ready "; do
+ if [ $(( $(date +%s) - START_TIME )) -gt "$TIMEOUT" ]; then
+ log_message "ERROR" "Timed out waiting for node readiness."
+ exit 1
+ fi
+ sleep 5
+ done
+ log_message "SUCCESS" "Node $NODE_NAME is ready."
+}
+
+# Main execution
+check_dependencies
+fetch_k3s_details
+
+# Step 1: Create cloud-init configuration
+log_message "INFO" "Generating cloud-init configuration..."
+cat <<EOF > user-data
+#cloud-config
+users:
+  - name: ubuntu
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    groups: sudo,containerd,cni
+    ssh_authorized_keys:
+      - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHkddvi88YIJiniQwd7aUlvvFm85HRO2qAGAvCRxjDwu sshkeys
+
+chpasswd:
+  list: |
+    ubuntu:ubuntu
+  expire: False
+
+packages:
+  - openssh-server
+
+# # Configure networking (static IP on ens3)
+# network:
+#   version: 2
+#   ethernets:
+#     ens3:
+#       dhcp4: no
+#       addresses:
+#         - 192.168.100.10/24
+#       gateway4: 192.168.100.1
+#       nameservers:
+#         addresses: [8.8.8.8]
+
+runcmd:
+  - systemctl enable ssh
+  - systemctl start ssh
+
+  # Start K3s agent to join cluster
+  - curl -L https://get.k3s.io | INSTALL_K3S_EXEC="agent" \
+      K3S_URL=https://95.216.40.236:6443 \
+      K3S_TOKEN=K102543326838b25343053ceb7b2372496f2e33fc62f57854fa34f63b480c0bb3de::server:d23f690f8a34256acbb010f869ac3199 \
+      sh -s - agent
+EOF
+
+cat <<EOF > network-config
+version: 2
+ethernets:
+  ens3:
+    dhcp4: no
+    addresses:
+      - 192.168.100.10/24
+    gateway4: 192.168.100.1
+    nameservers:
+      addresses: [8.8.8.8]
+
+EOF
+# cat <<EOF > user-data
+# #cloud-config
+# users:
+#   - name: ubuntu
+#     sudo: ALL=(ALL) NOPASSWD:ALL
+#     groups: sudo,containerd,cni
+#     ssh_authorized_keys:
+#       - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHkddvi88YIJiniQwd7aUlvvFm85HRO2qAGAvCRxjDwu sshkeys
+# chpasswd:
+#   list: |
+#     ubuntu:ubuntu
+#   expire: False
+# packages:
+#   - openssh-server
+# runcmd:
+#   - systemctl enable ssh
+#   - systemctl start ssh
+#   # Configure static IP for host-only bridge connectivity
+#   - ip addr add 192.168.100.2/24 dev ens3 || true
+#   - ip link set ens3 up
+#   - ip route add default via 192.168.100.1 || true
+#   # Wait a few seconds to ensure network is up
+#   - sleep 5
+#   - echo "nameserver 8.8.8.8" | sudo tee /etc/resolv.conf
+#   - sudo bash -c 'echo "127.0.0.1 node21" >> /etc/hosts'
+#   - echo "nameserver 192.168.100.1" | sudo tee /etc/resolv.conf
+#   # Start K3s agent to join cluster
+#   - curl -L https://get.k3s.io | INSTALL_K3S_EXEC="agent" K3S_URL=https://95.216.40.236:6443 K3S_TOKEN=$K3S_TOKEN sh -s - agent --node-name $NODE_NAME 
+#   EOF
+# # runcmd:
+# #   - systemctl enable ssh
+# #   - systemctl start ssh
+# #   - curl -L https://get.k3s.io | INSTALL_K3S_EXEC="agent" K3S_URL=$K3S_SERVER_URL K3S_TOKEN=$K3S_TOKEN sh -s - agent --node-name $NODE_NAME
+# # EOF
+#   # - curl -sfL https://get.k3s.io | K3S_URL=https://192.168.100.1:6443 K3S_TOKEN=$K3S_TOKEN sh -s - agent --node-ip=192.168.100.2 
+
+# # edit "/etc/netplan/50-cloud-init.yaml"
+# # netplan apply
+# # sudo resolvectl dns ens3 8.8.8.8
+# # sudo resolvectl flush-caches
+cat <<EOF > meta-data
+instance-id: $NODE_NAME
+local-hostname: $NODE_NAME
+EOF
+# bash cloud-localds "$CLOUD_INIT_ISO" user-data meta-data
+
+bash cloud-localds "$CLOUD_INIT_ISO" --network-config=network-config user-data meta-data
+
+# Step 2: Select OS image
+select_os_image
+log_message "INFO" "Starting VM: $NODE_NAME..."
+
+cp /app/os.qcow2 /host-tmp-vm/os.qcow2
+cp /app/cloud.iso /host-tmp-vm/cloud.iso
+
+# # Run QEMU on host via nsenter
+# nsenter -t 1 -m -u -n -i -p -- /usr/bin/qemu-system-x86_64 -m 4096 -smp 2 \
+# -drive file="/host-tmp-vm/os.qcow2",if=virtio \
+# -drive file="/host-tmp-vm/cloud.iso",format=raw,if=virtio \
+# -netdev user,id=mynet0,hostfwd=tcp::2222-:22,hostfwd=tcp::6443-:6443 \
+# -device e1000,netdev=mynet0 \
+# -nographic -bios /usr/share/qemu/bios-256k.bin
+
+# RUN QEMU with linux bridge
+nsenter -t 1 -m -u -n -i -p -- /usr/bin/qemu-system-x86_64 -m 4096 -smp 2 \
+-drive file="/host-tmp-vm/os.qcow2",if=virtio \
+-drive file="/host-tmp-vm/cloud.iso",format=raw,if=virtio \
+-netdev tap,id=mynet0,ifname=tap0,script=no,downscript=no \
+-device virtio-net-pci,netdev=mynet0 \
+-nographic -bios /usr/share/qemu/bios-256k.bin
+
+
+
+# #!/bin/sh
+
+# set -e  # Exit immediately if a command exits with a non-zero status
+
+# # Input arguments
+# K3S_TOKEN_SECRET=${1}  
+# NODE_NAME=${2} 
+# MEMORY=${3}
+# CPUS=${4}
+# TIMEOUT=${5}
+# OS=${6}
+# QCOW2_IMAGE_FILE=${7}  
+# CLOUD_INIT_ISO=${8}  
+
+# # Validate input arguments
+# if [ $# -ne 8 ]; then
+#   echo "Usage: $0 <K3S_TOKEN_SECRET> <NODE_NAME> <MEMORY> <CPUS> <TIMEOUT> <OS> <QCOW2_IMAGE_FILE> <CLOUD_INIT_ISO>"
+#   exit 1
+# fi
+
+# # Function: Log messages with timestamp
+# log_message() {
+#   echo "$(date +'%Y-%m-%d %H:%M:%S') [$1] $2"
+# }
+
+# # Function: Fetch K3S cluster details
+# fetch_k3s_details() {
+#   log_message "INFO" "Fetching Kubernetes cluster details..."
+#   K3S_SERVER_IP=$(kubectl get secret "$K3S_TOKEN_SECRET" -o jsonpath='{.data.K3S_SERVER_IP}' | base64 -d)
+#   K3S_TOKEN=$(kubectl get secret "$K3S_TOKEN_SECRET" -o jsonpath='{.data.token}' | base64 -d)
+
+#   if [ -z "$K3S_TOKEN" ]; then
+#     log_message "ERROR" "Failed to retrieve K3S token."
+#     exit 1
+#   fi
+
+#   K3S_SERVER_URL="https://${K3S_SERVER_IP}:6443"
+# }
+
+# # Function: Select pre-downloaded OS image
+# select_os_image() {
+#   log_message "INFO" "Selecting pre-downloaded OS image for $OS..."
+#   case "$OS" in
+#     "ubuntu-18") cp /app/images/ubuntu-18.qcow2 "$QCOW2_IMAGE_FILE" ;;
+#     "ubuntu-20") cp /app/images/ubuntu-20.qcow2 "$QCOW2_IMAGE_FILE" ;;
+#     "ubuntu-22") cp /app/images/ubuntu-22.qcow2 "$QCOW2_IMAGE_FILE" ;;
+#     "ubuntu-24") cp /app/images/ubuntu-24.qcow2 "$QCOW2_IMAGE_FILE" ;;
+#     *) log_message "ERROR" "Unsupported OS type: $OS"; exit 1 ;;
+#   esac
+#   qemu-img resize "$QCOW2_IMAGE_FILE" 10G
+# }
+
+# # Function: Check if required commands are installed
+# check_dependencies() {
+#   log_message "INFO" "Verifying required commands..."
+#   for cmd in wget qemu-img qemu-system-x86_64 kubectl cloud-localds; do
+#     command -v "$cmd" >/dev/null 2>&1 || { log_message "ERROR" "$cmd not found. Install it before proceeding."; exit 1; }
+#   done
+# }
+
+# # Function: Wait for Kubernetes node readiness
+# wait_for_node_ready() {
+#   log_message "INFO" "Waiting for node $NODE_NAME to be ready..."
+#   START_TIME=$(date +%s)
+
+#   while ! kubectl get nodes "$NODE_NAME" 2>/dev/null | grep -q " Ready "; do
+#     if [ $(( $(date +%s) - START_TIME )) -gt "$TIMEOUT" ]; then
+#       log_message "ERROR" "Timed out waiting for node readiness."
+#       exit 1
+#     fi
+#     sleep 5
+#   done
+
+#   log_message "SUCCESS" "Node $NODE_NAME is ready."
+# }
+
+# # Main execution
+# check_dependencies
+# fetch_k3s_details
+
+# # Step 1: Create cloud-init configuration
+# log_message "INFO" "Generating cloud-init configuration..."
+# cat <<EOF > user-data
+# #cloud-config
+# users:
+#   - name: ubuntu
+#     sudo: ALL=(ALL) NOPASSWD:ALL
+#     groups: sudo,containerd,cni
+#     ssh_authorized_keys:
+#       - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICddu3IPxH0wQ5WIs9BEzVaabVEvrho/p4nzduq8tLee at
+# chpasswd:
+#   list: |
+#     ubuntu:ubuntu
+#   expire: False
+# packages:
+#   - openssh-server
+# runcmd:
+#   - systemctl enable ssh
+#   - systemctl start ssh
+#   - curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="agent" K3S_URL=$K3S_SERVER_URL K3S_TOKEN=$K3S_TOKEN sh -s - agent --node-name $NODE_NAME
+# EOF
+
+# cat <<EOF > meta-data
+# instance-id: $NODE_NAME
+# local-hostname: $NODE_NAME
+# EOF
+
+# bash cloud-localds "$CLOUD_INIT_ISO" user-data meta-data
+
+# # Step 2: Select OS image
+# select_os_image
+# # exit 0
+# log_message "INFO" "Starting VM: $NODE_NAME..."
+
+# # Bridge networking mode (replaces user-mode networking)
+# # qemu-system-x86_64 -m "$MEMORY" -smp "$CPUS" \
+# #    -drive file="$QCOW2_IMAGE_FILE",if=virtio \
+# #    -drive file="$CLOUD_INIT_ISO",format=raw,if=virtio \
+# #    -netdev bridge,id=br0,br=virbr0 \
+# #    -device virtio-net-pci,netdev=br0 \
+# #    -nographic -bios /usr/share/qemu/bios-256k.bin  
+
+# # user mode networking
+# qemu-system-x86_64 -m "$MEMORY" -smp "$CPUS" \
+#   -drive file="$QCOW2_IMAGE_FILE",if=virtio \
+#   -drive file="$CLOUD_INIT_ISO",format=raw,if=virtio \
+#   -netdev user,id=mynet0,hostfwd=tcp::2222-:22,hostfwd=tcp::6443-:6443 \ \
+#   -device e1000,netdev=mynet0 \
+#   -nographic -bios /usr/share/qemu/bios-256k.bin 
+
+# # # tap networking
+# # apk add iproute2
+# # ip tuntap add mode tap tap0
+# # ip link set tap0 up
+# # brctl addbr br0
+# # brctl addif br0 eth0 tap0
+# # ip link set br0 up
+# # qemu-system-x86_64 -m "$MEMORY" -smp "$CPUS" \
+# #   -drive file="$QCOW2_IMAGE_FILE",if=virtio \
+# #   -drive file="$CLOUD_INIT_ISO",format=raw,if=virtio \
+# #   -netdev tap,id=mynet0,ifname=tap0,script=no,downscript=no \
+# #   -device virtio-net-pci,netdev=mynet0 \
+# #   -nographic -bios /usr/share/qemu/bios-256k.bin
+
+# # QEMU_PID=$!
+
+# # Save PID to a file named after the node
+# echo "$QEMU_PID" > "/tmp/qemu-$NODE_NAME.pid"
+
+# sleep 60  # Initial wait time before checking node readiness
+
+# # Step 3: Verify node readiness
+# wait_for_node_ready
+
+# # Step 4: Label the new node as a worker
+# log_message "INFO" "Labeling node $NODE_NAME as worker..."
+# kubectl label node "$NODE_NAME" node-role.kubernetes.io/worker=worker
+
+# log_message "SUCCESS" "Node $NODE_NAME successfully added to the cluster."
