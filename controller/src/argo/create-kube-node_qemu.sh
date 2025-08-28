@@ -105,9 +105,10 @@ cp /app/cloud.iso /host-tmp-vm/cloud.iso
 
 # Step 3: RUN QEMU with linux bridge
 log_message "INFO" "Starting QEMU for node ${NODE_NAME}"
-nsenter -t 1 -m -u -n -i -p --  /usr/bin/qemu-system-x86_64 -m 4096 -smp 2 \
+nsenter -t 1 -m -u --net=/host/proc/1/ns/net -i -p --  /usr/bin/qemu-system-x86_64 -m 4096 -smp 2 \
 -drive file="/host-tmp-vm/os.qcow2",if=virtio \
 -drive file="/host-tmp-vm/cloud.iso",format=raw,if=virtio \
--netdev tap,id=mynet0,ifname=tap1,script=/etc/qemu-ifup,downscript=/etc/qemu-ifdown
--device virtio-net-pci,netdev=mynet0 \
--nographic -bios /usr/share/qemu/bios-256k.bin -D /host-tmp-vm/qemu-new.log -d unimp,guest_errors
+  -netdev tap,id=mynet0,ifname=tap0,script=no,downscript=no \
+  -device virtio-net-pci,netdev=mynet0 \
+  -nographic -bios /usr/share/qemu/bios-256k.bin \
+  -D /host-tmp-vm/qemu-new.log -d unimp,guest_errors
