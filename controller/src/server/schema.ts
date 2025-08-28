@@ -82,6 +82,61 @@ export type Bucket = {
   name: Scalars['String']['output'];
 };
 
+export type CarbonTrackerCpuUsageInput = {
+  cpuUsageSecondsTotal: Array<PrometheusSampleInput>;
+};
+
+/**  Carbon tracker data response  */
+export type CarbonTrackerData = {
+  __typename?: 'CarbonTrackerData';
+  /**  Average power usage value  */
+  averagePowerUsage: Scalars['Float']['output'];
+  /**  Average power usage unit  */
+  averagePowerUsageUnit: Scalars['String']['output'];
+  /**  Carbon intensity value  */
+  carbonIntensity: Scalars['Float']['output'];
+  /**  Carbon intensity unit  */
+  carbonIntensityUnit: Scalars['String']['output'];
+  /**  CO2 equivalent value  */
+  co2eq: Scalars['Float']['output'];
+  /**  CO2 equivalent unit  */
+  co2eqUnit: Scalars['String']['output'];
+  /**  CPU model information  */
+  cpuModel: Scalars['String']['output'];
+  /**  CPU power data  */
+  cpuPowerData: Scalars['String']['output'];
+  /**  Duration of the computation in seconds  */
+  duration: Scalars['Float']['output'];
+  /**  Energy consumption value  */
+  energy: Scalars['Float']['output'];
+  /**  Energy consumption unit  */
+  energyUnit: Scalars['String']['output'];
+  /**  Energy usage value  */
+  energyUsage: Scalars['Float']['output'];
+  /**  Energy usage unit  */
+  energyUsageUnit: Scalars['String']['output'];
+  /**  Location information  */
+  location: Scalars['String']['output'];
+};
+
+export type CarbonTrackerDryRunInput = {
+  dryRun: CarbonTrackerNodeInput;
+};
+
+/**  Carbon tracker data input for processing CPU usage data  */
+export type CarbonTrackerInput = {
+  /**  CPU usage data from prometheus metrics  */
+  data: CarbonTrackerDryRunInput;
+};
+
+export type CarbonTrackerMetricsInput = {
+  metrics: CarbonTrackerCpuUsageInput;
+};
+
+export type CarbonTrackerNodeInput = {
+  node: CarbonTrackerMetricsInput;
+};
+
 /**  The input data to create a new dry run  */
 export type CreateDryRunInput = {
   /**
@@ -938,6 +993,12 @@ export type PrometheusSample = {
   value: Scalars['PrometheusStringNumber']['output'];
 };
 
+/**  Input type for Prometheus sample data  */
+export type PrometheusSampleInput = {
+  timestamp: Scalars['TimeStamp']['input'];
+  value: Scalars['PrometheusStringNumber']['input'];
+};
+
 /**  The root query type. All queries that fetch data are defined here.  */
 export type Query = {
   __typename?: 'Query';
@@ -953,6 +1014,8 @@ export type Query = {
   dockerRegistryCredentials: Array<DockerRegistryCredential>;
   /**  Get a dry run by ID  */
   dryRun: DryRun;
+  /**  Fetch carbon tracker data from CPU usage metrics  */
+  fetchCarbontrackerData: CarbonTrackerData;
   /**  Compute aggregated resource metrics for a set of dry runs  */
   getAggregatedNodesMetrics: Array<Maybe<NodesAggregatedNodeMetrics>>;
   /**  Get hardware metrics server-side */
@@ -999,6 +1062,12 @@ export type QueryComputeScalingLawsFromNodesMetricsArgs = {
 /**  The root query type. All queries that fetch data are defined here.  */
 export type QueryDryRunArgs = {
   dryRunId: Scalars['String']['input'];
+};
+
+
+/**  The root query type. All queries that fetch data are defined here.  */
+export type QueryFetchCarbontrackerDataArgs = {
+  input: CarbonTrackerInput;
 };
 
 
@@ -1177,6 +1246,12 @@ export type ResolversTypes = {
   ArtifactMetadata: ResolverTypeWrapper<ArtifactMetadata>;
   Boolean: ResolverTypeWrapper<Scalars['Boolean']['output']>;
   Bucket: ResolverTypeWrapper<Bucket>;
+  CarbonTrackerCpuUsageInput: CarbonTrackerCpuUsageInput;
+  CarbonTrackerData: ResolverTypeWrapper<CarbonTrackerData>;
+  CarbonTrackerDryRunInput: CarbonTrackerDryRunInput;
+  CarbonTrackerInput: CarbonTrackerInput;
+  CarbonTrackerMetricsInput: CarbonTrackerMetricsInput;
+  CarbonTrackerNodeInput: CarbonTrackerNodeInput;
   CreateDryRunInput: CreateDryRunInput;
   CreateProjectInput: CreateProjectInput;
   CreateResourceInput: CreateResourceInput;
@@ -1202,6 +1277,7 @@ export type ResolversTypes = {
   NodesScalingLaws: ResolverTypeWrapper<NodesScalingLaws>;
   Project: ResolverTypeWrapper<Project>;
   PrometheusSample: ResolverTypeWrapper<PrometheusSample>;
+  PrometheusSampleInput: PrometheusSampleInput;
   PrometheusStringNumber: ResolverTypeWrapper<Scalars['PrometheusStringNumber']['output']>;
   Query: ResolverTypeWrapper<{}>;
   Resource: ResolverTypeWrapper<Resource>;
@@ -1225,6 +1301,12 @@ export type ResolversParentTypes = {
   ArtifactMetadata: ArtifactMetadata;
   Boolean: Scalars['Boolean']['output'];
   Bucket: Bucket;
+  CarbonTrackerCpuUsageInput: CarbonTrackerCpuUsageInput;
+  CarbonTrackerData: CarbonTrackerData;
+  CarbonTrackerDryRunInput: CarbonTrackerDryRunInput;
+  CarbonTrackerInput: CarbonTrackerInput;
+  CarbonTrackerMetricsInput: CarbonTrackerMetricsInput;
+  CarbonTrackerNodeInput: CarbonTrackerNodeInput;
   CreateDryRunInput: CreateDryRunInput;
   CreateProjectInput: CreateProjectInput;
   CreateResourceInput: CreateResourceInput;
@@ -1247,6 +1329,7 @@ export type ResolversParentTypes = {
   NodesScalingLaws: NodesScalingLaws;
   Project: Project;
   PrometheusSample: PrometheusSample;
+  PrometheusSampleInput: PrometheusSampleInput;
   PrometheusStringNumber: Scalars['PrometheusStringNumber']['output'];
   Query: {};
   Resource: Resource;
@@ -1296,6 +1379,24 @@ export type ArtifactMetadataResolvers<ContextType = any, ParentType extends Reso
 
 export type BucketResolvers<ContextType = any, ParentType extends ResolversParentTypes['Bucket'] = ResolversParentTypes['Bucket']> = {
   name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type CarbonTrackerDataResolvers<ContextType = any, ParentType extends ResolversParentTypes['CarbonTrackerData'] = ResolversParentTypes['CarbonTrackerData']> = {
+  averagePowerUsage?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
+  averagePowerUsageUnit?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  carbonIntensity?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
+  carbonIntensityUnit?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  co2eq?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
+  co2eqUnit?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  cpuModel?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  cpuPowerData?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  duration?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
+  energy?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
+  energyUnit?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  energyUsage?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
+  energyUsageUnit?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  location?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -1504,6 +1605,7 @@ export type QueryResolvers<ContextType = any, ParentType extends ResolversParent
   computeScalingLawsFromNodesMetrics?: Resolver<Array<Maybe<ResolversTypes['NodesScalingLaws']>>, ParentType, ContextType, Partial<QueryComputeScalingLawsFromNodesMetricsArgs>>;
   dockerRegistryCredentials?: Resolver<Array<ResolversTypes['DockerRegistryCredential']>, ParentType, ContextType>;
   dryRun?: Resolver<ResolversTypes['DryRun'], ParentType, ContextType, RequireFields<QueryDryRunArgs, 'dryRunId'>>;
+  fetchCarbontrackerData?: Resolver<ResolversTypes['CarbonTrackerData'], ParentType, ContextType, RequireFields<QueryFetchCarbontrackerDataArgs, 'input'>>;
   getAggregatedNodesMetrics?: Resolver<Array<Maybe<ResolversTypes['NodesAggregatedNodeMetrics']>>, ParentType, ContextType, RequireFields<QueryGetAggregatedNodesMetricsArgs, 'dryRunIds'>>;
   hardwaremetrics?: Resolver<ResolversTypes['HardwareMetrics'], ParentType, ContextType>;
   ping?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
@@ -1572,6 +1674,7 @@ export type Resolvers<ContextType = any> = {
   Artifact?: ArtifactResolvers<ContextType>;
   ArtifactMetadata?: ArtifactMetadataResolvers<ContextType>;
   Bucket?: BucketResolvers<ContextType>;
+  CarbonTrackerData?: CarbonTrackerDataResolvers<ContextType>;
   DockerRegistryCredential?: DockerRegistryCredentialResolvers<ContextType>;
   DryRun?: DryRunResolvers<ContextType>;
   DryRunNode?: DryRunNodeResolvers<ContextType>;

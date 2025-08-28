@@ -8,6 +8,7 @@ const getDryRunPhaseResultsQuery = gql`
 				phase
 				type
 				... on DryRunNodePod {
+					id
 					displayName
 					startedAt
 					finishedAt

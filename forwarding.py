@@ -7,20 +7,58 @@ import threading
 import time
 
 services = [
-    {"name": "cadvisor", "ports": [8081, 8080], "enabled": False},
-    {"name": "grafana", "ports": [8082, 80], "enabled": False},
-    {"name": "sftpgo", "ports": [8083, 80], "enabled": True},
-    {"name": "argo", "ports": [8084, 2746], "fullname": "argo-workflows-server"},
-    {"name": "minio", "ports": [8085, 9000]},
-    {"name": "minio-frontend", "ports": [8089, 9001], "enabled": False},
+    {
+        "name": "cadvisor", 
+        "ports": [8081, 8080], 
+        "enabled": False
+    },
+    {
+        "name": "grafana", 
+        "ports": [8082, 80], 
+        "enabled": False
+    },
+    {
+        "name": "sftpgo", 
+        "ports": [8083, 80], 
+        "enabled": False
+    },
+    {
+        "name": "argo",
+        "fullname": "argo-workflows-server",
+        "ports": [8084, 2746],
+        "enabled": True
+    },
+    {
+        "name": "minio-backend",
+        "fullname": "minio",
+        "ports": [8085, 9000],
+        "enabled": True
+    },
     {
         "name": "prometheus",
         "ports": [8086, 9090],
         "prefix": "",
         "fullname": "prometheus-operated",
     },
-    {"name": "controller", "ports": [8087, 9000]},
-    {"name": "frontend", "ports": [8088, 3000]},
+    {
+        "name": "controller",
+        "ports": [8087, 9000]
+    },
+    {
+        "name": "frontend",
+        "ports": [8088, 3000]
+    },
+    {
+        "name": "minio-frontend",
+        "fullname": "minio",
+        "ports": [8089, 9001],
+        "enabled": True
+    },
+    {
+        "name": "carbontracker",
+        "ports": [8000, 8000],
+        "enabled": True
+    },
 ]
 
 

@@ -58,6 +58,7 @@ export type DryRun = {
 export type DryRunMetrics = {
 	phase: string;
 	displayName: string;
+	id: string;
 	startedAt: string;
 	finishedAt: string;
 	duration: number;

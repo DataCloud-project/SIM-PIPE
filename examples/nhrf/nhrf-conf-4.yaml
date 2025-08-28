@@ -1,0 +1,437 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  generateName: nhrf-conf-4-
+spec:
+  entrypoint: nhrf-conf-4
+  volumes:
+  - name: shared-workdir
+    emptyDir:
+      sizeLimit: 300Gi
+  templates:
+  - name: nhrf-conf-4
+    dag:
+      tasks:
+      - name: trimming
+        template: trimming
+        arguments:
+          artifacts:
+            - name: fastq-data
+              s3:
+                key: nhrf/samples
+                bucket: artifacts
+                endpoint: simpipe-minio.default.svc.cluster.local:9000
+                insecure: true
+                accessKeySecret:
+                  name: simpipe-minio
+                  key: root-user
+                secretKeySecret:
+                  name: simpipe-minio
+                  key: root-password
+      - name: create-fasta-index
+        template: create-fasta-index
+        arguments:
+          artifacts:
+            - name: ref-genome-data
+              s3:
+                key: nhrf/reference_genome
+                bucket: artifacts
+                endpoint: simpipe-minio.default.svc.cluster.local:9000
+                insecure: true
+                accessKeySecret:
+                  name: simpipe-minio
+                  key: root-user
+                secretKeySecret:
+                  name: simpipe-minio
+                  key: root-password                
+      - name: alignment
+        depends: "trimming.Succeeded"
+        template: alignment
+        arguments:
+          artifacts:
+            - name: trimming-results
+              from: "{{tasks.trimming.outputs.artifacts.trimming-results}}"
+            - name: ref-genome-data
+              s3:
+                key: nhrf/reference_genome
+                bucket: artifacts
+                endpoint: simpipe-minio.default.svc.cluster.local:9000
+                insecure: true
+                accessKeySecret:
+                  name: simpipe-minio
+                  key: root-user
+                secretKeySecret:
+                  name: simpipe-minio
+                  key: root-password
+      - name: mark-duplicates
+        depends: "alignment.Succeeded"
+        template: mark-duplicates
+        arguments:
+          artifacts:
+            - name: alignment-results
+              from: "{{tasks.alignment.outputs.artifacts.alignment-results}}"
+      - name: base-quality-score
+        depends: "mark-duplicates.Succeeded && create-fasta-index.Succeeded"
+        template: base-quality-score
+        arguments:
+          artifacts:
+            - name: mark-duplicates-results
+              from: "{{tasks.mark-duplicates.outputs.artifacts.mark-duplicates-results}}"
+            - name: fasta-index
+              from: "{{tasks.create-fasta-index.outputs.artifacts.fasta-index}}"
+            - name: ref-genome-data
+              s3:
+                key: nhrf/reference_genome
+                bucket: artifacts
+                endpoint: simpipe-minio.default.svc.cluster.local:9000
+                insecure: true
+                accessKeySecret:
+                  name: simpipe-minio
+                  key: root-user
+                secretKeySecret:
+                  name: simpipe-minio
+                  key: root-password
+            - name: known-sites-data
+              s3:
+                key: nhrf/known_sites
+                bucket: artifacts
+                endpoint: simpipe-minio.default.svc.cluster.local:9000
+                insecure: true
+                accessKeySecret:
+                  name: simpipe-minio
+                  key: root-user
+                secretKeySecret:
+                  name: simpipe-minio
+                  key: root-password
+
+  - name: trimming
+    container:
+      image: quay.io/biocontainers/fastp:0.23.4--h125f33a_4
+      command: ["/bin/sh", "-c"]
+      args:
+        - |
+          # Use /tmp for intermediate processing to leverage fast storage
+          export TMPDIR=/tmp/fastp_work
+          mkdir -p ${TMPDIR} ${OUTDIR}
+
+          # Process tumor sample
+          fastp -i ${TUMOR_FASTQ1} -I ${TUMOR_FASTQ2} \
+                -o ${OUTDIR}/trimmed_tumor_R1.fastq.gz \
+                -O ${OUTDIR}/trimmed_tumor_R2.fastq.gz \
+                -h ${OUTDIR}/tumor_fastp.html \
+                -j ${OUTDIR}/tumor_fastp.json \
+                --thread 6
+
+          # Process normal sample
+          fastp -i ${NORMAL_FASTQ1} -I ${NORMAL_FASTQ2} \
+                -o ${OUTDIR}/trimmed_normal_R1.fastq.gz \
+                -O ${OUTDIR}/trimmed_normal_R2.fastq.gz \
+                -h ${OUTDIR}/normal_fastp.html \
+                -j ${OUTDIR}/normal_fastp.json \
+                --thread 6
+
+          # Clean up temp directory
+          rm -rf ${TMPDIR}
+
+          # List outputs for verification
+          ls -lah ${OUTDIR}
+      resources:
+        requests:
+          memory: "4Gi"
+          cpu: "6"
+          ephemeral-storage: "50Gi"
+        limits:
+          memory: "8Gi"
+          cpu: "6"
+          ephemeral-storage: "50Gi"
+      env:
+        - name: OUTDIR
+          value: /data/trimmed_data
+        - name: TUMOR_FASTQ1
+          value: /data/fastq_data/SRR24141497_1.fastq.gz
+        - name: TUMOR_FASTQ2
+          value: /data/fastq_data/SRR24141497_2.fastq.gz
+        - name: NORMAL_FASTQ1
+          value: /data/fastq_data/SRR24141508_1.fastq.gz
+        - name: NORMAL_FASTQ2
+          value: /data/fastq_data/SRR24141508_2.fastq.gz
+    inputs:
+      artifacts:
+        - name: fastq-data
+          path: /data/fastq_data
+    outputs:
+      artifacts:
+        - name: trimming-results
+          path: /data/trimmed_data
+
+  - name: alignment
+    container:
+      image: quay.io/biocontainers/mulled-v2-66534bcbb7031a148b13e2ad42583020b9cd25c4:8f2087d838e5270cd83b5a016667234429f16eea-0
+      command: ["/bin/sh", "-c"]
+      args:
+        - |
+          export TMPDIR=/tmp/minimap_work
+          mkdir -p ${TMPDIR} /data/alignment_results
+
+          echo "Copying and indexing reference genome in temp directory..."
+          cp ${REF_GENOME_PATH}/${REF_GENOME_FILENAME} ${TMPDIR}/
+          cp ${REF_GENOME_PATH}/${REF_GENOME_FILENAME}.* ${TMPDIR}/
+
+          cd ${TMPDIR}
+          bwa index ${REF_GENOME_FILENAME}
+
+          echo "Running alignment with direct SAM->BAM conversion..."
+
+          echo "Processing tumor sample..."
+          minimap2 -ax sr -t 6 ${REF_GENOME_PATH}/${REF_GENOME_FILENAME} \
+                ${TTUMOR_FASTQ1} ${TTUMOR_FASTQ2} | \
+                samtools view -@ 2 -Sb - | \
+                samtools sort -@ 2 -m 2G -o /data/alignment_results/tumor_sorted.bam -
+
+          echo "Processing normal sample..."
+          minimap2 -ax sr -t 6 ${REF_GENOME_PATH}/${REF_GENOME_FILENAME} \
+                ${TNORMAL_FASTQ1} ${TNORMAL_FASTQ2} | \          
+                samtools view -@ 2 -Sb - | \
+                samtools sort -@ 2 -m 2G -o /data/alignment_results/normal_sorted.bam -
+
+          # Index the BAM files
+          samtools index /data/alignment_results/tumor_sorted.bam
+          samtools index /data/alignment_results/normal_sorted.bam
+
+          # Clean up temp directory and input files to save space
+          cd /
+          rm -rf ${TMPDIR}
+          rm -f ${TTUMOR_FASTQ1} ${TTUMOR_FASTQ2} ${TNORMAL_FASTQ1} ${TNORMAL_FASTQ2}
+
+          echo "BWA alignment completed. Output files:"
+          ls -lah /data/alignment_results/
+      resources:
+        requests:
+          memory: "20Gi"
+          cpu: "6"
+          ephemeral-storage: "80Gi"
+        limits:
+          memory: "32Gi"
+          cpu: "6"
+          ephemeral-storage: "80Gi"
+      env:
+        - name: REF_GENOME_FILENAME
+          value: Homo_sapiens_assembly38.fasta
+        - name: REF_GENOME_PATH
+          value: /data/ref_genome
+        - name: TTUMOR_FASTQ1
+          value: /data/trimmed_data/trimmed_tumor_R1.fastq.gz
+        - name: TTUMOR_FASTQ2
+          value: /data/trimmed_data/trimmed_tumor_R2.fastq.gz
+        - name: TNORMAL_FASTQ1
+          value: /data/trimmed_data/trimmed_normal_R1.fastq.gz
+        - name: TNORMAL_FASTQ2
+          value: /data/trimmed_data/trimmed_normal_R2.fastq.gz
+    inputs:
+      artifacts:
+        - name: trimming-results
+          path: /data/trimmed_data
+        - name: ref-genome-data
+          path: /data/ref_genome
+    outputs:
+      artifacts:
+        - name: alignment-results
+          path: /data/alignment_results
+
+  - name: mark-duplicates
+    container:
+      image: quay.io/biocontainers/gatk4:4.5.0.0--py36hdfd78af_0
+      command: ["/bin/sh", "-c"]
+      args:
+        - |
+          mkdir -p ${OUTDIR}
+
+          # Process both samples in parallel
+          (
+            mkdir -p /tmp/tumor_markdup
+            gatk --java-options "-Xmx8g -XX:+UseParallelGC -XX:ParallelGCThreads=1" \
+                 MarkDuplicates \
+                 --INPUT ${INDIR}/tumor_sorted.bam \
+                 --OUTPUT ${OUTDIR}/tumor_dedup.bam \
+                 --METRICS_FILE ${OUTDIR}/tumor_metrics.txt \
+                 --TMP_DIR /tmp/tumor_markdup \
+                 --CREATE_INDEX true \
+                 --VALIDATION_STRINGENCY LENIENT
+          ) &
+
+          (
+            mkdir -p /tmp/normal_markdup
+            gatk --java-options "-Xmx8g -XX:+UseParallelGC -XX:ParallelGCThreads=1" \
+                 MarkDuplicates \
+                 --INPUT ${INDIR}/normal_sorted.bam \
+                 --OUTPUT ${OUTDIR}/normal_dedup.bam \
+                 --METRICS_FILE ${OUTDIR}/normal_metrics.txt \
+                 --TMP_DIR /tmp/normal_markdup \
+                 --CREATE_INDEX true \
+                 --VALIDATION_STRINGENCY LENIENT
+          ) &
+
+          wait
+          echo "Mark duplicates completed. Output files:"
+          ls -lah ${OUTDIR}/
+      resources:
+        requests:
+          memory: "20Gi"   # Increased for parallel processing
+          cpu: "4"         # Increased to utilize available cores
+          ephemeral-storage: "80Gi"
+        limits:
+          memory: "28Gi"   # Increased for parallel processing
+          cpu: "4"
+          ephemeral-storage: "80Gi"
+      env:
+        - name: INDIR
+          value: /data/alignment_results
+        - name: OUTDIR
+          value: /data/mark_duplicates
+    inputs:
+      artifacts:
+        - name: alignment-results
+          path: /data/alignment_results
+    outputs:
+      artifacts:
+        - name: mark-duplicates-results
+          path: /data/mark_duplicates
+
+  - name: create-fasta-index
+    container:
+      image: quay.io/biocontainers/samtools:1.17--h00cdaf9_0
+      command: ["/bin/sh", "-c"]
+      args:
+        - |
+          echo "Creating FASTA index for reference genome..."
+
+          echo "Contents of input directory:"
+          ls -lah /data/ref_genome/
+
+          # Create output directory for just the index file
+          mkdir -p /data/fasta_index/
+
+          # Create dictionary using samtools (more memory efficient)
+          samtools dict /data/ref_genome/Homo_sapiens_assembly38.fasta > /data/fasta_index/Homo_sapiens_assembly38.dict
+
+          # Create FASTA index directly from input location
+          samtools faidx /data/ref_genome/Homo_sapiens_assembly38.fasta
+
+          # Copy only the .fai file to output
+          cp /data/ref_genome/Homo_sapiens_assembly38.fasta.fai /data/fasta_index/
+
+          echo "FASTA index created successfully. Output:"
+          ls -lah /data/fasta_index/
+      resources:
+        requests:
+          memory: "2Gi"
+          cpu: "1"
+          ephemeral-storage: "10Gi"
+        limits:
+          memory: "4Gi"
+          cpu: "1"
+          ephemeral-storage: "10Gi"
+    inputs:
+      artifacts:
+        - name: ref-genome-data
+          path: /data/ref_genome
+    outputs:
+      artifacts:
+        - name: fasta-index
+          path: /data/fasta_index
+
+
+  - name: base-quality-score
+    container:
+      image: quay.io/biocontainers/gatk4:4.5.0.0--py36hdfd78af_0
+      command: ["/bin/sh", "-c"]
+      args:
+        - |
+          echo "Starting parallel BQSR processing..."
+          mkdir -p /data/final_results
+
+          cp /data/fasta_index/Homo_sapiens_assembly38.fasta.fai /data/ref_genome/
+          cp /data/fasta_index/Homo_sapiens_assembly38.dict /data/ref_genome/
+
+          echo "Verifying FASTA index and dict is in place..."
+          ls -lah /data/ref_genome/
+
+          echo "Verifying KNOWN SITES..."
+          ls -lah /data/known_sites/
+
+          # Process both samples in parallel
+          (
+            mkdir -p /tmp/tumor_bqsr
+            gatk --java-options "-Xmx8g -XX:+UseParallelGC" \
+                 BaseRecalibrator \
+                 -I ${TUMOR_DEDUP} \
+                 -R ${REF_GENOME} \
+                 -O ${OUTDIR}/tumor_recal_data.table \
+                 --tmp-dir /tmp/tumor_bqsr \
+                 --known-sites ${KNOWN_SITES}
+
+            gatk --java-options "-Xmx8g -XX:+UseParallelGC" \
+                 ApplyBQSR \
+                 -R ${REF_GENOME} \
+                 -I ${TUMOR_DEDUP} \
+                 --bqsr-recal-file ${OUTDIR}/tumor_recal_data.table \
+                 -O ${OUTDIR}/tumor_recal.bam \
+                 --tmp-dir /tmp/tumor_bqsr
+          ) &
+
+          (
+            mkdir -p /tmp/normal_bqsr
+            gatk --java-options "-Xmx8g -XX:+UseParallelGC" \
+                 BaseRecalibrator \
+                 -I ${NORMAL_DEDUP} \
+                 -R ${REF_GENOME} \
+                 -O ${OUTDIR}/normal_recal_data.table \
+                 --tmp-dir /tmp/normal_bqsr \
+                 --known-sites ${KNOWN_SITES}
+
+            gatk --java-options "-Xmx8g -XX:+UseParallelGC" \
+                 ApplyBQSR \
+                 -R ${REF_GENOME} \
+                 -I ${NORMAL_DEDUP} \
+                 --bqsr-recal-file ${OUTDIR}/normal_recal_data.table \
+                 -O ${OUTDIR}/normal_recal.bam \
+                 --tmp-dir /tmp/normal_bqsr
+          ) &
+
+          wait
+          echo "BQSR completed. Final output files:"
+          ls -lah ${OUTDIR}/
+      resources:
+        requests:
+          memory: "20Gi"   # Increased for parallel processing
+          cpu: "4"         # Increased to utilize available cores
+          ephemeral-storage: "100Gi"
+        limits:
+          memory: "28Gi"   # Increased for parallel processing
+          cpu: "4"
+          ephemeral-storage: "100Gi"
+      env:
+        - name: REF_GENOME
+          value: /data/ref_genome/Homo_sapiens_assembly38.fasta
+        - name: TUMOR_DEDUP
+          value: /data/mark_duplicates/tumor_dedup.bam
+        - name: NORMAL_DEDUP
+          value: /data/mark_duplicates/normal_dedup.bam
+        - name: KNOWN_SITES
+          value: /data/known_sites/00-common_all.vcf.gz
+        - name: OUTDIR
+          value: /data/final_results
+    inputs:
+      artifacts:
+        - name: mark-duplicates-results
+          path: /data/mark_duplicates
+        - name: ref-genome-data
+          path: /data/ref_genome
+        - name: known-sites-data
+          path: /data/known_sites
+        - name: fasta-index
+          path: /data/fasta_index
+    outputs:
+      artifacts:
+        - name: final-results
+          path: /data/final_results

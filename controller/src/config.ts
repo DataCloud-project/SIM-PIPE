@@ -28,5 +28,15 @@ export const kubernetesNamespace = process.env.KUBERNETES_NAMESPACE ?? 'default'
 // Prometheus endpoint
 export const prometheusServerUrl = process.env.PROMETHEUS_SERVER_URL ?? 'http://localhost:8086';
 
+// Carbontracker endpoint
+// For Kubernetes cluster deployment, use internal service DNS
+// For local development, use localhost
+export const carbontrackerEndpoint = process.env.CARBONTRACKER_ENDPOINT ?? 'http://localhost:8000';
+
+// Carbontracker endpoint
+// For Kubernetes cluster deployment, use internal service DNS
+// For local development, use localhost
+export const carbontrackerEndpoint = process.env.CARBONTRACKER_ENDPOINT ?? 'http://localhost:8000';
+
 // K3S Cluster Secret
 export const k3sClusterSecret = process.env.K3S_Cluster_SECRET ?? 'k3s-cluster-secret';
