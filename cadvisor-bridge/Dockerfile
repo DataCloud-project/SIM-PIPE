@@ -21,6 +21,10 @@ RUN go build -ldflags="-extldflags \"-static\" -s -w" -o sim-pipe-cadvisor-bridg
 # Create a non-root user 'simpipe' to run the Go application in the final stage
 RUN useradd -u 1000 simpipe
 
+# Machine ID stage
+FROM alpine:latest as machineid
+RUN echo "00000000000000000000000000000000" > /machine-id
+
 # Squash image
 FROM scratch as squasher
 
@@ -36,6 +40,12 @@ FROM scratch
 
 # Copy everything from the squasher stage
 COPY --from=squasher / /
+
+# Copy machine-id from machineid stage
+COPY --from=machineid /machine-id /etc/machine-id
+
+# # Create machine-id
+# RUN echo "00000000000000000000000000000000" > /etc/machine-id
 
 # Expose port 2112 to allow communication to/from server
 EXPOSE 2112

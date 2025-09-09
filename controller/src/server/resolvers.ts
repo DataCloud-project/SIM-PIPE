@@ -43,17 +43,9 @@ import {
   deleteBucket,
   deleteObjects,
   getObjectMetadata,
-  getObjectSize,
-  listAllBuckets,
-  listAllObjects,
 } from '../minio/minio.js';
 import { assertPrometheusIsHealthy } from '../prometheus/prometheus.js';
 import queryPrometheusResolver from '../prometheus/query-prometheus-resolver.js';
-import {
-  aggregatedNodesMetrics,
-  computeScalingLaws,
-  extrapolateFromScalingLaws,
-} from '../curve_fitting/dry-run-data.js';
 import fetchCarbontrackerData from '../carbontracker/carbontracker.js';
 import { NotFoundError, PingError } from './apollo-errors.js';
 import type { ArgoWorkflow, ArgoWorkflowTemplate } from '../argo/argo-client.js';
@@ -476,6 +468,7 @@ const resolvers = {
       const { input } = arguments_;
       const { k8sClient, k8sNamespace, user } = context;
       const { sub } = user;
+      console.log('calling create kube node in create resource resolver')
       return await createResource(input, k8sClient, k8sNamespace, sub);
     },
     async deleteResource(

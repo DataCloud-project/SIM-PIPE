@@ -2,7 +2,7 @@ import { spawn } from "child_process";
 import { k3sClusterSecret } from "../config.js";
 
 // Constants TODO: move to a config file or environment variables
-const CREATESCRIPTPATH = "./create-kube-node.sh";
+const CREATESCRIPTPATH = "./create-kube-node_qemu.sh";
 const DELETE_SCRIPT_PATH = "./shutdown-kube-node.sh";
 const QCOW2_IMAGE_FILE = "os.qcow2";
 const CLOUD_INIT_FILE = "cloud-init.iso";
@@ -22,14 +22,14 @@ export default function createKubeNode(
 
     const script = spawn("sh", [
       CREATESCRIPTPATH,
-      K3S_TOKEN_SECRET,
-      nodeName,
-      memory,
-      cpus,
-      timeout,
-      os,
-      QCOW2_IMAGE_FILE,
-      CLOUD_INIT_FILE,
+      // K3S_TOKEN_SECRET,
+      // nodeName,
+      // memory,
+      // cpus,
+      // timeout,
+      // os,
+      // QCOW2_IMAGE_FILE,
+      // CLOUD_INIT_FILE,
     ]);
 
     // Handle standard output

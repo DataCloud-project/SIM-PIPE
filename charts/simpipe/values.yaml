@@ -33,7 +33,7 @@ controller:
   prometheus:
     serverUrl: http://prometheus-operated:9090
   carbontracker:
-    endpoint: http://simpipe-carbontracker:8000
+    endpoint: http://simpipe-carbontracker:8090
 
   serviceAccount:
     # Annotations to add to the service account
@@ -411,23 +411,38 @@ cadvisor:
         mount: "/rootfs"
       - name: var-run
         path: "/var/run"
+        mount: "/var/run"
       - name: sys
         path: "/sys"
+        mount: "/sys"
       - name: docker
         path: "/var/lib/docker"
+        mount: "/var/lib/docker"
       - name: disk
         path: "/dev/disk"
+        mount: "/dev/disk"
+    volumeMounts:
+      - name: machine-id
+        mountPath: /etc/machine-id
+        readOnly: true
 
   extraContainers:
     - name: simpipe-cadvisor-bridge
       image: ghcr.io/datacloud-project/simpipe-cadvisor-bridge:0.3.0
       imagePullPolicy: IfNotPresent
       args:
-        - http://localhost:8080/metrics
+        - http://0.0.0.0:8080/metrics
       ports:
         - name: bridge
           containerPort: 2112
           protocol: TCP
+      securityContext:
+        runAsUser: 0
+        runAsGroup: 0
+      volumeMounts:
+        - name: machine-id
+          mountPath: /etc/machine-id
+          readOnly: true
 
   service:
     extraPorts:
@@ -436,9 +451,14 @@ cadvisor:
         port: 2112
         protocol: TCP
 
-  #nodeSelector:
-  #  node-role.kubernetes.io/worker: worker
+  hostNetwork: true
 
+  volumes:
+    - name: machine-id
+      hostPath:
+        path: /etc/machine-id
+        type: FileOrCreate
+        
 carbontracker:
   enabled: true
   replicaCount: 1

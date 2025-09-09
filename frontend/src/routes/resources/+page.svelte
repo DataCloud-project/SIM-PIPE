@@ -100,6 +100,7 @@
 		const responseAllResources: { resources: Resource[] } =
 			await requestGraphQLClient(allResourcesQuery);
 		resourcesList.set(responseAllResources.resources);
+		resourcesList.set([{name: 'node25', os: 'ubuntu20', cpu:'2', memory:'4096'}])
 	}
 
 	async function onShutdown(): Promise<void> {

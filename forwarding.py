@@ -10,7 +10,7 @@ services = [
     {
         "name": "cadvisor", 
         "ports": [8081, 8080], 
-        "enabled": False
+        "enabled": True
     },
     {
         "name": "grafana", 
@@ -56,7 +56,7 @@ services = [
     },
     {
         "name": "carbontracker",
-        "ports": [8000, 8000],
+        "ports": [8090, 8000],
         "enabled": True
     },
 ]

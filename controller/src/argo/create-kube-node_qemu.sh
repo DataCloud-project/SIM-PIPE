@@ -5,7 +5,7 @@ set -e # Exit immediately if a command exits with a non-zero status
 # Input arguments
 
 K3S_TOKEN_SECRET=${1:-"k3s-cluster-secret"}
-NODE_NAME=${2:-"node25"}
+NODE_NAME=${2:-"node26"}
 MEMORY=${3:-4096}
 CPUS=${4:-2}
 TIMEOUT=${5:-600}
@@ -33,6 +33,7 @@ select_os_image() {
 
 # Function: Fetch K3S cluster details
 fetch_k3s_details() {
+  # use curl ifconfig.me for ip
  log_message "INFO" "Fetching Kubernetes cluster details..."
  K3S_SERVER_IP=$(kubectl get secret "$K3S_TOKEN_SECRET" -o jsonpath='{.data.K3S_SERVER_IP}' | base64 -d)
  K3S_TOKEN=$(kubectl get secret "$K3S_TOKEN_SECRET" -o jsonpath='{.data.token}' | base64 -d)
@@ -66,13 +67,19 @@ chpasswd:
 
 packages:
   - openssh-server
+  - docker.io
 
 runcmd:
+  - systemd-machine-id-setup
   - systemctl enable ssh
   - systemctl start ssh
+  - systemctl enable docker
+  - systemctl start docker
+  - sudo chmod 666 /var/run/docker.sock
+  - sudo iptables -A INPUT -p tcp --dport 10250 -j ACCEPT
 
   # Start K3s agent to join cluster
-  - curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="agent" K3S_URL=${K3S_SERVER_URL} K3S_TOKEN=${K3S_TOKEN} sh -
+  - curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="agent --docker" K3S_URL=${K3S_SERVER_URL} K3S_TOKEN=${K3S_TOKEN} sh -
 EOF
 
 IP_ADDR=${9:-"192.168.100.11"}
