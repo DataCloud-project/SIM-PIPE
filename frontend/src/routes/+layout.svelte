@@ -131,17 +131,17 @@
 					<div>Registry</div>
 				</div>
 			</AppRailAnchor>
-			<!-- new section for managing resources for emulation -->
+			<!-- new section for managing resources for emulation -->			
 			<AppRailAnchor
-				label="Resources for deployment"
+				label="Emulated ndoes"
 				href="/resources"
 				selected={$page.url.pathname === '/resources'}
 			>
 				<div class="flex flex-col items-center justify-center">
 					<div>
-						<CodepenIcon size="1.5x" />
+						<BookOpenIcon size="1.5x" />
 					</div>
-					<div>Resources</div>
+					<div>Nodes</div>
 				</div>
 			</AppRailAnchor>
 			<!-- TO DO: temporary redirect to sftp go web interface; will be replaced by files manager when api is ready -->

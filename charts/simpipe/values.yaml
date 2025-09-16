@@ -391,10 +391,11 @@ cadvisor:
   enabled: true
   nameOverride: simpipe-cadvisor
 
-  simpipeRefreshInterval: 3s
-  simpipeScrapeTimeout: 2s
+  simpipeRefreshInterval: 15s     
+  simpipeScrapeTimeout: 10s       
 
   container:
+    name: cadvisor
     additionalArgs:
       - --housekeeping_interval=3s
       - --max_housekeeping_interval=6s
@@ -421,10 +422,13 @@ cadvisor:
       - name: disk
         path: "/dev/disk"
         mount: "/dev/disk"
-    volumeMounts:
       - name: machine-id
-        mountPath: /etc/machine-id
-        readOnly: true
+        path: /etc/machine-id
+        mount: /etc/machine-id  
+        type: FileOrCreate
+      - name: cgroup
+        path: "/sys/fs/cgroup"
+        mount: "/sys/fs/cgroup"
 
   extraContainers:
     - name: simpipe-cadvisor-bridge
@@ -443,6 +447,9 @@ cadvisor:
         - name: machine-id
           mountPath: /etc/machine-id
           readOnly: true
+        - name: cgroup
+          mountPath: /sys/fs/cgroup
+          readOnly: true
 
   service:
     extraPorts:
@@ -453,11 +460,6 @@ cadvisor:
 
   hostNetwork: true
 
-  volumes:
-    - name: machine-id
-      hostPath:
-        path: /etc/machine-id
-        type: FileOrCreate
         
 carbontracker:
   enabled: true
