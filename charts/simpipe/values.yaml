@@ -458,9 +458,6 @@ cadvisor:
         port: 2112
         protocol: TCP
 
-  hostNetwork: true
-
-        
 carbontracker:
   enabled: true
   replicaCount: 1

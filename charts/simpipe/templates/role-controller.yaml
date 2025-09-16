@@ -5,15 +5,15 @@ metadata:
   labels:
     {{- include "simpipeController.labels" . | nindent 4 }}
 rules:
-- apiGroups: ["simpipe.sct.sintef.no"]
-  resources: ["projects", "resources"]  # added resources to manage new cluster nodes
-  verbs: ["get", "list", "create", "update", "delete"]
-- apiGroups: [""]
-  resources: ["secrets"]
-  verbs: ["get", "list", "create", "update", "delete"]
-- apiGroups: ["argoproj.io"]
-  resources: ["workflows", "workflowtemplates", "cronworkflows"]
-  verbs: ["get", "list", "create", "update", "delete"]
-- apiGroups: [""]
-  resources: ["pods"]
-  verbs: ["get", "list", "watch", "create", "drain", "update", "delete"]  # Added this rule for getting access to pods and nodes
+  - apiGroups: ["simpipe.sct.sintef.no"]
+    resources: ["projects", "vmnodes"]
+    verbs: ["get", "list", "create", "update", "delete"]
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["get", "list", "create", "update", "delete"]
+  - apiGroups: ["argoproj.io"]
+    resources: ["workflows", "workflowtemplates", "cronworkflows"]
+    verbs: ["get", "list", "create", "update", "delete"]
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "list", "watch", "create", "drain", "update", "delete"]

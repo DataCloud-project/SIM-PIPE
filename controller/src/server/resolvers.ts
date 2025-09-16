@@ -468,7 +468,6 @@ const resolvers = {
       const { input } = arguments_;
       const { k8sClient, k8sNamespace, user } = context;
       const { sub } = user;
-      console.log('calling create kube node in create resource resolver')
       return await createResource(input, k8sClient, k8sNamespace, sub);
     },
     async deleteResource(

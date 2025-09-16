@@ -1,19 +1,11 @@
 <script lang="ts">
 	import { getModalStore, ProgressBar } from '@skeletonlabs/skeleton';
 	import type { ModalSettings } from '@skeletonlabs/skeleton';
-	import { EditIcon, FileTextIcon } from 'svelte-feather-icons';
 	import { resourcesList } from '../../stores/stores.js';
-	import type { Project } from '../../types.js';
 	import { goto } from '$app/navigation';
 	import { requestGraphQLClient } from '$lib/graphqlUtils';
-	import allProjectsQuery from '../../queries/get_all_projects.js';
-	import deleteProjectMutation from '../../queries/delete_project.js';
-	import allDryRunsQuery from '../../queries/get_all_dryruns.js';
 	import allResourcesQuery from '../../queries/get_all_resources.js';
 	import type { Resource } from '../../types.js';
-	import deleteDryRunMutation from '../../queries/delete_dry_run.js';
-	import deleteWorkflowTemplateMutation from '../../queries/delete_workflow_template.js';
-	// import { displayAlert } from '../../utils/alerts-utils.js';
 	import Alert from '$lib/modules/alert.svelte';
 
 	const modalStore = getModalStore();
@@ -28,9 +20,14 @@
 	const checkboxes: Record<string, boolean> = {};
 
 	const getResourcesList = async (): Promise<Resource[]> => {
-		const response: { resources: Resource[] } = await requestGraphQLClient(allResourcesQuery);
-		console.log(response);
-		return response.resources;
+		try {
+			const response: { resources: Resource[] } = await requestGraphQLClient(allResourcesQuery);
+			console.log(response);
+			return response.resources;
+		} catch (error) {
+			console.error('Error fetching resources:', error);
+			return [];
+		}
 	};
 
 	const resourcesPromise = getResourcesList();
@@ -100,7 +97,7 @@
 		const responseAllResources: { resources: Resource[] } =
 			await requestGraphQLClient(allResourcesQuery);
 		resourcesList.set(responseAllResources.resources);
-		resourcesList.set([{name: 'node25', os: 'ubuntu20', cpu:'2', memory:'4096'}])
+		resourcesList.set([{ name: 'node25', os: 'ubuntu20', cpu: '2', memory: '4096' }]);
 	}
 
 	async function onShutdown(): Promise<void> {

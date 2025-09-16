@@ -43,31 +43,43 @@ function convertK8SVMNodeToResource(k8sVMNode: K8SVMNode): Resource {
 }
 
 
-// List all resources
 export async function resources(
   k8sClient: K8sClient,
   k8sNamespace = 'default',
   user?: string,
 ): Promise<Resource[]> {
+
   let labelSelector: string | undefined;
   if (user) {
-    assertIsValidKubernetesLabel(user);
-    labelSelector = `${SIMPIPE_USER_LABEL}=${user}`;
+    try {
+      assertIsValidKubernetesLabel(user);
+      labelSelector = `${SIMPIPE_USER_LABEL}=${user}`;
+    } catch (validationError) {
+      console.error('resources.ts: Invalid Kubernetes label for user:', user, validationError);
+      throw validationError;
+    }
   }
-  const response = await k8sClient.customObjects.listNamespacedCustomObject(
-  'simpipe.sct.sintef.no',
-  'v1',
-  k8sNamespace,
-  'vmnodes',   // <- changed
-  undefined,
-  undefined,
-  undefined,
-  undefined,
-  labelSelector,
-  );
-  const { body } = response as { body: K8SVMNodeList };
-  return body.items.map((vmnode) => convertK8SVMNodeToResource(vmnode));
+
+  try {
+    const response = await k8sClient.customObjects.listNamespacedCustomObject(
+      'simpipe.sct.sintef.no',
+      'v1',
+      k8sNamespace,
+      'vmnodes',
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      labelSelector,
+    );
+    const { body } = response as { body: K8SVMNodeList };
+    return body.items.map((vmnode) => convertK8SVMNodeToResource(vmnode));
+  } catch (error) {
+    console.error('resources.ts: Kubernetes API call failed:', error);
+    throw error;
+  }
 }
+
 
 // Get a specific resource by ID
 export async function getResource(
@@ -77,16 +89,16 @@ export async function getResource(
   user?: string,
 ): Promise<Resource> {
   let body: K8SVMNode;
-;
+  ;
   try {
     const response = await k8sClient.customObjects.getNamespacedCustomObject(
-    'simpipe.sct.sintef.no',
-    'v1',
-    k8sNamespace,
-    'vmnodes',   // <- changed
-    id,
-  );
-  body = response.body as K8SVMNode;
+      'simpipe.sct.sintef.no',
+      'v1',
+      k8sNamespace,
+      'vmnodes',   // <- changed
+      id,
+    );
+    body = response.body as K8SVMNode;
 
   } catch (error) {
     if ((error as Error & { response?: { statusCode: number } }).response?.statusCode === 404) {
@@ -123,47 +135,52 @@ export async function createResource(
     labels = { [SIMPIPE_USER_LABEL]: user };
   }
 
-  // Step 1: Create the k3s node
-  try {
-    console.log('calling create kube node in create resource')
-    await createKubeNode(slugName, memory, cpus, '600', os);
-  } catch (error) {
-    throw new Error(`Failed to create k3s node: ${(error as Error).message}`);
-  }
-  
+  // Step 1: Create the k3s node commented for testing
+  // try {
+  //   console.log('calling create kube node in create resource')
+  //   await createKubeNode(slugName, memory, cpus, '600', os);
+  // } catch (error) {
+  //   throw new Error(`Failed to create k3s node: ${(error as Error).message}`);
+  // }
+
   // Step 2: Persist as a CRD VMNode
-let createdVMNode: K8SVMNode;
-try {
-  const response = await k8sClient.customObjects.createNamespacedCustomObject(
-    'simpipe.sct.sintef.no', // same group
-    'v1',                     // version
-    k8sNamespace,
-    'vmnodes',                // <- changed from 'resources' to 'vmnodes'
-    {
-      apiVersion: 'simpipe.sct.sintef.no/v1',
-      kind: 'VMNode',         // <- changed from 'Resource' to 'VMNode'
-      metadata: {
-        name: slugName,
-        labels,
+  let createdVMNode: K8SVMNode;
+  try {
+    const response = await k8sClient.customObjects.createNamespacedCustomObject(
+      'simpipe.sct.sintef.no',
+      'v1',
+      k8sNamespace,
+      'vmnodes',
+      {
+        apiVersion: 'simpipe.sct.sintef.no/v1',
+        kind: 'VMNode',
+        metadata: {
+          name: slugName,
+          labels,
+        },
+        spec: {
+          name,
+          os,
+          cpus,
+          memory,
+          status: 'Provisioning',
+        },
       },
-      spec: {
-        name,                 // <- changed from 'resourceName' to 'name'
-        os,
-        cpus,
-        memory,
-        status: 'Provisioning',     // <- new field for VM status
-      },
-    },
-  );
+    );
 
-  createdVMNode = response.body as K8SVMNode;
+    createdVMNode = response.body as K8SVMNode;
 
-} catch (error) {
-  if ((error as Error & { response?: { statusCode: number } }).response?.statusCode === 409) {
-    throw new ConflictError(`VMNode already exists with same id: ${slugName}`); // updated message
+  } catch (error) {
+    if ((error as any)?.response) {
+      console.error('createResource Kubernetes error response:', JSON.stringify((error as any).response, null, 2));
+    } else {
+      console.error('createResource error:', error);
+    }
+    if ((error as any)?.response?.statusCode === 409) {
+      throw new ConflictError(`VMNode already exists with same id: ${slugName}`);
+    }
+    throw new Error(`Failed to create VMNode: ${(error as Error).message}`);
   }
-  throw new Error(`Failed to create VMNode: ${(error as Error).message}`);       // updated message
-}
 
   return convertK8SVMNodeToResource(createdVMNode);
 }

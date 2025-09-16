@@ -17,24 +17,24 @@
 	const modalStore = getModalStore();
 
 	// Bindings for the inputs
-	let name = 'linux-node';	// Default value
+	let name = 'linux'; // Default value
 	let os = 'ubuntu-20'; // Default value
-	let cpus = 2;        // Default value
-	let memory = 4096;   // Default value in MB
+	let cpus = 2; // Default value
+	let memory = 4096; // Default value in MB
 
 	// OS options for the dropdown todo: move out?
 	const osOptions = [
-    { value: 'ubuntu-18', label: 'Ubuntu 18.04' },
-    { value: 'ubuntu-20', label: 'Ubuntu 20.04' },
-    { value: 'ubuntu-22', label: 'Ubuntu 22.04' },
-    { value: 'ubuntu-24', label: 'Ubuntu 24.04' },
- 	 ];
+		{ value: 'ubuntu-18', label: 'Ubuntu 18.04' },
+		{ value: 'ubuntu-20', label: 'Ubuntu 20.04' },
+		{ value: 'ubuntu-22', label: 'Ubuntu 22.04' },
+		{ value: 'ubuntu-24', label: 'Ubuntu 24.04' }
+	];
 
-	async function onSubmit(): Promise<void> {	
+	async function onSubmit(): Promise<void> {
 		// close the modal
 		modalStore.close();
 
-		// Create the resource		
+		// Create the resource
 		const createResourceMutationVariables = {
 			input: {
 				name: name,
@@ -50,7 +50,7 @@
 			);
 			console.log('time:', new Date().toISOString());
 			console.log('result:', result);
-			
+
 			const createResourceMessageModal: ModalSettings = {
 				type: 'alert',
 				title: 'New resource created&#10024;!',
@@ -82,26 +82,40 @@
 			<label class="label">
 				<span>OS</span>
 				<div class="flex">
-				  <select class="input" bind:value={os}>
-					<option value="" disabled hidden>Select an OS (e.g., {osOptions[0].label})</option>
-					{#each osOptions as option}
-					  <option value={option.value}>{option.label}</option>
-					{/each}
-				  </select>
+					<select class="input" bind:value={os}>
+						<option value="" disabled hidden>Select an OS (e.g., {osOptions[0].label})</option>
+						{#each osOptions as option}
+							<option value={option.value}>{option.label}</option>
+						{/each}
+					</select>
 				</div>
-			  </label>
-			  <label class="label">
+			</label>
+			<label class="label">
 				<span>Number of CPUs</span>
 				<div class="flex">
-				  <input class="input" type="number" bind:value={cpus} min="1" step="1" placeholder="Enter CPUs..." />
+					<input
+						class="input"
+						type="number"
+						bind:value={cpus}
+						min="1"
+						step="1"
+						placeholder="Enter CPUs..."
+					/>
 				</div>
-			  </label>
-			  <label class="label">
+			</label>
+			<label class="label">
 				<span>Memory (MB)</span>
 				<div class="flex">
-				  <input class="input" type="number" bind:value={memory} min="512" step="256" placeholder="Enter memory..." />
+					<input
+						class="input"
+						type="number"
+						bind:value={memory}
+						min="512"
+						step="256"
+						placeholder="Enter memory..."
+					/>
 				</div>
-			  </label>
+			</label>
 		</form>
 		<footer class="modal-footer {parent.regionFooter}">
 			<button class="btn {parent.buttonNeutral}" on:click={parent.onClose}

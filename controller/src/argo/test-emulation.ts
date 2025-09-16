@@ -7,7 +7,7 @@ const DELETE_SCRIPT_PATH = "./shutdown-kube-node.sh";
 const QCOW2_IMAGE_FILE = "os.qcow2";
 const CLOUD_INIT_FILE = "cloud-init.iso";
 
-const K3S_TOKEN_SECRET =  k3sClusterSecret; 
+const K3S_TOKEN_SECRET = k3sClusterSecret;
 
 // Function to create a Kubernetes node
 export default function createKubeNode(
@@ -42,7 +42,7 @@ export default function createKubeNode(
       console.error(`${data.toString().trim()}`);
     });
 
-    script.on("close", (code) => {
+    script.on("close", (code: number) => {
       if (code === 0) {
         console.log(`[SUCCESS] Node ${nodeName} created successfully.`);
         resolve(`Node ${nodeName} created successfully.`);
@@ -54,7 +54,7 @@ export default function createKubeNode(
 
     // Capture detailed stderr output
     let stderrData = '';
-    script.stderr.on("data", (data) => {
+    script.stderr.on("data", (data: { toString: () => string; }) => {
       const errorOutput = data.toString().trim();
       stderrData += errorOutput + '\n';
       console.error(`[STDERR] ${errorOutput}`);
@@ -80,7 +80,7 @@ export function deleteKubeNode(nodeName: string): Promise<string> {
       console.error(`${data.toString().trim()}`);
     });
 
-    script.on('close', (code) => {
+    script.on('close', (code: number) => {
       if (code === 0) {
         console.log(`[SUCCESS] Node ${nodeName} deleted successfully.`);
         resolve(`Node ${nodeName} deleted successfully.`);
@@ -91,7 +91,7 @@ export function deleteKubeNode(nodeName: string): Promise<string> {
     });
 
     let stderrData = '';
-    script.stderr.on('data', (data) => {
+    script.stderr.on('data', (data: { toString: () => string; }) => {
       const errorOutput = data.toString().trim();
       stderrData += `${errorOutput}\n`;
       console.error(`[STDERR] ${errorOutput}`);
