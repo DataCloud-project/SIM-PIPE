@@ -48,7 +48,7 @@
 
 	selectedArtifact.subscribe((value) => {
 		const artifactName = value?.name;
-		console.log('subscribe selectedArtifact', value);
+		// console.log('subscribe selectedArtifact', value);
 		if ($selectedArtifact) {
 			isActiveButton = true;
 			unselectOtherArtifacts(artifactName as string);

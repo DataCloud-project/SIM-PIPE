@@ -80,7 +80,7 @@
 	}
 
 	// log changes to reactiveBuckets
-	$: console.log('reactiveBuckets:', $reactiveBuckets);
+	// $: console.log('reactiveBuckets:', $reactiveBuckets);
 </script>
 
 <div class="flex artifact-structure">

@@ -47,12 +47,12 @@
 	onMount(async () => {
 		// await loadData();
 		await loadData2();
-		console.log('artifacts mounted');
+		// console.log('artifacts mounted');
 	});
 	/* eslint-disable no-console */
-	$: console.log('buckets:', buckets);
-	$: console.log('requests completed:', requestsComplete);
-	$: console.log('selected bucket:', selectedBucket);
+	// $: console.log('buckets:', buckets);
+	// $: console.log('requests completed:', requestsComplete);
+	// $: console.log('selected bucket:', selectedBucket);
 	// $: console.log('data', data);
 	/* eslint-enable no-console */
 </script>
