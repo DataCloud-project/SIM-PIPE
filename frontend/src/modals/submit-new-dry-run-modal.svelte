@@ -10,8 +10,10 @@
 	import allDryRunsQuery from '$queries/get_all_dryruns.js';
 	import { selectedArtifact, selectedProject } from '$stores/stores.js';
 	import { cBase, cForm, cHeader } from '../styles/styles.js';
-	import type { ArtifactHierarchyType, Project } from '$typesdefinitions';
+	import type { ArtifactHierarchyType, Project, Resource } from '$typesdefinitions';
 	import ArtifactBrowser from './artifact-browser.svelte';
+	import allResourcesQuery from '$queries/get_all_resources.js';
+	import { onMount } from 'svelte';
 
 	let isOverlayOpen = false;
 	let selectedTemplateTaskName = '';
@@ -36,7 +38,7 @@
 
 	const argoWorkflowTemplate = $selectedProject?.workflowTemplates[0]?.argoWorkflowTemplate;
 	const currentArgoWorkflowTemplates = argoWorkflowTemplate?.spec?.templates;
-	$: console.log('currentArgoWorkflowTemplate', currentArgoWorkflowTemplates);
+	// $: console.log('currentArgoWorkflowTemplate', currentArgoWorkflowTemplates);
 
 	type InputData = {
 		template_task_name: string;
@@ -249,51 +251,16 @@
 			).raw = inputArtifact.raw;
 	}
 
-	/* 
-	function createDefaultTemplateContainerRawInput(): TemplateContainerRawInput {
-		return {
-			artifacts: [
-				{
-					name: '', // the given name of the input artifact in the template container
-					path: '', // the path to the input artifact in the container
-					mode: 644, // file mode (read-write for owner, read-only for group and others)
-					raw: { data: '' } // raw input artifact details
-				}
-			]
-		};
-	}
-
-	function createDefaultTemplateContainerArtifactInput(): TemplateContainerArtifactInput {
-		return {
-			artifacts: [
-				{
-					name: '', // the given name of the input artifact in the template container
-					path: '', // the path to the input artifact in the container
-					mode: 644, // file mode (read-write for owner, read-only for group and others)
-					s3: createDefaultS3Input()
-				}
-			]
-		};
-	} */
-
 	function parsetemplateTaskList(): Task[] {
-		// disabling; could not resolve eslint error  Unsafe usage of optional chaining. If it short-circuits with 'undefined' the evaluation will throw TypeError  55:53  warning  Unexpected any. Specify a different type
 		const {
 			spec: { templates }
 		} = $selectedProject?.workflowTemplates[0]?.argoWorkflowTemplate;
-		// console.log(templates);
-		// dag or steps?
 		const dag = templates.find((template: any) => template.dag);
 		const steps = templates.find((template: any) => template.steps);
-		// console.log('dag', dag); array of tasks
-		// console.log('steps', steps); array of arrays of tasks
 		let tasks: Task[] = [];
 		if (dag) {
-			console.log('dag', dag);
 			tasks = dag.dag.tasks;
 		} else if (steps) {
-			console.log('steps', steps);
-			const tasks = [];
 			for (const step of steps.steps) {
 				tasks.push(...step);
 			}
@@ -302,18 +269,15 @@
 		templates.forEach((template: { name: string; inputs: any }) => {
 			templateContainerInputs[template.name] = template.inputs;
 		});
-		console.log('tasks', tasks);
-		console.log('templateContainerInputs', templateContainerInputs);
 		return tasks;
 	}
-	const templateTaskList = parsetemplateTaskList() || [];
+	// const templateTaskList = parsetemplateTaskList() || [];
+	$: templateTaskList = parsetemplateTaskList() || [];
 
 	// get modified workflow template with updated template inputs
 	function getModifiedWorkflowTemplate2(): any {
 		const newWorkflowTemplate = argoWorkflowTemplate;
 		newWorkflowTemplate.spec.templates = currentArgoWorkflowTemplates;
-		// console.log('originalWorkflowTemplate', argoWorkflowTemplate);
-		// console.log('newWorkflowTemplate', newWorkflowTemplate);
 		newWorkflowTemplate.metadata = { generateName: newWorkflowTemplate.metadata.generateName };
 		return newWorkflowTemplate;
 	}
@@ -322,7 +286,6 @@
 		modalStore.close();
 
 		const modifiedWorkflowTemplate = await getModifiedWorkflowTemplate2();
-		// const modifiedWorkflowTemplate = await newWorkflowTemplate(argoWorkflowTemplate);
 
 		const createDryRunMutationVariables = {
 			input: {
@@ -383,7 +346,25 @@
 		}
 	}
 
-	$: console.log('inputdata', inputdata);
+	let availableNodes: Resource[] = [];
+	let loadingAvailableNodes = true;
+	onMount(async () => {
+		try {
+			const allResourcesResponse: { resources: Resource[] } =
+				await requestGraphQLClient(allResourcesQuery);
+			availableNodes = allResourcesResponse.resources;
+			loadingAvailableNodes = false;
+			console.log('availableNodes loaded:', availableNodes);
+		} catch (error) {
+			console.error('Error getting available nodes: ', error);
+			loadingAvailableNodes = false;
+			availableNodes = []; // fail safe: empty array
+		}
+	});
+
+	let selectedNodeName = 'default';
+
+	// $: console.log('inputdata', inputdata);
 </script>
 
 {#if $modalStore[0]}
@@ -392,6 +373,20 @@
 		<article>{$modalStore[0].body ?? '(body missing)'}</article>
 		<form class="modal-form {cForm}">
 			{#if templateTaskList.length > 0}
+				{#if loadingAvailableNodes}
+					<p>Loading nodes...</p>
+				{:else if availableNodes.length === 0}
+					<p>No nodes available</p>
+				{:else}
+					<label for="node-select">Select node to schedule the dry run:</label>
+					<select id="node-select" bind:value={selectedNodeName}>
+						{#each availableNodes as node}
+							<option value={node.name}>
+								{node.name} - {node.os} ({node.cpus} CPUs, {node.memory} MB, {node.status})
+							</option>
+						{/each}
+					</select>
+				{/if}
 				{#each templateTaskList as task, i}
 					<div class="ml-5">
 						<!-- svelte-ignore a11y-label-has-associated-control -->
@@ -413,9 +408,8 @@
 								</span></label
 							>
 						{/if}
-						{#if Object.keys(templateContainerInputs[task.name]).length > 0}
+						<!-- {#if Object.keys(templateContainerInputs[task.name])?.length > 0}
 							<br />
-							<!-- svelte-ignore a11y-label-has-associated-control -->
 							<label>Upload Input files </label>
 							{#each templateContainerInputs[task.name].artifacts || [] as artifact, k}
 								<label for={artifact.name}>
@@ -423,8 +417,8 @@
 										<div class="grid grid-rows-2 grid-cols-3 justify-items-center items-center">
 											<div>
 												<span>{artifact.name}</span>
-											</div>
-											<div>
+											</div> -->
+						<!-- <div>
 												{#if inputdata[task.name] && inputdata[task.name][k] && inputdata[task.name][k].is_raw}
 													<span>{inputdata[task.name][k].raw?.filename}</span>
 												{:else}
@@ -441,7 +435,6 @@
 													<span></span>
 												{/if}
 											</div>
-											<div></div>
 											<div>
 												<FileButton
 													id={artifact.name}
@@ -459,13 +452,13 @@
 													on:click={() => openOverlay(task.name, artifact.name, k)}
 													>Browse artifacts</button
 												>
-											</div>
-										</div>
+											</div> -->
+						<!-- </div>
 									</span>
 								</label>
 								<br />
 							{/each}
-						{/if}
+						{/if} -->
 						{#each templateTaskList[i].arguments?.parameters || [] as param, j}
 							<!-- svelte-ignore a11y-label-has-associated-control -->
 							<label>Enviroment parameters:</label>

@@ -7,6 +7,7 @@ const allResourcesQuery = gql`
 			os
 			cpus
 			memory
+			status
 		}
 	}
 `;

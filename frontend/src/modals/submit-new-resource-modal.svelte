@@ -1,19 +1,14 @@
 <script lang="ts">
 	import { getModalStore, type ModalSettings } from '@skeletonlabs/skeleton';
-	import yaml from 'js-yaml';
 	import type { SvelteComponent } from 'svelte';
 
 	import { requestGraphQLClient } from '$lib/graphqlUtils.js';
 
-	import createProjectMutation from '$queries/create_project.js';
-	import createWorkflowTemplateMutation from '$queries/create_workflow_template.js';
 	import { cBase, cForm, cHeader } from '$styles/styles.js';
 	import createResourceMutation from '$queries/create_resource.js';
 
-	// Props - Exposes parent props to this component
 	export let parent: SvelteComponent;
 
-	// modalStore is a store that is used to trigger modals
 	const modalStore = getModalStore();
 
 	// Bindings for the inputs
@@ -22,7 +17,6 @@
 	let cpus = 2; // Default value
 	let memory = 4096; // Default value in MB
 
-	// OS options for the dropdown todo: move out?
 	const osOptions = [
 		{ value: 'ubuntu-18', label: 'Ubuntu 18.04' },
 		{ value: 'ubuntu-20', label: 'Ubuntu 20.04' },
@@ -48,8 +42,7 @@
 				createResourceMutation,
 				createResourceMutationVariables
 			);
-			console.log('time:', new Date().toISOString());
-			console.log('result:', result);
+			// console.log('result:', result);
 
 			const createResourceMessageModal: ModalSettings = {
 				type: 'alert',
@@ -59,8 +52,8 @@
 			modalStore.trigger(createResourceMessageModal);
 
 			await new Promise((resolve) => setTimeout(resolve, 1500));
-			// modalStore.close();
-			// modalStore.clear();
+			modalStore.close();
+			modalStore.clear();
 		} catch (error) {
 			console.error('Error creating resource:', error);
 		}

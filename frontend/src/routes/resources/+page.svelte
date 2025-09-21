@@ -2,11 +2,11 @@
 	import { getModalStore, ProgressBar } from '@skeletonlabs/skeleton';
 	import type { ModalSettings } from '@skeletonlabs/skeleton';
 	import { resourcesList } from '../../stores/stores.js';
-	import { goto } from '$app/navigation';
 	import { requestGraphQLClient } from '$lib/graphqlUtils';
 	import allResourcesQuery from '../../queries/get_all_resources.js';
 	import type { Resource } from '../../types.js';
 	import Alert from '$lib/modules/alert.svelte';
+	import deleteResourceMutation from '$queries/delete_resource.js';
 
 	const modalStore = getModalStore();
 
@@ -19,10 +19,10 @@
 
 	const checkboxes: Record<string, boolean> = {};
 
+	// fetch resources
 	const getResourcesList = async (): Promise<Resource[]> => {
 		try {
 			const response: { resources: Resource[] } = await requestGraphQLClient(allResourcesQuery);
-			console.log(response);
 			return response.resources;
 		} catch (error) {
 			console.error('Error fetching resources:', error);
@@ -30,20 +30,19 @@
 		}
 	};
 
-	const resourcesPromise = getResourcesList();
+	// initial load
+	let resourcesPromise: Promise<Resource[]> = getResourcesList();
 
 	resourcesPromise
 		.then((value) => {
 			$resourcesList = value;
 			reactiveResourcesList = value;
 		})
-		// eslint-disable-next-line unicorn/prefer-top-level-await
 		.catch(() => {
 			$resourcesList = undefined;
 		});
 
-	// to disable onclick propogation for checkbox input
-	// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+	// disable onclick propogation for checkbox input
 	const handleCheckboxClick = (event: any) => {
 		event.stopPropagation();
 	};
@@ -55,75 +54,93 @@
 	}): Promise<boolean> {
 		visibleAlert = true;
 		let hasErrors = false;
+
 		if (createResourceResponse.status === 200) {
-			await requestGraphQLClient<{ resources: Resource[] }>(allResourcesQuery).then((response) => {
-				reactiveResourcesList = response.resources;
-				$resourcesList = response.resources;
-			});
+			// Wait for the GraphQL request to finish before resetting
+			const response: { resources: Resource[] } = await requestGraphQLClient(allResourcesQuery);
+
+			reactiveResourcesList = response.resources;
+			resourcesList.set(response.resources);
+			$resourcesList = response.resources;
+
+			console.log('Resources after create ✅', reactiveResourcesList);
 		} else {
 			hasErrors = true;
 			alertVariant = 'variant-filled-error';
 			alertTitle = 'Resource creation failed!';
 			alertMessage = `Resource creation failed with status ${createResourceResponse.status}: ${createResourceResponse.error}`;
 		}
+
 		return hasErrors;
 	}
 
 	async function onCreate(): Promise<void> {
-		const modalPromise = new Promise<boolean>((resolve) => {
-			const modal: ModalSettings = {
-				type: 'component',
-				component: 'createNewResourceModal',
-				title: 'Add new resource',
-				body: 'Enter details of resource',
-				response: (r: {
-					createResourceResponse: {
-						status: number;
-						error: string;
-						resource: { name: string; id: string };
-					};
-				}) => {
-					resolve(handleOnCreateResourceResponse(r.createResourceResponse));
-				}
-			};
-			modalStore.trigger(modal);
-		}).then(() => {
-			console.log('onCreateNewProject promise resolved');
-		});
-		modalPromise.catch((error) => {
-			console.log('onCreateNewProject promise error:', error);
-		});
-		// update the resources list after creation
-		const responseAllResources: { resources: Resource[] } =
-			await requestGraphQLClient(allResourcesQuery);
-		resourcesList.set(responseAllResources.resources);
-		resourcesList.set([{ name: 'node25', os: 'ubuntu20', cpu: '2', memory: '4096' }]);
+		try {
+			await new Promise<void>((resolve, reject) => {
+				const modal: ModalSettings = {
+					type: 'component',
+					component: 'createNewResourceModal',
+					title: 'Add new resource',
+					body: 'Enter details of resource',
+					response: async (r: {
+						createResourceResponse: {
+							status: number;
+							error: string;
+							resource: { name: string; id: string };
+						};
+					}) => {
+						try {
+							await handleOnCreateResourceResponse(r.createResourceResponse);
+							resolve();
+						} catch (err) {
+							reject(err);
+						}
+					}
+				};
+				modalStore.trigger(modal);
+			});
+
+			console.log('✅ onCreate finished, resource list refreshed');
+		} catch (error) {
+			console.error('❌ onCreate error:', error);
+		}
 	}
 
-	async function onShutdown(): Promise<void> {
-		const variables = {
-			resourceId: 'linux-node'
-		};
-		const deleteResourceMutation = `mutation deleteResource($resourceId: String!) {
-			deleteResource(resourceId: $resourceId)
-		}`;
-		await requestGraphQLClient(deleteResourceMutation, variables).catch((error) => {
-			console.log(error);
-			visibleAlert = true;
-			alertTitle = 'Deleting resource failed!';
-			alertMessage = error.message;
-		});
-		visibleAlert = true;
-		alertTitle = 'Resource deleted!';
-		alertMessage = 'Resource deleted successfully';
-		// update the resources list after deletion
-		const responseAllResources: { resources: Resource[] } =
-			await requestGraphQLClient(allResourcesQuery);
-		resourcesList.set(responseAllResources.resources);
+	async function onDelete(): Promise<void> {
+		try {
+			const selected = Object.keys(checkboxes).filter((item) => checkboxes[item]);
+
+			await Promise.all(
+				selected.map(async (element) => {
+					console.log('calling deleteResourceMutation');
+					await requestGraphQLClient(deleteResourceMutation, { resourceId: element });
+
+					console.log('calling vMNodeDeletedMessageModal');
+					const vMNodeDeletedMessageModal: ModalSettings = {
+						type: 'alert',
+						title: 'VM node deleted🗑️!',
+						body: `Deleted VM node: ${element}`
+					};
+					modalStore.trigger(vMNodeDeletedMessageModal);
+
+					await new Promise((resolve) => setTimeout(resolve, 500));
+					modalStore.close();
+				})
+			);
+		} catch (error) {
+			console.log('Error deleting resources:', error);
+		} finally {
+			Object.keys(checkboxes).forEach((id) => (checkboxes[id] = false));
+
+			const response: { resources: Resource[] } = await requestGraphQLClient(allResourcesQuery);
+			resourcesList.set(response.resources);
+			$resourcesList = response.resources;
+			console.log('resetting resource list ✅', response.resources);
+		}
 	}
 </script>
 
-<!-- svelte-ignore missing-declaration -->
+<!-- UI -->
 <div class="flex w-full justify-center p-10">
 	<div class="table-container w-full">
 		{#await resourcesPromise}
@@ -138,7 +155,11 @@
 					</button>
 				</div>
 				<div>
-					<button type="button" class="btn btn-sm variant-filled-warning" on:click={onShutdown}>
+					<button
+						type="button"
+						class="btn btn-sm variant-filled-warning"
+						on:click={() => onDelete()}
+					>
 						<span>Shutdown</span>
 					</button>
 				</div>
@@ -148,9 +169,7 @@
 				<thead>
 					<tr>
 						<th class="w-10" />
-						<!-- Checkbox column, fixed small width -->
 						<th class="w-1/4">Name</th>
-						<!-- Equal width for content columns -->
 						<th class="w-1/4">OS</th>
 						<th class="w-1/4">CPUs</th>
 						<th class="w-1/4">Memory (in mb)</th>
@@ -163,7 +182,7 @@
 								<input
 									type="checkbox"
 									class="checkbox"
-									bind:checked={checkboxes[resource.id]}
+									bind:checked={checkboxes[resource.name]}
 									on:click={(event) => handleCheckboxClick(event)}
 								/>
 							</td>

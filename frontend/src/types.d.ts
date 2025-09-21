@@ -27,6 +27,7 @@ export type Resource = {
 	os: string;
 	cpus: string;
 	memory: string;
+	status: string;
 };
 
 export type WorkflowTemplate = {
@@ -51,6 +52,7 @@ export type DryRun = {
 	status: DryRunStatus;
 	project: Project;
 	log: [string];
+	node: string;
 	// TODO: change if needed; original type definition in graphql is
 	// log(maxLines: number, grep: string): [string];
 };

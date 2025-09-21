@@ -165,7 +165,13 @@
 				</div>
 				<div class="flex flex-row justify-end p-5 space-x-1">
 					<div>
-						<button type="button" class="btn btn-sm variant-filled" on:click={onCreateSelected}>
+						<button
+							type="button"
+							class="btn btn-sm variant-filled"
+							on:click={() => {
+								onCreateSelected();
+							}}
+						>
 							<span>Create</span>
 						</button>
 					</div>
@@ -202,6 +208,7 @@
 							<th>Run duration</th>
 							<th>Action</th>
 							<th style="text-align:center">Template</th>
+							<th>Node</th>
 							<th>Created</th>
 						</tr>
 					</thead>
@@ -245,6 +252,7 @@
 										</div>
 									</div></td
 								>
+								<td style="width:15%">{run.node ? run.node : 'Linux'}</td>
 								<td style="width:20%"><Timestamp timestamp={run.createdAt} /> </td>
 							</tr>
 						{/each}
