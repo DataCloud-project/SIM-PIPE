@@ -39,6 +39,7 @@ function convertK8SVMNodeToResource(k8sVMNode: K8SVMNode): Resource {
     os: spec.os,
     cpus: spec.cpus,
     memory: spec.memory,
+    status: spec.status,
   };
 }
 
@@ -95,7 +96,7 @@ export async function getResource(
       'simpipe.sct.sintef.no',
       'v1',
       k8sNamespace,
-      'vmnodes',   // <- changed
+      'vmnodes',
       id,
     );
     body = response.body as K8SVMNode;
@@ -163,7 +164,7 @@ export async function createResource(
           os,
           cpus,
           memory,
-          status: 'Provisioning',
+          status: 'provisioning',
         },
       },
     );
@@ -234,9 +235,9 @@ export async function deleteResource(
       'v1',
       k8sNamespace,
       'vmnodes',
-      id,
+      id
     );
-    await deleteKubeNode(id);
+    // await deleteKubeNode(id);
     return true;
   } catch (error) {
     if ((error as Error & { response?: { statusCode: number } }).response?.statusCode === 404) {

@@ -145,6 +145,7 @@ type Resource {
   os: String!
   cpus: String!
   memory: String!
+  status: String
 }
 
 """ Dry runs are created under a project which represents an executable instance of the pipeline. """

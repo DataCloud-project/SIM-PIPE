@@ -36,7 +36,7 @@ spec:
                     - shutdown
                     - provisioning
               required:
-                - resourceName
+                - name
                 - os
                 - cpus
                 - memory

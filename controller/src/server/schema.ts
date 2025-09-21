@@ -1108,6 +1108,7 @@ export type Resource = {
   memory: Scalars['String']['output'];
   name: Scalars['String']['output'];
   os: Scalars['String']['output'];
+  status?: Maybe<Scalars['String']['output']>;
 };
 
 export type ScalingLawData = {
@@ -1623,6 +1624,7 @@ export type ResourceResolvers<ContextType = any, ParentType extends ResolversPar
   memory?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   os?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  status?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
