@@ -141,7 +141,7 @@
 					<div>
 						<BookOpenIcon size="1.5x" />
 					</div>
-					<div>Nodes</div>
+					<div>VMs</div>
 				</div>
 			</AppRailAnchor>
 			<!-- TO DO: temporary redirect to sftp go web interface; will be replaced by files manager when api is ready -->

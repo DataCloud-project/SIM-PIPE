@@ -5,13 +5,15 @@ set -e # Exit immediately if a command exits with a non-zero status
 # Input arguments
 
 NODE_NAME=${1:-"node27"}
-K3S_TOKEN_SECRET=${2:-"k3s-cluster-secret"}
-MEMORY=${3:-4096}
-CPUS=${4:-2}
-TIMEOUT=${5:-600}
-OS=${6:-"ubuntu-20"}
-QCOW2_IMAGE_FILE=${7:-"os.qcow2"}
-CLOUD_INIT_ISO=${8:-"cloud.iso"}
+MEMORY=${2:-4096}
+CPUS=${3:-2}
+OS=${4:-"ubuntu-20"}
+K3S_TOKEN_SECRET=${5:-"k3s-cluster-secret"}
+TIMEOUT=${6:-600}
+QCOW2_IMAGE_FILE="os-${NODE_NAME}.qcow2"
+CLOUD_INIT_ISO="cloud-${NODE_NAME}.iso"
+
+TAP_INTERFACE="tap-${NODE_NAME}"
 
 # Function: Log messages with timestamp
 log_message() {
@@ -79,7 +81,25 @@ runcmd:
   - curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION=v1.33.4+k3s1 INSTALL_K3S_EXEC="agent --docker" K3S_URL=${K3S_SERVER_URL} K3S_TOKEN=${K3S_TOKEN} sh -
 EOF
 
+
 IP_ADDR=${9:-"192.168.100.11"}
+
+# NODE_NUM=$(echo "$NODE_NAME" | grep -o '[0-9]*$')
+# if [ -n "$NODE_NUM" ]; then
+#   IP_ADDR="192.168.100.${NODE_NUM}"
+#   log_message "DEBUG" "Node name has numeric suffix → using IP ${IP_ADDR}"
+# else
+#   HASH_NUM=$(echo -n "$NODE_NAME" | cksum | awk '{print $1 % 200 + 20}')
+#   IP_ADDR="192.168.100.${HASH_NUM}"
+#   log_message "DEBUG" "Node name has no numeric suffix → hash(${NODE_NAME})=${HASH_NUM}, IP=${IP_ADDR}"
+# fi
+
+# Log derived values
+log_message "DEBUG" "NODE_NAME=${NODE_NAME}"
+log_message "DEBUG" "QCOW2_IMAGE_FILE=${QCOW2_IMAGE_FILE}"
+log_message "DEBUG" "CLOUD_INIT_ISO=${CLOUD_INIT_ISO}"
+log_message "DEBUG" "TAP_INTERFACE=${TAP_INTERFACE}"
+log_message "DEBUG" "IP_ADDR=${IP_ADDR}"
 
 cat <<EOF > network-config
 version: 2
@@ -102,17 +122,40 @@ bash cloud-localds "$CLOUD_INIT_ISO" --network-config=network-config user-data m
 
 # Step 2: Select OS image
 select_os_image
-log_message "INFO" "Starting VM: $NODE_NAME..."
 
-cp /app/os.qcow2 /host-tmp-vm/os.qcow2
-cp /app/cloud.iso /host-tmp-vm/cloud.iso
+cp "$QCOW2_IMAGE_FILE" "/host-tmp-vm/${QCOW2_IMAGE_FILE}"
+cp "$CLOUD_INIT_ISO" "/host-tmp-vm/${CLOUD_INIT_ISO}"
 
 # Step 3: RUN QEMU with linux bridge
 log_message "INFO" "Starting QEMU for node ${NODE_NAME}"
-nsenter -t 1 -m -u --net=/host/proc/1/ns/net -i -p --  /usr/bin/qemu-system-x86_64 -m 4096 -smp 2 \
--drive file="/host-tmp-vm/os.qcow2",if=virtio \
--drive file="/host-tmp-vm/cloud.iso",format=raw,if=virtio \
-  -netdev tap,id=mynet0,ifname=tap0,script=no,downscript=no \
+# QEMU_CMD="nsenter -t 1 -m -u --net=/host/proc/1/ns/net -i -p --  /usr/bin/qemu-system-x86_64 -m ${MEMORY} -smp ${CPUS} \
+# -drive file="/host-tmp-vm/${QCOW2_IMAGE_FILE}",if=virtio \
+# -drive file="/host-tmp-vm/${CLOUD_INIT_ISO}",format=raw,if=virtio \
+#   -netdev tap,id=mynet0,ifname=tap0,script=/etc/qemu-ifup,downscript=/etc/qemu-ifdown \
+#   -device virtio-net-pci,netdev=mynet0 \
+#   -bios /usr/share/qemu/bios-256k.bin \
+#   -serial file:/host-tmp-vm/console-${NODE_NAME}.log \
+#   -daemonize"
+# log_message "DEBUG" "QEMU command: ${QEMU_CMD}"
+# has network but k3s agent not joining
+# QEMU_CMD="nsenter -t 1 -m -u --net=/host/proc/1/ns/net -i -p --  /usr/bin/qemu-system-x86_64 -m ${MEMORY} -smp ${CPUS} \
+# -drive file="/host-tmp-vm/${QCOW2_IMAGE_FILE}",if=virtio \
+# -drive file="/host-tmp-vm/${CLOUD_INIT_ISO}",format=raw,if=virtio \
+#   -netdev bridge,id=mynet0,br=br0 \
+#   -device virtio-net-pci,netdev=mynet0 \
+#   -bios /usr/share/qemu/bios-256k.bin \
+#   -serial file:/host-tmp-vm/console-${NODE_NAME}.log \
+#   -daemonize"
+
+QEMU_CMD="nsenter -t 1 -m -u --net=/host/proc/1/ns/net -i -p -- \
+/usr/bin/qemu-system-x86_64 -m ${MEMORY} -smp ${CPUS} \
+  -drive file="/host-tmp-vm/${QCOW2_IMAGE_FILE}",if=virtio \
+  -drive file="/host-tmp-vm/${CLOUD_INIT_ISO}",format=raw,if=virtio \
+  -netdev tap,id=mynet0,ifname=${TAP_INTERFACE},script=/etc/qemu-ifup,downscript=/etc/qemu-ifdown \
   -device virtio-net-pci,netdev=mynet0 \
-  -nographic -bios /usr/share/qemu/bios-256k.bin \
-  -D /host-tmp-vm/qemu-new.log -d unimp,guest_errors
+  -bios /usr/share/qemu/bios-256k.bin \
+  -serial mon:stdio \
+  -nographic"
+
+log_message "DEBUG" "QEMU command: ${QEMU_CMD}"
+eval ${QEMU_CMD}

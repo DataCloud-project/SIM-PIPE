@@ -9,7 +9,6 @@ import type {
 } from '../server/schema.js';
 import type { ArgoClientActionNames, ArgoNode, ArgoWorkflow } from './argo-client.js';
 import type ArgoWorkflowClient from './argo-client.js';
-import createKubeNode from './test-emulation.js';
 
 function convertArgoWorkflowPhaseToDryRunPhase(
   argoWorkflowPhase: string | undefined,

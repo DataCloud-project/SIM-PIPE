@@ -252,7 +252,7 @@
 										</div>
 									</div></td
 								>
-								<td style="width:15%">{run.node ? run.node : 'Linux'}</td>
+								<td style="width:15%">{run.node ? run.node : '?'}</td>
 								<td style="width:20%"><Timestamp timestamp={run.createdAt} /> </td>
 							</tr>
 						{/each}

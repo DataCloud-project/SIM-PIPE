@@ -275,17 +275,32 @@
 	$: templateTaskList = parsetemplateTaskList() || [];
 
 	// get modified workflow template with updated template inputs
-	function getModifiedWorkflowTemplate2(): any {
+	function getModifiedWorkflowTemplate(): any {
 		const newWorkflowTemplate = argoWorkflowTemplate;
 		newWorkflowTemplate.spec.templates = currentArgoWorkflowTemplates;
+		if (selectedNodeName !== 'default') {
+			newWorkflowTemplate.spec.templates = currentArgoWorkflowTemplates.map((tpl: any) => {
+				if (tpl.steps) {
+					return tpl;
+				}
+
+				return {
+					...tpl,
+					nodeSelector: {
+						'kubernetes.io/hostname': selectedNodeName
+					}
+				};
+			});
+		}
 		newWorkflowTemplate.metadata = { generateName: newWorkflowTemplate.metadata.generateName };
+		console.log('newWorkflowTemplate', newWorkflowTemplate);
 		return newWorkflowTemplate;
 	}
 
 	async function onCreateDryRunSubmit(): Promise<void> {
 		modalStore.close();
 
-		const modifiedWorkflowTemplate = await getModifiedWorkflowTemplate2();
+		const modifiedWorkflowTemplate = await getModifiedWorkflowTemplate();
 
 		const createDryRunMutationVariables = {
 			input: {
@@ -378,8 +393,9 @@
 				{:else if availableNodes.length === 0}
 					<p>No nodes available</p>
 				{:else}
-					<label for="node-select">Select node to schedule the dry run:</label>
+					<label for="node-select">Select node to execute the dry run:</label>
 					<select id="node-select" bind:value={selectedNodeName}>
+						<option value="default" disabled selected>Select a node...</option>
 						{#each availableNodes as node}
 							<option value={node.name}>
 								{node.name} - {node.os} ({node.cpus} CPUs, {node.memory} MB, {node.status})

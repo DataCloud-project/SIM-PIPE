@@ -8,6 +8,7 @@
 	import createResourceMutation from '$queries/create_resource.js';
 
 	export let parent: SvelteComponent;
+	export let response: (result: any) => void;
 
 	const modalStore = getModalStore();
 
@@ -25,9 +26,6 @@
 	];
 
 	async function onSubmit(): Promise<void> {
-		// close the modal
-		modalStore.close();
-
 		// Create the resource
 		const createResourceMutationVariables = {
 			input: {
@@ -42,12 +40,21 @@
 				createResourceMutation,
 				createResourceMutationVariables
 			);
-			// console.log('result:', result);
-
+			if (response) {
+				await response({
+					createResourceResponse: {
+						status: 200,
+						resource: result || {},
+						error: null
+					}
+				});
+			}
+			// close the modal
+			modalStore.close();
 			const createResourceMessageModal: ModalSettings = {
 				type: 'alert',
-				title: 'New resource created&#10024;!',
-				body: 'New node has been added to the cluster and ready to emulate on!'
+				title: 'New node is being provisioned &#10024;!',
+				body: 'New node is being added to the cluster and will be ready to emulate on in a few minutes!'
 			};
 			modalStore.trigger(createResourceMessageModal);
 
@@ -58,6 +65,13 @@
 			console.error('Error creating resource:', error);
 		}
 	}
+
+	function dispatch(
+		arg0: string,
+		arg1: { name: string; os: string; cpus: number; memory: number }
+	) {
+		throw new Error('Function not implemented.');
+	}
 </script>
 
 <!-- The modal form to submit a new project -->
@@ -67,7 +81,7 @@
 		<article>{$modalStore[0].body ?? '(body missing)'}</article>
 		<form class="modal-form {cForm}">
 			<label class="label">
-				<span>Resource name</span>
+				<span>VM name</span>
 				<div class="flex">
 					<input class="input" type="text" bind:value={name} placeholder="Enter name..." />
 				</div>

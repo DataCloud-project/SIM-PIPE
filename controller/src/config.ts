@@ -34,4 +34,7 @@ export const prometheusServerUrl = process.env.PROMETHEUS_SERVER_URL ?? 'http://
 export const carbontrackerEndpoint = process.env.CARBONTRACKER_ENDPOINT ?? 'http://localhost:8000';
 
 // K3S Cluster Secret
-export const k3sClusterSecret = process.env.K3S_Cluster_SECRET ?? 'k3s-cluster-secret';
+export const K3S_TOKEN_SECRET = process.env.K3S_Cluster_SECRET ?? 'k3s-cluster-secret';
+
+export const CREATESCRIPTPATH = './create-kube-node_qemu.sh';
+export const DELETE_SCRIPT_PATH = './shutdown-kube-node.sh';

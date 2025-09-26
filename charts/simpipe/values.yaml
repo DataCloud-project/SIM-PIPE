@@ -44,13 +44,12 @@ controller:
     create: true
   podAnnotations: {}
 
-  podSecurityContext:
-    {}
+  podSecurityContext: {}
 
   securityContext:
     privileged: true
     capabilities:
-        add: ["NET_ADMIN", "NET_RAW"]
+      add: ["NET_ADMIN", "NET_RAW"]
 
   service:
     type: ClusterIP
@@ -59,8 +58,7 @@ controller:
   ingress:
     enabled: false
     className: ""
-    annotations:
-      {}
+    annotations: {}
     hosts:
       - host: chart-example.local
         paths:
@@ -68,8 +66,7 @@ controller:
             pathType: ImplementationSpecific
     tls: []
 
-  resources:
-    {}    
+  resources: {}
 
   nodeSelector: {}
 
@@ -109,7 +106,7 @@ controller:
     - name: host-proc
       mountPath: /host/proc
       readOnly: true
-      
+
   volumes:
     - name: host-usr-lib
       hostPath:
@@ -144,13 +141,13 @@ controller:
         path: /etc
     - name: sys-net
       hostPath:
-        path: /sys/class/net   
+        path: /sys/class/net
     - name: host-proc
       hostPath:
         path: /proc
-        type: Directory 
+        type: Directory
   hostNetwork: true
-  hostPID: true  
+  hostPID: true
 
 frontend:
   replicaCount: 1
@@ -177,12 +174,10 @@ frontend:
 
   podAnnotations: {}
 
-  podSecurityContext:
-    {}
+  podSecurityContext: {}
     # fsGroup: 2000
 
-  securityContext:
-    {}
+  securityContext: {}
     # capabilities:
     #   drop:
     #   - ALL
@@ -197,8 +192,7 @@ frontend:
   ingress:
     enabled: false
     className: ""
-    annotations:
-      {}
+    annotations: {}
       # kubernetes.io/ingress.class: nginx
       # kubernetes.io/tls-acme: "true"
     hosts:
@@ -211,8 +205,7 @@ frontend:
     #    hosts:
     #      - chart-example.local
 
-  resources:
-    {}
+  resources: {}
     # We usually recommend not to specify default resources and to leave this as a conscious
     # choice for the user. This also increases chances charts run on environments with little
     # resources, such as Minikube. If you do want to specify resources, uncomment the following
@@ -261,15 +254,13 @@ kube-prometheus-stack:
             resources:
               requests:
                 storage: 8Gi
-      additionalRemoteWrite:
-        []
+      additionalRemoteWrite: []
         # - url: "http://simpipe-promscale.default.svc.cluster.local:9201/write"
         #   remoteTimeout: 100s
         #   queueConfig:
         #     maxSamplesPerSend: 10000
         #- url: "http://simpipe-influxdb.default.svc.cluster.local:8086/api/
-      additionalRemoteRead:
-        []
+      additionalRemoteRead: []
         # - url: "http://simpipe-promscale.default.svc.cluster.local:9201/read"
         #   readRecent: true
 
@@ -391,8 +382,8 @@ cadvisor:
   enabled: true
   nameOverride: simpipe-cadvisor
 
-  simpipeRefreshInterval: 15s     
-  simpipeScrapeTimeout: 10s       
+  simpipeRefreshInterval: 7s
+  simpipeScrapeTimeout: 7s
 
   container:
     name: cadvisor
@@ -402,7 +393,7 @@ cadvisor:
       #- --docker_only
       - --event_storage_event_limit=default=0
       - --event_storage_age_limit=default=0
-      - --enable_metrics=memory,cpu,process,network
+      - --enable_metrics=memory,cpu,process,network #TODO: do we need process?
       # Replace with the following line to enable disk metrics,
       # at the cost of a significant performance hit.
       #- --enable_metrics=memory,cpu,process,network,diskIO,disk
@@ -424,7 +415,7 @@ cadvisor:
         mount: "/dev/disk"
       - name: machine-id
         path: /etc/machine-id
-        mount: /etc/machine-id  
+        mount: /etc/machine-id
         type: FileOrCreate
       - name: cgroup
         path: "/sys/fs/cgroup"

@@ -1,13 +1,12 @@
 import slugify from 'slugify';
 import type { V1ListMeta, V1ObjectMeta } from '@kubernetes/client-node';
 
-import createKubeNode, { deleteKubeNode } from '../argo/test-emulation.js';
-import { ConflictError, InputValidationError, NotFoundError } from '../server/apollo-errors.js';
+import createKubeNode from '../argo/emulation-utils.js';
+import { InputValidationError, NotFoundError } from '../server/apollo-errors.js';
 import { SIMPIPE_USER_LABEL } from './label.js';
 import { assertIsValidKubernetesLabel } from './valid-kubernetes-label.js';
 import type { CreateResourceInput, Resource } from '../server/schema.js';
 import type K8sClient from './k8s-client.js';
-
 
 interface K8SVMNode {
   apiVersion: 'simpipe.sct.sintef.no/v1';
@@ -43,13 +42,11 @@ function convertK8SVMNodeToResource(k8sVMNode: K8SVMNode): Resource {
   };
 }
 
-
 export async function resources(
   k8sClient: K8sClient,
   k8sNamespace = 'default',
   user?: string,
 ): Promise<Resource[]> {
-
   let labelSelector: string | undefined;
   if (user) {
     try {
@@ -81,7 +78,6 @@ export async function resources(
   }
 }
 
-
 // Get a specific resource by ID
 export async function getResource(
   id: string,
@@ -100,7 +96,6 @@ export async function getResource(
       id,
     );
     body = response.body as K8SVMNode;
-
   } catch (error) {
     if ((error as Error & { response?: { statusCode: number } }).response?.statusCode === 404) {
       throw new NotFoundError(`Resource not found: ${id}`);
@@ -124,10 +119,10 @@ export async function createResource(
     name, os, cpus, memory,
   } = createResourceInput;
 
-  const slugName = slugify.default(name, { lower: true }).slice(0, 63);
+  const nodeName = slugify.default(name, { lower: true }).slice(0, 63);
 
-  if (!/^[\da-z]([\da-z-]*[\da-z])?$/.test(slugName)) {
-    throw new InputValidationError(`Resource name contains invalid characters: ${slugName}`);
+  if (!/^[\da-z]([\da-z-]*[\da-z])?$/.test(nodeName)) {
+    throw new InputValidationError(`Resource name contains invalid characters: ${nodeName}`);
   }
 
   let labels: Record<string, string> | undefined;
@@ -137,12 +132,15 @@ export async function createResource(
   }
 
   // Step 1: Create the k3s node commented for testing
-  // try {
-  //   console.log('calling create kube node in create resource')
-  //   await createKubeNode(slugName, memory, cpus, '600', os);
-  // } catch (error) {
-  //   throw new Error(`Failed to create k3s node: ${(error as Error).message}`);
-  // }
+  try {
+    createKubeNode(nodeName, memory, cpus, os).then(() => {
+      console.log('Kube node created successfully');
+    }).catch((error) => {
+      console.error('Error creating kube node:', error);
+    });
+  } catch (error) {
+    throw new Error(`Failed to create k3s node: ${(error as Error).message}`);
+  }
 
   // Step 2: Persist as a CRD VMNode
   let createdVMNode: K8SVMNode;
@@ -156,7 +154,7 @@ export async function createResource(
         apiVersion: 'simpipe.sct.sintef.no/v1',
         kind: 'VMNode',
         metadata: {
-          name: slugName,
+          name: nodeName,
           labels,
         },
         spec: {
@@ -170,16 +168,7 @@ export async function createResource(
     );
 
     createdVMNode = response.body as K8SVMNode;
-
   } catch (error) {
-    if ((error as any)?.response) {
-      console.error('createResource Kubernetes error response:', JSON.stringify((error as any).response, null, 2));
-    } else {
-      console.error('createResource error:', error);
-    }
-    if ((error as any)?.response?.statusCode === 409) {
-      throw new ConflictError(`VMNode already exists with same id: ${slugName}`);
-    }
     throw new Error(`Failed to create VMNode: ${(error as Error).message}`);
   }
 
@@ -235,7 +224,7 @@ export async function deleteResource(
       'v1',
       k8sNamespace,
       'vmnodes',
-      id
+      id,
     );
     // await deleteKubeNode(id);
     return true;

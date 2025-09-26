@@ -1,48 +1,37 @@
-import { spawn } from "child_process";
-import { k3sClusterSecret } from "../config.js";
+import { spawn } from 'node:child_process';
 
-// Constants TODO: move to a config file or environment variables
-const CREATESCRIPTPATH = "./create-kube-node_qemu.sh";
-const DELETE_SCRIPT_PATH = "./shutdown-kube-node.sh";
-const QCOW2_IMAGE_FILE = "os.qcow2";
-const CLOUD_INIT_FILE = "cloud-init.iso";
-
-const K3S_TOKEN_SECRET = k3sClusterSecret;
+import { CREATESCRIPTPATH, DELETE_SCRIPT_PATH, K3S_TOKEN_SECRET } from '../config.js';
 
 // Function to create a Kubernetes node
 export default function createKubeNode(
   nodeName: string,
   memory: string,
   cpus: string,
-  timeout: string,
-  os: string
+  os: string,
 ): Promise<string> {
   return new Promise((resolve, reject) => {
     console.log(`[INFO] Starting Kubernetes node creation: ${nodeName}`);
 
-    const script = spawn("sh", [
+    const script = spawn('sh', [
       CREATESCRIPTPATH,
-      // K3S_TOKEN_SECRET,
-      // nodeName,
-      // memory,
-      // cpus,
-      // timeout,
-      // os,
-      // QCOW2_IMAGE_FILE,
-      // CLOUD_INIT_FILE,
+      nodeName,
+      memory,
+      cpus,
+      os,
+      K3S_TOKEN_SECRET,
     ]);
 
     // Handle standard output
-    script.stdout.on("data", (data: { toString: () => string; }) => {
+    script.stdout.on('data', (data: { toString: () => string; }) => {
       console.log(`${data.toString().trim()}`);
     });
 
     // Handle errors
-    script.stderr.on("data", (data: { toString: () => string; }) => {
+    script.stderr.on('data', (data: { toString: () => string; }) => {
       console.error(`${data.toString().trim()}`);
     });
 
-    script.on("close", (code: number) => {
+    script.on('close', (code: number) => {
       if (code === 0) {
         console.log(`[SUCCESS] Node ${nodeName} created successfully.`);
         resolve(`Node ${nodeName} created successfully.`);
@@ -54,9 +43,9 @@ export default function createKubeNode(
 
     // Capture detailed stderr output
     let stderrData = '';
-    script.stderr.on("data", (data: { toString: () => string; }) => {
+    script.stderr.on('data', (data: { toString: () => string; }) => {
       const errorOutput = data.toString().trim();
-      stderrData += errorOutput + '\n';
+      stderrData += `${errorOutput}\n`;
       console.error(`[STDERR] ${errorOutput}`);
     });
   });

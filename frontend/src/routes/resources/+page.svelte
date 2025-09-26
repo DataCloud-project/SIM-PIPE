@@ -47,62 +47,42 @@
 		event.stopPropagation();
 	};
 
-	async function handleOnCreateResourceResponse(createResourceResponse: {
-		status: number;
-		resource: { name: string; id: string };
-		error: string;
-	}): Promise<boolean> {
-		visibleAlert = true;
-		let hasErrors = false;
-
-		if (createResourceResponse.status === 200) {
-			// Wait for the GraphQL request to finish before resetting
-			const response: { resources: Resource[] } = await requestGraphQLClient(allResourcesQuery);
-
-			reactiveResourcesList = response.resources;
-			resourcesList.set(response.resources);
-			$resourcesList = response.resources;
-
-			console.log('Resources after create ✅', reactiveResourcesList);
-		} else {
-			hasErrors = true;
-			alertVariant = 'variant-filled-error';
-			alertTitle = 'Resource creation failed!';
-			alertMessage = `Resource creation failed with status ${createResourceResponse.status}: ${createResourceResponse.error}`;
-		}
-
-		return hasErrors;
-	}
-
-	async function onCreate(): Promise<void> {
+	async function onCreate1(): Promise<void> {
 		try {
-			await new Promise<void>((resolve, reject) => {
-				const modal: ModalSettings = {
-					type: 'component',
-					component: 'createNewResourceModal',
-					title: 'Add new resource',
-					body: 'Enter details of resource',
-					response: async (r: {
-						createResourceResponse: {
-							status: number;
-							error: string;
-							resource: { name: string; id: string };
-						};
-					}) => {
-						try {
-							await handleOnCreateResourceResponse(r.createResourceResponse);
-							resolve();
-						} catch (err) {
-							reject(err);
-						}
-					}
-				};
-				modalStore.trigger(modal);
-			});
+			const modal: ModalSettings = {
+				type: 'component',
+				component: 'createNewResourceModal',
+				title: 'Add new resource',
+				body: 'Enter details of resource',
+				response: async (data: any) => {
+					// This is the function that receives the data from the modal
+					try {
+						// console.log('Modal response received:', data); 
+						// Refetch the resources list and update the store
+						const response: { resources: Resource[] } = await requestGraphQLClient(
+							allResourcesQuery,
+							{ cache: false }
+						);
+						resourcesList.set(response.resources);
 
-			console.log('✅ onCreate finished, resource list refreshed');
+						// Trigger the confirmation modal after the list is updated
+						const vMNodeCreatedMessageModal: ModalSettings = {
+							type: 'alert',
+							title: 'VM node created! 🎉',
+							body: 'Created VM node.'
+						};
+						modalStore.trigger(vMNodeCreatedMessageModal);
+
+						await new Promise((resolve) => setTimeout(resolve, 1500));
+						modalStore.close();
+					} catch (err) {
+						console.error('Error in modal response handler:', err);
+					}
+				}
+			};
+			modalStore.trigger(modal);
 		} catch (error) {
-			console.error('❌ onCreate error:', error);
+			console.log('Error creating resources:', error);
 		}
 	}
 
@@ -112,30 +92,24 @@
 
 			await Promise.all(
 				selected.map(async (element) => {
-					console.log('calling deleteResourceMutation');
 					await requestGraphQLClient(deleteResourceMutation, { resourceId: element });
-
-					console.log('calling vMNodeDeletedMessageModal');
-					const vMNodeDeletedMessageModal: ModalSettings = {
-						type: 'alert',
-						title: 'VM node deleted🗑️!',
-						body: `Deleted VM node: ${element}`
-					};
-					modalStore.trigger(vMNodeDeletedMessageModal);
-
-					await new Promise((resolve) => setTimeout(resolve, 500));
-					modalStore.close();
 				})
 			);
+			const vMNodeDeletedMessageModal: ModalSettings = {
+				type: 'alert',
+				title: 'VM node deleted🗑️!',
+				body: `Deleted VM node: ${selected.join(', ')}`
+			};
+			modalStore.trigger(vMNodeDeletedMessageModal);
+
+			await new Promise((resolve) => setTimeout(resolve, 1500));
+			modalStore.close();
 		} catch (error) {
 			console.log('Error deleting resources:', error);
 		} finally {
 			Object.keys(checkboxes).forEach((id) => (checkboxes[id] = false));
-
 			const response: { resources: Resource[] } = await requestGraphQLClient(allResourcesQuery);
 			resourcesList.set(response.resources);
-			$resourcesList = response.resources;
-			console.log('resetting resource list ✅', response.resources);
 		}
 	}
 </script>
@@ -143,36 +117,34 @@
 <!-- UI -->
 <div class="flex w-full justify-center p-10">
 	<div class="table-container w-full">
-		{#await resourcesPromise}
+		<!-- {#await resourcesPromise}
 			<p style="font-size:20px;">Loading resources...</p>
 			<ProgressBar />
-		{:then}
-			<h1>Resources</h1>
-			<div class="flex flex-row justify-end p-5 space-x-1">
-				<div>
-					<button type="button" class="btn btn-sm variant-filled" on:click={() => onCreate()}>
-						<span>Create</span>
-					</button>
-				</div>
-				<div>
-					<button
-						type="button"
-						class="btn btn-sm variant-filled-warning"
-						on:click={() => onDelete()}
-					>
-						<span>Shutdown</span>
-					</button>
-				</div>
+		{:then} -->
+		<h1>VM Nodes</h1>
+		<div class="flex flex-row justify-end p-5 space-x-1">
+			<div>
+				<button type="button" class="btn btn-sm variant-filled" on:click={() => onCreate1()}>
+					<span>Create</span>
+				</button>
 			</div>
+			<div>
+				<button type="button" class="btn btn-sm variant-filled-warning" on:click={() => onDelete()}>
+					<span>Shutdown</span>
+				</button>
+			</div>
+		</div>
+		{#if reactiveResourcesList?.length}
 			<table class="table table-interactive w-full">
 				<caption hidden>Resources</caption>
 				<thead>
 					<tr>
 						<th class="w-10" />
-						<th class="w-1/4">Name</th>
-						<th class="w-1/4">OS</th>
-						<th class="w-1/4">CPUs</th>
-						<th class="w-1/4">Memory (in mb)</th>
+						<th class="w-1/5">Name</th>
+						<th class="w-1/5">OS</th>
+						<th class="w-1/5">CPUs</th>
+						<th class="w-1/5">Memory (in mb)</th>
+						<th class="w-1/5">Status</th>
 					</tr>
 				</thead>
 				<tbody>
@@ -186,15 +158,19 @@
 									on:click={(event) => handleCheckboxClick(event)}
 								/>
 							</td>
-							<td style="w-1/4">{resource.name}</td>
-							<td class="w-1/4">{resource.os}</td>
-							<td class="w-1/4">{resource.cpus}</td>
-							<td class="w-1/4">{resource.memory}</td>
+							<td style="w-1/5">{resource.name}</td>
+							<td class="w-1/5">{resource.os}</td>
+							<td class="w-1/5">{resource.cpus}</td>
+							<td class="w-1/5">{resource.memory}</td>
+							<td class="w-1/5">{resource.status}</td>
 						</tr>
 					{/each}
 				</tbody>
 			</table>
-		{/await}
+		{:else}
+			<p>No resources yet.</p>
+		{/if}
+		<!-- {/await} -->
 	</div>
 </div>
 
