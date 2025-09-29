@@ -13,10 +13,12 @@
 	const modalStore = getModalStore();
 
 	// Bindings for the inputs
-	let name = 'linux'; // Default value
-	let os = 'ubuntu-20'; // Default value
-	let cpus = 2; // Default value
-	let memory = 4096; // Default value in MB
+	const formData = {
+		name: 'linux',
+		os: 'ubuntu-20',
+		cpus: 2,
+		memory: 4096
+	}
 
 	const osOptions = [
 		{ value: 'ubuntu-18', label: 'Ubuntu 18.04' },
@@ -29,10 +31,10 @@
 		// Create the resource
 		const createResourceMutationVariables = {
 			input: {
-				name: name,
-				os: os,
-				cpus: cpus.toString(),
-				memory: memory.toString()
+				name: formData.name,
+				os: formData.os,
+				cpus: formData.cpus.toString(),
+				memory: formData.memory.toString()
 			}
 		};
 		try {
@@ -40,6 +42,8 @@
 				createResourceMutation,
 				createResourceMutationVariables
 			);
+			// close the modal
+			modalStore.close();
 			if (response) {
 				await response({
 					createResourceResponse: {
@@ -49,8 +53,7 @@
 					}
 				});
 			}
-			// close the modal
-			modalStore.close();
+			
 			const createResourceMessageModal: ModalSettings = {
 				type: 'alert',
 				title: 'New node is being provisioned &#10024;!',
@@ -65,16 +68,8 @@
 			console.error('Error creating resource:', error);
 		}
 	}
-
-	function dispatch(
-		arg0: string,
-		arg1: { name: string; os: string; cpus: number; memory: number }
-	) {
-		throw new Error('Function not implemented.');
-	}
 </script>
 
-<!-- The modal form to submit a new project -->
 {#if $modalStore[0]}
 	<div class="modal-example-form {cBase}">
 		<header class={cHeader}>{$modalStore[0].title ?? '(title missing)'}</header>
@@ -83,13 +78,13 @@
 			<label class="label">
 				<span>VM name</span>
 				<div class="flex">
-					<input class="input" type="text" bind:value={name} placeholder="Enter name..." />
+					<input class="input" type="text" bind:value={formData.name} placeholder="Enter name..." />
 				</div>
 			</label>
 			<label class="label">
 				<span>OS</span>
 				<div class="flex">
-					<select class="input" bind:value={os}>
+					<select class="input" bind:value={formData.os}>
 						<option value="" disabled hidden>Select an OS (e.g., {osOptions[0].label})</option>
 						{#each osOptions as option}
 							<option value={option.value}>{option.label}</option>
@@ -103,7 +98,7 @@
 					<input
 						class="input"
 						type="number"
-						bind:value={cpus}
+						bind:value={formData.cpus}
 						min="1"
 						step="1"
 						placeholder="Enter CPUs..."
@@ -116,7 +111,7 @@
 					<input
 						class="input"
 						type="number"
-						bind:value={memory}
+						bind:value={formData.memory}
 						min="512"
 						step="256"
 						placeholder="Enter memory..."

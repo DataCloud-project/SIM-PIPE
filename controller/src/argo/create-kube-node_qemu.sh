@@ -10,8 +10,8 @@ CPUS=${3:-2}
 OS=${4:-"ubuntu-20"}
 K3S_TOKEN_SECRET=${5:-"k3s-cluster-secret"}
 TIMEOUT=${6:-600}
-QCOW2_IMAGE_FILE="os-${NODE_NAME}.qcow2"
-CLOUD_INIT_ISO="cloud-${NODE_NAME}.iso"
+QCOW2_IMAGE_FILE="${NODE_NAME}-os.qcow2"
+CLOUD_INIT_ISO="${NODE_NAME}-cloud.iso"
 
 TAP_INTERFACE="tap-${NODE_NAME}"
 
@@ -84,15 +84,15 @@ EOF
 
 IP_ADDR=${9:-"192.168.100.11"}
 
-# NODE_NUM=$(echo "$NODE_NAME" | grep -o '[0-9]*$')
-# if [ -n "$NODE_NUM" ]; then
-#   IP_ADDR="192.168.100.${NODE_NUM}"
-#   log_message "DEBUG" "Node name has numeric suffix → using IP ${IP_ADDR}"
-# else
-#   HASH_NUM=$(echo -n "$NODE_NAME" | cksum | awk '{print $1 % 200 + 20}')
-#   IP_ADDR="192.168.100.${HASH_NUM}"
-#   log_message "DEBUG" "Node name has no numeric suffix → hash(${NODE_NAME})=${HASH_NUM}, IP=${IP_ADDR}"
-# fi
+NODE_NUM=$(echo "$NODE_NAME" | grep -o '[0-9]*$')
+if [ -n "$NODE_NUM" ]; then
+  IP_ADDR="192.168.100.${NODE_NUM}"
+  log_message "DEBUG" "Node name has numeric suffix → using IP ${IP_ADDR}"
+else
+  HASH_NUM=$(echo -n "$NODE_NAME" | cksum | awk '{print $1 % 200 + 20}')
+  IP_ADDR="192.168.100.${HASH_NUM}"
+  log_message "DEBUG" "Node name has no numeric suffix → hash(${NODE_NAME})=${HASH_NUM}, IP=${IP_ADDR}"
+fi
 
 # Log derived values
 log_message "DEBUG" "NODE_NAME=${NODE_NAME}"
@@ -128,24 +128,6 @@ cp "$CLOUD_INIT_ISO" "/host-tmp-vm/${CLOUD_INIT_ISO}"
 
 # Step 3: RUN QEMU with linux bridge
 log_message "INFO" "Starting QEMU for node ${NODE_NAME}"
-# QEMU_CMD="nsenter -t 1 -m -u --net=/host/proc/1/ns/net -i -p --  /usr/bin/qemu-system-x86_64 -m ${MEMORY} -smp ${CPUS} \
-# -drive file="/host-tmp-vm/${QCOW2_IMAGE_FILE}",if=virtio \
-# -drive file="/host-tmp-vm/${CLOUD_INIT_ISO}",format=raw,if=virtio \
-#   -netdev tap,id=mynet0,ifname=tap0,script=/etc/qemu-ifup,downscript=/etc/qemu-ifdown \
-#   -device virtio-net-pci,netdev=mynet0 \
-#   -bios /usr/share/qemu/bios-256k.bin \
-#   -serial file:/host-tmp-vm/console-${NODE_NAME}.log \
-#   -daemonize"
-# log_message "DEBUG" "QEMU command: ${QEMU_CMD}"
-# has network but k3s agent not joining
-# QEMU_CMD="nsenter -t 1 -m -u --net=/host/proc/1/ns/net -i -p --  /usr/bin/qemu-system-x86_64 -m ${MEMORY} -smp ${CPUS} \
-# -drive file="/host-tmp-vm/${QCOW2_IMAGE_FILE}",if=virtio \
-# -drive file="/host-tmp-vm/${CLOUD_INIT_ISO}",format=raw,if=virtio \
-#   -netdev bridge,id=mynet0,br=br0 \
-#   -device virtio-net-pci,netdev=mynet0 \
-#   -bios /usr/share/qemu/bios-256k.bin \
-#   -serial file:/host-tmp-vm/console-${NODE_NAME}.log \
-#   -daemonize"
 
 QEMU_CMD="nsenter -t 1 -m -u --net=/host/proc/1/ns/net -i -p -- \
 /usr/bin/qemu-system-x86_64 -m ${MEMORY} -smp ${CPUS} \
@@ -154,8 +136,11 @@ QEMU_CMD="nsenter -t 1 -m -u --net=/host/proc/1/ns/net -i -p -- \
   -netdev tap,id=mynet0,ifname=${TAP_INTERFACE},script=/etc/qemu-ifup,downscript=/etc/qemu-ifdown \
   -device virtio-net-pci,netdev=mynet0 \
   -bios /usr/share/qemu/bios-256k.bin \
-  -serial mon:stdio \
-  -nographic"
+  -serial file:/host-tmp-vm/${NODE_NAME}-console.log \
+  -nographic \
+  -pidfile /host-tmp-vm/qemu-${NODE_NAME}.pid"
 
 log_message "DEBUG" "QEMU command: ${QEMU_CMD}"
-eval ${QEMU_CMD}
+eval ${QEMU_CMD} &
+# echo $! > "/host-tmp-vm/qemu-${NODE_NAME}.pid"
+cat /host-tmp-vm/qemu-${NODE_NAME}.pid

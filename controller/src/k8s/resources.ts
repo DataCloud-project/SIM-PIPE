@@ -1,7 +1,7 @@
 import slugify from 'slugify';
 import type { V1ListMeta, V1ObjectMeta } from '@kubernetes/client-node';
 
-import createKubeNode from '../argo/emulation-utils.js';
+import createKubeNode, { deleteKubeNode } from '../argo/emulation-utils.js';
 import { InputValidationError, NotFoundError } from '../server/apollo-errors.js';
 import { SIMPIPE_USER_LABEL } from './label.js';
 import { assertIsValidKubernetesLabel } from './valid-kubernetes-label.js';
@@ -226,7 +226,7 @@ export async function deleteResource(
       'vmnodes',
       id,
     );
-    // await deleteKubeNode(id);
+    await deleteKubeNode(id);
     return true;
   } catch (error) {
     if ((error as Error & { response?: { statusCode: number } }).response?.statusCode === 404) {

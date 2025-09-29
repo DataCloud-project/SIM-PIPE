@@ -261,11 +261,53 @@
 		cumulativeNetworkData = result.cumulativeNetworkData;
 		currentNetworkData = result.currentNetworkData;
 		logs = result.logs;
+		// const carbontrackerData: Array<{
+		// 	nodeId: string;
+		// 	stepName: string;
+		// 	carbonData: { fetchCarbontrackerData?: { co2eq: number; energy: number } } | undefined;
+		// }> = [];
+		// for (const step of metricsResponse) {
+		// 	if (step.type === 'Pod') {
+		// 		const carbonResponse = await getCarbontrackerDataResponse(
+		// 			step.metrics.cpuUsageSecondsTotal
+		// 		);
+		// 		carbontrackerData.push({
+		// 			nodeId: step.id,
+		// 			stepName: step.displayName,
+		// 			carbonData: carbonResponse
+		// 		});
+		// 	}
+		// }
+
+		// // Merge carbontracker data with stepsList
+		// $stepsList = $stepsList.map((step) => {
+		// 	const carbonData = carbontrackerData.find((carbon) => carbon.nodeId === step.id);
+		// 	return {
+		// 		...step,
+		// 		carbontracker: carbonData ? carbonData.carbonData : undefined
+		// 	};
+		// });
+
+		const responses = {
+			workflow: workflowResponse.project,
+			dryrun: dryrunResponse,
+			metrics: metricsResponse,
+			allstepnames: allStepNames,
+			selectedDryRunName: $selectedDryRunName,
+			carbontrackerData: undefined
+		};
+
+		console.log('responses:', responses);
+		return responses;
+	};
+
+	async function loadCarbonData(metricsResponse: any) {
 		const carbontrackerData: Array<{
 			nodeId: string;
 			stepName: string;
 			carbonData: { fetchCarbontrackerData?: { co2eq: number; energy: number } } | undefined;
 		}> = [];
+
 		for (const step of metricsResponse) {
 			if (step.type === 'Pod') {
 				const carbonResponse = await getCarbontrackerDataResponse(
@@ -279,27 +321,12 @@
 			}
 		}
 
-		// Merge carbontracker data with stepsList
-		$stepsList = $stepsList.map((step) => {
+		// merge into store
+		$stepsList = $stepsList?.map((step) => {
 			const carbonData = carbontrackerData.find((carbon) => carbon.nodeId === step.id);
-			return {
-				...step,
-				carbontracker: carbonData ? carbonData.carbonData : undefined
-			};
+			return { ...step, carbontracker: carbonData ? carbonData.carbonData : undefined };
 		});
-
-		const responses = {
-			workflow: workflowResponse.project,
-			dryrun: dryrunResponse,
-			metrics: metricsResponse,
-			allstepnames: allStepNames,
-			selectedDryRunName: $selectedDryRunName,
-			carbontrackerData
-		};
-
-		console.log('responses:', responses);
-		return responses;
-	};
+	}
 
 	function truncateString(word: string, maxLength: number): string {
 		if (word.length > maxLength) {
@@ -553,6 +580,9 @@
 		await buildDiagram();
 		computePipelineDuration();
 		loadingFinished = true;
+
+		// fire and forget
+		loadCarbonData(getDataResponse.metrics);
 	});
 
 	function getPartLogs(stepName: string, nmaxlinelength: number): string {

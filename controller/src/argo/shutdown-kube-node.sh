@@ -1,5 +1,7 @@
 #!/bin/sh
 
+set -e
+
 # Check if NODE_NAME is provided
 if [ -z "$1" ]; then
   echo "Error: NODE_NAME not provided. Usage: $0 <node-name>"
@@ -7,35 +9,21 @@ if [ -z "$1" ]; then
 fi
 
 NODE_NAME="$1"
-PID_FILE="/tmp/qemu-$NODE_NAME.pid"
+PID_FILE="/host-tmp-vm/qemu-${NODE_NAME}.pid"
+QCOW2_IMAGE_FILE="os-${NODE_NAME}.qcow2"
+CLOUD_INIT_ISO="cloud-${NODE_NAME}.iso"
+TAP_INTERFACE="tap-${NODE_NAME}"
 
-# Stop the running VM
 echo "Stopping the VM for $NODE_NAME..."
-if [ -f "$PID_FILE" ]; then
-  VM_PID=$(cat "$PID_FILE")
-  if ps -p "$VM_PID" > /dev/null 2>&1; then
-    kill -9 "$VM_PID"
-    echo "VM stopped."
-    rm -f "$PID_FILE"
-  else
-    echo "No running VM process found for PID $VM_PID."
-    rm -f "$PID_FILE"
-  fi
-else
-  echo "No PID file found for $NODE_NAME."
-fi
+VM_WRAPPER_PID=$(cat "$PID_FILE")
 
+kill -9 "$VM_WRAPPER_PID"
 
-# Clean up generated files
-echo "Deleting generated files..."
-rm -f user-data meta-data cloud-init.iso os.qcow2
+rm -f user-data meta-data network-config "$CLOUD_INIT_ISO" "$QCOW2_IMAGE_FILE"
 
-# Remove all deployments from the node
-echo "Draining deployments from node $NODE_NAME..."
-kubectl drain "$NODE_NAME" --ignore-daemonsets --delete-emptydir-data --force
+kubectl drain "$NODE_NAME" --ignore-daemonsets --delete-emptydir-data --force || true
 
-# Remove kube node from the cluster
-echo "Removing node $NODE_NAME from the cluster..."
-kubectl delete node "$NODE_NAME"
+kubectl delete node "$NODE_NAME" || true
 
+# rm -f "/tmp/qemu-${NODE_NAME}.pid"
 echo "Cleanup complete for $NODE_NAME"
