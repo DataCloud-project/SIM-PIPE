@@ -6,6 +6,7 @@
 
 	import { cBase, cForm, cHeader } from '$styles/styles.js';
 	import createResourceMutation from '$queries/create_resource.js';
+	import refreshVMNodesDetails from '$lib/refresh_vmnodes.js';
 
 	export let parent: SvelteComponent;
 	export let response: (result: any) => void;
@@ -17,7 +18,7 @@
 		name: 'linux',
 		os: 'ubuntu-20',
 		cpus: 2,
-		memory: 4096
+		memory: 8192
 	}
 
 	const osOptions = [
@@ -38,22 +39,13 @@
 			}
 		};
 		try {
-			const result = await requestGraphQLClient(
+			const result = requestGraphQLClient(
 				createResourceMutation,
 				createResourceMutationVariables
 			);
 			// close the modal
 			modalStore.close();
-			if (response) {
-				await response({
-					createResourceResponse: {
-						status: 200,
-						resource: result || {},
-						error: null
-					}
-				});
-			}
-			
+						
 			const createResourceMessageModal: ModalSettings = {
 				type: 'alert',
 				title: 'New node is being provisioned &#10024;!',
@@ -64,6 +56,8 @@
 			await new Promise((resolve) => setTimeout(resolve, 1500));
 			modalStore.close();
 			modalStore.clear();
+			// refresh the resources list to find when the new resource is ready
+			await refreshVMNodesDetails();
 		} catch (error) {
 			console.error('Error creating resource:', error);
 		}

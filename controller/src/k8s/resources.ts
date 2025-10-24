@@ -130,47 +130,47 @@ export async function createResource(
     assertIsValidKubernetesLabel(user);
     labels = { [SIMPIPE_USER_LABEL]: user };
   }
-
-  // Step 1: Create the k3s node commented for testing
+  let status: string = 'provisioning';
+  // Step 1: Create the k3s node
   try {
-    createKubeNode(nodeName, memory, cpus, os).then(() => {
-      console.log('Kube node created successfully');
-    }).catch((error) => {
-      console.error('Error creating kube node:', error);
-    });
+    console.log('calling create kube node')
+    await createKubeNode(nodeName, memory, cpus, os);
+    status = 'running';
   } catch (error) {
+    status = 'failed';
+    console.error('Error creating kube node:', error);
     throw new Error(`Failed to create k3s node: ${(error as Error).message}`);
   }
+
+  console.log('calling crd after creating the k3s worker node')
 
   // Step 2: Persist as a CRD VMNode
   let createdVMNode: K8SVMNode;
   try {
     const response = await k8sClient.customObjects.createNamespacedCustomObject(
-      'simpipe.sct.sintef.no',
-      'v1',
-      k8sNamespace,
-      'vmnodes',
+      'simpipe.sct.sintef.no',  // group
+      'v1',                     // version
+      k8sNamespace,             // namespace
+      'vmnodes',                // plural
       {
         apiVersion: 'simpipe.sct.sintef.no/v1',
         kind: 'VMNode',
-        metadata: {
-          name: nodeName,
-          labels,
-        },
-        spec: {
-          name,
-          os,
-          cpus,
-          memory,
-          status: 'provisioning',
-        },
+        metadata: { name: nodeName, labels },
+        spec: { name, os, cpus, memory, status },
       },
     );
+    console.log(response)
 
     createdVMNode = response.body as K8SVMNode;
-  } catch (error) {
-    throw new Error(`Failed to create VMNode: ${(error as Error).message}`);
+  } catch (error: any) {
+    console.error('[CRD] Failed to create VMNode CRD');
+    if (error.response?.body) {
+      console.error('[CRD] Error response body:', JSON.stringify(error.response.body, null, 2));
+    }
+    console.error('[CRD] Full error:', error);
+    throw new Error(`Failed to create VMNode: ${error.message}`);
   }
+
 
   return convertK8SVMNodeToResource(createdVMNode);
 }

@@ -35,6 +35,7 @@ spec:
                     - running
                     - shutdown
                     - provisioning
+                    - failed
               required:
                 - name
                 - os
