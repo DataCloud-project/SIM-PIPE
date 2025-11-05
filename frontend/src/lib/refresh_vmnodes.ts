@@ -4,38 +4,41 @@ import allResourcesQuery from '$queries/get_all_resources.js';
 
 let refreshProvisioningVMsPromise: Promise<void> | undefined;
 
-export default async function refreshVMNodesDetails(): Promise<void> {
-	if (refreshProvisioningVMsPromise !== undefined) {
-		// already refreshing
-		return;
+export default async function refreshVMNodesDetails(nodeName: string): Promise<void> {
+
+	if (refreshProvisioningVMsPromise) {
+		return refreshProvisioningVMsPromise;
 	}
 
 	refreshProvisioningVMsPromise = (async function waitForCompletion(): Promise<void> {
-		let provisioningVMs: boolean | undefined = false;
-		do {
-			try {
-			const response: { resources: Resource[] } = await requestGraphQLClient(allResourcesQuery);
-			for (const item of response.resources || []) {
-				if (item.status.toString() === 'provisioning') {
-					provisioningVMs = true;
-					break;
-				}
-			}
-			// Check if all resources are either failed or running
-			provisioningVMs = !response.resources?.every(
-				(item) =>
-					item.status.toString() !== 'failed' && item.status.toString() !== 'running'
-			);
-			// eslint-disable-next-line no-promise-executor-return
-			await new Promise((resolve) => setTimeout(resolve, 4000));
+		try {
+			let iteration = 0;
+			do {
+				iteration++;
 
-			if (!provisioningVMs) {
-				refreshProvisioningVMsPromise = undefined;
-				return;
-			}
-		} catch (error) {
-			console.error('Error updating VM nodes:', error);
+				try {
+					const response: { resources: Resource[] } = await requestGraphQLClient(
+						allResourcesQuery
+					);
+					const matching = response.resources?.find((r) => r.name === nodeName);
+					if (matching) {
+						const status = matching.status?.toString().toLowerCase();
+						if (status === 'running' || status === 'failed') {
+							return; 
+						}
+					} 
+				} catch (innerErr) {
+					console.error(`[${nodeName}] Error while fetching resources:`, innerErr);
+				}
+
+				const waitMs = 4000;
+				await new Promise((resolve) => setTimeout(resolve, waitMs));
+
+			} while (true); 
+		} finally {
+			refreshProvisioningVMsPromise = undefined;
 		}
-		} while (provisioningVMs);
 	})();
+
+	return refreshProvisioningVMsPromise;
 }

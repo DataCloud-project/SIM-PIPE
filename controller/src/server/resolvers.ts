@@ -4,7 +4,7 @@ import {
   assertDryRunNodeHasWorkflow,
   convertArgoWorkflowNode,
   convertArgoWorkflowToDryRun,
-  createDryRun, deleteDryRun, dryRunsForProject,
+  createDryRun, deleteDryRun, dryRunsForNode, dryRunsForProject,
   getDryRun, getDryRunNodeLog, resubmitDryRun, resumeDryRun,
   retryDryRun, stopDryRun, suspendDryRun,
 } from '../argo/dry-runs.js';
@@ -198,6 +198,10 @@ const resolvers = {
       const { argoClient } = context;
       return await getDryRun(dryRunId, argoClient);
     },
+    dryRunsForNode: async (_p: EmptyParent,
+      arguments_:{ nodeName: string }, context: AuthenticatedContext) => {
+    return dryRunsForNode(arguments_.nodeName, context.argoClient);
+   },
     async workflowTemplate(
       _p: EmptyParent, arguments_: QueryWorkflowTemplateArguments, context: AuthenticatedContext,
     ): Promise<Query['workflowTemplate']> {
@@ -382,6 +386,7 @@ const resolvers = {
         argoWorkflow: argoWorkflow as ArgoWorkflow,
         projectId: projectId ?? undefined,
         dryRunId: dryRunId ?? undefined,
+        nodeName: input.nodeName ?? undefined,
         argoClient,
       });
       // const { sub: userId } = context.user;

@@ -7,6 +7,9 @@
 	import { cBase, cForm, cHeader } from '$styles/styles.js';
 	import createResourceMutation from '$queries/create_resource.js';
 	import refreshVMNodesDetails from '$lib/refresh_vmnodes.js';
+	import { resourcesList } from '$stores/stores.js';
+	import type { Resource } from '$typesdefinitions';
+	import allResourcesQuery from '$queries/get_all_resources.js';
 
 	export let parent: SvelteComponent;
 	export let response: (result: any) => void;
@@ -15,11 +18,11 @@
 
 	// Bindings for the inputs
 	const formData = {
-		name: 'linux',
+		name: 'test-',
 		os: 'ubuntu-20',
 		cpus: 2,
 		memory: 8192
-	}
+	};
 
 	const osOptions = [
 		{ value: 'ubuntu-18', label: 'Ubuntu 18.04' },
@@ -29,7 +32,6 @@
 	];
 
 	async function onSubmit(): Promise<void> {
-		// Create the resource
 		const createResourceMutationVariables = {
 			input: {
 				name: formData.name,
@@ -38,14 +40,15 @@
 				memory: formData.memory.toString()
 			}
 		};
+
 		try {
 			const result = requestGraphQLClient(
 				createResourceMutation,
 				createResourceMutationVariables
 			);
-			// close the modal
+
 			modalStore.close();
-						
+
 			const createResourceMessageModal: ModalSettings = {
 				type: 'alert',
 				title: 'New node is being provisioned &#10024;!',
@@ -54,12 +57,28 @@
 			modalStore.trigger(createResourceMessageModal);
 
 			await new Promise((resolve) => setTimeout(resolve, 1500));
+
 			modalStore.close();
 			modalStore.clear();
-			// refresh the resources list to find when the new resource is ready
-			await refreshVMNodesDetails();
+
+			await refreshVMNodesDetails(formData.name);
+			const response: { resources: Resource[] } = await requestGraphQLClient(allResourcesQuery);
+			resourcesList.set(response.resources);
+			const createResourceReadyModal: ModalSettings = {
+				type: 'alert',
+				title: 'New node is ready!',
+				body: 'New node is ready!'
+			};
+			modalStore.trigger(createResourceReadyModal);
+
+			// Give the user a tiny pause so the modal is visible
+			await new Promise((resolve) => setTimeout(resolve, 1500));
+
+			modalStore.close();
+			modalStore.clear();
+
 		} catch (error) {
-			console.error('Error creating resource:', error);
+			console.error('❌ Error in onSubmit →', error);
 		}
 	}
 </script>

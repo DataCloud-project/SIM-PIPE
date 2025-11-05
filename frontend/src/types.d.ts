@@ -53,6 +53,7 @@ export type DryRun = {
 	project: Project;
 	log: [string];
 	node: string;
+	nodeName?: string;
 	// TODO: change if needed; original type definition in graphql is
 	// log(maxLines: number, grep: string): [string];
 };

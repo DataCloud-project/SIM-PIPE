@@ -147,6 +147,8 @@ export type CreateDryRunInput = {
   argoWorkflow: Scalars['ArgoWorkflow']['input'];
   /**  The id of the dry run (optional), will be generated if not provided  */
   dryRunId?: InputMaybe<Scalars['String']['input']>;
+  /**  The name of the node the dry run is scheduled on (optional)  */
+  nodeName?: InputMaybe<Scalars['String']['input']>;
   /**
    *  The project to which this dry run belongs (optional).
    *
@@ -218,6 +220,8 @@ export type DryRun = {
   id: Scalars['String']['output'];
   /**  A node of the dry run, by id  */
   node?: Maybe<DryRunNode>;
+  /**  The name of the node the dry run is scheduled on  */
+  nodeName?: Maybe<Scalars['String']['output']>;
   /**  The nodes of the dry run  */
   nodes?: Maybe<Array<DryRunNode>>;
   /**  The project to which the dry run belongs  */
@@ -1014,6 +1018,7 @@ export type Query = {
   dockerRegistryCredentials: Array<DockerRegistryCredential>;
   /**  Get a dry run by ID  */
   dryRun: DryRun;
+  dryRunsForNode: Array<DryRun>;
   /**  Fetch carbon tracker data from CPU usage metrics  */
   fetchCarbontrackerData: CarbonTrackerData;
   /**  Compute aggregated resource metrics for a set of dry runs  */
@@ -1062,6 +1067,12 @@ export type QueryComputeScalingLawsFromNodesMetricsArgs = {
 /**  The root query type. All queries that fetch data are defined here.  */
 export type QueryDryRunArgs = {
   dryRunId: Scalars['String']['input'];
+};
+
+
+/**  The root query type. All queries that fetch data are defined here.  */
+export type QueryDryRunsForNodeArgs = {
+  nodeName: Scalars['String']['input'];
 };
 
 
@@ -1413,6 +1424,7 @@ export type DryRunResolvers<ContextType = any, ParentType extends ResolversParen
   createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   node?: Resolver<Maybe<ResolversTypes['DryRunNode']>, ParentType, ContextType, RequireFields<DryRunNodeArgs, 'id'>>;
+  nodeName?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   nodes?: Resolver<Maybe<Array<ResolversTypes['DryRunNode']>>, ParentType, ContextType>;
   project?: Resolver<Maybe<ResolversTypes['Project']>, ParentType, ContextType>;
   status?: Resolver<ResolversTypes['DryRunStatus'], ParentType, ContextType>;
@@ -1606,6 +1618,7 @@ export type QueryResolvers<ContextType = any, ParentType extends ResolversParent
   computeScalingLawsFromNodesMetrics?: Resolver<Array<Maybe<ResolversTypes['NodesScalingLaws']>>, ParentType, ContextType, Partial<QueryComputeScalingLawsFromNodesMetricsArgs>>;
   dockerRegistryCredentials?: Resolver<Array<ResolversTypes['DockerRegistryCredential']>, ParentType, ContextType>;
   dryRun?: Resolver<ResolversTypes['DryRun'], ParentType, ContextType, RequireFields<QueryDryRunArgs, 'dryRunId'>>;
+  dryRunsForNode?: Resolver<Array<ResolversTypes['DryRun']>, ParentType, ContextType, RequireFields<QueryDryRunsForNodeArgs, 'nodeName'>>;
   fetchCarbontrackerData?: Resolver<ResolversTypes['CarbonTrackerData'], ParentType, ContextType, RequireFields<QueryFetchCarbontrackerDataArgs, 'input'>>;
   getAggregatedNodesMetrics?: Resolver<Array<Maybe<ResolversTypes['NodesAggregatedNodeMetrics']>>, ParentType, ContextType, RequireFields<QueryGetAggregatedNodesMetricsArgs, 'dryRunIds'>>;
   hardwaremetrics?: Resolver<ResolversTypes['HardwareMetrics'], ParentType, ContextType>;

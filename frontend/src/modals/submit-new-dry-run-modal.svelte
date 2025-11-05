@@ -292,8 +292,23 @@
 				};
 			});
 		}
-		newWorkflowTemplate.metadata = { generateName: newWorkflowTemplate.metadata.generateName };
-		console.log('newWorkflowTemplate', newWorkflowTemplate);
+		// Modify the generateName based on user input
+		if (dryRunNamePrefix.trim()) {
+			// Sanitize the prefix: lowercase, replace invalid chars with hyphens
+			const cleanedPrefix = dryRunNamePrefix
+				.toLowerCase()
+				.replace(/[^a-z0-9-]/g, '-')
+				.replace(/^-+|-+$/g, '')
+				.slice(0, 40);
+
+			newWorkflowTemplate.metadata = {
+				generateName: `${cleanedPrefix}-newWorkflowTemplate.metadata.generateName-`
+			};
+		} else {
+			newWorkflowTemplate.metadata = {
+				generateName: newWorkflowTemplate.metadata.generateName
+			};
+		}
 		return newWorkflowTemplate;
 	}
 
@@ -305,12 +320,11 @@
 		const createDryRunMutationVariables = {
 			input: {
 				projectId: $selectedProject?.id,
-				argoWorkflow: modifiedWorkflowTemplate
+				argoWorkflow: modifiedWorkflowTemplate,
+				nodeName: selectedNodeName
 			}
 		};
 
-		// TODO: why is this here? Can this following line be removed?
-		// eslint-disable-next-line no-promise-executor-return
 		await new Promise((resolve) => setTimeout(resolve, 1500));
 
 		try {
@@ -330,16 +344,13 @@
 			};
 			modalStore.trigger(createDryRunMessageModal);
 
-			// eslint-disable-next-line no-promise-executor-return
 			await new Promise((resolve) => setTimeout(resolve, 1500));
 			modalStore.close();
 			await refreshProjectDetails();
 			modalStore.clear();
 		} catch (error) {
-			// TODO: handle error
 			console.error('Failed to create dry run', error);
 			let createDryRunMessageModal: ModalSettings;
-			// eslint-disable-next-line unicorn/prefer-ternary
 			if ((error as Error).message.includes('PayloadTooLargeError')) {
 				createDryRunMessageModal = {
 					type: 'alert',
@@ -355,7 +366,6 @@
 			}
 			modalStore.trigger(createDryRunMessageModal);
 
-			// eslint-disable-next-line no-promise-executor-return
 			await new Promise((resolve) => setTimeout(resolve, 2500));
 			modalStore.close();
 		}
@@ -378,6 +388,7 @@
 	});
 
 	let selectedNodeName = 'default';
+	let dryRunNamePrefix = '';
 
 	// $: console.log('inputdata', inputdata);
 </script>
@@ -388,6 +399,24 @@
 		<article>{$modalStore[0].body ?? '(body missing)'}</article>
 		<form class="modal-form {cForm}">
 			{#if templateTaskList.length > 0}
+				<!-- Add Dry Run Name Prefix Input -->
+				<div class="mb-4">
+					<label for="dryrun-name-prefix" class="font-bold">
+						Dry Run Name Prefix (optional):
+					</label>
+					<input
+						id="dryrun-name-prefix"
+						type="text"
+						class="input variant-form-material"
+						bind:value={dryRunNamePrefix}
+						placeholder="e.g., experiment-1, test-v2"
+						pattern="[a-z0-9]([-a-z0-9]*[a-z0-9])?"
+						maxlength="40"
+					/>
+					<p class="text-sm text-surface-500 mt-1">
+						Leave empty for auto-generated name. Will append random suffix automatically.
+					</p>
+				</div>
 				{#if loadingAvailableNodes}
 					<p>Loading nodes...</p>
 				{:else if availableNodes.length === 0}
@@ -397,7 +426,14 @@
 					<select id="node-select" bind:value={selectedNodeName}>
 						<option value="default" disabled selected>Select a node...</option>
 						{#each availableNodes as node}
-							<option value={node.name}>
+							<option
+								value={node.name}
+								disabled={node.status?.toLowerCase() === 'shutdown'}
+								class:option-disabled={node.status?.toLowerCase() === 'shutdown'}
+								title={node.status?.toLowerCase() === 'shutdown'
+									? 'Node is shutdown and cannot be selected'
+									: ''}
+							>
 								{node.name} - {node.os} ({node.cpus} CPUs, {node.memory} MB, {node.status})
 							</option>
 						{/each}

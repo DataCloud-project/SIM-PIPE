@@ -59,7 +59,8 @@ export async function resources(
   }
 
   try {
-    const response = await k8sClient.customObjects.listNamespacedCustomObject(
+    // 1) List VMNode CRDs (optionally filtered by user label)
+    const crdResp = await k8sClient.customObjects.listNamespacedCustomObject(
       'simpipe.sct.sintef.no',
       'v1',
       k8sNamespace,
@@ -70,8 +71,69 @@ export async function resources(
       undefined,
       labelSelector,
     );
-    const { body } = response as { body: K8SVMNodeList };
-    return body.items.map((vmnode) => convertK8SVMNodeToResource(vmnode));
+    const { body } = crdResp as { body: K8SVMNodeList };
+    const items = body.items ?? [];
+
+    // 2) List actual Kubernetes Nodes (equivalent of `kubectl get nodes`)
+    const nodesResp = await k8sClient.core.listNode();
+    const k8sNodes = nodesResp.body?.items ?? [];
+
+    // 3) Build a map of nodeName -> desiredStatus based on Ready condition
+    const desiredStatusByNodeName = new Map<string, 'running' | 'provisioning'>();
+    for (const node of k8sNodes) {
+      const nodeName = node.metadata?.name;
+      if (!nodeName) continue;
+      const readyCond = node.status?.conditions?.find((c) => c.type === 'Ready');
+      const isReady = readyCond?.status === 'True';
+      desiredStatusByNodeName.set(nodeName, isReady ? 'running' : 'provisioning');
+    }
+
+    // 4) Reconcile CRDs against actual Nodes and patch status if needed
+    const patchPromises: Promise<unknown>[] = [];
+    for (const vmnode of items) {
+      const vmnodeName = vmnode.metadata?.name ?? vmnode.spec?.name;
+      if (!vmnodeName) continue;
+
+      const desired =
+        desiredStatusByNodeName.has(vmnodeName)
+          ? desiredStatusByNodeName.get(vmnodeName)!
+          : 'shutdown'; // Node not found in cluster
+
+      if (vmnode.spec.status !== desired) {
+        // Patch CRD status to reflect actual node state
+        patchPromises.push(
+          k8sClient.customObjects.patchNamespacedCustomObject(
+            'simpipe.sct.sintef.no',
+            'v1',
+            k8sNamespace,
+            'vmnodes',
+            vmnodeName,
+            [
+              {
+                op: 'replace',
+                path: '/spec/status',
+                value: desired,
+              },
+            ],
+            undefined,
+            undefined,
+            undefined,
+            { headers: { 'Content-Type': 'application/json-patch+json' } },
+          ).catch((err) => {
+            console.error(`resources.ts: failed to patch VMNode ${vmnodeName} status -> ${desired}`, err);
+          }),
+        );
+        // Optimistically update local object so the return reflects the change
+        vmnode.spec.status = desired;
+      }
+    }
+
+    if (patchPromises.length) {
+      await Promise.allSettled(patchPromises);
+    }
+
+    // 5) Return unified view
+    return items.map((vmnode) => convertK8SVMNodeToResource(vmnode));
   } catch (error) {
     console.error('resources.ts: Kubernetes API call failed:', error);
     throw error;
@@ -133,7 +195,6 @@ export async function createResource(
   let status: string = 'provisioning';
   // Step 1: Create the k3s node
   try {
-    console.log('calling create kube node')
     await createKubeNode(nodeName, memory, cpus, os);
     status = 'running';
   } catch (error) {
@@ -141,8 +202,6 @@ export async function createResource(
     console.error('Error creating kube node:', error);
     throw new Error(`Failed to create k3s node: ${(error as Error).message}`);
   }
-
-  console.log('calling crd after creating the k3s worker node')
 
   // Step 2: Persist as a CRD VMNode
   let createdVMNode: K8SVMNode;
@@ -159,7 +218,6 @@ export async function createResource(
         spec: { name, os, cpus, memory, status },
       },
     );
-    console.log(response)
 
     createdVMNode = response.body as K8SVMNode;
   } catch (error: any) {
@@ -175,43 +233,6 @@ export async function createResource(
   return convertK8SVMNodeToResource(createdVMNode);
 }
 
-// Rename an existing resource
-export async function renameResource(
-  id: string,
-  name: string,
-  k8sClient: K8sClient,
-  k8sNamespace = 'default',
-): Promise<Resource> {
-  let body: K8SVMNode;
-  try {
-    const response = await k8sClient.customObjects.patchNamespacedCustomObject(
-      'simpipe.sct.sintef.no',
-      'v1',
-      k8sNamespace,
-      'vmnodes',
-      id,
-      [{
-        op: 'replace',
-        path: '/spec/name',
-        value: name,
-      }],
-      undefined,
-      undefined,
-      undefined,
-      {
-        headers: { 'Content-Type': 'application/json-patch+json' },
-      },
-    );
-    body = response.body as K8SVMNode;
-  } catch (error) {
-    if ((error as Error & { response?: { statusCode: number } }).response?.statusCode === 404) {
-      throw new NotFoundError(`VMNode not found: ${id}`);
-    }
-    throw error;
-  }
-  return convertK8SVMNodeToResource(body);
-}
-
 // Delete a resource
 export async function deleteResource(
   id: string,
@@ -219,19 +240,33 @@ export async function deleteResource(
   k8sNamespace = 'default',
 ): Promise<boolean> {
   try {
-    await k8sClient.customObjects.deleteNamespacedCustomObject(
+    await k8sClient.customObjects.patchNamespacedCustomObject(
       'simpipe.sct.sintef.no',
       'v1',
       k8sNamespace,
       'vmnodes',
       id,
+      [
+        {
+          op: 'replace',
+          path: '/spec/status',
+          value: 'shutdown',
+        },
+      ],
+      undefined,
+      undefined,
+      undefined,
+      { headers: { 'Content-Type': 'application/json-patch+json' } },
     );
-    await deleteKubeNode(id);
-    return true;
   } catch (error) {
-    if ((error as Error & { response?: { statusCode: number } }).response?.statusCode === 404) {
-      throw new NotFoundError(`VMNode not found: ${id}`);
+    const code = (error as Error & { response?: { statusCode?: number } }).response?.statusCode;
+    if (code !== 404) {
+      console.warn(`deleteResource: failed to set status=shutdown for ${id}`, error);
     }
-    throw error;
+    // continue even if patch fails
   }
+
+  // Tear down the underlying VM/K3s node
+  await deleteKubeNode(id);
+  return true;
 }

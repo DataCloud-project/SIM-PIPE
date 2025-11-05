@@ -224,16 +224,16 @@
 										on:click={(event) => handleCheckboxClick(event)}
 									/>
 								</td>
-								<td style="width:20%">{run.id}</td>
-								<td style="width:20%">
+								<td style="width:15%">{run.id}</td>
+								<td style="width:10%">
 									<div><SymbolForRunResult runResult={run.status.phase.toString()} /></div>
 								</td>
-								<td style="width:20%">
+								<td style="width:12%">
 									<div>
 										{calculateDuration(run.nodes)}
 									</div>
 								</td>
-								<td style="width:20%">
+								<td style="width:12%">
 									<button type="button" class="btn-icon btn-icon-sm variant-soft">
 										<SymbolForAction
 											action={getDryRunAction(run.status.phase.toString())}
@@ -252,8 +252,8 @@
 										</div>
 									</div></td
 								>
-								<td style="width:15%">{run.node ? run.node : '?'}</td>
-								<td style="width:20%"><Timestamp timestamp={run.createdAt} /> </td>
+								<td style="width:15%">{run.nodeName ? run.nodeName : 'default'}</td>
+								<td style="width:15%"><Timestamp timestamp={run.createdAt} /> </td>
 							</tr>
 						{/each}
 					</tbody>

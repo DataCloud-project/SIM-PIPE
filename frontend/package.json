@@ -67,6 +67,7 @@
 		"plotly.js-dist": "^2.29.1",
 		"svelte-feather-icons": "^4.1.0",
 		"svelte-plotly.js": "^0.3.2",
+		"svelte-select": "^5.8.3",
 		"vitest": "^1.4.0"
 	}
 }

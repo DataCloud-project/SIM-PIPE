@@ -6,8 +6,14 @@ metadata:
     {{- include "simpipeController.labels" . | nindent 4 }}
 rules:
   - apiGroups: ["simpipe.sct.sintef.no"]
-    resources: ["projects", "vmnodes"]
+    resources: ["projects"]
     verbs: ["get", "list", "create", "update", "delete"]
+  - apiGroups: ["simpipe.sct.sintef.no"]
+    resources: ["vmnodes"]
+    verbs: ["get","list","watch","create","update","patch","delete"]
+  - apiGroups: ["simpipe.sct.sintef.no"]
+    resources: ["vmnodes/status"]
+    verbs: ["get","update","patch"]
   - apiGroups: [""]
     resources: ["secrets"]
     verbs: ["get", "list", "create", "update", "delete"]

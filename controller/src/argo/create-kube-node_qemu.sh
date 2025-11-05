@@ -84,30 +84,18 @@ runcmd:
   # Start K3s agent only after Docker is ready
   - curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION=v1.33.4+k3s1 INSTALL_K3S_EXEC="agent --docker" K3S_URL=${K3S_SERVER_URL} K3S_TOKEN=${K3S_TOKEN} sh -
 EOF
-# write_files:
-#   - path: /etc/ssh/sshd_config.d/90-cloud-init.conf
-#     content: |
-#       PasswordAuthentication yes
-#       PermitRootLogin yes
-#       PermitEmptyPasswords no
-  # - openssh-server
-# ssh_pwauth: true    
-# chpasswd:
-#   list: |
-#     ubuntu:ubuntu
-#   expire: False
 
 IP_ADDR=${9:-"192.168.100.11"}
 
-# NODE_NUM=$(echo "$NODE_NAME" | grep -o '[0-9]*$')
-# if [ -n "$NODE_NUM" ]; then
-#   IP_ADDR="192.168.100.${NODE_NUM}"
-#   log_message "DEBUG" "Node name has numeric suffix → using IP ${IP_ADDR}"
-# else
-#   HASH_NUM=$(echo -n "$NODE_NAME" | cksum | awk '{print $1 % 200 + 20}')
-#   IP_ADDR="192.168.100.${HASH_NUM}"
-#   log_message "DEBUG" "Node name has no numeric suffix → hash(${NODE_NAME})=${HASH_NUM}, IP=${IP_ADDR}"
-# fi
+NODE_NUM=$(echo "$NODE_NAME" | grep -o '[0-9]*$')
+if [ -n "$NODE_NUM" ]; then
+  IP_ADDR="192.168.100.${NODE_NUM}"
+  log_message "DEBUG" "Node name has numeric suffix → using IP ${IP_ADDR}"
+else
+  HASH_NUM=$(echo -n "$NODE_NAME" | cksum | awk '{print $1 % 200 + 20}')
+  IP_ADDR="192.168.100.${HASH_NUM}"
+  log_message "DEBUG" "Node name has no numeric suffix → hash(${NODE_NAME})=${HASH_NUM}, IP=${IP_ADDR}"
+fi
 
 # Log derived values
 log_message "DEBUG" "NODE_NAME=${NODE_NAME}"
@@ -117,9 +105,6 @@ log_message "DEBUG" "TAP_INTERFACE=${TAP_INTERFACE}"
 log_message "DEBUG" "IP_ADDR=${IP_ADDR}"
 log_message "DEBUG" "K3S_SERVER_URL=${K3S_SERVER_URL}"
 log_message "DEBUG" "K3S_TOKEN=${K3S_TOKEN}"
-
-# NIC='ens3'
-# NIC='enp0s2'
 
 cat <<EOF > network-config
 network:
@@ -131,7 +116,7 @@ network:
         name: en*
       dhcp4: false
       addresses:
-        - 192.168.100.11/24
+        - ${IP_ADDR}/24
       gateway4: 192.168.100.1
       nameservers:
         addresses:
@@ -183,15 +168,6 @@ nsenter -t 1 -m -u --net=/host/proc/1/ns/net -i -p -- \
   -daemonize \
   -serial file:/host-tmp-vm/${NODE_NAME}-console.log \
   -pidfile /host-tmp-vm/qemu-${NODE_NAME}.pid
-
-  # -monitor none \
-  # -machine q35 \
-  # -cpu Broadwell-v4,+aes,+xsave,+xsaveopt,+xsavec,+xgetbv1,+avx,+avx2 \
-  # -cpu Broadwell-v4,+aes,+xsave,+xsaveopt,+avx,+avx2 \
-  # -cpu max \
-  # -nodefaults \
-  # -nographic \
-
 
 log_message "DEBUG" "QEMU command: ${QEMU_CMD}"
 # exit 0

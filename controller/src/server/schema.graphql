@@ -117,6 +117,8 @@ type Query {
   fetchCarbontrackerData(
     """ Input data containing CPU usage metrics """
     input: CarbonTrackerInput!): CarbonTrackerData! @auth
+
+  dryRunsForNode(nodeName: String!): [DryRun!]!
 }
 
 """ Project is the high level concept for a specific pipeline in SIM-PIPE. It contains all the previous dry runs of the pipeline and its results. """
@@ -164,6 +166,9 @@ type DryRun {
 
   """ The project to which the dry run belongs """
   project: Project
+
+  """ The name of the node the dry run is scheduled on """
+  nodeName: String
 
   """ The nodes of the dry run """
   nodes: [DryRunNode!]
@@ -601,6 +606,9 @@ input CreateDryRunInput {
 
   """ The id of the dry run (optional), will be generated if not provided """
   dryRunId: String
+
+  """ The name of the node the dry run is scheduled on (optional) """
+  nodeName: String
 
   """ The raw Argo workflow document.
 
