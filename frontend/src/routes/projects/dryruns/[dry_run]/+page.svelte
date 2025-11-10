@@ -224,11 +224,11 @@
 										on:click={(event) => handleCheckboxClick(event)}
 									/>
 								</td>
-								<td style="width:15%">{run.id}</td>
+								<td style="width:17%">{run.id}</td>
 								<td style="width:10%">
 									<div><SymbolForRunResult runResult={run.status.phase.toString()} /></div>
 								</td>
-								<td style="width:12%">
+								<td style="width:15%">
 									<div>
 										{calculateDuration(run.nodes)}
 									</div>

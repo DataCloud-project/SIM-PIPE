@@ -30,7 +30,6 @@
 		}
 	};
 
-	// initial load
 	let resourcesPromise: Promise<Resource[]> = getResourcesList();
 
 	resourcesPromise
@@ -42,7 +41,6 @@
 			$resourcesList = undefined;
 		});
 
-	// disable onclick propogation for checkbox input
 	const handleCheckboxClick = (event: any) => {
 		event.stopPropagation();
 	};
@@ -53,36 +51,42 @@
 				type: 'component',
 				component: 'createNewResourceModal',
 				title: 'Add new resource',
-				body: 'Enter details of resource',
 				response: async (data: any) => {
-					// This is the function that receives the data from the modal
-					try {
-						// console.log('Modal response received:', data); 
-						// Refetch the resources list and update the store
-						const response: { resources: Resource[] } = await requestGraphQLClient(
-							allResourcesQuery,
-							{ cache: false }
-						);
-						resourcesList.set(response.resources);
+					// Poll backend for status
+					const resourceName = data.name;
+					let tries = 0;
+					let ready = false;
 
-						// Trigger the confirmation modal after the list is updated
-						const vMNodeCreatedMessageModal: ModalSettings = {
-							type: 'alert',
-							title: 'VM node created! 🎉',
-							body: 'Created VM node.'
-						};
-						modalStore.trigger(vMNodeCreatedMessageModal);
+					while (!ready && tries < 30) {
+						await new Promise((res) => setTimeout(res, 2000)); // poll every 2s
+						tries++;
 
-						await new Promise((resolve) => setTimeout(resolve, 1500));
-						modalStore.close();
-					} catch (err) {
-						console.error('Error in modal response handler:', err);
+						const response = await requestGraphQLClient(allResourcesQuery, { cache: false }) as { resources: Resource[] };
+						const res = response.resources.find((r: Resource) => r.name === resourceName);
+
+						if (res?.status === 'READY') {
+							ready = true;
+							break;
+						}
 					}
+
+					// Refresh list
+					const updated = await requestGraphQLClient(allResourcesQuery, { cache: false }) as { resources: Resource[] };
+					resourcesList.set(updated.resources);
+
+					modalStore.trigger({
+						type: 'alert',
+						title: 'VM Node Ready ✅',
+						body: 'The VM node is running and reachable!'
+					});
+
+					await new Promise((res) => setTimeout(res, 1500));
+					modalStore.close();
 				}
 			};
 			modalStore.trigger(modal);
 		} catch (error) {
-			console.log('Error creating resources:', error);
+			console.error(error);
 		}
 	}
 
@@ -114,13 +118,8 @@
 	}
 </script>
 
-<!-- UI -->
 <div class="flex w-full justify-center p-10">
 	<div class="table-container w-full">
-		<!-- {#await resourcesPromise}
-			<p style="font-size:20px;">Loading resources...</p>
-			<ProgressBar />
-		{:then} -->
 		<h1>VM Nodes</h1>
 		<div class="flex flex-row justify-end p-5 space-x-1">
 			<div>
@@ -170,7 +169,6 @@
 		{:else}
 			<p>No resources yet.</p>
 		{/if}
-		<!-- {/await} -->
 	</div>
 </div>
 
