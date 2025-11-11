@@ -76,18 +76,6 @@ controller:
 
   # emulation
   volumeMounts:
-    - name: host-bin
-      mountPath: /host/usr/bin
-    - name: host-images
-      mountPath: /host/images
-    - name: host-lib
-      mountPath: /host/lib
-    - name: host-lib64
-      mountPath: /host/lib64
-    - name: host-usr-lib
-      mountPath: /host/usr/lib
-    - name: host-usr-lib64
-      mountPath: /host/usr/lib64
     - name: host-tmp-vm
       mountPath: /host-tmp-vm
     - name: kvm
@@ -97,35 +85,11 @@ controller:
     - name: qemu-conf
       mountPath: /etc
       mountPropagation: HostToContainer
-    # - name: qemu-conf
-    #   mountPath: /etc/qemu
-    #   mountPropagation: HostToContainer
-    - name: sys-net
-      mountPath: /sys/class/net
-      mountPropagation: HostToContainer
     - name: host-proc
       mountPath: /host/proc
       readOnly: true
 
   volumes:
-    - name: host-usr-lib
-      hostPath:
-        path: /usr/lib
-    - name: host-usr-lib64
-      hostPath:
-        path: /usr/lib64
-    - name: host-bin
-      hostPath:
-        path: /usr/bin/
-    - name: host-images
-      hostPath:
-        path: /var/lib/qemu/images/
-    - name: host-lib
-      hostPath:
-        path: /lib
-    - name: host-lib64
-      hostPath:
-        path: /lib64
     - name: host-tmp-vm
       hostPath:
         path: /tmp/vm-files
@@ -139,9 +103,6 @@ controller:
     - name: qemu-conf
       hostPath:
         path: /etc
-    - name: sys-net
-      hostPath:
-        path: /sys/class/net
     - name: host-proc
       hostPath:
         path: /proc
