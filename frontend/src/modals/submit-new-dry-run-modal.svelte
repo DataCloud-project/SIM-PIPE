@@ -293,7 +293,7 @@
 			});
 		}
 		// Modify the generateName based on user input
-		if (dryRunNamePrefix.trim()) {
+		if (dryRunNamePrefix != '') {
 			// Sanitize the prefix: lowercase, replace invalid chars with hyphens
 			const cleanedPrefix = dryRunNamePrefix
 				.toLowerCase()
@@ -379,7 +379,6 @@
 				await requestGraphQLClient(allResourcesQuery);
 			availableNodes = allResourcesResponse.resources;
 			loadingAvailableNodes = false;
-			console.log('availableNodes loaded:', availableNodes);
 		} catch (error) {
 			console.error('Error getting available nodes: ', error);
 			loadingAvailableNodes = false;

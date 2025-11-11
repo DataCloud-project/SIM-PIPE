@@ -138,20 +138,7 @@ cp "$CLOUD_INIT_ISO" "/host-tmp-vm/${CLOUD_INIT_ISO}"
 
 # Step 3: RUN QEMU with linux bridge
 log_message "INFO" "Starting QEMU for node ${NODE_NAME}"
-# command without console
-# QEMU_CMD="nsenter -t 1 -m -u --net=/host/proc/1/ns/net -i -p -- \
-# /usr/bin/qemu-system-x86_64 -m ${MEMORY} -smp ${CPUS} \
-#   -drive file=\"/host-tmp-vm/${QCOW2_IMAGE_FILE}\",if=virtio,cache=writeback,discard=unmap,format=qcow2,aio=threads \
-#   -drive file=\"/host-tmp-vm/${CLOUD_INIT_ISO}\",format=raw,if=virtio,cache=writeback,aio=threads \
-#   -netdev tap,id=mynet0,ifname=${TAP_INTERFACE},script=/etc/qemu-ifup,downscript=/etc/qemu-ifdown \
-#   -device virtio-net-pci,netdev=mynet0 \
-#   -machine pc \
-#   -cpu qemu64 \
-#   -bios /usr/share/qemu/bios-256k.bin \
-#   -accel tcg,thread=multi,tb-size=4096 \
-#   -pidfile /host-tmp-vm/qemu-${NODE_NAME}.pid"
 
-# command with console
 nsenter -t 1 -m -u --net=/host/proc/1/ns/net -i -p -- \
 /usr/bin/qemu-system-x86_64 \
   -m "${MEMORY}" -smp "${CPUS}" \
@@ -170,7 +157,6 @@ nsenter -t 1 -m -u --net=/host/proc/1/ns/net -i -p -- \
   -pidfile /host-tmp-vm/qemu-${NODE_NAME}.pid
 
 log_message "DEBUG" "QEMU command: ${QEMU_CMD}"
-# exit 0
 BOOT_START_TIME=$(date +%s)
 eval ${QEMU_CMD} &
 chown 1000:1000 /host-tmp-vm/*
