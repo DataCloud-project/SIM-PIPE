@@ -459,28 +459,28 @@
 								</span></label
 							>
 						{/if}
-						<!-- {#if Object.keys(templateContainerInputs[task.name])?.length > 0}
+						{#if templateContainerInputs[task.template]?.inputs && Object.keys(templateContainerInputs[task.template].inputs).length > 0 && templateContainerInputs[task.template].inputs.artifacts}
 							<br />
 							<label>Upload Input files </label>
-							{#each templateContainerInputs[task.name].artifacts || [] as artifact, k}
+							{#each templateContainerInputs[task.template].inputs.artifacts || [] as artifact, k}
 								<label for={artifact.name}>
 									<span>
 										<div class="grid grid-rows-2 grid-cols-3 justify-items-center items-center">
 											<div>
 												<span>{artifact.name}</span>
-											</div> -->
-						<!-- <div>
-												{#if inputdata[task.name] && inputdata[task.name][k] && inputdata[task.name][k].is_raw}
-													<span>{inputdata[task.name][k].raw?.filename}</span>
+											</div>
+											<div>
+												{#if inputdata[task.template] && inputdata[task.template][k] && inputdata[task.template][k].is_raw}
+													<span>{inputdata[task.template][k].raw?.filename}</span>
 												{:else}
 													<span></span>
 												{/if}
 											</div>
 											<div>
-												{#if inputdata[task.name] && inputdata[task.name][k] && inputdata[task.name][k].is_artifact}
+												{#if inputdata[task.template] && inputdata[task.template][k] && inputdata[task.template][k].is_artifact}
 													<span
-														>{inputdata[task.name][k].artifact?.artifact_bucket}
-														{inputdata[task.name][k].artifact?.artifact_path}</span
+														>{inputdata[task.template][k].artifact?.artifact_bucket}
+														{inputdata[task.template][k].artifact?.artifact_path}</span
 													>
 												{:else}
 													<span></span>
@@ -491,7 +491,7 @@
 													id={artifact.name}
 													name={artifact.name}
 													bind:files={currentinputfiles}
-													on:change={() => triggerInsertRawInput(task.name, artifact.name, k)}
+													on:change={() => triggerInsertRawInput(task.template, artifact.name, k)}
 												>
 													Upload local file
 												</FileButton>
@@ -500,16 +500,16 @@
 												<button
 													type="button"
 													class="btn variant-soft-primary"
-													on:click={() => openOverlay(task.name, artifact.name, k)}
+													on:click={() => openOverlay(task.template, artifact.name, k)}
 													>Browse artifacts</button
 												>
-											</div> -->
-						<!-- </div>
+											</div>
+										</div>
 									</span>
 								</label>
 								<br />
 							{/each}
-						{/if} -->
+						{/if}
 						{#each templateTaskList[i].arguments?.parameters || [] as param, j}
 							<!-- svelte-ignore a11y-label-has-associated-control -->
 							<label>Enviroment parameters:</label>
