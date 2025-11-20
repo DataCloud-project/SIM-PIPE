@@ -1,0 +1,22 @@
+{{- if .Values.minio.enabled -}}
+apiVersion: v1
+kind: Service
+metadata:
+  name: simpipe-minio
+  labels:
+    app: simpipe-minio
+    {{- include "simpipeUtils.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.minio.service.type }}
+  ports:
+  - name: api
+    port: 9000
+    targetPort: api
+    protocol: TCP
+  - name: console
+    port: 9001
+    targetPort: console
+    protocol: TCP
+  selector:
+    app: simpipe-minio
+{{- end }}

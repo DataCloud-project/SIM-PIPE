@@ -1,0 +1,18 @@
+{{- if .Values.minio.enabled -}}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: simpipe-minio
+  labels:
+    app: simpipe-minio
+    {{- include "simpipeUtils.labels" . | nindent 4 }}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ .Values.minio.persistence.size }}
+  {{- if .Values.minio.persistence.storageClass }}
+  storageClassName: {{ .Values.minio.persistence.storageClass }}
+  {{- end }}
+{{- end }}
