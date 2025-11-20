@@ -344,16 +344,26 @@ sftpgo:
 
 postgresql:
   enabled: true
-  global:
-    postgresql:
-      auth:
-        username: postgres
-        password: simpipe1234
-        postgresPassword: simpipe1234
-  architecture: standalone
-  primary:
-    persistence:
-      size: 32Gi
+  image:
+    repository: postgres
+    tag: "15.4"
+    pullPolicy: IfNotPresent
+  auth:
+    username: postgres
+    password: simpipe1234
+    database: postgres
+  service:
+    type: ClusterIP
+  persistence:
+    size: 32Gi
+    storageClass: ""
+  resources:
+    requests:
+      memory: 256Mi
+      cpu: 250m
+    limits:
+      memory: 1Gi
+      cpu: 1000m
 
 cadvisor:
   enabled: true
