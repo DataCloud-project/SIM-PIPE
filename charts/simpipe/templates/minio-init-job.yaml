@@ -1,0 +1,39 @@
+{{- if .Values.minio.enabled -}}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: simpipe-minio-init
+  labels:
+    app: simpipe-minio-init
+    {{- include "simpipeUtils.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-weight": "5"
+    "helm.sh/hook-delete-policy": before-hook-creation
+spec:
+  template:
+    metadata:
+      labels:
+        app: simpipe-minio-init
+    spec:
+      restartPolicy: OnFailure
+      containers:
+      - name: minio-mc
+        image: minio/mc:latest
+        command:
+        - /bin/sh
+        - -c
+        - |
+          set -e
+          echo "Waiting for MinIO to be ready..."
+          until mc alias set myminio http://simpipe-minio:9000 {{ .Values.minio.rootUser }} {{ .Values.minio.rootPassword }}; do
+            echo "MinIO not ready yet, retrying in 5 seconds..."
+            sleep 5
+          done
+          echo "MinIO is ready, creating buckets..."
+          {{- range .Values.minio.buckets }}
+          mc mb --ignore-existing myminio/{{ . }}
+          echo "Bucket {{ . }} created or already exists"
+          {{- end }}
+          echo "All buckets created successfully"
+{{- end }}

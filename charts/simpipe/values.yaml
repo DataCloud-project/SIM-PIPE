@@ -279,13 +279,29 @@ argo-events:
 
 minio:
   enabled: true
-  auth:
-    rootUser: simpipe
-    # Obviously placeholder password
-    rootPassword: simpipe1234
-  defaultBuckets: "artifacts,logs,registry"
+  image:
+    repository: minio/minio
+    tag: RELEASE.2024-11-07T00-52-20Z
+    pullPolicy: IfNotPresent
+  rootUser: simpipe
+  # Obviously placeholder password
+  rootPassword: simpipe1234
+  buckets:
+    - artifacts
+    - logs
+    - registry
+  service:
+    type: ClusterIP
   persistence:
     size: 32Gi
+    storageClass: ""
+  resources:
+    requests:
+      memory: 512Mi
+      cpu: 250m
+    limits:
+      memory: 1Gi
+      cpu: 1000m
 
 docker-registry:
   enabled: false
