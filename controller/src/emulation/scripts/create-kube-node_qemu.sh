@@ -139,6 +139,7 @@ cp "$CLOUD_INIT_ISO" "/host-tmp-vm/${CLOUD_INIT_ISO}"
 # Step 3: RUN QEMU with linux bridge
 log_message "INFO" "Starting QEMU for node ${NODE_NAME}"
 
+QEMU_COMMAND="
 nsenter -t 1 -m -u --net=/host/proc/1/ns/net -i -p -- \
 /usr/bin/qemu-system-x86_64 \
   -m "${MEMORY}" -smp "${CPUS}" \
@@ -155,10 +156,13 @@ nsenter -t 1 -m -u --net=/host/proc/1/ns/net -i -p -- \
   -daemonize \
   -serial file:/host-tmp-vm/${NODE_NAME}-console.log \
   -pidfile /host-tmp-vm/qemu-${NODE_NAME}.pid
+"
+log_message "DEBUG" "QEMU command: ${QEMU_COMMAND}"
 
-log_message "DEBUG" "QEMU command: ${QEMU_CMD}"
+eval "$QEMU_COMMAND"
+
 BOOT_START_TIME=$(date +%s)
-eval ${QEMU_CMD} &
+# eval ${QEMU_CMD} &
 chown 1000:1000 /host-tmp-vm/*
 
 # Step 6: Wait for the VM to initialize
