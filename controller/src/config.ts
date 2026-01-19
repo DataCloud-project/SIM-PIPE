@@ -36,5 +36,12 @@ export const carbontrackerEndpoint = process.env.CARBONTRACKER_ENDPOINT ?? 'http
 // K3S Cluster Secret
 export const K3S_TOKEN_SECRET = process.env.K3S_Cluster_SECRET ?? 'k3s-cluster-secret';
 
-export const CREATESCRIPTPATH = './create-kube-node_qemu.sh';
+export const CREATESCRIPTPATH_DEBIAN = './create-kube-node_qemu.sh';
+export const CREATESCRIPTPATH_WSL = './create-kube-node_wsl.sh';
 export const DELETE_SCRIPT_PATH = './shutdown-kube-node.sh';
+
+// WSL / QEMU bridge networking (used by helper scripts)
+export const WSL_BRIDGE_IF = process.env.WSL_BR_IF ?? 'bridge-qemu';
+export const WSL_BRIDGE_CIDR = process.env.WSL_BR_CIDR ?? '172.30.0.1/24';
+export const WSL_BRIDGE_NET = process.env.WSL_BR_NET ?? '172.30.0.0/24';
+export const WSL_WAN_IF = process.env.WSL_WAN_IF ?? 'eth0';

@@ -18,10 +18,10 @@
 
 	// Bindings for the inputs
 	const formData = {
-		name: 'test-',
+		name: 'vm-',
 		os: 'ubuntu-20',
-		cpus: 2,
-		memory: 8192
+		cpus: 1,
+		memory: 1024
 	};
 
 	const osOptions = [
@@ -42,7 +42,7 @@
 		};
 
 		try {
-			const result = requestGraphQLClient(
+			requestGraphQLClient(
 				createResourceMutation,
 				createResourceMutationVariables
 			);
@@ -70,9 +70,7 @@
 				body: 'New node is ready!'
 			};
 			modalStore.trigger(createResourceReadyModal);
-
-			// Give the user a tiny pause so the modal is visible
-			await new Promise((resolve) => setTimeout(resolve, 1500));
+			await new Promise((resolve) => setTimeout(resolve, 2000));
 
 			modalStore.close();
 			modalStore.clear();

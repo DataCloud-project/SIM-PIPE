@@ -243,6 +243,7 @@ export async function createDryRun({
   }
 
   let createdWorkflow: ArgoWorkflow;
+  delete argoWorkflow.metadata?.resourceVersion;
   try {
     createdWorkflow = await argoClient.createWorkflow({ workflow: argoWorkflow });
   } catch (error) {
