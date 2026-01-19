@@ -719,6 +719,11 @@ type Mutation @auth {
     """ ID of the resource to be deleted """
     resourceId: String!): Boolean!
 
+ """ Shutdown an existing resource. The mutation returns true if the shutdown was successful. """
+  shutdownResource(
+    """ ID of the resource to be shutdown """
+    resourceId: String!): Boolean!
+
   """ Create a new docker registry credential """
   createDockerRegistryCredential(
     """ Input for the new docker registry credential """

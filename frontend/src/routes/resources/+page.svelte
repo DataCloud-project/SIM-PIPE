@@ -7,6 +7,7 @@
 	import type { Resource } from '../../types.js';
 	import Alert from '$lib/modules/alert.svelte';
 	import deleteResourceMutation from '$queries/delete_resource.js';
+	import shutdownResourceMutation from '$queries/shutdown_resource.js';
 
 	const modalStore = getModalStore();
 
@@ -116,6 +117,33 @@
 			resourcesList.set(response.resources);
 		}
 	}
+
+	async function onShutdown(): Promise<void> {
+		try {
+			const selected = Object.keys(checkboxes).filter((item) => checkboxes[item]);
+
+			await Promise.all(
+				selected.map(async (element) => {
+					await requestGraphQLClient(shutdownResourceMutation, { resourceId: element });
+				})
+			);
+			const vMNodeShutdownMessageModal: ModalSettings = {
+				type: 'alert',
+				title: 'VM node has been shutdown!',
+				body: `Shutdown VM node: ${selected.join(', ')}`
+			};
+			modalStore.trigger(vMNodeShutdownMessageModal);
+
+			await new Promise((resolve) => setTimeout(resolve, 1500));
+			modalStore.close();
+		} catch (error) {
+			console.log('Error shutting down VM node:', error);
+		} finally {
+			Object.keys(checkboxes).forEach((id) => (checkboxes[id] = false));
+			const response: { resources: Resource[] } = await requestGraphQLClient(allResourcesQuery);
+			resourcesList.set(response.resources);
+		}
+	}
 </script>
 
 <div class="flex w-full justify-center p-10">
@@ -128,8 +156,13 @@
 				</button>
 			</div>
 			<div>
-				<button type="button" class="btn btn-sm variant-filled-warning" on:click={() => onDelete()}>
+				<button type="button" class="btn btn-sm variant-filled-surface" on:click={() => onShutdown()}>
 					<span>Shutdown</span>
+				</button>
+			</div>
+			<div>
+				<button type="button" class="btn btn-sm variant-filled-warning" on:click={() => onDelete()}>
+					<span>Delete</span>
 				</button>
 			</div>
 		</div>

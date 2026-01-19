@@ -825,6 +825,8 @@ export type Mutation = {
   resumeDryRun: DryRun;
   /**  Retry a failed dry run. Restart an existing dry run. */
   retryDryRun: DryRun;
+  /**  Shutdown an existing resource. The mutation returns true if the shutdown was successful.  */
+  shutdownResource: Scalars['Boolean']['output'];
   /**  Stop an active dry run.  */
   stopDryRun: DryRun;
   /**  Suspend an active dry run.  */
@@ -932,6 +934,11 @@ export type MutationResumeDryRunArgs = {
 
 export type MutationRetryDryRunArgs = {
   dryRunId: Scalars['String']['input'];
+};
+
+
+export type MutationShutdownResourceArgs = {
+  resourceId: Scalars['String']['input'];
 };
 
 
@@ -1571,6 +1578,7 @@ export type MutationResolvers<ContextType = any, ParentType extends ResolversPar
   resubmitDryRun?: Resolver<ResolversTypes['DryRun'], ParentType, ContextType, RequireFields<MutationResubmitDryRunArgs, 'dryRunId'>>;
   resumeDryRun?: Resolver<ResolversTypes['DryRun'], ParentType, ContextType, RequireFields<MutationResumeDryRunArgs, 'dryRunId'>>;
   retryDryRun?: Resolver<ResolversTypes['DryRun'], ParentType, ContextType, RequireFields<MutationRetryDryRunArgs, 'dryRunId'>>;
+  shutdownResource?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationShutdownResourceArgs, 'resourceId'>>;
   stopDryRun?: Resolver<ResolversTypes['DryRun'], ParentType, ContextType, RequireFields<MutationStopDryRunArgs, 'dryRunId'>>;
   suspendDryRun?: Resolver<ResolversTypes['DryRun'], ParentType, ContextType, RequireFields<MutationSuspendDryRunArgs, 'dryRunId'>>;
   updateDockerRegistryCredential?: Resolver<ResolversTypes['DockerRegistryCredential'], ParentType, ContextType, RequireFields<MutationUpdateDockerRegistryCredentialArgs, 'credential'>>;

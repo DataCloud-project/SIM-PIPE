@@ -15,6 +15,7 @@ import {
   updateWorkflowTemplate,
   workflowTemplatesForProject,
 } from '../argo/workflow-template.js';
+import fetchCarbontrackerData from '../carbontracker/carbontracker.js';
 import {
   aggregatedNodesMetrics,
   computeScalingLaws,
@@ -32,21 +33,22 @@ import { SIMPIPE_PROJECT_LABEL } from '../k8s/label.js';
 import {
   createProject, deleteProject, getProject, projects, renameProject,
 } from '../k8s/projects.js';
-import { createResource, deleteResource, resources } from '../k8s/resources.js';
+import {
+  createResource, deleteResource, resources, shutdownResource,
+} from '../k8s/resources.js';
 import {
   computePresignedGetUrl,
   computePresignedPutUrl,
-  listAllBuckets,
-  listAllObjects,
-  getObjectSize,
   createBucket,
   deleteBucket,
   deleteObjects,
   getObjectMetadata,
+  getObjectSize,
+  listAllBuckets,
+  listAllObjects,
 } from '../minio/minio.js';
 import { assertPrometheusIsHealthy } from '../prometheus/prometheus.js';
 import queryPrometheusResolver from '../prometheus/query-prometheus-resolver.js';
-import fetchCarbontrackerData from '../carbontracker/carbontracker.js';
 import { NotFoundError, PingError } from './apollo-errors.js';
 import type { ArgoWorkflow, ArgoWorkflowTemplate } from '../argo/argo-client.js';
 import type ArgoWorkflowClient from '../argo/argo-client.js';
@@ -73,13 +75,14 @@ import type {
   MutationDeleteDockerRegistryCredentialArgs as MutationDeleteDockerRegistryCredentialArguments,
   MutationDeleteDryRunArgs as MutationDeleteDryRunArguments,
   MutationDeleteProjectArgs as MutationDeleteProjectArguments,
-  MutationDeleteResourceArgs,
+  MutationDeleteResourceArgs as MutationDeleteResourceArguments,
   MutationDeleteWorkflowTemplateArgs as MutationDeleteWorkflowTemplateArguments,
   MutationRenameProjectArgs as MutationRenameProjectArguments,
   MutationResolvers,
   MutationResubmitDryRunArgs as MutationResubmitDryRunArguments,
   MutationResumeDryRunArgs as MutationResumeDryRunArguments,
   MutationRetryDryRunArgs as MutationRetryDryRunArguments,
+  MutationShutdownResourceArgs as MutationShutdownResourceArguments,
   MutationStopDryRunArgs as MutationStopDryRunArguments,
   MutationSuspendDryRunArgs as MutationSuspendDryRunArguments,
   MutationUpdateDockerRegistryCredentialArgs as MutationUpdateDockerRegistryCredentialArguments,
@@ -91,16 +94,16 @@ import type {
   QueryArtifactArgs as QueryArtifactArguments,
   QueryArtifactsArgs as QueryArtifactsArguments,
   QueryComputeScalingLawsFromNodesMetricsArgs as QueryComputeScalingLawsFromNodesMetricsArguments,
+  QueryComputeScalingLawsFromNodesMetricsArgs as QueryComputeScalingLawsFromNodesMetricsArguments_,
   QueryDryRunArgs as QueryDryRunArguments,
+  QueryFetchCarbontrackerDataArgs as QueryFetchCarbontrackerDataArguments,
   QueryGetAggregatedNodesMetricsArgs as QueryGetAggregatedNodesMetricsArguments,
+  QueryGetAggregatedNodesMetricsArgs as QueryGetAggregatedNodesMetricsArguments_,
   QueryPredictScalingArgs as QueryPredictScalingArguments,
+  QueryPredictScalingArgs as QueryPredictScalingArguments_,
   QueryProjectArgs as QueryProjectArguments,
   QueryResolvers,
   QueryWorkflowTemplateArgs as QueryWorkflowTemplateArguments,
-  QueryComputeScalingLawsFromNodesMetricsArgs,
-  QueryPredictScalingArgs,
-  QueryGetAggregatedNodesMetricsArgs,
-  QueryFetchCarbontrackerDataArgs as QueryFetchCarbontrackerDataArguments,
   WorkflowTemplate,
 } from './schema.js';
 
@@ -199,9 +202,7 @@ const resolvers = {
       return await getDryRun(dryRunId, argoClient);
     },
     dryRunsForNode: async (_p: EmptyParent,
-      arguments_:{ nodeName: string }, context: AuthenticatedContext) => {
-    return dryRunsForNode(arguments_.nodeName, context.argoClient);
-   },
+      arguments_:{ nodeName: string }, context: AuthenticatedContext) => dryRunsForNode(arguments_.nodeName, context.argoClient),
     async workflowTemplate(
       _p: EmptyParent, arguments_: QueryWorkflowTemplateArguments, context: AuthenticatedContext,
     ): Promise<Query['workflowTemplate']> {
@@ -259,9 +260,8 @@ const resolvers = {
     async hardwaremetrics(
       _p: EmptyParent, _a: EmptyArguments, context: AuthenticatedContext,
     ): Promise<Query['hardwaremetrics']> {
-
       const ncores = cpuCoresData.length;
-      const hardwaremetrics = {cpuCores: ncores, cpuCoresData: cpuCoresData};
+      const hardwaremetrics = { cpuCores: ncores, cpuCoresData };
 
       return hardwaremetrics;
     },
@@ -477,12 +477,21 @@ const resolvers = {
     },
     async deleteResource(
       _p: EmptyParent,
-      arguments_: MutationDeleteResourceArgs,
+      arguments_: MutationDeleteResourceArguments,
       context: AuthenticatedContext,
     ): Promise<Mutation['deleteResource']> {
       const { resourceId } = arguments_;
       const { k8sClient, k8sNamespace } = context;
       return await deleteResource(resourceId, k8sClient, k8sNamespace);
+    },
+    async shutdownResource(
+      _p: EmptyParent,
+      arguments_: MutationShutdownResourceArguments,
+      context: AuthenticatedContext,
+    ): Promise<Mutation['shutdownResource']> {
+      const { resourceId } = arguments_;
+      const { k8sClient, k8sNamespace } = context;
+      return await shutdownResource(resourceId, k8sClient, k8sNamespace);
     },
     async createDockerRegistryCredential(
       _p: EmptyParent,

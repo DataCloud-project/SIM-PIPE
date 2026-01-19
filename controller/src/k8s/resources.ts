@@ -240,6 +240,34 @@ export async function deleteResource(
   k8sNamespace = 'default',
 ): Promise<boolean> {
   try {
+    // Delete the VMNode CRD
+    await k8sClient.customObjects.deleteNamespacedCustomObject(
+      'simpipe.sct.sintef.no',
+      'v1',
+      k8sNamespace,
+      'vmnodes',
+      id,
+    );
+  } catch (error) {
+    const code = (error as Error & { response?: { statusCode?: number } }).response?.statusCode;
+    if (code !== 404) {
+      console.warn(`deleteResource: failed to delete VMNode CRD for ${id}`, error);
+    }
+  }
+
+  // Tear down the underlying VM/K3s node
+  await deleteKubeNode(id);
+  return true;
+}
+
+// Shutdown a resource
+export async function shutdownResource(
+  id: string,
+  k8sClient: K8sClient,
+  k8sNamespace = 'default',
+): Promise<boolean> {
+  try {
+    // Patch CRD for VM Node to modify status to 'shutdown'
     await k8sClient.customObjects.patchNamespacedCustomObject(
       'simpipe.sct.sintef.no',
       'v1',
@@ -259,13 +287,16 @@ export async function deleteResource(
       { headers: { 'Content-Type': 'application/json-patch+json' } },
     );
   } catch (error) {
-    const code = (error as Error & { response?: { statusCode?: number } }).response?.statusCode;
+    const errWithResp = error as Error & { response?: { statusCode?: number; body?: unknown } };
+    const code = errWithResp.response?.statusCode;
     if (code !== 404) {
-      console.warn(`deleteResource: failed to set status=shutdown for ${id}`, error);
+      console.warn(`shutdownResource: failed to set status=shutdown for ${id}`, {
+        statusCode: code,
+        responseBody: errWithResp.response?.body,
+        error,
+      });
     }
-    // continue even if patch fails
   }
-
   // Tear down the underlying VM/K3s node
   await deleteKubeNode(id);
   return true;
