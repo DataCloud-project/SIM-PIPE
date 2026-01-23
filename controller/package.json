@@ -45,10 +45,10 @@
     "eslint-plugin-simple-import-sort": "^10.0.0",
     "eslint-plugin-unicorn": "^47.0.0",
     "spectaql": "^1.5.3",
-    "typescript": "^5.1.6"
+    "typescript": "^5.1.6",
+    "@graphql-codegen/cli": "4.0.1"
   },
   "optionalDependencies": {
-    "@graphql-codegen/cli": "4.0.1",
     "@graphql-codegen/introspection": "4.0.0",
     "@graphql-codegen/typescript": "4.0.1",
     "@graphql-codegen/typescript-operations": "^4.0.1",

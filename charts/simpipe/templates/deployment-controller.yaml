@@ -62,6 +62,21 @@ spec:
               value: {{ .Values.controller.prometheus.serverUrl | quote }}
             - name: CARBONTRACKER_ENDPOINT
               value: {{ .Values.controller.carbontracker.endpoint | quote }}
+            - name: MOOSE_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: simpipe-moose-api
+                  key: MOOSE_API_KEY
+            - name: OPENROUTER_API_KEY_PAID
+              valueFrom:
+                secretKeyRef:
+                  name: simpipe-openrouter-api-paid
+                  key: OPENROUTER_API_KEY_PAID
+            - name: OPENROUTER_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: simpipe-openrouter-api
+                  key: OPENROUTER_API_KEY
             - name: NODE_ENV
               value: development
           ports:

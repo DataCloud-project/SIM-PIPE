@@ -32,3 +32,16 @@ export const prometheusServerUrl = process.env.PROMETHEUS_SERVER_URL ?? 'http://
 // For Kubernetes cluster deployment, use internal service DNS
 // For local development, use localhost
 export const carbontrackerEndpoint = process.env.CARBONTRACKER_ENDPOINT ?? 'http://localhost:8000';
+
+// Moose API endpoint and api keys
+export const mooseApiEndpoint:string = process.env.MOOSE_API_ENDPOINT ?? 'https://moose.zooverse.dev';
+export const mooseApiKey:string = process.env.MOOSE_API_KEY ?? '';
+export const mooseApiKeyPAID:string = process.env.MOOSE_PAID_API_KEY ?? '';
+export const openRouterApiKey:string = process.env.OPENROUTER_API_KEY ?? '';
+export const openRouterApiKeyPAID:string = process.env.OPENROUTER_API_KEY_PAID ?? '';
+export const useOpenRouterPaidAPI = false;
+
+// Moose DPV LLM configuration
+export const mooseLlmProvider = 'openrouter';
+export const mooseLlmModel = 'gpt-oss-120b';
+export const mooseDpvSchema = 'dpv';

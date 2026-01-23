@@ -119,6 +119,34 @@ export async function getObjectMetadata(
   return metadata;
 }
 
+// get full text content of an object (artifact)
+export async function getObjectText(
+  objectName: string,
+  _bucketName?: string,
+): Promise<string> {
+  const bucketName = _bucketName || minioBucketName;
+
+  const stream = await minioInternalClient.getObject(bucketName, objectName);
+
+  return await new Promise<string>((resolve, reject) => {
+    const chunks: Buffer[] = [];
+
+    stream.on('data', (chunk) => {
+      chunks.push(chunk as Buffer);
+    });
+
+    stream.on('end', () => {
+      resolve(Buffer.concat(chunks).toString('utf8'));
+    });
+
+    stream.on('error', (error) => {
+      // eslint-disable-next-line no-console
+      console.error('Error reading Minio object', error);
+      reject(error);
+    });
+  });
+}
+
 // get buckets
 export async function listAllBuckets(): Promise<BucketItemFromList[]> {
   return await minioInternalClient.listBuckets();
