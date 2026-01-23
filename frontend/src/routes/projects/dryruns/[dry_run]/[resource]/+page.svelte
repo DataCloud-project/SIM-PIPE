@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { ProgressBar, CodeBlock } from '@skeletonlabs/skeleton';
+	import { ProgressBar, CodeBlock, getModalStore } from '@skeletonlabs/skeleton';
 	import { AlertTriangleIcon, ZoomInIcon } from 'svelte-feather-icons';
 	import { filesize } from 'filesize';
 	import getDryRunMetricsQuery from '$queries/get_dry_run_metrics.js';
@@ -23,6 +23,8 @@
 	import type { MetricsAnalytics } from '$utils/resource-utils';
 	// import { displayAlert } from '$utils/alerts-utils';
 	import type { DryRunMetrics, DryRun, MetricsWithTimeStamps } from '$typesdefinitions';
+	import type { ModalSettings } from '@skeletonlabs/skeleton';
+	import getMooseAnalysisQuery from '$queries/get_moose_analysis.js';
 
 	// Extended type to include carbontracker data
 	interface ExtendedDryRunMetrics extends DryRunMetrics {
@@ -33,6 +35,12 @@
 			};
 		};
 	}
+
+	type MooseEntity = { text: string; type_id: string; confidence: number };
+
+	let mooseEntities: MooseEntity[] = [];
+	let showMooseModal = false;
+	const modalStore = getModalStore();
 
 	export let data;
 
@@ -555,6 +563,34 @@
 		loadingFinished = true;
 	});
 
+	async function onAnalyze(artifactUrl: string): Promise<void> {
+		console.log('clicked analyze for artifact:', artifactUrl);
+		const mooseAPIMessageModal: ModalSettings = {
+			type: 'alert',
+			title: 'Calling Moose API with the artifact text✨',
+			body: `Awaiting response from API...`
+		};
+		modalStore.trigger(mooseAPIMessageModal);
+
+		// eslint-disable-next-line no-promise-executor-return
+		await new Promise((resolve) => setTimeout(resolve, 2500));
+		modalStore.close();
+		// const response = await requestGraphQLClient<{ result: string }>(getMooseAnalysisQuery, {
+		// 	artifactUrl
+		// });
+		// console.log('Moose analysis response:', response.result);
+		// const job = JSON.parse(response.result) as {
+		// 	result?: { results?: { entities?: MooseEntity[] }[] };
+		// };
+		const response = {"job_id":"7fec2e67-c6c8-4033-9490-1381a928be39","status":"completed","created_at":"2026-01-22T17:28:13.615831+00:00","updated_at":"2026-01-22T17:28:52.218513+00:00","result":{"results":[{"task_id":"task-1","entities":[{"start":32,"end":36,"text":"76kg","type_id":"dpv-pd:Weight","confidence":0.5317919075144509},{"start":48,"end":53,"text":"99bpm","type_id":"dpv-pd:PhysicalHealth","confidence":0.5432098765432098},{"start":69,"end":75,"text":"131/88","type_id":"dpv-pd:PhysicalHealth","confidence":0.5141242937853108},{"start":87,"end":91,"text":"5254","type_id":"dpv:ActivityMonitoring","confidence":0.5602836879432623},{"start":125,"end":133,"text":"John Doe","type_id":"dpv:Patient","confidence":0.5189189189189188}]}]}}
+		const job = JSON.parse(JSON.stringify(response)) as {
+			result?: { results?: { entities?: MooseEntity[] }[] };
+		};
+
+		mooseEntities = job.result?.results?.flatMap((r) => r.entities ?? []) ?? [];
+		showMooseModal = true;
+	}
+
 	function getPartLogs(stepName: string, nmaxlinelength: number): string {
 		const steplogs = logs[stepName];
 		// console.log('stepName:', stepName);
@@ -593,14 +629,14 @@
 					><ZoomInIcon /></button
 				>
 			</h1>
-			<div class="grid grid-flow-rows grid-cols-1 items-center w-full p-5">
+			<div class="grid grid-flow-rows grid-cols-1 items-center w-full p-3">
 				<div>
 					<Mermaid {diagram} />
 				</div>
 				<div>
 					<Legend />
 				</div>
-				<div class="p-5">
+				<div class="p-3">
 					<table class="table table-interactive">
 						<thead>
 							<tr>
@@ -612,20 +648,21 @@
 								<th>Energy [<span class="lowercase">k</span>Wh]</th>
 								<th>Status</th>
 								<th>Output</th>
+								<th>Privacy check</th>
 							</tr>
 						</thead>
 						<tbody>
 							{#each reactiveStepsList || [] as step}
 								<!-- eslint-disable-next-line @typescript-eslint/explicit-function-return-type -->
 								<tr on:click={() => stepOnClick(step.displayName)}>
-									<td style="width:15%">{step.displayName}</td>
-									<td style="width:15%">
+									<td style="width:12%">{step.displayName}</td>
+									<td style="width:14%">
 										{step.startedAt ?? '-'}
 									</td>
-									<td style="width:15%">
+									<td style="width:14%">
 										{step.finishedAt ?? '-'}
 									</td>
-									<td style="width:10%">{displayStepDuration(step)}</td>
+									<td style="width:8%">{displayStepDuration(step)}</td>
 									<td style="width:10%">
 										{#if step.carbontracker?.fetchCarbontrackerData?.co2eq}
 											{step.carbontracker.fetchCarbontrackerData.co2eq.toFixed(3)}
@@ -640,8 +677,8 @@
 											-
 										{/if}
 									</td>
-									<td style="width:10%">{step.phase}</td>
-									<td style="width:15%">
+									<td style="width:8%">{step.phase}</td>
+									<td style="width:10%">
 										{#if step.outputArtifacts?.length > 1}
 											{#each step.outputArtifacts as artifact}
 												{#if artifact.name !== 'main-logs'}
@@ -651,6 +688,16 @@
 										{:else}
 											<p>-</p>
 										{/if}
+									</td>
+									<td style="width:15%">
+										<button
+											type="button"
+											class="px-3 py-1 rounded border border-slate-300 bg-slate-50 text-slate-700 text-xs font-normal hover:bg-slate-100 hover:border-slate-400 cursor-pointer"
+											on:click|stopPropagation={() => onAnalyze('dummy')}
+											>
+											<!-- on:click|stopPropagation={() => onAnalyze(step.outputArtifacts[0]?.url)} -->
+											Run privacy check
+										</button>
 									</td>
 								</tr>
 							{/each}
@@ -701,7 +748,7 @@
 				{/if}
 
 				<div class="card resourcecard">
-					<table class="table table-interactive">
+					<table class="table table-interactive w-full">
 						<thead>
 							<tr>
 								<th>Resource</th>
@@ -766,6 +813,43 @@
 					/>
 				</div>
 			</div>
+
+			{#if showMooseModal}
+				<div class="moose-modal-backdrop w-full" on:click={() => (showMooseModal = false)}>
+					<div class="moose-modal" on:click|stopPropagation>
+						<header class="moose-modal-header">
+							<h2>Detected privacy-relevant entities</h2>
+							<button type="button" class="btn btn-sm" on:click={() => (showMooseModal = false)}>
+								Close
+							</button>
+						</header>
+						<section class="moose-modal-body">
+							{#if mooseEntities.length === 0}
+								<p>No entities detected in this output.</p>
+							{:else}
+								<table class="table table-interactive w-full">
+									<thead>
+										<tr>
+											<th>Text</th>
+											<th>Type</th>
+											<th>Confidence</th>
+										</tr>
+									</thead>
+									<tbody>
+										{#each mooseEntities as entity}
+											<tr>
+												<td>{entity.text}</td>
+												<td>{entity.type_id}</td>
+												<td>{(entity.confidence * 100).toFixed(1)}%</td>
+											</tr>
+										{/each}
+									</tbody>
+								</table>
+							{/if}
+						</section>
+					</div>
+				</div>
+			{/if}
 		{/if}
 	</div>
 </div>
@@ -795,8 +879,70 @@
 		overflow-y: scroll;
 		max-height: 50vh;
 	}
+	.moose-modal-backdrop {
+		position: fixed;
+		inset: 0;
+		background-color: rgba(0, 0, 0, 0.5);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		z-index: 50;
+	}
+	.moose-modal {
+		background-color: white;
+		border-radius: 0.5rem;
+		padding: 1.5rem;
+		max-width: 48rem;
+		width: 100%;
+		max-height: 80vh;
+		overflow-y: auto;
+		box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
+			0 4px 6px -2px rgba(0, 0, 0, 0.05);
+	}
+	.moose-modal-header {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		margin-bottom: 1rem;
+	}
+	.moose-modal-body {
+		max-height: 60vh;
+		overflow-y: auto;
+	}
 	ul {
 		max-height: 75vh;
 		max-height: fit-content;
+	}
+
+	.table.table {
+        max-height: 80vh;
+        overflow-y: auto;
+        overflow-x: scroll;
+        display: block;
+        border-collapse: collapse;
+        margin-left: auto;
+        margin-right: auto;
+        table-layout: auto;
+        width: 100%;
+    }
+    thead {
+        position: sticky;
+        top: 0;
+    }
+
+	/* Make Moose entities table always span full modal width */
+	.moose-modal-body table {
+		width: 100%;
+		table-layout: fixed;
+	}
+	.moose-modal-body th:nth-child(1),
+	.moose-modal-body td:nth-child(1) {
+		width: 33.33%;
+	}
+	.moose-modal-body th:nth-child(2),
+	.moose-modal-body td:nth-child(2),
+	.moose-modal-body th:nth-child(3),
+	.moose-modal-body td:nth-child(3) {
+		width: 33.33%;
 	}
 </style>
