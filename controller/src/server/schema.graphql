@@ -114,6 +114,11 @@ type Query {
   fetchCarbontrackerData(
     """ Input data containing CPU usage metrics """
     input: CarbonTrackerInput!): CarbonTrackerData! @auth
+
+  """ Fetch moose analysis results from an artifact URL """
+  getMooseAnalysis(
+    """ The URL of the artifact to be analysed """
+    artifactUrl: String!): String! @auth
 }
 
 """ Project is the high level concept for a specific pipeline in SIM-PIPE. It contains all the previous dry runs of the pipeline and its results. """

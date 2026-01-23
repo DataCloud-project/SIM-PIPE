@@ -36,6 +36,7 @@ import {
   deleteBucket,
   deleteObjects,
   getObjectMetadata,
+  getObjectText,
 } from '../minio/minio.js';
 import { ArtifactItem } from '../minio/minio.js';
 import { assertPrometheusIsHealthy } from '../prometheus/prometheus.js';
@@ -96,6 +97,8 @@ import type {
   NodesAggregatedNodeMetrics,
   NodesScalingLaws,
 } from './schema.js';
+import { getDPVJobResult, getDPVJobResultPolling, makeDPVCall } from '../moose/moose.js';
+import { get } from 'node:http';
 
 interface ContextUser {
   sub: string
@@ -327,6 +330,15 @@ const resolvers = {
       const { input } = arguments_;
 
       return await fetchCarbontrackerData(input);
+    },
+    async getMooseAnalysis(
+      _p: EmptyParent,
+      arguments_: { artifactUrl: string },
+      _context: AuthenticatedContext,
+    ): Promise<Query['getMooseAnalysis']> {
+      const { artifactUrl } = arguments_;
+      const result = await getDPVJobResultPolling(artifactUrl);
+      return JSON.stringify(result);
     },
   } as Required<QueryResolvers<AuthenticatedContext, EmptyParent>>,
   Mutation: {

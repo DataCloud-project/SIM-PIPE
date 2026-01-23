@@ -992,6 +992,8 @@ export type Query = {
   fetchCarbontrackerData: CarbonTrackerData;
   /**  Compute aggregated resource metrics for a set of dry runs  */
   getAggregatedNodesMetrics: Array<Maybe<NodesAggregatedNodeMetrics>>;
+  /**  Fetch moose analysis results from an artifact URL  */
+  getMooseAnalysis: Scalars['String']['output'];
   /**  Get hardware metrics server-side */
   hardwaremetrics: HardwareMetrics;
   /**  Returns pong if the server is up and running.  */
@@ -1047,6 +1049,12 @@ export type QueryFetchCarbontrackerDataArgs = {
 export type QueryGetAggregatedNodesMetricsArgs = {
   aggregateMethod?: InputMaybe<Scalars['String']['input']>;
   dryRunIds: Array<InputMaybe<Scalars['String']['input']>>;
+};
+
+
+/**  The root query type. All queries that fetch data are defined here.  */
+export type QueryGetMooseAnalysisArgs = {
+  artifactUrl: Scalars['String']['input'];
 };
 
 
@@ -1563,6 +1571,7 @@ export type QueryResolvers<ContextType = any, ParentType extends ResolversParent
   dryRun?: Resolver<ResolversTypes['DryRun'], ParentType, ContextType, RequireFields<QueryDryRunArgs, 'dryRunId'>>;
   fetchCarbontrackerData?: Resolver<ResolversTypes['CarbonTrackerData'], ParentType, ContextType, RequireFields<QueryFetchCarbontrackerDataArgs, 'input'>>;
   getAggregatedNodesMetrics?: Resolver<Array<Maybe<ResolversTypes['NodesAggregatedNodeMetrics']>>, ParentType, ContextType, RequireFields<QueryGetAggregatedNodesMetricsArgs, 'dryRunIds'>>;
+  getMooseAnalysis?: Resolver<ResolversTypes['String'], ParentType, ContextType, RequireFields<QueryGetMooseAnalysisArgs, 'artifactUrl'>>;
   hardwaremetrics?: Resolver<ResolversTypes['HardwareMetrics'], ParentType, ContextType>;
   ping?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   predictScaling?: Resolver<ResolversTypes['ScalingPredictions'], ParentType, ContextType, RequireFields<QueryPredictScalingArgs, 'data_x' | 'data_x_to_predict'>>;
