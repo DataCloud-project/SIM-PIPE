@@ -6,6 +6,7 @@ const allArtifactsQuery = gql`
 			name
 			url
 			bucketName
+			mooseReport
 		}
 	}
 `;

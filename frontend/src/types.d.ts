@@ -79,6 +79,9 @@ export type DryRunMetrics = {
 		key: string;
 		name: string;
 		url: string;
+		size?: number;
+		bucketName?: string;
+		mooseReport?: string;
 	}[];
 };
 
@@ -168,8 +171,9 @@ export type Bucket = {
 export type Artifact = {
 	name: string;
 	url: string;
-	size: number;
-	bucketName: string;
+	size?: number;
+	bucketName?: string;
+	mooseReport?: string;
 };
 
 // Bucket with artifacts

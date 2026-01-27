@@ -203,3 +203,15 @@ export async function deleteObjects(objects: string[], bucketName: string): Prom
     });
   });
 }
+
+const MOOSE_REPORT_SUFFIX = '.moose-report.json';
+
+export async function setMooseReportForArtifact(
+  objectName: string,
+  report: string,
+  _bucketName?: string,
+): Promise<void> {
+  const bucketName = _bucketName || minioBucketName;
+  const reportKey = `${objectName}${MOOSE_REPORT_SUFFIX}`;
+  await minioInternalClient.putObject(bucketName, reportKey, report);
+}

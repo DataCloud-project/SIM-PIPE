@@ -22,7 +22,7 @@
 	} from '$utils/resource-utils';
 	import type { MetricsAnalytics } from '$utils/resource-utils';
 	// import { displayAlert } from '$utils/alerts-utils';
-	import type { DryRunMetrics, DryRun, MetricsWithTimeStamps } from '$typesdefinitions';
+	import type { DryRunMetrics, DryRun, MetricsWithTimeStamps, Artifact } from '$typesdefinitions';
 	import type { ModalSettings } from '@skeletonlabs/skeleton';
 	import getMooseAnalysisQuery from '$queries/get_moose_analysis.js';
 
@@ -563,32 +563,60 @@
 		loadingFinished = true;
 	});
 
-	async function onAnalyze(artifactUrl: string): Promise<void> {
-		console.log('clicked analyze for artifact:', artifactUrl);
-		const mooseAPIMessageModal: ModalSettings = {
-			type: 'alert',
-			title: 'Calling Moose API with the artifact text✨',
-			body: `Awaiting response from API...`
-		};
-		modalStore.trigger(mooseAPIMessageModal);
+	async function onAnalyze(artifact: Artifact): Promise<void> {
+		let results: { entities?: MooseEntity[] }[] | undefined;
 
-		// eslint-disable-next-line no-promise-executor-return
-		await new Promise((resolve) => setTimeout(resolve, 2500));
-		modalStore.close();
-		// const response = await requestGraphQLClient<{ result: string }>(getMooseAnalysisQuery, {
-		// 	artifactUrl
-		// });
-		// console.log('Moose analysis response:', response.result);
-		// const job = JSON.parse(response.result) as {
-		// 	result?: { results?: { entities?: MooseEntity[] }[] };
-		// };
-		const response = {"job_id":"7fec2e67-c6c8-4033-9490-1381a928be39","status":"completed","created_at":"2026-01-22T17:28:13.615831+00:00","updated_at":"2026-01-22T17:28:52.218513+00:00","result":{"results":[{"task_id":"task-1","entities":[{"start":32,"end":36,"text":"76kg","type_id":"dpv-pd:Weight","confidence":0.5317919075144509},{"start":48,"end":53,"text":"99bpm","type_id":"dpv-pd:PhysicalHealth","confidence":0.5432098765432098},{"start":69,"end":75,"text":"131/88","type_id":"dpv-pd:PhysicalHealth","confidence":0.5141242937853108},{"start":87,"end":91,"text":"5254","type_id":"dpv:ActivityMonitoring","confidence":0.5602836879432623},{"start":125,"end":133,"text":"John Doe","type_id":"dpv:Patient","confidence":0.5189189189189188}]}]}}
-		const job = JSON.parse(JSON.stringify(response)) as {
-			result?: { results?: { entities?: MooseEntity[] }[] };
-		};
+		if (!artifact.mooseReport) {
+			const mooseAPIMessageModal: ModalSettings = {
+				type: 'alert',
+				title: 'Calling Moose API with the artifact text✨',
+				body: `Awaiting response from API...`
+			};
+			modalStore.trigger(mooseAPIMessageModal);
 
-		mooseEntities = job.result?.results?.flatMap((r) => r.entities ?? []) ?? [];
+			// eslint-disable-next-line no-promise-executor-return
+			await new Promise((resolve) => setTimeout(resolve, 2500));
+			modalStore.close();
+			const response = await requestGraphQLClient<{ result: string }>(getMooseAnalysisQuery, {
+				artifactUrl: artifact.url
+			});
+			console.log('Moose analysis response:', response.result);
+			const job = JSON.parse(response.result) as {
+				result?: { results?: { entities?: MooseEntity[] }[] };
+			};
+			results = job.result?.results;
+
+			// Refresh dry run nodes from backend so artifacts include the stored Moose report
+			try {
+				const dryrunVariables = {
+					// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+					dryRunId: data.resource
+				};
+				const dryrunResponse: { dryRun: DryRun } = await requestGraphQLClient(
+					getDryRunPhaseResultsQuery,
+					dryrunVariables
+				);
+				// update steps list and phases
+				$stepsList = dryrunResponse.dryRun.nodes;
+				$stepsList = $stepsList.filter((item) => item.type === 'Pod');
+				dryrunResponse.dryRun.nodes.forEach((node: DryRunMetrics) => {
+					dryRunPhases[node.displayName] = node.phase;
+				});
+			} catch (error) {
+				// eslint-disable-next-line no-console
+				console.error('Error refreshing dry run after Moose analysis', error);
+			}
+		} else {
+			// get job from stored Moose report
+			const job = JSON.parse(artifact.mooseReport) as {
+				result?: { results?: { entities?: MooseEntity[] }[] };
+			};
+			results = job.result?.results;
+		}
+
+		mooseEntities = results?.flatMap((r) => r.entities ?? []) ?? [];
 		showMooseModal = true;
+
 	}
 
 	function getPartLogs(stepName: string, nmaxlinelength: number): string {
@@ -682,7 +710,7 @@
 										{#if step.outputArtifacts?.length > 1}
 											{#each step.outputArtifacts as artifact}
 												{#if artifact.name !== 'main-logs'}
-													<a href={step.outputArtifacts[0].url}>{step.outputArtifacts[0].name}* </a>
+													<a href={step.outputArtifacts[0].url}>{step.outputArtifacts[0].name} </a>
 												{/if}
 											{/each}
 										{:else}
@@ -690,14 +718,25 @@
 										{/if}
 									</td>
 									<td style="width:15%">
+										{#if step.outputArtifacts?.length > 1 }
 										<button
 											type="button"
-											class="px-3 py-1 rounded border border-slate-300 bg-slate-50 text-slate-700 text-xs font-normal hover:bg-slate-100 hover:border-slate-400 cursor-pointer"
-											on:click|stopPropagation={() => onAnalyze('dummy')}
+											class={`px-3 py-1 rounded border text-xs font-normal cursor-pointer hover:border-slate-400 ${
+												step.outputArtifacts?.length > 1 && !step.outputArtifacts[0]?.mooseReport
+													? 'bg-amber-100 border-amber-300 text-amber-800 hover:bg-amber-150'
+													: 'bg-emerald-100 border-emerald-300 text-emerald-800 hover:bg-emerald-150'
+											}`}
+											on:click|stopPropagation={() => onAnalyze(step.outputArtifacts[0])}
 											>
-											<!-- on:click|stopPropagation={() => onAnalyze(step.outputArtifacts[0]?.url)} -->
-											Run privacy check
+											{#if step.outputArtifacts?.length > 1 && !step.outputArtifacts[0]?.mooseReport}
+												Run privacy check
+											{:else}
+												View privacy report
+											{/if}
 										</button>
+										{:else}
+											-
+										{/if}
 									</td>
 								</tr>
 							{/each}

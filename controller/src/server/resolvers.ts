@@ -37,6 +37,7 @@ import {
   deleteObjects,
   getObjectMetadata,
   getObjectText,
+  setMooseReportForArtifact,
 } from '../minio/minio.js';
 import { ArtifactItem } from '../minio/minio.js';
 import { assertPrometheusIsHealthy } from '../prometheus/prometheus.js';
@@ -71,6 +72,7 @@ import type {
   MutationDeleteDryRunArgs as MutationDeleteDryRunArguments,
   MutationDeleteProjectArgs as MutationDeleteProjectArguments,
   MutationDeleteWorkflowTemplateArgs as MutationDeleteWorkflowTemplateArguments,
+  MutationSetMooseReportArgs as MutationSetMooseReportArguments,
   MutationRenameProjectArgs as MutationRenameProjectArguments,
   MutationResolvers,
   MutationResubmitDryRunArgs as MutationResubmitDryRunArguments,
@@ -338,6 +340,15 @@ const resolvers = {
     ): Promise<Query['getMooseAnalysis']> {
       const { artifactUrl } = arguments_;
       const result = await getDPVJobResultPolling(artifactUrl);
+
+      // Parse the Minio bucket and object key from the public artifact URL
+      // so we can store the Moose report alongside the artifact itself.
+      const url = new URL(artifactUrl);
+      const pathParts = url.pathname.replace(/^\/+/, '').split('/');
+      const bucketName = pathParts.shift()!; // e.g. "artifacts"
+      const objectName = pathParts.join('/');
+
+      await setMooseReportForArtifact(objectName, JSON.stringify(result), bucketName);
       return JSON.stringify(result);
     },
   } as Required<QueryResolvers<AuthenticatedContext, EmptyParent>>,
@@ -595,7 +606,18 @@ const resolvers = {
       const { bucketName, keys } = arguments_;
       const response = await deleteObjects(keys, bucketName);
       return response;
-    }
+    },
+    async setMooseReport(
+      _p: EmptyParent,
+      arguments_: MutationSetMooseReportArguments,
+      _context: AuthenticatedContext,
+    ): Promise<Mutation['setMooseReport']> {
+      const { bucketName, key, report } = arguments_;
+      // bucketName is optional; if not provided, the Minio helper
+      // will fall back to the default artifacts bucket.
+      await setMooseReportForArtifact(key, report, bucketName ?? undefined);
+      return true;
+    },
   } as Required<MutationResolvers<AuthenticatedContext, EmptyParent>>,
   Project: {
     async dryRuns(
@@ -790,7 +812,7 @@ const resolvers = {
       }
       const filesize = await getObjectSize(key, bucketName as string);
       // console.log('artifact size calc', filesize, key, bucketName, artifact)
-      return filesize
+      return filesize;
     },
   },
   WorkflowTemplate: {

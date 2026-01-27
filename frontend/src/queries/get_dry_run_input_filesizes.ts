@@ -12,6 +12,7 @@ const getDryRunInputFilesizeQuery = gql`
 					inputArtifacts {
 						name
 						size
+						mooseReport
 					}
 				}
 			}

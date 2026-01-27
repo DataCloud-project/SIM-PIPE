@@ -55,6 +55,8 @@ export type Artifact = {
   bucketName?: Maybe<Scalars['String']['output']>;
   /**  The artifact path  */
   key?: Maybe<Scalars['String']['output']>;
+  /**  The compliance check report from Moose API, if available  */
+  mooseReport?: Maybe<Scalars['String']['output']>;
   /**  The artifact name  */
   name: Scalars['String']['output'];
   /**  The artifact size  */
@@ -805,6 +807,8 @@ export type Mutation = {
   resumeDryRun: DryRun;
   /**  Retry a failed dry run. Restart an existing dry run. */
   retryDryRun: DryRun;
+  /**  Store or update the Moose compliance report for a specific artifact  */
+  setMooseReport: Scalars['Boolean']['output'];
   /**  Stop an active dry run.  */
   stopDryRun: DryRun;
   /**  Suspend an active dry run.  */
@@ -902,6 +906,13 @@ export type MutationResumeDryRunArgs = {
 
 export type MutationRetryDryRunArgs = {
   dryRunId: Scalars['String']['input'];
+};
+
+
+export type MutationSetMooseReportArgs = {
+  bucketName?: InputMaybe<Scalars['String']['input']>;
+  key: Scalars['String']['input'];
+  report: Scalars['String']['input'];
 };
 
 
@@ -1329,6 +1340,7 @@ export interface ArgoWorkflowTemplateScalarConfig extends GraphQLScalarTypeConfi
 export type ArtifactResolvers<ContextType = any, ParentType extends ResolversParentTypes['Artifact'] = ResolversParentTypes['Artifact']> = {
   bucketName?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   key?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  mooseReport?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   size?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
   url?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
@@ -1522,6 +1534,7 @@ export type MutationResolvers<ContextType = any, ParentType extends ResolversPar
   resubmitDryRun?: Resolver<ResolversTypes['DryRun'], ParentType, ContextType, RequireFields<MutationResubmitDryRunArgs, 'dryRunId'>>;
   resumeDryRun?: Resolver<ResolversTypes['DryRun'], ParentType, ContextType, RequireFields<MutationResumeDryRunArgs, 'dryRunId'>>;
   retryDryRun?: Resolver<ResolversTypes['DryRun'], ParentType, ContextType, RequireFields<MutationRetryDryRunArgs, 'dryRunId'>>;
+  setMooseReport?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationSetMooseReportArgs, 'key' | 'report'>>;
   stopDryRun?: Resolver<ResolversTypes['DryRun'], ParentType, ContextType, RequireFields<MutationStopDryRunArgs, 'dryRunId'>>;
   suspendDryRun?: Resolver<ResolversTypes['DryRun'], ParentType, ContextType, RequireFields<MutationSuspendDryRunArgs, 'dryRunId'>>;
   updateDockerRegistryCredential?: Resolver<ResolversTypes['DockerRegistryCredential'], ParentType, ContextType, RequireFields<MutationUpdateDockerRegistryCredentialArgs, 'credential'>>;

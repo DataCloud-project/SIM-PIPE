@@ -503,6 +503,8 @@ type Artifact {
   size: Int
   """ The name of the bucket that holds the artifact """
   bucketName: String
+  """ The compliance check report from Moose API, if available """
+  mooseReport: String
 }
 
 """ Artifact metadata """
@@ -730,4 +732,13 @@ type Mutation @auth {
     """ The name of the bucket to be deleted """
     bucketName: String!,
     keys: [String!]!): Boolean!
+
+  """ Store or update the Moose compliance report for a specific artifact """
+  setMooseReport(
+    """ The name of the bucket that holds the artifact (optional, defaults to the main artifacts bucket) """
+    bucketName: String,
+    """ The key/path of the artifact object """
+    key: String!,
+    """ The Moose report JSON string """
+    report: String!): Boolean!
 }

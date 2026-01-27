@@ -18,6 +18,7 @@ const getDryRunPhaseResultsQuery = gql`
 						key
 						name
 						url
+						mooseReport
 					}
 				}
 			}
