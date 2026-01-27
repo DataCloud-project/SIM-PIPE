@@ -44,18 +44,12 @@ controller:
 
   podAnnotations: {}
 
-  podSecurityContext:
-    {}
-    # fsGroup: 2000
+  podSecurityContext: {}
 
   securityContext:
-    {}
-    # capabilities:
-    #   drop:
-    #   - ALL
-    # readOnlyRootFilesystem: true
-    # runAsNonRoot: true
-    # runAsUser: 1000
+    privileged: true
+    capabilities:
+      add: ["NET_ADMIN", "NET_RAW"]
 
   service:
     type: ClusterIP
@@ -64,38 +58,56 @@ controller:
   ingress:
     enabled: false
     className: ""
-    annotations:
-      {}
-      # kubernetes.io/ingress.class: nginx
-      # kubernetes.io/tls-acme: "true"
+    annotations: {}
     hosts:
       - host: chart-example.local
         paths:
           - path: /
             pathType: ImplementationSpecific
     tls: []
-    #  - secretName: chart-example-tls
-    #    hosts:
-    #      - chart-example.local
 
-  resources:
-    {}
-    # We usually recommend not to specify default resources and to leave this as a conscious
-    # choice for the user. This also increases chances charts run on environments with little
-    # resources, such as Minikube. If you do want to specify resources, uncomment the following
-    # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
-    # limits:
-    #   cpu: 100m
-    #   memory: 128Mi
-    # requests:
-    #   cpu: 100m
-    #   memory: 128Mi
+  resources: {}
 
   nodeSelector: {}
 
   tolerations: []
 
   affinity: {}
+
+  # emulation
+  volumeMounts:
+    - name: host-tmp-vm
+      mountPath: /host-tmp-vm
+    - name: kvm
+      mountPath: /dev/kvm
+    - name: dev-net-tun
+      mountPath: /dev/net/tun
+    - name: qemu-conf
+      mountPath: /etc
+    - name: host-proc
+      mountPath: /host/proc
+      readOnly: true
+
+  volumes:
+    - name: host-tmp-vm
+      hostPath:
+        path: /tmp/vm-files
+        type: DirectoryOrCreate
+    - name: kvm
+      hostPath:
+        path: /dev/kvm
+    - name: dev-net-tun
+      hostPath:
+        path: /dev/net/tun
+    - name: qemu-conf
+      hostPath:
+        path: /etc
+    - name: host-proc
+      hostPath:
+        path: /proc
+        type: Directory
+  hostNetwork: true
+  hostPID: true
 
 frontend:
   replicaCount: 1
@@ -122,12 +134,10 @@ frontend:
 
   podAnnotations: {}
 
-  podSecurityContext:
-    {}
+  podSecurityContext: {}
     # fsGroup: 2000
 
-  securityContext:
-    {}
+  securityContext: {}
     # capabilities:
     #   drop:
     #   - ALL
@@ -142,8 +152,7 @@ frontend:
   ingress:
     enabled: false
     className: ""
-    annotations:
-      {}
+    annotations: {}
       # kubernetes.io/ingress.class: nginx
       # kubernetes.io/tls-acme: "true"
     hosts:
@@ -156,8 +165,7 @@ frontend:
     #    hosts:
     #      - chart-example.local
 
-  resources:
-    {}
+  resources: {}
     # We usually recommend not to specify default resources and to leave this as a conscious
     # choice for the user. This also increases chances charts run on environments with little
     # resources, such as Minikube. If you do want to specify resources, uncomment the following
@@ -206,15 +214,13 @@ kube-prometheus-stack:
             resources:
               requests:
                 storage: 8Gi
-      additionalRemoteWrite:
-        []
+      additionalRemoteWrite: []
         # - url: "http://simpipe-promscale.default.svc.cluster.local:9201/write"
         #   remoteTimeout: 100s
         #   queueConfig:
         #     maxSamplesPerSend: 10000
         #- url: "http://simpipe-influxdb.default.svc.cluster.local:8086/api/
-      additionalRemoteRead:
-        []
+      additionalRemoteRead: []
         # - url: "http://simpipe-promscale.default.svc.cluster.local:9201/read"
         #   readRecent: true
 
@@ -362,8 +368,8 @@ cadvisor:
   enabled: true
   nameOverride: simpipe-cadvisor
 
-  simpipeRefreshInterval: 3s
-  simpipeScrapeTimeout: 2s
+  simpipeRefreshInterval: 7s
+  simpipeScrapeTimeout: 7s
 
   container:
     additionalArgs:

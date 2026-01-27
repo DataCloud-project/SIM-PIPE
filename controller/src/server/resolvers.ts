@@ -44,6 +44,7 @@ import {
   deleteObjects,
   getObjectMetadata,
   setMooseReportForArtifact,
+  getMooseReportForArtifact,
   getObjectSize,
   listAllBuckets,
   listAllObjects,
@@ -862,6 +863,33 @@ const resolvers = {
       // console.log('artifact size calc', filesize, key, bucketName, artifact)
       return filesize;
       return filesize;
+    },
+    async mooseReport(
+      artifact: Artifact,
+    ): Promise<Artifact['mooseReport']> {
+      const { key, bucketName } = artifact;
+      if (!key) {
+        return undefined;
+      }
+
+      try {
+        const report = await getMooseReportForArtifact(key, bucketName as string | undefined);
+        // eslint-disable-next-line no-console
+        console.log('[Moose] Resolved mooseReport for artifact', {
+          key,
+          bucketName,
+          hasReport: report !== undefined,
+        });
+        return report ?? undefined;
+      } catch (error) {
+        // eslint-disable-next-line no-console
+        console.error('[Moose] Error resolving mooseReport for artifact', {
+          key,
+          bucketName,
+          error,
+        });
+        return undefined;
+      }
     },
   },
   WorkflowTemplate: {

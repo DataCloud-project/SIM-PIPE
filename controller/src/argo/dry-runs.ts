@@ -1,4 +1,4 @@
-import { SIMPIPE_PROJECT_LABEL } from '../k8s/label.js';
+import { SIMPIPE_PROJECT_LABEL, SIMPIPE_NODE_LABEL } from '../k8s/label.js';
 import {
   ConflictError, InvalidArgoWorkflowError, NotFoundError, WrongRequestError,
 } from '../server/apollo-errors.js';
@@ -84,9 +84,11 @@ function convertArgoNodeType(
 export function convertArgoWorkflowToDryRun(argoWorkflow: ArgoWorkflow): DryRun {
   const { metadata, status, spec } = argoWorkflow;
   const { suspend } = spec;
+  let nodeName = metadata.labels?.[SIMPIPE_NODE_LABEL];
   return {
     id: metadata.name ?? '',
     createdAt: (new Date(metadata.creationTimestamp ?? '') ?? new Date()).toISOString(),
+    nodeName,
     argoWorkflow,
     status: {
       ...status,
@@ -147,13 +149,9 @@ export function convertArgoWorkflowNode(node: ArgoNode, argoWorkflow: ArgoWorkfl
   return {
     ...node,
     type,
-    // Will be handled in the resolvers
     children: node.children
-      // fetch the nodes from the status section
       ?.map((id) => argoWorkflow.status?.nodes?.[id])
-      // Ignore the nodes that do not have a status (yet)
       .filter((childNode): childNode is ArgoNode => !!childNode)
-      // And convert
       .map((childNode) => convertArgoWorkflowNode(childNode, argoWorkflow)),
     phase: convertArgoNodePhaseToDryRunNodePhase(node.phase),
     exitCode: node.outputs?.exitCode,
@@ -172,7 +170,16 @@ export async function dryRunsForProject(
   const dryRuns = await argoClient.listWorkflows({
     [SIMPIPE_PROJECT_LABEL]: projectId,
   });
-  // return dryRuns.filter((dryRun) => dryRun.metadata.labels?.project === project.id);
+  return dryRuns.map((dryRun) => convertArgoWorkflowToDryRun(dryRun));
+}
+
+export async function dryRunsForNode(
+  nodeName: string,
+  argoClient: ArgoWorkflowClient,
+): Promise<DryRun[]> {
+  const dryRuns = await argoClient.listWorkflows({
+    [SIMPIPE_NODE_LABEL]: nodeName,
+  });
   return dryRuns.map((dryRun) => convertArgoWorkflowToDryRun(dryRun));
 }
 
@@ -197,11 +204,13 @@ export async function createDryRun({
   argoWorkflow: inputArgoWorkflow,
   projectId,
   dryRunId,
+  nodeName,
   argoClient,
 }: {
   argoWorkflow: ArgoWorkflow,
   projectId?: string,
   dryRunId?: string,
+  nodeName?: string,
   argoClient: ArgoWorkflowClient,
 }): Promise<DryRun> {
   const argoWorkflow: ArgoWorkflow = {
@@ -223,6 +232,10 @@ export async function createDryRun({
   if (projectId) {
     argoWorkflow.metadata.labels[SIMPIPE_PROJECT_LABEL] = projectId;
   }
+
+  if (nodeName) {
+    argoWorkflow.metadata.labels[SIMPIPE_NODE_LABEL] = nodeName;
+  }
   if (dryRunId) {
     argoWorkflow.metadata.name = dryRunId;
   } else if (!argoWorkflow.metadata.name && !argoWorkflow.metadata.generateName) {
@@ -232,6 +245,7 @@ export async function createDryRun({
   }
 
   let createdWorkflow: ArgoWorkflow;
+  delete argoWorkflow.metadata?.resourceVersion;
   try {
     createdWorkflow = await argoClient.createWorkflow({ workflow: argoWorkflow });
   } catch (error) {

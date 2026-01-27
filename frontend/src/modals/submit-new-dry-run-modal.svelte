@@ -10,8 +10,10 @@
 	import allDryRunsQuery from '$queries/get_all_dryruns.js';
 	import { selectedArtifact, selectedProject } from '$stores/stores.js';
 	import { cBase, cForm, cHeader } from '../styles/styles.js';
-	import type { ArtifactHierarchyType, Project } from '$typesdefinitions';
+	import type { ArtifactHierarchyType, Project, Resource } from '$typesdefinitions';
 	import ArtifactBrowser from './artifact-browser.svelte';
+	import allResourcesQuery from '$queries/get_all_resources.js';
+	import { onMount } from 'svelte';
 
 	let isOverlayOpen = false;
 	let selectedTemplateTaskName = '';
@@ -34,9 +36,9 @@
 	const inputdata: { [task_name: string]: { [template_task_artifact_index: number]: InputData } } =
 		{};
 
-	const argoWorkflowTemplate = $selectedProject?.workflowTemplates[0].argoWorkflowTemplate;
-	const currentArgoWorkflowTemplates = argoWorkflowTemplate.spec.templates;
-	$: console.log('currentArgoWorkflowTemplate', currentArgoWorkflowTemplates);
+	const argoWorkflowTemplate = $selectedProject?.workflowTemplates[0]?.argoWorkflowTemplate;
+	const currentArgoWorkflowTemplates = argoWorkflowTemplate?.spec?.templates;
+	// $: console.log('currentArgoWorkflowTemplate', currentArgoWorkflowTemplates);
 
 	type InputData = {
 		template_task_name: string;
@@ -277,23 +279,15 @@
 	} */
 
 	function parsetemplateTaskList(): Task[] {
-		// disabling; could not resolve eslint error  Unsafe usage of optional chaining. If it short-circuits with 'undefined' the evaluation will throw TypeError  55:53  warning  Unexpected any. Specify a different type
 		const {
 			spec: { templates }
 		} = $selectedProject?.workflowTemplates[0]?.argoWorkflowTemplate;
-		// console.log(templates);
-		// dag or steps?
 		const dag = templates.find((template: any) => template.dag);
 		const steps = templates.find((template: any) => template.steps);
-		// console.log('dag', dag); array of tasks
-		// console.log('steps', steps); array of arrays of tasks
 		let tasks: Task[] = [];
 		if (dag) {
-			console.log('dag', dag);
 			tasks = dag.dag.tasks;
 		} else if (steps) {
-			console.log('steps', steps);
-			const tasks = [];
 			for (const step of steps.steps) {
 				tasks.push(...step);
 			}
@@ -302,8 +296,6 @@
 		templates.forEach((template: { name: string; inputs: any }) => {
 			templateContainerInputs[template.name] = template.inputs;
 		});
-		console.log('tasks', tasks);
-		console.log('templateContainerInputs', templateContainerInputs);
 		return tasks;
 	}
 	// const templateTaskList = parsetemplateTaskList() || [];
@@ -360,8 +352,6 @@
 			}
 		};
 
-		// TODO: why is this here? Can this following line be removed?
-		// eslint-disable-next-line no-promise-executor-return
 		await new Promise((resolve) => setTimeout(resolve, 1500));
 
 		try {
@@ -381,16 +371,13 @@
 			};
 			modalStore.trigger(createDryRunMessageModal);
 
-			// eslint-disable-next-line no-promise-executor-return
 			await new Promise((resolve) => setTimeout(resolve, 1500));
 			modalStore.close();
 			await refreshProjectDetails();
 			modalStore.clear();
 		} catch (error) {
-			// TODO: handle error
 			console.error('Failed to create dry run', error);
 			let createDryRunMessageModal: ModalSettings;
-			// eslint-disable-next-line unicorn/prefer-ternary
 			if ((error as Error).message.includes('PayloadTooLargeError')) {
 				createDryRunMessageModal = {
 					type: 'alert',
@@ -406,7 +393,6 @@
 			}
 			modalStore.trigger(createDryRunMessageModal);
 
-			// eslint-disable-next-line no-promise-executor-return
 			await new Promise((resolve) => setTimeout(resolve, 2500));
 			modalStore.close();
 		}
@@ -430,7 +416,7 @@
 	let selectedNodeName = 'default';
 	let dryRunNamePrefix = '';
 
-	// $: console.log('inputdata', inputdata);
+	$: console.log('inputdata', inputdata);
 </script>
 
 {#if $modalStore[0]}

@@ -941,6 +941,18 @@ export type MutationRetryDryRunArgs = {
 };
 
 
+export type MutationSetMooseReportArgs = {
+  bucketName?: InputMaybe<Scalars['String']['input']>;
+  key: Scalars['String']['input'];
+  report: Scalars['String']['input'];
+};
+
+
+export type MutationShutdownResourceArgs = {
+  resourceId: Scalars['String']['input'];
+};
+
+
 export type MutationStopDryRunArgs = {
   dryRunId: Scalars['String']['input'];
   terminate?: InputMaybe<Scalars['Boolean']['input']>;
@@ -1586,6 +1598,8 @@ export type MutationResolvers<ContextType = any, ParentType extends ResolversPar
   resubmitDryRun?: Resolver<ResolversTypes['DryRun'], ParentType, ContextType, RequireFields<MutationResubmitDryRunArgs, 'dryRunId'>>;
   resumeDryRun?: Resolver<ResolversTypes['DryRun'], ParentType, ContextType, RequireFields<MutationResumeDryRunArgs, 'dryRunId'>>;
   retryDryRun?: Resolver<ResolversTypes['DryRun'], ParentType, ContextType, RequireFields<MutationRetryDryRunArgs, 'dryRunId'>>;
+  setMooseReport?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationSetMooseReportArgs, 'key' | 'report'>>;
+  shutdownResource?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationShutdownResourceArgs, 'resourceId'>>;
   stopDryRun?: Resolver<ResolversTypes['DryRun'], ParentType, ContextType, RequireFields<MutationStopDryRunArgs, 'dryRunId'>>;
   suspendDryRun?: Resolver<ResolversTypes['DryRun'], ParentType, ContextType, RequireFields<MutationSuspendDryRunArgs, 'dryRunId'>>;
   updateDockerRegistryCredential?: Resolver<ResolversTypes['DockerRegistryCredential'], ParentType, ContextType, RequireFields<MutationUpdateDockerRegistryCredentialArgs, 'credential'>>;

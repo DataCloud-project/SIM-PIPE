@@ -213,5 +213,85 @@ export async function setMooseReportForArtifact(
 ): Promise<void> {
   const bucketName = _bucketName || minioBucketName;
   const reportKey = `${objectName}${MOOSE_REPORT_SUFFIX}`;
-  await minioInternalClient.putObject(bucketName, reportKey, report);
+  try {
+    // eslint-disable-next-line no-console
+    console.log('[Moose] Saving report to Minio', {
+      bucketName,
+      objectName,
+      reportKey,
+      reportLength: report.length,
+    });
+    await minioInternalClient.putObject(bucketName, reportKey, report);
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error('[Moose] Error saving report to Minio', {
+      bucketName,
+      objectName,
+      reportKey,
+      error,
+    });
+    throw error;
+  }
+}
+
+export async function getMooseReportForArtifact(
+  objectName: string,
+  _bucketName?: string,
+): Promise<string | undefined> {
+  const bucketName = _bucketName || minioBucketName;
+  const reportKey = `${objectName}${MOOSE_REPORT_SUFFIX}`;
+
+  try {
+    // eslint-disable-next-line no-console
+    console.log('[Moose] Fetching report from Minio', {
+      bucketName,
+      objectName,
+      reportKey,
+    });
+
+    const stream = await minioInternalClient.getObject(bucketName, reportKey);
+
+    return await new Promise<string>((resolve, reject) => {
+      const chunks: Buffer[] = [];
+
+      stream.on('data', (chunk) => {
+        chunks.push(chunk as Buffer);
+      });
+
+      stream.on('end', () => {
+        resolve(Buffer.concat(chunks).toString('utf8'));
+      });
+
+      stream.on('error', (error) => {
+        // eslint-disable-next-line no-console
+        console.error('[Moose] Error reading report from Minio', {
+          bucketName,
+          objectName,
+          reportKey,
+          error,
+        });
+        reject(error);
+      });
+    });
+  } catch (error: any) {
+    if (error?.code === 'NoSuchKey' || error?.code === 'NotFound') {
+      // Report simply not there yet
+      // eslint-disable-next-line no-console
+      console.log('[Moose] No report object found for artifact', {
+        bucketName,
+        objectName,
+        reportKey,
+      });
+      return undefined;
+    }
+
+    // eslint-disable-next-line no-console
+    console.error('[Moose] Error fetching report from Minio', {
+      bucketName,
+      objectName,
+      reportKey,
+      error,
+    });
+    throw error;
+  }
 }
