@@ -165,7 +165,13 @@
 				</div>
 				<div class="flex flex-row justify-end p-5 space-x-1">
 					<div>
-						<button type="button" class="btn btn-sm variant-filled" on:click={onCreateSelected}>
+						<button
+							type="button"
+							class="btn btn-sm variant-filled"
+							on:click={() => {
+								onCreateSelected();
+							}}
+						>
 							<span>Create</span>
 						</button>
 					</div>
@@ -202,6 +208,7 @@
 							<th>Run duration</th>
 							<th>Action</th>
 							<th style="text-align:center">Template</th>
+							<th>Node</th>
 							<th>Created</th>
 						</tr>
 					</thead>
@@ -217,16 +224,16 @@
 										on:click={(event) => handleCheckboxClick(event)}
 									/>
 								</td>
-								<td style="width:20%">{run.id}</td>
-								<td style="width:20%">
+								<td style="width:17%">{run.id}</td>
+								<td style="width:10%">
 									<div><SymbolForRunResult runResult={run.status.phase.toString()} /></div>
 								</td>
-								<td style="width:20%">
+								<td style="width:15%">
 									<div>
 										{calculateDuration(run.nodes)}
 									</div>
 								</td>
-								<td style="width:20%">
+								<td style="width:12%">
 									<button type="button" class="btn-icon btn-icon-sm variant-soft">
 										<SymbolForAction
 											action={getDryRunAction(run.status.phase.toString())}
@@ -245,7 +252,8 @@
 										</div>
 									</div></td
 								>
-								<td style="width:20%"><Timestamp timestamp={run.createdAt} /> </td>
+								<td style="width:15%">{run.nodeName ? run.nodeName : 'default'}</td>
+								<td style="width:15%"><Timestamp timestamp={run.createdAt} /> </td>
 							</tr>
 						{/each}
 					</tbody>

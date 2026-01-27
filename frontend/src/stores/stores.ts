@@ -2,6 +2,7 @@ import { writable } from 'svelte/store';
 import type { GraphQLClient } from 'graphql-request';
 import type {
 	Project,
+	Resource,
 	DockerRegistryCredential,
 	DryRun,
 	SampleFile,
@@ -19,6 +20,7 @@ export const graphQLClient = writable<GraphQLClient>();
 export const filesList = writable<SampleFile[] | undefined>();
 export const stepsList = writable<DryRunMetrics[] | undefined>();
 export const projectsList = writable<Project[] | undefined>();
+export const resourcesList = writable<Resource[] | undefined>();
 export const selectedProject = writable<Project | undefined>();
 export const selectedProjectName = writable<string | undefined>();
 export const selectedDryRunName = writable<string | undefined>();

@@ -64,6 +64,9 @@ type Query {
     """ Name of the Argo workflow template to be fetched """
     name: String!): WorkflowTemplate @auth
 
+  """ List of all resources """
+  resources: [Resource!]! @auth
+
   """ List of all the artifacts """
   artifacts(
     """ The name of the bucket """
@@ -119,6 +122,8 @@ type Query {
   getMooseAnalysis(
     """ The URL of the artifact to be analysed """
     artifactUrl: String!): String! @auth
+
+  dryRunsForNode(nodeName: String!): [DryRun!]!  
 }
 
 """ Project is the high level concept for a specific pipeline in SIM-PIPE. It contains all the previous dry runs of the pipeline and its results. """
@@ -140,6 +145,15 @@ type Project {
   workflowTemplates: [WorkflowTemplate!]
 }
 
+""" Resources are nodes created to emulate pipeline execution on a specific hardware. """
+type Resource {
+  id: String!
+  name: String!
+  os: String!
+  cpus: String!
+  memory: String!
+  status: String
+}
 
 """ Dry runs are created under a project which represents an executable instance of the pipeline. """
 type DryRun {
@@ -157,6 +171,9 @@ type DryRun {
 
   """ The project to which the dry run belongs """
   project: Project
+
+  """ The name of the node the dry run is scheduled on """
+  nodeName: String
 
   """ The nodes of the dry run """
   nodes: [DryRunNode!]
@@ -571,6 +588,21 @@ input CreateProjectInput {
   id: String
 }
 
+""" The input data to create a new resource. """
+input CreateResourceInput {
+  """ The name of the new resource """
+  name: String!
+
+  """ The os type name of the new resource """
+  os: String!
+
+  """ The cpus for the new resource """
+  cpus: String!
+  
+  """ The memory for the new resource """
+  memory: String!
+}
+
 """ The input data to create a new dry run """
 input CreateDryRunInput {
   """ The project to which this dry run belongs (optional).
@@ -581,6 +613,9 @@ input CreateDryRunInput {
 
   """ The id of the dry run (optional), will be generated if not provided """
   dryRunId: String
+
+  """ The name of the node the dry run is scheduled on (optional) """
+  nodeName: String
 
   """ The raw Argo workflow document.
 
@@ -680,6 +715,21 @@ type Mutation @auth {
     dryRunId: String!,
     """ ID of the target project """
     projectId: String!): DryRun!
+
+  """ Create a new resource """
+  createResource(
+  """ Input to create the new dry run """
+  input: CreateResourceInput!): Resource!
+
+ """ Delete an existing resource. The mutation returns true if the deletion was successful. """
+  deleteResource(
+    """ ID of the resource to be deleted """
+    resourceId: String!): Boolean!
+
+ """ Shutdown an existing resource. The mutation returns true if the shutdown was successful. """
+  shutdownResource(
+    """ ID of the resource to be shutdown """
+    resourceId: String!): Boolean!
 
   """ Create a new docker registry credential """
   createDockerRegistryCredential(

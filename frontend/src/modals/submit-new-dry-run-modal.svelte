@@ -306,28 +306,57 @@
 		console.log('templateContainerInputs', templateContainerInputs);
 		return tasks;
 	}
-	const templateTaskList = parsetemplateTaskList() || [];
+	// const templateTaskList = parsetemplateTaskList() || [];
+	$: templateTaskList = parsetemplateTaskList() || [];
 
 	// get modified workflow template with updated template inputs
-	function getModifiedWorkflowTemplate2(): any {
+	function getModifiedWorkflowTemplate(): any {
 		const newWorkflowTemplate = argoWorkflowTemplate;
 		newWorkflowTemplate.spec.templates = currentArgoWorkflowTemplates;
-		// console.log('originalWorkflowTemplate', argoWorkflowTemplate);
-		// console.log('newWorkflowTemplate', newWorkflowTemplate);
-		newWorkflowTemplate.metadata = { generateName: newWorkflowTemplate.metadata.generateName };
+		if (selectedNodeName !== 'default') {
+			newWorkflowTemplate.spec.templates = currentArgoWorkflowTemplates.map((tpl: any) => {
+				if (tpl.steps) {
+					return tpl;
+				}
+
+				return {
+					...tpl,
+					nodeSelector: {
+						'kubernetes.io/hostname': selectedNodeName
+					}
+				};
+			});
+		}
+		// Modify the generateName based on user input
+		if (dryRunNamePrefix != '') {
+			// Sanitize the prefix: lowercase, replace invalid chars with hyphens
+			const cleanedPrefix = dryRunNamePrefix
+				.toLowerCase()
+				.replace(/[^a-z0-9-]/g, '-')
+				.replace(/^-+|-+$/g, '')
+				.slice(0, 40);
+
+			newWorkflowTemplate.metadata = {
+				generateName: `${cleanedPrefix}-newWorkflowTemplate.metadata.generateName-`
+			};
+		} else {
+			newWorkflowTemplate.metadata = {
+				generateName: newWorkflowTemplate.metadata.generateName
+			};
+		}
 		return newWorkflowTemplate;
 	}
 
 	async function onCreateDryRunSubmit(): Promise<void> {
 		modalStore.close();
 
-		const modifiedWorkflowTemplate = await getModifiedWorkflowTemplate2();
-		// const modifiedWorkflowTemplate = await newWorkflowTemplate(argoWorkflowTemplate);
+		const modifiedWorkflowTemplate = await getModifiedWorkflowTemplate();
 
 		const createDryRunMutationVariables = {
 			input: {
 				projectId: $selectedProject?.id,
-				argoWorkflow: modifiedWorkflowTemplate
+				argoWorkflow: modifiedWorkflowTemplate,
+				nodeName: selectedNodeName
 			}
 		};
 
@@ -383,7 +412,25 @@
 		}
 	}
 
-	$: console.log('inputdata', inputdata);
+	let availableNodes: Resource[] = [];
+	let loadingAvailableNodes = true;
+	onMount(async () => {
+		try {
+			const allResourcesResponse: { resources: Resource[] } =
+				await requestGraphQLClient(allResourcesQuery);
+			availableNodes = allResourcesResponse.resources;
+			loadingAvailableNodes = false;
+		} catch (error) {
+			console.error('Error getting available nodes: ', error);
+			loadingAvailableNodes = false;
+			availableNodes = []; // fail safe: empty array
+		}
+	});
+
+	let selectedNodeName = 'default';
+	let dryRunNamePrefix = '';
+
+	// $: console.log('inputdata', inputdata);
 </script>
 
 {#if $modalStore[0]}

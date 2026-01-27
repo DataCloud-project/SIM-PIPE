@@ -75,7 +75,7 @@ affinity: {}
 
 # This will create a ServiceMonitor Custom Resource indicating the prometheus operator what to scrape.
 metrics:
-  enabled: false
+  enabled: true
   interval: 30s
   scrapeTimeout: 30s
   # This will allow you to specify relabelings on the metrics before ingestion. E.g. to use the kubernetes monitoring

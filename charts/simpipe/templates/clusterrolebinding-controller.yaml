@@ -1,0 +1,13 @@
+# Binds the ClusterRole to the simpipe-controller service account for cluster-scoped access
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ include "simpipeController.serviceAccountName" . }}-controller-clusterrolebinding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ include "simpipeController.serviceAccountName" . }}-controller-clusterrole
+subjects:
+- kind: ServiceAccount
+  name: {{ include "simpipeController.serviceAccountName" . }}
+  namespace: {{ .Release.Namespace }}
