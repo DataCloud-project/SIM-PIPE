@@ -21,6 +21,13 @@ log_message() {
  echo "$(date +'%-Y-%-m-%-d %H:%M:%S') [$1] $2"
 }
 
+# Ensure Debian host bridge, NAT, and qemu-ifup/ifdown are configured.
+# This script is idempotent and safe to run multiple times.
+if [ -x /app/setup-debian-host.sh ]; then
+  log_message "INFO" "Running Debian host network setup script..."
+  /app/setup-debian-host.sh || log_message "ERROR" "setup-debian-host.sh failed"
+fi
+
 select_os_image() {
  log_message "INFO" "Selecting pre-downloaded OS image for $OS..."
  case "$OS" in
@@ -71,6 +78,9 @@ packages:
   - docker.io            
 
 runcmd:
+  # Set ubuntu password
+  - echo "ubuntu:ubuntu" | chpasswd
+
   # - apt-get install -y docker.io
   - systemctl enable docker
   - systemctl start docker
@@ -85,15 +95,15 @@ runcmd:
   - curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION=v1.33.4+k3s1 INSTALL_K3S_EXEC="agent --docker" K3S_URL=${K3S_SERVER_URL} K3S_TOKEN=${K3S_TOKEN} sh -
 EOF
 
-IP_ADDR=${9:-"192.168.100.11"}
+IP_ADDR=${9:-"172.31.0.11"}
 
 NODE_NUM=$(echo "$NODE_NAME" | grep -o '[0-9]*$')
 if [ -n "$NODE_NUM" ]; then
-  IP_ADDR="192.168.100.${NODE_NUM}"
+  IP_ADDR="172.31.0.${NODE_NUM}"
   log_message "DEBUG" "Node name has numeric suffix → using IP ${IP_ADDR}"
 else
   HASH_NUM=$(echo -n "$NODE_NAME" | cksum | awk '{print $1 % 200 + 20}')
-  IP_ADDR="192.168.100.${HASH_NUM}"
+  IP_ADDR="172.31.0.${HASH_NUM}"
   log_message "DEBUG" "Node name has no numeric suffix → hash(${NODE_NAME})=${HASH_NUM}, IP=${IP_ADDR}"
 fi
 
@@ -117,7 +127,7 @@ network:
       dhcp4: false
       addresses:
         - ${IP_ADDR}/24
-      gateway4: 192.168.100.1
+      gateway4: 172.31.0.1
       nameservers:
         addresses:
           - 8.8.8.8
@@ -139,6 +149,22 @@ cp "$CLOUD_INIT_ISO" "/host-tmp-vm/${CLOUD_INIT_ISO}"
 # Step 3: RUN QEMU with linux bridge
 log_message "INFO" "Starting QEMU for node ${NODE_NAME}"
 
+# QEMU_COMMAND="
+# nsenter -t 1 -m -u --net=/host/proc/1/ns/net -i -p -- \
+# /usr/bin/qemu-system-x86_64 \
+#   -m "${MEMORY}" -smp "${CPUS}" \
+#   -drive file="/host-tmp-vm/${QCOW2_IMAGE_FILE}",if=virtio,cache=directsync,discard=unmap,format=qcow2,aio=native \
+#   -drive file="/host-tmp-vm/${CLOUD_INIT_ISO}",format=raw,if=virtio,cache=writeback,aio=threads \
+#   -netdev tap,id=mynet0,ifname="${TAP_INTERFACE}",script=/etc/qemu-ifup,downscript=/etc/qemu-ifdown \
+#   -device virtio-net-pci,netdev=mynet0 \
+#   -machine q35,accel=kvm,usb=off \
+#   -cpu host \
+#   -enable-kvm \
+#   -nographic \
+#   -nodefaults \
+#   -no-reboot -no-shutdown \
+#   -serial mon:stdio
+# "
 QEMU_COMMAND="
 nsenter -t 1 -m -u --net=/host/proc/1/ns/net -i -p -- \
 /usr/bin/qemu-system-x86_64 \
@@ -158,7 +184,6 @@ nsenter -t 1 -m -u --net=/host/proc/1/ns/net -i -p -- \
   -pidfile /host-tmp-vm/qemu-${NODE_NAME}.pid
 "
 log_message "DEBUG" "QEMU command: ${QEMU_COMMAND}"
-
 eval "$QEMU_COMMAND"
 
 BOOT_START_TIME=$(date +%s)

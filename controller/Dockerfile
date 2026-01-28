@@ -38,6 +38,15 @@ COPY src/emulation/scripts/shutdown-kube-node.sh /app/shutdown-kube-node.sh
 COPY src/emulation/scripts/create-kube-node_qemu.sh /app/create-kube-node_qemu.sh
 COPY src/emulation/scripts/create-kube-node_wsl.sh /app/create-kube-node_wsl.sh
 COPY src/emulation/scripts/setup-wsl-host.sh /app/setup-wsl-host.sh
+COPY src/emulation/scripts/setup-debian-host.sh /app/setup-debian-host.sh
+
+# Ensure emulation helper scripts are executable
+RUN chmod +x \
+    /app/shutdown-kube-node.sh \
+    /app/create-kube-node_qemu.sh \
+    /app/create-kube-node_wsl.sh \
+    /app/setup-wsl-host.sh \
+    /app/setup-debian-host.sh
 
 EXPOSE 9000
 CMD ["--experimental-specifier-resolution=node", "index.js"]
