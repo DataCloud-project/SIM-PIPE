@@ -113,33 +113,34 @@ export async function getDPVJobResultPolling(
   const objectName = pathParts.join('/');
 
   const artifactText = await getObjectText(objectName, bucketName);
+  console.log('Fetched artifact text for DPV processing:', artifactText);
   // TODO: remove when moose api error is resolved
-  const result = {
-    job_id: '7fec2e67-c6c8-4033-9490-1381a928be39',
-    status: 'completed',
-    created_at: '2026-01-22T17:28:13.615831+00:00',
-    updated_at: '2026-01-22T17:28:52.218513+00:00',
-    result: {
-      results: [{
-        task_id: 'task-1',
-        entities: [{
-          start: 32, end: 36, text: '76kg', type_id: 'dpv-pd:Weight', confidence: 0.531_791_907_514_450_9,
-        }, {
-          start: 48, end: 53, text: '99bpm', type_id: 'dpv-pd:PhysicalHealth', confidence: 0.543_209_876_543_209_8,
-        }, {
-          start: 69, end: 75, text: '131/88', type_id: 'dpv-pd:PhysicalHealth', confidence: 0.514_124_293_785_310_8,
-        }, {
-          start: 87, end: 91, text: '5254', type_id: 'dpv:ActivityMonitoring', confidence: 0.560_283_687_943_262_3,
-        }, {
-          start: 125, end: 133, text: 'John Doe', type_id: 'dpv:Patient', confidence: 0.518_918_918_918_918_8,
-        }],
-      }],
-    },
-  };
-  return result;
+  // const result = {
+  //   job_id: '7fec2e67-c6c8-4033-9490-1381a928be39',
+  //   status: 'completed',
+  //   created_at: '2026-01-22T17:28:13.615831+00:00',
+  //   updated_at: '2026-01-22T17:28:52.218513+00:00',
+  //   result: {
+  //     results: [{
+  //       task_id: 'task-1',
+  //       entities: [{
+  //         start: 32, end: 36, text: '76kg', type_id: 'dpv-pd:Weight', confidence: 0.531_791_907_514_450_9,
+  //       }, {
+  //         start: 48, end: 53, text: '99bpm', type_id: 'dpv-pd:PhysicalHealth', confidence: 0.543_209_876_543_209_8,
+  //       }, {
+  //         start: 69, end: 75, text: '131/88', type_id: 'dpv-pd:PhysicalHealth', confidence: 0.514_124_293_785_310_8,
+  //       }, {
+  //         start: 87, end: 91, text: '5254', type_id: 'dpv:ActivityMonitoring', confidence: 0.560_283_687_943_262_3,
+  //       }, {
+  //         start: 125, end: 133, text: 'John Doe', type_id: 'dpv:Patient', confidence: 0.518_918_918_918_918_8,
+  //       }],
+  //     }],
+  //   },
+  // };
+  // return result;
   // Start Moose DPV job with the artifact text
   const jobId = await makeDPVCall(artifactText);
-
+  console.log('Started DPV job with ID:', jobId);
   let attempt = 0;
 
   // Simple polling loop: re-check status every pollingIntervalMs while it's "processing".

@@ -52,17 +52,17 @@
 		overflow-x: auto;
 		overflow-y: visible;
 		padding: 20px;
+		display: flex;
+		justify-content: center;
 	}
 	
 	.mermaid {
 		width: max-content;
-		min-width: 100%;
 		height: auto;
 	}
 
 	/* Force larger SVG size */
 	:global(.mermaid svg) {
-		min-width: 800px !important;
 		width: auto !important;
 		height: auto !important;
 		max-width: none !important;

@@ -242,13 +242,6 @@ export async function getMooseReportForArtifact(
   const reportKey = `${objectName}${MOOSE_REPORT_SUFFIX}`;
 
   try {
-    // eslint-disable-next-line no-console
-    console.log('[Moose] Fetching report from Minio', {
-      bucketName,
-      objectName,
-      reportKey,
-    });
-
     const stream = await minioInternalClient.getObject(bucketName, reportKey);
 
     return await new Promise<string>((resolve, reject) => {
@@ -275,13 +268,6 @@ export async function getMooseReportForArtifact(
     });
   } catch (error: any) {
     if (error?.code === 'NoSuchKey' || error?.code === 'NotFound') {
-      // Report simply not there yet
-      // eslint-disable-next-line no-console
-      console.log('[Moose] No report object found for artifact', {
-        bucketName,
-        objectName,
-        reportKey,
-      });
       return undefined;
     }
 

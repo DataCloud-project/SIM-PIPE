@@ -425,6 +425,28 @@
 		<article>{$modalStore[0].body ?? '(body missing)'}</article>
 		<form class="modal-form {cForm}">
 			{#if templateTaskList.length > 0}
+				{#if loadingAvailableNodes}
+					<p>Loading nodes...</p>
+				{:else if availableNodes.length === 0}
+					<p>No nodes available</p>
+				{:else}
+					<label for="node-select">Select node to execute the dry run:</label>
+					<select id="node-select" bind:value={selectedNodeName}>
+						<option value="default" disabled selected>Select a node...</option>
+						{#each availableNodes as node}
+							<option
+								value={node.name}
+								disabled={node.status?.toLowerCase() === 'shutdown'}
+								class:option-disabled={node.status?.toLowerCase() === 'shutdown'}
+								title={node.status?.toLowerCase() === 'shutdown'
+									? 'Node is shutdown and cannot be selected'
+									: ''}
+							>
+								{node.name} - {node.os} ({node.cpus} CPUs, {node.memory} MB, {node.status})
+							</option>
+						{/each}
+					</select>
+				{/if}
 				{#each templateTaskList as task, i}
 					<div class="ml-5">
 						<!-- svelte-ignore a11y-label-has-associated-control -->

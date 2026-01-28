@@ -874,12 +874,6 @@ const resolvers = {
 
       try {
         const report = await getMooseReportForArtifact(key, bucketName as string | undefined);
-        // eslint-disable-next-line no-console
-        console.log('[Moose] Resolved mooseReport for artifact', {
-          key,
-          bucketName,
-          hasReport: report !== undefined,
-        });
         return report ?? undefined;
       } catch (error) {
         // eslint-disable-next-line no-console

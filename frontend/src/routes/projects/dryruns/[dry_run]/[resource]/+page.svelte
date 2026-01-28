@@ -657,15 +657,15 @@
 					><ZoomInIcon /></button
 				>
 			</h1>
-			<div class="grid grid-flow-rows grid-cols-1 items-center w-full p-3">
+			<div class="flex content-center grid grid-flow-rows grid-cols-1 items-center w-full p-3">
 				<div>
 					<Mermaid {diagram} />
 				</div>
 				<div>
 					<Legend />
 				</div>
-				<div class="p-3">
-					<table class="table table-interactive">
+				<div class="p-3 table-wrapper">
+					<table class="table table-interactive p-1">
 						<thead>
 							<tr>
 								<th>Name</th>
@@ -680,33 +680,33 @@
 							</tr>
 						</thead>
 						<tbody>
-							{#each reactiveStepsList || [] as step}
-								<!-- eslint-disable-next-line @typescript-eslint/explicit-function-return-type -->
-								<tr on:click={() => stepOnClick(step.displayName)}>
-									<td style="width:12%">{step.displayName}</td>
-									<td style="width:14%">
+								{#each reactiveStepsList || [] as step}
+									<!-- eslint-disable-next-line @typescript-eslint/explicit-function-return-type -->
+									<tr on:click={() => stepOnClick(step.displayName)}>
+										<td>{step.displayName}</td>
+										<td>
 										{step.startedAt ?? '-'}
-									</td>
-									<td style="width:14%">
+										</td>
+										<td>
 										{step.finishedAt ?? '-'}
-									</td>
-									<td style="width:8%">{displayStepDuration(step)}</td>
-									<td style="width:10%">
+										</td>
+										<td>{displayStepDuration(step)}</td>
+										<td>
 										{#if step.carbontracker?.fetchCarbontrackerData?.co2eq}
 											{step.carbontracker.fetchCarbontrackerData.co2eq.toFixed(3)}
 										{:else}
 											-
 										{/if}
 									</td>
-									<td style="width:10%">
+									<td>
 										{#if step.carbontracker?.fetchCarbontrackerData?.energy}
 											{step.carbontracker.fetchCarbontrackerData.energy.toFixed(6)}
 										{:else}
 											-
 										{/if}
 									</td>
-									<td style="width:8%">{step.phase}</td>
-									<td style="width:10%">
+									<td>{step.phase}</td>
+									<td>
 										{#if step.outputArtifacts?.length > 1}
 											{#each step.outputArtifacts as artifact}
 												{#if artifact.name !== 'main-logs'}
@@ -717,7 +717,7 @@
 											<p>-</p>
 										{/if}
 									</td>
-									<td style="width:15%">
+									<td>
 										{#if step.outputArtifacts?.length > 1 }
 										<button
 											type="button"
@@ -744,7 +744,7 @@
 					</table>
 				</div>
 			</div>
-			<div class="grid grid-rows-4 grid-cols-2 gap-5 auto-rows-min">
+			<div class="grid grid-rows-4 grid-cols-2 gap-5 auto-rows-min p2">
 				<!-- if the logs are empty, remove logs sections -->
 				{#if Object.values(logs).join('') !== ''}
 					<div class="card mainlogcard row-span-4 p-5">
@@ -787,7 +787,7 @@
 				{/if}
 
 				<div class="card resourcecard">
-					<table class="table table-interactive w-full">
+					<table class="table table-interactive w-full p-4">
 						<thead>
 							<tr>
 								<th>Resource</th>
@@ -900,8 +900,7 @@
 		max-height: 50vh;
 	}
 	.card.resourcecard {
-		overflow-y: scroll;
-		overflow-x: scroll;
+		overflow: visible;
 		min-height: 25rem;
 		max-height: fit-content;
 	}
@@ -953,21 +952,38 @@
 		max-height: fit-content;
 	}
 
-	.table.table {
-        max-height: 80vh;
-        overflow-y: auto;
-        overflow-x: scroll;
-        display: block;
-        border-collapse: collapse;
-        margin-left: auto;
-        margin-right: auto;
-        table-layout: auto;
-        width: 100%;
-    }
-    thead {
-        position: sticky;
-        top: 0;
-    }
+	.table.table-interactive {
+			width: 100%;
+			border-collapse: collapse;
+			table-layout: fixed;
+	}
+
+	/* Make the small Resource/Metrics table use the full card width with two balanced columns */
+	.card.resourcecard .table.table-interactive th:first-child,
+	.card.resourcecard .table.table-interactive td:first-child {
+			width: 40%;
+	}
+	.card.resourcecard .table.table-interactive th:last-child,
+	.card.resourcecard .table.table-interactive td:last-child {
+			width: 60%;
+	}
+	.card.resourcecard .table.table-interactive thead {
+			position: static;
+	}
+
+	.table-wrapper {
+			width: 100%;
+			max-height: 80vh;
+			overflow-y: auto;
+			overflow-x: auto;
+	}
+
+	.table.table-interactive thead {
+			position: sticky;
+			top: 0;
+			background-color: inherit;
+			z-index: 1;
+	}
 
 	/* Make Moose entities table always span full modal width */
 	.moose-modal-body table {
