@@ -1,8 +1,10 @@
 - name: Install K3S
   hosts: all
   vars:
-    # 1.27.4 is broken with docker, wait for 1.27.5 and put it to false or remove the line
-    k3s_release_version: v1.27.3+k3s1
+    # Use the latest stable K3s release from the default channel.
+    # This avoids incompatibilities between older K3s binaries and
+    # newer Docker API versions (e.g. Docker requiring client API >= 1.44).
+    k3s_release_version: false
     k3s_build_cluster: false
     k3s_install_hard_links: true
     k3s_become: true
@@ -15,6 +17,18 @@
       disable:
         - traefik
       write-kubeconfig-mode: '0640'
+  pre_tasks:
+    - name: Override k3s_ensure_directories_exist to avoid dirname on omit
+      ansible.builtin.set_fact:
+        k3s_ensure_directories_exist:
+          - name: Config directory
+            path: "/etc/rancher/k3s"
+          - name: Config.yaml.d directory
+            path: "/etc/rancher/k3s/config.yaml.d"
+          - name: Systemd unit file directory
+            path: "/etc/systemd/system"
+          - name: Data directory
+            path: "/var/lib/rancher/k3s"
   roles:
     - xanmanning.k3s
   tasks:

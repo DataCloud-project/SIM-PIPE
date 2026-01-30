@@ -1,54 +1,188 @@
 #!/usr/bin/env python3
 
 import argparse
+import getpass
+import json
 import os
 import platform
+import pwd
 import re
 import subprocess
 import sys
+import tempfile
 
 from checklist import (check_ansible_installed, check_debian_or_ubuntu,
-                       check_helm_diff_installed, check_if_installed,
-                       check_simpipe_deployment_presence,
-                       check_tools_installed)
+                      check_helm_diff_installed, check_if_installed,
+                      check_simpipe_deployment_presence,
+                      check_tools_installed)
+
+
+def get_current_username():
+    """Return the current username in a way that works in WSL2 and non-login shells.
+
+    os.getlogin() relies on a controlling terminal and can fail in WSL2 or when
+    there is no utmp entry (for example when started from some IDEs). This
+    helper falls back to environment-based and uid-based lookups.
+    """
+    try:
+        return os.getlogin()
+    except OSError:
+        # Fallback to getpass (LOGNAME/USER/...) and then to pwd lookup
+        try:
+            return getpass.getuser()
+        except Exception:
+            return pwd.getpwuid(os.getuid()).pw_name
+
+
+def get_current_groups():
+    """Retrieve the group names a user is a member of by parsing /etc/group."""
+    groups = set()
+    username = get_current_username()
+    
+    # First, get the primary group from /etc/passwd
+    try:
+        user_info = pwd.getpwnam(username)
+        primary_gid = user_info.pw_gid
+        # Get primary group name from /etc/group
+        with open('/etc/group', 'r') as f:
+            for line in f:
+                parts = line.strip().split(':')
+                if len(parts) >= 3 and int(parts[2]) == primary_gid:
+                    groups.add(parts[0])
+                    break
+    except Exception as e:
+        print(f"⚠️ Warning: Could not get primary group: {e}")
+    
+    # Then get supplementary groups from /etc/group
+    with open('/etc/group', 'r') as f:
+        for line in f:
+            parts = line.strip().split(':')
+            if len(parts) < 4:
+                continue
+            group_name = parts[0]
+            members = parts[3]
+            if members:  # Check if the members field is not empty
+                # Split by comma and strip any whitespace or quotes
+                member_list = [m.strip().strip("'\"[]") for m in members.split(',')]
+                if username in member_list:
+                    groups.add(group_name)
+    
+    return groups
 
 
 def install_tools_debian():
-
+    # Ensure /etc/rancher/k3s/ and config.yaml.d are accessible
+    k3s_dir = "/etc/rancher/k3s"
+    config_dir = os.path.join(k3s_dir, "config.yaml.d")
+    for d in [k3s_dir, config_dir]:
+        if os.path.exists(d) and not os.access(d, os.R_OK | os.X_OK):
+            print(f"ℹ️ Fixing permissions for {d} (requires sudo)...")
+            subprocess.run(["sudo", "chmod", "a+rx", d], check=True)
+            print(f"✅ Permissions for {d} set to a+rx.")
+    # Ensure k3s kubeconfig is readable by the current user
+    kubeconfig_path = "/etc/rancher/k3s/k3s.yaml"
+    if os.path.exists(kubeconfig_path):
+        try:
+            with open(kubeconfig_path, "r") as f:
+                pass
+        except PermissionError:
+            print(f"ℹ️ Fixing permissions for {kubeconfig_path} (requires sudo)...")
+            subprocess.run(["sudo", "chmod", "644", kubeconfig_path], check=True)
+            print(f"✅ Permissions for {kubeconfig_path} set to 644.")
     if not check_ansible_installed():
         install_ansible_via_pip()
 
     # install galaxy requirements for ansible
     print("⏳ Installing Ansible galaxy requirements...")
+    os.makedirs("./ansible/roles", exist_ok=True)
     subprocess.run(
-        ["sudo", "ansible-galaxy", "install", "-r", "./ansible/requirements.yaml"],
+        [
+            "ansible-galaxy", "install",
+            "-r", "./ansible/requirements.yaml",
+            "--roles-path", "./ansible/roles"
+        ],
         check=True,
     )
 
-    # Get current username
-    username = os.getlogin()
+    # Get current username (robust in WSL2 / non-login shells)
+    username = get_current_username()
     if re.match(r"^[a-zA-Z0-9_-]+$", username) is None:
         print(
             "❌ Your username contains invalid characters. Please use only alphanumeric characters and underscores."
         )
         sys.exit(1)
 
+    # Check if user is already in docker group
+    current_groups = get_current_groups()
+    if "docker" not in current_groups:
+        print(f"ℹ️ Adding user '{username}' to docker group...")
+        
+        # First, check if docker group exists, create it if not
+        try:
+            subprocess.run(["sudo", "getent", "group", "docker"], 
+                         check=True, capture_output=True)
+        except subprocess.CalledProcessError:
+            print("ℹ️ Docker group doesn't exist, creating it...")
+            subprocess.run(["sudo", "groupadd", "docker"], check=True)
+        
+        # Add user to docker group
+        subprocess.run(["sudo", "usermod", "-aG", "docker", username], check=True)
+        
+        # Verify the group membership was updated
+        try:
+            # Use getent to verify the user is in the docker group
+            result = subprocess.run(
+                ["sudo", "getent", "group", "docker"],
+                capture_output=True,
+                text=True,
+                check=True
+            )
+            if username in result.stdout:
+                print(f"✅ User '{username}' successfully added to docker group.")
+            else:
+                print(f"⚠️ Warning: User '{username}' may not have been added to docker group.")
+        except subprocess.CalledProcessError as e:
+            print(f"⚠️ Warning: Could not verify docker group: {e}")
+        
+        print("ℹ️ You must log out and log back in (or restart your WSL/terminal session) for group changes to take effect.")
+    else:
+        print(f"✅ User '{username}' is already in docker group.")
+
     # install simpipe using ansible
     print("⏳ Installing simpipe...")
-    subprocess.run(
-        [
-            "sudo",
-            "ansible-playbook",
-            "-i",
-            "localhost,",
-            "-c",
-            "local",
-            "-e",
-            f"docker_users=['{username}']",
-            "./ansible/install-everything.yaml",
-        ],
-        check=True,
-    )
+    extra_vars = {"docker_users": [username]}
+    vars_file = None
+    try:
+        with tempfile.NamedTemporaryFile("w", delete=False) as tf:
+            json.dump(extra_vars, tf)
+            tf.flush()
+            vars_file = tf.name
+
+        kgp
+        env = os.environ.copy()
+        env["ANSIBLE_ALLOW_BROKEN_CONDITIONALS"] = "True"
+        subprocess.run(
+            [
+                "ansible-playbook",
+                "-i",
+                "localhost,",
+                "-c",
+                "local",
+                "-b",
+                "-K",
+                "-e",
+                f"@{vars_file}",
+                "./ansible/install-everything.yaml",
+            ],
+            check=True,
+            env=env,
+        )
+    finally:
+        if vars_file:
+            try:
+                os.unlink(vars_file)
+            except Exception:
+                pass
 
     # Install helm diff for the current user
     # (ansible will install it as well, but for root)
@@ -82,14 +216,14 @@ def install_tools_mac():
 
 
 def install_or_upgrade_simpipe():
-
     is_deployed = check_simpipe_deployment_presence()
 
     chart = os.path.join(os.path.dirname(__file__), "charts", "simpipe")
     values = os.path.join(os.path.dirname(__file__), "charts", "simpipe", "values.yaml")
-    # chart = "oci://ghcr.io/datacloud-project/simpipe"
 
     if is_deployed:
+        env = os.environ.copy()
+        env.setdefault("HELM_NO_PLUGINS", "1")
 
         # check whether the chart needs to be updated using helm diff
         try:
@@ -108,6 +242,7 @@ def install_or_upgrade_simpipe():
                 ],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
+                env=env,
             )
         except subprocess.CalledProcessError as e:
             print(f"❌ Error while checking simpipe deployment: {e}")
@@ -120,7 +255,17 @@ def install_or_upgrade_simpipe():
             try:
                 print("⬆️ upgrading simpipe")
                 subprocess.check_call(
-                    ["helm", "upgrade", "simpipe", "--wait", chart, "-f", values, "--no-hooks"]
+                    [
+                        "helm",
+                        "upgrade",
+                        "simpipe",
+                        "--wait",
+                        chart,
+                        "-f",
+                        values,
+                        "--no-hooks",
+                    ],
+                    env=env,
                 )
             except subprocess.CalledProcessError as e:
                 print(f"❌ Error while upgrading simpipe: {e}")
@@ -128,8 +273,11 @@ def install_or_upgrade_simpipe():
     else:
         try:
             print("🌈 installing simpipe")
+            env = os.environ.copy()
+            env.setdefault("HELM_NO_PLUGINS", "1")
             subprocess.check_call(
-                ["helm", "install", "simpipe", "--wait", chart, "-f", values]
+                ["helm", "install", "simpipe", "--wait", chart, "-f", values],
+                env=env,
             )
         except subprocess.CalledProcessError as e:
             print(f"❌ Error while installing simpipe: {e}")
@@ -144,8 +292,9 @@ def install_helm_diff_plugin():
         )
         print("🎉 helm-diff plugin installed successfully.")
     except subprocess.CalledProcessError as e:
-        print(f"❌ Error while installing helm-diff plugin: {e}")
-        sys.exit(1)
+        print(f"⚠️ helm-diff plugin could not be installed (optional): {e}")
+        print("   SIM-PIPE can still be installed and used; the plugin is only")
+        print("   needed for optional 'helm diff' upgrade previews.")
 
 
 def install_ansible_via_pip():
@@ -168,30 +317,28 @@ def install_ansible_via_pip():
         )
 
         # Install Ansible
-        subprocess.run(
+        result = subprocess.run(
             ["sudo", "pip3", "install", "ansible"],
-            check=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
         )
 
+        if result.returncode != 0:
+            stderr = result.stderr or ""
+            if "externally-managed-environment" in stderr or "PEP 668" in stderr:
+                print("ℹ️ Python environment is externally managed; retrying Ansible install with --break-system-packages.")
+                subprocess.run(
+                    ["sudo", "pip3", "install", "--break-system-packages", "ansible"],
+                    check=True,
+                )
+            else:
+                raise subprocess.CalledProcessError(result.returncode, result.args, output=result.stdout, stderr=result.stderr)
+
         print("✅ Ansible installed successfully.")
-    except subprocess.CalledProcessError:
-        print("❌ Error occurred while installing Ansible.")
+    except subprocess.CalledProcessError as e:
+        print(f"❌ Error occurred while installing Ansible: {e}")
         sys.exit(1)
-
-
-def get_current_groups():
-    """Retrieve the group names a user is a member of by parsing /etc/group."""
-    groups = set()
-    username = os.getlogin()
-    with open('/etc/group', 'r') as f:
-        for line in f:
-            parts = line.strip().split(':')
-            if len(parts) < 4:
-                continue
-            group_name, _, _, members = parts
-            if username in members.split(','):
-                groups.add(group_name)
-    return groups
 
 
 def main(force=False):
@@ -205,9 +352,16 @@ def main(force=False):
             currentuser_groups_before_install = get_current_groups()
             install_tools_debian()
             currentuser_groups_after_install = get_current_groups()
-            if currentuser_groups_before_install != currentuser_groups_after_install:
-                print("ℹ️ You may need to logout and login again to use SIM-PIPE, Docker, and Kubernetes.")
-
+            
+            # Check if docker group was added
+            if "docker" not in currentuser_groups_before_install and "docker" in currentuser_groups_after_install:
+                print("\n⚠️ IMPORTANT: You have been added to the docker group.")
+                print("   You must log out and log back in (or restart your WSL/terminal session)")
+                print("   for the group changes to take effect.")
+                print("\n   After logging back in, you can verify with:")
+                print("   $ groups | grep docker")
+                print("   or")
+                print("   $ grep docker /etc/group")
         else:
             print("🫤 Sorry, only Debian or Ubuntu are supported for now.")
             print("You can use the checklist.py script to check your environment,")

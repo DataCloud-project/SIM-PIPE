@@ -1,0 +1,54 @@
+---
+- include_role:
+    name: andrewrothstein.unarchivedeps
+- name: resolve platform specific vars
+  include_vars: '{{ item }}'
+  with_first_found:
+    - files:
+        - '{{ ansible_distribution }}-{{ ansible_distribution_release }}.yml'
+        - '{{ ansible_distribution }}.yml'
+        - '{{ ansible_os_family }}.yml'
+      skip: true
+      paths:
+        - '{{ role_path }}/vars'
+- name: check for install at {{ argo_exe }}
+  stat:
+    path: '{{ argo_exe }}'
+  changed_when: false
+  register: argo_binary
+- when: not argo_binary.stat.exists
+  block:
+    - name: downloading {{ argo_url }} to {{ argo_exe_gz }}
+      become: true
+      become_user: root
+      get_url:
+        url: '{{ argo_url }}'
+        dest: '{{ argo_exe_gz }}'
+        checksum: '{{ argo_checksum }}'
+        mode: 0644
+    - name: gunzip...
+      become: true
+      become_user: root
+      command: gunzip {{ argo_exe_gz }}
+      args:
+        creates: '{{ argo_exe }}'
+    - name: chmod 755 {{ argo_exe }}
+      become: true
+      become_user: root
+      file:
+        path: '{{ argo_exe }}'
+        mode: 0755
+  always:
+    - name: rm {{ argo_exe_gz }}
+      become: true
+      become_user: root
+      file:
+        path: '{{ argo_exe_gz }}'
+        state: absent
+- name: linking {{ argo_link }} to {{ argo_exe }}
+  become: true
+  become_user: root
+  file:
+    src: '{{ argo_exe }}'
+    dest: '{{ argo_link }}'
+    state: link

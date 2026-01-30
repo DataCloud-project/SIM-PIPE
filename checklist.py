@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import json
+import os
 import re
 import shutil
 import subprocess
@@ -227,7 +228,6 @@ def check_tools_installed(silent=False):
             check_kubectl_installed(silent),
             check_docker_installed(silent),
             check_helm_installed(silent),
-            check_helm_diff_installed(silent),
             check_argo_installed(silent),
         ]
     )
@@ -235,8 +235,11 @@ def check_tools_installed(silent=False):
 
 def check_simpipe_deployment_presence():
     try:
+        env = dict(os.environ)
+        env.setdefault("HELM_NO_PLUGINS", "1")
         output = subprocess.check_output(
-            ["helm", "list", "--deployed", "--output", "json"]
+            ["helm", "list", "--deployed", "--output", "json"],
+            env=env,
         )
         deployments = json.loads(output)
         for deployment in deployments:

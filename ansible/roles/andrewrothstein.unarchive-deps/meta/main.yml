@@ -1,0 +1,38 @@
+---
+galaxy_info:
+  author: Andrew Rothstein
+  description: role to install deps needed for the Ansible unarchive module
+  company: BlackRock
+  license:
+    - MIT
+  min_ansible_version: 2.0
+  platforms:
+    - name: Alpine
+      version:
+        - all
+    - name: Archlinux
+      version:
+        - all
+    - name: Debian
+      versions:
+        - bookworm
+        - bullseye
+    - name: EL
+      versions:
+        - 8
+        - 9
+    - name: Fedora
+      versions:
+        - 37
+        - 38
+    - name: Ubuntu
+      versions:
+        - focal
+        - jammy
+    - name: MacOSX
+      versions:
+        - all
+  galaxy_tags:
+    - archive
+    - unarchive
+    - packaging
