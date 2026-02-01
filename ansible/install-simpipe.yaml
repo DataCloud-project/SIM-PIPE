@@ -14,6 +14,12 @@
         path: ../charts/simpipe/Chart.yaml
       register: simpipe_chart_local
 
+    - name: Remove potentially broken helm-diff plugin for root
+      ansible.builtin.file:
+        path: /root/.local/share/helm/plugins/helm-diff
+        state: absent
+
+
     - name: Install SIM-PIPE Helm chart (local if available, else remote)
       kubernetes.core.helm:
         name: simpipe
@@ -27,4 +33,11 @@
       environment:
         HELM_NO_PLUGINS: "1"
         KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+
+    - name: Set secure permissions on k3s kubeconfig
+      ansible.builtin.file:
+        path: /etc/rancher/k3s/k3s.yaml
+        owner: "{{ ansible_env.SUDO_USER | default(ansible_user_id) }}"
+        group: "{{ ansible_env.SUDO_USER | default(ansible_user_id) }}"
+        mode: '0600'
 

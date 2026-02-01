@@ -237,6 +237,7 @@ def check_simpipe_deployment_presence():
     try:
         env = dict(os.environ)
         env.setdefault("HELM_NO_PLUGINS", "1")
+        env.setdefault("KUBECONFIG", "/etc/rancher/k3s/k3s.yaml")
         output = subprocess.check_output(
             ["helm", "list", "--deployed", "--output", "json"],
             env=env,

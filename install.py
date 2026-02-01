@@ -79,16 +79,13 @@ def install_tools_debian():
             print(f"ℹ️ Fixing permissions for {d} (requires sudo)...")
             subprocess.run(["sudo", "chmod", "a+rx", d], check=True)
             print(f"✅ Permissions for {d} set to a+rx.")
-    # Ensure k3s kubeconfig is readable by the current user
+    # Ensure k3s kubeconfig has secure permissions
     kubeconfig_path = "/etc/rancher/k3s/k3s.yaml"
     if os.path.exists(kubeconfig_path):
-        try:
-            with open(kubeconfig_path, "r") as f:
-                pass
-        except PermissionError:
-            print(f"ℹ️ Fixing permissions for {kubeconfig_path} (requires sudo)...")
-            subprocess.run(["sudo", "chmod", "644", kubeconfig_path], check=True)
-            print(f"✅ Permissions for {kubeconfig_path} set to 644.")
+        print(f"ℹ️ Setting secure permissions for {kubeconfig_path}...")
+        subprocess.run(["sudo", "chown", f"{get_current_username()}:{get_current_username()}", kubeconfig_path], check=True)
+        subprocess.run(["sudo", "chmod", "600", kubeconfig_path], check=True)
+        print(f"✅ Permissions for {kubeconfig_path} set to 600 and owner to {get_current_username()}.")
     if not check_ansible_installed():
         install_ansible_via_pip()
 
@@ -106,7 +103,7 @@ def install_tools_debian():
 
     # Get current username (robust in WSL2 / non-login shells)
     username = get_current_username()
-    if re.match(r"^[a-zA-Z0-9_-]+$", username) is None:
+    if re.match(r"^[a-zA-Z0-9_.-]+$", username) is None:
         print(
             "❌ Your username contains invalid characters. Please use only alphanumeric characters and underscores."
         )
@@ -150,6 +147,19 @@ def install_tools_debian():
 
     # install simpipe using ansible
     print("⏳ Installing simpipe...")
+    
+    # Ensure secrets are created before installing the chart
+    from secrets_manager import ensure_secrets
+    env_secrets = os.environ.copy()
+    if "KUBECONFIG" not in env_secrets:
+        env_secrets["KUBECONFIG"] = "/etc/rancher/k3s/k3s.yaml"
+    
+    try:
+        ensure_secrets(env=env_secrets)
+    except Exception as e:
+        print(f"⚠️ Warning: Failed to ensure secrets: {e}")
+
+
     extra_vars = {"docker_users": [username]}
     vars_file = None
     try:
@@ -158,7 +168,6 @@ def install_tools_debian():
             tf.flush()
             vars_file = tf.name
 
-        kgp
         env = os.environ.copy()
         env["ANSIBLE_ALLOW_BROKEN_CONDITIONALS"] = "True"
         subprocess.run(
@@ -224,6 +233,7 @@ def install_or_upgrade_simpipe():
     if is_deployed:
         env = os.environ.copy()
         env.setdefault("HELM_NO_PLUGINS", "1")
+        env.setdefault("KUBECONFIG", "/etc/rancher/k3s/k3s.yaml")
 
         # check whether the chart needs to be updated using helm diff
         try:
@@ -275,6 +285,7 @@ def install_or_upgrade_simpipe():
             print("🌈 installing simpipe")
             env = os.environ.copy()
             env.setdefault("HELM_NO_PLUGINS", "1")
+            env.setdefault("KUBECONFIG", "/etc/rancher/k3s/k3s.yaml")
             subprocess.check_call(
                 ["helm", "install", "simpipe", "--wait", chart, "-f", values],
                 env=env,
@@ -284,17 +295,7 @@ def install_or_upgrade_simpipe():
 
 
 def install_helm_diff_plugin():
-    try:
-        print("⏳ Installing helm-diff plugin...")
-        subprocess.run(
-            ["helm", "plugin", "install", "https://github.com/databus23/helm-diff"],
-            check=True,
-        )
-        print("🎉 helm-diff plugin installed successfully.")
-    except subprocess.CalledProcessError as e:
-        print(f"⚠️ helm-diff plugin could not be installed (optional): {e}")
-        print("   SIM-PIPE can still be installed and used; the plugin is only")
-        print("   needed for optional 'helm diff' upgrade previews.")
+    print("ℹ️ Skipping helm-diff plugin (not required for SIM-PIPE).")
 
 
 def install_ansible_via_pip():

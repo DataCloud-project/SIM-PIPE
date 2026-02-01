@@ -50,5 +50,10 @@
   apt_repository:
     repo: "{{ docker_apt_repository }}"
     state: present
-    update_cache: true
+    update_cache: false
   when: docker_add_repo | bool
+
+- name: Update apt cache.
+  command: apt-get update
+  when: docker_add_repo | bool
+  ignore_errors: true
