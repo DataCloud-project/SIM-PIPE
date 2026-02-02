@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # Read WSL/QEMU networking from environment or default values.
-BR_IF="${WSL_BR_IF:-bridge-qemu}"
+BR_IF="${WSL_BR_IF:-simpipe-bridge}"
 BR_CIDR="${WSL_BR_CIDR:-172.30.0.1/24}"
 BR_NET="${WSL_BR_NET:-172.30.0.0/24}"
 WAN_IF="${WSL_WAN_IF:-eth0}"

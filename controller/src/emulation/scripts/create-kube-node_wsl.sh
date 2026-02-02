@@ -19,6 +19,7 @@ log_message() { echo "$(date +'%-Y-%-m-%-d %H:%M:%S') [$1] $2"; }
 
 # Networking: derive IP from NODE_NAME to allow multiple nodes without collisions
 BASE_PREFIX="172.30.0"
+GATEWAY="172.30.0.1"
 
 NODE_NUM=$(echo "$NODE_NAME" | grep -o '[0-9]*$')
 if [ -n "$NODE_NUM" ]; then
@@ -56,7 +57,7 @@ fetch_k3s_details() {
   log_message "INFO" "Fetching Kubernetes cluster details..."
   K3S_SERVER_IP=$(kubectl get secret "$K3S_TOKEN_SECRET" -o jsonpath='{.data.K3S_SERVER_IP}' | base64 -d)
   K3S_TOKEN=$(kubectl get secret "$K3S_TOKEN_SECRET" -o jsonpath='{.data.token}' | base64 -d)
-  K3S_SERVER_URL="https://${K3S_SERVER_IP}:6443"
+  K3S_SERVER_URL="https://${GATEWAY}:6443"
 }
 
 fetch_k3s_details
@@ -81,6 +82,8 @@ packages:
   - docker.io
 
 runcmd:
+  # Set ubuntu password
+  - echo "ubuntu:ubuntu" | chpasswd
   - systemctl enable docker
   - systemctl start docker
   - bash -c 'until systemctl is-active --quiet docker; do sleep 1; done'
@@ -102,7 +105,7 @@ network:
       match:
         name: "e*"
       dhcp4: false
-      gateway4: 172.30.0.1
+      gateway4: ${GATEWAY}
       addresses:
         - ${IP_ADDR}/24
       nameservers:
@@ -139,7 +142,6 @@ nsenter -t 1 -m -u --net=/host/proc/1/ns/net -i -p -- \
   -serial file:/host-tmp-vm/${NODE_NAME}-console.log
 "
 log_message "DEBUG" "QEMU command: ${QEMU_COMMAND}"
-# nohup sh -c "$QEMU_COMMAND" > /host-tmp-vm/${NODE_NAME}-stdout.log 2>&1 &
 nohup sh -c "$QEMU_COMMAND" > /host-tmp-vm/${NODE_NAME}-stdout.log 2>&1 & echo $! > /host-tmp-vm/qemu-${NODE_NAME}.pid
 BOOT_START_TIME=$(date +%s)
 
