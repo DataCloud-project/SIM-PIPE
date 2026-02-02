@@ -156,15 +156,6 @@
 					<div>VMs</div>
 				</div>
 			</AppRailAnchor>
-			<!-- TO DO: temporary redirect to sftp go web interface; will be replaced by files manager when api is ready -->
-			<AppRailAnchor label="Sample Files" href={generateServiceUrl()} external={true}>
-				<div class="flex flex-col items-center justify-center">
-					<div>
-						<FileIcon size="1.5x" />
-					</div>
-					<div>Files</div>
-				</div>
-			</AppRailAnchor>
 			<!-- 			<AppRailAnchor label="Ideas" href="/ideas" selected={$page.url.pathname === '/ideas'} >
 				<div class="flex flex-col items-center justify-center">
 					<div>
