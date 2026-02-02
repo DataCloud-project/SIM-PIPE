@@ -79,13 +79,6 @@ def install_tools_debian():
             print(f"ℹ️ Fixing permissions for {d} (requires sudo)...")
             subprocess.run(["sudo", "chmod", "a+rx", d], check=True)
             print(f"✅ Permissions for {d} set to a+rx.")
-    # Ensure k3s kubeconfig has secure permissions
-    kubeconfig_path = "/etc/rancher/k3s/k3s.yaml"
-    if os.path.exists(kubeconfig_path):
-        print(f"ℹ️ Setting secure permissions for {kubeconfig_path}...")
-        subprocess.run(["sudo", "chown", f"{get_current_username()}:{get_current_username()}", kubeconfig_path], check=True)
-        subprocess.run(["sudo", "chmod", "600", kubeconfig_path], check=True)
-        print(f"✅ Permissions for {kubeconfig_path} set to 600 and owner to {get_current_username()}.")
     if not check_ansible_installed():
         install_ansible_via_pip()
 
@@ -145,20 +138,8 @@ def install_tools_debian():
     else:
         print(f"✅ User '{username}' is already in docker group.")
 
-    # install simpipe using ansible
-    print("⏳ Installing simpipe...")
-    
-    # Ensure secrets are created before installing the chart
-    from secrets_manager import ensure_secrets
-    env_secrets = os.environ.copy()
-    if "KUBECONFIG" not in env_secrets:
-        env_secrets["KUBECONFIG"] = "/etc/rancher/k3s/k3s.yaml"
-    
-    try:
-        ensure_secrets(env=env_secrets)
-    except Exception as e:
-        print(f"⚠️ Warning: Failed to ensure secrets: {e}")
-
+    # Install base infrastructure using Ansible (Docker, k3s, CLI tools, etc.)
+    print("⏳ Installing base SIM-PIPE dependencies (Docker, k3s, tools)...")
 
     extra_vars = {"docker_users": [username]}
     vars_file = None
@@ -170,6 +151,8 @@ def install_tools_debian():
 
         env = os.environ.copy()
         env["ANSIBLE_ALLOW_BROKEN_CONDITIONALS"] = "True"
+
+        # First, install Docker, k3s and supporting tools (no SIM-PIPE yet)
         subprocess.run(
             [
                 "ansible-playbook",
@@ -182,6 +165,51 @@ def install_tools_debian():
                 "-e",
                 f"@{vars_file}",
                 "./ansible/install-everything.yaml",
+            ],
+            check=True,
+            env=env,
+        )
+
+        # Ensure k3s kubeconfig has secure permissions *after* k3s install
+        kubeconfig_path = "/etc/rancher/k3s/k3s.yaml"
+        if os.path.exists(kubeconfig_path):
+            print(f"ℹ️ Setting secure permissions for {kubeconfig_path}...")
+            subprocess.run([
+                "sudo",
+                "chown",
+                f"{get_current_username()}:{get_current_username()}",
+                kubeconfig_path,
+            ], check=True)
+            subprocess.run(["sudo", "chmod", "600", kubeconfig_path], check=True)
+            print(
+                f"✅ Permissions for {kubeconfig_path} set to 600 and owner to {get_current_username()}."
+            )
+
+        # Now ensure required Kubernetes secrets exist before installing SIM-PIPE
+        from secrets_manager import ensure_secrets
+
+        env_secrets = os.environ.copy()
+        env_secrets.setdefault("KUBECONFIG", "/etc/rancher/k3s/k3s.yaml")
+
+        print("⏳ Ensuring SIM-PIPE secrets are configured (you may be prompted)...")
+        try:
+            ensure_secrets(env=env_secrets)
+        except Exception as e:
+            print(f"❌ Failed to ensure required secrets: {e}")
+            sys.exit(1)
+
+        # Finally, install SIM-PIPE via its dedicated playbook
+        print("⏳ Installing SIM-PIPE Helm chart via Ansible...")
+        subprocess.run(
+            [
+                "ansible-playbook",
+                "-i",
+                "localhost,",
+                "-c",
+                "local",
+                "-b",
+                "-K",
+                "./ansible/install-simpipe.yaml",
             ],
             check=True,
             env=env,

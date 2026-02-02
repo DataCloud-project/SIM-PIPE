@@ -5,4 +5,3 @@
 - ansible.builtin.import_playbook: install-python.yaml
 - ansible.builtin.import_playbook: install-socat.yaml
 - ansible.builtin.import_playbook: install-argocli.yaml
-- ansible.builtin.import_playbook: install-simpipe.yaml
