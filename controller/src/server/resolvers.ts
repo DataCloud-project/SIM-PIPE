@@ -109,9 +109,12 @@ import type {
   QueryWorkflowTemplateArgs as QueryWorkflowTemplateArguments,
   WorkflowTemplate,
   QueryGetMooseAnalysisArgs,
+  ApiTokens,
+  MutationUpdateApiTokensArgs,
 } from './schema.js';
 import { getDPVJobResult, getDPVJobResultPolling, makeDPVCall } from '../moose/moose.js';
 import { get } from 'node:http';
+import { getApiTokenSecrets, updateApiTokenSecrets } from '../k8s/api-tokens.js';
 
 interface ContextUser {
   sub: string
@@ -178,6 +181,12 @@ const resolvers = {
       }
 
       return 'pong';
+    },
+    async apiTokens(
+      _p: EmptyParent, _a: EmptyArguments, context: AuthenticatedContext,
+    ): Promise<Query['apiTokens']> {
+      const { k8sClient, k8sNamespace } = context;
+      return await getApiTokenSecrets(k8sClient, k8sNamespace);
     },
     async dockerRegistryCredentials(
       _p: EmptyParent, _a: EmptyArguments, context: AuthenticatedContext,
@@ -379,6 +388,19 @@ const resolvers = {
   },
   } as Required<QueryResolvers<AuthenticatedContext, EmptyParent>>,
   Mutation: {
+    async updateApiTokens(
+      _p: EmptyParent,
+      arguments_: MutationUpdateApiTokensArgs,
+      context: AuthenticatedContext,
+    ): Promise<Mutation['updateApiTokens']> {
+      const { k8sClient, k8sNamespace } = context;
+      const { mooseApiKey, openrouterApiKey, openrouterApiKeyPaid } = arguments_;
+      return await updateApiTokenSecrets(k8sClient, k8sNamespace, {
+        mooseApiKey: mooseApiKey ?? undefined,
+        openrouterApiKey: openrouterApiKey ?? undefined,
+        openrouterApiKeyPaid: openrouterApiKeyPaid ?? undefined,
+      });
+    },
     async createBucket(
       _p: EmptyParent, arguments_: MutationCreateBucketArguments, context: AuthenticatedContext,
     ): Promise<Mutation['createBucket']> {

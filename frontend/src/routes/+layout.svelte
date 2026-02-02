@@ -131,6 +131,18 @@
 					<div>Registry</div>
 				</div>
 			</AppRailAnchor>
+			<AppRailAnchor
+				label="Manage API tokens"
+				href="/api-tokens"
+				selected={$page.url.pathname === '/api-tokens'}
+			>
+				<div class="flex flex-col items-center justify-center">
+					<div>
+						<LockIcon size="1.5x" />
+					</div>
+					<div>API tokens</div>
+				</div>
+			</AppRailAnchor>
 			<!-- new section for managing resources for emulation -->			
 			<AppRailAnchor
 				label="Emulated ndoes"

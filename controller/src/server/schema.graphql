@@ -36,6 +36,13 @@ type HardwareMetrics {
   cpuCores: Int!
 }
 
+""" API tokens used by the SIM-PIPE controller for external services. """
+type ApiTokens {
+  mooseApiKey: String!
+  openrouterApiKey: String!
+  openrouterApiKeyPaid: String!
+}
+
 """ The root query type. All queries that fetch data are defined here. """
 
 type Query {
@@ -128,6 +135,9 @@ type Query {
     save: Boolean = true): String! @auth
 
   dryRunsForNode(nodeName: String!): [DryRun!]!  
+
+  """ Inspect the API tokens used by the controller. """
+  apiTokens: ApiTokens! @auth
 }
 
 """ Project is the high level concept for a specific pipeline in SIM-PIPE. It contains all the previous dry runs of the pipeline and its results. """
@@ -795,4 +805,11 @@ type Mutation @auth {
     key: String!,
     """ The Moose report JSON string """
     report: String!): Boolean!
+
+  """ Update the API tokens used by the controller. Any omitted field keeps its current value. """
+  updateApiTokens(
+    mooseApiKey: String,
+    openrouterApiKey: String,
+    openrouterApiKeyPaid: String,
+  ): ApiTokens!
 }

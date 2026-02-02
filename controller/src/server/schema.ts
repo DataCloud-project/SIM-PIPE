@@ -48,6 +48,14 @@ export type AggregatedNodeMetricsInput = {
   nodeId: Array<Scalars['String']['input']>;
 };
 
+/**  API tokens used by the SIM-PIPE controller for external services.  */
+export type ApiTokens = {
+  __typename?: 'ApiTokens';
+  mooseApiKey: Scalars['String']['output'];
+  openrouterApiKey: Scalars['String']['output'];
+  openrouterApiKeyPaid: Scalars['String']['output'];
+};
+
 /**  Contains information about files produced during a dry run execution  */
 export type Artifact = {
   __typename?: 'Artifact';
@@ -835,6 +843,8 @@ export type Mutation = {
   stopDryRun: DryRun;
   /**  Suspend an active dry run.  */
   suspendDryRun: DryRun;
+  /**  Update the API tokens used by the controller. Any omitted field keeps its current value.  */
+  updateApiTokens: ApiTokens;
   /**  Update an existing docker registry credential  */
   updateDockerRegistryCredential: DockerRegistryCredential;
   /**  Update an existing Argo workflow template  */
@@ -964,6 +974,13 @@ export type MutationSuspendDryRunArgs = {
 };
 
 
+export type MutationUpdateApiTokensArgs = {
+  mooseApiKey?: InputMaybe<Scalars['String']['input']>;
+  openrouterApiKey?: InputMaybe<Scalars['String']['input']>;
+  openrouterApiKeyPaid?: InputMaybe<Scalars['String']['input']>;
+};
+
+
 export type MutationUpdateDockerRegistryCredentialArgs = {
   credential: DockerRegistryCredentialInput;
 };
@@ -1024,6 +1041,8 @@ export type PrometheusSampleInput = {
 /**  The root query type. All queries that fetch data are defined here.  */
 export type Query = {
   __typename?: 'Query';
+  /**  Inspect the API tokens used by the controller.  */
+  apiTokens: ApiTokens;
   /**  Artifact metadata  */
   artifact?: Maybe<ArtifactMetadata>;
   /**  List of all the artifacts  */
@@ -1041,7 +1060,11 @@ export type Query = {
   fetchCarbontrackerData: CarbonTrackerData;
   /**  Compute aggregated resource metrics for a set of dry runs  */
   getAggregatedNodesMetrics: Array<Maybe<NodesAggregatedNodeMetrics>>;
-  /**  Fetch moose analysis results from an artifact URL  */
+  /**
+   *  Fetch moose analysis results from an artifact URL.
+   * By default the resulting report is stored alongside the artifact.
+   * Set save to false to fetch a preview without persisting it.
+   */
   getMooseAnalysis: Scalars['String']['output'];
   /**  Get hardware metrics server-side */
   hardwaremetrics: HardwareMetrics;
@@ -1279,6 +1302,7 @@ export type ResolversInterfaceTypes<RefType extends Record<string, unknown>> = {
 export type ResolversTypes = {
   AggregatedNodeMetrics: ResolverTypeWrapper<AggregatedNodeMetrics>;
   AggregatedNodeMetricsInput: AggregatedNodeMetricsInput;
+  ApiTokens: ResolverTypeWrapper<ApiTokens>;
   ArgoWorkflow: ResolverTypeWrapper<Scalars['ArgoWorkflow']['output']>;
   ArgoWorkflowTemplate: ResolverTypeWrapper<Scalars['ArgoWorkflowTemplate']['output']>;
   Artifact: ResolverTypeWrapper<Artifact>;
@@ -1334,6 +1358,7 @@ export type ResolversTypes = {
 export type ResolversParentTypes = {
   AggregatedNodeMetrics: AggregatedNodeMetrics;
   AggregatedNodeMetricsInput: AggregatedNodeMetricsInput;
+  ApiTokens: ApiTokens;
   ArgoWorkflow: Scalars['ArgoWorkflow']['output'];
   ArgoWorkflowTemplate: Scalars['ArgoWorkflowTemplate']['output'];
   Artifact: Artifact;
@@ -1388,6 +1413,13 @@ export type AggregatedNodeMetricsResolvers<ContextType = any, ParentType extends
   fileSize?: Resolver<Array<ResolversTypes['Float']>, ParentType, ContextType>;
   mem?: Resolver<Array<ResolversTypes['Float']>, ParentType, ContextType>;
   nodeId?: Resolver<Array<ResolversTypes['String']>, ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type ApiTokensResolvers<ContextType = any, ParentType extends ResolversParentTypes['ApiTokens'] = ResolversParentTypes['ApiTokens']> = {
+  mooseApiKey?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  openrouterApiKey?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  openrouterApiKeyPaid?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -1603,6 +1635,7 @@ export type MutationResolvers<ContextType = any, ParentType extends ResolversPar
   shutdownResource?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationShutdownResourceArgs, 'resourceId'>>;
   stopDryRun?: Resolver<ResolversTypes['DryRun'], ParentType, ContextType, RequireFields<MutationStopDryRunArgs, 'dryRunId'>>;
   suspendDryRun?: Resolver<ResolversTypes['DryRun'], ParentType, ContextType, RequireFields<MutationSuspendDryRunArgs, 'dryRunId'>>;
+  updateApiTokens?: Resolver<ResolversTypes['ApiTokens'], ParentType, ContextType, Partial<MutationUpdateApiTokensArgs>>;
   updateDockerRegistryCredential?: Resolver<ResolversTypes['DockerRegistryCredential'], ParentType, ContextType, RequireFields<MutationUpdateDockerRegistryCredentialArgs, 'credential'>>;
   updateWorkflowTemplate?: Resolver<ResolversTypes['WorkflowTemplate'], ParentType, ContextType, RequireFields<MutationUpdateWorkflowTemplateArgs, 'update'>>;
 };
@@ -1642,6 +1675,7 @@ export interface PrometheusStringNumberScalarConfig extends GraphQLScalarTypeCon
 }
 
 export type QueryResolvers<ContextType = any, ParentType extends ResolversParentTypes['Query'] = ResolversParentTypes['Query']> = {
+  apiTokens?: Resolver<ResolversTypes['ApiTokens'], ParentType, ContextType>;
   artifact?: Resolver<Maybe<ResolversTypes['ArtifactMetadata']>, ParentType, ContextType, RequireFields<QueryArtifactArgs, 'bucketName' | 'key'>>;
   artifacts?: Resolver<Array<ResolversTypes['Artifact']>, ParentType, ContextType, Partial<QueryArtifactsArgs>>;
   buckets?: Resolver<Array<ResolversTypes['Bucket']>, ParentType, ContextType>;
@@ -1651,7 +1685,7 @@ export type QueryResolvers<ContextType = any, ParentType extends ResolversParent
   dryRunsForNode?: Resolver<Array<ResolversTypes['DryRun']>, ParentType, ContextType, RequireFields<QueryDryRunsForNodeArgs, 'nodeName'>>;
   fetchCarbontrackerData?: Resolver<ResolversTypes['CarbonTrackerData'], ParentType, ContextType, RequireFields<QueryFetchCarbontrackerDataArgs, 'input'>>;
   getAggregatedNodesMetrics?: Resolver<Array<Maybe<ResolversTypes['NodesAggregatedNodeMetrics']>>, ParentType, ContextType, RequireFields<QueryGetAggregatedNodesMetricsArgs, 'dryRunIds'>>;
-  getMooseAnalysis?: Resolver<ResolversTypes['String'], ParentType, ContextType, RequireFields<QueryGetMooseAnalysisArgs, 'artifactUrl'>>;
+  getMooseAnalysis?: Resolver<ResolversTypes['String'], ParentType, ContextType, RequireFields<QueryGetMooseAnalysisArgs, 'artifactUrl' | 'save'>>;
   hardwaremetrics?: Resolver<ResolversTypes['HardwareMetrics'], ParentType, ContextType>;
   ping?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   predictScaling?: Resolver<ResolversTypes['ScalingPredictions'], ParentType, ContextType, RequireFields<QueryPredictScalingArgs, 'data_x' | 'data_x_to_predict'>>;
@@ -1715,6 +1749,7 @@ export type CpuTimesResolvers<ContextType = any, ParentType extends ResolversPar
 
 export type Resolvers<ContextType = any> = {
   AggregatedNodeMetrics?: AggregatedNodeMetricsResolvers<ContextType>;
+  ApiTokens?: ApiTokensResolvers<ContextType>;
   ArgoWorkflow?: GraphQLScalarType;
   ArgoWorkflowTemplate?: GraphQLScalarType;
   Artifact?: ArtifactResolvers<ContextType>;

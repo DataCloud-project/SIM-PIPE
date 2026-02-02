@@ -47,9 +47,6 @@ export async function makeDPVCall(text: string, taskId = 'task-1'): Promise<stri
         : 'OPENROUTER_API_KEY is not configured',
     );
   }
- console.log('mooseApiKey:', mooseApiKey);
-  console.log('llmApiKey:', llmApiKey);
-  //   const baseUrl = mooseApiEndpoint.replace(/\/+$/, '');
   const url = `${mooseApiEndpoint}/ner`;
 
   const body: DpvRequestBody = {

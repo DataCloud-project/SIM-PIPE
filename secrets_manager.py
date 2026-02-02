@@ -32,15 +32,19 @@ def ensure_secrets(env=None):
         ], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, env=env)
         if result.returncode != 0:
             value = getpass.getpass(secret["prompt"])
-            if value:
-                print(f"Creating secret {secret['name']}...")
-                subprocess.run([
-                    "kubectl", "create", "secret", "generic", secret["name"],
-                    f"--from-literal={secret['key']}={value}",
-                    "--namespace", "default"
-                ], check=True, env=env)
+            # Always create the secret so the controller pods don't crash;
+            # if the user skips input, store an empty string as the value.
+            if not value:
+                value = ""
+                print(f"Creating secret {secret['name']} with empty value (user skipped input)...")
             else:
-                print(f"Skipping creation of {secret['name']} (not provided)")
+                print(f"Creating secret {secret['name']}...")
+
+            subprocess.run([
+                "kubectl", "create", "secret", "generic", secret["name"],
+                f"--from-literal={secret['key']}={value}",
+                "--namespace", "default"
+            ], check=True, env=env)
 
     # --- Ensure k3s-cluster-secret exists ---
     k3s_secret_name = "k3s-cluster-secret"
