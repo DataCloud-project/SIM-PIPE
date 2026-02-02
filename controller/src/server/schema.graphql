@@ -118,10 +118,14 @@ type Query {
     """ Input data containing CPU usage metrics """
     input: CarbonTrackerInput!): CarbonTrackerData! @auth
 
-  """ Fetch moose analysis results from an artifact URL """
+  """ Fetch moose analysis results from an artifact URL.
+      By default the resulting report is stored alongside the artifact.
+      Set save to false to fetch a preview without persisting it. """
   getMooseAnalysis(
     """ The URL of the artifact to be analysed """
-    artifactUrl: String!): String! @auth
+    artifactUrl: String!,
+    """ Whether to persist the Moose report alongside the artifact (default: true) """
+    save: Boolean = true): String! @auth
 
   dryRunsForNode(nodeName: String!): [DryRun!]!  
 }

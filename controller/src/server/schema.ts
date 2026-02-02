@@ -1112,6 +1112,7 @@ export type QueryGetAggregatedNodesMetricsArgs = {
 /**  The root query type. All queries that fetch data are defined here.  */
 export type QueryGetMooseAnalysisArgs = {
   artifactUrl: Scalars['String']['input'];
+  save?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
 

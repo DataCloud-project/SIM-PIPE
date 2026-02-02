@@ -108,6 +108,7 @@ import type {
   QueryResolvers,
   QueryWorkflowTemplateArgs as QueryWorkflowTemplateArguments,
   WorkflowTemplate,
+  QueryGetMooseAnalysisArgs,
 } from './schema.js';
 import { getDPVJobResult, getDPVJobResultPolling, makeDPVCall } from '../moose/moose.js';
 import { get } from 'node:http';
@@ -355,13 +356,16 @@ const resolvers = {
       return await fetchCarbontrackerData(input);
     },
     async getMooseAnalysis(
-      _p: EmptyParent,
-      arguments_: { artifactUrl: string },
-      _context: AuthenticatedContext,
-    ): Promise<Query['getMooseAnalysis']> {
-      const { artifactUrl } = arguments_;
-      const result = await getDPVJobResultPolling(artifactUrl);
+    _p: EmptyParent,
+    arguments_: QueryGetMooseAnalysisArgs,
+    _context: AuthenticatedContext,
+  ): Promise<Query['getMooseAnalysis']> {
+    const { artifactUrl, save } = arguments_;
+    const result = await getDPVJobResultPolling(artifactUrl);
 
+    // By default we persist the report alongside the artifact; callers can
+    // opt out by passing save = false for preview-only requests.
+    if (save !== false) {
       // Parse the Minio bucket and object key from the public artifact URL
       // so we can store the Moose report alongside the artifact itself.
       const url = new URL(artifactUrl);
@@ -370,8 +374,9 @@ const resolvers = {
       const objectName = pathParts.join('/');
 
       await setMooseReportForArtifact(objectName, JSON.stringify(result), bucketName);
-      return JSON.stringify(result);
-    },
+    }
+    return JSON.stringify(result);
+  },
   } as Required<QueryResolvers<AuthenticatedContext, EmptyParent>>,
   Mutation: {
     async createBucket(

@@ -25,6 +25,7 @@
 	import type { DryRunMetrics, DryRun, MetricsWithTimeStamps, Artifact } from '$typesdefinitions';
 	import type { ModalSettings } from '@skeletonlabs/skeleton';
 	import getMooseAnalysisQuery from '$queries/get_moose_analysis.js';
+	import setMooseReportMutation from '$queries/set_moose_report.js';
 
 	// Extended type to include carbontracker data
 	interface ExtendedDryRunMetrics extends DryRunMetrics {
@@ -40,6 +41,11 @@
 
 	let mooseEntities: MooseEntity[] = [];
 	let showMooseModal = false;
+	let selectedArtifact: Artifact | null = null;
+	let mooseJobStatus: string | null = null;
+	let mooseJobError: string | null = null;
+	let latestMooseReportJson: string | null = null;
+	let hasUnsavedMooseReport = false;
 	const modalStore = getModalStore();
 
 	export let data;
@@ -563,10 +569,16 @@
 		loadingFinished = true;
 	});
 
-	async function onAnalyze(artifact: Artifact): Promise<void> {
+	async function onAnalyze(artifact: Artifact, attempt_rerun = false): Promise<void> {
+		selectedArtifact = artifact;
 		let results: { entities?: MooseEntity[] }[] | undefined;
 
-		if (!artifact.mooseReport) {
+		// Decide whether this call should persist the report server-side.
+		// - First run (no existing mooseReport): save by default.
+		// - Rerun: preview only (save = false); user can choose to save.
+		const shouldSaveOnServer = !attempt_rerun && !artifact.mooseReport;
+
+		if (!artifact.mooseReport || attempt_rerun) {
 			const mooseAPIMessageModal: ModalSettings = {
 				type: 'alert',
 				title: 'Calling Moose API with the artifact text✨',
@@ -578,12 +590,19 @@
 			await new Promise((resolve) => setTimeout(resolve, 2500));
 			modalStore.close();
 			const response = await requestGraphQLClient<{ result: string }>(getMooseAnalysisQuery, {
-				artifactUrl: artifact.url
+				artifactUrl: artifact.url,
+				save: shouldSaveOnServer ? true : false,
 			});
 			console.log('Moose analysis response:', response.result);
+			latestMooseReportJson = response.result;
+			hasUnsavedMooseReport = !shouldSaveOnServer;
 			const job = JSON.parse(response.result) as {
+				status?: string;
+				error?: string;
 				result?: { results?: { entities?: MooseEntity[] }[] };
 			};
+			mooseJobStatus = job.status ?? null;
+			mooseJobError = job.error ?? null;
 			results = job.result?.results;
 
 			// Refresh dry run nodes from backend so artifacts include the stored Moose report
@@ -608,15 +627,47 @@
 			}
 		} else {
 			// get job from stored Moose report
+			latestMooseReportJson = artifact.mooseReport;
+			hasUnsavedMooseReport = false;
 			const job = JSON.parse(artifact.mooseReport) as {
+				status?: string;
+				error?: string;
 				result?: { results?: { entities?: MooseEntity[] }[] };
 			};
+			mooseJobStatus = job.status ?? null;
+			mooseJobError = job.error ?? null;
 			results = job.result?.results;
 		}
 
 		mooseEntities = results?.flatMap((r) => r.entities ?? []) ?? [];
 		showMooseModal = true;
 
+	}
+
+	async function rerunMooseAnalysis(): Promise<void> {
+		if (!selectedArtifact) return;
+		showMooseModal = false;
+		await onAnalyze(selectedArtifact, true);
+	}
+
+	async function saveMooseReport(): Promise<void> {
+		if (!selectedArtifact || !latestMooseReportJson) return;
+		try {
+			const url = new URL(selectedArtifact.url);
+			const pathParts = url.pathname.replace(/^\/+/, '').split('/');
+			const bucketName = pathParts.shift()!;
+			const objectName = pathParts.join('/');
+
+			await requestGraphQLClient(setMooseReportMutation, {
+				bucketName,
+				key: objectName,
+				report: latestMooseReportJson
+			});
+			hasUnsavedMooseReport = false;
+		} catch (error) {
+			// eslint-disable-next-line no-console
+			console.error('Error saving Moose report', error);
+		}
 	}
 
 	function getPartLogs(stepName: string, nmaxlinelength: number): string {
@@ -731,7 +782,7 @@
 											{#if step.outputArtifacts?.length > 1 && !step.outputArtifacts[0]?.mooseReport}
 												Run privacy check
 											{:else}
-												View privacy report
+												View saved report
 											{/if}
 										</button>
 										{:else}
@@ -858,11 +909,38 @@
 					<div class="moose-modal" on:click|stopPropagation>
 						<header class="moose-modal-header">
 							<h2>Detected privacy-relevant entities</h2>
-							<button type="button" class="btn btn-sm" on:click={() => (showMooseModal = false)}>
-								Close
-							</button>
+							<div class="moose-modal-actions">
+								<button
+									type="button"
+									class="moose-btn"
+									on:click={() => rerunMooseAnalysis()}
+								>
+									Re-run analysis
+								</button>
+								{#if hasUnsavedMooseReport}
+									<button
+										type="button"
+										class="moose-btn"
+										on:click={() => saveMooseReport()}
+									>
+										Save report
+									</button>
+								{/if}
+								<button
+									type="button"
+									class="moose-btn"
+									on:click={() => (showMooseModal = false)}
+								>
+									Close
+								</button>
+							</div>
 						</header>
 						<section class="moose-modal-body">
+							{#if mooseJobStatus === 'failed'}
+								<p class="moose-status moose-status-failed">
+									Latest privacy check run failed; entities may be incomplete.
+								</p>
+							{/if}
 							{#if mooseEntities.length === 0}
 								<p>No entities detected in this output.</p>
 							{:else}
@@ -943,9 +1021,32 @@
 		justify-content: space-between;
 		margin-bottom: 1rem;
 	}
+	.moose-modal-actions {
+		display: flex;
+		gap: 0.5rem;
+	}
+	.moose-btn {
+		padding: 0.25rem 0.75rem;
+		border-radius: 0.25rem;
+		border: 1px solid #d1d5db;
+		background-color: #f9fafb;
+		color: #111827;
+		font-size: 0.875rem;
+		cursor: pointer;
+	}
+	.moose-btn:hover {
+		background-color: #e5e7eb;
+	}
 	.moose-modal-body {
 		max-height: 60vh;
 		overflow-y: auto;
+	}
+	.moose-status {
+		margin-bottom: 0.75rem;
+		font-size: 0.875rem;
+	}
+	.moose-status-failed {
+		color: #b91c1c;
 	}
 	ul {
 		max-height: 75vh;
