@@ -394,11 +394,10 @@ const resolvers = {
       context: AuthenticatedContext,
     ): Promise<Mutation['updateApiTokens']> {
       const { k8sClient, k8sNamespace } = context;
-      const { mooseApiKey, openrouterApiKey, openrouterApiKeyPaid } = arguments_;
+      const { mooseApiKey, openrouterApiKey } = arguments_;
       return await updateApiTokenSecrets(k8sClient, k8sNamespace, {
         mooseApiKey: mooseApiKey ?? undefined,
         openrouterApiKey: openrouterApiKey ?? undefined,
-        openrouterApiKeyPaid: openrouterApiKeyPaid ?? undefined,
       });
     },
     async createBucket(

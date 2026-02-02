@@ -4,7 +4,6 @@ import type K8sClient from './k8s-client.js';
 export interface ApiTokenSecrets {
   mooseApiKey: string;
   openrouterApiKey: string;
-  openrouterApiKeyPaid: string;
 }
 
 const MOOSE_SECRET_NAME = 'simpipe-moose-api';
@@ -13,8 +12,6 @@ const MOOSE_SECRET_KEY = 'MOOSE_API_KEY';
 const OPENROUTER_SECRET_NAME = 'simpipe-openrouter-api';
 const OPENROUTER_SECRET_KEY = 'OPENROUTER_API_KEY';
 
-const OPENROUTER_PAID_SECRET_NAME = 'simpipe-openrouter-api-paid';
-const OPENROUTER_PAID_SECRET_KEY = 'OPENROUTER_API_KEY_PAID';
 
 async function readSecretValue(
   k8sClient: K8sClient,
@@ -83,16 +80,14 @@ export async function getApiTokenSecrets(
   k8sClient: K8sClient,
   namespace: string,
 ): Promise<ApiTokenSecrets> {
-  const [mooseApiKey, openrouterApiKey, openrouterApiKeyPaid] = await Promise.all([
+  const [mooseApiKey, openrouterApiKey] = await Promise.all([
     readSecretValue(k8sClient, namespace, MOOSE_SECRET_NAME, MOOSE_SECRET_KEY),
     readSecretValue(k8sClient, namespace, OPENROUTER_SECRET_NAME, OPENROUTER_SECRET_KEY),
-    readSecretValue(k8sClient, namespace, OPENROUTER_PAID_SECRET_NAME, OPENROUTER_PAID_SECRET_KEY),
   ]);
 
   return {
     mooseApiKey,
     openrouterApiKey,
-    openrouterApiKeyPaid,
   };
 }
 
@@ -111,10 +106,6 @@ export async function updateApiTokenSecrets(
       tokens.openrouterApiKey !== undefined && tokens.openrouterApiKey.trim() !== ''
         ? tokens.openrouterApiKey
         : current.openrouterApiKey,
-    openrouterApiKeyPaid:
-      tokens.openrouterApiKeyPaid !== undefined && tokens.openrouterApiKeyPaid.trim() !== ''
-        ? tokens.openrouterApiKeyPaid
-        : current.openrouterApiKeyPaid,
   };
 
   await Promise.all([
@@ -125,13 +116,6 @@ export async function updateApiTokenSecrets(
       OPENROUTER_SECRET_NAME,
       OPENROUTER_SECRET_KEY,
       next.openrouterApiKey,
-    ),
-    upsertSecretValue(
-      k8sClient,
-      namespace,
-      OPENROUTER_PAID_SECRET_NAME,
-      OPENROUTER_PAID_SECRET_KEY,
-      next.openrouterApiKeyPaid,
     ),
   ]);
 

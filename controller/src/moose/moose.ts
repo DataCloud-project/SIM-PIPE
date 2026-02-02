@@ -8,8 +8,6 @@ import {
   mooseLlmModel,
   mooseLlmProvider,
   openRouterApiKey,
-  openRouterApiKeyPAID,
-  useOpenRouterPaidAPI,
 } from '../config.js';
 import { getObjectText } from '../minio/minio.js';
 
@@ -39,13 +37,8 @@ export async function makeDPVCall(text: string, taskId = 'task-1'): Promise<stri
   if (!mooseApiKey) {
     throw new Error('MOOSE_API_KEY is not configured');
   }
-  const llmApiKey = useOpenRouterPaidAPI ? openRouterApiKeyPAID : openRouterApiKey;
-  if (!llmApiKey) {
-    throw new Error(
-      useOpenRouterPaidAPI
-        ? 'OPENROUTER_API_KEY_PAID is not configured'
-        : 'OPENROUTER_API_KEY is not configured',
-    );
+  if (!openRouterApiKey) {
+    throw new Error('OPENROUTER_API_KEY is not configured');
   }
   const url = `${mooseApiEndpoint}/ner`;
 
@@ -71,7 +64,7 @@ export async function makeDPVCall(text: string, taskId = 'task-1'): Promise<stri
     responseType: 'json',
     headers: {
       accept: 'application/json',
-      'X-LLM-API-Key': llmApiKey,
+      'X-LLM-API-Key': openRouterApiKey,
       'X-API-Key': mooseApiKey,
       'Content-Type': 'application/json',
     },

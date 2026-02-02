@@ -19,11 +19,6 @@ def ensure_secrets(env=None):
             "key": "OPENROUTER_API_KEY",
             "prompt": "Enter OPENROUTER_API_KEY (leave blank to skip): "
         },
-        {
-            "name": "simpipe-openrouter-api-paid",
-            "key": "OPENROUTER_API_KEY_PAID",
-            "prompt": "Enter OPENROUTER_API_KEY_PAID (leave blank to skip): "
-        },
     ]
     for secret in required_secrets:
         # Check if secret exists
@@ -103,10 +98,6 @@ def ensure_secrets(env=None):
                 k3s_server_ip = ip.split()[0]
         except Exception as e:
             print(f"Could not get k3s server IP: {e}")
-
-        # Truncate token part after :: if present
-        if k3s_token and "::" in k3s_token:
-            k3s_token = k3s_token.split(":")[0]
             
         if k3s_token and k3s_server_ip:
             print(f"Creating secret {k3s_secret_name}...")

@@ -53,7 +53,6 @@ export type ApiTokens = {
   __typename?: 'ApiTokens';
   mooseApiKey: Scalars['String']['output'];
   openrouterApiKey: Scalars['String']['output'];
-  openrouterApiKeyPaid: Scalars['String']['output'];
 };
 
 /**  Contains information about files produced during a dry run execution  */
@@ -977,7 +976,6 @@ export type MutationSuspendDryRunArgs = {
 export type MutationUpdateApiTokensArgs = {
   mooseApiKey?: InputMaybe<Scalars['String']['input']>;
   openrouterApiKey?: InputMaybe<Scalars['String']['input']>;
-  openrouterApiKeyPaid?: InputMaybe<Scalars['String']['input']>;
 };
 
 
@@ -1419,7 +1417,6 @@ export type AggregatedNodeMetricsResolvers<ContextType = any, ParentType extends
 export type ApiTokensResolvers<ContextType = any, ParentType extends ResolversParentTypes['ApiTokens'] = ResolversParentTypes['ApiTokens']> = {
   mooseApiKey?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   openrouterApiKey?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  openrouterApiKeyPaid?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 

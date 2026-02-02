@@ -40,7 +40,6 @@ type HardwareMetrics {
 type ApiTokens {
   mooseApiKey: String!
   openrouterApiKey: String!
-  openrouterApiKeyPaid: String!
 }
 
 """ The root query type. All queries that fetch data are defined here. """
@@ -810,6 +809,5 @@ type Mutation @auth {
   updateApiTokens(
     mooseApiKey: String,
     openrouterApiKey: String,
-    openrouterApiKeyPaid: String,
   ): ApiTokens!
 }

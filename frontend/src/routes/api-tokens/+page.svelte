@@ -8,13 +8,11 @@
 	type ApiTokens = {
 		mooseApiKey: string;
 		openrouterApiKey: string;
-		openrouterApiKeyPaid: string;
 	};
 
 	let tokens: ApiTokens = {
 		mooseApiKey: '',
-		openrouterApiKey: '',
-		openrouterApiKeyPaid: ''
+		openrouterApiKey: ''
 	};
 
 	let loading = true;
@@ -23,7 +21,6 @@
 	let successMessage: string | null = null;
 	let showMoose = false;
 	let showOpenrouter = false;
-	let showOpenrouterPaid = false;
 
 	async function loadTokens(): Promise<void> {
 		loading = true;
@@ -47,8 +44,7 @@
 		try {
 			const variables = {
 				mooseApiKey: tokens.mooseApiKey,
-				openrouterApiKey: tokens.openrouterApiKey,
-				openrouterApiKeyPaid: tokens.openrouterApiKeyPaid
+				openrouterApiKey: tokens.openrouterApiKey
 			};
 			const response: { updateApiTokens: ApiTokens } = await requestGraphQLClient(
 				updateApiTokensMutation,
@@ -145,35 +141,6 @@
 							on:click={() => (showOpenrouter = !showOpenrouter)}
 						>
 							{showOpenrouter ? 'Hide' : 'Show'}
-						</button>
-					</div>
-				</label>
-				<label class="label">
-					<span>OPENROUTER_API_KEY_PAID</span>
-					<div class="flex items-center space-x-2">
-						{#if showOpenrouterPaid}
-							<input
-								class="input flex-1"
-								type="text"
-								bind:value={tokens.openrouterApiKeyPaid}
-								placeholder="Enter OpenRouter paid API key (optional)"
-								autocomplete="off"
-							/>
-						{:else}
-							<input
-								class="input flex-1"
-								type="password"
-								bind:value={tokens.openrouterApiKeyPaid}
-								placeholder="Enter OpenRouter paid API key (optional)"
-								autocomplete="off"
-							/>
-						{/if}
-						<button
-							class="btn btn-xs variant-soft"
-							type="button"
-							on:click={() => (showOpenrouterPaid = !showOpenrouterPaid)}
-						>
-							{showOpenrouterPaid ? 'Hide' : 'Show'}
 						</button>
 					</div>
 				</label>

@@ -5,7 +5,6 @@ const getApiTokensQuery = gql`
 		apiTokens {
 			mooseApiKey
 			openrouterApiKey
-			openrouterApiKeyPaid
 		}
 	}
 `;

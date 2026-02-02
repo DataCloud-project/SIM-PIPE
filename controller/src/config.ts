@@ -38,8 +38,6 @@ export const mooseApiEndpoint:string = process.env.MOOSE_API_ENDPOINT ?? 'https:
 export const mooseApiKey:string = process.env.MOOSE_API_KEY ?? '';
 export const mooseApiKeyPAID:string = process.env.MOOSE_PAID_API_KEY ?? '';
 export const openRouterApiKey:string = process.env.OPENROUTER_API_KEY ?? '';
-export const openRouterApiKeyPAID:string = process.env.OPENROUTER_API_KEY_PAID ?? '';
-export const useOpenRouterPaidAPI = process.env.ENABLE_OPENROUTER_PAID_API ? process.env.ENABLE_OPENROUTER_PAID_API.toLowerCase() === 'true' : true;
 
 // Moose DPV LLM configuration
 export const mooseLlmProvider = 'openrouter';

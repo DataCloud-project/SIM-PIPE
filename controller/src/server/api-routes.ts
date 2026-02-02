@@ -21,11 +21,10 @@ export default function createApiRouter(k8sClient: K8sClient): Router {
 
   router.put('/api/tokens', async (req, res) => {
     try {
-      const { mooseApiKey, openrouterApiKey, openrouterApiKeyPaid } = req.body ?? {};
+      const { mooseApiKey, openrouterApiKey } = req.body ?? {};
       const updated = await updateApiTokenSecrets(k8sClient, namespace, {
         mooseApiKey,
         openrouterApiKey,
-        openrouterApiKeyPaid,
       });
       res.json(updated);
     } catch (error) {
