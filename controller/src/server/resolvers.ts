@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto';
+import { get } from 'node:http';
 
 import {
   assertDryRunNodeHasWorkflow,
@@ -22,6 +23,7 @@ import {
   extrapolateFromScalingLaws,
 } from '../curve_fitting/dry-run-data.js';
 import cpuCoresData from '../hardwaremetrics/hardwaremetrics.js';
+import { getApiTokenSecrets, updateApiTokenSecrets } from '../k8s/api-tokens.js';
 import assignArgoWorkflowToProject from '../k8s/assign-argoworkflow-to-project.js';
 import {
   createDockerRegistryCredential,
@@ -42,13 +44,14 @@ import {
   createBucket,
   deleteBucket,
   deleteObjects,
-  getObjectMetadata,
-  setMooseReportForArtifact,
   getMooseReportForArtifact,
+  getObjectMetadata,
   getObjectSize,
   listAllBuckets,
   listAllObjects,
+  setMooseReportForArtifact,
 } from '../minio/minio.js';
+import { getMooseAnalysis } from '../moose/moose.js';
 import { assertPrometheusIsHealthy } from '../prometheus/prometheus.js';
 import queryPrometheusResolver from '../prometheus/query-prometheus-resolver.js';
 import { NotFoundError, PingError } from './apollo-errors.js';
@@ -79,15 +82,16 @@ import type {
   MutationDeleteProjectArgs as MutationDeleteProjectArguments,
   MutationDeleteResourceArgs as MutationDeleteResourceArguments,
   MutationDeleteWorkflowTemplateArgs as MutationDeleteWorkflowTemplateArguments,
-  MutationSetMooseReportArgs as MutationSetMooseReportArguments,
   MutationRenameProjectArgs as MutationRenameProjectArguments,
   MutationResolvers,
   MutationResubmitDryRunArgs as MutationResubmitDryRunArguments,
   MutationResumeDryRunArgs as MutationResumeDryRunArguments,
   MutationRetryDryRunArgs as MutationRetryDryRunArguments,
+  MutationSetMooseReportArgs as MutationSetMooseReportArguments,
   MutationShutdownResourceArgs as MutationShutdownResourceArguments,
   MutationStopDryRunArgs as MutationStopDryRunArguments,
   MutationSuspendDryRunArgs as MutationSuspendDryRunArguments,
+  MutationUpdateApiTokensArgs as MutationUpdateApiTokensArguments,
   MutationUpdateDockerRegistryCredentialArgs as MutationUpdateDockerRegistryCredentialArguments,
   MutationUpdateWorkflowTemplateArgs as MutationUpdateWorkflowTemplateArguments,
   NodesAggregatedNodeMetrics,
@@ -97,24 +101,16 @@ import type {
   QueryArtifactArgs as QueryArtifactArguments,
   QueryArtifactsArgs as QueryArtifactsArguments,
   QueryComputeScalingLawsFromNodesMetricsArgs as QueryComputeScalingLawsFromNodesMetricsArguments,
-  QueryComputeScalingLawsFromNodesMetricsArgs as QueryComputeScalingLawsFromNodesMetricsArguments_,
   QueryDryRunArgs as QueryDryRunArguments,
   QueryFetchCarbontrackerDataArgs as QueryFetchCarbontrackerDataArguments,
   QueryGetAggregatedNodesMetricsArgs as QueryGetAggregatedNodesMetricsArguments,
-  QueryGetAggregatedNodesMetricsArgs as QueryGetAggregatedNodesMetricsArguments_,
+  QueryGetMooseAnalysisArgs as QueryGetMooseAnalysisArguments,
   QueryPredictScalingArgs as QueryPredictScalingArguments,
-  QueryPredictScalingArgs as QueryPredictScalingArguments_,
   QueryProjectArgs as QueryProjectArguments,
   QueryResolvers,
   QueryWorkflowTemplateArgs as QueryWorkflowTemplateArguments,
   WorkflowTemplate,
-  QueryGetMooseAnalysisArgs,
-  ApiTokens,
-  MutationUpdateApiTokensArgs,
 } from './schema.js';
-import { getDPVJobResult, getDPVJobResultPolling, makeDPVCall } from '../moose/moose.js';
-import { get } from 'node:http';
-import { getApiTokenSecrets, updateApiTokenSecrets } from '../k8s/api-tokens.js';
 
 interface ContextUser {
   sub: string
@@ -217,7 +213,7 @@ const resolvers = {
       return await getDryRun(dryRunId, argoClient);
     },
     dryRunsForNode: async (_p: EmptyParent,
-      arguments_:{ nodeName: string }, context: AuthenticatedContext) => dryRunsForNode(arguments_.nodeName, context.argoClient),
+      arguments_: { nodeName: string }, context: AuthenticatedContext) => dryRunsForNode(arguments_.nodeName, context.argoClient),
     async workflowTemplate(
       _p: EmptyParent, arguments_: QueryWorkflowTemplateArguments, context: AuthenticatedContext,
     ): Promise<Query['workflowTemplate']> {
@@ -365,32 +361,17 @@ const resolvers = {
       return await fetchCarbontrackerData(input);
     },
     async getMooseAnalysis(
-    _p: EmptyParent,
-    arguments_: QueryGetMooseAnalysisArgs,
-    _context: AuthenticatedContext,
-  ): Promise<Query['getMooseAnalysis']> {
-    const { artifactUrl, save } = arguments_;
-    const result = await getDPVJobResultPolling(artifactUrl);
-
-    // By default we persist the report alongside the artifact; callers can
-    // opt out by passing save = false for preview-only requests.
-    if (save !== false) {
-      // Parse the Minio bucket and object key from the public artifact URL
-      // so we can store the Moose report alongside the artifact itself.
-      const url = new URL(artifactUrl);
-      const pathParts = url.pathname.replace(/^\/+/, '').split('/');
-      const bucketName = pathParts.shift()!; // e.g. "artifacts"
-      const objectName = pathParts.join('/');
-
-      await setMooseReportForArtifact(objectName, JSON.stringify(result), bucketName);
-    }
-    return JSON.stringify(result);
-  },
+      _p: EmptyParent,
+      arguments_: QueryGetMooseAnalysisArguments,
+      _context: AuthenticatedContext,
+    ): Promise<Query['getMooseAnalysis']> {
+      return await getMooseAnalysis(arguments_);
+    },
   } as Required<QueryResolvers<AuthenticatedContext, EmptyParent>>,
   Mutation: {
     async updateApiTokens(
       _p: EmptyParent,
-      arguments_: MutationUpdateApiTokensArgs,
+      arguments_: MutationUpdateApiTokensArguments,
       context: AuthenticatedContext,
     ): Promise<Mutation['updateApiTokens']> {
       const { k8sClient, k8sNamespace } = context;
@@ -886,8 +867,6 @@ const resolvers = {
         return undefined;
       }
       const filesize = await getObjectSize(key, bucketName as string);
-      // console.log('artifact size calc', filesize, key, bucketName, artifact)
-      return filesize;
       return filesize;
     },
     async mooseReport(
@@ -904,6 +883,28 @@ const resolvers = {
       } catch (error) {
         // eslint-disable-next-line no-console
         console.error('[Moose] Error resolving mooseReport for artifact', {
+          key,
+          bucketName,
+          error,
+        });
+        return undefined;
+      }
+    },
+    async sotwReportUrl(
+      artifact: Artifact,
+    ): Promise<Artifact['sotwReportUrl']> {
+      const { key, bucketName } = artifact;
+      if (!key) {
+        return undefined;
+      }
+      // The SoTW CSV is stored alongside the main artifact with a
+      // fixed suffix; we expose a presigned URL for download.
+      try {
+        const sotwKey = `${key}.sotw.csv`;
+        return await computePresignedGetUrl(sotwKey, bucketName as string);
+      } catch (error) {
+        // eslint-disable-next-line no-console
+        console.error('[SoTW] Error resolving sotwReportUrl for artifact', {
           key,
           bucketName,
           error,

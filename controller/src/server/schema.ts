@@ -64,6 +64,8 @@ export type Artifact = {
   key?: Maybe<Scalars['String']['output']>;
   /**  The compliance check report from Moose API, if available  */
   mooseReport?: Maybe<Scalars['String']['output']>;
+  /**  URL to download the SoTW CSV derived from the Moose report, if available  */
+  sotwReportUrl?: Maybe<Scalars['String']['output']>;
   /**  The artifact name  */
   name: Scalars['String']['output'];
   /**  The artifact size  */
@@ -1133,6 +1135,7 @@ export type QueryGetAggregatedNodesMetricsArgs = {
 /**  The root query type. All queries that fetch data are defined here.  */
 export type QueryGetMooseAnalysisArgs = {
   artifactUrl: Scalars['String']['input'];
+  stepStartedAt?: InputMaybe<Scalars['String']['input']>;
   save?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
@@ -1432,6 +1435,7 @@ export type ArtifactResolvers<ContextType = any, ParentType extends ResolversPar
   bucketName?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   key?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   mooseReport?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  sotwReportUrl?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   size?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
   url?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;

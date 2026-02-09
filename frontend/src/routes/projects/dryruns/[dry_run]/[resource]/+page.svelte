@@ -569,7 +569,7 @@
 		loadingFinished = true;
 	});
 
-	async function onAnalyze(artifact: Artifact, attempt_rerun = false): Promise<void> {
+	async function onAnalyze(artifact: Artifact, stepStartedAt: string | null, attempt_rerun = false): Promise<void> {
 		selectedArtifact = artifact;
 		let results: { entities?: MooseEntity[] }[] | undefined;
 
@@ -591,7 +591,8 @@
 			modalStore.close();
 			const response = await requestGraphQLClient<{ result: string }>(getMooseAnalysisQuery, {
 				artifactUrl: artifact.url,
-				save: shouldSaveOnServer ? true : false,
+				stepStartedAt: stepStartedAt ?? undefined,
+				save: shouldSaveOnServer ? true : false
 			});
 			console.log('Moose analysis response:', response.result);
 			latestMooseReportJson = response.result;
@@ -647,7 +648,7 @@
 	async function rerunMooseAnalysis(): Promise<void> {
 		if (!selectedArtifact) return;
 		showMooseModal = false;
-		await onAnalyze(selectedArtifact, true);
+		await onAnalyze(selectedArtifact, null, true);
 	}
 
 	async function saveMooseReport(): Promise<void> {
@@ -668,6 +669,42 @@
 			// eslint-disable-next-line no-console
 			console.error('Error saving Moose report', error);
 		}
+	}
+
+	async function downloadSotwCsv(artifact: Artifact | null): Promise<void> {
+		const sotwUrl = artifact?.sotwReportUrl;
+		if (sotwUrl) {
+			try {
+				const response = await fetch(sotwUrl);
+				if (!response.ok) throw new Error('Failed to fetch SoTW CSV');
+				const blob = await response.blob();
+				const url = URL.createObjectURL(blob);
+				const link = document.createElement('a');
+				link.href = url;
+				// Use artifact key or name for the download filename, fallback to sotw.csv
+				let baseName = artifact?.key || artifact?.name || 'sotw';
+				// Remove any path from key if present
+				baseName = baseName.split('/').pop() || baseName;
+				link.download = `${baseName}.sotw.csv`;
+				document.body.appendChild(link);
+				link.click();
+				document.body.removeChild(link);
+				URL.revokeObjectURL(url);
+			} catch (e) {
+				console.error('Error downloading SoTW CSV:', e);
+				alert('Failed to download SoTW CSV.');
+			}
+			return;
+		}
+		// if there is no sotwReportUrl, show a modal stating that the report is not available
+		const noReportModal: ModalSettings = {
+			type: 'alert',
+			title: 'SoTW report not available⚠️',
+			body: `The SoTW report for this artifact is not available.`
+		};
+		modalStore.trigger(noReportModal);
+		await new Promise((resolve) => setTimeout(resolve, 2000));
+		modalStore.close();      
 	}
 
 	function getPartLogs(stepName: string, nmaxlinelength: number): string {
@@ -777,7 +814,7 @@
 													? 'bg-amber-100 border-amber-300 text-amber-800 hover:bg-amber-150'
 													: 'bg-emerald-100 border-emerald-300 text-emerald-800 hover:bg-emerald-150'
 											}`}
-											on:click|stopPropagation={() => onAnalyze(step.outputArtifacts[0])}
+											on:click|stopPropagation={() => onAnalyze(step.outputArtifacts[0], step.startedAt)}
 											>
 											{#if step.outputArtifacts?.length > 1 && !step.outputArtifacts[0]?.mooseReport}
 												Run privacy check
@@ -910,6 +947,13 @@
 						<header class="moose-modal-header">
 							<h2>Detected privacy-relevant entities</h2>
 							<div class="moose-modal-actions">
+								<button
+									type="button"
+									class="moose-btn"
+									on:click={() => downloadSotwCsv(selectedArtifact)}
+								>
+									Download SoTW
+								</button>
 								<button
 									type="button"
 									class="moose-btn"

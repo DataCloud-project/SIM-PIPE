@@ -205,6 +205,7 @@ export async function deleteObjects(objects: string[], bucketName: string): Prom
 }
 
 const MOOSE_REPORT_SUFFIX = '.moose-report.json';
+const SOTW_REPORT_SUFFIX = '.sotw.csv';
 
 export async function setMooseReportForArtifact(
   objectName: string,
@@ -225,6 +226,36 @@ export async function setMooseReportForArtifact(
   } catch (error) {
     // eslint-disable-next-line no-console
     console.error('[Moose] Error saving report to Minio', {
+      bucketName,
+      objectName,
+      reportKey,
+      error,
+    });
+    throw error;
+  }
+}
+
+export async function setSotwReportForArtifact(
+  objectName: string,
+  csv: string,
+  _bucketName?: string,
+): Promise<void> {
+  const bucketName = _bucketName || minioBucketName;
+  const reportKey = `${objectName}${SOTW_REPORT_SUFFIX}`;
+  try {
+    // eslint-disable-next-line no-console
+    console.log('[SoTW] Saving SoTW CSV to Minio', {
+      bucketName,
+      objectName,
+      reportKey,
+      length: csv.length,
+    });
+    await minioInternalClient.putObject(bucketName, reportKey, csv, {
+      'Content-Type': 'text/csv; charset=utf-8',
+    });
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error('[SoTW] Error saving SoTW CSV to Minio', {
       bucketName,
       objectName,
       reportKey,

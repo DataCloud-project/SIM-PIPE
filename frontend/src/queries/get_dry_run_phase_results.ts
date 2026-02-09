@@ -15,10 +15,13 @@ const getDryRunPhaseResultsQuery = gql`
 					duration
 					phase
 					outputArtifacts {
+						bucketName
 						key
 						name
+						size
 						url
 						mooseReport
+						sotwReportUrl
 					}
 				}
 			}

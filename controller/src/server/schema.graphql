@@ -130,6 +130,8 @@ type Query {
   getMooseAnalysis(
     """ The URL of the artifact to be analysed """
     artifactUrl: String!,
+    """ The start time of the dry run step that produced this artifact (ISO 8601 string) """
+    stepStartedAt: String,
     """ Whether to persist the Moose report alongside the artifact (default: true) """
     save: Boolean = true): String! @auth
 
@@ -535,6 +537,8 @@ type Artifact {
   bucketName: String
   """ The compliance check report from Moose API, if available """
   mooseReport: String
+  """ URL to download the SoTW CSV derived from the Moose report, if available """
+  sotwReportUrl: String
 }
 
 """ Artifact metadata """

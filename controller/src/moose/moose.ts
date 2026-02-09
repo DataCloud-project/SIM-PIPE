@@ -1,5 +1,14 @@
+// Moose entity type for DPV results
+export interface MooseEntity {
+  start: number;
+  end: number;
+  text: string;
+  type_id: string;
+  confidence: number;
+}
 /* eslint-disable import/prefer-default-export */
 import got from 'got';
+import type { Query, QueryGetMooseAnalysisArgs as QueryGetMooseAnalysisArguments } from 'server/schema.js';
 
 import {
   mooseApiEndpoint,
@@ -9,27 +18,16 @@ import {
   mooseLlmProvider,
   openRouterApiKey,
 } from '../config.js';
-import { getObjectText } from '../minio/minio.js';
-
-interface DpvTask {
-  task_id: string;
-  text: string;
-}
+import { getObjectText, setMooseReportForArtifact, setSotwReportForArtifact } from '../minio/minio.js';
 
 interface DpvRequestBody {
-  tasks: DpvTask[];
+  tasks: { task_id: string; text: string; }[];
   include_scores: boolean;
   llm: {
     provider: string;
     model: string;
   };
   schema: string;
-}
-
-function sanitizeArtifactText(text: string): string {
-  if (!text) return text;
-
-  return JSON.stringify(text).slice(1, -1);
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -59,7 +57,7 @@ export async function makeDPVCall(text: string, taskId = 'task-1'): Promise<stri
 
   console.log('body:', JSON.stringify(body, null, 2));
 
-  const response:{ body:{ job_id: string } } = await got.post(url, {
+  const response: { body: { job_id: string } } = await got.post(url, {
     json: body,
     responseType: 'json',
     headers: {
@@ -91,12 +89,71 @@ export async function getDPVJobResult(jobId: string): Promise<{ status?: string 
   return response.body as { status?: string } & Record<string, unknown>;
 }
 
+export function buildSotwCsvFromMooseResult(result: unknown, stepStartedAt?: string): string {
+  // The SoTW CSV has one row per DPV entity instance in the Moose report.
+  const headers = [
+    'http://www.w3.org/ns/odrl/2/dateTime',
+    'http://www.w3.org/ns/odrl/2/Party',
+    'http://www.w3.org/ns/odrl/2/Action',
+    'http://www.w3.org/ns/odrl/2/Asset',
+    'http://www.w3.org/ns/odrl/2/Purpose',
+  ];
+
+  const entities: MooseEntity[] = [];
+
+  if (result && typeof result === 'object') {
+    const job = result as {
+      status?: string;
+      created_at?: string;
+      result?: { results?: { entities?: MooseEntity[] | null }[] | null };
+    };
+    if (job.status === 'completed' && job.result?.results) {
+      for (const r of job.result.results) {
+        if (Array.isArray(r.entities)) {
+          for (const entity of r.entities) {
+            entities.push(entity);
+          }
+        }
+      }
+    }
+  }
+
+  const makeRow = (entity?: MooseEntity): string[] => [
+    stepStartedAt ?? '', // Use the step start time when provided; otherwise leave empty
+    '', // Party left blank until userId is available in SIMPIPE
+    'http://www.w3.org/ns/odrl/2/use',
+    entity ? JSON.stringify(entity.type_id) : '', // same entity type extracted from Moose is passed on, can be extended to IRI later
+    'https://w3id.org/dpv#DataQualityImprovement', // picked a purpose which matched why data was in SIMPIPE
+  ];
+
+  const rows: string[][] = [];
+  if (entities.length === 0) {
+    rows.push(makeRow());
+  } else {
+    for (const entity of entities) {
+      rows.push(makeRow(entity));
+    }
+  }
+
+  const escapeCell = (value: string): string => {
+    if (value.includes('"') || value.includes(',') || value.includes('\n')) {
+      return `"${value.replaceAll('"', '""')}"`;
+    }
+    return value;
+  };
+
+  const headerLine = headers.map((value) => escapeCell(value)).join(',');
+  const rowLines = rows.map((row) => row.map((value) => escapeCell(value)).join(','));
+  const lines = [headerLine, ...rowLines];
+  return `${lines.join('\n')}\n`;
+}
+
 export async function getDPVJobResultPolling(
   artifactUrl: string,
   pollingIntervalMs = 4000,
   maxAttempts = 80,
 ): Promise<unknown> {
-// Parse the Minio bucket and object key from the public artifact URL,
+  // Parse the Minio bucket and object key from the public artifact URL,
   // then fetch the content via the internal Minio client (not localhost).
   const url = new URL(artifactUrl);
   const pathParts = url.pathname.replace(/^\/+/, '').split('/');
@@ -153,4 +210,38 @@ export async function getDPVJobResultPolling(
       setTimeout(resolve, pollingIntervalMs);
     });
   }
+}
+
+export async function getMooseAnalysis(arguments_: QueryGetMooseAnalysisArguments): Promise<Query['getMooseAnalysis']> {
+  const { artifactUrl, save } = arguments_;
+  const { stepStartedAt } = arguments_;
+  const result = await getDPVJobResultPolling(artifactUrl);
+
+  // By default we persist the report alongside the artifact; callers can
+  // opt out by passing save = false for preview-only requests.
+  if (save !== false) {
+    // Parse the Minio bucket and object key from the public artifact URL
+    // so we can store the Moose report alongside the artifact itself.
+    const url = new URL(artifactUrl);
+    const pathParts = url.pathname.replace(/^\/+/, '').split('/');
+    const bucketName = pathParts.shift()!; // e.g. "artifacts"
+    const objectName = pathParts.join('/');
+
+    await setMooseReportForArtifact(objectName, JSON.stringify(result), bucketName);
+
+    // Also derive and persist an SoTW CSV representation alongside the Moose report.
+    try {
+      const csv = buildSotwCsvFromMooseResult(result, stepStartedAt ?? undefined);
+      await setSotwReportForArtifact(objectName, csv, bucketName);
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error('[SoTW] Error generating or saving SoTW CSV', {
+        artifactUrl,
+        bucketName,
+        objectName,
+        error,
+      });
+    }
+  }
+  return JSON.stringify(result);
 }
