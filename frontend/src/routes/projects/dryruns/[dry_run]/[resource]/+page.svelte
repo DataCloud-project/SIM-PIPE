@@ -600,11 +600,11 @@
 			const job = JSON.parse(response.result) as {
 				status?: string;
 				error?: string;
-				result?: { results?: { entities?: MooseEntity[] }[] };
+				result?: { entities?: MooseEntity[] };
 			};
 			mooseJobStatus = job.status ?? null;
 			mooseJobError = job.error ?? null;
-			results = job.result?.results;
+			mooseEntities = job.result?.entities ?? [];
 
 			// Refresh dry run nodes from backend so artifacts include the stored Moose report
 			try {
@@ -633,16 +633,14 @@
 			const job = JSON.parse(artifact.mooseReport) as {
 				status?: string;
 				error?: string;
-				result?: { results?: { entities?: MooseEntity[] }[] };
+				result?: { entities?: MooseEntity[] };
 			};
 			mooseJobStatus = job.status ?? null;
 			mooseJobError = job.error ?? null;
-			results = job.result?.results;
+			mooseEntities = job.result?.entities ?? [];
 		}
 
-		mooseEntities = results?.flatMap((r) => r.entities ?? []) ?? [];
 		showMooseModal = true;
-
 	}
 
 	async function rerunMooseAnalysis(): Promise<void> {
@@ -764,7 +762,7 @@
 								<th>Energy [<span class="lowercase">k</span>Wh]</th>
 								<th>Status</th>
 								<th>Output</th>
-								<th>Privacy check</th>
+								<th>Data Analysis</th>
 							</tr>
 						</thead>
 						<tbody>
@@ -817,7 +815,7 @@
 											on:click|stopPropagation={() => onAnalyze(step.outputArtifacts[0], step.startedAt)}
 											>
 											{#if step.outputArtifacts?.length > 1 && !step.outputArtifacts[0]?.mooseReport}
-												Run privacy check
+												Run data analysis
 											{:else}
 												View saved report
 											{/if}
@@ -982,7 +980,7 @@
 						<section class="moose-modal-body">
 							{#if mooseJobStatus === 'failed'}
 								<p class="moose-status moose-status-failed">
-									Latest privacy check run failed; entities may be incomplete.
+									Latest data analysis check run failed; entities may be incomplete.
 								</p>
 							{/if}
 							{#if mooseEntities.length === 0}
@@ -1001,7 +999,15 @@
 											<tr>
 												<td>{entity.text}</td>
 												<td>{entity.type_id}</td>
-												<td>{(entity.confidence * 100).toFixed(1)}%</td>
+												   <td>
+													   {#if entity.confidence > 0.75}
+														   High
+													   {:else if entity.confidence < 0.5}
+														   Low
+													   {:else}
+														   Medium
+													   {/if}
+												   </td>
 											</tr>
 										{/each}
 									</tbody>

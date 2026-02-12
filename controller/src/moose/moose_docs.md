@@ -3,26 +3,7 @@ kubectl create secret generic simpipe-openrouter-api-paid --from-literal=OPENROU
 
 kubectl create secret generic simpipe-openrouter-api --from-literal=OPENROUTER_API_KEY='<your-openrouter-key>'
 
-curl -X 'POST' \
-  'https://moose.zooverse.dev/ner' \
-  -H 'accept: application/json' \
-  -H 'X-LLM-API-Key: openrouterkey' \
-  -H 'X-API-Key: mooseapikey' \
-  -H 'Content-Type: application/json' \
-  -d '{
-  "tasks": [
-    {
-      "task_id": "someid",
-      "text": "#this should be an argument"
-    }
-  ],
-  "include_scores": false,
-  "llm": {
-    "provider": "openrouter",
-    "model": "gpt-oss-120b"
-  },
-  "schema": "dpv"
-}'
+curl -X 'POST' \   'https://moose.zooverse.dev/schemas/dpv_pd/ner' \   -H 'accept: application/json' \   -H 'X-API-Key: mooseapikey' \   -H 'X-LLM-API-Key: openrouterkey' \   -H 'Content-Type: application/json' \   -d '{   "text": "We collect email addresses and IP addresses for fraud prevention.",   "llm": {       "provider": "openrouter",       "model": "meta-llama/llama-3.3-70b-instruct"    } }'
 
 https://moose.zooverse.dev/ner
 

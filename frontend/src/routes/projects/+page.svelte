@@ -32,7 +32,6 @@
 		return response.projects;
 	};
 
-	// TODO: replace this when dryRuns_aggregate is ready in the api
 	// get dry run counts for each project, and reset checkboxes
 	function getDryRunCounts(projectList: Project[] | undefined): Record<string, number> {
 		dryRunCounts = {};
@@ -68,44 +67,45 @@
 
 	async function onDeleteSelected(): Promise<void> {
 		try {
-			Object.keys(checkboxes)
-				.filter((item) => checkboxes[item])
-				// eslint-disable-next-line @typescript-eslint/no-misused-promises
-				.forEach(async (element) => {
-					const projectVariables = {
-						projectId: element
-					};
-					const responseDryRuns = await requestGraphQLClient<{
-						project: { dryRuns: Record<string, undefined>[] };
-					}>(allDryRunsQuery, projectVariables);
-					// eslint-disable-next-line @typescript-eslint/no-misused-promises
-					responseDryRuns.project.dryRuns.forEach(async (dry_run: Record<string, undefined>) => {
-						await requestGraphQLClient(deleteDryRunMutation, {
-							dryRunId: dry_run.id
-						});
-					});
-					await requestGraphQLClient(deleteWorkflowTemplateMutation, {
-						name: element
-					}).catch((error) => {
+			const selectedProjectIds = Object.keys(checkboxes).filter((item) => checkboxes[item]);
+			const deletePromises = selectedProjectIds.map(async (element) => {
+				const projectVariables = { projectId: element };
+				const responseDryRuns = await requestGraphQLClient<{
+					project: { dryRuns: Record<string, undefined>[] };
+				}>(allDryRunsQuery, projectVariables);
+				await Promise.all(
+					responseDryRuns.project.dryRuns.map(async (dry_run: Record<string, undefined>) => {
+						try {
+							await requestGraphQLClient(deleteDryRunMutation, { dryRunId: dry_run.id });
+						} catch (error) {
+							console.error('Error deleting dry run:', error);
+						}
+					})
+				);
+				await requestGraphQLClient(deleteWorkflowTemplateMutation, { name: element }).catch(
+					(error) => {
 						console.log(error);
 						visibleAlert = true;
 						alertTitle = 'Delete workflow template failed!';
 						alertMessage = error.message;
-					});
-					await requestGraphQLClient(deleteProjectMutation, projectVariables);
-				});
+					}
+				);
+				await requestGraphQLClient(deleteProjectMutation, projectVariables);
+			});
 
-			// TODO: wait for all delete promises to complete change to Promise.all - no-misused-promises
-			// await Promise.all(deletePromises);
+			await Promise.all(deletePromises);
 
 			const title = 'Project deleted🗑️!';
-			const body = `Deleted projects: ${Object.keys(checkboxes).join(', ')}`;
+			const body = `Deleted projects: ${selectedProjectIds.join(', ')}`;
 
-			// await displayAlert(title, body);
-			console.log(title, body);
-			// inserting a small delay because sometimes delete mutation returns true, but all projects query returns the deleted project as well
-			// eslint-disable-next-line no-promise-executor-return
-			await new Promise((resolve) => setTimeout(resolve, 150));
+			const projectDeletedModal: ModalSettings = {
+				type: 'alert',
+				title: 'Project deleted🗑️!',
+				body: `Deleted projects: ${selectedProjectIds.join(', ')}`
+			};
+			modalStore.trigger(projectDeletedModal);
+			await new Promise((resolve) => setTimeout(resolve, 1500));
+			modalStore.close();  
 
 			// update the project list after deletion
 			const responseAllProjects: { projects: Project[] } =
@@ -241,7 +241,7 @@
 					<button
 						type="button"
 						class="btn btn-sm variant-filled-warning"
-						on:click={onDeleteSelected}
+						on:click={() => onDeleteSelected()}
 					>
 						<span>Delete</span>
 					</button>

@@ -1,11 +1,4 @@
 // Moose entity type for DPV results
-export interface MooseEntity {
-  start: number;
-  end: number;
-  text: string;
-  type_id: string;
-  confidence: number;
-}
 /* eslint-disable import/prefer-default-export */
 import got from 'got';
 import type { Query, QueryGetMooseAnalysisArgs as QueryGetMooseAnalysisArguments } from 'server/schema.js';
@@ -20,9 +13,16 @@ import {
 } from '../config.js';
 import { getObjectText, setMooseReportForArtifact, setSotwReportForArtifact } from '../minio/minio.js';
 
+export interface MooseEntity {
+  start: number;
+  end: number;
+  text: string;
+  type_id: string;
+  confidence: number;
+}
+
 interface DpvRequestBody {
-  tasks: { task_id: string; text: string; }[];
-  include_scores: boolean;
+  text: string;
   llm: {
     provider: string;
     model: string;
@@ -30,8 +30,7 @@ interface DpvRequestBody {
   schema: string;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export async function makeDPVCall(text: string, taskId = 'task-1'): Promise<string> {
+export async function makeDPVCall(text: string): Promise<string> {
   if (!mooseApiKey) {
     throw new Error('MOOSE_API_KEY is not configured');
   }
@@ -41,13 +40,7 @@ export async function makeDPVCall(text: string, taskId = 'task-1'): Promise<stri
   const url = `${mooseApiEndpoint}/ner`;
 
   const body: DpvRequestBody = {
-    tasks: [
-      {
-        task_id: taskId,
-        text,
-      },
-    ],
-    include_scores: false,
+    text,
     llm: {
       provider: mooseLlmProvider,
       model: mooseLlmModel,
@@ -55,23 +48,59 @@ export async function makeDPVCall(text: string, taskId = 'task-1'): Promise<stri
     schema: mooseDpvSchema,
   };
 
-  console.log('body:', JSON.stringify(body, null, 2));
-
-  const response: { body: { job_id: string } } = await got.post(url, {
+  console.log('full request (keys are hidden):', JSON.stringify({
     json: body,
     responseType: 'json',
     headers: {
       accept: 'application/json',
-      'X-LLM-API-Key': openRouterApiKey,
-      'X-API-Key': mooseApiKey,
+      'X-LLM-API-Key': 'openRouterApiKey',
+      'X-API-Key': 'mooseApiKey',
       'Content-Type': 'application/json',
     },
-  });
-  console.log('DPV response:', response.body);
-  return response.body.job_id;
+  }));
+
+  try {
+    const response: { body: { job_id: string } } = await got.post(url, {
+      json: body,
+      responseType: 'json',
+      headers: {
+        accept: 'application/json',
+        'X-LLM-API-Key': openRouterApiKey,
+        'X-API-Key': mooseApiKey,
+        'Content-Type': 'application/json',
+      },
+    });
+    console.log('DPV response:', response.body);
+    return response.body.job_id;
+  } catch (error) {
+    console.error('Error making DPV call to Moose API:', error);
+    throw error;
+  }
 }
 
-export async function getDPVJobResult(jobId: string): Promise<{ status?: string } & Record<string, unknown>> {
+
+// Define MooseJobResult type for the new Moose API response
+export interface MooseJobResultEntity {
+  start: number;
+  end: number;
+  text: string;
+  type_id: string;
+  confidence: number;
+}
+
+export interface MooseJobResult {
+  job_id: string;
+  status: string;
+  created_at: string;
+  updated_at: string;
+  result: {
+    entities: MooseJobResultEntity[];
+    warnings?: unknown[];
+  };
+  [key: string]: unknown;
+}
+
+export async function getDPVJobResult(jobId: string): Promise<MooseJobResult> {
   if (!mooseApiKey) {
     throw new Error('MOOSE_API_KEY is not configured');
   }
@@ -86,7 +115,7 @@ export async function getDPVJobResult(jobId: string): Promise<{ status?: string 
     },
   });
 
-  return response.body as { status?: string } & Record<string, unknown>;
+  return response.body as MooseJobResult;
 }
 
 export function buildSotwCsvFromMooseResult(result: unknown, stepStartedAt?: string): string {
@@ -152,7 +181,7 @@ export async function getDPVJobResultPolling(
   artifactUrl: string,
   pollingIntervalMs = 4000,
   maxAttempts = 80,
-): Promise<unknown> {
+): Promise<MooseJobResult> {
   // Parse the Minio bucket and object key from the public artifact URL,
   // then fetch the content via the internal Minio client (not localhost).
   const url = new URL(artifactUrl);
@@ -162,30 +191,7 @@ export async function getDPVJobResultPolling(
 
   const artifactText = await getObjectText(objectName, bucketName);
   console.log('Fetched artifact text for DPV processing:', artifactText);
-  // TODO: remove when moose api error is resolved
-  // const result = {
-  //   job_id: '7fec2e67-c6c8-4033-9490-1381a928be39',
-  //   status: 'completed',
-  //   created_at: '2026-01-22T17:28:13.615831+00:00',
-  //   updated_at: '2026-01-22T17:28:52.218513+00:00',
-  //   result: {
-  //     results: [{
-  //       task_id: 'task-1',
-  //       entities: [{
-  //         start: 32, end: 36, text: '76kg', type_id: 'dpv-pd:Weight', confidence: 0.531_791_907_514_450_9,
-  //       }, {
-  //         start: 48, end: 53, text: '99bpm', type_id: 'dpv-pd:PhysicalHealth', confidence: 0.543_209_876_543_209_8,
-  //       }, {
-  //         start: 69, end: 75, text: '131/88', type_id: 'dpv-pd:PhysicalHealth', confidence: 0.514_124_293_785_310_8,
-  //       }, {
-  //         start: 87, end: 91, text: '5254', type_id: 'dpv:ActivityMonitoring', confidence: 0.560_283_687_943_262_3,
-  //       }, {
-  //         start: 125, end: 133, text: 'John Doe', type_id: 'dpv:Patient', confidence: 0.518_918_918_918_918_8,
-  //       }],
-  //     }],
-  //   },
-  // };
-  // return result;
+
   // Start Moose DPV job with the artifact text
   const jobId = await makeDPVCall(artifactText);
   console.log('Started DPV job with ID:', jobId);
@@ -226,6 +232,19 @@ export async function getMooseAnalysis(arguments_: QueryGetMooseAnalysisArgument
     const pathParts = url.pathname.replace(/^\/+/, '').split('/');
     const bucketName = pathParts.shift()!; // e.g. "artifacts"
     const objectName = pathParts.join('/');
+
+    // edit confidence values to low, medium and high for new Moose API format
+    if (result && result.result && Array.isArray(result.result.entities)) {
+      for (const entity of result.result.entities) {
+        if (entity.confidence > 0.75) {
+          entity.confidence = 'high' as unknown as number;
+        } else if (entity.confidence < 0.5) {
+          entity.confidence = 'low' as unknown as number;
+        } else {
+          entity.confidence = 'medium' as unknown as number;
+        }
+      }
+    }
 
     await setMooseReportForArtifact(objectName, JSON.stringify(result), bucketName);
 
