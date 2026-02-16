@@ -42,6 +42,7 @@ export const openRouterApiKey:string = process.env.OPENROUTER_API_KEY ?? '';
 // Moose DPV LLM configuration
 export const mooseLlmProvider = 'openrouter';
 export const mooseLlmModel = 'meta-llama/llama-3.3-70b-instruct';
+// export const mooseLlmModel = 'gpt-oss-120b';
 export const mooseDpvSchema = 'dpv_pd';
 
 // K3S Cluster Secret

@@ -51,6 +51,7 @@
 	export let data;
 
 	let loadingFinished = false;
+	let loadingError: string | null = null;
 	let workflow: { workflowTemplates: { argoWorkflowTemplate: { spec: { templates: any[] } } }[] };
 	const dryRunPhases: { [x: string]: string } = {};
 	const graphOrientation = 'LR';
@@ -174,10 +175,8 @@
 			dryRunPhaseMessage = response?.dryRun?.status?.message;
 			return response?.dryRun?.nodes.filter((node) => Object.keys(node).length > 0);
 		} catch (error) {
-			const title = 'Internal error!';
-			const body = `${(error as Error).message}`;
-			// await displayAlert(title, body, 10_000);
-			console.log(title, body);
+			loadingError = 'Failed to load metrics';
+			console.log('Failed to load metrics', error);
 			return [];
 		}
 	};
@@ -228,31 +227,36 @@
 		metrics: any;
 		allstepnames: string[];
 	}> => {
-		const selectedProjectResponse = await requestGraphQLClient<{
+		const dryRunId = data.resource;
+
+		// Kick off independent requests as early as possible
+		const dryRunPromise = requestGraphQLClient<{
 			dryRun?: { project: { name: string; id: string } };
-		}>(getDryRunQuery, {
-			dryRunId: data.resource
-		});
+		}>(getDryRunQuery, { dryRunId });
+		const metricsPromise = getMetricsResponse();
+		const dryrunPhasePromise = requestGraphQLClient<{ dryRun: DryRun }>(
+			getDryRunPhaseResultsQuery,
+			{ dryRunId }
+		);
+
+		const selectedProjectResponse = await dryRunPromise;
 		if (!selectedProjectResponse.dryRun?.project) {
 			throw new Error('Project not found');
 		}
-		selectedProject = selectedProjectResponse.dryRun?.project;
-		selectedProjectName.set(selectedProject?.name);
-		const workflowVariables = {
-			// name: selectedProject?.name
-			projectId: selectedProject?.id
-		};
-		const dryrunVariables = {
-			// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-			dryRunId: data.resource
-		};
-		selectedDryRunName.set(data.resource);
-		const workflowResponse = await requestGraphQLClient<any>(getProjectQuery, workflowVariables);
+		selectedProject = selectedProjectResponse.dryRun.project;
+		selectedProjectName.set(selectedProject.name);
+		selectedDryRunName.set(dryRunId);
 
-		const dryrunResponse: { dryRun: DryRun } = await requestGraphQLClient(
-			getDryRunPhaseResultsQuery,
-			dryrunVariables
-		);
+		const workflowPromise = requestGraphQLClient<any>(getProjectQuery, {
+			projectId: selectedProject.id
+		});
+
+		const [workflowResponse, dryrunResponse, metricsResponse] = await Promise.all([
+			workflowPromise,
+			dryrunPhasePromise,
+			metricsPromise
+		]);
+
 		// set stepsList as nodes
 		$stepsList = dryrunResponse.dryRun.nodes;
 		// filter out all nodes which are not of type Pod
@@ -261,37 +265,33 @@
 			dryRunPhases[node.displayName] = node.phase;
 		});
 
-		const metricsResponse = await getMetricsResponse();
+		const metrics = (metricsResponse as unknown as DryRunMetrics[]) ?? [];
+		if (metrics.length === 0) {
+			loadingError = loadingError ?? 'No metrics returned for this dry run';
+		}
 
-		// eslint-disable-next-line @typescript-eslint/no-unused-expressions
-		selectedProjectName.set;
-
-		const result = await getMetricsUsageUtils(metricsResponse as unknown as DryRunMetrics[]);
+		const result = await getMetricsUsageUtils(metrics);
 		const { allStepNames } = result;
-		// console.log('allStepNames:', allStepNames);
 		cumulativeCpuData = result.cumulativeCpuData;
 		currentCpuData = result.currentCpuData;
 		memoryData = result.memoryData;
 		cumulativeNetworkData = result.cumulativeNetworkData;
 		currentNetworkData = result.currentNetworkData;
 		logs = result.logs;
+
 		const carbontrackerData: Array<{
 			nodeId: string;
 			stepName: string;
 			carbonData: { fetchCarbontrackerData?: { co2eq: number; energy: number } } | undefined;
-		}> = [];
-		for (const step of metricsResponse) {
-			if (step.type === 'Pod') {
-				const carbonResponse = await getCarbontrackerDataResponse(
-					step.metrics.cpuUsageSecondsTotal
-				);
-				carbontrackerData.push({
+		}> = await Promise.all(
+			metrics
+				.filter((step) => step.type === 'Pod')
+				.map(async (step) => ({
 					nodeId: step.id,
 					stepName: step.displayName,
-					carbonData: carbonResponse
-				});
-			}
-		}
+					carbonData: await getCarbontrackerDataResponse(step.metrics.cpuUsageSecondsTotal)
+				}))
+		);
 
 		// Merge carbontracker data with stepsList
 		$stepsList = $stepsList.map((step) => {
@@ -305,7 +305,7 @@
 		const responses = {
 			workflow: workflowResponse.project,
 			dryrun: dryrunResponse,
-			metrics: metricsResponse,
+			metrics,
 			allstepnames: allStepNames,
 			selectedDryRunName: $selectedDryRunName,
 			carbontrackerData
@@ -400,25 +400,17 @@
 		let diagramFinished = false;
 		mermaidCode = []; // clear mermaidCode
 		mermaidCode.push(`graph ${graphOrientation};`);
-		// console.log('buildDiagram workflow:', workflow);
-		// eslint-disable-next-line @typescript-eslint/no-misused-promises
-		workflow.workflowTemplates[0]?.argoWorkflowTemplate?.spec?.templates?.forEach(
-			// eslint-disable-next-line @typescript-eslint/no-misused-promises
-			async (template) => {
-				try {
-					if (template.dag) argoDAGtoMermaid(template.dag);
-					else if (template.steps) argoStepsToMermaid(template.steps);
-				} catch (error) {
-					console.log(error);
-					const title = 'Error displaying dry run step diagram❌!';
-					const body = `${(error as Error).message}`;
-					// await displayAlert(title, body, 5000);
-					console.log(title, body);
-					// eslint-disable-next-line @typescript-eslint/no-floating-promises
-					goto(`/projects/dryruns/${selectedProject?.id}`);
-				}
+		const templates = workflow.workflowTemplates?.[0]?.argoWorkflowTemplate?.spec?.templates ?? [];
+		for (const template of templates) {
+			try {
+				if (template.dag) argoDAGtoMermaid(template.dag);
+				else if (template.steps) argoStepsToMermaid(template.steps);
+			} catch (error) {
+				console.log('Error building mermaid diagram', error);
+				goto(`/projects/dryruns/${selectedProject?.id}`);
+				break;
 			}
-		);
+		}
 		diagram = mermaidCode.join('\n');
 		diagramFinished = true;
 		return diagramFinished;
@@ -561,12 +553,16 @@
 	};
 
 	onMount(async () => {
-		const getDataResponse = await getData();
-		workflow = getDataResponse.workflow;
-		allStepNames = getDataResponse.allstepnames;
-		await buildDiagram();
-		computePipelineDuration();
-		loadingFinished = true;
+		try {
+			const getDataResponse = await getData();
+			workflow = getDataResponse.workflow;
+			allStepNames = getDataResponse.allstepnames;
+			await buildDiagram();
+			computePipelineDuration();
+			loadingFinished = true;
+		} catch (error) {
+			loadingError = (error as Error).message ?? 'Failed to load dry run details';
+		}
 	});
 
 	async function onAnalyze(artifact: Artifact, stepStartedAt: string | null, attempt_rerun = false): Promise<void> {
@@ -718,7 +714,15 @@
 
 <div class="flex w-full content-center p-10">
 	<div class="table-container">
-		{#if !loadingFinished}
+		{#if loadingError}
+			<div class="card p-4">
+				<h2>Failed to load data</h2>
+				<p>{loadingError}</p>
+				<button type="button" class="btn btn-sm variant-filled" on:click={() => goto('/projects')}>
+					Back to projects
+				</button>
+			</div>
+		{:else if !loadingFinished}
 			<p>Loading metrics...</p>
 			<ProgressBar />
 		{:else}
@@ -761,7 +765,7 @@
 								<th>CO2 [<span class="lowercase">g</span>]</th>
 								<th>Energy [<span class="lowercase">k</span>Wh]</th>
 								<th>Status</th>
-								<th>Output</th>
+								<th class="output-col">Output</th>
 								<th>Data Analysis</th>
 							</tr>
 						</thead>
@@ -792,11 +796,11 @@
 										{/if}
 									</td>
 									<td>{step.phase}</td>
-									<td>
+									<td class="output-col">
 										{#if step.outputArtifacts?.length > 1}
 											{#each step.outputArtifacts as artifact}
 												{#if artifact.name !== 'main-logs'}
-													<a href={step.outputArtifacts[0].url}>{step.outputArtifacts[0].name} </a>
+													<a href={artifact.url} class="output-link">{artifact.name}</a>
 												{/if}
 											{/each}
 										{:else}
@@ -1107,6 +1111,19 @@
 			width: 100%;
 			border-collapse: collapse;
 			table-layout: fixed;
+	}
+
+	/* Prevent long artifact names from bleeding into the next column */
+	.output-col {
+		max-width: 12rem;
+		word-break: break-word;
+		white-space: normal;
+	}
+
+	.output-link {
+		display: inline-block;
+		max-width: 100%;
+		word-break: break-word;
 	}
 
 	/* Make the small Resource/Metrics table use the full card width with two balanced columns */

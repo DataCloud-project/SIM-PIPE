@@ -43,7 +43,7 @@ fi
 
 # Assign IP if not already present
 if ! $NSENTER ip addr show dev "${BR_IF}" | grep -q " ${BR_CIDR%/*}"; then
-  $NSENTER ip addr flush dev "${BR_IF}" || true
+  # Only add the address if missing; avoid flushing to preserve existing consumers.
   $NSENTER ip addr add "${BR_CIDR}" dev "${BR_IF}"
 fi
 
@@ -55,11 +55,14 @@ $NSENTER sysctl -w net.ipv4.ip_forward=1 >/dev/null
 echo "[*] WAN_IF detected as ${WAN_IF}"
 
 echo "[*] Adding iptables FORWARD rules (simpipe-bridge -> ${WAN_IF})"
-$NSENTER iptables -A FORWARD -i "${BR_IF}" -o "${WAN_IF}" -j ACCEPT
-$NSENTER iptables -A FORWARD -i "${WAN_IF}" -o "${BR_IF}" -m state --state RELATED,ESTABLISHED -j ACCEPT
+$NSENTER iptables -C FORWARD -i "${BR_IF}" -o "${WAN_IF}" -j ACCEPT 2>/dev/null || \
+  $NSENTER iptables -A FORWARD -i "${BR_IF}" -o "${WAN_IF}" -j ACCEPT
+$NSENTER iptables -C FORWARD -i "${WAN_IF}" -o "${BR_IF}" -m state --state RELATED,ESTABLISHED -j ACCEPT 2>/dev/null || \
+  $NSENTER iptables -A FORWARD -i "${WAN_IF}" -o "${BR_IF}" -m state --state RELATED,ESTABLISHED -j ACCEPT
 
 echo "[*] Adding iptables MASQUERADE rule for ${BR_NET} via ${WAN_IF}"
-$NSENTER iptables -t nat -A POSTROUTING -s "${BR_NET}" -o "${WAN_IF}" -j MASQUERADE
+$NSENTER iptables -t nat -C POSTROUTING -s "${BR_NET}" -o "${WAN_IF}" -j MASQUERADE 2>/dev/null || \
+  $NSENTER iptables -t nat -A POSTROUTING -s "${BR_NET}" -o "${WAN_IF}" -j MASQUERADE
 
 echo "[*] Writing /etc/qemu-ifup"
 cat >/etc/qemu-ifup <<EOF

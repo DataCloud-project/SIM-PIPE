@@ -23,13 +23,19 @@
 	let alertVariant: string = 'variant-ghost-surface';
 
 	$: reactiveProjectsList = $projectsList;
+	let loadingError: string | null = null;
 
 	const checkboxes: Record<string, boolean> = {};
 	let dryRunCounts: Record<string, number> = {};
 
 	const getProjectsList = async (): Promise<Project[]> => {
-		const response: { projects: Project[] } = await requestGraphQLClient(allProjectsQuery);
-		return response.projects;
+		try {
+			const response: { projects: Project[] } = await requestGraphQLClient(allProjectsQuery);
+			return response.projects;
+		} catch (error) {
+			loadingError = 'Failed to load projects';
+			throw error;
+		}
 	};
 
 	// get dry run counts for each project, and reset checkboxes
@@ -44,19 +50,15 @@
 
 	$: dryRunCounts = getDryRunCounts(reactiveProjectsList);
 
-	const projectsPromise = getProjectsList();
+	async function refreshProjects(): Promise<Project[]> {
+		const value = await getProjectsList();
+		$projectsList = value;
+		reactiveProjectsList = value;
+		dryRunCounts = getDryRunCounts(value);
+		return value;
+	}
 
-	// TODO: move to lib or utils
-	projectsPromise
-		.then((value) => {
-			$projectsList = value;
-			reactiveProjectsList = value;
-			dryRunCounts = getDryRunCounts($projectsList);
-		})
-		// eslint-disable-next-line unicorn/prefer-top-level-await
-		.catch(() => {
-			$projectsList = undefined;
-		});
+	const projectsPromise = refreshProjects();
 
 	/* const modal: ModalSettings = {
 		type: 'component',
@@ -108,9 +110,7 @@
 			modalStore.close();  
 
 			// update the project list after deletion
-			const responseAllProjects: { projects: Project[] } =
-				await requestGraphQLClient(allProjectsQuery);
-			projectsList.set(responseAllProjects.projects);
+			await refreshProjects();
 		} catch (error) {
 			const title = 'Error deleting project❌!';
 			const body = `${(error as Error).message}`;
@@ -190,6 +190,7 @@
 			modalStore.trigger(modal);
 		}).then(() => {
 			console.log('onCreateNewProject promise resolved');
+			void refreshProjects();
 		});
 		modalPromise.catch((error) => {
 			console.log('onCreateNewProject promise error:', error);
@@ -226,6 +227,12 @@
 			<p style="font-size:20px;">Loading projects...</p>
 			<ProgressBar />
 		{:then}
+			{#if loadingError}
+				<div class="card p-4">
+					<h2>Failed to load projects</h2>
+					<p>{loadingError}</p>
+				</div>
+			{:else}
 			<h1>Projects</h1>
 			<div class="flex flex-row justify-end p-5 space-x-1">
 				<div>
@@ -304,6 +311,12 @@
 					{/each}
 				</tbody>
 			</table>
+			{/if}
+		{:catch error}
+			<div class="card p-4">
+				<h2>Failed to load projects</h2>
+				<p>{error.message}</p>
+			</div>
 		{/await}
 	</div>
 </div>

@@ -1,6 +1,25 @@
 #!/bin/sh
 
-set -e # Exit immediately if a command exits with a non-zero status
+set -euo pipefail # Exit on error, unset vars, or failed pipeline
+
+# Basic pre-flight checks to fail fast with clear messages
+require_cmd() {
+  if ! command -v "$1" >/dev/null 2>&1; then
+    echo "[ERROR] Missing required command: $1" >&2
+    exit 1
+  fi
+}
+
+require_cmd kubectl
+require_cmd qemu-system-x86_64
+require_cmd qemu-img
+require_cmd cloud-localds
+
+# Ensure host tmp mount exists and is writable
+if [ ! -d /host-tmp-vm ] || [ ! -w /host-tmp-vm ]; then
+  echo "[ERROR] /host-tmp-vm is missing or not writable; ensure the host path is mounted" >&2
+  exit 1
+fi
 
 # Input arguments
 
@@ -29,30 +48,42 @@ if [ -x /app/setup-debian-host.sh ]; then
 fi
 
 select_os_image() {
- log_message "INFO" "Selecting pre-downloaded OS image for $OS..."
+log_message "INFO" "Selecting pre-downloaded OS image for $OS..."
+ base_image=""
  case "$OS" in
-"ubuntu-18") qemu-img create -f qcow2 -F qcow2 -b /app/images/ubuntu-18.qcow2 "${QCOW2_IMAGE_FILE}" 10G ;;
-"ubuntu-20") qemu-img create -f qcow2 -F qcow2 -b /app/images/ubuntu-20.qcow2 "${QCOW2_IMAGE_FILE}" 10G ;;
-"ubuntu-22") qemu-img create -f qcow2 -F qcow2 -b /app/images/ubuntu-22.qcow2 "${QCOW2_IMAGE_FILE}" 10G ;;
-"ubuntu-24") qemu-img create -f qcow2 -F qcow2 -b /app/images/ubuntu-24.qcow2 "${QCOW2_IMAGE_FILE}" 10G ;;
+"ubuntu-18") base_image=/app/images/ubuntu-18.qcow2 ;;
+"ubuntu-20") base_image=/app/images/ubuntu-20.qcow2 ;;
+"ubuntu-22") base_image=/app/images/ubuntu-22.qcow2 ;;
+"ubuntu-24") base_image=/app/images/ubuntu-24.qcow2 ;;
 
 *) log_message "ERROR" "Unsupported OS type: $OS"; exit 1 ;;
 esac
+
+ if [ ! -f "$base_image" ]; then
+   log_message "ERROR" "Base image not found: $base_image"
+   exit 1
+ fi
+
+ qemu-img create -f qcow2 -F qcow2 -b "$base_image" "${QCOW2_IMAGE_FILE}" 10G
 }
 
 # Function: Fetch K3S cluster details
 fetch_k3s_details() {
-  # use curl ifconfig.me for ip
- log_message "INFO" "Fetching Kubernetes cluster details..."
- K3S_SERVER_IP=$(kubectl get secret "$K3S_TOKEN_SECRET" -o jsonpath='{.data.K3S_SERVER_IP}' | base64 -d)
- K3S_TOKEN=$(kubectl get secret "$K3S_TOKEN_SECRET" -o jsonpath='{.data.token}' | base64 -d)
+  log_message "INFO" "Fetching Kubernetes cluster details..."
+  K3S_SERVER_IP=$(kubectl get secret "$K3S_TOKEN_SECRET" -o jsonpath='{.data.K3S_SERVER_IP}' 2>/dev/null | base64 -d || true)
+  K3S_TOKEN=$(kubectl get secret "$K3S_TOKEN_SECRET" -o jsonpath='{.data.token}' 2>/dev/null | base64 -d || true)
 
- if [ -z "$K3S_TOKEN" ]; then
- log_message "ERROR" "Failed to retrieve K3S token."
- exit 1
- fi
+  if [ -z "$K3S_TOKEN" ]; then
+    log_message "ERROR" "Failed to retrieve K3S token from secret ${K3S_TOKEN_SECRET}."
+    exit 1
+  fi
 
- K3S_SERVER_URL="https://${K3S_SERVER_IP}:6443"
+  if [ -z "$K3S_SERVER_IP" ]; then
+    log_message "ERROR" "K3S_SERVER_IP missing in secret ${K3S_TOKEN_SECRET}."
+    exit 1
+  fi
+
+  K3S_SERVER_URL="https://${K3S_SERVER_IP}:6443"
 
 }
 

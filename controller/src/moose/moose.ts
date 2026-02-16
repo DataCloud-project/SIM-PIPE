@@ -78,7 +78,6 @@ export async function makeDPVCall(text: string): Promise<string> {
   }
 }
 
-
 // Define MooseJobResult type for the new Moose API response
 export interface MooseJobResultEntity {
   start: number;
@@ -117,42 +116,39 @@ export async function getDPVJobResult(jobId: string): Promise<MooseJobResult> {
 
   return response.body as MooseJobResult;
 }
+// Helper to expand CURIEs to IRIs
+function getIRI(dpvEntity: string): string {
+  if (dpvEntity.startsWith('dpv-pd:')) {
+    return `https://w3id.org/dpv/pd/owl#${dpvEntity.slice('dpv-pd:'.length)}`;
+  } if (dpvEntity.startsWith('dpv:')) {
+    return `https://w3id.org/dpv/owl#${dpvEntity.slice('dpv:'.length)}`;
+  }
+  return dpvEntity;
+}
 
-export function buildSotwCsvFromMooseResult(result: unknown, stepStartedAt?: string): string {
+export function buildSotwCsvFromMooseResult(result: MooseJobResult, stepStartedAt?: string): string {
   // The SoTW CSV has one row per DPV entity instance in the Moose report.
   const headers = [
     'http://www.w3.org/ns/odrl/2/dateTime',
     'http://www.w3.org/ns/odrl/2/Party',
     'http://www.w3.org/ns/odrl/2/Action',
     'http://www.w3.org/ns/odrl/2/Asset',
-    'http://www.w3.org/ns/odrl/2/Purpose',
+    'https://www.sintef.no/ontology#contains',
+    'http://www.w3.org/ns/odrl/2/purpose',
   ];
 
-  const entities: MooseEntity[] = [];
-
-  if (result && typeof result === 'object') {
-    const job = result as {
-      status?: string;
-      created_at?: string;
-      result?: { results?: { entities?: MooseEntity[] | null }[] | null };
-    };
-    if (job.status === 'completed' && job.result?.results) {
-      for (const r of job.result.results) {
-        if (Array.isArray(r.entities)) {
-          for (const entity of r.entities) {
-            entities.push(entity);
-          }
-        }
-      }
-    }
-  }
+  const entities: MooseEntity[] = result && typeof result === 'object' && result.status === 'completed'
+  && result.result && Array.isArray(result.result.entities)
+    ? result.result.entities
+    : [];
 
   const makeRow = (entity?: MooseEntity): string[] => [
     stepStartedAt ?? '', // Use the step start time when provided; otherwise leave empty
-    '', // Party left blank until userId is available in SIMPIPE
+    'https://w3id.org/dpv/owl#Entity',
     'http://www.w3.org/ns/odrl/2/use',
-    entity ? JSON.stringify(entity.type_id) : '', // same entity type extracted from Moose is passed on, can be extended to IRI later
-    'https://w3id.org/dpv#DataQualityImprovement', // picked a purpose which matched why data was in SIMPIPE
+    'https://w3id.org/dpv/owl#Data', // Asset column is always this IRI
+    entity && entity.type_id ? getIRI(entity.type_id) : '', // Asset (contains) column: expanded IRI
+    'https://w3id.org/dpv/owl#DataQualityImprovement', // Purpose column
   ];
 
   const rows: string[][] = [];

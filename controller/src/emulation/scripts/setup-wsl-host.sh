@@ -26,7 +26,7 @@ fi
 
 # Assign IP if not already present
 if ! $NSENTER ip addr show dev "${BR_IF}" | grep -q " ${BR_CIDR%/*}"; then
-  $NSENTER ip addr flush dev "${BR_IF}" || true
+  # Only add the address if missing; avoid flushing to preserve existing consumers.
   $NSENTER ip addr add "${BR_CIDR}" dev "${BR_IF}"
 fi
 

@@ -14,24 +14,25 @@ SIM-PIPE generates and simulates a deployment configuration for the final deploy
 
 ## Quick installation
 
-If you use MacOS or Debian based Linux, run the following command to install and start SIM-PIPE:
+Supported by the scripts: Debian/Ubuntu (k3s) and macOS (Colima). For other distros, use the manual Helm flow in the Kubernetes section.
 
 ```bash
-python install.py
-python start.py
-# or
 python3 install.py
 python3 start.py
 ```
 
-*Please note that this is an opiniated installation script. You may want to install it manually instead.*
+What these do:
+- `install.py`: installs prerequisites (Ansible, Docker, k3s on Linux; brew tools on macOS), adds you to the `docker` group, installs/updates the Helm chart with [charts/simpipe/values.yaml](charts/simpipe/values.yaml), and ensures required secrets.
+- `start.py`: re-runs installer checks, ensures secrets, and waits for the cluster. On macOS it also starts Colima+Kubernetes; on Linux it expects your k3s cluster already running and readable.
 
-Use the following command to easily expose the various services of SIM-PIPE:
+Important:
+- If you were added to the `docker` group, log out/in (or restart your shell/WSL) before re-running `start.py`, otherwise kubeconfig access will fail.
+- The scripts expect kubeconfig at `/etc/rancher/k3s/k3s.yaml` and try to fix ownership (600). Override via `KUBECONFIG` if needed.
+
+Port-forward helper (optional, local dev):
 ```bash
-python forwarding.py
+python3 forwarding.py
 ```
-
-*You can check the advanced installation section for more details on the installation process.*
 
 ## Quick Start using the GUI
 
@@ -62,26 +63,22 @@ argo logs @latest
 
 ## Advanced installation
 
-### MacOS Installation
+### macOS Installation
 
-The MacOS installation is automated using `brew` and the `python install.py` script. You need to install [brew](https://brew.sh/) first.
-Note that the `python start.py` script will automatically install the dependencies first.
+Requires [brew](https://brew.sh/) first. `python3 start.py` will install tools via brew, start Colima with Kubernetes (`simpipe` profile), and then install/upgrade the chart using the bundled values and secrets helper.
 
-The MacOS installation uses a Linux virtual machine using `colima` named `simpipe`. When starting simpipe, the default Kubernetes context will be set to the `simpipe` kubernetes cluster.
+### Linux (Debian/Ubuntu)
 
-### Linux Debian(like) Installation
+`python3 install.py` installs prerequisites (Ansible, Docker, k3s, helm, argo CLI), creates/uses `/etc/rancher/k3s/k3s.yaml`, ensures SIM-PIPE secrets, and installs/updates the Helm chart. `python3 start.py` re-runs checks and waits for pods but does **not** start k3s for you—start it manually if it is down.
 
-The Linux installation is also automated using the `python install.py` script. We only focus on Debian based Linux distributions for now. We tested on Debian and Ubuntu, but it may work with little efforts on other distributions with little modifications.
-
-The installation will first install Ansible and then Ansible to install everything.
-
-If you don't with to use the Python installation script, you can also use the Ansible playbooks directly.
+If you prefer manual Ansible steps:
 ```bash
-sudo ansible-galaxy install -r ./ansible/requirements.yaml
-echo sudo ansible-playbook -i localhost, -c local -e docker_users=[\'$(whoami)\']./ansible/install-everything.yaml
+sudo ansible-galaxy install -r ./ansible/requirements.yaml --roles-path ./ansible/roles
+sudo ansible-playbook -i localhost, -c local -b -K -e docker_users=["$(whoami)"] ./ansible/install-everything.yaml
+sudo ansible-playbook -i localhost, -c local -b -K ./ansible/install-simpipe.yaml
 ```
 
-*If you are already running a Kubernetes cluster on your machine, it may be easier to install SIM-PIPE on it directly using Helm as explained in the following section.*
+After being added to the `docker` group, log out/in before retrying so kubectl can read kubeconfig.
 
 ### Kubernetes Installation
 
@@ -92,14 +89,19 @@ Please note that it is recommended to use a clean Kubernetes cluster for the ins
 SIM-PIPE is been developed and tested on kubernetes `1.27` with the [K3S distribution](http://k3s.io). The default configuration
 uses the `default` namespace and has opiniated settings for [Argo Workflow](https://argoproj.github.io/workflows/) and the various secrets and role bindings.
 
-You may want to change the configuration of the Helm chart to match your needs.
+You may want to change the configuration of the Helm chart to match your needs. If installing manually, create the required secrets first (see `secrets_manager.py`), then apply the chart with the bundled values file:
 
 ```bash
 # Using the latest release
-helm install simpipe oci://ghcr.io/datacloud-project/sim-pipe
+helm install simpipe oci://ghcr.io/datacloud-project/sim-pipe -f charts/simpipe/values.yaml
 # or using the local folder
-helm install simpipe ./charts/simpipe
+helm install simpipe ./charts/simpipe -f charts/simpipe/values.yaml
 ```
+
+Chart defaults to note (edit in [charts/simpipe/values.yaml](charts/simpipe/values.yaml)):
+- Controller runs on hostNetwork, privileged, port 9000; Argo endpoint `http://simpipe-argo-workflows-server:2746/`.
+- MinIO enabled with default creds `simpipe/simpipe1234`, buckets `artifacts`, `logs`, `registry`.
+- Carbontracker, cadvisor bridge, and Argo Workflows enabled by default. Change or secure before exposing externally.
 
 ### Windows Installation
 

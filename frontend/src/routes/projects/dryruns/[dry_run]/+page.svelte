@@ -24,22 +24,14 @@
 	export const getProjectDetails = async (): Promise<Project> => {
 		const variables = { projectId: data.dry_run };
 		const response: { project: Project } = await requestGraphQLClient(allDryRunsQuery, variables);
+		$selectedProject = response.project;
+		reactiveProjectDetails = response.project;
+		reactiveProjectDetails.dryRuns.forEach((element: DryRun) => {
+			checkboxes[element.id] = false;
+		});
 		return response.project;
 	};
 	const projectDetailsPromise = getProjectDetails();
-
-	// TODO: move to lib or utils
-	projectDetailsPromise
-		.then((value) => {
-			$selectedProject = value;
-			reactiveProjectDetails = value;
-			reactiveProjectDetails.dryRuns.forEach((element: DryRun) => {
-				checkboxes[element.id] = false;
-			});
-		})
-		.catch(() => {
-			reactiveProjectDetails = undefined;
-		});
 
 	async function onDeleteSelected(): Promise<void> {
 		const deletePromises = Object.keys(checkboxes)
@@ -259,6 +251,14 @@
 					</tbody>
 				</table>
 			{/if}
+		{:catch error}
+			<div class="card p-4">
+				<h2>Failed to load dry runs</h2>
+				<p>{error.message}</p>
+				<button type="button" class="btn btn-sm variant-filled" on:click={() => goto('/projects')}>
+					Back to projects
+				</button>
+			</div>
 		{/await}
 	</div>
 </div>

@@ -17,8 +17,16 @@
 	let alertVariant: string = 'variant-ghost-surface';
 
 	$: reactiveResourcesList = $resourcesList;
+	let loadingError: string | null = null;
 
 	const checkboxes: Record<string, boolean> = {};
+
+	function resetCheckboxes(list?: Resource[]): void {
+		Object.keys(checkboxes).forEach((key) => delete checkboxes[key]);
+		list?.forEach((resource) => {
+			checkboxes[resource.name] = false;
+		});
+	}
 
 	// fetch resources
 	const getResourcesList = async (): Promise<Resource[]> => {
@@ -27,20 +35,20 @@
 			return response.resources;
 		} catch (error) {
 			console.error('Error fetching resources:', error);
+			loadingError = 'Failed to load resources';
 			return [];
 		}
 	};
 
-	let resourcesPromise: Promise<Resource[]> = getResourcesList();
+	async function refreshResources(): Promise<Resource[]> {
+		const value = await getResourcesList();
+		$resourcesList = value;
+		reactiveResourcesList = value;
+		resetCheckboxes(value);
+		return value;
+	}
 
-	resourcesPromise
-		.then((value) => {
-			$resourcesList = value;
-			reactiveResourcesList = value;
-		})
-		.catch(() => {
-			$resourcesList = undefined;
-		});
+	let resourcesPromise: Promise<Resource[]> = refreshResources();
 
 	const handleCheckboxClick = (event: any) => {
 		event.stopPropagation();
@@ -113,8 +121,7 @@
 			console.log('Error deleting resources:', error);
 		} finally {
 			Object.keys(checkboxes).forEach((id) => (checkboxes[id] = false));
-			const response: { resources: Resource[] } = await requestGraphQLClient(allResourcesQuery);
-			resourcesList.set(response.resources);
+			await refreshResources();
 		}
 	}
 
@@ -140,8 +147,7 @@
 			console.log('Error shutting down VM node:', error);
 		} finally {
 			Object.keys(checkboxes).forEach((id) => (checkboxes[id] = false));
-			const response: { resources: Resource[] } = await requestGraphQLClient(allResourcesQuery);
-			resourcesList.set(response.resources);
+			await refreshResources();
 		}
 	}
 </script>
@@ -166,7 +172,16 @@
 				</button>
 			</div>
 		</div>
-		{#if reactiveResourcesList?.length}
+		{#await resourcesPromise}
+			<p style="font-size:20px;">Loading VM nodes...</p>
+			<ProgressBar />
+		{:then}
+			{#if loadingError}
+				<div class="card p-4">
+					<h2>Failed to load resources</h2>
+					<p>{loadingError}</p>
+				</div>
+			{:else if reactiveResourcesList?.length}
 			<table class="table table-interactive w-full">
 				<caption hidden>Resources</caption>
 				<thead>
@@ -202,6 +217,12 @@
 		{:else}
 			<p>No resources yet.</p>
 		{/if}
+		{:catch error}
+			<div class="card p-4">
+				<h2>Failed to load resources</h2>
+				<p>{error.message}</p>
+			</div>
+		{/await}
 	</div>
 </div>
 
