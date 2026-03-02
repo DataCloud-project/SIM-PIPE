@@ -475,18 +475,18 @@
 							{#each templateContainerInputs[task.name].artifacts || [] as artifact, k}
 								<label for={artifact.name}>
 									<span>
-										<div class="grid grid-rows-2 grid-cols-3 justify-items-center items-center">
-											<div>
+										<div class="flex flex-col gap-2 w-full">
+											<div class="text-left">
 												<span>{artifact.name}</span>
 											</div>
-											<div>
+											<div class="text-left text-sm">
 												{#if inputdata[task.name] && inputdata[task.name][k] && inputdata[task.name][k].is_raw}
 													<span>{inputdata[task.name][k].raw?.filename}</span>
 												{:else}
 													<span></span>
 												{/if}
 											</div>
-											<div>
+											<div class="text-left text-sm">
 												{#if inputdata[task.name] && inputdata[task.name][k] && inputdata[task.name][k].is_artifact}
 													<span
 														>{inputdata[task.name][k].artifact?.artifact_bucket}
@@ -496,8 +496,7 @@
 													<span></span>
 												{/if}
 											</div>
-											<div></div>
-											<div>
+											<div class="flex items-center gap-3 text-left">
 												<FileButton
 													id={artifact.name}
 													name={artifact.name}
@@ -506,8 +505,6 @@
 												>
 													Upload local file
 												</FileButton>
-											</div>
-											<div>
 												<button
 													type="button"
 													class="btn variant-soft-primary"

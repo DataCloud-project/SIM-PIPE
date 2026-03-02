@@ -32,12 +32,4 @@
         state: present
       environment:
         HELM_NO_PLUGINS: "1"
-        KUBECONFIG: /etc/rancher/k3s/k3s.yaml
-
-    - name: Set secure permissions on k3s kubeconfig
-      ansible.builtin.file:
-        path: /etc/rancher/k3s/k3s.yaml
-        owner: "{{ ansible_env.SUDO_USER | default(ansible_user_id) }}"
-        group: "{{ ansible_env.SUDO_USER | default(ansible_user_id) }}"
-        mode: '0600'
 

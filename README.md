@@ -22,12 +22,11 @@ python3 start.py
 ```
 
 What these do:
-- `install.py`: installs prerequisites (Ansible, Docker, k3s on Linux; brew tools on macOS), adds you to the `docker` group, installs/updates the Helm chart with [charts/simpipe/values.yaml](charts/simpipe/values.yaml), and ensures required secrets.
-- `start.py`: re-runs installer checks, ensures secrets, and waits for the cluster. On macOS it also starts Colima+Kubernetes; on Linux it expects your k3s cluster already running and readable.
+- `install.py`: installs prerequisites (Ansible, Docker, k3s on Linux; brew tools on macOS), installs/updates the Helm chart with [charts/simpipe/values.yaml](charts/simpipe/values.yaml), and ensures required secrets using your `KUBECONFIG` (falls back to `~/.kube/config` or `/etc/rancher/k3s/k3s.yaml` when they exist).
+- `start.py`: re-runs installer checks, ensures secrets, and waits for the cluster. On macOS it also starts Colima+Kubernetes; on Linux it expects your cluster reachable via `KUBECONFIG` (no permissions are changed).
 
 Important:
-- If you were added to the `docker` group, log out/in (or restart your shell/WSL) before re-running `start.py`, otherwise kubeconfig access will fail.
-- The scripts expect kubeconfig at `/etc/rancher/k3s/k3s.yaml` and try to fix ownership (600). Override via `KUBECONFIG` if needed.
+- Set `KUBECONFIG` to point to your cluster. The scripts will fall back to `~/.kube/config` or `/etc/rancher/k3s/k3s.yaml` if they exist, but they no longer change kubeconfig permissions or add you to `docker`.
 
 Port-forward helper (optional, local dev):
 ```bash
@@ -69,16 +68,14 @@ Requires [brew](https://brew.sh/) first. `python3 start.py` will install tools v
 
 ### Linux (Debian/Ubuntu)
 
-`python3 install.py` installs prerequisites (Ansible, Docker, k3s, helm, argo CLI), creates/uses `/etc/rancher/k3s/k3s.yaml`, ensures SIM-PIPE secrets, and installs/updates the Helm chart. `python3 start.py` re-runs checks and waits for pods but does **not** start k3s for you—start it manually if it is down.
+`python3 install.py` installs prerequisites (Ansible, Docker, k3s, helm, argo CLI), ensures SIM-PIPE secrets, and installs/updates the Helm chart using your `KUBECONFIG` (falling back to `~/.kube/config` or `/etc/rancher/k3s/k3s.yaml` if present). `python3 start.py` re-runs checks and waits for pods but does **not** start k3s for you—start it manually if it is down.
 
 If you prefer manual Ansible steps:
 ```bash
 sudo ansible-galaxy install -r ./ansible/requirements.yaml --roles-path ./ansible/roles
-sudo ansible-playbook -i localhost, -c local -b -K -e docker_users=["$(whoami)"] ./ansible/install-everything.yaml
+sudo ansible-playbook -i localhost, -c local -b -K ./ansible/install-everything.yaml
 sudo ansible-playbook -i localhost, -c local -b -K ./ansible/install-simpipe.yaml
 ```
-
-After being added to the `docker` group, log out/in before retrying so kubectl can read kubeconfig.
 
 ### Kubernetes Installation
 

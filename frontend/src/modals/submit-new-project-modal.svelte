@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { getModalStore } from '@skeletonlabs/skeleton';
+	import { getModalStore, type ModalSettings } from '@skeletonlabs/skeleton';
 	import yaml from 'js-yaml';
 	import type { SvelteComponent } from 'svelte';
 
@@ -75,17 +75,22 @@
 	}
 
 	// handle input file
-	async function handleInputFile(): Promise<JSON> {
-		let template: JSON = {} as JSON;
+	async function handleInputFile(): Promise<{ template: JSON | null; error?: string }> {
+		let template: JSON | null = null;
 		const fileText = await inputFilesList[0].text();
 		if (fileText !== '') {
 			try {
 				template = JSON.parse(fileText) as JSON;
-			} catch {
-				template = yaml.load(fileText) as JSON;
+			} catch (jsonErr) {
+				try {
+					template = yaml.load(fileText) as JSON;
+				} catch (yamlErr) {
+					// Return error message for YAML parsing
+					return { template: null, error: yamlErr instanceof Error ? yamlErr.message : 'Invalid YAML' };
+				}
 			}
 		}
-		return template;
+		return { template };
 	}
 
 	async function onClose(response: any): Promise<void> {
@@ -95,46 +100,55 @@
 	}
 
 	async function onSubmit(): Promise<void> {
-		const inputPromise = handleInputFile();
+		// First, parse the input file
+		const inputResult = await handleInputFile();
 
-		const createProjectPromise = createProject();
-
-		const [inputResponse, createProjectResponse] = await Promise.all([
-			inputPromise,
-			createProjectPromise
-		]);
-
-		if (createProjectResponse.status === 200) {
-			projectId = createProjectResponse.project.id;
-			workflowTemplate = inputResponse;
-
-			if (Object.keys(workflowTemplate).length > 0) {
-				const createWorkflowPromise = createWorkflowTemplate();
-				const [createWorkflowResponse] = await Promise.all([createWorkflowPromise]);
-
-				await onClose({ createProjectResponse, createWorkflowResponse });
-			} else {
-				const createWorkflowResponse = {
-					status: 204,
-					error: 'no workflow template provided',
-					name: 'none'
-				};
-				await onClose({ createProjectResponse, createWorkflowResponse });
-			}
-		} else {
-			await onClose({
-				createProjectResponse,
-				createWorkflowResponse: {
-					status: 500,
-					error: 'never created workflow template due to previous errors',
-					name: 'none'
-				}
-			});
+		if (inputResult.error) {
+			// Show error and do not proceed
+			const modal: ModalSettings = {
+				type: 'alert',
+				title: 'Failed: Error in parsing workflow template',
+				body: inputResult.error
+			};
+			modalStore.trigger(modal);
+			await new Promise((resolve) => setTimeout(resolve, 1500));
+			modalStore.close();
+			return;
 		}
 
-		// close the modal
-		modalStore.close();
+		if (inputResult.template && Object.keys(inputResult.template).length > 0) {
+			workflowTemplate = inputResult.template;
+			// Create project first
+			const createProjectResponse = await createProject();
+			if (createProjectResponse.status === 200 && createProjectResponse.project.id !== 'none') {
+				projectId = createProjectResponse.project.id;
+				// Try to create workflow template
+				const createWorkflowResponse = await createWorkflowTemplate();
+				if (createWorkflowResponse.status === 200 && createWorkflowResponse.name !== 'none') {
+					// Both succeeded
+					const modal: ModalSettings = {
+						type: 'alert',
+						title: 'Success: Project and Workflow template created successfully',
+						body: `Project "${createProjectResponse.project.name}" and Workflow template "${createWorkflowResponse.name}" have been created successfully.`
+					};
+					modalStore.trigger(modal);
+					await new Promise((resolve) => setTimeout(resolve, 1500));
+					modalStore.close();
+				} else {
+					// Workflow template creation failed, delete the project
+					const modal: ModalSettings = {
+						type: 'alert',
+						title: 'Failed: Workflow template creation failed',
+						body: `Project "${createProjectResponse.project.name}" was created successfully, but Workflow template "${createWorkflowResponse.name}" failed to be created.`
+					};
+					modalStore.trigger(modal);
+					await new Promise((resolve) => setTimeout(resolve, 1500));
+					modalStore.close();
+				}
+			} 
+		}
 	}
+
 </script>
 
 <!-- The modal form to submit a new project -->

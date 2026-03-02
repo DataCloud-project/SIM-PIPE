@@ -56,7 +56,15 @@ export async function projects(
     'simpipe.sct.sintef.no', 'v1', k8sNamespace, 'projects', undefined, undefined, undefined, undefined, labelSelector,
   );
   const { body } = response as { body: K8SProjectList };
-  return body.items.map((project) => convertK8SProjectToProject(project));
+  // Sort projects by creationTimestamp descending
+  const sortedItems = body.items.slice().sort((a, b) => {
+    const dateA = new Date(a.metadata.creationTimestamp ?? '');
+    const dateB = new Date(b.metadata.creationTimestamp ?? '');
+    if (isNaN(dateA as any)) return 1;
+    if (isNaN(dateB as any)) return -1;
+    return dateB.getTime() - dateA.getTime();
+  });
+  return sortedItems.map((project) => convertK8SProjectToProject(project));
 }
 
 export async function getProject(

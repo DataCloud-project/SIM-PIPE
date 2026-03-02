@@ -139,10 +139,37 @@ function cumulativeToCurrent(
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export const calculateDuration = (metrics: DryRunMetrics[]) => {
-	const duration =
-		metrics?.filter((metric) => metric.type === 'Steps')[0]?.duration ||
-		metrics?.filter((metric) => metric.type === 'DAG')[0]?.duration;
-	return duration === undefined ? '-' : duration;
+	if (!Array.isArray(metrics) || metrics.length === 0) return '-';
+
+	// Prefer aggregate nodes when available.
+	const aggregateDuration =
+		metrics.find((metric) => metric.type === 'Steps')?.duration ??
+		metrics.find((metric) => metric.type === 'DAG')?.duration;
+	if (
+		typeof aggregateDuration === 'number' &&
+		Number.isFinite(aggregateDuration) &&
+		aggregateDuration >= 0
+	) {
+		return aggregateDuration;
+	}
+
+	// Fallback for workflows that only expose Pod nodes (or don’t provide DAG/Steps duration).
+	const startedAtMs: number[] = metrics
+		.map((m) => Date.parse(m.startedAt))
+		.filter((v) => Number.isFinite(v));
+	const finishedAtMs: number[] = metrics
+		.map((m) => Date.parse(m.finishedAt))
+		.filter((v) => Number.isFinite(v));
+	if (startedAtMs.length > 0 && finishedAtMs.length > 0) {
+		const spanSeconds = Math.round((Math.max(...finishedAtMs) - Math.min(...startedAtMs)) / 1000);
+		if (Number.isFinite(spanSeconds) && spanSeconds >= 0) return spanSeconds;
+	}
+
+	// Last resort: use the largest available node duration.
+	const nodeDurations = metrics
+		.map((m) => m.duration)
+		.filter((d): d is number => typeof d === 'number' && Number.isFinite(d) && d >= 0);
+	return nodeDurations.length > 0 ? Math.max(...nodeDurations) : '-';
 };
 
 export async function getMetricsUsageUtils(metrics: DryRunMetrics[]): Promise<{

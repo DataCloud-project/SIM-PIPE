@@ -51,7 +51,7 @@
 	export let data;
 
 	let loadingFinished = false;
-	let loadingError: string | null = null;
+	let loadingError: unknown | null = null;
 	let workflow: { workflowTemplates: { argoWorkflowTemplate: { spec: { templates: any[] } } }[] };
 	const dryRunPhases: { [x: string]: string } = {};
 	const graphOrientation = 'LR';
@@ -561,7 +561,7 @@
 			computePipelineDuration();
 			loadingFinished = true;
 		} catch (error) {
-			loadingError = (error as Error).message ?? 'Failed to load dry run details';
+			loadingError = error;
 		}
 	});
 
@@ -710,14 +710,44 @@
 		// eslint-disable-next-line no-else-return
 		else return `${steplogs.slice(0, nmaxlinelength)}...`;
 	}
+
+	// Utility to extract a short error message from a possibly large/unknown error value
+	function getShortErrorMessage(error: unknown): string {
+		if (!error) return '';
+		// Most common case
+		if (error instanceof Error) return error.message;
+		// Some libraries throw plain objects with a message
+		if (typeof error === 'object' && 'message' in error) {
+			const maybeMessage = (error as { message?: unknown }).message;
+			if (typeof maybeMessage === 'string' && maybeMessage.trim() !== '') return maybeMessage;
+		}
+		// Sometimes it is already a string (or a JSON string)
+		if (typeof error === 'string') {
+			try {
+				const match = error.match(/"message"\s*:\s*"([^"]+)"/);
+				if (match?.[1]) return match[1];
+				const obj = JSON.parse(error) as { message?: unknown };
+				if (typeof obj?.message === 'string' && obj.message.trim() !== '') return obj.message;
+			} catch {
+				// Not JSON; fall through
+			}
+			return error.length > 200 ? `${error.slice(0, 200)}...` : error;
+		}
+		// Last resort
+		try {
+			return JSON.stringify(error).slice(0, 200);
+		} catch {
+			return String(error);
+		}
+	}
 </script>
 
 <div class="flex w-full content-center p-10">
 	<div class="table-container">
 		{#if loadingError}
 			<div class="card p-4">
-				<h2>Failed to load data</h2>
-				<p>{loadingError}</p>
+				<h2>Failed to load data</h2><br />
+				<p>{getShortErrorMessage(loadingError)}</p> <br />
 				<button type="button" class="btn btn-sm variant-filled" on:click={() => goto('/projects')}>
 					Back to projects
 				</button>
@@ -840,15 +870,26 @@
 					<div class="card mainlogcard row-span-4 p-5">
 						<!-- display if the dryrun has a non-empty phase message from argo (usually null if no error) -->
 						{#if dryRunPhaseMessage}
-							<div class="card logcard row-span-1 p-5">
-								<div style="display: flex; align-items: center; color: red; gap: 5px">
+							<div class="card logcard row-span-1 p-3">
+								<div style="display: flex; align-items: center; color: #b45309; gap: 5px"><!-- amber-700 -->
 									<AlertTriangleIcon />
-									<h1>Error Message</h1>
+									<h1>Workflow Failure Summary</h1> <br />
 								</div>
 								<section class="p-1">
-									<div class="w-full">
-										<CodeBlock language="json" code={dryRunPhaseMessage} />
-									</div>
+									{#if reactiveStepsList && reactiveStepsList.length > 0}
+										{#if reactiveStepsList.filter(step => step.phase === 'Failed').length > 0}
+											<div class="w-full">
+												<p style="color: #b45309; font-weight: bold;">
+													{reactiveStepsList.filter(step => step.phase === 'Failed').length} out of {reactiveStepsList.length} steps failed.
+												</p>
+												<p style="color: #b45309;">Failed step(s): {reactiveStepsList.filter(step => step.phase === 'Failed').map(s => s.displayName).join(', ')}</p>
+											</div>
+										{:else}
+											<div class="w-full">
+												<p style="color: #b45309;">Workflow failed. See logs for details.</p>
+											</div>
+										{/if}
+									{/if}
 								</section>
 							</div>
 						{/if}
@@ -1026,146 +1067,201 @@
 </div>
 
 <style>
-	.card.plotcard {
-		display: grid;
-		place-items: start;
-		max-height: 50vh;
-	}
-	.card.resourcecard {
-		overflow: visible;
-		min-height: 25rem;
-		max-height: fit-content;
-	}
-	.card.mainlogcard {
-		overflow-y: scroll;
-		overflow-x: scroll;
-		max-height: 200vh;
-	}
-	.card.logcard {
-		overflow-y: scroll;
-		max-height: fit-content;
-	}
-	.logbox {
-		overflow-y: scroll;
-		max-height: 50vh;
-	}
-	.moose-modal-backdrop {
-		position: fixed;
-		inset: 0;
-		background-color: rgba(0, 0, 0, 0.5);
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		z-index: 50;
-	}
-	.moose-modal {
-		background-color: white;
-		border-radius: 0.5rem;
-		padding: 1.5rem;
-		max-width: 48rem;
-		width: 100%;
-		max-height: 80vh;
-		overflow-y: auto;
-		box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
-			0 4px 6px -2px rgba(0, 0, 0, 0.05);
-	}
-	.moose-modal-header {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		margin-bottom: 1rem;
-	}
-	.moose-modal-actions {
-		display: flex;
-		gap: 0.5rem;
-	}
-	.moose-btn {
-		padding: 0.25rem 0.75rem;
-		border-radius: 0.25rem;
-		border: 1px solid #d1d5db;
-		background-color: #f9fafb;
-		color: #111827;
-		font-size: 0.875rem;
-		cursor: pointer;
-	}
-	.moose-btn:hover {
-		background-color: #e5e7eb;
-	}
-	.moose-modal-body {
-		max-height: 60vh;
-		overflow-y: auto;
-	}
-	.moose-status {
-		margin-bottom: 0.75rem;
-		font-size: 0.875rem;
-	}
-	.moose-status-failed {
-		color: #b91c1c;
-	}
-	ul {
-		max-height: 75vh;
-		max-height: fit-content;
-	}
+   .card.plotcard {
+	   display: grid;
+	   place-items: start;
+	   max-height: 50vh;
+   }
+   .card.resourcecard {
+	   overflow: visible;
+	   min-height: 25rem;
+	   max-height: fit-content;
+   }
+   .card.mainlogcard {
+	   overflow-y: scroll;
+	   overflow-x: scroll;
+	   max-height: 200vh;
+   }
+   .card.logcard {
+	   overflow-y: scroll;
+	   max-height: fit-content;
+   }
+   .logbox {
+	   overflow-y: scroll;
+	   max-height: 50vh;
+   }
+   .moose-modal-backdrop {
+	   position: fixed;
+	   inset: 0;
+	   background-color: rgba(0, 0, 0, 0.5);
+	   display: flex;
+	   align-items: center;
+	   justify-content: center;
+	   z-index: 50;
+   }
+   .moose-modal {
+	   background-color: white;
+	   border-radius: 0.5rem;
+	   padding: 1.5rem;
+	   max-width: 48rem;
+	   width: 100%;
+	   max-height: 80vh;
+	   overflow-y: auto;
+	   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
+		   0 4px 6px -2px rgba(0, 0, 0, 0.05);
+   }
+   .moose-modal-header {
+	   display: flex;
+	   align-items: center;
+	   justify-content: space-between;
+	   margin-bottom: 1rem;
+   }
+   .moose-modal-actions {
+	   display: flex;
+	   gap: 0.5rem;
+   }
+   .moose-btn {
+	   padding: 0.25rem 0.75rem;
+	   border-radius: 0.25rem;
+	   border: 1px solid #d1d5db;
+	   background-color: #f9fafb;
+	   color: #111827;
+	   font-size: 0.875rem;
+	   cursor: pointer;
+   }
+   .moose-btn:hover {
+	   background-color: #e5e7eb;
+   }
+   .moose-modal-body {
+	   max-height: 60vh;
+	   overflow-y: auto;
+   }
+   .moose-status {
+	   margin-bottom: 0.75rem;
+	   font-size: 0.875rem;
+   }
+   .moose-status-failed {
+	   color: #b91c1c;
+   }
+   ul {
+	   max-height: 75vh;
+	   max-height: fit-content;
+   }
 
-	.table.table-interactive {
-			width: 100%;
-			border-collapse: collapse;
-			table-layout: fixed;
-	}
+   .table.table-interactive {
+		   width: 100%;
+		   border-collapse: collapse;
+		   table-layout: fixed;
+   }
 
-	/* Prevent long artifact names from bleeding into the next column */
-	.output-col {
-		max-width: 12rem;
-		word-break: break-word;
-		white-space: normal;
-	}
+   /* Prevent long artifact names from bleeding into the next column */
+   .output-col {
+	   max-width: 12rem;
+	   word-break: break-word;
+	   white-space: normal;
+   }
 
-	.output-link {
-		display: inline-block;
-		max-width: 100%;
-		word-break: break-word;
-	}
+   .output-link {
+	   display: inline-block;
+	   max-width: 100%;
+	   word-break: break-word;
+   }
 
-	/* Make the small Resource/Metrics table use the full card width with two balanced columns */
-	.card.resourcecard .table.table-interactive th:first-child,
-	.card.resourcecard .table.table-interactive td:first-child {
-			width: 40%;
-	}
-	.card.resourcecard .table.table-interactive th:last-child,
-	.card.resourcecard .table.table-interactive td:last-child {
-			width: 60%;
-	}
-	.card.resourcecard .table.table-interactive thead {
-			position: static;
-	}
 
-	.table-wrapper {
-			width: 100%;
-			max-height: 80vh;
-			overflow-y: auto;
-			overflow-x: auto;
-	}
+   /* Improved: Adjust column widths for better layout */
+   .table.table-interactive th:nth-child(1),
+   .table.table-interactive td:nth-child(1) {
+	   width: 18%;
+	   min-width: 14ch;
+	   max-width: 32ch;
+	   word-break: break-word;
+	   white-space: normal;
+   }
+   .table.table-interactive th:nth-child(2),
+   .table.table-interactive td:nth-child(2) {
+	   width: 10%;
+	   min-width: 7ch;
+	   max-width: 14ch;
+   }
+   .table.table-interactive th:nth-child(3),
+   .table.table-interactive td:nth-child(3) {
+	   width: 10%;
+	   min-width: 7ch;
+	   max-width: 14ch;
+   }
+   .table.table-interactive th:nth-child(4),
+   .table.table-interactive td:nth-child(4) {
+	   width: 8%;
+	   min-width: 6ch;
+	   max-width: 10ch;
+   }
+   .table.table-interactive th:nth-child(5),
+   .table.table-interactive td:nth-child(5),
+   .table.table-interactive th:nth-child(6),
+   .table.table-interactive td:nth-child(6) {
+	   width: 7%;
+	   min-width: 5ch;
+	   max-width: 10ch;
+   }
+   .table.table-interactive th:nth-child(7),
+   .table.table-interactive td:nth-child(7) {
+	   width: 8%;
+	   min-width: 6ch;
+	   max-width: 12ch;
+   }
+   .table.table-interactive th.output-col,
+   .table.table-interactive td.output-col {
+	   width: 12%;
+	   min-width: 8ch;
+	   max-width: 18ch;
+   }
+   .table.table-interactive th:nth-child(9),
+   .table.table-interactive td:nth-child(9) {
+	   width: 10%;
+	   min-width: 7ch;
+	   max-width: 14ch;
+   }
 
-	.table.table-interactive thead {
-			position: sticky;
-			top: 0;
-			background-color: inherit;
-			z-index: 1;
-	}
+   /* Make the small Resource/Metrics table use the full card width with two balanced columns */
+   .card.resourcecard .table.table-interactive th:first-child,
+   .card.resourcecard .table.table-interactive td:first-child {
+		   width: 40%;
+   }
+   .card.resourcecard .table.table-interactive th:last-child,
+   .card.resourcecard .table.table-interactive td:last-child {
+		   width: 60%;
+   }
+   .card.resourcecard .table.table-interactive thead {
+		   position: static;
+   }
 
-	/* Make Moose entities table always span full modal width */
-	.moose-modal-body table {
-		width: 100%;
-		table-layout: fixed;
-	}
-	.moose-modal-body th:nth-child(1),
-	.moose-modal-body td:nth-child(1) {
-		width: 33.33%;
-	}
-	.moose-modal-body th:nth-child(2),
-	.moose-modal-body td:nth-child(2),
-	.moose-modal-body th:nth-child(3),
-	.moose-modal-body td:nth-child(3) {
-		width: 33.33%;
-	}
+   .table-wrapper {
+		   width: 100%;
+		   max-height: 80vh;
+		   overflow-y: auto;
+		   overflow-x: auto;
+   }
+
+   .table.table-interactive thead {
+		   position: sticky;
+		   top: 0;
+		   background-color: inherit;
+		   z-index: 1;
+   }
+
+   /* Make Moose entities table always span full modal width */
+   .moose-modal-body table {
+	   width: 100%;
+	   table-layout: fixed;
+   }
+   .moose-modal-body th:nth-child(1),
+   .moose-modal-body td:nth-child(1) {
+	   width: 33.33%;
+   }
+   .moose-modal-body th:nth-child(2),
+   .moose-modal-body td:nth-child(2),
+   .moose-modal-body th:nth-child(3),
+   .moose-modal-body td:nth-child(3) {
+	   width: 33.33%;
+   }
 </style>

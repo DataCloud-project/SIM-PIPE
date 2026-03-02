@@ -1,4 +1,5 @@
 <script lang="ts">
+	let showDetails = false;
 	import { getModalStore, ProgressBar } from '@skeletonlabs/skeleton';
 	import type { ModalSettings } from '@skeletonlabs/skeleton';
 	import { EditIcon, FileTextIcon } from 'svelte-feather-icons';
@@ -27,6 +28,12 @@
 
 	const checkboxes: Record<string, boolean> = {};
 	let dryRunCounts: Record<string, number> = {};
+
+	function shortErrorMessage(error: string): string {
+		if (!error) return 'Unknown error';
+		const firstLine = error.split('\n')[0]?.trim();
+		return firstLine && firstLine.length > 0 ? firstLine : error;
+	}
 
 	const getProjectsList = async (): Promise<Project[]> => {
 		try {
@@ -142,7 +149,7 @@
 	): Promise<boolean> {
 		console.log('createProjectResponse:', createProjectResponse);
 		console.log('createWorkflowResponse:', createWorkflowResponse);
-		visibleAlert = true;
+		visibleAlert = false;
 		let hasErrors = false;
 		if (createProjectResponse.status === 200) {
 			await requestGraphQLClient<{ projects: Project[] }>(allProjectsQuery).then((response) => {
@@ -150,21 +157,26 @@
 				$projectsList = response.projects;
 			});
 			if (createWorkflowResponse.status === 200) {
+				visibleAlert = true;
 				alertVariant = 'variant-ghost-success';
 				alertTitle = 'Project created!';
-				alertMessage = `Project ${createProjectResponse.project.name} created with id ${createProjectResponse.project.id} and workflow template ${createWorkflowResponse.name} created`;
+				alertMessage = `Project ${createProjectResponse.project.name} and workflow template ${createWorkflowResponse.name} created`;
 			} else {
 				hasErrors = true;
-				alertVariant = 'variant-ghost-warning';
-				alertTitle = 'Project created! However, workflow creation failed!';
-				alertMessage = `Create template manually: ${createWorkflowResponse.error}`;
 			}
 		} else {
 			hasErrors = true;
-			alertVariant = 'variant-filled-error';
-			alertTitle = 'Project creation failed!';
-			alertMessage = `Project creation failed with status ${createProjectResponse.status}: ${createProjectResponse.error} and workflow template creation failed with status ${createWorkflowResponse.status}: ${createWorkflowResponse.error}`;
 		}
+
+		if (hasErrors) {
+			const errorModal: ModalSettings = {
+				type: 'alert',
+				title: 'Project not created',
+				body: `Project was not created because workflow template creation failed: ${shortErrorMessage(createWorkflowResponse.error || createProjectResponse.error)}`
+			};
+			modalStore.trigger(errorModal);
+		}
+
 		return hasErrors;
 	}
 
@@ -228,9 +240,16 @@
 			<ProgressBar />
 		{:then}
 			{#if loadingError}
-				<div class="card p-4">
-					<h2>Failed to load projects</h2>
-					<p>{loadingError}</p>
+				<div class="error-message">
+					<strong>Failed to load projects</strong>
+					<button on:click={() => showDetails = !showDetails} style="margin-left: 1em;">
+						{showDetails ? 'Hide Details' : 'Show Details'}
+					</button>
+					{#if showDetails}
+						<pre style="max-height: 300px; overflow: auto; background: #f8f8f8; border: 1px solid #ccc; padding: 1em; margin-top: 1em;">
+							{loadingError}
+						</pre>
+					{/if}
 				</div>
 			{:else}
 			<h1>Projects</h1>

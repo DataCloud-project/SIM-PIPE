@@ -237,7 +237,17 @@ def check_simpipe_deployment_presence():
     try:
         env = dict(os.environ)
         env.setdefault("HELM_NO_PLUGINS", "1")
-        env.setdefault("KUBECONFIG", "/etc/rancher/k3s/k3s.yaml")
+        if not env.get("KUBECONFIG"):
+            for candidate in (
+                os.path.expanduser("~/.kube/config"),
+                "/etc/rancher/k3s/k3s.yaml",
+            ):
+                if candidate and os.path.exists(candidate):
+                    env["KUBECONFIG"] = candidate
+                    break
+            else:
+                print("❌ No kubeconfig found. Set KUBECONFIG before checking deployments.")
+                return False
         output = subprocess.check_output(
             ["helm", "list", "--deployed", "--output", "json"],
             env=env,

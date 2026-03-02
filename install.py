@@ -1,84 +1,57 @@
 #!/usr/bin/env python3
 
 import argparse
-import getpass
-import json
 import os
 import platform
-import pwd
-import re
 import subprocess
 import sys
-import tempfile
 
 from checklist import (check_ansible_installed, check_debian_or_ubuntu,
                       check_helm_diff_installed, check_if_installed,
                       check_simpipe_deployment_presence,
                       check_tools_installed)
 
+DEFAULT_KUBECONFIG_PATH = "/etc/rancher/k3s/k3s.yaml"
 
-def get_current_username():
-    """Return the current username in a way that works in WSL2 and non-login shells.
 
-    os.getlogin() relies on a controlling terminal and can fail in WSL2 or when
-    there is no utmp entry (for example when started from some IDEs). This
-    helper falls back to environment-based and uid-based lookups.
+def ensure_kubeconfig_env():
+    """Return an env dict that includes KUBECONFIG, preferring user-provided values.
+
+    Order of precedence:
+    1) Respect an existing KUBECONFIG in the current environment.
+    2) If unset, fall back to the k3s kubeconfig path when it exists.
+    The function exits with a helpful message when no kubeconfig is available.
     """
-    try:
-        return os.getlogin()
-    except OSError:
-        # Fallback to getpass (LOGNAME/USER/...) and then to pwd lookup
-        try:
-            return getpass.getuser()
-        except Exception:
-            return pwd.getpwuid(os.getuid()).pw_name
 
+    env = os.environ.copy()
+    kubeconfig_value = env.get("KUBECONFIG")
 
-def get_current_groups():
-    """Retrieve the group names a user is a member of by parsing /etc/group."""
-    groups = set()
-    username = get_current_username()
-    
-    # First, get the primary group from /etc/passwd
-    try:
-        user_info = pwd.getpwnam(username)
-        primary_gid = user_info.pw_gid
-        # Get primary group name from /etc/group
-        with open('/etc/group', 'r') as f:
-            for line in f:
-                parts = line.strip().split(':')
-                if len(parts) >= 3 and int(parts[2]) == primary_gid:
-                    groups.add(parts[0])
-                    break
-    except Exception as e:
-        print(f"⚠️ Warning: Could not get primary group: {e}")
-    
-    # Then get supplementary groups from /etc/group
-    with open('/etc/group', 'r') as f:
-        for line in f:
-            parts = line.strip().split(':')
-            if len(parts) < 4:
-                continue
-            group_name = parts[0]
-            members = parts[3]
-            if members:  # Check if the members field is not empty
-                # Split by comma and strip any whitespace or quotes
-                member_list = [m.strip().strip("'\"[]") for m in members.split(',')]
-                if username in member_list:
-                    groups.add(group_name)
-    
-    return groups
+    if not kubeconfig_value:
+        for candidate in (
+            DEFAULT_KUBECONFIG_PATH,
+            os.path.expanduser("~/.kube/config"),
+        ):
+            if candidate and os.path.exists(candidate):
+                kubeconfig_value = candidate
+                env["KUBECONFIG"] = kubeconfig_value
+                break
+
+    if not kubeconfig_value:
+        print("❌ No kubeconfig detected. Set the KUBECONFIG environment variable to your cluster config and retry.")
+        sys.exit(1)
+
+    kubeconfig_paths = [p for p in kubeconfig_value.split(os.pathsep) if p]
+    if kubeconfig_paths and not any(os.path.exists(p) for p in kubeconfig_paths):
+        print(f"❌ KUBECONFIG points to '{kubeconfig_value}', but no listed file exists.")
+        print("Set KUBECONFIG to a valid kubeconfig path and retry.")
+        sys.exit(1)
+
+    # Propagate to the current process so downstream calls that inherit the env see it.
+    os.environ["KUBECONFIG"] = kubeconfig_value
+    return env, kubeconfig_value
 
 
 def install_tools_debian():
-    # Ensure /etc/rancher/k3s/ and config.yaml.d are accessible
-    k3s_dir = "/etc/rancher/k3s"
-    config_dir = os.path.join(k3s_dir, "config.yaml.d")
-    for d in [k3s_dir, config_dir]:
-        if os.path.exists(d) and not os.access(d, os.R_OK | os.X_OK):
-            print(f"ℹ️ Fixing permissions for {d} (requires sudo)...")
-            subprocess.run(["sudo", "chmod", "a+rx", d], check=True)
-            print(f"✅ Permissions for {d} set to a+rx.")
     if not check_ansible_installed():
         install_ansible_via_pip()
 
@@ -94,132 +67,57 @@ def install_tools_debian():
         check=True,
     )
 
-    # Get current username (robust in WSL2 / non-login shells)
-    username = get_current_username()
-    if re.match(r"^[a-zA-Z0-9_.-]+$", username) is None:
-        print(
-            "❌ Your username contains invalid characters. Please use only alphanumeric characters and underscores."
-        )
-        sys.exit(1)
-
-    # Check if user is already in docker group
-    current_groups = get_current_groups()
-    if "docker" not in current_groups:
-        print(f"ℹ️ Adding user '{username}' to docker group...")
-        
-        # First, check if docker group exists, create it if not
-        try:
-            subprocess.run(["sudo", "getent", "group", "docker"], 
-                         check=True, capture_output=True)
-        except subprocess.CalledProcessError:
-            print("ℹ️ Docker group doesn't exist, creating it...")
-            subprocess.run(["sudo", "groupadd", "docker"], check=True)
-        
-        # Add user to docker group
-        subprocess.run(["sudo", "usermod", "-aG", "docker", username], check=True)
-        
-        # Verify the group membership was updated
-        try:
-            # Use getent to verify the user is in the docker group
-            result = subprocess.run(
-                ["sudo", "getent", "group", "docker"],
-                capture_output=True,
-                text=True,
-                check=True
-            )
-            if username in result.stdout:
-                print(f"✅ User '{username}' successfully added to docker group.")
-            else:
-                print(f"⚠️ Warning: User '{username}' may not have been added to docker group.")
-        except subprocess.CalledProcessError as e:
-            print(f"⚠️ Warning: Could not verify docker group: {e}")
-        
-        print("ℹ️ You must log out and log back in (or restart your WSL/terminal session) for group changes to take effect.")
-    else:
-        print(f"✅ User '{username}' is already in docker group.")
-
     # Install base infrastructure using Ansible (Docker, k3s, CLI tools, etc.)
     print("⏳ Installing base SIM-PIPE dependencies (Docker, k3s, tools)...")
+    env_base = os.environ.copy()
+    env_base["ANSIBLE_ALLOW_BROKEN_CONDITIONALS"] = "True"
 
-    extra_vars = {"docker_users": [username]}
-    vars_file = None
+    # First, install Docker, k3s and supporting tools (no SIM-PIPE yet)
+    subprocess.run(
+        [
+            "ansible-playbook",
+            "-i",
+            "localhost,",
+            "-c",
+            "local",
+            "-b",
+            "-K",
+            "./ansible/install-everything.yaml",
+        ],
+        check=True,
+        env=env_base,
+    )
+
+    # Now ensure required Kubernetes secrets exist before installing SIM-PIPE
+    from secrets_manager import ensure_secrets
+
+    env_kubeconfig, kubeconfig_path = ensure_kubeconfig_env()
+
+    print("⏳ Ensuring SIM-PIPE secrets are configured (you may be prompted)...")
     try:
-        with tempfile.NamedTemporaryFile("w", delete=False) as tf:
-            json.dump(extra_vars, tf)
-            tf.flush()
-            vars_file = tf.name
+        ensure_secrets(env=env_kubeconfig)
+    except Exception as e:
+        print(f"❌ Failed to ensure required secrets: {e}")
+        sys.exit(1)
 
-        env = os.environ.copy()
-        env["ANSIBLE_ALLOW_BROKEN_CONDITIONALS"] = "True"
-
-        # First, install Docker, k3s and supporting tools (no SIM-PIPE yet)
-        subprocess.run(
-            [
-                "ansible-playbook",
-                "-i",
-                "localhost,",
-                "-c",
-                "local",
-                "-b",
-                "-K",
-                "-e",
-                f"@{vars_file}",
-                "./ansible/install-everything.yaml",
-            ],
-            check=True,
-            env=env,
-        )
-
-        # Ensure k3s kubeconfig has secure permissions *after* k3s install
-        kubeconfig_path = "/etc/rancher/k3s/k3s.yaml"
-        if os.path.exists(kubeconfig_path):
-            print(f"ℹ️ Setting secure permissions for {kubeconfig_path}...")
-            subprocess.run([
-                "sudo",
-                "chown",
-                f"{get_current_username()}:{get_current_username()}",
-                kubeconfig_path,
-            ], check=True)
-            subprocess.run(["sudo", "chmod", "600", kubeconfig_path], check=True)
-            print(
-                f"✅ Permissions for {kubeconfig_path} set to 600 and owner to {get_current_username()}."
-            )
-
-        # Now ensure required Kubernetes secrets exist before installing SIM-PIPE
-        from secrets_manager import ensure_secrets
-
-        env_secrets = os.environ.copy()
-        env_secrets.setdefault("KUBECONFIG", "/etc/rancher/k3s/k3s.yaml")
-
-        print("⏳ Ensuring SIM-PIPE secrets are configured (you may be prompted)...")
-        try:
-            ensure_secrets(env=env_secrets)
-        except Exception as e:
-            print(f"❌ Failed to ensure required secrets: {e}")
-            sys.exit(1)
-
-        # Finally, install SIM-PIPE via its dedicated playbook
-        print("⏳ Installing SIM-PIPE Helm chart via Ansible...")
-        subprocess.run(
-            [
-                "ansible-playbook",
-                "-i",
-                "localhost,",
-                "-c",
-                "local",
-                "-b",
-                "-K",
-                "./ansible/install-simpipe.yaml",
-            ],
-            check=True,
-            env=env,
-        )
-    finally:
-        if vars_file:
-            try:
-                os.unlink(vars_file)
-            except Exception:
-                pass
+    # Finally, install SIM-PIPE via its dedicated playbook
+    print("⏳ Installing SIM-PIPE Helm chart via Ansible...")
+    env_with_kubeconfig = env_base.copy()
+    env_with_kubeconfig["KUBECONFIG"] = kubeconfig_path
+    subprocess.run(
+        [
+            "ansible-playbook",
+            "-i",
+            "localhost,",
+            "-c",
+            "local",
+            "-b",
+            "-K",
+            "./ansible/install-simpipe.yaml",
+        ],
+        check=True,
+        env=env_with_kubeconfig,
+    )
 
     # Install helm diff for the current user
     # (ansible will install it as well, but for root)
@@ -259,9 +157,8 @@ def install_or_upgrade_simpipe():
     values = os.path.join(os.path.dirname(__file__), "charts", "simpipe", "values.yaml")
 
     if is_deployed:
-        env = os.environ.copy()
+        env, _ = ensure_kubeconfig_env()
         env.setdefault("HELM_NO_PLUGINS", "1")
-        env.setdefault("KUBECONFIG", "/etc/rancher/k3s/k3s.yaml")
 
         # check whether the chart needs to be updated using helm diff
         try:
@@ -311,9 +208,8 @@ def install_or_upgrade_simpipe():
     else:
         try:
             print("🌈 installing simpipe")
-            env = os.environ.copy()
+            env, _ = ensure_kubeconfig_env()
             env.setdefault("HELM_NO_PLUGINS", "1")
-            env.setdefault("KUBECONFIG", "/etc/rancher/k3s/k3s.yaml")
             subprocess.check_call(
                 ["helm", "install", "simpipe", "--wait", chart, "-f", values],
                 env=env,
@@ -378,19 +274,7 @@ def main(force=False):
     system = platform.system()
     if system == "Linux":
         if check_debian_or_ubuntu():
-            currentuser_groups_before_install = get_current_groups()
             install_tools_debian()
-            currentuser_groups_after_install = get_current_groups()
-            
-            # Check if docker group was added
-            if "docker" not in currentuser_groups_before_install and "docker" in currentuser_groups_after_install:
-                print("\n⚠️ IMPORTANT: You have been added to the docker group.")
-                print("   You must log out and log back in (or restart your WSL/terminal session)")
-                print("   for the group changes to take effect.")
-                print("\n   After logging back in, you can verify with:")
-                print("   $ groups | grep docker")
-                print("   or")
-                print("   $ grep docker /etc/group")
         else:
             print("🫤 Sorry, only Debian or Ubuntu are supported for now.")
             print("You can use the checklist.py script to check your environment,")
