@@ -222,7 +222,9 @@
 								</td>
 								<td style="width:15%">
 									<div>
-										{calculateDuration(run.nodes)}
+										{['Succeeded', 'Failed', 'Error'].includes(run.status.phase)
+											? calculateDuration(run.nodes)
+											: '-'}
 									</div>
 								</td>
 								<td style="width:12%">

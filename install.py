@@ -97,8 +97,8 @@ def install_tools_debian():
     try:
         ensure_secrets(env=env_kubeconfig)
     except Exception as e:
-        print(f"❌ Failed to ensure required secrets: {e}")
-        sys.exit(1)
+        print(f"⚠️ Skipping secret setup for now: {e}")
+        print("   You can set secrets later by running `python -c \"from secrets_manager import ensure_secrets; ensure_secrets()\"` once KUBECONFIG works.")
 
     # Finally, install SIM-PIPE via its dedicated playbook
     print("⏳ Installing SIM-PIPE Helm chart via Ansible...")

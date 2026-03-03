@@ -28,7 +28,7 @@ function parseOsRelease(content: string): Record<string, string> {
 }
 
 // Detect host OS (based on host /etc/os-release and /proc/version mounted into the pod)
-function detectHostOS(): 'wsl-ubuntu24' | 'debian13' | 'unknown' {
+function detectHostOS(): 'wsl-ubuntu' | 'debian13' | 'unknown' {
   const readFirstAvailable = (paths: string[]): string => {
     for (const path of paths) {
       try {
@@ -76,7 +76,7 @@ function detectHostOS(): 'wsl-ubuntu24' | 'debian13' | 'unknown' {
     || osRelease.toLowerCase().includes('wsl');
 
   if (isWSL) {
-    return 'wsl-ubuntu24';
+    return 'wsl-ubuntu';
   }
 
   // Prefer structured fields from /etc/os-release when available
@@ -94,8 +94,8 @@ function getScriptPath() {
   const osType = detectHostOS();
 
   switch (osType) {
-    case 'wsl-ubuntu24': {
-      console.log('[INFO] Host detected: WSL Ubuntu 24.04 → using script1');
+    case 'wsl-ubuntu': {
+      console.log('[INFO] Host detected: WSL Ubuntu  → using script1');
       return CREATESCRIPTPATH_WSL;
     }
 

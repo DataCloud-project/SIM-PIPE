@@ -273,63 +273,67 @@
 					</button>
 				</div>
 			</div>
-			<table class="table table-interactive">
-				<caption hidden>Projects</caption>
-				<thead>
-					<tr>
-						<th />
-						<th>Name</th>
-						<th>Created</th>
-						<th>Dry runs</th>
-						<th style="text-align:center">Template</th>
-						<th />
-					</tr>
-				</thead>
-				<tbody>
-					{#each reactiveProjectsList || [] as project}
-						<!-- eslint-disable-next-line @typescript-eslint/explicit-function-return-type -->
-						<tr on:click={() => gotodryruns(project.id)}>
-							<td style="width:25px;">
-								<input
-									type="checkbox"
-									class="checkbox"
-									bind:checked={checkboxes[project.id]}
-									on:click={(event) => handleCheckboxClick(event)}
-								/>
-							</td>
-							<td style="width:25%">{project.name}</td>
-							<td style="width:25%">
-								<div><Timestamp timestamp={project.createdAt} /></div>
-							</td>
-							<td style="width:25%">
-								{dryRunCounts[project.id]}
-							</td>
-							<!-- eslint-disable-next-line svelte/no-unused-svelte-ignore -->
-							<!-- svelte-ignore a11y-click-events-have-key-events -->
-							<!-- eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/explicit-function-return-type -->
-							<td style="width:15%" on:click|stopPropagation={(event) => gotoTemplate(project)}>
-								<div class="grid grid-rows-2 grid-cols-1 justify-items-center">
-									<div><FileTextIcon size="1x" /></div>
-									<div>
-										<p class="no-underline hover:underline">show</p>
-										<div />
-									</div>
-								</div></td
-							>
-							<td style="width:10%">
-								<button
-									type="button"
-									title="Rename project"
-									class="btn-icon btn-icon-sm variant-soft"
-									on:click={() => renameProject(project)}
-								>
-									<EditIcon size="20" />
-								</button>
-							</td>
+			{#if reactiveProjectsList && reactiveProjectsList.length}
+				<table class="table table-interactive">
+					<caption hidden>Projects</caption>
+					<thead>
+						<tr>
+							<th />
+							<th>Name</th>
+							<th>Created</th>
+							<th>Dry runs</th>
+							<th style="text-align:center">Template</th>
+							<th />
 						</tr>
-					{/each}
-				</tbody>
-			</table>
+					</thead>
+					<tbody>
+						{#each reactiveProjectsList || [] as project}
+							<!-- eslint-disable-next-line @typescript-eslint/explicit-function-return-type -->
+							<tr on:click={() => gotodryruns(project.id)}>
+								<td style="width:25px;">
+									<input
+										type="checkbox"
+										class="checkbox"
+										bind:checked={checkboxes[project.id]}
+										on:click={(event) => handleCheckboxClick(event)}
+									/>
+								</td>
+								<td style="width:25%">{project.name}</td>
+								<td style="width:25%">
+									<div><Timestamp timestamp={project.createdAt} /></div>
+								</td>
+								<td style="width:25%">
+									{dryRunCounts[project.id]}
+								</td>
+								<!-- eslint-disable-next-line svelte/no-unused-svelte-ignore -->
+								<!-- svelte-ignore a11y-click-events-have-key-events -->
+								<!-- eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/explicit-function-return-type -->
+								<td style="width:15%" on:click|stopPropagation={(event) => gotoTemplate(project)}>
+									<div class="grid grid-rows-2 grid-cols-1 justify-items-center">
+										<div><FileTextIcon size="1x" /></div>
+										<div>
+											<p class="no-underline hover:underline">show</p>
+											<div />
+										</div>
+									</div></td
+								>
+								<td style="width:10%">
+									<button
+										type="button"
+										title="Rename project"
+										class="btn-icon btn-icon-sm variant-soft"
+										on:click={() => renameProject(project)}
+									>
+										<EditIcon size="20" />
+									</button>
+								</td>
+							</tr>
+						{/each}
+					</tbody>
+				</table>
+			{:else}
+				<p>No projects yet.</p>
+			{/if}
 			{/if}
 		{:catch error}
 			<div class="card p-4">

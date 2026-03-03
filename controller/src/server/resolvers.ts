@@ -24,6 +24,7 @@ import {
 } from '../curve_fitting/dry-run-data.js';
 import cpuCoresData from '../hardwaremetrics/hardwaremetrics.js';
 import { getApiTokenSecrets, updateApiTokenSecrets } from '../k8s/api-tokens.js';
+import { getK3sClusterSecret, updateK3sClusterSecret } from '../k8s/k3s-cluster-secret.js';
 import assignArgoWorkflowToProject from '../k8s/assign-argoworkflow-to-project.js';
 import {
   createDockerRegistryCredential,
@@ -59,7 +60,7 @@ import type { ArgoWorkflow, ArgoWorkflowTemplate } from '../argo/argo-client.js'
 import type ArgoWorkflowClient from '../argo/argo-client.js';
 import type K8sClient from '../k8s/k8s-client.js';
 import type { ArtifactItem } from '../minio/minio.js';
-import type {
+import {
   Artifact,
   DryRun,
   DryRunNode,
@@ -92,6 +93,7 @@ import type {
   MutationStopDryRunArgs as MutationStopDryRunArguments,
   MutationSuspendDryRunArgs as MutationSuspendDryRunArguments,
   MutationUpdateApiTokensArgs as MutationUpdateApiTokensArguments,
+  MutationUpdateK3sClusterSecretArgs as MutationUpdateK3sClusterSecretArguments,
   MutationUpdateDockerRegistryCredentialArgs as MutationUpdateDockerRegistryCredentialArguments,
   MutationUpdateWorkflowTemplateArgs as MutationUpdateWorkflowTemplateArguments,
   NodesAggregatedNodeMetrics,
@@ -183,6 +185,12 @@ const resolvers = {
     ): Promise<Query['apiTokens']> {
       const { k8sClient, k8sNamespace } = context;
       return await getApiTokenSecrets(k8sClient, k8sNamespace);
+    },
+    async k3sClusterSecret(
+      _p: EmptyParent, _a: EmptyArguments, context: AuthenticatedContext,
+    ): Promise<Query['k3sClusterSecret']> {
+      const { k8sClient, k8sNamespace } = context;
+      return await getK3sClusterSecret(k8sClient, k8sNamespace);
     },
     async dockerRegistryCredentials(
       _p: EmptyParent, _a: EmptyArguments, context: AuthenticatedContext,
@@ -379,6 +387,18 @@ const resolvers = {
       return await updateApiTokenSecrets(k8sClient, k8sNamespace, {
         mooseApiKey: mooseApiKey ?? undefined,
         openrouterApiKey: openrouterApiKey ?? undefined,
+      });
+    },
+    async updateK3sClusterSecret(
+      _p: EmptyParent,
+      arguments_: MutationUpdateK3sClusterSecretArguments,
+      context: AuthenticatedContext,
+    ): Promise<Mutation['updateK3sClusterSecret']> {
+      const { k8sClient, k8sNamespace } = context;
+      const { token, serverIp } = arguments_;
+      return await updateK3sClusterSecret(k8sClient, k8sNamespace, {
+        token: token ?? undefined,
+        serverIp: serverIp ?? undefined,
       });
     },
     async createBucket(

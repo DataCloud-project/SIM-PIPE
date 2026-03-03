@@ -34,6 +34,16 @@ LAST_OCTET=$(( (HASH_NUM + NODE_NUM) % 200 + 20 ))
 IP_ADDR="${BASE_PREFIX}.${LAST_OCTET}"
 log_message "DEBUG" "Derived IP ${IP_ADDR} from name ${NODE_NAME} (prefix=${PREFIX}, suffix=${NODE_NUM})"
 
+# Use controller pod resolver (kube-dns) for guest DNS
+DNS1=""
+if [ -r /etc/resolv.conf ]; then
+  DNS1=$(awk '/^nameserver/{print $2; exit}' /etc/resolv.conf)
+fi
+if [ -z "$DNS1" ]; then
+  DNS1="10.43.0.10"
+fi
+log_message "INFO" "Using DNS server: ${DNS1}"
+
 # Ensure WSL host bridge, NAT, and qemu-ifup/ifdown are configured.
 # This script is idempotent and safe to run multiple times.
 if [ -x /app/setup-wsl-host.sh ]; then
@@ -55,7 +65,6 @@ select_os_image() {
 
 fetch_k3s_details() {
   log_message "INFO" "Fetching Kubernetes cluster details..."
-  K3S_SERVER_IP=$(kubectl get secret "$K3S_TOKEN_SECRET" -o jsonpath='{.data.K3S_SERVER_IP}' | base64 -d)
   K3S_TOKEN=$(kubectl get secret "$K3S_TOKEN_SECRET" -o jsonpath='{.data.token}' | base64 -d)
   K3S_SERVER_URL="https://${GATEWAY}:6443"
 }
@@ -70,7 +79,7 @@ ssh_deletekeys: true
 ssh_pwauth: true
 disable_root: true
 users:
-  - name: ubuntu
+  - name: user
     sudo: ALL=(ALL) NOPASSWD:ALL
     groups: docker
     shell: /bin/bash
@@ -82,11 +91,16 @@ packages:
   - docker.io
 
 runcmd:
-  # Set ubuntu password
-  - echo "ubuntu:ubuntu" | chpasswd
+  # Set user password
+  - echo "user:user" | chpasswd
   - systemctl enable docker
   - systemctl start docker
   - bash -c 'until systemctl is-active --quiet docker; do sleep 1; done'
+
+  # Force a static resolv.conf (avoid systemd-resolved stub)
+  - systemctl disable --now systemd-resolved || true
+  - rm -f /etc/resolv.conf
+  - bash -c 'printf "nameserver ${DNS1}\n" > /etc/resolv.conf'
 
   # Remove incorrect default route via lo (workaround for netplan bug)
   - bash -c 'ip route del default via 172.30.0.1 dev lo || true'
@@ -110,7 +124,7 @@ network:
         - ${IP_ADDR}/24
       nameservers:
         addresses:
-          - 8.8.8.8
+          - ${DNS1}
 EOF
 
 cat <<EOF > meta-data
@@ -125,6 +139,24 @@ cp "$CLOUD_INIT_ISO" "/host-tmp-vm/${CLOUD_INIT_ISO}"
 
 log_message "INFO" "Starting QEMU for node ${NODE_NAME}"
 
+# QEMU_COMMAND="
+# nsenter -t 1 -m -u --net=/host/proc/1/ns/net -i -p -- \
+# /usr/bin/qemu-system-x86_64 \
+#   -m ${MEMORY} -smp ${CPUS} \
+#   -drive file=/host-tmp-vm/${QCOW2_IMAGE_FILE},if=virtio,cache=directsync,discard=unmap,format=qcow2,aio=native \
+#   -drive file=/host-tmp-vm/${CLOUD_INIT_ISO},format=raw,if=virtio,cache=writeback,aio=threads \
+#   -netdev tap,id=mynet0,ifname=${TAP_INTERFACE},script=/etc/qemu-ifup,downscript=/etc/qemu-ifdown \
+#   -device virtio-net-pci,netdev=mynet0 \
+#   -machine q35,accel=kvm,usb=off \
+#   -cpu host \
+#   -enable-kvm \
+#   -nographic \
+#   -nodefaults \
+#   -no-reboot -no-shutdown \
+#   -serial mon:stdio
+# "
+# log_message "DEBUG" "QEMU command: ${QEMU_COMMAND}"
+# exit 0
 QEMU_COMMAND="
 nsenter -t 1 -m -u --net=/host/proc/1/ns/net -i -p -- \
 /usr/bin/qemu-system-x86_64 \

@@ -55,6 +55,13 @@ export type ApiTokens = {
   openrouterApiKey: Scalars['String']['output'];
 };
 
+/**  K3s cluster connection details used by VM helpers.  */
+export type K3sClusterSecret = {
+  __typename?: 'K3sClusterSecret';
+  serverIp: Scalars['String']['output'];
+  token: Scalars['String']['output'];
+};
+
 /**  Contains information about files produced during a dry run execution  */
 export type Artifact = {
   __typename?: 'Artifact';
@@ -846,6 +853,8 @@ export type Mutation = {
   suspendDryRun: DryRun;
   /**  Update the API tokens used by the controller. Any omitted field keeps its current value.  */
   updateApiTokens: ApiTokens;
+  /**  Update the k3s cluster secret used by VM helpers. Any omitted field keeps its current value.  */
+  updateK3sClusterSecret: K3sClusterSecret;
   /**  Update an existing docker registry credential  */
   updateDockerRegistryCredential: DockerRegistryCredential;
   /**  Update an existing Argo workflow template  */
@@ -981,6 +990,12 @@ export type MutationUpdateApiTokensArgs = {
 };
 
 
+export type MutationUpdateK3sClusterSecretArgs = {
+  serverIp?: InputMaybe<Scalars['String']['input']>;
+  token?: InputMaybe<Scalars['String']['input']>;
+};
+
+
 export type MutationUpdateDockerRegistryCredentialArgs = {
   credential: DockerRegistryCredentialInput;
 };
@@ -1043,6 +1058,8 @@ export type Query = {
   __typename?: 'Query';
   /**  Inspect the API tokens used by the controller.  */
   apiTokens: ApiTokens;
+  /**  Inspect the k3s cluster secret used by VM helpers.  */
+  k3sClusterSecret: K3sClusterSecret;
   /**  Artifact metadata  */
   artifact?: Maybe<ArtifactMetadata>;
   /**  List of all the artifacts  */
@@ -1335,6 +1352,7 @@ export type ResolversTypes = {
   Float: ResolverTypeWrapper<Scalars['Float']['output']>;
   HardwareMetrics: ResolverTypeWrapper<HardwareMetrics>;
   Int: ResolverTypeWrapper<Scalars['Int']['output']>;
+  K3sClusterSecret: ResolverTypeWrapper<K3sClusterSecret>;
   Mutation: ResolverTypeWrapper<{}>;
   NodesAggregatedNodeMetrics: ResolverTypeWrapper<NodesAggregatedNodeMetrics>;
   NodesAggregatedNodeMetricsInput: NodesAggregatedNodeMetricsInput;
@@ -1376,6 +1394,7 @@ export type ResolversParentTypes = {
   CreateProjectInput: CreateProjectInput;
   CreateResourceInput: CreateResourceInput;
   CreateWorkflowTemplateInput: CreateWorkflowTemplateInput;
+  K3sClusterSecret: K3sClusterSecret;
   DockerRegistryCredential: DockerRegistryCredential;
   DockerRegistryCredentialInput: DockerRegistryCredentialInput;
   DryRun: DryRun;
@@ -1420,6 +1439,12 @@ export type AggregatedNodeMetricsResolvers<ContextType = any, ParentType extends
 export type ApiTokensResolvers<ContextType = any, ParentType extends ResolversParentTypes['ApiTokens'] = ResolversParentTypes['ApiTokens']> = {
   mooseApiKey?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   openrouterApiKey?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type K3sClusterSecretResolvers<ContextType = any, ParentType extends ResolversParentTypes['K3sClusterSecret'] = ResolversParentTypes['K3sClusterSecret']> = {
+  serverIp?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  token?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -1637,6 +1662,7 @@ export type MutationResolvers<ContextType = any, ParentType extends ResolversPar
   stopDryRun?: Resolver<ResolversTypes['DryRun'], ParentType, ContextType, RequireFields<MutationStopDryRunArgs, 'dryRunId'>>;
   suspendDryRun?: Resolver<ResolversTypes['DryRun'], ParentType, ContextType, RequireFields<MutationSuspendDryRunArgs, 'dryRunId'>>;
   updateApiTokens?: Resolver<ResolversTypes['ApiTokens'], ParentType, ContextType, Partial<MutationUpdateApiTokensArgs>>;
+  updateK3sClusterSecret?: Resolver<ResolversTypes['K3sClusterSecret'], ParentType, ContextType, Partial<MutationUpdateK3sClusterSecretArgs>>;
   updateDockerRegistryCredential?: Resolver<ResolversTypes['DockerRegistryCredential'], ParentType, ContextType, RequireFields<MutationUpdateDockerRegistryCredentialArgs, 'credential'>>;
   updateWorkflowTemplate?: Resolver<ResolversTypes['WorkflowTemplate'], ParentType, ContextType, RequireFields<MutationUpdateWorkflowTemplateArgs, 'update'>>;
 };
@@ -1688,6 +1714,7 @@ export type QueryResolvers<ContextType = any, ParentType extends ResolversParent
   getAggregatedNodesMetrics?: Resolver<Array<Maybe<ResolversTypes['NodesAggregatedNodeMetrics']>>, ParentType, ContextType, RequireFields<QueryGetAggregatedNodesMetricsArgs, 'dryRunIds'>>;
   getMooseAnalysis?: Resolver<ResolversTypes['String'], ParentType, ContextType, RequireFields<QueryGetMooseAnalysisArgs, 'artifactUrl' | 'save'>>;
   hardwaremetrics?: Resolver<ResolversTypes['HardwareMetrics'], ParentType, ContextType>;
+  k3sClusterSecret?: Resolver<ResolversTypes['K3sClusterSecret'], ParentType, ContextType>;
   ping?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   predictScaling?: Resolver<ResolversTypes['ScalingPredictions'], ParentType, ContextType, RequireFields<QueryPredictScalingArgs, 'data_x' | 'data_x_to_predict'>>;
   project?: Resolver<ResolversTypes['Project'], ParentType, ContextType, RequireFields<QueryProjectArgs, 'projectId'>>;
@@ -1757,6 +1784,7 @@ export type Resolvers<ContextType = any> = {
   ArtifactMetadata?: ArtifactMetadataResolvers<ContextType>;
   Bucket?: BucketResolvers<ContextType>;
   CarbonTrackerData?: CarbonTrackerDataResolvers<ContextType>;
+  K3sClusterSecret?: K3sClusterSecretResolvers<ContextType>;
   DockerRegistryCredential?: DockerRegistryCredentialResolvers<ContextType>;
   DryRun?: DryRunResolvers<ContextType>;
   DryRunNode?: DryRunNodeResolvers<ContextType>;

@@ -42,6 +42,12 @@ type ApiTokens {
   openrouterApiKey: String!
 }
 
+""" K3s cluster connection details used by VM helpers. """
+type K3sClusterSecret {
+  token: String!
+  serverIp: String!
+}
+
 """ The root query type. All queries that fetch data are defined here. """
 
 type Query {
@@ -139,6 +145,9 @@ type Query {
 
   """ Inspect the API tokens used by the controller. """
   apiTokens: ApiTokens! @auth
+
+  """ Inspect the k3s cluster secret used by VM helpers. """
+  k3sClusterSecret: K3sClusterSecret! @auth
 }
 
 """ Project is the high level concept for a specific pipeline in SIM-PIPE. It contains all the previous dry runs of the pipeline and its results. """
@@ -736,7 +745,7 @@ type Mutation @auth {
   """ Create a new resource """
   createResource(
   """ Input to create the new dry run """
-  input: CreateResourceInput!): Resource!
+  input: CreateResourceInput!): CreateResourceResult!
 
  """ Delete an existing resource. The mutation returns true if the deletion was successful. """
   deleteResource(
@@ -814,4 +823,10 @@ type Mutation @auth {
     mooseApiKey: String,
     openrouterApiKey: String,
   ): ApiTokens!
+
+  """ Update the k3s cluster secret used by VM helpers. Any omitted field keeps its current value. """
+  updateK3sClusterSecret(
+    token: String,
+    serverIp: String,
+  ): K3sClusterSecret!
 }

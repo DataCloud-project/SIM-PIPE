@@ -17,6 +17,14 @@ if [ -e /host/proc/1/ns/net ]; then
   NSENTER="nsenter --net=/host/proc/1/ns/net --"
 fi
 
+# Prefer legacy when available; allow override via IPTABLES_BIN.
+if [ -z "${IPTABLES_BIN:-}" ] && command -v iptables-legacy >/dev/null 2>&1; then
+  IPTABLES_BIN="iptables-legacy"
+fi
+: "${IPTABLES_BIN:=iptables}"
+
+echo "[*] Using iptables binary: ${IPTABLES_BIN}"
+
 echo "[*] Creating/Configuring bridge ${BR_IF} on ${BR_CIDR}"
 
 # Create bridge if missing
@@ -36,14 +44,14 @@ echo "[*] Enabling IPv4 forwarding"
 $NSENTER sysctl -w net.ipv4.ip_forward=1 >/dev/null
 
 echo "[*] Adding iptables FORWARD rules"
-$NSENTER iptables -C FORWARD -i "${BR_IF}" -o "${WAN_IF}" -j ACCEPT 2>/dev/null \
-  || $NSENTER iptables -A FORWARD -i "${BR_IF}" -o "${WAN_IF}" -j ACCEPT
-$NSENTER iptables -C FORWARD -i "${WAN_IF}" -o "${BR_IF}" -j ACCEPT 2>/dev/null \
-  || $NSENTER iptables -A FORWARD -i "${WAN_IF}" -o "${BR_IF}" -j ACCEPT
+$NSENTER ${IPTABLES_BIN} -C FORWARD -i "${BR_IF}" -o "${WAN_IF}" -j ACCEPT 2>/dev/null \
+  || $NSENTER ${IPTABLES_BIN} -A FORWARD -i "${BR_IF}" -o "${WAN_IF}" -j ACCEPT
+$NSENTER ${IPTABLES_BIN} -C FORWARD -i "${WAN_IF}" -o "${BR_IF}" -j ACCEPT 2>/dev/null \
+  || $NSENTER ${IPTABLES_BIN} -A FORWARD -i "${WAN_IF}" -o "${BR_IF}" -j ACCEPT
 
 echo "[*] Adding iptables MASQUERADE rule for ${BR_NET}"
-$NSENTER iptables -t nat -C POSTROUTING -s "${BR_NET}" -o "${WAN_IF}" -j MASQUERADE 2>/dev/null \
-  || $NSENTER iptables -t nat -A POSTROUTING -s "${BR_NET}" -o "${WAN_IF}" -j MASQUERADE
+$NSENTER ${IPTABLES_BIN} -t nat -C POSTROUTING -s "${BR_NET}" -o "${WAN_IF}" -j MASQUERADE 2>/dev/null \
+  || $NSENTER ${IPTABLES_BIN} -t nat -A POSTROUTING -s "${BR_NET}" -o "${WAN_IF}" -j MASQUERADE
 
 echo "[*] Writing /etc/qemu-ifup"
 cat >/etc/qemu-ifup <<EOF

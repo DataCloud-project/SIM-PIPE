@@ -150,6 +150,10 @@
 			await refreshResources();
 		}
 	}
+
+	async function onOpenLogs(): Promise<void> {
+		console.log('To be implemented')
+	}
 </script>
 
 <div class="flex w-full justify-center p-10">
@@ -192,6 +196,7 @@
 						<th class="w-1/5">CPUs</th>
 						<th class="w-1/5">Memory (in mb)</th>
 						<th class="w-1/5">Status</th>
+						<th class="w-1/5">Logs</th>
 					</tr>
 				</thead>
 				<tbody>
@@ -206,10 +211,19 @@
 								/>
 							</td>
 							<td style="w-1/5">{resource.name}</td>
-							<td class="w-1/5">{resource.os}</td>
-							<td class="w-1/5">{resource.cpus}</td>
-							<td class="w-1/5">{resource.memory}</td>
-							<td class="w-1/5">{resource.status}</td>
+							<td style="w-1/5">{resource.os}</td>
+							<td style="w-1/6">{resource.cpus}</td>
+							<td style="w-1/5">{resource.memory}</td>
+							<td style="w-1/5">{resource.status}</td>
+							<td style="w-1/4">
+								<button
+									type="button"
+									class="btn btn-sm variant-filled"
+									on:click={() => onOpenLogs(resource.name)}
+								>
+									Get VM console logs
+								</button>
+							</td>
 						</tr>
 					{/each}
 				</tbody>
