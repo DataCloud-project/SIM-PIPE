@@ -5,10 +5,11 @@ import os
 import platform
 import subprocess
 import sys
+import time
 
-from checklist import (check_ansible_installed, check_debian_or_ubuntu,
-                      check_helm_diff_installed, check_if_installed,
-                      check_simpipe_deployment_presence,
+from checklist import (check_ansible_installed, check_cluster_status,
+                      check_debian_or_ubuntu, check_helm_diff_installed,
+                      check_if_installed, check_simpipe_deployment_presence,
                       check_tools_installed)
 
 DEFAULT_KUBECONFIG_PATH = "/etc/rancher/k3s/k3s.yaml"
@@ -92,6 +93,16 @@ def install_tools_debian():
     from secrets_manager import ensure_secrets
 
     env_kubeconfig, kubeconfig_path = ensure_kubeconfig_env()
+
+    # Wait for the cluster to be reachable before running helm/secret setup.
+    nb_tentatives = 0
+    while not check_cluster_status(silent=True):
+        print("😴 Waiting for Kubernetes cluster to be ready...")
+        nb_tentatives += 1
+        if nb_tentatives > 8:
+            if not check_cluster_status(silent=False):
+                sys.exit(1)
+        time.sleep(5)
 
     print("⏳ Ensuring SIM-PIPE secrets are configured (you may be prompted)...")
     try:

@@ -7,6 +7,10 @@ def ensure_secrets(env=None):
     if env is None:
         env = os.environ.copy()
 
+    print("\n=== Optional secrets for Moose API data analysis ===")
+    print("Only needed if you plan to use the integrated data analysis feature of the Moose API.")
+    print("It is safe to skip and provide these later.\n")
+
     # --- Ensure required secrets exist ---
     required_secrets = [
         {
@@ -42,6 +46,9 @@ def ensure_secrets(env=None):
             ], check=True, env=env)
 
     # --- Ensure k3s-cluster-secret exists ---
+    print("\n=== Optional virtualization support ===")
+    print("Only needed if you plan to use the SIM-PIPE virtualization module.")
+    print("It is safe to skip and provide this later.\n")
     k3s_secret_name = "k3s-cluster-secret"
     k3s_token_path = "/var/lib/rancher/k3s/server/node-token"
     # Check if secret exists

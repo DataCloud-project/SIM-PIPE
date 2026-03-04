@@ -90,10 +90,6 @@ def main():
         time.sleep(5)
     print("🎉 the kubernetes cluster is ready.")
 
-    # --- Ensure secrets exist (idempotent) ---
-    from secrets_manager import ensure_secrets
-    ensure_secrets(env=env)
-
     install_or_upgrade_simpipe()
 
     nb_tentatives = 0
