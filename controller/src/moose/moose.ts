@@ -12,7 +12,7 @@ import {
 } from '../config.js';
 import { getObjectText, setMooseReportForArtifact, setSotwReportForArtifact } from '../minio/minio.js';
 
-export interface MooseEntity {
+interface MooseEntity {
   start: number;
   end: number;
   text: string;
@@ -49,7 +49,7 @@ interface DpvRequestBody {
   schema: string;
 }
 
-export async function makeDPVCall(text: string): Promise<string> {
+async function makeDPVCall(text: string): Promise<string> {
   if (!mooseApiKey) {
     throw new Error('MOOSE_API_KEY is not configured');
   }
@@ -101,7 +101,7 @@ export async function makeDPVCall(text: string): Promise<string> {
 }
 
 // Define MooseJobResult type for the new Moose API response
-export interface MooseJobResultEntity {
+interface MooseJobResultEntity {
   start: number;
   end: number;
   text: string;
@@ -109,7 +109,7 @@ export interface MooseJobResultEntity {
   confidence: number;
 }
 
-export interface MooseJobResult {
+interface MooseJobResult {
   job_id: string;
   status: string;
   created_at: string;
@@ -121,7 +121,7 @@ export interface MooseJobResult {
   [key: string]: unknown;
 }
 
-export async function getDPVJobResult(jobId: string): Promise<MooseJobResult> {
+async function getDPVJobResult(jobId: string): Promise<MooseJobResult> {
   if (!mooseApiKey) {
     throw new Error('MOOSE_API_KEY is not configured');
   }
@@ -149,7 +149,7 @@ function getIRI(dpvEntity: string): string {
   return dpvEntity;
 }
 
-export function buildSotwCsvFromMooseResult(
+function buildSotwCsvFromMooseResult(
   result: MooseJobResult,
   stepStartedAt?: string,
 ): string {
@@ -198,7 +198,7 @@ export function buildSotwCsvFromMooseResult(
   return `${lines.join('\n')}\n`;
 }
 
-export async function getDPVJobResultPolling(
+async function getDPVJobResultPolling(
   artifactUrl: string,
   pollingIntervalMs = 4000,
   maxAttempts = 80,
@@ -243,6 +243,7 @@ export async function getDPVJobResultPolling(
   return poll(0);
 }
 
+// eslint-disable-next-line import/prefer-default-export
 export async function getMooseAnalysis(
   arguments_: QueryGetMooseAnalysisArguments,
 ): Promise<Query['getMooseAnalysis']> {

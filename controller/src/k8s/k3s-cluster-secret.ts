@@ -3,7 +3,7 @@ import type { V1Secret } from '@kubernetes/client-node';
 import { K3S_TOKEN_SECRET } from '../config.js';
 import type K8sClient from './k8s-client.js';
 
-export interface K3sClusterSecret {
+interface K3sClusterSecret {
   token: string;
   serverIp: string;
 }

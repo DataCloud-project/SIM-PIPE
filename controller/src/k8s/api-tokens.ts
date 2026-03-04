@@ -2,7 +2,7 @@ import type { V1Secret } from '@kubernetes/client-node';
 
 import type K8sClient from './k8s-client.js';
 
-export interface ApiTokenSecrets {
+interface ApiTokenSecrets {
   mooseApiKey: string;
   openrouterApiKey: string;
 }

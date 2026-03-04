@@ -2,7 +2,7 @@ import slugify from 'slugify';
 import type { V1ListMeta, V1ObjectMeta } from '@kubernetes/client-node';
 
 import createKubeNode, { deleteKubeNode } from '../argo/emulation-utils.js';
-import { InputValidationError, NotFoundError } from '../server/apollo-errors.js';
+import { InputValidationError } from '../server/apollo-errors.js';
 import { SIMPIPE_USER_LABEL } from './label.js';
 import { assertIsValidKubernetesLabel } from './valid-kubernetes-label.js';
 import type { CreateResourceInput, Resource } from '../server/schema.js';
@@ -164,33 +164,33 @@ export async function resources(
 }
 
 // Get a specific resource by ID
-export async function getResource(
-  id: string,
-  k8sClient: K8sClient,
-  k8sNamespace = 'default',
-  user?: string,
-): Promise<Resource> {
-  let body: K8SVMNode;
-  try {
-    const response = await k8sClient.customObjects.getNamespacedCustomObject(
-      'simpipe.sct.sintef.no',
-      'v1',
-      k8sNamespace,
-      'vmnodes',
-      id,
-    );
-    body = response.body as K8SVMNode;
-  } catch (error) {
-    if ((error as Error & { response?: { statusCode: number } }).response?.statusCode === 404) {
-      throw new NotFoundError(`Resource not found: ${id}`);
-    }
-    throw error;
-  }
-  if (user && body.metadata.labels?.[SIMPIPE_USER_LABEL] !== user) {
-    throw new NotFoundError(`Resource not found: ${id}`);
-  }
-  return convertK8SVMNodeToResource(body);
-}
+// export async function getResource(
+//   id: string,
+//   k8sClient: K8sClient,
+//   k8sNamespace = 'default',
+//   user?: string,
+// ): Promise<Resource> {
+//   let body: K8SVMNode;
+//   try {
+//     const response = await k8sClient.customObjects.getNamespacedCustomObject(
+//       'simpipe.sct.sintef.no',
+//       'v1',
+//       k8sNamespace,
+//       'vmnodes',
+//       id,
+//     );
+//     body = response.body as K8SVMNode;
+//   } catch (error) {
+//     if ((error as Error & { response?: { statusCode: number } }).response?.statusCode === 404) {
+//       throw new NotFoundError(`Resource not found: ${id}`);
+//     }
+//     throw error;
+//   }
+//   if (user && body.metadata.labels?.[SIMPIPE_USER_LABEL] !== user) {
+//     throw new NotFoundError(`Resource not found: ${id}`);
+//   }
+//   return convertK8SVMNodeToResource(body);
+// }
 
 // Create a new resource
 export async function createResource(

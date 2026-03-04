@@ -36,7 +36,6 @@ export const carbontrackerEndpoint = process.env.CARBONTRACKER_ENDPOINT ?? 'http
 // Moose API endpoint and api keys
 export const mooseApiEndpoint:string = process.env.MOOSE_API_ENDPOINT ?? 'https://moose.zooverse.dev';
 export const mooseApiKey:string = process.env.MOOSE_API_KEY ?? '';
-export const mooseApiKeyPAID:string = process.env.MOOSE_PAID_API_KEY ?? '';
 export const openRouterApiKey:string = process.env.OPENROUTER_API_KEY ?? '';
 
 // Moose DPV LLM configuration
@@ -51,9 +50,3 @@ export const K3S_TOKEN_SECRET = process.env.K3S_Cluster_SECRET ?? 'k3s-cluster-s
 export const CREATESCRIPTPATH_DEBIAN = './create-kube-node_qemu.sh';
 export const CREATESCRIPTPATH_WSL = './create-kube-node_wsl.sh';
 export const DELETE_SCRIPT_PATH = './shutdown-kube-node.sh';
-
-// WSL / QEMU bridge networking (used by helper scripts)
-export const WSL_BRIDGE_IF = process.env.WSL_BR_IF ?? 'bridge-qemu';
-export const WSL_BRIDGE_CIDR = process.env.WSL_BR_CIDR ?? '172.30.0.1/24';
-export const WSL_BRIDGE_NET = process.env.WSL_BR_NET ?? '172.30.0.0/24';
-export const WSL_WAN_IF = process.env.WSL_WAN_IF ?? 'eth0';

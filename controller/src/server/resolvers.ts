@@ -24,7 +24,6 @@ import {
 } from '../curve_fitting/dry-run-data.js';
 import cpuCoresData from '../hardwaremetrics/hardwaremetrics.js';
 import { getApiTokenSecrets, updateApiTokenSecrets } from '../k8s/api-tokens.js';
-import { getK3sClusterSecret, updateK3sClusterSecret } from '../k8s/k3s-cluster-secret.js';
 import assignArgoWorkflowToProject from '../k8s/assign-argoworkflow-to-project.js';
 import {
   createDockerRegistryCredential,
@@ -32,6 +31,7 @@ import {
   dockerRegistryCredentials,
   updateDockerRegistryCredential,
 } from '../k8s/docker-config-json.js';
+import { getK3sClusterSecret, updateK3sClusterSecret } from '../k8s/k3s-cluster-secret.js';
 import { SIMPIPE_PROJECT_LABEL } from '../k8s/label.js';
 import {
   createProject, deleteProject, getProject, projects, renameProject,
@@ -56,10 +56,6 @@ import { getMooseAnalysis } from '../moose/moose.js';
 import { assertPrometheusIsHealthy } from '../prometheus/prometheus.js';
 import queryPrometheusResolver from '../prometheus/query-prometheus-resolver.js';
 import { NotFoundError, PingError } from './apollo-errors.js';
-import type { ArgoWorkflow, ArgoWorkflowTemplate } from '../argo/argo-client.js';
-import type ArgoWorkflowClient from '../argo/argo-client.js';
-import type K8sClient from '../k8s/k8s-client.js';
-import type { ArtifactItem } from '../minio/minio.js';
 import {
   Artifact,
   DryRun,
@@ -93,8 +89,8 @@ import {
   MutationStopDryRunArgs as MutationStopDryRunArguments,
   MutationSuspendDryRunArgs as MutationSuspendDryRunArguments,
   MutationUpdateApiTokensArgs as MutationUpdateApiTokensArguments,
-  MutationUpdateK3sClusterSecretArgs as MutationUpdateK3sClusterSecretArguments,
   MutationUpdateDockerRegistryCredentialArgs as MutationUpdateDockerRegistryCredentialArguments,
+  MutationUpdateK3sClusterSecretArgs as MutationUpdateK3sClusterSecretArguments,
   MutationUpdateWorkflowTemplateArgs as MutationUpdateWorkflowTemplateArguments,
   NodesAggregatedNodeMetrics,
   NodesScalingLaws,
@@ -113,6 +109,10 @@ import {
   QueryWorkflowTemplateArgs as QueryWorkflowTemplateArguments,
   WorkflowTemplate,
 } from './schema.js';
+import type { ArgoWorkflow, ArgoWorkflowTemplate } from '../argo/argo-client.js';
+import type ArgoWorkflowClient from '../argo/argo-client.js';
+import type K8sClient from '../k8s/k8s-client.js';
+import type { ArtifactItem } from '../minio/minio.js';
 
 interface ContextUser {
   sub: string
