@@ -3,6 +3,7 @@
 	import { ProgressBar, CodeBlock, getModalStore } from '@skeletonlabs/skeleton';
 	import { AlertTriangleIcon, ZoomInIcon } from 'svelte-feather-icons';
 	import { filesize } from 'filesize';
+	import type { ModalSettings } from '@skeletonlabs/skeleton';
 	import getDryRunMetricsQuery from '$queries/get_dry_run_metrics.js';
 	import getProjectQuery from '$queries/get_project';
 	import getDryRunPhaseResultsQuery from '$queries/get_dry_run_phase_results';
@@ -23,7 +24,6 @@
 	import type { MetricsAnalytics } from '$utils/resource-utils';
 	// import { displayAlert } from '$utils/alerts-utils';
 	import type { DryRunMetrics, DryRun, MetricsWithTimeStamps, Artifact } from '$typesdefinitions';
-	import type { ModalSettings } from '@skeletonlabs/skeleton';
 	import getMooseAnalysisQuery from '$queries/get_moose_analysis.js';
 	import setMooseReportMutation from '$queries/set_moose_report.js';
 
@@ -41,17 +41,17 @@
 
 	let mooseEntities: MooseEntity[] = [];
 	let showMooseModal = false;
-	let selectedArtifact: Artifact | null = null;
-	let mooseJobStatus: string | null = null;
-	let mooseJobError: string | null = null;
-	let latestMooseReportJson: string | null = null;
+	let selectedArtifact: Artifact | undefined;
+	let mooseJobStatus: string | undefined;
+	let latestMooseReportJson: string | undefined;
 	let hasUnsavedMooseReport = false;
 	const modalStore = getModalStore();
 
 	export let data;
 
 	let loadingFinished = false;
-	let loadingError: unknown | null = null;
+	// eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
+	let loadingError: unknown | undefined;
 	let workflow: { workflowTemplates: { argoWorkflowTemplate: { spec: { templates: any[] } } }[] };
 	const dryRunPhases: { [x: string]: string } = {};
 	const graphOrientation = 'LR';
@@ -565,7 +565,11 @@
 		}
 	});
 
-	async function onAnalyze(artifact: Artifact, stepStartedAt: string | null, attempt_rerun = false): Promise<void> {
+	async function onAnalyze(
+		artifact: Artifact,
+		stepStartedAt: string | undefined,
+		attempt_rerun = false
+	): Promise<void> {
 		selectedArtifact = artifact;
 		let results: { entities?: MooseEntity[] }[] | undefined;
 
@@ -588,7 +592,7 @@
 			const response = await requestGraphQLClient<{ result: string }>(getMooseAnalysisQuery, {
 				artifactUrl: artifact.url,
 				stepStartedAt: stepStartedAt ?? undefined,
-				save: shouldSaveOnServer ? true : false
+				save: !!shouldSaveOnServer
 			});
 			console.log('Moose analysis response:', response.result);
 			latestMooseReportJson = response.result;
@@ -598,8 +602,7 @@
 				error?: string;
 				result?: { entities?: MooseEntity[] };
 			};
-			mooseJobStatus = job.status ?? null;
-			mooseJobError = job.error ?? null;
+			mooseJobStatus = job.status ?? undefined;
 			mooseEntities = job.result?.entities ?? [];
 
 			// Refresh dry run nodes from backend so artifacts include the stored Moose report
@@ -631,8 +634,7 @@
 				error?: string;
 				result?: { entities?: MooseEntity[] };
 			};
-			mooseJobStatus = job.status ?? null;
-			mooseJobError = job.error ?? null;
+			mooseJobStatus = job.status ?? undefined;
 			mooseEntities = job.result?.entities ?? [];
 		}
 
@@ -642,7 +644,7 @@
 	async function rerunMooseAnalysis(): Promise<void> {
 		if (!selectedArtifact) return;
 		showMooseModal = false;
-		await onAnalyze(selectedArtifact, null, true);
+		await onAnalyze(selectedArtifact, undefined, true);
 	}
 
 	async function saveMooseReport(): Promise<void> {
@@ -665,7 +667,7 @@
 		}
 	}
 
-	async function downloadSotwCsv(artifact: Artifact | null): Promise<void> {
+	async function downloadSotwCsv(artifact: Artifact | null | undefined): Promise<void> {
 		const sotwUrl = artifact?.sotwReportUrl;
 		if (sotwUrl) {
 			try {
@@ -675,17 +677,17 @@
 				const url = URL.createObjectURL(blob);
 				const link = document.createElement('a');
 				link.href = url;
-				// Use artifact key or name for the download filename, fallback to sotw.csv
-				let baseName = artifact?.key || artifact?.name || 'sotw';
-				// Remove any path from key if present
+				// Use artifact name for the download filename, fallback to sotw.csv
+				let baseName = artifact?.name || 'sotw';
+				// Remove any path from name if present
 				baseName = baseName.split('/').pop() || baseName;
 				link.download = `${baseName}.sotw.csv`;
-				document.body.appendChild(link);
+				document.body.append(link);
 				link.click();
-				document.body.removeChild(link);
+				link.remove();
 				URL.revokeObjectURL(url);
-			} catch (e) {
-				console.error('Error downloading SoTW CSV:', e);
+			} catch (error) {
+				console.error('Error downloading SoTW CSV:', error);
 				alert('Failed to download SoTW CSV.');
 			}
 			return;
@@ -697,8 +699,10 @@
 			body: `The SoTW report for this artifact is not available.`
 		};
 		modalStore.trigger(noReportModal);
-		await new Promise((resolve) => setTimeout(resolve, 2000));
-		modalStore.close();      
+		await new Promise((resolve) => {
+			setTimeout(resolve, 2000);
+		});
+		modalStore.close();
 	}
 
 	function getPartLogs(stepName: string, nmaxlinelength: number): string {
@@ -746,8 +750,10 @@
 	<div class="table-container">
 		{#if loadingError}
 			<div class="card p-4">
-				<h2>Failed to load data</h2><br />
-				<p>{getShortErrorMessage(loadingError)}</p> <br />
+				<h2>Failed to load data</h2>
+				<br />
+				<p>{getShortErrorMessage(loadingError)}</p>
+				<br />
 				<button type="button" class="btn btn-sm variant-filled" on:click={() => goto('/projects')}>
 					Back to projects
 				</button>
@@ -800,18 +806,18 @@
 							</tr>
 						</thead>
 						<tbody>
-								{#each reactiveStepsList || [] as step}
-									<!-- eslint-disable-next-line @typescript-eslint/explicit-function-return-type -->
-									<tr on:click={() => stepOnClick(step.displayName)}>
-										<td>{step.displayName}</td>
-										<td>
+							{#each reactiveStepsList || [] as step}
+								<!-- eslint-disable-next-line @typescript-eslint/explicit-function-return-type -->
+								<tr on:click={() => stepOnClick(step.displayName)}>
+									<td>{step.displayName}</td>
+									<td>
 										{step.startedAt ?? '-'}
-										</td>
-										<td>
+									</td>
+									<td>
 										{step.finishedAt ?? '-'}
-										</td>
-										<td>{displayStepDuration(step)}</td>
-										<td>
+									</td>
+									<td>{displayStepDuration(step)}</td>
+									<td>
 										{#if step.carbontracker?.fetchCarbontrackerData?.co2eq}
 											{step.carbontracker.fetchCarbontrackerData.co2eq.toFixed(3)}
 										{:else}
@@ -838,22 +844,23 @@
 										{/if}
 									</td>
 									<td>
-										{#if step.outputArtifacts?.length > 1 }
-										<button
-											type="button"
-											class={`px-3 py-1 rounded border text-xs font-normal cursor-pointer hover:border-slate-400 ${
-												step.outputArtifacts?.length > 1 && !step.outputArtifacts[0]?.mooseReport
-													? 'bg-amber-100 border-amber-300 text-amber-800 hover:bg-amber-150'
-													: 'bg-emerald-100 border-emerald-300 text-emerald-800 hover:bg-emerald-150'
-											}`}
-											on:click|stopPropagation={() => onAnalyze(step.outputArtifacts[0], step.startedAt)}
+										{#if step.outputArtifacts?.length > 1}
+											<button
+												type="button"
+												class={`px-3 py-1 rounded border text-xs font-normal cursor-pointer hover:border-slate-400 ${
+													step.outputArtifacts?.length > 1 && !step.outputArtifacts[0]?.mooseReport
+														? 'bg-amber-100 border-amber-300 text-amber-800 hover:bg-amber-150'
+														: 'bg-emerald-100 border-emerald-300 text-emerald-800 hover:bg-emerald-150'
+												}`}
+												on:click|stopPropagation={() =>
+													onAnalyze(step.outputArtifacts[0], step.startedAt)}
 											>
-											{#if step.outputArtifacts?.length > 1 && !step.outputArtifacts[0]?.mooseReport}
-												Run data analysis
-											{:else}
-												View saved report
-											{/if}
-										</button>
+												{#if step.outputArtifacts?.length > 1 && !step.outputArtifacts[0]?.mooseReport}
+													Run data analysis
+												{:else}
+													View saved report
+												{/if}
+											</button>
 										{:else}
 											-
 										{/if}
@@ -871,18 +878,26 @@
 						<!-- display if the dryrun has a non-empty phase message from argo (usually null if no error) -->
 						{#if dryRunPhaseMessage}
 							<div class="card logcard row-span-1 p-3">
-								<div style="display: flex; align-items: center; color: #b45309; gap: 5px"><!-- amber-700 -->
+								<div style="display: flex; align-items: center; color: #b45309; gap: 5px">
+									<!-- amber-700 -->
 									<AlertTriangleIcon />
-									<h1>Workflow Failure Summary</h1> <br />
+									<h1>Workflow Failure Summary</h1>
+									<br />
 								</div>
 								<section class="p-1">
 									{#if reactiveStepsList && reactiveStepsList.length > 0}
-										{#if reactiveStepsList.filter(step => step.phase === 'Failed').length > 0}
+										{#if reactiveStepsList.some((step) => step.phase === 'Failed')}
 											<div class="w-full">
 												<p style="color: #b45309; font-weight: bold;">
-													{reactiveStepsList.filter(step => step.phase === 'Failed').length} out of {reactiveStepsList.length} steps failed.
+													{reactiveStepsList.filter((step) => step.phase === 'Failed').length} out of
+													{reactiveStepsList.length} steps failed.
 												</p>
-												<p style="color: #b45309;">Failed step(s): {reactiveStepsList.filter(step => step.phase === 'Failed').map(s => s.displayName).join(', ')}</p>
+												<p style="color: #b45309;">
+													Failed step(s): {reactiveStepsList
+														.filter((step) => step.phase === 'Failed')
+														.map((s) => s.displayName)
+														.join(', ')}
+												</p>
 											</div>
 										{:else}
 											<div class="w-full">
@@ -985,22 +1000,32 @@
 			</div>
 
 			{#if showMooseModal}
-				<div class="moose-modal-backdrop w-full" on:click={() => (showMooseModal = false)}>
-					<div class="moose-modal" on:click|stopPropagation>
+				<div
+					class="moose-modal-backdrop w-full"
+					on:click={() => {
+						showMooseModal = false;
+					}}
+					role="presentation"
+				>
+					<div class="moose-modal" on:click|stopPropagation={() => {}} role="presentation">
 						<header class="moose-modal-header">
 							<h2>Detected privacy-relevant entities</h2>
 							<div class="moose-modal-actions">
 								<button
 									type="button"
 									class="moose-btn"
-									on:click={() => downloadSotwCsv(selectedArtifact)}
+									on:click={async () => {
+										await downloadSotwCsv(selectedArtifact ?? undefined);
+									}}
 								>
 									Download SoTW
 								</button>
 								<button
 									type="button"
 									class="moose-btn"
-									on:click={() => rerunMooseAnalysis()}
+									on:click={async () => {
+										await rerunMooseAnalysis();
+									}}
 								>
 									Re-run analysis
 								</button>
@@ -1008,7 +1033,9 @@
 									<button
 										type="button"
 										class="moose-btn"
-										on:click={() => saveMooseReport()}
+										on:click={async () => {
+											await saveMooseReport();
+										}}
 									>
 										Save report
 									</button>
@@ -1016,7 +1043,9 @@
 								<button
 									type="button"
 									class="moose-btn"
-									on:click={() => (showMooseModal = false)}
+									on:click={() => {
+										showMooseModal = false;
+									}}
 								>
 									Close
 								</button>
@@ -1044,15 +1073,15 @@
 											<tr>
 												<td>{entity.text}</td>
 												<td>{entity.type_id}</td>
-												   <td>
-													   {#if entity.confidence > 0.75}
-														   High
-													   {:else if entity.confidence < 0.5}
-														   Low
-													   {:else}
-														   Medium
-													   {/if}
-												   </td>
+												<td>
+													{#if entity.confidence > 0.75}
+														High
+													{:else if entity.confidence < 0.5}
+														Low
+													{:else}
+														Medium
+													{/if}
+												</td>
 											</tr>
 										{/each}
 									</tbody>
@@ -1067,201 +1096,204 @@
 </div>
 
 <style>
-   .card.plotcard {
-	   display: grid;
-	   place-items: start;
-	   max-height: 50vh;
-   }
-   .card.resourcecard {
-	   overflow: visible;
-	   min-height: 25rem;
-	   max-height: fit-content;
-   }
-   .card.mainlogcard {
-	   overflow-y: scroll;
-	   overflow-x: scroll;
-	   max-height: 200vh;
-   }
-   .card.logcard {
-	   overflow-y: scroll;
-	   max-height: fit-content;
-   }
-   .logbox {
-	   overflow-y: scroll;
-	   max-height: 50vh;
-   }
-   .moose-modal-backdrop {
-	   position: fixed;
-	   inset: 0;
-	   background-color: rgba(0, 0, 0, 0.5);
-	   display: flex;
-	   align-items: center;
-	   justify-content: center;
-	   z-index: 50;
-   }
-   .moose-modal {
-	   background-color: white;
-	   border-radius: 0.5rem;
-	   padding: 1.5rem;
-	   max-width: 48rem;
-	   width: 100%;
-	   max-height: 80vh;
-	   overflow-y: auto;
-	   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
-		   0 4px 6px -2px rgba(0, 0, 0, 0.05);
-   }
-   .moose-modal-header {
-	   display: flex;
-	   align-items: center;
-	   justify-content: space-between;
-	   margin-bottom: 1rem;
-   }
-   .moose-modal-actions {
-	   display: flex;
-	   gap: 0.5rem;
-   }
-   .moose-btn {
-	   padding: 0.25rem 0.75rem;
-	   border-radius: 0.25rem;
-	   border: 1px solid #d1d5db;
-	   background-color: #f9fafb;
-	   color: #111827;
-	   font-size: 0.875rem;
-	   cursor: pointer;
-   }
-   .moose-btn:hover {
-	   background-color: #e5e7eb;
-   }
-   .moose-modal-body {
-	   max-height: 60vh;
-	   overflow-y: auto;
-   }
-   .moose-status {
-	   margin-bottom: 0.75rem;
-	   font-size: 0.875rem;
-   }
-   .moose-status-failed {
-	   color: #b91c1c;
-   }
-   ul {
-	   max-height: 75vh;
-	   max-height: fit-content;
-   }
+	.card.plotcard {
+		display: grid;
+		place-items: start;
+		max-height: 50vh;
+	}
+	.card.resourcecard {
+		overflow: visible;
+		min-height: 25rem;
+		max-height: fit-content;
+	}
+	.card.mainlogcard {
+		overflow-y: scroll;
+		overflow-x: scroll;
+		max-height: 200vh;
+	}
+	.card.logcard {
+		overflow-y: scroll;
+		max-height: fit-content;
+	}
+	.logbox {
+		overflow-y: scroll;
+		max-height: 50vh;
+	}
+	.moose-modal-backdrop {
+		position: fixed;
+		inset: 0;
+		background-color: rgba(0, 0, 0, 0.5);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		z-index: 50;
+		border: none;
+		padding: 0;
+		background-color: rgba(0, 0, 0, 0.5);
+	}
+	.moose-modal {
+		background-color: white;
+		border-radius: 0.5rem;
+		padding: 1.5rem;
+		max-width: 48rem;
+		width: 100%;
+		max-height: 80vh;
+		overflow-y: auto;
+		box-shadow:
+			0 10px 15px -3px rgba(0, 0, 0, 0.1),
+			0 4px 6px -2px rgba(0, 0, 0, 0.05);
+	}
+	.moose-modal-header {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		margin-bottom: 1rem;
+	}
+	.moose-modal-actions {
+		display: flex;
+		gap: 0.5rem;
+	}
+	.moose-btn {
+		padding: 0.25rem 0.75rem;
+		border-radius: 0.25rem;
+		border: 1px solid #d1d5db;
+		background-color: #f9fafb;
+		color: #111827;
+		font-size: 0.875rem;
+		cursor: pointer;
+	}
+	.moose-btn:hover {
+		background-color: #e5e7eb;
+	}
+	.moose-modal-body {
+		max-height: 60vh;
+		overflow-y: auto;
+	}
+	.moose-status {
+		margin-bottom: 0.75rem;
+		font-size: 0.875rem;
+	}
+	.moose-status-failed {
+		color: #b91c1c;
+	}
+	ul {
+		max-height: 75vh;
+		max-height: fit-content;
+	}
 
-   .table.table-interactive {
-		   width: 100%;
-		   border-collapse: collapse;
-		   table-layout: fixed;
-   }
+	.table.table-interactive {
+		width: 100%;
+		border-collapse: collapse;
+		table-layout: fixed;
+	}
 
-   /* Prevent long artifact names from bleeding into the next column */
-   .output-col {
-	   max-width: 12rem;
-	   word-break: break-word;
-	   white-space: normal;
-   }
+	/* Prevent long artifact names from bleeding into the next column */
+	.output-col {
+		max-width: 12rem;
+		word-break: break-word;
+		white-space: normal;
+	}
 
-   .output-link {
-	   display: inline-block;
-	   max-width: 100%;
-	   word-break: break-word;
-   }
+	.output-link {
+		display: inline-block;
+		max-width: 100%;
+		word-break: break-word;
+	}
 
+	/* Improved: Adjust column widths for better layout */
+	.table.table-interactive th:nth-child(1),
+	.table.table-interactive td:nth-child(1) {
+		width: 18%;
+		min-width: 14ch;
+		max-width: 32ch;
+		word-break: break-word;
+		white-space: normal;
+	}
+	.table.table-interactive th:nth-child(2),
+	.table.table-interactive td:nth-child(2) {
+		width: 10%;
+		min-width: 7ch;
+		max-width: 14ch;
+	}
+	.table.table-interactive th:nth-child(3),
+	.table.table-interactive td:nth-child(3) {
+		width: 10%;
+		min-width: 7ch;
+		max-width: 14ch;
+	}
+	.table.table-interactive th:nth-child(4),
+	.table.table-interactive td:nth-child(4) {
+		width: 8%;
+		min-width: 6ch;
+		max-width: 10ch;
+	}
+	.table.table-interactive th:nth-child(5),
+	.table.table-interactive td:nth-child(5),
+	.table.table-interactive th:nth-child(6),
+	.table.table-interactive td:nth-child(6) {
+		width: 7%;
+		min-width: 5ch;
+		max-width: 10ch;
+	}
+	.table.table-interactive th:nth-child(7),
+	.table.table-interactive td:nth-child(7) {
+		width: 8%;
+		min-width: 6ch;
+		max-width: 12ch;
+	}
+	.table.table-interactive th.output-col,
+	.table.table-interactive td.output-col {
+		width: 12%;
+		min-width: 8ch;
+		max-width: 18ch;
+	}
+	.table.table-interactive th:nth-child(9),
+	.table.table-interactive td:nth-child(9) {
+		width: 10%;
+		min-width: 7ch;
+		max-width: 14ch;
+	}
 
-   /* Improved: Adjust column widths for better layout */
-   .table.table-interactive th:nth-child(1),
-   .table.table-interactive td:nth-child(1) {
-	   width: 18%;
-	   min-width: 14ch;
-	   max-width: 32ch;
-	   word-break: break-word;
-	   white-space: normal;
-   }
-   .table.table-interactive th:nth-child(2),
-   .table.table-interactive td:nth-child(2) {
-	   width: 10%;
-	   min-width: 7ch;
-	   max-width: 14ch;
-   }
-   .table.table-interactive th:nth-child(3),
-   .table.table-interactive td:nth-child(3) {
-	   width: 10%;
-	   min-width: 7ch;
-	   max-width: 14ch;
-   }
-   .table.table-interactive th:nth-child(4),
-   .table.table-interactive td:nth-child(4) {
-	   width: 8%;
-	   min-width: 6ch;
-	   max-width: 10ch;
-   }
-   .table.table-interactive th:nth-child(5),
-   .table.table-interactive td:nth-child(5),
-   .table.table-interactive th:nth-child(6),
-   .table.table-interactive td:nth-child(6) {
-	   width: 7%;
-	   min-width: 5ch;
-	   max-width: 10ch;
-   }
-   .table.table-interactive th:nth-child(7),
-   .table.table-interactive td:nth-child(7) {
-	   width: 8%;
-	   min-width: 6ch;
-	   max-width: 12ch;
-   }
-   .table.table-interactive th.output-col,
-   .table.table-interactive td.output-col {
-	   width: 12%;
-	   min-width: 8ch;
-	   max-width: 18ch;
-   }
-   .table.table-interactive th:nth-child(9),
-   .table.table-interactive td:nth-child(9) {
-	   width: 10%;
-	   min-width: 7ch;
-	   max-width: 14ch;
-   }
+	/* Make the small Resource/Metrics table use the full card width with two balanced columns */
+	.card.resourcecard .table.table-interactive th:first-child,
+	.card.resourcecard .table.table-interactive td:first-child {
+		width: 40%;
+	}
+	.card.resourcecard .table.table-interactive th:last-child,
+	.card.resourcecard .table.table-interactive td:last-child {
+		width: 60%;
+	}
+	.card.resourcecard .table.table-interactive thead {
+		position: static;
+	}
 
-   /* Make the small Resource/Metrics table use the full card width with two balanced columns */
-   .card.resourcecard .table.table-interactive th:first-child,
-   .card.resourcecard .table.table-interactive td:first-child {
-		   width: 40%;
-   }
-   .card.resourcecard .table.table-interactive th:last-child,
-   .card.resourcecard .table.table-interactive td:last-child {
-		   width: 60%;
-   }
-   .card.resourcecard .table.table-interactive thead {
-		   position: static;
-   }
+	.table-wrapper {
+		width: 100%;
+		max-height: 80vh;
+		overflow-y: auto;
+		overflow-x: auto;
+	}
 
-   .table-wrapper {
-		   width: 100%;
-		   max-height: 80vh;
-		   overflow-y: auto;
-		   overflow-x: auto;
-   }
+	.table.table-interactive thead {
+		position: sticky;
+		top: 0;
+		background-color: inherit;
+		z-index: 1;
+	}
 
-   .table.table-interactive thead {
-		   position: sticky;
-		   top: 0;
-		   background-color: inherit;
-		   z-index: 1;
-   }
-
-   /* Make Moose entities table always span full modal width */
-   .moose-modal-body table {
-	   width: 100%;
-	   table-layout: fixed;
-   }
-   .moose-modal-body th:nth-child(1),
-   .moose-modal-body td:nth-child(1) {
-	   width: 33.33%;
-   }
-   .moose-modal-body th:nth-child(2),
-   .moose-modal-body td:nth-child(2),
-   .moose-modal-body th:nth-child(3),
-   .moose-modal-body td:nth-child(3) {
-	   width: 33.33%;
-   }
+	/* Make Moose entities table always span full modal width */
+	.moose-modal-body table {
+		width: 100%;
+		table-layout: fixed;
+	}
+	.moose-modal-body th:nth-child(1),
+	.moose-modal-body td:nth-child(1) {
+		width: 33.33%;
+	}
+	.moose-modal-body th:nth-child(2),
+	.moose-modal-body td:nth-child(2),
+	.moose-modal-body th:nth-child(3),
+	.moose-modal-body td:nth-child(3) {
+		width: 33.33%;
+	}
 </style>

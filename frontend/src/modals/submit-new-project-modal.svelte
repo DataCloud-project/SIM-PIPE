@@ -75,18 +75,21 @@
 	}
 
 	// handle input file
-	async function handleInputFile(): Promise<{ template: JSON | null; error?: string }> {
-		let template: JSON | null = null;
+	async function handleInputFile(): Promise<{ template: JSON | undefined; error?: string }> {
+		let template: JSON | undefined;
 		const fileText = await inputFilesList[0].text();
 		if (fileText !== '') {
 			try {
 				template = JSON.parse(fileText) as JSON;
-			} catch (jsonErr) {
+			} catch {
 				try {
 					template = yaml.load(fileText) as JSON;
-				} catch (yamlErr) {
+				} catch (error) {
 					// Return error message for YAML parsing
-					return { template: null, error: yamlErr instanceof Error ? yamlErr.message : 'Invalid YAML' };
+					return {
+						template: undefined,
+						error: error instanceof Error ? error.message : 'Invalid YAML'
+					};
 				}
 			}
 		}
@@ -111,7 +114,9 @@
 				body: inputResult.error
 			};
 			modalStore.trigger(modal);
-			await new Promise((resolve) => setTimeout(resolve, 1500));
+			await new Promise((resolve) => {
+				setTimeout(resolve, 1500);
+			});
 			modalStore.close();
 			return;
 		}
@@ -132,7 +137,9 @@
 						body: `Project "${createProjectResponse.project.name}" and Workflow template "${createWorkflowResponse.name}" have been created successfully.`
 					};
 					modalStore.trigger(modal);
-					await new Promise((resolve) => setTimeout(resolve, 1500));
+					await new Promise((resolve) => {
+						setTimeout(resolve, 1500);
+					});
 					modalStore.close();
 				} else {
 					// Workflow template creation failed, delete the project
@@ -142,13 +149,14 @@
 						body: `Project "${createProjectResponse.project.name}" was created successfully, but Workflow template "${createWorkflowResponse.name}" failed to be created.`
 					};
 					modalStore.trigger(modal);
-					await new Promise((resolve) => setTimeout(resolve, 1500));
+					await new Promise((resolve) => {
+						setTimeout(resolve, 1500);
+					});
 					modalStore.close();
 				}
-			} 
+			}
 		}
 	}
-
 </script>
 
 <!-- The modal form to submit a new project -->

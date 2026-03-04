@@ -12,36 +12,36 @@ import {
 function parseOsRelease(content: string): Record<string, string> {
   const result: Record<string, string> = {};
 
-  content.split('\n').forEach((line) => {
+  for (const line of content.split('\n')) {
     const trimmed = line.trim();
-    if (!trimmed || trimmed.startsWith('#')) return;
-
-    const [key, ...rest] = trimmed.split('=');
-    if (!key || rest.length === 0) return;
-
-    let value = rest.join('=');
-    value = value.replace(/^"/, '').replace(/"$/, '');
-    result[key] = value;
-  });
+    if (trimmed && !trimmed.startsWith('#')) {
+      const [key, ...rest] = trimmed.split('=');
+      if (key && rest.length > 0) {
+        let value = rest.join('=');
+        value = value.replace(/^"/, '').replace(/"$/, '');
+        result[key] = value;
+      }
+    }
+  }
 
   return result;
 }
 
+function readFirstAvailable(paths: string[]): string {
+  for (const path of paths) {
+    try {
+      if (existsSync(path)) {
+        return readFileSync(path, { encoding: 'utf8' });
+      }
+    } catch {
+      // Ignore and try the next path.
+    }
+  }
+  return '';
+}
+
 // Detect host OS (based on host /etc/os-release and /proc/version mounted into the pod)
 function detectHostOS(): 'wsl-ubuntu' | 'debian13' | 'unknown' {
-  const readFirstAvailable = (paths: string[]): string => {
-    for (const path of paths) {
-      try {
-        if (existsSync(path)) {
-          return readFileSync(path, { encoding: 'utf8' });
-        }
-      } catch {
-        continue;
-      }
-    }
-    return '';
-  };
-
   // IMPORTANT: Only look at the host filesystem, never the container rootfs.
   // /host/proc is a mount of the host /proc into the controller pod. Using
   // /host/proc/1/root/etc/os-release reads the real host OS release file.
@@ -49,11 +49,10 @@ function detectHostOS(): 'wsl-ubuntu' | 'debian13' | 'unknown' {
     '/host/proc/1/root/etc/os-release',
     '/host/etc/os-release',
   ]);
-  const procVersion = readFirstAvailable([
-    '/host/proc/version',
-  ]);
+  const procVersion = readFirstAvailable(['/host/proc/version']);
 
   if (!osRelease || !procVersion) {
+    // eslint-disable-next-line no-console
     console.error('[ERROR] Unable to detect OS: missing host metadata files');
     return 'unknown';
   }
@@ -90,21 +89,24 @@ function detectHostOS(): 'wsl-ubuntu' | 'debian13' | 'unknown' {
 }
 
 // Choose script based on OS
-function getScriptPath() {
+function getScriptPath(): string {
   const osType = detectHostOS();
 
   switch (osType) {
     case 'wsl-ubuntu': {
+      // eslint-disable-next-line no-console
       console.log('[INFO] Host detected: WSL Ubuntu  → using script1');
       return CREATESCRIPTPATH_WSL;
     }
 
     case 'debian13': {
+      // eslint-disable-next-line no-console
       console.log('[INFO] Host detected: Debian 13 → using script2');
       return CREATESCRIPTPATH_DEBIAN;
     }
 
     default: {
+      // eslint-disable-next-line no-console
       console.log('[WARN] Unknown OS, using fallback script');
       return CREATESCRIPTPATH_WSL;
     }
@@ -132,12 +134,14 @@ export default function createKubeNode(
     ]);
 
     script.stdout.on('data', (data: Buffer) => {
+      // eslint-disable-next-line no-console
       console.log(data.toString().trim());
     });
 
     script.stderr.on('data', (data: Buffer) => {
       const error = data.toString().trim();
       stderrData += `${error}\n`;
+      // eslint-disable-next-line no-console
       console.error(`[STDERR] ${error}`);
     });
 
@@ -147,7 +151,7 @@ export default function createKubeNode(
       } else {
         reject(
           new Error(
-            `[ERROR] Script exited with code ${code}. STDERR:\n${stderrData}`,
+            `[ERROR] Script exited with code ${code ?? 'unknown'}. STDERR:\n${stderrData}`,
           ),
         );
       }
@@ -158,18 +162,21 @@ export default function createKubeNode(
 // Delete Kubernetes node
 export function deleteKubeNode(nodeName: string): Promise<string> {
   return new Promise((resolve, reject) => {
+    // eslint-disable-next-line no-console
     console.log(`[INFO] Starting Kubernetes node deletion: ${nodeName}`);
 
     let stderrData = '';
     const script = spawn('sh', [DELETE_SCRIPT_PATH, nodeName]);
 
     script.stdout.on('data', (data: Buffer) => {
+      // eslint-disable-next-line no-console
       console.log(data.toString().trim());
     });
 
     script.stderr.on('data', (data: Buffer) => {
       const error = data.toString().trim();
       stderrData += `${error}\n`;
+      // eslint-disable-next-line no-console
       console.error(`[STDERR] ${error}`);
     });
 
@@ -179,7 +186,7 @@ export function deleteKubeNode(nodeName: string): Promise<string> {
       } else {
         reject(
           new Error(
-            `[ERROR] Script exited with code ${code}. STDERR:\n${stderrData}`,
+            `[ERROR] Script exited with code ${code ?? 'unknown'}. STDERR:\n${stderrData}`,
           ),
         );
       }

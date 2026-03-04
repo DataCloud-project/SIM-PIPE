@@ -1,4 +1,5 @@
 import type { V1Secret } from '@kubernetes/client-node';
+
 import type K8sClient from './k8s-client.js';
 
 export interface ApiTokenSecrets {
@@ -12,6 +13,12 @@ const MOOSE_SECRET_KEY = 'MOOSE_API_KEY';
 const OPENROUTER_SECRET_NAME = 'simpipe-openrouter-api';
 const OPENROUTER_SECRET_KEY = 'OPENROUTER_API_KEY';
 
+function getStatusCode(error: unknown): number | undefined {
+  if (typeof error !== 'object' || error === null) return undefined;
+  if (!('response' in error)) return undefined;
+  const { response } = (error as { response?: { statusCode?: number } });
+  return response?.statusCode;
+}
 
 async function readSecretValue(
   k8sClient: K8sClient,
@@ -20,14 +27,14 @@ async function readSecretValue(
   key: string,
 ): Promise<string> {
   try {
-    const res = await k8sClient.core.readNamespacedSecret(name, namespace);
-    const data = res.body.data ?? {};
+    const response = await k8sClient.core.readNamespacedSecret(name, namespace);
+    const data = response.body.data ?? {};
     const encoded = data[key];
     if (!encoded) return '';
     return Buffer.from(encoded, 'base64').toString('utf8');
-  } catch (error: any) {
+  } catch (error: unknown) {
     // If the secret does not exist, treat as empty string
-    if (error?.response?.statusCode === 404) {
+    if (getStatusCode(error) === 404) {
       return '';
     }
     throw error;
@@ -45,10 +52,10 @@ async function upsertSecretValue(
 
   let existing: V1Secret | undefined;
   try {
-    const res = await k8sClient.core.readNamespacedSecret(name, namespace);
-    existing = res.body;
-  } catch (error: any) {
-    if (error?.response?.statusCode !== 404) {
+    const response = await k8sClient.core.readNamespacedSecret(name, namespace);
+    existing = response.body;
+  } catch (error: unknown) {
+    if (getStatusCode(error) !== 404) {
       throw error;
     }
   }

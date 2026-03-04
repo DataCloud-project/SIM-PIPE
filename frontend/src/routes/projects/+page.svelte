@@ -24,7 +24,7 @@
 	let alertVariant: string = 'variant-ghost-surface';
 
 	$: reactiveProjectsList = $projectsList;
-	let loadingError: string | null = null;
+	let loadingError: string | null;
 
 	const checkboxes: Record<string, boolean> = {};
 	let dryRunCounts: Record<string, number> = {};
@@ -113,8 +113,10 @@
 				body: `Deleted projects: ${selectedProjectIds.join(', ')}`
 			};
 			modalStore.trigger(projectDeletedModal);
-			await new Promise((resolve) => setTimeout(resolve, 1500));
-			modalStore.close();  
+			await new Promise((resolve) => {
+				setTimeout(resolve, 1500);
+			});
+			modalStore.close();
 
 			// update the project list after deletion
 			await refreshProjects();
@@ -202,6 +204,7 @@
 			modalStore.trigger(modal);
 		}).then(() => {
 			console.log('onCreateNewProject promise resolved');
+			// eslint-disable-next-line no-void
 			void refreshProjects();
 		});
 		modalPromise.catch((error) => {
@@ -242,98 +245,104 @@
 			{#if loadingError}
 				<div class="error-message">
 					<strong>Failed to load projects</strong>
-					<button on:click={() => showDetails = !showDetails} style="margin-left: 1em;">
+					<button
+						on:click={() => {
+							showDetails = !showDetails;
+						}}
+						style="margin-left: 1em;"
+					>
 						{showDetails ? 'Hide Details' : 'Show Details'}
 					</button>
 					{#if showDetails}
-						<pre style="max-height: 300px; overflow: auto; background: #f8f8f8; border: 1px solid #ccc; padding: 1em; margin-top: 1em;">
+						<pre
+							style="max-height: 300px; overflow: auto; background: #f8f8f8; border: 1px solid #ccc; padding: 1em; margin-top: 1em;">
 							{loadingError}
 						</pre>
 					{/if}
 				</div>
 			{:else}
-			<h1>Projects</h1>
-			<div class="flex flex-row justify-end p-5 space-x-1">
-				<div>
-					<button
-						type="button"
-						class="btn btn-sm variant-filled"
-						on:click={() => onCreateNewProject()}
-					>
-						<span>Create</span>
-					</button>
+				<h1>Projects</h1>
+				<div class="flex flex-row justify-end p-5 space-x-1">
+					<div>
+						<button
+							type="button"
+							class="btn btn-sm variant-filled"
+							on:click={() => onCreateNewProject()}
+						>
+							<span>Create</span>
+						</button>
+					</div>
+					<div>
+						<button
+							type="button"
+							class="btn btn-sm variant-filled-warning"
+							on:click={() => onDeleteSelected()}
+						>
+							<span>Delete</span>
+						</button>
+					</div>
 				</div>
-				<div>
-					<button
-						type="button"
-						class="btn btn-sm variant-filled-warning"
-						on:click={() => onDeleteSelected()}
-					>
-						<span>Delete</span>
-					</button>
-				</div>
-			</div>
-			{#if reactiveProjectsList && reactiveProjectsList.length}
-				<table class="table table-interactive">
-					<caption hidden>Projects</caption>
-					<thead>
-						<tr>
-							<th />
-							<th>Name</th>
-							<th>Created</th>
-							<th>Dry runs</th>
-							<th style="text-align:center">Template</th>
-							<th />
-						</tr>
-					</thead>
-					<tbody>
-						{#each reactiveProjectsList || [] as project}
-							<!-- eslint-disable-next-line @typescript-eslint/explicit-function-return-type -->
-							<tr on:click={() => gotodryruns(project.id)}>
-								<td style="width:25px;">
-									<input
-										type="checkbox"
-										class="checkbox"
-										bind:checked={checkboxes[project.id]}
-										on:click={(event) => handleCheckboxClick(event)}
-									/>
-								</td>
-								<td style="width:25%">{project.name}</td>
-								<td style="width:25%">
-									<div><Timestamp timestamp={project.createdAt} /></div>
-								</td>
-								<td style="width:25%">
-									{dryRunCounts[project.id]}
-								</td>
-								<!-- eslint-disable-next-line svelte/no-unused-svelte-ignore -->
-								<!-- svelte-ignore a11y-click-events-have-key-events -->
-								<!-- eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/explicit-function-return-type -->
-								<td style="width:15%" on:click|stopPropagation={(event) => gotoTemplate(project)}>
-									<div class="grid grid-rows-2 grid-cols-1 justify-items-center">
-										<div><FileTextIcon size="1x" /></div>
-										<div>
-											<p class="no-underline hover:underline">show</p>
-											<div />
-										</div>
-									</div></td
-								>
-								<td style="width:10%">
-									<button
-										type="button"
-										title="Rename project"
-										class="btn-icon btn-icon-sm variant-soft"
-										on:click={() => renameProject(project)}
-									>
-										<EditIcon size="20" />
-									</button>
-								</td>
+				{#if reactiveProjectsList && reactiveProjectsList.length > 0}
+					<table class="table table-interactive">
+						<caption hidden>Projects</caption>
+						<thead>
+							<tr>
+								<th />
+								<th>Name</th>
+								<th>Created</th>
+								<th>Dry runs</th>
+								<th style="text-align:center">Template</th>
+								<th />
 							</tr>
-						{/each}
-					</tbody>
-				</table>
-			{:else}
-				<p>No projects yet.</p>
-			{/if}
+						</thead>
+						<tbody>
+							{#each reactiveProjectsList || [] as project}
+								<!-- eslint-disable-next-line @typescript-eslint/explicit-function-return-type -->
+								<tr on:click={() => gotodryruns(project.id)}>
+									<td style="width:25px;">
+										<input
+											type="checkbox"
+											class="checkbox"
+											bind:checked={checkboxes[project.id]}
+											on:click={(event) => handleCheckboxClick(event)}
+										/>
+									</td>
+									<td style="width:25%">{project.name}</td>
+									<td style="width:25%">
+										<div><Timestamp timestamp={project.createdAt} /></div>
+									</td>
+									<td style="width:25%">
+										{dryRunCounts[project.id]}
+									</td>
+									<!-- eslint-disable-next-line svelte/no-unused-svelte-ignore -->
+									<!-- svelte-ignore a11y-click-events-have-key-events -->
+									<!-- eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/explicit-function-return-type -->
+									<td style="width:15%" on:click|stopPropagation={(event) => gotoTemplate(project)}>
+										<div class="grid grid-rows-2 grid-cols-1 justify-items-center">
+											<div><FileTextIcon size="1x" /></div>
+											<div>
+												<p class="no-underline hover:underline">show</p>
+												<div />
+											</div>
+										</div></td
+									>
+									<td style="width:10%">
+										<button
+											type="button"
+											title="Rename project"
+											class="btn-icon btn-icon-sm variant-soft"
+											on:click={() => renameProject(project)}
+										>
+											<EditIcon size="20" />
+										</button>
+									</td>
+								</tr>
+							{/each}
+						</tbody>
+					</table>
+				{:else}
+					<p>No projects yet.</p>
+				{/if}
 			{/if}
 		{:catch error}
 			<div class="card p-4">

@@ -265,6 +265,13 @@ export async function setSotwReportForArtifact(
   }
 }
 
+function getMinioErrorCode(error: unknown): string | undefined {
+  if (typeof error !== 'object' || error === null) return undefined;
+  if (!('code' in error)) return undefined;
+  const { code } = (error as { code?: unknown });
+  return typeof code === 'string' ? code : undefined;
+}
+
 export async function getMooseReportForArtifact(
   objectName: string,
   _bucketName?: string,
@@ -297,8 +304,9 @@ export async function getMooseReportForArtifact(
         reject(error);
       });
     });
-  } catch (error: any) {
-    if (error?.code === 'NoSuchKey' || error?.code === 'NotFound') {
+  } catch (error: unknown) {
+    const code = getMinioErrorCode(error);
+    if (code === 'NoSuchKey' || code === 'NotFound') {
       return undefined;
     }
 

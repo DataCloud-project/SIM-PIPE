@@ -57,12 +57,14 @@ export async function projects(
   );
   const { body } = response as { body: K8SProjectList };
   // Sort projects by creationTimestamp descending
-  const sortedItems = body.items.slice().sort((a, b) => {
+  const sortedItems = [...body.items].sort((a, b) => {
     const dateA = new Date(a.metadata.creationTimestamp ?? '');
     const dateB = new Date(b.metadata.creationTimestamp ?? '');
-    if (isNaN(dateA as any)) return 1;
-    if (isNaN(dateB as any)) return -1;
-    return dateB.getTime() - dateA.getTime();
+    const timeA = dateA.getTime();
+    const timeB = dateB.getTime();
+    if (Number.isNaN(timeA)) return 1;
+    if (Number.isNaN(timeB)) return -1;
+    return timeB - timeA;
   });
   return sortedItems.map((project) => convertK8SProjectToProject(project));
 }

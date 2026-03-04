@@ -231,7 +231,8 @@ const resolvers = {
       return await getWorkflowTemplate(name, argoClient, sub);
     },
     async buckets(
-      _p: EmptyParent, _a: EmptyArguments, context: AuthenticatedContext,
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      _p: EmptyParent, _a: EmptyArguments,
     ): Promise<Query['buckets']> {
       const buckets = await listAllBuckets();
       return buckets.map(({ name }) => ({
@@ -246,7 +247,7 @@ const resolvers = {
       return await resources(k8sClient, k8sNamespace, sub);
     },
     async artifact(
-      _p: EmptyParent, arguments_: QueryArtifactArguments, context: AuthenticatedContext,
+      _p: EmptyParent, arguments_: QueryArtifactArguments,
     ): Promise<Query['artifact']> {
       const { key, bucketName } = arguments_;
       const object = await getObjectMetadata(key, bucketName);
@@ -259,24 +260,28 @@ const resolvers = {
       return returnobject;
     },
     async artifacts(
-      _p: EmptyParent, arguments_: QueryArtifactsArguments, context: AuthenticatedContext,
+      _p: EmptyParent, arguments_: QueryArtifactsArguments,
     ): Promise<Query['artifacts']> {
       const { bucketName } = arguments_;
       // console.log(bucketName);
       let objects: ArtifactItem[];
+      // eslint-disable-next-line unicorn/prefer-ternary
       if (bucketName) {
         objects = await listAllObjects(bucketName);
       } else {
         objects = await listAllObjects(); // will use default bucket
       }
-      return objects.map(({ name, size }) => ({
-        name,
-        key: name,
-        size,
-        bucketName,
-      }));
+      return objects
+        .filter(({ name }) => name !== undefined)
+        .map(({ name, size }) => ({
+          name: name as string,
+          key: name as string,
+          size,
+          bucketName,
+        }));
     },
     async hardwaremetrics(
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       _p: EmptyParent, _a: EmptyArguments, context: AuthenticatedContext,
     ): Promise<Query['hardwaremetrics']> {
       const ncores = cpuCoresData.length;

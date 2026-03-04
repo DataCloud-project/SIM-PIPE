@@ -8,7 +8,7 @@
 	import '../app.postcss';
 	import hljs from 'highlight.js';
 	import 'highlight.js/styles/github-dark.css'; // highlight.js theme
-	import { LockIcon, BookOpenIcon, FileIcon, FolderIcon,CodepenIcon } from 'svelte-feather-icons';
+	import { LockIcon, BookOpenIcon, FolderIcon } from 'svelte-feather-icons';
 	import {
 		AppShell,
 		AppBar,
@@ -143,7 +143,7 @@
 					<div>API tokens</div>
 				</div>
 			</AppRailAnchor>
-			<!-- new section for managing resources for emulation -->			
+			<!-- new section for managing resources for emulation -->
 			<AppRailAnchor
 				label="Emulated ndoes"
 				href="/resources"

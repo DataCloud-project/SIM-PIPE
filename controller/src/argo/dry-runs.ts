@@ -1,4 +1,4 @@
-import { SIMPIPE_PROJECT_LABEL, SIMPIPE_NODE_LABEL } from '../k8s/label.js';
+import { SIMPIPE_NODE_LABEL, SIMPIPE_PROJECT_LABEL } from '../k8s/label.js';
 import {
   ConflictError, InvalidArgoWorkflowError, NotFoundError, WrongRequestError,
 } from '../server/apollo-errors.js';
@@ -84,7 +84,7 @@ function convertArgoNodeType(
 export function convertArgoWorkflowToDryRun(argoWorkflow: ArgoWorkflow): DryRun {
   const { metadata, status, spec } = argoWorkflow;
   const { suspend } = spec;
-  let nodeName = metadata.labels?.[SIMPIPE_NODE_LABEL];
+  const nodeName = metadata.labels?.[SIMPIPE_NODE_LABEL];
   return {
     id: metadata.name ?? '',
     createdAt: (new Date(metadata.creationTimestamp ?? '') ?? new Date()).toISOString(),

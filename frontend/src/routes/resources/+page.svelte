@@ -17,7 +17,7 @@
 	let alertVariant: string = 'variant-ghost-surface';
 
 	$: reactiveResourcesList = $resourcesList;
-	let loadingError: string | null = null;
+	let loadingError: string | null;
 
 	const checkboxes: Record<string, boolean> = {};
 
@@ -48,7 +48,7 @@
 		return value;
 	}
 
-	let resourcesPromise: Promise<Resource[]> = refreshResources();
+	const resourcesPromise: Promise<Resource[]> = refreshResources();
 
 	const handleCheckboxClick = (event: any) => {
 		event.stopPropagation();
@@ -60,37 +60,50 @@
 				type: 'component',
 				component: 'createNewResourceModal',
 				title: 'Add new resource',
-				response: async (data: any) => {
+				response: (data: any) => {
 					// Poll backend for status
 					const resourceName = data.name;
 					let tries = 0;
 					let ready = false;
 
-					while (!ready && tries < 30) {
-						await new Promise((res) => setTimeout(res, 2000)); // poll every 2s
-						tries++;
+					// eslint-disable-next-line no-void
+					void (async () => {
+						while (!ready && tries < 30) {
+							await new Promise((res) => {
+								setTimeout(res, 2000);
+							}); // poll every 2s
+							tries += 1;
 
-						const response = await requestGraphQLClient(allResourcesQuery, { cache: false }) as { resources: Resource[] };
-						const res = response.resources.find((r: Resource) => r.name === resourceName);
+							// eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
+							const response = (await requestGraphQLClient(allResourcesQuery, {
+								cache: false
+							})) as { resources: Resource[] };
+							const res = response.resources.find((r: Resource) => r.name === resourceName);
 
-						if (res?.status === 'READY') {
-							ready = true;
-							break;
+							if (res?.status === 'READY') {
+								ready = true;
+								break;
+							}
 						}
-					}
 
-					// Refresh list
-					const updated = await requestGraphQLClient(allResourcesQuery, { cache: false }) as { resources: Resource[] };
-					resourcesList.set(updated.resources);
+						// Refresh list
+						// eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
+						const updated = (await requestGraphQLClient(allResourcesQuery, { cache: false })) as {
+							resources: Resource[];
+						};
+						resourcesList.set(updated.resources);
 
-					modalStore.trigger({
-						type: 'alert',
-						title: 'VM Node Ready ✅',
-						body: 'The VM node is running and reachable!'
-					});
+						modalStore.trigger({
+							type: 'alert',
+							title: 'VM Node Ready ✅',
+							body: 'The VM node is running and reachable!'
+						});
 
-					await new Promise((res) => setTimeout(res, 1500));
-					modalStore.close();
+						await new Promise((res) => {
+							setTimeout(res, 1500);
+						});
+						modalStore.close();
+					})();
 				}
 			};
 			modalStore.trigger(modal);
@@ -115,11 +128,14 @@
 			};
 			modalStore.trigger(vMNodeDeletedMessageModal);
 
-			await new Promise((resolve) => setTimeout(resolve, 1500));
+			await new Promise((resolve) => {
+				setTimeout(resolve, 1500);
+			});
 			modalStore.close();
 		} catch (error) {
 			console.log('Error deleting resources:', error);
 		} finally {
+			// eslint-disable-next-line no-return-assign
 			Object.keys(checkboxes).forEach((id) => (checkboxes[id] = false));
 			await refreshResources();
 		}
@@ -141,18 +157,21 @@
 			};
 			modalStore.trigger(vMNodeShutdownMessageModal);
 
-			await new Promise((resolve) => setTimeout(resolve, 1500));
+			await new Promise((resolve) => {
+				setTimeout(resolve, 1500);
+			});
 			modalStore.close();
 		} catch (error) {
 			console.log('Error shutting down VM node:', error);
 		} finally {
+			// eslint-disable-next-line no-return-assign
 			Object.keys(checkboxes).forEach((id) => (checkboxes[id] = false));
 			await refreshResources();
 		}
 	}
 
-	async function onOpenLogs(): Promise<void> {
-		console.log('To be implemented')
+	async function onOpenLogs(name: string): Promise<void> {
+		console.log('To be implemented');
 	}
 </script>
 
@@ -166,7 +185,11 @@
 				</button>
 			</div>
 			<div>
-				<button type="button" class="btn btn-sm variant-filled-surface" on:click={() => onShutdown()}>
+				<button
+					type="button"
+					class="btn btn-sm variant-filled-surface"
+					on:click={() => onShutdown()}
+				>
 					<span>Shutdown</span>
 				</button>
 			</div>
@@ -186,51 +209,51 @@
 					<p>{loadingError}</p>
 				</div>
 			{:else if reactiveResourcesList?.length}
-			<table class="table table-interactive w-full">
-				<caption hidden>Resources</caption>
-				<thead>
-					<tr>
-						<th class="w-10" />
-						<th class="w-1/5">Name</th>
-						<th class="w-1/5">OS</th>
-						<th class="w-1/5">CPUs</th>
-						<th class="w-1/5">Memory (in mb)</th>
-						<th class="w-1/5">Status</th>
-						<th class="w-1/5">Logs</th>
-					</tr>
-				</thead>
-				<tbody>
-					{#each reactiveResourcesList || [] as resource}
+				<table class="table table-interactive w-full">
+					<caption hidden>Resources</caption>
+					<thead>
 						<tr>
-							<td class="w-10">
-								<input
-									type="checkbox"
-									class="checkbox"
-									bind:checked={checkboxes[resource.name]}
-									on:click={(event) => handleCheckboxClick(event)}
-								/>
-							</td>
-							<td style="w-1/5">{resource.name}</td>
-							<td style="w-1/5">{resource.os}</td>
-							<td style="w-1/6">{resource.cpus}</td>
-							<td style="w-1/5">{resource.memory}</td>
-							<td style="w-1/5">{resource.status}</td>
-							<td style="w-1/4">
-								<button
-									type="button"
-									class="btn btn-sm variant-filled"
-									on:click={() => onOpenLogs(resource.name)}
-								>
-									Get VM console logs
-								</button>
-							</td>
+							<th class="w-10" />
+							<th class="w-1/5">Name</th>
+							<th class="w-1/5">OS</th>
+							<th class="w-1/5">CPUs</th>
+							<th class="w-1/5">Memory (in mb)</th>
+							<th class="w-1/5">Status</th>
+							<th class="w-1/5">Logs</th>
 						</tr>
-					{/each}
-				</tbody>
-			</table>
-		{:else}
-			<p>No resources yet.</p>
-		{/if}
+					</thead>
+					<tbody>
+						{#each reactiveResourcesList || [] as resource}
+							<tr>
+								<td class="w-10">
+									<input
+										type="checkbox"
+										class="checkbox"
+										bind:checked={checkboxes[resource.name]}
+										on:click={(event) => handleCheckboxClick(event)}
+									/>
+								</td>
+								<td style="w-1/5">{resource.name}</td>
+								<td style="w-1/5">{resource.os}</td>
+								<td style="w-1/6">{resource.cpus}</td>
+								<td style="w-1/5">{resource.memory}</td>
+								<td style="w-1/5">{resource.status}</td>
+								<td style="w-1/4">
+									<button
+										type="button"
+										class="btn btn-sm variant-filled"
+										on:click={() => onOpenLogs(resource.name)}
+									>
+										Get VM console logs
+									</button>
+								</td>
+							</tr>
+						{/each}
+					</tbody>
+				</table>
+			{:else}
+				<p>No resources yet.</p>
+			{/if}
 		{:catch error}
 			<div class="card p-4">
 				<h2>Failed to load resources</h2>

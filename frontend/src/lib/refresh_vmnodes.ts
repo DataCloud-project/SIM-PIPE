@@ -5,7 +5,6 @@ import allResourcesQuery from '$queries/get_all_resources.js';
 let refreshProvisioningVMsPromise: Promise<void> | undefined;
 
 export default async function refreshVMNodesDetails(nodeName: string): Promise<void> {
-
 	if (refreshProvisioningVMsPromise) {
 		return refreshProvisioningVMsPromise;
 	}
@@ -14,27 +13,27 @@ export default async function refreshVMNodesDetails(nodeName: string): Promise<v
 		try {
 			let iteration = 0;
 			do {
+				// eslint-disable-next-line no-plusplus
 				iteration++;
 
 				try {
-					const response: { resources: Resource[] } = await requestGraphQLClient(
-						allResourcesQuery
-					);
+					const response: { resources: Resource[] } = await requestGraphQLClient(allResourcesQuery);
 					const matching = response.resources?.find((r) => r.name === nodeName);
 					if (matching) {
 						const status = matching.status?.toString().toLowerCase();
 						if (status === 'running' || status === 'failed') {
-							return; 
+							return;
 						}
-					} 
-				} catch (innerErr) {
-					console.error(`[${nodeName}] Error while fetching resources:`, innerErr);
+					}
+				} catch (error) {
+					console.error(`[${nodeName}] Error while fetching resources:`, error);
 				}
 
 				const waitMs = 4000;
-				await new Promise((resolve) => setTimeout(resolve, waitMs));
-
-			} while (true); 
+				await new Promise((resolve) => {
+					setTimeout(resolve, waitMs);
+				});
+			} while (true);
 		} finally {
 			refreshProvisioningVMsPromise = undefined;
 		}

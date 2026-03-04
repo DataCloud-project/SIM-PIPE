@@ -1,4 +1,5 @@
 import type { V1Secret } from '@kubernetes/client-node';
+
 import { K3S_TOKEN_SECRET } from '../config.js';
 import type K8sClient from './k8s-client.js';
 
@@ -10,6 +11,13 @@ export interface K3sClusterSecret {
 const TOKEN_KEY = 'token';
 const SERVER_IP_KEY = 'K3S_SERVER_IP';
 
+function getStatusCode(error: unknown): number | undefined {
+  if (typeof error !== 'object' || error === null) return undefined;
+  if (!('response' in error)) return undefined;
+  const { response } = (error as { response?: { statusCode?: number } });
+  return response?.statusCode;
+}
+
 async function readSecretValue(
   k8sClient: K8sClient,
   namespace: string,
@@ -17,13 +25,13 @@ async function readSecretValue(
   key: string,
 ): Promise<string> {
   try {
-    const res = await k8sClient.core.readNamespacedSecret(name, namespace);
-    const data = res.body.data ?? {};
+    const response = await k8sClient.core.readNamespacedSecret(name, namespace);
+    const data = response.body.data ?? {};
     const encoded = data[key];
     if (!encoded) return '';
     return Buffer.from(encoded, 'base64').toString('utf8');
-  } catch (error: any) {
-    if (error?.response?.statusCode === 404) {
+  } catch (error: unknown) {
+    if (getStatusCode(error) === 404) {
       return '';
     }
     throw error;
@@ -42,10 +50,10 @@ async function upsertK3sSecret(
 
   let existing: V1Secret | undefined;
   try {
-    const res = await k8sClient.core.readNamespacedSecret(name, namespace);
-    existing = res.body;
-  } catch (error: any) {
-    if (error?.response?.statusCode !== 404) {
+    const response = await k8sClient.core.readNamespacedSecret(name, namespace);
+    existing = response.body;
+  } catch (error: unknown) {
+    if (getStatusCode(error) !== 404) {
       throw error;
     }
   }
@@ -94,8 +102,8 @@ export async function updateK3sClusterSecret(
 ): Promise<K3sClusterSecret> {
   const current = await getK3sClusterSecret(k8sClient, namespace);
   const next: K3sClusterSecret = {
-    token: partial.token !== undefined ? partial.token : current.token,
-    serverIp: partial.serverIp !== undefined ? partial.serverIp : current.serverIp,
+    token: partial.token === undefined ? current.token : partial.token,
+    serverIp: partial.serverIp === undefined ? current.serverIp : partial.serverIp,
   };
 
   await upsertK3sSecret(k8sClient, namespace, K3S_TOKEN_SECRET, next.token, next.serverIp);

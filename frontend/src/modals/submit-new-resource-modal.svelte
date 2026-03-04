@@ -12,6 +12,7 @@
 	import allResourcesQuery from '$queries/get_all_resources.js';
 
 	export let parent: SvelteComponent;
+	// eslint-disable-next-line svelte/valid-compile
 	export let response: (result: any) => void;
 
 	const modalStore = getModalStore();
@@ -42,10 +43,7 @@
 		};
 
 		try {
-			requestGraphQLClient(
-				createResourceMutation,
-				createResourceMutationVariables
-			);
+			requestGraphQLClient(createResourceMutation, createResourceMutationVariables);
 
 			modalStore.close();
 
@@ -56,7 +54,9 @@
 			};
 			modalStore.trigger(createResourceMessageModal);
 
-			await new Promise((resolve) => setTimeout(resolve, 1500));
+			await new Promise((resolve) => {
+				setTimeout(resolve, 1500);
+			});
 
 			modalStore.close();
 			modalStore.clear();
@@ -70,11 +70,12 @@
 				body: 'New node is ready!'
 			};
 			modalStore.trigger(createResourceReadyModal);
-			await new Promise((resolve) => setTimeout(resolve, 2000));
+			await new Promise((resolve) => {
+				setTimeout(resolve, 2000);
+			});
 
 			modalStore.close();
 			modalStore.clear();
-
 		} catch (error) {
 			console.error('❌ Error in onSubmit →', error);
 		}

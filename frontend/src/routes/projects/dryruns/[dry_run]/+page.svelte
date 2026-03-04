@@ -222,7 +222,7 @@
 								</td>
 								<td style="width:15%">
 									<div>
-										{['Succeeded', 'Failed', 'Error'].includes(run.status.phase)
+										{['Succeeded', 'Failed', 'Error'].includes(run.status.phase.toString())
 											? calculateDuration(run.nodes)
 											: '-'}
 									</div>
@@ -237,7 +237,7 @@
 								</td>
 								<!-- eslint-disable-next-line svelte/no-unused-svelte-ignore runResult
 								<!-- svelte-ignore a11y-click-events-have-key-events -->
-								<td style="width:15%" on:click|stopPropagation={(event) => gotoTemplate(run.id)}>
+								<td style="width:15%" on:click|stopPropagation={() => gotoTemplate(run.id)}>
 									<div class="grid grid-rows-2 grid-cols-1 justify-items-center">
 										<div><FileTextIcon size="1x" /></div>
 										<div>
@@ -246,7 +246,7 @@
 										</div>
 									</div></td
 								>
-								<td style="width:15%">{run.nodeName ? run.nodeName : 'default'}</td>
+								<td style="width:15%">{run.nodeName ?? 'default'}</td>
 								<td style="width:15%"><Timestamp timestamp={run.createdAt} /> </td>
 							</tr>
 						{/each}

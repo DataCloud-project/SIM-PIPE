@@ -8,6 +8,25 @@ import { assertIsValidKubernetesLabel } from './valid-kubernetes-label.js';
 import type { CreateResourceInput, Resource } from '../server/schema.js';
 import type K8sClient from './k8s-client.js';
 
+function getStatusCode(error: unknown): number | undefined {
+  if (typeof error !== 'object' || error === null) return undefined;
+  if (!('response' in error)) return undefined;
+  const { response } = (error as { response?: { statusCode?: number } });
+  return response?.statusCode;
+}
+
+function getResponseBody(error: unknown): unknown {
+  if (typeof error !== 'object' || error === null) return undefined;
+  if (!('response' in error)) return undefined;
+  const { response } = (error as { response?: { body?: unknown } });
+  return response?.body;
+}
+
+function getErrorMessage(error: unknown): string {
+  if (error instanceof Error) return error.message;
+  return 'Unknown error';
+}
+
 interface K8SVMNode {
   apiVersion: 'simpipe.sct.sintef.no/v1';
   kind: 'VMNode';
@@ -53,6 +72,7 @@ export async function resources(
       assertIsValidKubernetesLabel(user);
       labelSelector = `${SIMPIPE_USER_LABEL}=${user}`;
     } catch (validationError) {
+      // eslint-disable-next-line no-console
       console.error('resources.ts: Invalid Kubernetes label for user:', user, validationError);
       throw validationError;
     }
@@ -82,59 +102,62 @@ export async function resources(
     const desiredStatusByNodeName = new Map<string, 'running' | 'provisioning'>();
     for (const node of k8sNodes) {
       const nodeName = node.metadata?.name;
-      if (!nodeName) continue;
-      const readyCond = node.status?.conditions?.find((c) => c.type === 'Ready');
-      const isReady = readyCond?.status === 'True';
-      desiredStatusByNodeName.set(nodeName, isReady ? 'running' : 'provisioning');
+      if (nodeName) {
+        const readyCond = node.status?.conditions?.find((c) => c.type === 'Ready');
+        const isReady = readyCond?.status === 'True';
+        desiredStatusByNodeName.set(nodeName, isReady ? 'running' : 'provisioning');
+      }
     }
 
     // 4) Reconcile CRDs against actual Nodes and patch status if needed
     const patchPromises: Promise<unknown>[] = [];
     for (const vmnode of items) {
       const vmnodeName = vmnode.metadata?.name ?? vmnode.spec?.name;
-      if (!vmnodeName) continue;
+      if (vmnodeName) {
+        const desired = desiredStatusByNodeName.get(vmnodeName) ?? 'shutdown';
 
-      const desired =
-        desiredStatusByNodeName.has(vmnodeName)
-          ? desiredStatusByNodeName.get(vmnodeName)!
-          : 'shutdown'; // Node not found in cluster
-
-      if (vmnode.spec.status !== desired) {
-        // Patch CRD status to reflect actual node state
-        patchPromises.push(
-          k8sClient.customObjects.patchNamespacedCustomObject(
-            'simpipe.sct.sintef.no',
-            'v1',
-            k8sNamespace,
-            'vmnodes',
-            vmnodeName,
-            [
-              {
-                op: 'replace',
-                path: '/spec/status',
-                value: desired,
-              },
-            ],
-            undefined,
-            undefined,
-            undefined,
-            { headers: { 'Content-Type': 'application/json-patch+json' } },
-          ).catch((err) => {
-            console.error(`resources.ts: failed to patch VMNode ${vmnodeName} status -> ${desired}`, err);
-          }),
-        );
-        // Optimistically update local object so the return reflects the change
-        vmnode.spec.status = desired;
+        if (vmnode.spec.status !== desired) {
+          // Patch CRD status to reflect actual node state
+          patchPromises.push(
+            k8sClient.customObjects.patchNamespacedCustomObject(
+              'simpipe.sct.sintef.no',
+              'v1',
+              k8sNamespace,
+              'vmnodes',
+              vmnodeName,
+              [
+                {
+                  op: 'replace',
+                  path: '/spec/status',
+                  value: desired,
+                },
+              ],
+              undefined,
+              undefined,
+              undefined,
+              { headers: { 'Content-Type': 'application/json-patch+json' } },
+            ).catch((error) => {
+              // eslint-disable-next-line no-console
+              console.error(
+                `resources.ts: failed to patch VMNode ${vmnodeName} status -> ${desired}`,
+                error,
+              );
+            }),
+          );
+          // Optimistically update local object so the return reflects the change
+          vmnode.spec.status = desired;
+        }
       }
     }
 
-    if (patchPromises.length) {
+    if (patchPromises.length > 0) {
       await Promise.allSettled(patchPromises);
     }
 
     // 5) Return unified view
     return items.map((vmnode) => convertK8SVMNodeToResource(vmnode));
   } catch (error) {
+    // eslint-disable-next-line no-console
     console.error('resources.ts: Kubernetes API call failed:', error);
     throw error;
   }
@@ -148,7 +171,6 @@ export async function getResource(
   user?: string,
 ): Promise<Resource> {
   let body: K8SVMNode;
-  ;
   try {
     const response = await k8sClient.customObjects.getNamespacedCustomObject(
       'simpipe.sct.sintef.no',
@@ -192,43 +214,56 @@ export async function createResource(
     assertIsValidKubernetesLabel(user);
     labels = { [SIMPIPE_USER_LABEL]: user };
   }
-  let status: string = 'provisioning';
+  let status = 'provisioning';
   // Step 1: Create the k3s node
   try {
     await createKubeNode(nodeName, memory, cpus, os);
     status = 'running';
   } catch (error) {
     status = 'failed';
+    // eslint-disable-next-line no-console
     console.error('Error creating kube node:', error);
-    throw new Error(`Failed to create k3s node: ${(error as Error).message}`);
+    throw new Error(`Failed to create k3s node: ${getErrorMessage(error)}`);
   }
 
   // Step 2: Persist as a CRD VMNode
   let createdVMNode: K8SVMNode;
   try {
     const response = await k8sClient.customObjects.createNamespacedCustomObject(
-      'simpipe.sct.sintef.no',  // group
-      'v1',                     // version
-      k8sNamespace,             // namespace
-      'vmnodes',                // plural
+      'simpipe.sct.sintef.no', // group
+      'v1', // version
+      k8sNamespace, // namespace
+      'vmnodes', // plural
       {
         apiVersion: 'simpipe.sct.sintef.no/v1',
         kind: 'VMNode',
-        metadata: { name: nodeName, labels },
-        spec: { name, os, cpus, memory, status },
+        metadata: {
+          name: nodeName,
+          labels,
+        },
+        spec: {
+          name,
+          os,
+          cpus,
+          memory,
+          status,
+        },
       },
     );
 
     createdVMNode = response.body as K8SVMNode;
-  } catch (error: any) {
+  } catch (error: unknown) {
+    // eslint-disable-next-line no-console
     console.error('[CRD] Failed to create VMNode CRD');
-    if (error.response?.body) {
-      console.error('[CRD] Error response body:', JSON.stringify(error.response.body, null, 2));
+    const responseBody = getResponseBody(error);
+    if (responseBody) {
+      // eslint-disable-next-line no-console
+      console.error('[CRD] Error response body:', JSON.stringify(responseBody, undefined, 2));
     }
+    // eslint-disable-next-line no-console
     console.error('[CRD] Full error:', error);
-    throw new Error(`Failed to create VMNode: ${error.message}`);
+    throw new Error(`Failed to create VMNode: ${getErrorMessage(error)}`);
   }
-
 
   return convertK8SVMNodeToResource(createdVMNode);
 }
@@ -249,8 +284,9 @@ export async function deleteResource(
       id,
     );
   } catch (error) {
-    const code = (error as Error & { response?: { statusCode?: number } }).response?.statusCode;
+    const code = getStatusCode(error);
     if (code !== 404) {
+      // eslint-disable-next-line no-console
       console.warn(`deleteResource: failed to delete VMNode CRD for ${id}`, error);
     }
   }
@@ -287,12 +323,12 @@ export async function shutdownResource(
       { headers: { 'Content-Type': 'application/json-patch+json' } },
     );
   } catch (error) {
-    const errWithResp = error as Error & { response?: { statusCode?: number; body?: unknown } };
-    const code = errWithResp.response?.statusCode;
+    const code = getStatusCode(error);
     if (code !== 404) {
+      // eslint-disable-next-line no-console
       console.warn(`shutdownResource: failed to set status=shutdown for ${id}`, {
         statusCode: code,
-        responseBody: errWithResp.response?.body,
+        responseBody: getResponseBody(error),
         error,
       });
     }

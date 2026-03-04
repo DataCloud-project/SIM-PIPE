@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { browser } from '$app/environment';
 	import { ProgressBar } from '@skeletonlabs/skeleton';
+	import { browser } from '$app/environment';
 	import { requestGraphQLClient } from '$lib/graphqlUtils';
 	import getApiTokensQuery from '../../queries/get_api_tokens';
 	import updateApiTokensMutation from '../../queries/update_api_tokens';
@@ -30,22 +30,21 @@
 	let loading = true;
 	let savingTokens = false;
 	let savingK3s = false;
-	let errorMessage: string | null = null;
-	let successMessage: string | null = null;
-	let k3sSuccessMessage: string | null = null;
+	let errorMessage: string | undefined;
+	let successMessage: string | undefined;
+	let k3sSuccessMessage: string | undefined;
 	let showMoose = false;
 	let showOpenrouter = false;
 	let showK3sToken = false;
 
 	async function loadData(): Promise<void> {
 		loading = true;
-		errorMessage = null;
+		errorMessage = undefined;
 		try {
-			const [tokensResponse, k3sResponse]: [{ apiTokens: ApiTokens }, { k3sClusterSecret: K3sClusterSecret }] =
-				await Promise.all([
-					requestGraphQLClient(getApiTokensQuery),
-					requestGraphQLClient(getK3sClusterSecretQuery)
-				]);
+			const [tokensResponse, k3sResponse] = (await Promise.all([
+				requestGraphQLClient(getApiTokensQuery),
+				requestGraphQLClient(getK3sClusterSecretQuery)
+			])) as [{ apiTokens: ApiTokens }, { k3sClusterSecret: K3sClusterSecret }];
 			tokens = tokensResponse.apiTokens;
 			k3sSecret = k3sResponse.k3sClusterSecret;
 		} catch (error) {
@@ -59,8 +58,8 @@
 
 	async function saveTokens(): Promise<void> {
 		savingTokens = true;
-		errorMessage = null;
-		successMessage = null;
+		errorMessage = undefined;
+		successMessage = undefined;
 		try {
 			const variables = {
 				mooseApiKey: tokens.mooseApiKey,
@@ -83,8 +82,8 @@
 
 	async function saveK3sSecret(): Promise<void> {
 		savingK3s = true;
-		errorMessage = null;
-		k3sSuccessMessage = null;
+		errorMessage = undefined;
+		k3sSuccessMessage = undefined;
 		try {
 			const variables = {
 				token: k3sSecret.token,
@@ -153,7 +152,9 @@
 						<button
 							class="btn btn-xs variant-soft"
 							type="button"
-							on:click={() => (showMoose = !showMoose)}
+							on:click={() => {
+								showMoose = !showMoose;
+							}}
 						>
 							{showMoose ? 'Hide' : 'Show'}
 						</button>
@@ -182,7 +183,9 @@
 						<button
 							class="btn btn-xs variant-soft"
 							type="button"
-							on:click={() => (showOpenrouter = !showOpenrouter)}
+							on:click={() => {
+								showOpenrouter = !showOpenrouter;
+							}}
 						>
 							{showOpenrouter ? 'Hide' : 'Show'}
 						</button>
@@ -204,7 +207,8 @@
 			<div class="mt-8 space-y-2">
 				<h2>k3s cluster secret (VM helpers)</h2>
 				<p class="text-sm text-surface-500-300-token">
-					Used by VM/WSL helper scripts so nodes can join the cluster. Leave blank if you will set it later.
+					Used by VM/WSL helper scripts so nodes can join the cluster. Leave blank if you will set
+					it later.
 				</p>
 				{#if k3sSuccessMessage}
 					<p class="text-success-500-300-token mb-2">{k3sSuccessMessage}</p>
@@ -232,7 +236,9 @@
 						<button
 							class="btn btn-xs variant-soft"
 							type="button"
-							on:click={() => (showK3sToken = !showK3sToken)}
+							on:click={() => {
+								showK3sToken = !showK3sToken;
+							}}
 						>
 							{showK3sToken ? 'Hide' : 'Show'}
 						</button>

@@ -1,5 +1,4 @@
 // Moose entity type for DPV results
-/* eslint-disable import/prefer-default-export */
 import got from 'got';
 import type { Query, QueryGetMooseAnalysisArgs as QueryGetMooseAnalysisArguments } from 'server/schema.js';
 
@@ -19,6 +18,26 @@ export interface MooseEntity {
   text: string;
   type_id: string;
   confidence: number;
+}
+
+function escapeCsvCell(value: string): string {
+  if (value.includes('"') || value.includes(',') || value.includes('\n')) {
+    return `"${value.replaceAll('"', '""')}"`;
+  }
+  return value;
+}
+
+function parseArtifactUrl(artifactUrl: string): { bucketName: string; objectName: string } {
+  const url = new URL(artifactUrl);
+  const pathParts = url.pathname.replace(/^\/+/, '').split('/');
+  const bucketName = pathParts.shift();
+  const objectName = pathParts.join('/');
+
+  if (!bucketName || objectName.length === 0) {
+    throw new Error(`Invalid artifact URL: ${artifactUrl}`);
+  }
+
+  return { bucketName, objectName };
 }
 
 interface DpvRequestBody {
@@ -48,6 +67,7 @@ export async function makeDPVCall(text: string): Promise<string> {
     schema: mooseDpvSchema,
   };
 
+  // eslint-disable-next-line no-console
   console.log('full request (keys are hidden):', JSON.stringify({
     json: body,
     responseType: 'json',
@@ -70,9 +90,11 @@ export async function makeDPVCall(text: string): Promise<string> {
         'Content-Type': 'application/json',
       },
     });
+    // eslint-disable-next-line no-console
     console.log('DPV response:', response.body);
     return response.body.job_id;
   } catch (error) {
+    // eslint-disable-next-line no-console
     console.error('Error making DPV call to Moose API:', error);
     throw error;
   }
@@ -120,13 +142,17 @@ export async function getDPVJobResult(jobId: string): Promise<MooseJobResult> {
 function getIRI(dpvEntity: string): string {
   if (dpvEntity.startsWith('dpv-pd:')) {
     return `https://w3id.org/dpv/pd/owl#${dpvEntity.slice('dpv-pd:'.length)}`;
-  } if (dpvEntity.startsWith('dpv:')) {
+  }
+  if (dpvEntity.startsWith('dpv:')) {
     return `https://w3id.org/dpv/owl#${dpvEntity.slice('dpv:'.length)}`;
   }
   return dpvEntity;
 }
 
-export function buildSotwCsvFromMooseResult(result: MooseJobResult, stepStartedAt?: string): string {
+export function buildSotwCsvFromMooseResult(
+  result: MooseJobResult,
+  stepStartedAt?: string,
+): string {
   // The SoTW CSV has one row per DPV entity instance in the Moose report.
   const headers = [
     'http://www.w3.org/ns/odrl/2/dateTime',
@@ -137,8 +163,11 @@ export function buildSotwCsvFromMooseResult(result: MooseJobResult, stepStartedA
     'http://www.w3.org/ns/odrl/2/purpose',
   ];
 
-  const entities: MooseEntity[] = result && typeof result === 'object' && result.status === 'completed'
-  && result.result && Array.isArray(result.result.entities)
+  const entities: MooseEntity[] = result
+    && typeof result === 'object'
+    && result.status === 'completed'
+    && result.result
+    && Array.isArray(result.result.entities)
     ? result.result.entities
     : [];
 
@@ -147,7 +176,9 @@ export function buildSotwCsvFromMooseResult(result: MooseJobResult, stepStartedA
     'https://w3id.org/dpv/owl#Entity',
     'http://www.w3.org/ns/odrl/2/use',
     'https://w3id.org/dpv/owl#Data', // Asset column is always this IRI
-    entity && entity.type_id ? getIRI(entity.type_id) : '', // Asset (contains) column: expanded IRI
+    entity && entity.type_id
+      ? getIRI(entity.type_id)
+      : '', // Asset (contains) column: expanded IRI
     'https://w3id.org/dpv/owl#DataQualityImprovement', // Purpose column
   ];
 
@@ -160,15 +191,9 @@ export function buildSotwCsvFromMooseResult(result: MooseJobResult, stepStartedA
     }
   }
 
-  const escapeCell = (value: string): string => {
-    if (value.includes('"') || value.includes(',') || value.includes('\n')) {
-      return `"${value.replaceAll('"', '""')}"`;
-    }
-    return value;
-  };
-
-  const headerLine = headers.map((value) => escapeCell(value)).join(',');
-  const rowLines = rows.map((row) => row.map((value) => escapeCell(value)).join(','));
+  const headerLine = headers.map((value) => escapeCsvCell(value)).join(',');
+  const rowLines = rows.map((row) => row.map((value) => escapeCsvCell(value)).join(','),
+  );
   const lines = [headerLine, ...rowLines];
   return `${lines.join('\n')}\n`;
 }
@@ -180,41 +205,47 @@ export async function getDPVJobResultPolling(
 ): Promise<MooseJobResult> {
   // Parse the Minio bucket and object key from the public artifact URL,
   // then fetch the content via the internal Minio client (not localhost).
-  const url = new URL(artifactUrl);
-  const pathParts = url.pathname.replace(/^\/+/, '').split('/');
-  const bucketName = pathParts.shift()!; // e.g. "artifacts"
-  const objectName = pathParts.join('/');
+  const { bucketName, objectName } = parseArtifactUrl(artifactUrl);
 
   const artifactText = await getObjectText(objectName, bucketName);
+  // eslint-disable-next-line no-console
   console.log('Fetched artifact text for DPV processing:', artifactText);
 
   // Start Moose DPV job with the artifact text
   const jobId = await makeDPVCall(artifactText);
+  // eslint-disable-next-line no-console
   console.log('Started DPV job with ID:', jobId);
-  let attempt = 0;
 
-  // Simple polling loop: re-check status every pollingIntervalMs while it's "processing".
-  // Stops when status changes (e.g. to "completed" or an error state) or when maxAttempts is reached.
-  // eslint-disable-next-line no-constant-condition
-  while (true) {
+  const poll = async (attempt: number): Promise<MooseJobResult> => {
     const result = await getDPVJobResult(jobId);
     if (result.status === 'completed' || result.status === 'failed') {
+      // eslint-disable-next-line no-console
       console.log('DPV job polling result:', result);
       return result;
     }
+
+    // eslint-disable-next-line no-console
     console.log('Polling attempt', attempt);
-    attempt += 1;
-    if (attempt >= maxAttempts) {
-      throw new Error(`DPV job ${jobId} did not reach status 'completed' or 'failed' after ${maxAttempts} attempts`);
+
+    if (attempt + 1 >= maxAttempts) {
+      const message = `DPV job ${jobId} did not reach status 'completed' or 'failed' after `
+        + `${maxAttempts} attempts`;
+      throw new Error(message);
     }
 
     await new Promise((resolve) => {
       setTimeout(resolve, pollingIntervalMs);
     });
-  }
+
+    return poll(attempt + 1);
+  };
+
+  return poll(0);
 }
 
-export async function getMooseAnalysis(arguments_: QueryGetMooseAnalysisArguments): Promise<Query['getMooseAnalysis']> {
+export async function getMooseAnalysis(
+  arguments_: QueryGetMooseAnalysisArguments,
+): Promise<Query['getMooseAnalysis']> {
   const { artifactUrl, save } = arguments_;
   const { stepStartedAt } = arguments_;
   const result = await getDPVJobResultPolling(artifactUrl);
@@ -224,10 +255,7 @@ export async function getMooseAnalysis(arguments_: QueryGetMooseAnalysisArgument
   if (save !== false) {
     // Parse the Minio bucket and object key from the public artifact URL
     // so we can store the Moose report alongside the artifact itself.
-    const url = new URL(artifactUrl);
-    const pathParts = url.pathname.replace(/^\/+/, '').split('/');
-    const bucketName = pathParts.shift()!; // e.g. "artifacts"
-    const objectName = pathParts.join('/');
+    const { bucketName, objectName } = parseArtifactUrl(artifactUrl);
 
     // edit confidence values to low, medium and high for new Moose API format
     if (result && result.result && Array.isArray(result.result.entities)) {

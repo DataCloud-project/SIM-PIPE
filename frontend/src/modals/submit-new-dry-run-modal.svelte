@@ -3,6 +3,7 @@
 	import type { ModalSettings } from '@skeletonlabs/skeleton';
 	import type { SvelteComponent } from 'svelte';
 
+	import { onMount } from 'svelte';
 	import { requestGraphQLClient } from '$lib/graphqlUtils.js';
 
 	import refreshProjectDetails from '$lib/refresh_runs.js';
@@ -13,7 +14,6 @@
 	import type { ArtifactHierarchyType, Project, Resource } from '$typesdefinitions';
 	import ArtifactBrowser from './artifact-browser.svelte';
 	import allResourcesQuery from '$queries/get_all_resources.js';
-	import { onMount } from 'svelte';
 
 	let isOverlayOpen = false;
 	let selectedTemplateTaskName = '';
@@ -305,6 +305,7 @@
 	function getModifiedWorkflowTemplate(): any {
 		const newWorkflowTemplate = argoWorkflowTemplate;
 		newWorkflowTemplate.spec.templates = currentArgoWorkflowTemplates;
+		// eslint-disable-next-line @typescript-eslint/no-use-before-define
 		if (selectedNodeName !== 'default') {
 			newWorkflowTemplate.spec.templates = currentArgoWorkflowTemplates.map((tpl: any) => {
 				if (tpl.steps) {
@@ -314,26 +315,29 @@
 				return {
 					...tpl,
 					nodeSelector: {
+						// eslint-disable-next-line @typescript-eslint/no-use-before-define
 						'kubernetes.io/hostname': selectedNodeName
 					}
 				};
 			});
 		}
 		// Modify the generateName based on user input
-		if (dryRunNamePrefix != '') {
+		// eslint-disable-next-line @typescript-eslint/no-use-before-define, eqeqeq
+		if (dryRunNamePrefix == '') {
+			newWorkflowTemplate.metadata = {
+				generateName: newWorkflowTemplate.metadata.generateName
+			};
+		} else {
 			// Sanitize the prefix: lowercase, replace invalid chars with hyphens
+			// eslint-disable-next-line @typescript-eslint/no-use-before-define
 			const cleanedPrefix = dryRunNamePrefix
 				.toLowerCase()
-				.replace(/[^a-z0-9-]/g, '-')
-				.replace(/^-+|-+$/g, '')
+				.replaceAll(/[^\da-z-]/g, '-')
+				.replaceAll(/^-+|-+$/g, '')
 				.slice(0, 40);
 
 			newWorkflowTemplate.metadata = {
 				generateName: `${cleanedPrefix}-newWorkflowTemplate.metadata.generateName-`
-			};
-		} else {
-			newWorkflowTemplate.metadata = {
-				generateName: newWorkflowTemplate.metadata.generateName
 			};
 		}
 		return newWorkflowTemplate;
@@ -348,11 +352,14 @@
 			input: {
 				projectId: $selectedProject?.id,
 				argoWorkflow: modifiedWorkflowTemplate,
+				// eslint-disable-next-line @typescript-eslint/no-use-before-define
 				nodeName: selectedNodeName
 			}
 		};
 
-		await new Promise((resolve) => setTimeout(resolve, 1500));
+		await new Promise((resolve) => {
+			setTimeout(resolve, 1500);
+		});
 
 		try {
 			const responseCreateDryRun: { createDryRun: { id: string } } = await requestGraphQLClient(
@@ -371,29 +378,32 @@
 			};
 			modalStore.trigger(createDryRunMessageModal);
 
-			await new Promise((resolve) => setTimeout(resolve, 1500));
+			await new Promise((resolve) => {
+				setTimeout(resolve, 1500);
+			});
 			modalStore.close();
 			await refreshProjectDetails();
 			modalStore.clear();
 		} catch (error) {
 			console.error('Failed to create dry run', error);
 			let createDryRunMessageModal: ModalSettings;
-			if ((error as Error).message.includes('PayloadTooLargeError')) {
-				createDryRunMessageModal = {
-					type: 'alert',
-					title: 'Failed!',
-					body: 'Input file size exceeded limit (90KB)!'
-				};
-			} else {
-				createDryRunMessageModal = {
-					type: 'alert',
-					title: 'Failed to create dry run!',
-					body: 'Check dry run inputs!'
-				};
-			}
+			// eslint-disable-next-line prefer-const
+			createDryRunMessageModal = (error as Error).message.includes('PayloadTooLargeError')
+				? {
+						type: 'alert',
+						title: 'Failed!',
+						body: 'Input file size exceeded limit (90KB)!'
+					}
+				: {
+						type: 'alert',
+						title: 'Failed to create dry run!',
+						body: 'Check dry run inputs!'
+					};
 			modalStore.trigger(createDryRunMessageModal);
 
-			await new Promise((resolve) => setTimeout(resolve, 2500));
+			await new Promise((resolve) => {
+				setTimeout(resolve, 2500);
+			});
 			modalStore.close();
 		}
 	}
@@ -407,7 +417,7 @@
 			availableNodes = allResourcesResponse.resources;
 			loadingAvailableNodes = false;
 		} catch (error) {
-			console.error('Error getting available nodes: ', error);
+			console.error('Error getting available nodes:', error);
 			loadingAvailableNodes = false;
 			availableNodes = []; // fail safe: empty array
 		}

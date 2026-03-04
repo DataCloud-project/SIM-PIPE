@@ -55,7 +55,7 @@
 		display: flex;
 		justify-content: center;
 	}
-	
+
 	.mermaid {
 		width: max-content;
 		height: auto;
