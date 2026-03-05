@@ -31,3 +31,18 @@
             path: "/var/lib/rancher/k3s"
   roles:
     - xanmanning.k3s
+  post_tasks:
+    - name: Ensure ~/.kube directory exists for the calling user
+      ansible.builtin.file:
+        path: "{{ ansible_env.HOME }}/.kube"
+        state: directory
+        mode: "0700"
+        owner: "{{ ansible_env.USER | default(ansible_user_id) }}"
+
+    - name: Copy k3s kubeconfig to ~/.kube/config so unprivileged kubectl works
+      ansible.builtin.copy:
+        src: /etc/rancher/k3s/k3s.yaml
+        dest: "{{ ansible_env.HOME }}/.kube/config"
+        remote_src: true
+        mode: "0600"
+        owner: "{{ ansible_env.USER | default(ansible_user_id) }}"

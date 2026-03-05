@@ -67,11 +67,13 @@ spec:
                 secretKeyRef:
                   name: simpipe-moose-api
                   key: MOOSE_API_KEY
+                  optional: true
             - name: OPENROUTER_API_KEY
               valueFrom:
                 secretKeyRef:
                   name: simpipe-openrouter-api
                   key: OPENROUTER_API_KEY
+                  optional: true
             - name: NODE_ENV
               value: development
           ports:

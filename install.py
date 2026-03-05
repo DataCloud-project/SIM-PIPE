@@ -28,11 +28,12 @@ def ensure_kubeconfig_env():
     kubeconfig_value = env.get("KUBECONFIG")
 
     if not kubeconfig_value:
+        # Prefer ~/.kube/config (user-readable) over the root-only k3s path.
         for candidate in (
-            DEFAULT_KUBECONFIG_PATH,
             os.path.expanduser("~/.kube/config"),
+            DEFAULT_KUBECONFIG_PATH,
         ):
-            if candidate and os.path.exists(candidate):
+            if candidate and os.path.exists(candidate) and os.access(candidate, os.R_OK):
                 kubeconfig_value = candidate
                 env["KUBECONFIG"] = kubeconfig_value
                 break
@@ -92,14 +93,15 @@ def install_tools_debian():
     # Now ensure required Kubernetes secrets exist before installing SIM-PIPE
     from secrets_manager import ensure_secrets
 
+    # Re-resolve kubeconfig here so we pick up ~/.kube/config written by the
+    # ansible k3s post_tasks even if KUBECONFIG wasn't set before that step.
     env_kubeconfig, kubeconfig_path = ensure_kubeconfig_env()
 
-    # Wait for the cluster to be reachable before running helm/secret setup.
     nb_tentatives = 0
     while not check_cluster_status(silent=True):
         print("😴 Waiting for Kubernetes cluster to be ready...")
         nb_tentatives += 1
-        if nb_tentatives > 8:
+        if nb_tentatives > 12:
             if not check_cluster_status(silent=False):
                 sys.exit(1)
         time.sleep(5)
