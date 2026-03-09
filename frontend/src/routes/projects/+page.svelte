@@ -13,8 +13,8 @@
 	import allDryRunsQuery from '../../queries/get_all_dryruns.js';
 	import deleteDryRunMutation from '../../queries/delete_dry_run.js';
 	import deleteWorkflowTemplateMutation from '../../queries/delete_workflow_template.js';
-	// import { displayAlert } from '../../utils/alerts-utils.js';
 	import Alert from '$lib/modules/alert.svelte';
+	import { displayModal } from '$utils/modal-utils.js';
 
 	const modalStore = getModalStore();
 
@@ -104,27 +104,17 @@
 
 			await Promise.all(deletePromises);
 
-			const title = 'Project deleted🗑️!';
-			const body = `Deleted projects: ${selectedProjectIds.join(', ')}`;
-
-			const projectDeletedModal: ModalSettings = {
-				type: 'alert',
-				title: 'Project deleted🗑️!',
-				body: `Deleted projects: ${selectedProjectIds.join(', ')}`
-			};
-			modalStore.trigger(projectDeletedModal);
-			await new Promise((resolve) => {
-				setTimeout(resolve, 1500);
-			});
-			modalStore.close();
-
+			await displayModal(
+				'Project deleted🗑️!',
+				`Deleted projects: ${selectedProjectIds.join(', ')}`,
+				modalStore
+			);
 			// update the project list after deletion
 			await refreshProjects();
 		} catch (error) {
 			const title = 'Error deleting project❌!';
 			const body = `${(error as Error).message}`;
-			// await displayAlert(title, body, 4000);
-			console.log(title, body);
+			await displayModal(title, body, modalStore);
 		} finally {
 			// reset checkboxes
 			$projectsList?.forEach((element) => {
@@ -161,7 +151,7 @@
 			if (createWorkflowResponse.status === 200) {
 				visibleAlert = true;
 				alertVariant = 'variant-ghost-success';
-				alertTitle = 'Project created!';
+				alertTitle = 'Project created!🎉';
 				alertMessage = `Project ${createProjectResponse.project.name} and workflow template ${createWorkflowResponse.name} created`;
 			} else {
 				hasErrors = true;
@@ -202,10 +192,9 @@
 				}
 			};
 			modalStore.trigger(modal);
-		}).then(() => {
+		}).then(async () => {
 			console.log('onCreateNewProject promise resolved');
-			// eslint-disable-next-line no-void
-			void refreshProjects();
+			await refreshProjects();
 		});
 		modalPromise.catch((error) => {
 			console.log('onCreateNewProject promise error:', error);

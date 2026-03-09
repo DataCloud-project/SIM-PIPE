@@ -1,0 +1,16 @@
+import type { ModalSettings } from '@skeletonlabs/skeleton';
+
+export async function displayModal(
+	title: string,
+	body: string,
+	modalStore: { trigger: (arg0: ModalSettings) => void; close: () => void }
+): Promise<void> {
+	const modalSettings: ModalSettings = {
+		type: 'alert',
+		title,
+		body
+	};
+	modalStore.trigger(modalSettings);
+	await new Promise((resolve) => setTimeout(resolve, 2000));
+	modalStore.close();
+}

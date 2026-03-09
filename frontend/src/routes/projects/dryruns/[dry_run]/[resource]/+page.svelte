@@ -16,16 +16,11 @@
 	import { colors } from './Config.js';
 	import { stepsList, selectedProjectName, selectedDryRunName } from '$stores/stores';
 	import Legend from './legend.svelte';
-	import {
-		getMetricsUsageUtils,
-		getMetricsAnalyticsUtils,
-		displayStepDuration
-	} from '$utils/resource-utils';
-	import type { MetricsAnalytics } from '$utils/resource-utils';
-	// import { displayAlert } from '$utils/alerts-utils';
+	import { getMetricsUsageUtils, displayStepDuration } from '$utils/resource-utils';
 	import type { DryRunMetrics, DryRun, MetricsWithTimeStamps, Artifact } from '$typesdefinitions';
 	import getMooseAnalysisQuery from '$queries/get_moose_analysis.js';
 	import setMooseReportMutation from '$queries/set_moose_report.js';
+	import { displayModal } from '$utils/modal-utils.js';
 
 	// Extended type to include carbontracker data
 	interface ExtendedDryRunMetrics extends DryRunMetrics {
@@ -579,16 +574,11 @@
 		const shouldSaveOnServer = !attempt_rerun && !artifact.mooseReport;
 
 		if (!artifact.mooseReport || attempt_rerun) {
-			const mooseAPIMessageModal: ModalSettings = {
-				type: 'alert',
-				title: 'Calling Moose API with the artifact text✨',
-				body: `Awaiting response from API...`
-			};
-			modalStore.trigger(mooseAPIMessageModal);
-
-			// eslint-disable-next-line no-promise-executor-return
-			await new Promise((resolve) => setTimeout(resolve, 2500));
-			modalStore.close();
+			await displayModal(
+				'Calling Moose API with the artifact text✨',
+				'Awaiting response from API...',
+				modalStore
+			);
 			const response = await requestGraphQLClient<{ result: string }>(getMooseAnalysisQuery, {
 				artifactUrl: artifact.url,
 				stepStartedAt: stepStartedAt ?? undefined,
@@ -693,16 +683,11 @@
 			return;
 		}
 		// if there is no sotwReportUrl, show a modal stating that the report is not available
-		const noReportModal: ModalSettings = {
-			type: 'alert',
-			title: 'SoTW report not available⚠️',
-			body: `The SoTW report for this artifact is not available.`
-		};
-		modalStore.trigger(noReportModal);
-		await new Promise((resolve) => {
-			setTimeout(resolve, 2000);
-		});
-		modalStore.close();
+		await displayModal(
+			'SoTW report not available⚠️',
+			'The SoTW report for this artifact is not available.',
+			modalStore
+		);
 	}
 
 	function getPartLogs(stepName: string, nmaxlinelength: number): string {

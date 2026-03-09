@@ -8,6 +8,7 @@
 	import Alert from '$lib/modules/alert.svelte';
 	import deleteResourceMutation from '$queries/delete_resource.js';
 	import shutdownResourceMutation from '$queries/shutdown_resource.js';
+	import { displayModal } from '$utils/modal-utils.js';
 
 	const modalStore = getModalStore();
 
@@ -93,16 +94,11 @@
 						};
 						resourcesList.set(updated.resources);
 
-						modalStore.trigger({
-							type: 'alert',
-							title: 'VM Node Ready ✅',
-							body: 'The VM node is running and reachable!'
-						});
-
-						await new Promise((res) => {
-							setTimeout(res, 1500);
-						});
-						modalStore.close();
+						await displayModal(
+							'VM Node Ready 🎉',
+							`The VM node "${resourceName}" is running and reachable!`,
+							modalStore
+						);
 					})();
 				}
 			};
@@ -121,17 +117,11 @@
 					await requestGraphQLClient(deleteResourceMutation, { resourceId: element });
 				})
 			);
-			const vMNodeDeletedMessageModal: ModalSettings = {
-				type: 'alert',
-				title: 'VM node deleted🗑️!',
-				body: `Deleted VM node: ${selected.join(', ')}`
-			};
-			modalStore.trigger(vMNodeDeletedMessageModal);
-
-			await new Promise((resolve) => {
-				setTimeout(resolve, 1500);
-			});
-			modalStore.close();
+			await displayModal(
+				'VM node deleted🗑️!',
+				`Deleted VM node: ${selected.join(', ')}`,
+				modalStore
+			);
 		} catch (error) {
 			console.log('Error deleting resources:', error);
 		} finally {
@@ -150,17 +140,11 @@
 					await requestGraphQLClient(shutdownResourceMutation, { resourceId: element });
 				})
 			);
-			const vMNodeShutdownMessageModal: ModalSettings = {
-				type: 'alert',
-				title: 'VM node has been shutdown!',
-				body: `Shutdown VM node: ${selected.join(', ')}`
-			};
-			modalStore.trigger(vMNodeShutdownMessageModal);
-
-			await new Promise((resolve) => {
-				setTimeout(resolve, 1500);
-			});
-			modalStore.close();
+			await displayModal(
+				'VM node has been shutdown!',
+				`Shutdown VM node: ${selected.join(', ')}`,
+				modalStore
+			);
 		} catch (error) {
 			console.log('Error shutting down VM node:', error);
 		} finally {

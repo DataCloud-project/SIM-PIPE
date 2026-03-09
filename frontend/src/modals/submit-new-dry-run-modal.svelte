@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { getModalStore, FileButton } from '@skeletonlabs/skeleton';
-	import type { ModalSettings } from '@skeletonlabs/skeleton';
 	import type { SvelteComponent } from 'svelte';
 
 	import { onMount } from 'svelte';
@@ -14,6 +13,7 @@
 	import type { ArtifactHierarchyType, Project, Resource } from '$typesdefinitions';
 	import ArtifactBrowser from './artifact-browser.svelte';
 	import allResourcesQuery from '$queries/get_all_resources.js';
+	import { displayModal } from '$utils/modal-utils.js';
 
 	let isOverlayOpen = false;
 	let selectedTemplateTaskName = '';
@@ -371,40 +371,25 @@
 				projectId: $selectedProject?.id
 			});
 			$selectedProject = response.project;
-			const createDryRunMessageModal: ModalSettings = {
-				type: 'alert',
-				title: 'New dry run created&#10024;!',
-				body: `New dry run ID: ${responseCreateDryRun?.createDryRun?.id}`
-			};
-			modalStore.trigger(createDryRunMessageModal);
+			await displayModal(
+				'New dry run created!🎉',
+				`New dry run ID: ${responseCreateDryRun?.createDryRun?.id}`,
+				modalStore
+			);
 
-			await new Promise((resolve) => {
-				setTimeout(resolve, 1500);
-			});
-			modalStore.close();
 			await refreshProjectDetails();
 			modalStore.clear();
 		} catch (error) {
 			console.error('Failed to create dry run', error);
-			let createDryRunMessageModal: ModalSettings;
-			// eslint-disable-next-line prefer-const
-			createDryRunMessageModal = (error as Error).message.includes('PayloadTooLargeError')
-				? {
-						type: 'alert',
-						title: 'Failed!',
-						body: 'Input file size exceeded limit (90KB)!'
-					}
-				: {
-						type: 'alert',
-						title: 'Failed to create dry run!',
-						body: 'Check dry run inputs!'
-					};
-			modalStore.trigger(createDryRunMessageModal);
-
-			await new Promise((resolve) => {
-				setTimeout(resolve, 2500);
-			});
-			modalStore.close();
+			if ((error as Error).message.includes('PayloadTooLargeError')) {
+				await displayModal(
+					'Failed to create dry run❌',
+					'Input file size exceeded limit (90KB)!',
+					modalStore
+				);
+			} else {
+				await displayModal('Failed to create dry run❌', 'Check dry run inputs!', modalStore);
+			}
 		}
 	}
 

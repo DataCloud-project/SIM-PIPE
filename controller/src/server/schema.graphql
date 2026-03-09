@@ -745,7 +745,7 @@ type Mutation @auth {
   """ Create a new resource """
   createResource(
   """ Input to create the new dry run """
-  input: CreateResourceInput!): CreateResourceResult!
+  input: CreateResourceInput!): Resource!
 
  """ Delete an existing resource. The mutation returns true if the deletion was successful. """
   deleteResource(

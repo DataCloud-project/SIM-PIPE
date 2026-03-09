@@ -8,6 +8,7 @@
 	import createProjectMutation from '$queries/create_project.js';
 	import createWorkflowTemplateMutation from '$queries/create_workflow_template.js';
 	import { cBase, cForm, cHeader } from '$styles/styles.js';
+	import { displayModal } from '$utils/modal-utils.js';
 
 	// Props - Exposes parent props to this component
 	export let parent: SvelteComponent;
@@ -105,19 +106,10 @@
 	async function onSubmit(): Promise<void> {
 		// First, parse the input file
 		const inputResult = await handleInputFile();
-
+		modalStore.close(); // Close the modal after submission
 		if (inputResult.error) {
 			// Show error and do not proceed
-			const modal: ModalSettings = {
-				type: 'alert',
-				title: 'Failed: Error in parsing workflow template',
-				body: inputResult.error
-			};
-			modalStore.trigger(modal);
-			await new Promise((resolve) => {
-				setTimeout(resolve, 1500);
-			});
-			modalStore.close();
+			await displayModal('Failed to parse template❌', inputResult.error, modalStore);
 			return;
 		}
 
@@ -129,30 +121,21 @@
 				projectId = createProjectResponse.project.id;
 				// Try to create workflow template
 				const createWorkflowResponse = await createWorkflowTemplate();
+				// eslint-disable-next-line unicorn/prefer-ternary
 				if (createWorkflowResponse.status === 200 && createWorkflowResponse.name !== 'none') {
 					// Both succeeded
-					const modal: ModalSettings = {
-						type: 'alert',
-						title: 'Success: Project and Workflow template created successfully',
-						body: `Project "${createProjectResponse.project.name}" and Workflow template "${createWorkflowResponse.name}" have been created successfully.`
-					};
-					modalStore.trigger(modal);
-					await new Promise((resolve) => {
-						setTimeout(resolve, 1500);
-					});
-					modalStore.close();
+					await displayModal(
+						'Project created!🎉',
+						`Project "${createProjectResponse.project.name}" have been created successfully.`,
+						modalStore
+					);
 				} else {
 					// Workflow template creation failed, delete the project
-					const modal: ModalSettings = {
-						type: 'alert',
-						title: 'Failed: Workflow template creation failed',
-						body: `Project "${createProjectResponse.project.name}" was created successfully, but Workflow template "${createWorkflowResponse.name}" failed to be created.`
-					};
-					modalStore.trigger(modal);
-					await new Promise((resolve) => {
-						setTimeout(resolve, 1500);
-					});
-					modalStore.close();
+					await displayModal(
+						'Failed: Workflow template creation failed❌',
+						`Project "${createProjectResponse.project.name}" was created successfully, but Workflow template "${createWorkflowResponse.name}" failed to be created.`,
+						modalStore
+					);
 				}
 			}
 		}

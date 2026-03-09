@@ -10,6 +10,7 @@
 	import { resourcesList } from '$stores/stores.js';
 	import type { Resource } from '$typesdefinitions';
 	import allResourcesQuery from '$queries/get_all_resources.js';
+	import { displayModal } from '$utils/modal-utils.js';
 
 	export let parent: SvelteComponent;
 	// eslint-disable-next-line svelte/valid-compile
@@ -47,37 +48,21 @@
 
 			modalStore.close();
 
-			const createResourceMessageModal: ModalSettings = {
-				type: 'alert',
-				title: 'New node is being provisioned &#10024;!',
-				body: 'New node is being added to the cluster and will be ready to emulate on in a few minutes!'
-			};
-			modalStore.trigger(createResourceMessageModal);
-
-			await new Promise((resolve) => {
-				setTimeout(resolve, 1500);
-			});
-
-			modalStore.close();
+			await displayModal(
+				'New node is being provisioned &#10024;!',
+				'New node is being added to the cluster and will be ready to emulate on in a few minutes!',
+				modalStore
+			);
 			modalStore.clear();
 
 			await refreshVMNodesDetails(formData.name);
 			const response: { resources: Resource[] } = await requestGraphQLClient(allResourcesQuery);
 			resourcesList.set(response.resources);
-			const createResourceReadyModal: ModalSettings = {
-				type: 'alert',
-				title: 'New node is ready!',
-				body: 'New node is ready!'
-			};
-			modalStore.trigger(createResourceReadyModal);
-			await new Promise((resolve) => {
-				setTimeout(resolve, 2000);
-			});
-
-			modalStore.close();
+			await displayModal('New node ready!', 'New node is ready to be used!', modalStore);
 			modalStore.clear();
 		} catch (error) {
-			console.error('❌ Error in onSubmit →', error);
+			await displayModal('Error', `An error occurred while creating the new node: ${error.message}`, modalStore);
+			modalStore.clear();
 		}
 	}
 </script>

@@ -28,11 +28,56 @@ def ensure_kubeconfig_env():
     kubeconfig_value = env.get("KUBECONFIG")
 
     if not kubeconfig_value:
-        # Prefer ~/.kube/config (user-readable) over the root-only k3s path.
-        for candidate in (
-            os.path.expanduser("~/.kube/config"),
-            DEFAULT_KUBECONFIG_PATH,
-        ):
+        kube_home = os.path.expanduser("~/.kube")
+        kube_config = os.path.join(kube_home, "config")
+        k3s_config = DEFAULT_KUBECONFIG_PATH
+
+        # If ~/.kube/config does not exist but k3s config does
+        if not os.path.exists(kube_config) and os.path.exists(k3s_config):
+            if os.access(k3s_config, os.R_OK):
+                os.makedirs(kube_home, exist_ok=True)
+                try:
+                    import shutil
+                    shutil.copy2(k3s_config, kube_config)
+                    print(f"✅ Copied kubeconfig from {k3s_config} to {kube_config}")
+                except Exception as e:
+                    print(f"❌ Failed to copy kubeconfig: {e}")
+                    sys.exit(1)
+            else:
+                print(f"❌ Cannot read {k3s_config} (permission denied).")
+                answer = input("Do you want to copy it using sudo? [y/N]: ").strip().lower()
+                if answer == 'y':
+                    os.makedirs(kube_home, exist_ok=True)
+                    cp_cmd = f"sudo cp {k3s_config} {kube_config}"
+                    chown_cmd = f"sudo chown $(id -u):$(id -g) {kube_config}"
+                    try:
+                        subprocess.run(cp_cmd, shell=True, check=True)
+                        subprocess.run(chown_cmd, shell=True, check=True)
+                        print(f"✅ Copied kubeconfig from {k3s_config} to {kube_config} with sudo.")
+                    except subprocess.CalledProcessError as e:
+                        print(f"❌ Failed to copy kubeconfig with sudo: {e}")
+                        sys.exit(1)
+                else:
+                    print(f"You can manually run: sudo cp {k3s_config} {kube_config} && sudo chown $(id -u):$(id -g) {kube_config}")
+                    # Do not exit yet; maybe ~/.kube/config was created by Ansible
+
+        # Now prefer ~/.kube/config if it exists
+        for candidate in (kube_config, k3s_config):
+            if candidate and os.path.exists(candidate) and os.access(candidate, os.R_OK):
+                kubeconfig_value = candidate
+                env["KUBECONFIG"] = kubeconfig_value
+                break
+
+        # If neither config exists, print a clear error
+        if not kubeconfig_value:
+            print("❌ No kubeconfig detected at ~/.kube/config or /etc/rancher/k3s/k3s.yaml.")
+            print("If you installed k3s with sudo, you may need to copy the kubeconfig manually:")
+            print(f"  sudo cp {k3s_config} ~/.kube/config && sudo chown $(id -u):$(id -g) ~/.kube/config")
+            print("Or re-run the Ansible playbook as your user.")
+            sys.exit(1)
+
+        # Now prefer ~/.kube/config if it exists
+        for candidate in (kube_config, k3s_config):
             if candidate and os.path.exists(candidate) and os.access(candidate, os.R_OK):
                 kubeconfig_value = candidate
                 env["KUBECONFIG"] = kubeconfig_value

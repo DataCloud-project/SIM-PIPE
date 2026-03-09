@@ -12,6 +12,7 @@
 	import Timestamp from './timestamp.svelte';
 	import { requestGraphQLClient } from '$lib/graphqlUtils.js';
 	import { calculateDuration } from '$utils/resource-utils.js';
+	import { displayModal } from '$utils/modal-utils.js';
 
 	const modalStore = getModalStore();
 
@@ -40,15 +41,12 @@
 
 		await Promise.all(deletePromises);
 
-		const dryRunDeletedMessageModal: ModalSettings = {
-			type: 'alert',
-			title: 'Dry run deleted🗑️!',
-			body: `Deleted dry runs: ${Object.keys(checkboxes).join(', ')}`
-		};
-		modalStore.trigger(dryRunDeletedMessageModal);
-		// eslint-disable-next-line no-promise-executor-return
-		await new Promise((resolve) => setTimeout(resolve, 1500));
-		modalStore.close();
+		await displayModal(
+			'Dry run deleted🗑️!',
+			`Deleted dry runs: ${Object.keys(checkboxes).join(', ')}`,
+			modalStore
+		);
+
 		// reset checkboxes
 		$selectedProject?.dryRuns.forEach((element) => {
 			checkboxes[element.id] = false;
