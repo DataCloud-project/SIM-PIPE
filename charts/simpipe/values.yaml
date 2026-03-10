@@ -14,7 +14,7 @@ controller:
     #pullPolicy: IfNotPresent
     pullPolicy: Always
     # Overrides the image tag whose default is the chart appVersion.
-    tag: "0.5.7-rc.2"
+    tag: "0.5.7-rc.3"
 
   imagePullSecrets: []
   nameOverride: ""
@@ -117,7 +117,7 @@ frontend:
     #pullPolicy: IfNotPresent
     pullPolicy: Always
     # Overrides the image tag whose default is the chart appVersion.
-    tag: "0.5.7-rc.2"
+    tag: "0.5.7-rc.3"
 
   imagePullSecrets: []
   nameOverride: ""
