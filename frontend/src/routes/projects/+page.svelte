@@ -87,16 +87,19 @@
 						try {
 							await requestGraphQLClient(deleteDryRunMutation, { dryRunId: dry_run.id });
 						} catch (error) {
-							console.error('Error deleting dry run:', error);
+							const message = error instanceof Error ? error.message : String(error);
+							await displayModal('Error deleting dry run⚠️', `Error: ${message}`, modalStore);
 						}
 					})
 				);
 				await requestGraphQLClient(deleteWorkflowTemplateMutation, { name: element }).catch(
 					(error) => {
-						console.log(error);
-						visibleAlert = true;
-						alertTitle = 'Delete workflow template failed!';
-						alertMessage = error.message;
+						// eslint-disable-next-line @typescript-eslint/no-floating-promises
+						displayModal(
+							'Delete workflow template failed⚠️',
+							`Error: ${error instanceof Error ? error.message : String(error)}`,
+							modalStore
+						);
 					}
 				);
 				await requestGraphQLClient(deleteProjectMutation, projectVariables);
@@ -193,11 +196,11 @@
 			};
 			modalStore.trigger(modal);
 		}).then(async () => {
-			console.log('onCreateNewProject promise resolved');
 			await refreshProjects();
 		});
 		modalPromise.catch((error) => {
-			console.log('onCreateNewProject promise error:', error);
+			// eslint-disable-next-line @typescript-eslint/no-floating-promises
+			displayModal('Error creating project', 'Error creating project', modalStore);
 		});
 	}
 

@@ -1,3 +1,5 @@
+import { execFile } from 'node:child_process';
+import { promisify } from 'node:util';
 import slugify from 'slugify';
 import type { V1ListMeta, V1ObjectMeta } from '@kubernetes/client-node';
 
@@ -7,6 +9,8 @@ import { SIMPIPE_USER_LABEL } from './label.js';
 import { assertIsValidKubernetesLabel } from './valid-kubernetes-label.js';
 import type { CreateResourceInput, Resource } from '../server/schema.js';
 import type K8sClient from './k8s-client.js';
+
+const execFileAsync = promisify(execFile);
 
 function getStatusCode(error: unknown): number | undefined {
   if (typeof error !== 'object' || error === null) return undefined;
@@ -25,6 +29,44 @@ function getResponseBody(error: unknown): unknown {
 function getErrorMessage(error: unknown): string {
   if (error instanceof Error) return error.message;
   return 'Unknown error';
+}
+
+async function getProcessTable(): Promise<string> {
+  const commandVariants: Array<{ command: string; args: string[] }> = [
+    {
+      command: 'nsenter',
+      args: ['-t', '1', '-p', '-m', '-u', '-n', '-i', '--', 'ps', '-eo', 'pid,args'],
+    },
+    { command: 'ps', args: ['-eo', 'pid,args'] },
+  ];
+
+  for (const variant of commandVariants) {
+    try {
+      // eslint-disable-next-line no-await-in-loop
+      const { stdout } = await execFileAsync(variant.command, variant.args);
+      if (stdout) return stdout;
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.warn(`resources.ts: unable to read process table via ${variant.command}`, error);
+    }
+  }
+
+  return '';
+}
+
+async function isQemuRunningForNode(nodeName: string): Promise<boolean> {
+  if (!/^[\w.-]+$/.test(nodeName)) {
+    // Invalid node name; treat as not running to allow cleanup to proceed safely.
+    return false;
+  }
+
+  const processTable = await getProcessTable();
+  if (!processTable) return false;
+
+  const needle = nodeName.toLowerCase();
+  return processTable
+    .split('\n')
+    .some((line) => line.includes('qemu-system') && line.toLowerCase().includes(needle));
 }
 
 interface K8SVMNode {
@@ -59,6 +101,74 @@ function convertK8SVMNodeToResource(k8sVMNode: K8SVMNode): Resource {
     memory: spec.memory,
     status: spec.status,
   };
+}
+
+export async function cleanupStaleResource(
+  id: string,
+  k8sClient: K8sClient,
+  k8sNamespace = 'default',
+): Promise<boolean> {
+  let vmnode: K8SVMNode | undefined;
+  try {
+    const response = await k8sClient.customObjects.getNamespacedCustomObject(
+      'simpipe.sct.sintef.no',
+      'v1',
+      k8sNamespace,
+      'vmnodes',
+      id,
+    );
+    vmnode = response.body as K8SVMNode;
+  } catch (error) {
+    const code = getStatusCode(error);
+    if (code === 404) {
+      return false;
+    }
+    // eslint-disable-next-line no-console
+    console.error('cleanupStaleResource: failed to load VMNode', { id, error });
+    throw error;
+  }
+
+  const status = vmnode.spec?.status?.toLowerCase?.() ?? '';
+  const isReady = status === 'ready' || status === 'running';
+  if (isReady) return false;
+
+  const nodeName = vmnode.metadata?.name ?? id;
+  const qemuRunning = await isQemuRunningForNode(nodeName);
+  if (qemuRunning) return false;
+
+  try {
+    await k8sClient.customObjects.patchNamespacedCustomObject(
+      'simpipe.sct.sintef.no',
+      'v1',
+      k8sNamespace,
+      'vmnodes',
+      nodeName,
+      [
+        {
+          op: 'replace',
+          path: '/spec/status',
+          value: 'shutdown',
+        },
+      ],
+      undefined,
+      undefined,
+      undefined,
+      { headers: { 'Content-Type': 'application/json-patch+json' } },
+    );
+  } catch (error) {
+    const code = getStatusCode(error);
+    if (code !== 404) {
+      // eslint-disable-next-line no-console
+      console.warn(`cleanupStaleResource: failed to patch status for ${nodeName}`, {
+        statusCode: code,
+        responseBody: getResponseBody(error),
+        error,
+      });
+    }
+  }
+
+  await deleteKubeNode(nodeName);
+  return true;
 }
 
 export async function resources(
@@ -111,6 +221,8 @@ export async function resources(
 
     // 4) Reconcile CRDs against actual Nodes and patch status if needed
     const patchPromises: Promise<unknown>[] = [];
+    const cleanupPromises: Promise<void>[] = [];
+    const cleanedIds = new Set<string>();
     for (const vmnode of items) {
       const vmnodeName = vmnode.metadata?.name ?? vmnode.spec?.name;
       if (vmnodeName) {
@@ -147,6 +259,20 @@ export async function resources(
           // Optimistically update local object so the return reflects the change
           vmnode.spec.status = desired;
         }
+
+        const current = vmnode.spec.status?.toLowerCase?.();
+        if (current && current !== 'ready' && current !== 'running') {
+          cleanupPromises.push(
+            cleanupStaleResource(vmnodeName, k8sClient, k8sNamespace)
+              .then((removed) => {
+                if (removed) cleanedIds.add(vmnodeName);
+              })
+              .catch((error) => {
+                // eslint-disable-next-line no-console
+                console.error(`resources.ts: cleanupStaleResource failed for ${vmnodeName}`, error);
+              }),
+          );
+        }
       }
     }
 
@@ -154,8 +280,17 @@ export async function resources(
       await Promise.allSettled(patchPromises);
     }
 
+    if (cleanupPromises.length > 0) {
+      await Promise.allSettled(cleanupPromises);
+    }
+
     // 5) Return unified view
-    return items.map((vmnode) => convertK8SVMNodeToResource(vmnode));
+    const filtered = items.filter((vmnode) => {
+      const name = vmnode.metadata?.name ?? vmnode.spec?.name;
+      return name ? !cleanedIds.has(name) : true;
+    });
+
+    return filtered.map((vmnode) => convertK8SVMNodeToResource(vmnode));
   } catch (error) {
     // eslint-disable-next-line no-console
     console.error('resources.ts: Kubernetes API call failed:', error);

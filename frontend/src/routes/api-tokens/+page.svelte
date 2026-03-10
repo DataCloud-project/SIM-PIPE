@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { ProgressBar } from '@skeletonlabs/skeleton';
+	import { onDestroy } from 'svelte';
 	import { browser } from '$app/environment';
 	import { requestGraphQLClient } from '$lib/graphqlUtils';
 	import getApiTokensQuery from '../../queries/get_api_tokens';
@@ -7,22 +8,29 @@
 	import getK3sClusterSecretQuery from '../../queries/get_k3s_cluster_secret';
 	import updateK3sClusterSecretMutation from '../../queries/update_k3s_cluster_secret';
 
+	type ApiTokenState = {
+		hasValue: boolean;
+		maskedPreview?: string | null;
+	};
+
 	type ApiTokens = {
-		mooseApiKey: string;
-		openrouterApiKey: string;
+		mooseApiKey: ApiTokenState;
+		openrouterApiKey: ApiTokenState;
 	};
 
-	type K3sClusterSecret = {
-		token: string;
-		serverIp: string;
-	};
+	type TokenField = 'mooseApiKey' | 'openrouterApiKey';
 
-	let tokens: ApiTokens = {
+	const tokens: Record<TokenField, string> = {
 		mooseApiKey: '',
 		openrouterApiKey: ''
 	};
 
-	let k3sSecret: K3sClusterSecret = {
+	let tokenStates: ApiTokens = {
+		mooseApiKey: { hasValue: false },
+		openrouterApiKey: { hasValue: false }
+	};
+
+	let k3sSecret: { token: string; serverIp: string } = {
 		token: '',
 		serverIp: ''
 	};
@@ -37,6 +45,17 @@
 	let showOpenrouter = false;
 	let showK3sToken = false;
 
+	const safeErrorMessage = (error: unknown, fallback: string): string => {
+		if (error instanceof Error && error.message) return error.message;
+		return fallback;
+	};
+
+	const clearTokenField = (field: TokenField): void => {
+		tokens[field] = '';
+		if (field === 'mooseApiKey') showMoose = false;
+		if (field === 'openrouterApiKey') showOpenrouter = false;
+	};
+
 	async function loadData(): Promise<void> {
 		loading = true;
 		errorMessage = undefined;
@@ -44,13 +63,12 @@
 			const [tokensResponse, k3sResponse] = (await Promise.all([
 				requestGraphQLClient(getApiTokensQuery),
 				requestGraphQLClient(getK3sClusterSecretQuery)
-			])) as [{ apiTokens: ApiTokens }, { k3sClusterSecret: K3sClusterSecret }];
-			tokens = tokensResponse.apiTokens;
+			])) as [{ apiTokens: ApiTokens }, { k3sClusterSecret: { token: string; serverIp: string } }];
+
+			tokenStates = tokensResponse.apiTokens;
 			k3sSecret = k3sResponse.k3sClusterSecret;
 		} catch (error) {
-			console.error(error);
-			// eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-			errorMessage = `Error loading secrets: ${(error as Error).message}`;
+			errorMessage = safeErrorMessage(error, 'Error loading secrets.');
 		} finally {
 			loading = false;
 		}
@@ -61,20 +79,28 @@
 		errorMessage = undefined;
 		successMessage = undefined;
 		try {
-			const variables = {
-				mooseApiKey: tokens.mooseApiKey,
-				openrouterApiKey: tokens.openrouterApiKey
-			};
+			const variables: Partial<Record<TokenField, string>> = {};
+			if (tokens.mooseApiKey.trim()) variables.mooseApiKey = tokens.mooseApiKey.trim();
+			if (tokens.openrouterApiKey.trim())
+				variables.openrouterApiKey = tokens.openrouterApiKey.trim();
+
+			if (!variables.mooseApiKey && !variables.openrouterApiKey) {
+				successMessage = 'No changes to save. Leave a field blank to keep its stored value.';
+				return;
+			}
+
 			const response: { updateApiTokens: ApiTokens } = await requestGraphQLClient(
 				updateApiTokensMutation,
 				variables
 			);
-			tokens = response.updateApiTokens;
-			successMessage = 'API tokens updated successfully.';
+
+			tokenStates = response.updateApiTokens;
+			clearTokenField('mooseApiKey');
+			clearTokenField('openrouterApiKey');
+			successMessage =
+				'API tokens updated. Stored values stay hidden; blanks leave them unchanged.';
 		} catch (error) {
-			console.error(error);
-			// eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-			errorMessage = `Error updating API tokens: ${(error as Error).message}`;
+			errorMessage = safeErrorMessage(error, 'Error updating API tokens.');
 		} finally {
 			savingTokens = false;
 		}
@@ -89,20 +115,22 @@
 				token: k3sSecret.token,
 				serverIp: k3sSecret.serverIp
 			};
-			const response: { updateK3sClusterSecret: K3sClusterSecret } = await requestGraphQLClient(
-				updateK3sClusterSecretMutation,
-				variables
-			);
+			const response: { updateK3sClusterSecret: { token: string; serverIp: string } } =
+				await requestGraphQLClient(updateK3sClusterSecretMutation, variables);
 			k3sSecret = response.updateK3sClusterSecret;
 			k3sSuccessMessage = 'k3s cluster secret updated successfully.';
 		} catch (error) {
-			console.error(error);
-			// eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-			errorMessage = `Error updating k3s cluster secret: ${(error as Error).message}`;
+			errorMessage = safeErrorMessage(error, 'Error updating k3s cluster secret.');
 		} finally {
 			savingK3s = false;
 		}
 	}
+
+	onDestroy(() => {
+		// Clear transient token values when leaving the page
+		clearTokenField('mooseApiKey');
+		clearTokenField('openrouterApiKey');
+	});
 
 	if (browser) {
 		// eslint-disable-next-line @typescript-eslint/no-floating-promises
@@ -114,7 +142,7 @@
 	<div class="table-container max-w-3xl mx-auto">
 		<h1>Manage API tokens</h1>
 		<p class="mt-2 mb-4 text-sm text-surface-500-300-token">
-			Configure the API tokens used by the SIM-PIPE controller.
+			Enter a new value to replace a token; leave it blank to keep the current value.
 		</p>
 
 		{#if loading}
@@ -131,21 +159,32 @@
 			<div class="space-y-4">
 				<label class="label">
 					<span>MOOSE_API_KEY</span>
-					<div class="flex items-center space-x-2">
+					<p class="text-xs text-surface-500-300-token">
+						{#if tokenStates.mooseApiKey.hasValue}
+							Stored (hidden): {tokenStates.mooseApiKey.maskedPreview ?? '********'}. Enter a new
+							value only if you want to replace it.
+						{:else}
+							Set a value if you want to enable this token.
+						{/if}
+					</p>
+					<p class="text-xs text-surface-500-300-token">
+						Leave blank to keep using the current token.
+					</p>
+					<div class="flex flex-wrap items-center gap-2">
 						{#if showMoose}
 							<input
-								class="input flex-1"
+								class="input flex-1 min-w-[200px]"
 								type="text"
 								bind:value={tokens.mooseApiKey}
-								placeholder="Enter MOOSE API key (optional)"
+								placeholder="Enter new value to replace"
 								autocomplete="off"
 							/>
 						{:else}
 							<input
-								class="input flex-1"
+								class="input flex-1 min-w-[200px]"
 								type="password"
 								bind:value={tokens.mooseApiKey}
-								placeholder="Enter MOOSE API key (optional)"
+								placeholder="Enter new value to replace"
 								autocomplete="off"
 							/>
 						{/if}
@@ -162,21 +201,32 @@
 				</label>
 				<label class="label">
 					<span>OPENROUTER_API_KEY</span>
-					<div class="flex items-center space-x-2">
+					<p class="text-xs text-surface-500-300-token">
+						{#if tokenStates.openrouterApiKey.hasValue}
+							Stored (hidden): {tokenStates.openrouterApiKey.maskedPreview ?? '********'}. Enter a
+							new value only if you want to replace it.
+						{:else}
+							Set a value if you want to enable this token.
+						{/if}
+					</p>
+					<p class="text-xs text-surface-500-300-token">
+						Leave blank to keep using the current token.
+					</p>
+					<div class="flex flex-wrap items-center gap-2">
 						{#if showOpenrouter}
 							<input
-								class="input flex-1"
+								class="input flex-1 min-w-[200px]"
 								type="text"
 								bind:value={tokens.openrouterApiKey}
-								placeholder="Enter OpenRouter API key (optional)"
+								placeholder="Enter new value to replace"
 								autocomplete="off"
 							/>
 						{:else}
 							<input
-								class="input flex-1"
+								class="input flex-1 min-w-[200px]"
 								type="password"
 								bind:value={tokens.openrouterApiKey}
-								placeholder="Enter OpenRouter API key (optional)"
+								placeholder="Enter new value to replace"
 								autocomplete="off"
 							/>
 						{/if}
@@ -207,8 +257,8 @@
 			<div class="mt-8 space-y-2">
 				<h2>k3s cluster secret (VM helpers)</h2>
 				<p class="text-sm text-surface-500-300-token">
-					Used by VM/WSL helper scripts so nodes can join the cluster. Leave blank if you will set
-					it later.
+					Used by Virtualization module to enable nodes to join the cluster. Leave blank to use
+					existing value.
 				</p>
 				{#if k3sSuccessMessage}
 					<p class="text-success-500-300-token mb-2">{k3sSuccessMessage}</p>

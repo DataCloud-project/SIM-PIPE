@@ -171,7 +171,11 @@
 			return response?.dryRun?.nodes.filter((node) => Object.keys(node).length > 0);
 		} catch (error) {
 			loadingError = 'Failed to load metrics';
-			console.log('Failed to load metrics', error);
+			await displayModal(
+				'Failed to load metrics⚠️',
+				`Error fetching metrics: ${error instanceof Error ? error.message : String(error)}`,
+				modalStore
+			);
 			return [];
 		}
 	};
@@ -198,7 +202,6 @@
 				}
 			}
 		};
-		console.log('inputData:', inputData);
 		try {
 			const response = await requestGraphQLClient(getCarbontrackerDataQuery, inputData);
 			return response as {
@@ -208,10 +211,9 @@
 				};
 			};
 		} catch (error) {
-			const title = 'Internal error!';
-			const body = `${(error as Error).message}`;
-			// await displayAlert(title, body, 10_000);
-			console.log(title, body);
+			const title = 'Internal error!⚠️';
+			const body = `Error fetching carbontracker data: ${(error as Error).message}`;
+			await displayModal(title, body, modalStore);
 			return undefined;
 		}
 	}
@@ -306,7 +308,6 @@
 			carbontrackerData
 		};
 
-		console.log('responses:', responses);
 		return responses;
 	};
 
@@ -401,7 +402,11 @@
 				if (template.dag) argoDAGtoMermaid(template.dag);
 				else if (template.steps) argoStepsToMermaid(template.steps);
 			} catch (error) {
-				console.log('Error building mermaid diagram', error);
+				await displayModal(
+					'Diagram error⚠️',
+					`Error building mermaid diagram ${error instanceof Error ? error.message : String(error)}`,
+					modalStore
+				);
 				goto(`/projects/dryruns/${selectedProject?.id}`);
 				break;
 			}
@@ -584,7 +589,6 @@
 				stepStartedAt: stepStartedAt ?? undefined,
 				save: !!shouldSaveOnServer
 			});
-			console.log('Moose analysis response:', response.result);
 			latestMooseReportJson = response.result;
 			hasUnsavedMooseReport = !shouldSaveOnServer;
 			const job = JSON.parse(response.result) as {
@@ -612,8 +616,11 @@
 					dryRunPhases[node.displayName] = node.phase;
 				});
 			} catch (error) {
-				// eslint-disable-next-line no-console
-				console.error('Error refreshing dry run after Moose analysis', error);
+				await displayModal(
+					'Error refreshing dry run after Moose analysis⚠️',
+					`Error: ${error instanceof Error ? error.message : String(error)}`,
+					modalStore
+				);
 			}
 		} else {
 			// get job from stored Moose report
@@ -652,8 +659,11 @@
 			});
 			hasUnsavedMooseReport = false;
 		} catch (error) {
-			// eslint-disable-next-line no-console
-			console.error('Error saving Moose report', error);
+			await displayModal(
+				'Error saving Moose report⚠️',
+				`Error ${error instanceof Error ? error.message : String(error)}`,
+				modalStore
+			);
 		}
 	}
 
@@ -677,8 +687,11 @@
 				link.remove();
 				URL.revokeObjectURL(url);
 			} catch (error) {
-				console.error('Error downloading SoTW CSV:', error);
-				alert('Failed to download SoTW CSV.');
+				await displayModal(
+					'Error downloading SoTW CSV⚠️',
+					`Error: ${error instanceof Error ? error.message : String(error)}`,
+					modalStore
+				);
 			}
 			return;
 		}
@@ -692,8 +705,6 @@
 
 	function getPartLogs(stepName: string, nmaxlinelength: number): string {
 		const steplogs = logs[stepName];
-		// console.log('stepName:', stepName);
-		// console.log('steplogs:', steplogs);
 		// eslint-disable-next-line unicorn/prefer-ternary
 		if (steplogs.length < nmaxlinelength) return steplogs;
 		// eslint-disable-next-line no-else-return

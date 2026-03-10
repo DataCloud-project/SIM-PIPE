@@ -5,17 +5,11 @@
 	import { requestGraphQLClient } from '$lib/graphqlUtils';
 	import allResourcesQuery from '../../queries/get_all_resources.js';
 	import type { Resource } from '../../types.js';
-	import Alert from '$lib/modules/alert.svelte';
 	import deleteResourceMutation from '$queries/delete_resource.js';
 	import shutdownResourceMutation from '$queries/shutdown_resource.js';
 	import { displayModal } from '$utils/modal-utils.js';
 
 	const modalStore = getModalStore();
-
-	let visibleAlert: boolean = false;
-	let alertTitle: string = 'Alert!';
-	let alertMessage: string = 'Alert!';
-	let alertVariant: string = 'variant-ghost-surface';
 
 	$: reactiveResourcesList = $resourcesList;
 	let loadingError: string | null;
@@ -25,7 +19,7 @@
 	function resetCheckboxes(list?: Resource[]): void {
 		Object.keys(checkboxes).forEach((key) => delete checkboxes[key]);
 		list?.forEach((resource) => {
-			checkboxes[resource.name] = false;
+			checkboxes[resource.id] = false;
 		});
 	}
 
@@ -35,7 +29,8 @@
 			const response: { resources: Resource[] } = await requestGraphQLClient(allResourcesQuery);
 			return response.resources;
 		} catch (error) {
-			console.error('Error fetching resources:', error);
+			const message = error instanceof Error ? error.message : String(error);
+			await displayModal('Load error⚠️', `Error: ${message}`, modalStore);
 			loadingError = 'Failed to load resources';
 			return [];
 		}
@@ -104,7 +99,7 @@
 			};
 			modalStore.trigger(modal);
 		} catch (error) {
-			console.error(error);
+			await displayModal('Create resource error', String(error), modalStore);
 		}
 	}
 
@@ -123,7 +118,8 @@
 				modalStore
 			);
 		} catch (error) {
-			console.log('Error deleting resources:', error);
+			const message = error instanceof Error ? error.message : String(error);
+			await displayModal('Error deleting resources⚠️', `Error: ${message}`, modalStore);
 		} finally {
 			// eslint-disable-next-line no-return-assign
 			Object.keys(checkboxes).forEach((id) => (checkboxes[id] = false));
@@ -146,7 +142,8 @@
 				modalStore
 			);
 		} catch (error) {
-			console.log('Error shutting down VM node:', error);
+			const message = error instanceof Error ? error.message : String(error);
+			await displayModal('Shutdown error⚠️', `Error: ${message}`, modalStore);
 		} finally {
 			// eslint-disable-next-line no-return-assign
 			Object.keys(checkboxes).forEach((id) => (checkboxes[id] = false));
@@ -155,7 +152,7 @@
 	}
 
 	async function onOpenLogs(name: string): Promise<void> {
-		console.log('To be implemented');
+		await displayModal('Not implemented', 'To be implemented', modalStore);
 	}
 </script>
 
@@ -213,7 +210,7 @@
 									<input
 										type="checkbox"
 										class="checkbox"
-										bind:checked={checkboxes[resource.name]}
+										bind:checked={checkboxes[resource.id]}
 										on:click={(event) => handleCheckboxClick(event)}
 									/>
 								</td>
@@ -247,7 +244,7 @@
 	</div>
 </div>
 
-<Alert bind:visibleAlert bind:alertTitle bind:alertMessage bind:alertVariant />
+<!-- <Alert bind:visibleAlert bind:alertTitle bind:alertMessage bind:alertVariant /> -->
 
 <style>
 	.table.table {

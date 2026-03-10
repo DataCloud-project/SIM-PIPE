@@ -23,7 +23,7 @@ import {
   extrapolateFromScalingLaws,
 } from '../curve_fitting/dry-run-data.js';
 import cpuCoresData from '../hardwaremetrics/hardwaremetrics.js';
-import { getApiTokenSecrets, updateApiTokenSecrets } from '../k8s/api-tokens.js';
+import { getApiTokenStates, updateApiTokenSecrets } from '../k8s/api-tokens.js';
 import assignArgoWorkflowToProject from '../k8s/assign-argoworkflow-to-project.js';
 import {
   createDockerRegistryCredential,
@@ -37,7 +37,11 @@ import {
   createProject, deleteProject, getProject, projects, renameProject,
 } from '../k8s/projects.js';
 import {
-  createResource, deleteResource, resources, shutdownResource,
+  cleanupStaleResource,
+  createResource,
+  deleteResource,
+  resources,
+  shutdownResource,
 } from '../k8s/resources.js';
 import {
   computePresignedGetUrl,
@@ -77,6 +81,7 @@ import {
   MutationDeleteDockerRegistryCredentialArgs as MutationDeleteDockerRegistryCredentialArguments,
   MutationDeleteDryRunArgs as MutationDeleteDryRunArguments,
   MutationDeleteProjectArgs as MutationDeleteProjectArguments,
+  MutationCleanupStaleResourceArgs as MutationCleanupStaleResourceArguments,
   MutationDeleteResourceArgs as MutationDeleteResourceArguments,
   MutationDeleteWorkflowTemplateArgs as MutationDeleteWorkflowTemplateArguments,
   MutationRenameProjectArgs as MutationRenameProjectArguments,
@@ -184,7 +189,7 @@ const resolvers = {
       _p: EmptyParent, _a: EmptyArguments, context: AuthenticatedContext,
     ): Promise<Query['apiTokens']> {
       const { k8sClient, k8sNamespace } = context;
-      return await getApiTokenSecrets(k8sClient, k8sNamespace);
+      return await getApiTokenStates(k8sClient, k8sNamespace);
     },
     async k3sClusterSecret(
       _p: EmptyParent, _a: EmptyArguments, context: AuthenticatedContext,
@@ -538,6 +543,15 @@ const resolvers = {
       const { resourceId } = arguments_;
       const { k8sClient, k8sNamespace } = context;
       return await deleteResource(resourceId, k8sClient, k8sNamespace);
+    },
+    async cleanupStaleResource(
+      _p: EmptyParent,
+      arguments_: MutationCleanupStaleResourceArguments,
+      context: AuthenticatedContext,
+    ): Promise<Mutation['cleanupStaleResource']> {
+      const { resourceId } = arguments_;
+      const { k8sClient, k8sNamespace } = context;
+      return await cleanupStaleResource(resourceId, k8sClient, k8sNamespace);
     },
     async shutdownResource(
       _p: EmptyParent,

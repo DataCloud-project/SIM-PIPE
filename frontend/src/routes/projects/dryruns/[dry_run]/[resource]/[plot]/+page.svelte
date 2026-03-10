@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { ProgressBar } from '@skeletonlabs/skeleton';
+	import { ProgressBar, getModalStore } from '@skeletonlabs/skeleton';
 	import { format } from 'date-fns';
 	import { gql } from 'graphql-request';
 	import { selectedProjectName, selectedDryRunName, selectedMetricsType } from '$stores/stores';
@@ -7,10 +7,12 @@
 	import { requestGraphQLClient } from '$lib/graphqlUtils';
 	import Plot from '../plot.svelte';
 	// import { displayAlert } from '$utils/alerts-utils';
+	import { displayModal } from '$utils/modal-utils.js';
 
 	const datefmt = 'yyyy-MM-dd HH:mm:ss';
 	const defaultMetricsType = 'All';
 	selectedMetricsType.set(defaultMetricsType);
+	const modalStore = getModalStore();
 
 	// TODO: These functions are the same as in [resource].svelte
 	// should be merged and moved into lib?
@@ -231,11 +233,9 @@
 			);
 		})
 		.catch(async (error) => {
-			console.log(error);
 			const title = 'Error reading resource consumption of dry run❌!';
 			const body = `${(error as Error).message}`;
-			// await displayAlert(title, body, 10_000);
-			console.log(title, body);
+			await displayModal(title, body, modalStore);
 			// eslint-disable-next-line @typescript-eslint/no-floating-promises
 			goto(`/projects/dryruns/${$selectedProjectName}/${$selectedDryRunName}`);
 		});

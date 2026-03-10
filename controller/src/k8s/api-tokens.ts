@@ -7,6 +7,16 @@ interface ApiTokenSecrets {
   openrouterApiKey: string;
 }
 
+export interface ApiTokenState {
+  hasValue: boolean;
+  maskedPreview?: string;
+}
+
+export interface ApiTokenStates {
+  mooseApiKey: ApiTokenState;
+  openrouterApiKey: ApiTokenState;
+}
+
 const MOOSE_SECRET_NAME = 'simpipe-moose-api';
 const MOOSE_SECRET_KEY = 'MOOSE_API_KEY';
 
@@ -83,7 +93,28 @@ async function upsertSecretValue(
   await k8sClient.core.replaceNamespacedSecret(name, namespace, existing);
 }
 
-export async function getApiTokenSecrets(
+function maskSecret(value: string): string | undefined {
+  const trimmed = value.trim();
+  if (!trimmed) return undefined;
+  if (trimmed.length <= 4) return '*'.repeat(trimmed.length);
+
+  const prefix = trimmed.slice(0, 2);
+  const suffix = trimmed.slice(-2);
+  const maskLength = Math.min(Math.max(trimmed.length - 4, 4), 12);
+  return `${prefix}${'*'.repeat(maskLength)}${suffix}`;
+}
+
+function toState(value: string): ApiTokenState {
+  const trimmed = value.trim();
+  if (!trimmed) return { hasValue: false };
+
+  return {
+    hasValue: true,
+    maskedPreview: maskSecret(trimmed),
+  };
+}
+
+async function getApiTokenSecrets(
   k8sClient: K8sClient,
   namespace: string,
 ): Promise<ApiTokenSecrets> {
@@ -98,11 +129,23 @@ export async function getApiTokenSecrets(
   };
 }
 
+export async function getApiTokenStates(
+  k8sClient: K8sClient,
+  namespace: string,
+): Promise<ApiTokenStates> {
+  const secrets = await getApiTokenSecrets(k8sClient, namespace);
+
+  return {
+    mooseApiKey: toState(secrets.mooseApiKey),
+    openrouterApiKey: toState(secrets.openrouterApiKey),
+  };
+}
+
 export async function updateApiTokenSecrets(
   k8sClient: K8sClient,
   namespace: string,
   tokens: Partial<ApiTokenSecrets>,
-): Promise<ApiTokenSecrets> {
+): Promise<ApiTokenStates> {
   const current = await getApiTokenSecrets(k8sClient, namespace);
   const next: ApiTokenSecrets = {
     mooseApiKey:
@@ -126,5 +169,5 @@ export async function updateApiTokenSecrets(
     ),
   ]);
 
-  return next;
+  return await getApiTokenStates(k8sClient, namespace);
 }

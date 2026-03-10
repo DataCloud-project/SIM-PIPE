@@ -36,10 +36,18 @@ type HardwareMetrics {
   cpuCores: Int!
 }
 
+""" Masked/metadata view of a single API token. """
+type ApiTokenState {
+  """True if a value is currently stored."""
+  hasValue: Boolean!
+  """Partially-masked preview (never the full secret)."""
+  maskedPreview: String
+}
+
 """ API tokens used by the SIM-PIPE controller for external services. """
 type ApiTokens {
-  mooseApiKey: String!
-  openrouterApiKey: String!
+  mooseApiKey: ApiTokenState!
+  openrouterApiKey: ApiTokenState!
 }
 
 """ K3s cluster connection details used by VM helpers. """
@@ -141,7 +149,7 @@ type Query {
     """ Whether to persist the Moose report alongside the artifact (default: true) """
     save: Boolean = true): String! @auth
 
-  dryRunsForNode(nodeName: String!): [DryRun!]!  
+  dryRunsForNode(nodeName: String!): [DryRun!]!
 
   """ Inspect the API tokens used by the controller. """
   apiTokens: ApiTokens! @auth
@@ -624,7 +632,7 @@ input CreateResourceInput {
 
   """ The cpus for the new resource """
   cpus: String!
-  
+
   """ The memory for the new resource """
   memory: String!
 }
@@ -751,6 +759,11 @@ type Mutation @auth {
   deleteResource(
     """ ID of the resource to be deleted """
     resourceId: String!): Boolean!
+
+   """ Delete a stale resource when the VM is gone and mark it as shutdown. """
+   cleanupStaleResource(
+     """ ID of the resource to be cleaned """
+     resourceId: String!): Boolean!
 
  """ Shutdown an existing resource. The mutation returns true if the shutdown was successful. """
   shutdownResource(

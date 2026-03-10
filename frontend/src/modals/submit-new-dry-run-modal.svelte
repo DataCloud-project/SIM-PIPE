@@ -38,7 +38,6 @@
 
 	const argoWorkflowTemplate = $selectedProject?.workflowTemplates[0]?.argoWorkflowTemplate;
 	const currentArgoWorkflowTemplates = argoWorkflowTemplate?.spec?.templates;
-	// $: console.log('currentArgoWorkflowTemplate', currentArgoWorkflowTemplates);
 
 	type InputData = {
 		template_task_name: string;
@@ -123,7 +122,6 @@
 		artifact_name: string,
 		task_artifact_index: number
 	): void {
-		console.log('openOverlay');
 		selectedTemplateTaskName = template_task_name;
 		selectedTemplateTaskArtifactName = artifact_name;
 		selectedTaskArtifactIndex = task_artifact_index;
@@ -131,7 +129,6 @@
 	}
 
 	const closeOverlay = (): void => {
-		console.log('closeOverlay');
 		isOverlayOpen = false;
 		$selectedArtifact = undefined;
 	};
@@ -161,7 +158,6 @@
 			template_task_artifact_name: string;
 		};
 	}): void {
-		console.log('triggerInsertArtifactInput');
 		const selectedArtifact = event.detail.selected_artifact;
 		const selectedTemplateTaskName = event.detail.template_task_name;
 		const selectedTemplateTaskArtifactName = event.detail.template_task_artifact_name;
@@ -202,7 +198,6 @@
 			inputdata[selectedTemplateTaskName] = [];
 		}
 		inputdata[selectedTemplateTaskName][selectedTemplateTaskArtifactIndex] = inputdataData;
-		console.log('handleMessage inputdata', inputdata);
 	}
 
 	async function triggerInsertRawInput(
@@ -211,7 +206,6 @@
 		task_artifact_index: number
 	): Promise<void> {
 		// when a file is uploaded, the raw input is updated similarly to handleMessage event from the ArtifactBrowser
-		console.log('triggerInsertRawInput');
 		const selectedTemplateTaskName = template_task_name;
 		const selectedTemplateTaskArtifactName = template_artifact_name;
 		const selectedTemplateTaskArtifactIndex = task_artifact_index;
@@ -420,22 +414,15 @@
 			{#if templateTaskList.length > 0}
 				{#if loadingAvailableNodes}
 					<p>Loading nodes...</p>
-				{:else if availableNodes.length === 0}
-					<p>No nodes available</p>
+				{:else if availableNodes.filter((n) => n.status?.toLowerCase() === 'running').length === 0}
+					<p>No running nodes available</p>
 				{:else}
 					<label for="node-select">Select node to execute the dry run:</label>
 					<select id="node-select" bind:value={selectedNodeName}>
 						<option value="default" disabled selected>Select a node...</option>
-						{#each availableNodes as node}
-							<option
-								value={node.name}
-								disabled={node.status?.toLowerCase() === 'shutdown'}
-								class:option-disabled={node.status?.toLowerCase() === 'shutdown'}
-								title={node.status?.toLowerCase() === 'shutdown'
-									? 'Node is shutdown and cannot be selected'
-									: ''}
-							>
-								{node.name} - {node.os} ({node.cpus} CPUs, {node.memory} MB, {node.status})
+						{#each availableNodes.filter((n) => n.status?.toLowerCase() === 'running') as node}
+							<option value={node.name}>
+								{node.name} - {node.os} ({node.cpus} CPUs, {node.memory} MB)
 							</option>
 						{/each}
 					</select>
