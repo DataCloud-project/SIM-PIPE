@@ -16,6 +16,9 @@
 	// modalStore is a store that is used to trigger modals
 	const modalStore = getModalStore();
 
+	// Keep a reference to the modal response handler before the modal is closed
+	let responseHandler: ((response: any) => void) | undefined;
+
 	// variables
 	let projectName: string = '';
 	let projectId: string;
@@ -98,47 +101,65 @@
 	}
 
 	async function onClose(response: any): Promise<void> {
-		if ($modalStore[0] && typeof $modalStore[0].response === 'function') {
-			$modalStore[0].response(response);
-		}
+		const responder = responseHandler ?? $modalStore[0]?.response;
+		if (typeof responder === 'function') responder(response);
 	}
 
 	async function onSubmit(): Promise<void> {
 		// First, parse the input file
 		const inputResult = await handleInputFile();
-		modalStore.close(); // Close the modal after submission
+
+		// Capture the current modal's response handler before the modal closes
+		responseHandler = $modalStore[0]?.response;
+
+		// Default responses so the parent always gets a payload and can refresh
+		let createProjectResponse = {
+			status: 500,
+			error: 'Project creation not attempted',
+			project: { name: 'none', id: 'none' }
+		};
+		let createWorkflowResponse = {
+			status: 500,
+			error: 'Workflow template creation not attempted',
+			name: 'none'
+		};
+
 		if (inputResult.error) {
-			// Show error and do not proceed
 			await displayModal('Failed to parse template❌', inputResult.error, modalStore);
+			await onClose({ createProjectResponse, createWorkflowResponse });
+			modalStore.close();
 			return;
 		}
 
+		modalStore.close(); // Close the modal after submission
+
 		if (inputResult.template && Object.keys(inputResult.template).length > 0) {
 			workflowTemplate = inputResult.template;
-			// Create project first
-			const createProjectResponse = await createProject();
+			createProjectResponse = await createProject();
 			if (createProjectResponse.status === 200 && createProjectResponse.project.id !== 'none') {
 				projectId = createProjectResponse.project.id;
-				// Try to create workflow template
-				const createWorkflowResponse = await createWorkflowTemplate();
-				// eslint-disable-next-line unicorn/prefer-ternary
-				if (createWorkflowResponse.status === 200 && createWorkflowResponse.name !== 'none') {
-					// Both succeeded
-					await displayModal(
-						'Project created!🎉',
-						`Project "${createProjectResponse.project.name}" have been created successfully.`,
-						modalStore
-					);
-				} else {
-					// Workflow template creation failed, delete the project
-					await displayModal(
-						'Failed: Workflow template creation failed❌',
-						`Project "${createProjectResponse.project.name}" was created successfully, but Workflow template "${createWorkflowResponse.name}" failed to be created.`,
-						modalStore
-					);
-				}
+				createWorkflowResponse = await createWorkflowTemplate();
+				await (createWorkflowResponse.status === 200 && createWorkflowResponse.name !== 'none'
+					? displayModal(
+							'Project created!🎉',
+							`Project "${createProjectResponse.project.name}" have been created successfully.`,
+							modalStore
+						)
+					: displayModal(
+							'Failed: Workflow template creation failed❌',
+							`Project "${createProjectResponse.project.name}" was created successfully, but Workflow template "${createWorkflowResponse.name}" failed to be created.`,
+							modalStore
+						));
+			} else {
+				await displayModal(
+					'Project not created❌',
+					createProjectResponse.error || 'Project creation failed.',
+					modalStore
+				);
 			}
 		}
+
+		await onClose({ createProjectResponse, createWorkflowResponse });
 	}
 </script>
 

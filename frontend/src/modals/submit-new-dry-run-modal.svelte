@@ -251,7 +251,7 @@
 			).raw = inputArtifact.raw;
 	}
 
-	/* 
+	/*
 	function createDefaultTemplateContainerRawInput(): TemplateContainerRawInput {
 		return {
 			artifacts: [
@@ -381,15 +381,13 @@
 			modalStore.clear();
 		} catch (error) {
 			console.error('Failed to create dry run', error);
-			if ((error as Error).message.includes('PayloadTooLargeError')) {
-				await displayModal(
-					'Failed to create dry run❌',
-					'Input file size exceeded limit (90KB)!',
-					modalStore
-				);
-			} else {
-				await displayModal('Failed to create dry run❌', 'Check dry run inputs!', modalStore);
-			}
+			await ((error as Error).message.includes('PayloadTooLargeError')
+				? displayModal(
+						'Failed to create dry run❌',
+						'Input file size exceeded limit (90KB)!',
+						modalStore
+					)
+				: displayModal('Failed to create dry run❌', 'Check dry run inputs!', modalStore));
 		}
 	}
 

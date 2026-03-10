@@ -61,7 +61,11 @@
 			await displayModal('New node ready!', 'New node is ready to be used!', modalStore);
 			modalStore.clear();
 		} catch (error) {
-			await displayModal('Error', `An error occurred while creating the new node: ${error.message}`, modalStore);
+			await displayModal(
+				'Error',
+				`An error occurred while creating the new node: ${(error as Error).message}`,
+				modalStore
+			);
 			modalStore.clear();
 		}
 	}

@@ -11,6 +11,8 @@ export async function displayModal(
 		body
 	};
 	modalStore.trigger(modalSettings);
-	await new Promise((resolve) => setTimeout(resolve, 2000));
+	await new Promise((resolve) => {
+		setTimeout(resolve, 2000);
+	});
 	modalStore.close();
 }
