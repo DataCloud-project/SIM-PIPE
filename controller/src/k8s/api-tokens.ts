@@ -7,12 +7,12 @@ interface ApiTokenSecrets {
   openrouterApiKey: string;
 }
 
-export interface ApiTokenState {
+interface ApiTokenState {
   hasValue: boolean;
   maskedPreview?: string;
 }
 
-export interface ApiTokenStates {
+interface ApiTokenStates {
   mooseApiKey: ApiTokenState;
   openrouterApiKey: ApiTokenState;
 }
