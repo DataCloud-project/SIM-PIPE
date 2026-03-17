@@ -226,23 +226,26 @@
 			inputdata[selectedTemplateTaskName] = [];
 		}
 		inputdata[selectedTemplateTaskName][selectedTemplateTaskArtifactIndex] = inputdataData;
-
 		const template = currentArgoWorkflowTemplates.find(
 			(template: any) => template.name === selectedTemplateTaskName
 		);
+		if (!template?.inputs?.artifacts) {
+			console.warn('No inputs found for template', selectedTemplateTaskName);
+			return;
+		}
+
 		const inputArtifact = template.inputs.artifacts.find(
 			(artifact: any) => artifact.name === selectedTemplateTaskArtifactName
 		);
-		// pop inputArtifact.s3
+		if (!inputArtifact) {
+			console.warn('No matching artifact found on template', selectedTemplateTaskArtifactName);
+			return;
+		}
+
 		if ('s3' in inputArtifact) {
 			delete inputArtifact.s3;
 		}
 		inputArtifact.raw = { data: text };
-		currentArgoWorkflowTemplates
-			.find((template: any) => template.name === selectedTemplateTaskName)
-			.inputs.artifacts.find(
-				(artifact: any) => artifact.name === selectedTemplateTaskArtifactName
-			).raw = inputArtifact.raw;
 	}
 
 	/*
@@ -273,9 +276,11 @@
 	} */
 
 	function parsetemplateTaskList(): Task[] {
+		const workflowTemplates = $selectedProject?.workflowTemplates;
+		const workflowTemplate = workflowTemplates?.[0]?.argoWorkflowTemplate;
 		const {
 			spec: { templates }
-		} = $selectedProject?.workflowTemplates[0]?.argoWorkflowTemplate;
+		} = workflowTemplate;
 		const dag = templates.find((template: any) => template.dag);
 		const steps = templates.find((template: any) => template.steps);
 		let tasks: Task[] = [];
@@ -288,7 +293,7 @@
 		}
 		// extract input artifacts from template
 		templates.forEach((template: { name: string; inputs: any }) => {
-			templateContainerInputs[template.name] = template.inputs;
+			templateContainerInputs[template.name] = template.inputs ?? {};
 		});
 		return tasks;
 	}
@@ -448,11 +453,11 @@
 								</span></label
 							>
 						{/if}
-						{#if Object.keys(templateContainerInputs[task.name]).length > 0}
+						{#if Object.keys(templateContainerInputs[task.template] || {}).length > 0}
 							<br />
 							<!-- svelte-ignore a11y-label-has-associated-control -->
 							<label>Upload Input files </label>
-							{#each templateContainerInputs[task.name].artifacts || [] as artifact, k}
+							{#each templateContainerInputs[task.template]?.artifacts || [] as artifact, k}
 								<label for={artifact.name}>
 									<span>
 										<div class="flex flex-col gap-2 w-full">
@@ -460,17 +465,17 @@
 												<span>{artifact.name}</span>
 											</div>
 											<div class="text-left text-sm">
-												{#if inputdata[task.name] && inputdata[task.name][k] && inputdata[task.name][k].is_raw}
-													<span>{inputdata[task.name][k].raw?.filename}</span>
+												{#if inputdata[task.template] && inputdata[task.template][k] && inputdata[task.template][k].is_raw}
+													<span>{inputdata[task.template][k].raw?.filename}</span>
 												{:else}
 													<span></span>
 												{/if}
 											</div>
 											<div class="text-left text-sm">
-												{#if inputdata[task.name] && inputdata[task.name][k] && inputdata[task.name][k].is_artifact}
+												{#if inputdata[task.template] && inputdata[task.template][k] && inputdata[task.template][k].is_artifact}
 													<span
-														>{inputdata[task.name][k].artifact?.artifact_bucket}
-														{inputdata[task.name][k].artifact?.artifact_path}</span
+														>{inputdata[task.template][k].artifact?.artifact_bucket}
+														{inputdata[task.template][k].artifact?.artifact_path}</span
 													>
 												{:else}
 													<span></span>
@@ -481,14 +486,14 @@
 													id={artifact.name}
 													name={artifact.name}
 													bind:files={currentinputfiles}
-													on:change={() => triggerInsertRawInput(task.name, artifact.name, k)}
+													on:change={() => triggerInsertRawInput(task.template, artifact.name, k)}
 												>
 													Upload local file
 												</FileButton>
 												<button
 													type="button"
 													class="btn variant-soft-primary"
-													on:click={() => openOverlay(task.name, artifact.name, k)}
+													on:click={() => openOverlay(task.template, artifact.name, k)}
 													>Browse artifacts</button
 												>
 											</div>

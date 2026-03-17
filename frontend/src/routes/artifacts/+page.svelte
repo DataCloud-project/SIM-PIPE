@@ -3,7 +3,8 @@
 	import type { ModalSettings } from '@skeletonlabs/skeleton';
 	import { DownloadIcon, Trash2Icon, UploadIcon, XSquareIcon } from 'svelte-feather-icons';
 	import Artifacts from './artifacts.svelte';
-	import { reactiveBuckets, selectedBucket } from '$stores/stores';
+	import { get } from 'svelte/store';
+	import { buckets as bucketsStore, reactiveBuckets, selectedBucket } from '$stores/stores';
 	import type { ArtifactHierarchyType } from '$typesdefinitions';
 	import Alert from '$lib/modules/alert.svelte';
 	import { requestGraphQLClient } from '$lib/graphqlUtils';
@@ -59,6 +60,15 @@
 
 		artifacts.forEach((artifact) => traverse(artifact));
 		return paths;
+	}
+
+	function findArtifactUrl(bucketName: string, artifactPath: string): string | undefined {
+		const currentBuckets = get(bucketsStore);
+		const bucketEntry = currentBuckets.find((b) => b.bucket.name === bucketName);
+		if (!bucketEntry) return undefined;
+		const normalizedPath = artifactPath.replace(/^\/+/, '');
+		const match = bucketEntry.artifacts.find((artifact) => artifact.name === normalizedPath);
+		return match?.url;
 	}
 
 	// Upload file using presigned url
@@ -174,6 +184,75 @@
 		modalPromise.catch((error) => {
 			console.log('uploadFile promise error:', error);
 		});
+	}
+
+	async function onDownloadArtifacts(): Promise<void> {
+		const selected = getSelectedArtifactsAllBuckets().filter((artifact) => artifact.isSelected);
+		if (selected.length === 0) {
+			alertTitle = '👎 Error';
+			alertMessage = 'Select at least one file to download.';
+			alertVariant = 'variant-filled-error';
+			alertVisible = true;
+			return;
+		}
+
+		// Only attempt to download leaf nodes (files)
+		const files = selected.filter((artifact) => artifact.subfolders.length === 0);
+		if (files.length === 0) {
+			alertTitle = '👎 Error';
+			alertMessage = 'Select a file (not a folder) to download.';
+			alertVariant = 'variant-filled-error';
+			alertVisible = true;
+			return;
+		}
+
+		const successes: string[] = [];
+		const failures: string[] = [];
+
+		for (const artifact of files) {
+			const url = findArtifactUrl(artifact.bucket, artifact.path);
+			if (!url) {
+				failures.push(`${artifact.bucket}/${artifact.path}`);
+				continue;
+			}
+
+			try {
+				const response = await fetch(url);
+				if (!response.ok) {
+					throw new Error(`Download failed with status ${response.status}`);
+				}
+				const blob = await response.blob();
+				const objectUrl = URL.createObjectURL(blob);
+				const link = document.createElement('a');
+				link.href = objectUrl;
+				link.download = artifact.name;
+				document.body.append(link);
+				link.click();
+				link.remove();
+				URL.revokeObjectURL(objectUrl);
+				successes.push(`${artifact.bucket}/${artifact.path}`);
+			} catch (error) {
+				console.error('Error downloading artifact', artifact, error);
+				failures.push(`${artifact.bucket}/${artifact.path}`);
+			}
+		}
+
+		if (failures.length === 0) {
+			alertTitle = '👍 Download started';
+			alertMessage = successes.join('<br/>');
+			alertVariant = 'variant-ghost-success';
+			alertVisible = true;
+		} else if (successes.length === 0) {
+			alertTitle = '👎 Download failed';
+			alertMessage = failures.join('<br/>');
+			alertVariant = 'variant-filled-error';
+			alertVisible = true;
+		} else {
+			alertTitle = '⚠️ Partial download';
+			alertMessage = `Succeeded: ${successes.join('<br/>')}<br/>Failed: ${failures.join('<br/>')}`;
+			alertVariant = 'variant-filled-warning';
+			alertVisible = true;
+		}
 	}
 
 	// TODO: Delete bucket
@@ -393,10 +472,7 @@
 						</button>
 					</div>
 					<div>
-						<button
-							on:click={() => console.log('Download Artifacts ... not implemented yet!')}
-							title="Download Artifacts ... not implemented yet!"
-						>
+						<button on:click={() => onDownloadArtifacts()} title="Download selected artifacts">
 							<DownloadIcon size="1.5x" />
 						</button>
 					</div>
