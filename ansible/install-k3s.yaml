@@ -16,7 +16,8 @@
       # service-cidr: 10.52.0.0/16
       disable:
         - traefik
-      write-kubeconfig-mode: '0640'
+      # 0644: world-readable so the symlink in ~/.kube/config works for any user
+      write-kubeconfig-mode: '0644'
   pre_tasks:
     - name: Override k3s_ensure_directories_exist to avoid dirname on omit
       ansible.builtin.set_fact:
@@ -39,10 +40,9 @@
         mode: "0700"
         owner: "{{ ansible_env.USER | default(ansible_user_id) }}"
 
-    - name: Copy k3s kubeconfig to ~/.kube/config so unprivileged kubectl works
-      ansible.builtin.copy:
+    - name: Symlink k3s kubeconfig to ~/.kube/config so it stays fresh on every k3s restart/upgrade
+      ansible.builtin.file:
         src: /etc/rancher/k3s/k3s.yaml
         dest: "{{ ansible_env.HOME }}/.kube/config"
-        remote_src: true
-        mode: "0600"
-        owner: "{{ ansible_env.USER | default(ansible_user_id) }}"
+        state: link
+        force: true

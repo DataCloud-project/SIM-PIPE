@@ -27,7 +27,8 @@
 		}
 		const maybeMessage = (err as { message?: unknown }).message;
 		if (typeof maybeMessage === 'string') return maybeMessage;
-		const gqlMessage = (err as { response?: { errors?: { message?: string }[] } }).response?.errors?.[0]?.message;
+		const gqlMessage = (err as { response?: { errors?: { message?: string }[] } }).response
+			?.errors?.[0]?.message;
 		return gqlMessage ?? undefined;
 	};
 
@@ -171,13 +172,9 @@
 			console.log('Extracted workflow error message:', workflowMessage);
 			if (projectMessage) errorMessages.push(projectMessage);
 			if (workflowMessage) errorMessages.push(workflowMessage);
-			const errorBody = errorMessages.length > 0 ? errorMessages.join('\n') : 'Project creation failed.';
-			await displayModal(
-				'Project creation failed❌',
-				errorBody,
-				modalStore,
-				5000
-			);
+			const errorBody =
+				errorMessages.length > 0 ? errorMessages.join('\n') : 'Project creation failed.';
+			await displayModal('Project creation failed❌', errorBody, modalStore, 5000);
 		}
 		return true;
 	}

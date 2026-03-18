@@ -35,9 +35,58 @@ CLOUD_INIT_ISO="${NODE_NAME}-cloud.iso"
 
 TAP_INTERFACE="tap-${NODE_NAME}"
 
+# Directory on the host-mounted path where base OS images are cached.
+# This path survives pod restarts because /host-tmp-vm is a hostPath mount.
+IMAGE_CACHE_DIR="/host-tmp-vm/images"
+
 # Function: Log messages with timestamp
 log_message() {
  echo "$(date +'%-Y-%-m-%-d %H:%M:%S') [$1] $2"
+}
+
+# Ensure the base image for $1 OS type is present in IMAGE_CACHE_DIR,
+# downloading it on first use. Sets BASE_IMAGE_PATH to the resolved path.
+# Uses a lockdir to safely handle concurrent calls for the same OS type.
+ensure_os_image() {
+  local os="$1"
+  local dest="${IMAGE_CACHE_DIR}/${os}.qcow2"
+  local lock="${dest}.downloading"
+  mkdir -p "$IMAGE_CACHE_DIR"
+
+  if [ ! -f "$dest" ]; then
+    if mkdir "$lock" 2>/dev/null; then
+      # This process owns the download
+      local url
+      case "$os" in
+        "ubuntu-18") url="https://cloud-images.ubuntu.com/bionic/current/bionic-server-cloudimg-amd64.img" ;;
+        "ubuntu-20") url="https://cloud-images.ubuntu.com/focal/current/focal-server-cloudimg-amd64.img" ;;
+        "ubuntu-22") url="https://cloud-images.ubuntu.com/jammy/current/jammy-server-cloudimg-amd64.img" ;;
+        "ubuntu-24") url="https://cloud-images.ubuntu.com/noble/current/noble-server-cloudimg-amd64.img" ;;
+        *) rmdir "$lock"; log_message "ERROR" "Unsupported OS type: $os"; exit 1 ;;
+      esac
+      log_message "INFO" "Downloading $os base image (first use only, ~500 MB)..."
+      if wget -O "${dest}.tmp" "$url"; then
+        mv "${dest}.tmp" "$dest"
+        log_message "INFO" "Cached $os image at $dest"
+      else
+        rm -f "${dest}.tmp"
+        rmdir "$lock"
+        log_message "ERROR" "Failed to download $os image from $url"
+        exit 1
+      fi
+      rmdir "$lock"
+    else
+      # Another process is downloading the same image; wait for it to finish
+      log_message "INFO" "Waiting for concurrent download of $os image to complete..."
+      while [ -d "$lock" ]; do sleep 3; done
+      if [ ! -f "$dest" ]; then
+        log_message "ERROR" "Concurrent download of $os image failed."
+        exit 1
+      fi
+    fi
+  fi
+
+  BASE_IMAGE_PATH="$dest"
 }
 
 # Ensure Debian host bridge, NAT, and qemu-ifup/ifdown are configured.
@@ -48,23 +97,9 @@ if [ -x /app/setup-debian-host.sh ]; then
 fi
 
 select_os_image() {
-log_message "INFO" "Selecting pre-downloaded OS image for $OS..."
- base_image=""
- case "$OS" in
-"ubuntu-18") base_image=/app/images/ubuntu-18.qcow2 ;;
-"ubuntu-20") base_image=/app/images/ubuntu-20.qcow2 ;;
-"ubuntu-22") base_image=/app/images/ubuntu-22.qcow2 ;;
-"ubuntu-24") base_image=/app/images/ubuntu-24.qcow2 ;;
-
-*) log_message "ERROR" "Unsupported OS type: $OS"; exit 1 ;;
-esac
-
- if [ ! -f "$base_image" ]; then
-   log_message "ERROR" "Base image not found: $base_image"
-   exit 1
- fi
-
- qemu-img create -f qcow2 -F qcow2 -b "$base_image" "${QCOW2_IMAGE_FILE}" 10G
+  log_message "INFO" "Ensuring OS image is available for $OS..."
+  ensure_os_image "$OS"
+  qemu-img create -f qcow2 -F qcow2 -b "$BASE_IMAGE_PATH" "${QCOW2_IMAGE_FILE}" 10G
 }
 
 # Function: Fetch K3S cluster details
@@ -106,7 +141,7 @@ users:
 package_update: false
 package_upgrade: false
 packages:
-  - docker.io            
+  - docker.io
 
 runcmd:
   # Set ubuntu password

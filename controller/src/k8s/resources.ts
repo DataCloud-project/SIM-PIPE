@@ -168,6 +168,26 @@ export async function cleanupStaleResource(
   }
 
   await deleteKubeNode(nodeName);
+
+  // Delete the VMNode CRD so this node is not re-queued for cleanup on subsequent
+  // resources() polling calls (the status-patch above is not enough — the CRD must
+  // be removed, otherwise every poll sees status=shutdown and restarts cleanup).
+  try {
+    await k8sClient.customObjects.deleteNamespacedCustomObject(
+      'simpipe.sct.sintef.no',
+      'v1',
+      k8sNamespace,
+      'vmnodes',
+      nodeName,
+    );
+  } catch (error) {
+    const code = getStatusCode(error);
+    if (code !== 404) {
+      // eslint-disable-next-line no-console
+      console.warn(`cleanupStaleResource: failed to delete VMNode CRD for ${nodeName}`, error);
+    }
+  }
+
   return true;
 }
 
@@ -261,7 +281,10 @@ export async function resources(
         }
 
         const current = vmnode.spec.status?.toLowerCase?.();
-        if (current && current !== 'ready' && current !== 'running') {
+        // Only clean up truly stale nodes (provisioning/failed with no QEMU).
+        // Nodes with status 'shutdown' were explicitly stopped and must remain
+        // visible in the UI — do not delete their CRDs automatically.
+        if (current && current !== 'ready' && current !== 'running' && current !== 'shutdown') {
           cleanupPromises.push(
             cleanupStaleResource(vmnodeName, k8sClient, k8sNamespace)
               .then((removed) => {

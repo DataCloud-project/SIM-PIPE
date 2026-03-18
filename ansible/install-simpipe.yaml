@@ -14,12 +14,6 @@
         path: ../charts/simpipe/Chart.yaml
       register: simpipe_chart_local
 
-    - name: Remove potentially broken helm-diff plugin for root
-      ansible.builtin.file:
-        path: /root/.local/share/helm/plugins/helm-diff
-        state: absent
-
-
     - name: Install SIM-PIPE Helm chart (local if available, else remote)
       kubernetes.core.helm:
         name: simpipe

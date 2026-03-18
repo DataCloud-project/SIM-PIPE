@@ -16,11 +16,13 @@ BR_CIDR="${DEBIAN_BR_CIDR:-172.31.0.1/24}"
 BR_NET="${DEBIAN_BR_NET:-172.31.0.0/24}"
 WAN_IF="${DEBIAN_WAN_IF:-}"
 
-# If running inside a container with the host network namespace bind-mounted
-# at /host/proc/1/ns/net, mirror the nsenter pattern used by QEMU.
+# If running inside a container with host namespaces available, enter both the
+# host mount namespace (to pick up the host's iptables binary, e.g. iptables-nft
+# on Debian 12+) and the host network namespace.
+# The controller pod sets hostPID=true, so PID 1 is the host init process.
 NSENTER=""
 if [ -e /host/proc/1/ns/net ]; then
-  NSENTER="nsenter --net=/host/proc/1/ns/net --"
+  NSENTER="nsenter -t 1 -m -n --"
 fi
 
 # Auto-detect WAN_IF if not provided (uses default route in the

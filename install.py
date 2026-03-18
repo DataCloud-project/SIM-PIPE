@@ -37,28 +37,32 @@ def ensure_kubeconfig_env():
             if os.access(k3s_config, os.R_OK):
                 os.makedirs(kube_home, exist_ok=True)
                 try:
-                    import shutil
-                    shutil.copy2(k3s_config, kube_config)
-                    print(f"✅ Copied kubeconfig from {k3s_config} to {kube_config}")
+                    # Symlink instead of copy so ~/.kube/config always reflects
+                    # the current credentials after a k3s restart or upgrade.
+                    if os.path.islink(kube_config):
+                        os.unlink(kube_config)
+                    os.symlink(k3s_config, kube_config)
+                    print(f"✅ Linked kubeconfig: {kube_config} -> {k3s_config}")
                 except Exception as e:
-                    print(f"❌ Failed to copy kubeconfig: {e}")
+                    print(f"❌ Failed to link kubeconfig: {e}")
                     sys.exit(1)
             else:
                 print(f"❌ Cannot read {k3s_config} (permission denied).")
                 answer = input("Do you want to copy it using sudo? [y/N]: ").strip().lower()
                 if answer == 'y':
                     os.makedirs(kube_home, exist_ok=True)
-                    cp_cmd = f"sudo cp {k3s_config} {kube_config}"
-                    chown_cmd = f"sudo chown $(id -u):$(id -g) {kube_config}"
+                    # Use a symlink so future k3s restarts/upgrades don't leave stale credentials.
+                    chmod_cmd = f"sudo chmod 644 {k3s_config}"
+                    ln_cmd = f"sudo ln -sf {k3s_config} {kube_config}"
                     try:
-                        subprocess.run(cp_cmd, shell=True, check=True)
-                        subprocess.run(chown_cmd, shell=True, check=True)
-                        print(f"✅ Copied kubeconfig from {k3s_config} to {kube_config} with sudo.")
+                        subprocess.run(chmod_cmd, shell=True, check=True)
+                        subprocess.run(ln_cmd, shell=True, check=True)
+                        print(f"✅ Linked kubeconfig: {kube_config} -> {k3s_config}")
                     except subprocess.CalledProcessError as e:
-                        print(f"❌ Failed to copy kubeconfig with sudo: {e}")
+                        print(f"❌ Failed to link kubeconfig with sudo: {e}")
                         sys.exit(1)
                 else:
-                    print(f"You can manually run: sudo cp {k3s_config} {kube_config} && sudo chown $(id -u):$(id -g) {kube_config}")
+                    print(f"You can manually run: sudo chmod 644 {k3s_config} && sudo ln -sf {k3s_config} {kube_config}")
                     # Do not exit yet; maybe ~/.kube/config was created by Ansible
 
         # Now prefer ~/.kube/config if it exists
@@ -72,7 +76,7 @@ def ensure_kubeconfig_env():
         if not kubeconfig_value:
             print("❌ No kubeconfig detected at ~/.kube/config or /etc/rancher/k3s/k3s.yaml.")
             print("If you installed k3s with sudo, you may need to copy the kubeconfig manually:")
-            print(f"  sudo cp {k3s_config} ~/.kube/config && sudo chown $(id -u):$(id -g) ~/.kube/config")
+            print(f"  sudo chmod 644 {k3s_config} && sudo ln -sf {k3s_config} ~/.kube/config")
             print("Or re-run the Ansible playbook as your user.")
             sys.exit(1)
 
@@ -177,11 +181,6 @@ def install_tools_debian():
         env=env_with_kubeconfig,
     )
 
-    # Install helm diff for the current user
-    # (ansible will install it as well, but for root)
-    if not check_helm_diff_installed(silent=True):
-        install_helm_diff_plugin()
-
 
 def install_tools_mac():
     if not check_if_installed("brew"):
@@ -197,9 +196,6 @@ def install_tools_mac():
     print("⏳ Installing tools: " + ", ".join(tools) + "...")
 
     subprocess.run(["brew", "install", *tools], check=True)
-
-    if not check_helm_diff_installed(silent=True):
-        install_helm_diff_plugin()
 
     if check_tools_installed():
         print("🎉 Tools installed successfully.")
@@ -274,11 +270,6 @@ def install_or_upgrade_simpipe():
             )
         except subprocess.CalledProcessError as e:
             print(f"❌ Error while installing simpipe: {e}")
-
-
-def install_helm_diff_plugin():
-    print("ℹ️ Skipping helm-diff plugin (not required for SIM-PIPE).")
-
 
 def install_ansible_via_pip():
     """
