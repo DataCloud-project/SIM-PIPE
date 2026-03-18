@@ -93,15 +93,8 @@ async function upsertSecretValue(
   await k8sClient.core.replaceNamespacedSecret(name, namespace, existing);
 }
 
-function maskSecret(value: string): string | undefined {
-  const trimmed = value.trim();
-  if (!trimmed) return undefined;
-  if (trimmed.length <= 4) return '*'.repeat(trimmed.length);
-
-  const prefix = trimmed.slice(0, 2);
-  const suffix = trimmed.slice(-2);
-  const maskLength = Math.min(Math.max(trimmed.length - 4, 4), 12);
-  return `${prefix}${'*'.repeat(maskLength)}${suffix}`;
+function maskSecret(): string {
+  return '**************';
 }
 
 function toState(value: string): ApiTokenState {
@@ -110,7 +103,7 @@ function toState(value: string): ApiTokenState {
 
   return {
     hasValue: true,
-    maskedPreview: maskSecret(trimmed),
+    maskedPreview: maskSecret(),
   };
 }
 

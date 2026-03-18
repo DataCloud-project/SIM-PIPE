@@ -298,7 +298,9 @@
 	// get modified workflow template with updated template inputs
 	function getModifiedWorkflowTemplate(): any {
 		const newWorkflowTemplate = argoWorkflowTemplate;
+		console.log('newWorkflowTemplate begin', newWorkflowTemplate);
 		newWorkflowTemplate.spec.templates = currentArgoWorkflowTemplates;
+
 		// eslint-disable-next-line @typescript-eslint/no-use-before-define
 		if (selectedNodeName !== 'default') {
 			newWorkflowTemplate.spec.templates = currentArgoWorkflowTemplates.map((tpl: any) => {
@@ -334,6 +336,7 @@
 				generateName: `${cleanedPrefix}-newWorkflowTemplate.metadata.generateName-`
 			};
 		}
+		console.log('newWorkflowTemplate', newWorkflowTemplate);
 		return newWorkflowTemplate;
 	}
 

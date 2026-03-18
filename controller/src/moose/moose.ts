@@ -67,18 +67,6 @@ async function makeDPVCall(text: string): Promise<string> {
     schema: mooseDpvSchema,
   };
 
-  // eslint-disable-next-line no-console
-  console.log('full request (keys are hidden):', JSON.stringify({
-    json: body,
-    responseType: 'json',
-    headers: {
-      accept: 'application/json',
-      'X-LLM-API-Key': 'openRouterApiKey',
-      'X-API-Key': 'mooseApiKey',
-      'Content-Type': 'application/json',
-    },
-  }));
-
   try {
     const response: { body: { job_id: string } } = await got.post(url, {
       json: body,

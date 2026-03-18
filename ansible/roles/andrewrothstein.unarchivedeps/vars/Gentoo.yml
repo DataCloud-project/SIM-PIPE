@@ -1,9 +1,0 @@
----
-unarchivedeps_all_pkgs:
-  - app-arch/bzip2
-  - app-arch/gzip
-  - app-arch/unzip
-unarchivedeps_tar_pkgs:
-  - app-arch/tar
-unarchivedeps_xz_pkgs:
-  - app-arch/xz-utils

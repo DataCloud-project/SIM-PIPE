@@ -3,7 +3,8 @@ import type { ModalSettings } from '@skeletonlabs/skeleton';
 export async function displayModal(
 	title: string,
 	body: string,
-	modalStore: { trigger: (arg0: ModalSettings) => void; close: () => void }
+	modalStore: { trigger: (arg0: ModalSettings) => void; close: () => void },
+	timeout: number = 2000
 ): Promise<void> {
 	const modalSettings: ModalSettings = {
 		type: 'alert',
@@ -12,7 +13,7 @@ export async function displayModal(
 	};
 	modalStore.trigger(modalSettings);
 	await new Promise((resolve) => {
-		setTimeout(resolve, 2000);
+		setTimeout(resolve, timeout);
 	});
 	modalStore.close();
 }

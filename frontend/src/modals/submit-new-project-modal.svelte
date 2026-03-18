@@ -123,15 +123,13 @@
 			error: 'Workflow template creation not attempted',
 			name: 'none'
 		};
-
 		if (inputResult.error) {
-			await displayModal('Failed to parse template❌', inputResult.error, modalStore);
+			createWorkflowResponse.error = `'Failed to parse template❌': ${inputResult.error}`;
 			await onClose({ createProjectResponse, createWorkflowResponse });
 			modalStore.close();
 			return;
 		}
-
-		modalStore.close(); // Close the modal after submission
+		modalStore.close();
 
 		if (inputResult.template && Object.keys(inputResult.template).length > 0) {
 			workflowTemplate = inputResult.template;
@@ -139,26 +137,8 @@
 			if (createProjectResponse.status === 200 && createProjectResponse.project.id !== 'none') {
 				projectId = createProjectResponse.project.id;
 				createWorkflowResponse = await createWorkflowTemplate();
-				await (createWorkflowResponse.status === 200 && createWorkflowResponse.name !== 'none'
-					? displayModal(
-							'Project created!🎉',
-							`Project "${createProjectResponse.project.name}" have been created successfully.`,
-							modalStore
-						)
-					: displayModal(
-							'Failed: Workflow template creation failed❌',
-							`Project "${createProjectResponse.project.name}" was created successfully, but Workflow template "${createWorkflowResponse.name}" failed to be created.`,
-							modalStore
-						));
-			} else {
-				await displayModal(
-					'Project not created❌',
-					createProjectResponse.error || 'Project creation failed.',
-					modalStore
-				);
 			}
 		}
-
 		await onClose({ createProjectResponse, createWorkflowResponse });
 	}
 </script>

@@ -13,27 +13,29 @@
 	import allDryRunsQuery from '../../queries/get_all_dryruns.js';
 	import deleteDryRunMutation from '../../queries/delete_dry_run.js';
 	import deleteWorkflowTemplateMutation from '../../queries/delete_workflow_template.js';
-	import Alert from '$lib/modules/alert.svelte';
 	import { displayModal } from '$utils/modal-utils.js';
 
 	const modalStore = getModalStore();
 
-	let visibleAlert: boolean = false;
-	let alertTitle: string = 'Alert!';
-	let alertMessage: string = 'Alert!';
-	let alertVariant: string = 'variant-ghost-surface';
+	const extractErrorMessage = (err: unknown): string | undefined => {
+		if (!err) return undefined;
+		if (typeof err === 'string') {
+			const jsonMessageMatch = err.match(/"message":"([^"]+)"/);
+			if (jsonMessageMatch?.[1]) return jsonMessageMatch[1];
+			const splitIdx = err.indexOf(':{');
+			return splitIdx > 0 ? err.slice(0, splitIdx) : err;
+		}
+		const maybeMessage = (err as { message?: unknown }).message;
+		if (typeof maybeMessage === 'string') return maybeMessage;
+		const gqlMessage = (err as { response?: { errors?: { message?: string }[] } }).response?.errors?.[0]?.message;
+		return gqlMessage ?? undefined;
+	};
 
 	$: reactiveProjectsList = $projectsList;
 	let loadingError: string | null;
 
 	const checkboxes: Record<string, boolean> = {};
 	let dryRunCounts: Record<string, number> = {};
-
-	function shortErrorMessage(error: string): string {
-		if (!error) return 'Unknown error';
-		const firstLine = error.split('\n')[0]?.trim();
-		return firstLine && firstLine.length > 0 ? firstLine : error;
-	}
 
 	const getProjectsList = async (): Promise<Project[]> => {
 		try {
@@ -144,35 +146,40 @@
 	): Promise<boolean> {
 		console.log('createProjectResponse:', createProjectResponse);
 		console.log('createWorkflowResponse:', createWorkflowResponse);
-		visibleAlert = false;
-		let hasErrors = false;
-		if (createProjectResponse.status === 200) {
+
+		if (createProjectResponse.status === 200 && createProjectResponse.project.id !== 'none') {
+			await (createWorkflowResponse.status === 200 && createWorkflowResponse.name !== 'none'
+				? displayModal(
+						'Project created!🎉',
+						`Project "${createProjectResponse.project.name}" has been created successfully.`,
+						modalStore
+					)
+				: displayModal(
+						'Failed: Workflow template creation failed❌',
+						`Project "${createProjectResponse.project.name}" was created successfully, but Workflow template "${createWorkflowResponse.name}" failed to be created.`,
+						modalStore
+					));
 			await requestGraphQLClient<{ projects: Project[] }>(allProjectsQuery).then((response) => {
 				reactiveProjectsList = response.projects;
 				$projectsList = response.projects;
 			});
-			if (createWorkflowResponse.status === 200) {
-				visibleAlert = true;
-				alertVariant = 'variant-ghost-success';
-				alertTitle = 'Project created!🎉';
-				alertMessage = `Project ${createProjectResponse.project.name} and workflow template ${createWorkflowResponse.name} created`;
-			} else {
-				hasErrors = true;
-			}
 		} else {
-			hasErrors = true;
+			const errorMessages: string[] = [];
+			const projectMessage = extractErrorMessage(createProjectResponse.error);
+			const workflowMessage = extractErrorMessage(createWorkflowResponse.error);
+			console.log('Extracted project error message:', projectMessage);
+			console.log('Extracted workflow error message:', workflowMessage);
+			if (projectMessage) errorMessages.push(projectMessage);
+			if (workflowMessage) errorMessages.push(workflowMessage);
+			const errorBody = errorMessages.length > 0 ? errorMessages.join('\n') : 'Project creation failed.';
+			await displayModal(
+				'Project creation failed❌',
+				errorBody,
+				modalStore,
+				5000
+			);
 		}
-
-		if (hasErrors) {
-			const errorModal: ModalSettings = {
-				type: 'alert',
-				title: 'Project not created',
-				body: `Project was not created because workflow template creation failed: ${shortErrorMessage(createWorkflowResponse.error || createProjectResponse.error)}`
-			};
-			modalStore.trigger(errorModal);
-		}
-
-		return hasErrors;
+		return true;
 	}
 
 	function onCreateNewProject(): void {
@@ -344,8 +351,6 @@
 		{/await}
 	</div>
 </div>
-
-<Alert bind:visibleAlert bind:alertTitle bind:alertMessage bind:alertVariant />
 
 <style>
 	.table.table {
