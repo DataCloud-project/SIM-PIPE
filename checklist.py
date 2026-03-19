@@ -249,7 +249,7 @@ def check_simpipe_deployment_presence():
                 print("❌ No kubeconfig found. Set KUBECONFIG before checking deployments.")
                 return False
         output = subprocess.check_output(
-            ["helm", "list", "--deployed", "--output", "json"],
+            ["helm", "list", "--deployed", "--namespace", "default", "--output", "json"],
             env=env,
         )
         deployments = json.loads(output)

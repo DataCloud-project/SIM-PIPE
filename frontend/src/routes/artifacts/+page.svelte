@@ -2,8 +2,8 @@
 	import { getModalStore } from '@skeletonlabs/skeleton';
 	import type { ModalSettings } from '@skeletonlabs/skeleton';
 	import { DownloadIcon, Trash2Icon, UploadIcon, XSquareIcon } from 'svelte-feather-icons';
-	import Artifacts from './artifacts.svelte';
 	import { get } from 'svelte/store';
+	import Artifacts from './artifacts.svelte';
 	import { buckets as bucketsStore, reactiveBuckets, selectedBucket } from '$stores/stores';
 	import type { ArtifactHierarchyType } from '$typesdefinitions';
 	import Alert from '$lib/modules/alert.svelte';
@@ -213,6 +213,7 @@
 			const url = findArtifactUrl(artifact.bucket, artifact.path);
 			if (!url) {
 				failures.push(`${artifact.bucket}/${artifact.path}`);
+				// eslint-disable-next-line no-continue
 				continue;
 			}
 
