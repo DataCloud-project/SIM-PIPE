@@ -30,6 +30,9 @@ OS=${4:-"ubuntu-20"}
 K3S_TOKEN_SECRET=${5:-"k3s-cluster-secret"}
 
 TIMEOUT=${6:-600}
+K3S_VERSION=${7:-""}  # Pin a version (e.g. v1.29.0+k3s1) or leave empty for latest stable
+# Use stable channel when no version is pinned; otherwise pin to the provided version
+K3S_VERSION_FLAG="${K3S_VERSION:+INSTALL_K3S_VERSION=}${K3S_VERSION:-INSTALL_K3S_CHANNEL=stable}"
 QCOW2_IMAGE_FILE="${NODE_NAME}-os.qcow2"
 CLOUD_INIT_ISO="${NODE_NAME}-cloud.iso"
 
@@ -158,7 +161,7 @@ runcmd:
   - iptables -A INPUT -p udp --dport 8472 -j ACCEPT
 
   # Start K3s agent only after Docker is ready
-  - curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION=v1.33.4+k3s1 INSTALL_K3S_EXEC="agent --docker" K3S_URL=${K3S_SERVER_URL} K3S_TOKEN=${K3S_TOKEN} sh -
+  - curl -sfL https://get.k3s.io | ${K3S_VERSION_FLAG} INSTALL_K3S_EXEC="agent --docker --node-name ${NODE_NAME}" K3S_URL=${K3S_SERVER_URL} K3S_TOKEN=${K3S_TOKEN} sh -
 EOF
 
 IP_ADDR=${9:-"172.31.0.11"}

@@ -9,6 +9,9 @@ CPUS=${3:-2}
 OS=${4:-"ubuntu-20"}
 K3S_TOKEN_SECRET=${5:-"k3s-cluster-secret"}
 TIMEOUT=${6:-1200}
+K3S_VERSION=${7:-""}  # Pin a version or leave empty for latest stable
+# Use stable channel when no version is pinned; otherwise pin to the provided version
+K3S_VERSION_FLAG="${K3S_VERSION:+INSTALL_K3S_VERSION=}${K3S_VERSION:-INSTALL_K3S_CHANNEL=stable}"
 
 # File Paths
 QCOW2_IMAGE_FILE="${NODE_NAME}-os.qcow2"
@@ -148,8 +151,8 @@ runcmd:
   # Remove incorrect default route via lo (workaround for netplan bug)
   - bash -c 'ip route del default via 172.30.0.1 dev lo || true'
 
-  # Start K3s agent (let k3s/flannel pick the interface/IP based on the
-  - curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION=v1.33.4+k3s1 INSTALL_K3S_EXEC="agent --docker" K3S_URL=${K3S_SERVER_URL} K3S_TOKEN=${K3S_TOKEN} sh - 
+  # Start K3s agent (let k3s/flannel pick the interface/IP based on the node name)
+  - curl -sfL https://get.k3s.io | ${K3S_VERSION_FLAG} INSTALL_K3S_EXEC="agent --docker --node-name ${NODE_NAME}" K3S_URL=${K3S_SERVER_URL} K3S_TOKEN=${K3S_TOKEN} sh -
 EOF
 
 # Network Config (Static IP within the Bridge Range, robust NIC matching)

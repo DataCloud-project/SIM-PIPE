@@ -14,7 +14,7 @@ controller:
     #pullPolicy: IfNotPresent
     pullPolicy: Always
     # Overrides the image tag whose default is the chart appVersion.
-    tag: "0.5.7-rc.4"
+    tag: "0.6-rc.2"
 
   imagePullSecrets: []
   nameOverride: ""
@@ -117,7 +117,7 @@ frontend:
     #pullPolicy: IfNotPresent
     pullPolicy: Always
     # Overrides the image tag whose default is the chart appVersion.
-    tag: "0.5.7-rc.4"
+    tag: "0.6-rc.2"
 
   imagePullSecrets: []
   nameOverride: ""
@@ -368,8 +368,8 @@ cadvisor:
   enabled: true
   nameOverride: simpipe-cadvisor
 
-  simpipeRefreshInterval: 7s
-  simpipeScrapeTimeout: 7s
+  simpipeRefreshInterval: 3s
+  simpipeScrapeTimeout: 2s
 
   container:
     additionalArgs:
