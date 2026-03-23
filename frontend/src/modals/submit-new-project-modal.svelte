@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { getModalStore } from '@skeletonlabs/skeleton';
+	import { getModalStore, type ModalSettings } from '@skeletonlabs/skeleton';
 	import yaml from 'js-yaml';
 	import type { SvelteComponent } from 'svelte';
 
@@ -8,12 +8,16 @@
 	import createProjectMutation from '$queries/create_project.js';
 	import createWorkflowTemplateMutation from '$queries/create_workflow_template.js';
 	import { cBase, cForm, cHeader } from '$styles/styles.js';
+	import { displayModal } from '$utils/modal-utils.js';
 
 	// Props - Exposes parent props to this component
 	export let parent: SvelteComponent;
 
 	// modalStore is a store that is used to trigger modals
 	const modalStore = getModalStore();
+
+	// Keep a reference to the modal response handler before the modal is closed
+	let responseHandler: ((response: any) => void) | undefined;
 
 	// variables
 	let projectName: string = '';
@@ -75,65 +79,67 @@
 	}
 
 	// handle input file
-	async function handleInputFile(): Promise<JSON> {
-		let template: JSON = {} as JSON;
+	async function handleInputFile(): Promise<{ template: JSON | undefined; error?: string }> {
+		let template: JSON | undefined;
 		const fileText = await inputFilesList[0].text();
 		if (fileText !== '') {
 			try {
 				template = JSON.parse(fileText) as JSON;
 			} catch {
-				template = yaml.load(fileText) as JSON;
+				try {
+					template = yaml.load(fileText) as JSON;
+				} catch (error) {
+					// Return error message for YAML parsing
+					return {
+						template: undefined,
+						error: error instanceof Error ? error.message : 'Invalid YAML'
+					};
+				}
 			}
 		}
-		return template;
+		return { template };
 	}
 
 	async function onClose(response: any): Promise<void> {
-		if ($modalStore[0] && typeof $modalStore[0].response === 'function') {
-			$modalStore[0].response(response);
-		}
+		const responder = responseHandler ?? $modalStore[0]?.response;
+		if (typeof responder === 'function') responder(response);
 	}
 
 	async function onSubmit(): Promise<void> {
-		const inputPromise = handleInputFile();
+		// First, parse the input file
+		const inputResult = await handleInputFile();
 
-		const createProjectPromise = createProject();
+		// Capture the current modal's response handler before the modal closes
+		responseHandler = $modalStore[0]?.response;
 
-		const [inputResponse, createProjectResponse] = await Promise.all([
-			inputPromise,
-			createProjectPromise
-		]);
-
-		if (createProjectResponse.status === 200) {
-			projectId = createProjectResponse.project.id;
-			workflowTemplate = inputResponse;
-
-			if (Object.keys(workflowTemplate).length > 0) {
-				const createWorkflowPromise = createWorkflowTemplate();
-				const [createWorkflowResponse] = await Promise.all([createWorkflowPromise]);
-
-				await onClose({ createProjectResponse, createWorkflowResponse });
-			} else {
-				const createWorkflowResponse = {
-					status: 204,
-					error: 'no workflow template provided',
-					name: 'none'
-				};
-				await onClose({ createProjectResponse, createWorkflowResponse });
-			}
-		} else {
-			await onClose({
-				createProjectResponse,
-				createWorkflowResponse: {
-					status: 500,
-					error: 'never created workflow template due to previous errors',
-					name: 'none'
-				}
-			});
+		// Default responses so the parent always gets a payload and can refresh
+		let createProjectResponse = {
+			status: 500,
+			error: 'Project creation not attempted',
+			project: { name: 'none', id: 'none' }
+		};
+		let createWorkflowResponse = {
+			status: 500,
+			error: 'Workflow template creation not attempted',
+			name: 'none'
+		};
+		if (inputResult.error) {
+			createWorkflowResponse.error = `'Failed to parse template❌': ${inputResult.error}`;
+			await onClose({ createProjectResponse, createWorkflowResponse });
+			modalStore.close();
+			return;
 		}
-
-		// close the modal
 		modalStore.close();
+
+		if (inputResult.template && Object.keys(inputResult.template).length > 0) {
+			workflowTemplate = inputResult.template;
+			createProjectResponse = await createProject();
+			if (createProjectResponse.status === 200 && createProjectResponse.project.id !== 'none') {
+				projectId = createProjectResponse.project.id;
+				createWorkflowResponse = await createWorkflowTemplate();
+			}
+		}
+		await onClose({ createProjectResponse, createWorkflowResponse });
 	}
 </script>
 

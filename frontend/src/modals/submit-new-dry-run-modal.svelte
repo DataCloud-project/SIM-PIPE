@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { getModalStore, FileButton } from '@skeletonlabs/skeleton';
-	import type { ModalSettings } from '@skeletonlabs/skeleton';
 	import type { SvelteComponent } from 'svelte';
 
+	import { onMount } from 'svelte';
 	import { requestGraphQLClient } from '$lib/graphqlUtils.js';
 
 	import refreshProjectDetails from '$lib/refresh_runs.js';
@@ -10,8 +10,10 @@
 	import allDryRunsQuery from '$queries/get_all_dryruns.js';
 	import { selectedArtifact, selectedProject } from '$stores/stores.js';
 	import { cBase, cForm, cHeader } from '../styles/styles.js';
-	import type { ArtifactHierarchyType, Project } from '$typesdefinitions';
+	import type { ArtifactHierarchyType, Project, Resource } from '$typesdefinitions';
 	import ArtifactBrowser from './artifact-browser.svelte';
+	import allResourcesQuery from '$queries/get_all_resources.js';
+	import { displayModal } from '$utils/modal-utils.js';
 
 	let isOverlayOpen = false;
 	let selectedTemplateTaskName = '';
@@ -34,9 +36,8 @@
 	const inputdata: { [task_name: string]: { [template_task_artifact_index: number]: InputData } } =
 		{};
 
-	const argoWorkflowTemplate = $selectedProject?.workflowTemplates[0].argoWorkflowTemplate;
-	const currentArgoWorkflowTemplates = argoWorkflowTemplate.spec.templates;
-	$: console.log('currentArgoWorkflowTemplate', currentArgoWorkflowTemplates);
+	const argoWorkflowTemplate = $selectedProject?.workflowTemplates[0]?.argoWorkflowTemplate;
+	const currentArgoWorkflowTemplates = argoWorkflowTemplate?.spec?.templates;
 
 	type InputData = {
 		template_task_name: string;
@@ -121,7 +122,6 @@
 		artifact_name: string,
 		task_artifact_index: number
 	): void {
-		console.log('openOverlay');
 		selectedTemplateTaskName = template_task_name;
 		selectedTemplateTaskArtifactName = artifact_name;
 		selectedTaskArtifactIndex = task_artifact_index;
@@ -129,7 +129,6 @@
 	}
 
 	const closeOverlay = (): void => {
-		console.log('closeOverlay');
 		isOverlayOpen = false;
 		$selectedArtifact = undefined;
 	};
@@ -159,7 +158,6 @@
 			template_task_artifact_name: string;
 		};
 	}): void {
-		console.log('triggerInsertArtifactInput');
 		const selectedArtifact = event.detail.selected_artifact;
 		const selectedTemplateTaskName = event.detail.template_task_name;
 		const selectedTemplateTaskArtifactName = event.detail.template_task_artifact_name;
@@ -200,7 +198,6 @@
 			inputdata[selectedTemplateTaskName] = [];
 		}
 		inputdata[selectedTemplateTaskName][selectedTemplateTaskArtifactIndex] = inputdataData;
-		console.log('handleMessage inputdata', inputdata);
 	}
 
 	async function triggerInsertRawInput(
@@ -209,7 +206,6 @@
 		task_artifact_index: number
 	): Promise<void> {
 		// when a file is uploaded, the raw input is updated similarly to handleMessage event from the ArtifactBrowser
-		console.log('triggerInsertRawInput');
 		const selectedTemplateTaskName = template_task_name;
 		const selectedTemplateTaskArtifactName = template_artifact_name;
 		const selectedTemplateTaskArtifactIndex = task_artifact_index;
@@ -230,26 +226,29 @@
 			inputdata[selectedTemplateTaskName] = [];
 		}
 		inputdata[selectedTemplateTaskName][selectedTemplateTaskArtifactIndex] = inputdataData;
-
 		const template = currentArgoWorkflowTemplates.find(
 			(template: any) => template.name === selectedTemplateTaskName
 		);
+		if (!template?.inputs?.artifacts) {
+			console.warn('No inputs found for template', selectedTemplateTaskName);
+			return;
+		}
+
 		const inputArtifact = template.inputs.artifacts.find(
 			(artifact: any) => artifact.name === selectedTemplateTaskArtifactName
 		);
-		// pop inputArtifact.s3
+		if (!inputArtifact) {
+			console.warn('No matching artifact found on template', selectedTemplateTaskArtifactName);
+			return;
+		}
+
 		if ('s3' in inputArtifact) {
 			delete inputArtifact.s3;
 		}
 		inputArtifact.raw = { data: text };
-		currentArgoWorkflowTemplates
-			.find((template: any) => template.name === selectedTemplateTaskName)
-			.inputs.artifacts.find(
-				(artifact: any) => artifact.name === selectedTemplateTaskArtifactName
-			).raw = inputArtifact.raw;
 	}
 
-	/* 
+	/*
 	function createDefaultTemplateContainerRawInput(): TemplateContainerRawInput {
 		return {
 			artifacts: [
@@ -277,63 +276,92 @@
 	} */
 
 	function parsetemplateTaskList(): Task[] {
-		// disabling; could not resolve eslint error  Unsafe usage of optional chaining. If it short-circuits with 'undefined' the evaluation will throw TypeError  55:53  warning  Unexpected any. Specify a different type
+		const workflowTemplates = $selectedProject?.workflowTemplates;
+		const workflowTemplate = workflowTemplates?.[0]?.argoWorkflowTemplate;
 		const {
 			spec: { templates }
-		} = $selectedProject?.workflowTemplates[0]?.argoWorkflowTemplate;
-		// console.log(templates);
-		// dag or steps?
+		} = workflowTemplate;
 		const dag = templates.find((template: any) => template.dag);
 		const steps = templates.find((template: any) => template.steps);
-		// console.log('dag', dag); array of tasks
-		// console.log('steps', steps); array of arrays of tasks
 		let tasks: Task[] = [];
 		if (dag) {
-			console.log('dag', dag);
 			tasks = dag.dag.tasks;
 		} else if (steps) {
-			console.log('steps', steps);
-			const tasks = [];
 			for (const step of steps.steps) {
 				tasks.push(...step);
 			}
 		}
 		// extract input artifacts from template
 		templates.forEach((template: { name: string; inputs: any }) => {
-			templateContainerInputs[template.name] = template.inputs;
+			templateContainerInputs[template.name] = template.inputs ?? {};
 		});
-		console.log('tasks', tasks);
-		console.log('templateContainerInputs', templateContainerInputs);
 		return tasks;
 	}
-	const templateTaskList = parsetemplateTaskList() || [];
+	// const templateTaskList = parsetemplateTaskList() || [];
+	$: templateTaskList = parsetemplateTaskList() || [];
 
 	// get modified workflow template with updated template inputs
-	function getModifiedWorkflowTemplate2(): any {
+	function getModifiedWorkflowTemplate(): any {
 		const newWorkflowTemplate = argoWorkflowTemplate;
+		console.log('newWorkflowTemplate begin', newWorkflowTemplate);
 		newWorkflowTemplate.spec.templates = currentArgoWorkflowTemplates;
-		// console.log('originalWorkflowTemplate', argoWorkflowTemplate);
-		// console.log('newWorkflowTemplate', newWorkflowTemplate);
-		newWorkflowTemplate.metadata = { generateName: newWorkflowTemplate.metadata.generateName };
+
+		// eslint-disable-next-line @typescript-eslint/no-use-before-define
+		if (selectedNodeName !== 'default') {
+			newWorkflowTemplate.spec.templates = currentArgoWorkflowTemplates.map((tpl: any) => {
+				if (tpl.steps) {
+					return tpl;
+				}
+
+				return {
+					...tpl,
+					nodeSelector: {
+						// eslint-disable-next-line @typescript-eslint/no-use-before-define
+						'kubernetes.io/hostname': selectedNodeName
+					}
+				};
+			});
+		}
+		// Modify the generateName based on user input
+		// eslint-disable-next-line @typescript-eslint/no-use-before-define, eqeqeq
+		if (dryRunNamePrefix == '') {
+			newWorkflowTemplate.metadata = {
+				generateName: newWorkflowTemplate.metadata.generateName
+			};
+		} else {
+			// Sanitize the prefix: lowercase, replace invalid chars with hyphens
+			// eslint-disable-next-line @typescript-eslint/no-use-before-define
+			const cleanedPrefix = dryRunNamePrefix
+				.toLowerCase()
+				.replaceAll(/[^\da-z-]/g, '-')
+				.replaceAll(/^-+|-+$/g, '')
+				.slice(0, 40);
+
+			newWorkflowTemplate.metadata = {
+				generateName: `${cleanedPrefix}-newWorkflowTemplate.metadata.generateName-`
+			};
+		}
+		console.log('newWorkflowTemplate', newWorkflowTemplate);
 		return newWorkflowTemplate;
 	}
 
 	async function onCreateDryRunSubmit(): Promise<void> {
 		modalStore.close();
 
-		const modifiedWorkflowTemplate = await getModifiedWorkflowTemplate2();
-		// const modifiedWorkflowTemplate = await newWorkflowTemplate(argoWorkflowTemplate);
+		const modifiedWorkflowTemplate = await getModifiedWorkflowTemplate();
 
 		const createDryRunMutationVariables = {
 			input: {
 				projectId: $selectedProject?.id,
-				argoWorkflow: modifiedWorkflowTemplate
+				argoWorkflow: modifiedWorkflowTemplate,
+				// eslint-disable-next-line @typescript-eslint/no-use-before-define
+				nodeName: selectedNodeName
 			}
 		};
 
-		// TODO: why is this here? Can this following line be removed?
-		// eslint-disable-next-line no-promise-executor-return
-		await new Promise((resolve) => setTimeout(resolve, 1500));
+		await new Promise((resolve) => {
+			setTimeout(resolve, 1500);
+		});
 
 		try {
 			const responseCreateDryRun: { createDryRun: { id: string } } = await requestGraphQLClient(
@@ -345,43 +373,43 @@
 				projectId: $selectedProject?.id
 			});
 			$selectedProject = response.project;
-			const createDryRunMessageModal: ModalSettings = {
-				type: 'alert',
-				title: 'New dry run created&#10024;!',
-				body: `New dry run ID: ${responseCreateDryRun?.createDryRun?.id}`
-			};
-			modalStore.trigger(createDryRunMessageModal);
+			await displayModal(
+				'New dry run created!🎉',
+				`New dry run ID: ${responseCreateDryRun?.createDryRun?.id}`,
+				modalStore
+			);
 
-			// eslint-disable-next-line no-promise-executor-return
-			await new Promise((resolve) => setTimeout(resolve, 1500));
-			modalStore.close();
 			await refreshProjectDetails();
 			modalStore.clear();
 		} catch (error) {
-			// TODO: handle error
 			console.error('Failed to create dry run', error);
-			let createDryRunMessageModal: ModalSettings;
-			// eslint-disable-next-line unicorn/prefer-ternary
-			if ((error as Error).message.includes('PayloadTooLargeError')) {
-				createDryRunMessageModal = {
-					type: 'alert',
-					title: 'Failed!',
-					body: 'Input file size exceeded limit (90KB)!'
-				};
-			} else {
-				createDryRunMessageModal = {
-					type: 'alert',
-					title: 'Failed to create dry run!',
-					body: 'Check dry run inputs!'
-				};
-			}
-			modalStore.trigger(createDryRunMessageModal);
-
-			// eslint-disable-next-line no-promise-executor-return
-			await new Promise((resolve) => setTimeout(resolve, 2500));
-			modalStore.close();
+			await ((error as Error).message.includes('PayloadTooLargeError')
+				? displayModal(
+						'Failed to create dry run❌',
+						'Input file size exceeded limit (90KB)!',
+						modalStore
+					)
+				: displayModal('Failed to create dry run❌', 'Check dry run inputs!', modalStore));
 		}
 	}
+
+	let availableNodes: Resource[] = [];
+	let loadingAvailableNodes = true;
+	onMount(async () => {
+		try {
+			const allResourcesResponse: { resources: Resource[] } =
+				await requestGraphQLClient(allResourcesQuery);
+			availableNodes = allResourcesResponse.resources;
+			loadingAvailableNodes = false;
+		} catch (error) {
+			console.error('Error getting available nodes:', error);
+			loadingAvailableNodes = false;
+			availableNodes = []; // fail safe: empty array
+		}
+	});
+
+	let selectedNodeName = 'default';
+	let dryRunNamePrefix = '';
 
 	$: console.log('inputdata', inputdata);
 </script>
@@ -392,6 +420,21 @@
 		<article>{$modalStore[0].body ?? '(body missing)'}</article>
 		<form class="modal-form {cForm}">
 			{#if templateTaskList.length > 0}
+				{#if loadingAvailableNodes}
+					<p>Loading nodes...</p>
+				{:else if availableNodes.filter((n) => n.status?.toLowerCase() === 'running').length === 0}
+					<p>No running nodes available</p>
+				{:else}
+					<label for="node-select">Select node to execute the dry run:</label>
+					<select id="node-select" bind:value={selectedNodeName}>
+						<option value="default" disabled selected>Select a node...</option>
+						{#each availableNodes.filter((n) => n.status?.toLowerCase() === 'running') as node}
+							<option value={node.name}>
+								{node.name} - {node.os} ({node.cpus} CPUs, {node.memory} MB)
+							</option>
+						{/each}
+					</select>
+				{/if}
 				{#each templateTaskList as task, i}
 					<div class="ml-5">
 						<!-- svelte-ignore a11y-label-has-associated-control -->
@@ -413,50 +456,47 @@
 								</span></label
 							>
 						{/if}
-						{#if Object.keys(templateContainerInputs[task.name]).length > 0}
+						{#if Object.keys(templateContainerInputs[task.template] || {}).length > 0}
 							<br />
 							<!-- svelte-ignore a11y-label-has-associated-control -->
 							<label>Upload Input files </label>
-							{#each templateContainerInputs[task.name].artifacts || [] as artifact, k}
+							{#each templateContainerInputs[task.template]?.artifacts || [] as artifact, k}
 								<label for={artifact.name}>
 									<span>
-										<div class="grid grid-rows-2 grid-cols-3 justify-items-center items-center">
-											<div>
+										<div class="flex flex-col gap-2 w-full">
+											<div class="text-left">
 												<span>{artifact.name}</span>
 											</div>
-											<div>
-												{#if inputdata[task.name] && inputdata[task.name][k] && inputdata[task.name][k].is_raw}
-													<span>{inputdata[task.name][k].raw?.filename}</span>
+											<div class="text-left text-sm">
+												{#if inputdata[task.template] && inputdata[task.template][k] && inputdata[task.template][k].is_raw}
+													<span>{inputdata[task.template][k].raw?.filename}</span>
 												{:else}
 													<span></span>
 												{/if}
 											</div>
-											<div>
-												{#if inputdata[task.name] && inputdata[task.name][k] && inputdata[task.name][k].is_artifact}
+											<div class="text-left text-sm">
+												{#if inputdata[task.template] && inputdata[task.template][k] && inputdata[task.template][k].is_artifact}
 													<span
-														>{inputdata[task.name][k].artifact?.artifact_bucket}
-														{inputdata[task.name][k].artifact?.artifact_path}</span
+														>{inputdata[task.template][k].artifact?.artifact_bucket}
+														{inputdata[task.template][k].artifact?.artifact_path}</span
 													>
 												{:else}
 													<span></span>
 												{/if}
 											</div>
-											<div></div>
-											<div>
+											<div class="flex items-center gap-3 text-left">
 												<FileButton
 													id={artifact.name}
 													name={artifact.name}
 													bind:files={currentinputfiles}
-													on:change={() => triggerInsertRawInput(task.name, artifact.name, k)}
+													on:change={() => triggerInsertRawInput(task.template, artifact.name, k)}
 												>
 													Upload local file
 												</FileButton>
-											</div>
-											<div>
 												<button
 													type="button"
 													class="btn variant-soft-primary"
-													on:click={() => openOverlay(task.name, artifact.name, k)}
+													on:click={() => openOverlay(task.template, artifact.name, k)}
 													>Browse artifacts</button
 												>
 											</div>

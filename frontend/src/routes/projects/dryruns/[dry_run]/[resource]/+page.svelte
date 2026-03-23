@@ -1,8 +1,9 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { ProgressBar, CodeBlock } from '@skeletonlabs/skeleton';
+	import { ProgressBar, CodeBlock, getModalStore } from '@skeletonlabs/skeleton';
 	import { AlertTriangleIcon, ZoomInIcon } from 'svelte-feather-icons';
 	import { filesize } from 'filesize';
+	import type { ModalSettings } from '@skeletonlabs/skeleton';
 	import getDryRunMetricsQuery from '$queries/get_dry_run_metrics.js';
 	import getProjectQuery from '$queries/get_project';
 	import getDryRunPhaseResultsQuery from '$queries/get_dry_run_phase_results';
@@ -15,14 +16,11 @@
 	import { colors } from './Config.js';
 	import { stepsList, selectedProjectName, selectedDryRunName } from '$stores/stores';
 	import Legend from './legend.svelte';
-	import {
-		getMetricsUsageUtils,
-		getMetricsAnalyticsUtils,
-		displayStepDuration
-	} from '$utils/resource-utils';
-	import type { MetricsAnalytics } from '$utils/resource-utils';
-	// import { displayAlert } from '$utils/alerts-utils';
-	import type { DryRunMetrics, DryRun, MetricsWithTimeStamps } from '$typesdefinitions';
+	import { getMetricsUsageUtils, displayStepDuration } from '$utils/resource-utils';
+	import type { DryRunMetrics, DryRun, MetricsWithTimeStamps, Artifact } from '$typesdefinitions';
+	import getMooseAnalysisQuery from '$queries/get_moose_analysis.js';
+	import setMooseReportMutation from '$queries/set_moose_report.js';
+	import { displayModal } from '$utils/modal-utils.js';
 
 	// Extended type to include carbontracker data
 	interface ExtendedDryRunMetrics extends DryRunMetrics {
@@ -34,9 +32,21 @@
 		};
 	}
 
+	type MooseEntity = { text: string; type_id: string; confidence: number };
+
+	let mooseEntities: MooseEntity[] = [];
+	let showMooseModal = false;
+	let selectedArtifact: Artifact | undefined;
+	let mooseJobStatus: string | undefined;
+	let latestMooseReportJson: string | undefined;
+	let hasUnsavedMooseReport = false;
+	const modalStore = getModalStore();
+
 	export let data;
 
 	let loadingFinished = false;
+	// eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
+	let loadingError: unknown | undefined;
 	let workflow: { workflowTemplates: { argoWorkflowTemplate: { spec: { templates: any[] } } }[] };
 	const dryRunPhases: { [x: string]: string } = {};
 	const graphOrientation = 'LR';
@@ -160,10 +170,12 @@
 			dryRunPhaseMessage = response?.dryRun?.status?.message;
 			return response?.dryRun?.nodes.filter((node) => Object.keys(node).length > 0);
 		} catch (error) {
-			const title = 'Internal error!';
-			const body = `${(error as Error).message}`;
-			// await displayAlert(title, body, 10_000);
-			console.log(title, body);
+			loadingError = 'Failed to load metrics';
+			await displayModal(
+				'Failed to load metrics⚠️',
+				`Error fetching metrics: ${error instanceof Error ? error.message : String(error)}`,
+				modalStore
+			);
 			return [];
 		}
 	};
@@ -190,7 +202,6 @@
 				}
 			}
 		};
-		console.log('inputData:', inputData);
 		try {
 			const response = await requestGraphQLClient(getCarbontrackerDataQuery, inputData);
 			return response as {
@@ -200,10 +211,9 @@
 				};
 			};
 		} catch (error) {
-			const title = 'Internal error!';
-			const body = `${(error as Error).message}`;
-			// await displayAlert(title, body, 10_000);
-			console.log(title, body);
+			const title = 'Internal error!⚠️';
+			const body = `Error fetching carbontracker data: ${(error as Error).message}`;
+			await displayModal(title, body, modalStore);
 			return undefined;
 		}
 	}
@@ -214,31 +224,36 @@
 		metrics: any;
 		allstepnames: string[];
 	}> => {
-		const selectedProjectResponse = await requestGraphQLClient<{
+		const dryRunId = data.resource;
+
+		// Kick off independent requests as early as possible
+		const dryRunPromise = requestGraphQLClient<{
 			dryRun?: { project: { name: string; id: string } };
-		}>(getDryRunQuery, {
-			dryRunId: data.resource
-		});
+		}>(getDryRunQuery, { dryRunId });
+		const metricsPromise = getMetricsResponse();
+		const dryrunPhasePromise = requestGraphQLClient<{ dryRun: DryRun }>(
+			getDryRunPhaseResultsQuery,
+			{ dryRunId }
+		);
+
+		const selectedProjectResponse = await dryRunPromise;
 		if (!selectedProjectResponse.dryRun?.project) {
 			throw new Error('Project not found');
 		}
-		selectedProject = selectedProjectResponse.dryRun?.project;
-		selectedProjectName.set(selectedProject?.name);
-		const workflowVariables = {
-			// name: selectedProject?.name
-			projectId: selectedProject?.id
-		};
-		const dryrunVariables = {
-			// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-			dryRunId: data.resource
-		};
-		selectedDryRunName.set(data.resource);
-		const workflowResponse = await requestGraphQLClient<any>(getProjectQuery, workflowVariables);
+		selectedProject = selectedProjectResponse.dryRun.project;
+		selectedProjectName.set(selectedProject.name);
+		selectedDryRunName.set(dryRunId);
 
-		const dryrunResponse: { dryRun: DryRun } = await requestGraphQLClient(
-			getDryRunPhaseResultsQuery,
-			dryrunVariables
-		);
+		const workflowPromise = requestGraphQLClient<any>(getProjectQuery, {
+			projectId: selectedProject.id
+		});
+
+		const [workflowResponse, dryrunResponse, metricsResponse] = await Promise.all([
+			workflowPromise,
+			dryrunPhasePromise,
+			metricsPromise
+		]);
+
 		// set stepsList as nodes
 		$stepsList = dryrunResponse.dryRun.nodes;
 		// filter out all nodes which are not of type Pod
@@ -247,37 +262,33 @@
 			dryRunPhases[node.displayName] = node.phase;
 		});
 
-		const metricsResponse = await getMetricsResponse();
+		const metrics = (metricsResponse as unknown as DryRunMetrics[]) ?? [];
+		if (metrics.length === 0) {
+			loadingError = loadingError ?? 'No metrics returned for this dry run';
+		}
 
-		// eslint-disable-next-line @typescript-eslint/no-unused-expressions
-		selectedProjectName.set;
-
-		const result = await getMetricsUsageUtils(metricsResponse as unknown as DryRunMetrics[]);
+		const result = await getMetricsUsageUtils(metrics);
 		const { allStepNames } = result;
-		// console.log('allStepNames:', allStepNames);
 		cumulativeCpuData = result.cumulativeCpuData;
 		currentCpuData = result.currentCpuData;
 		memoryData = result.memoryData;
 		cumulativeNetworkData = result.cumulativeNetworkData;
 		currentNetworkData = result.currentNetworkData;
 		logs = result.logs;
+
 		const carbontrackerData: Array<{
 			nodeId: string;
 			stepName: string;
 			carbonData: { fetchCarbontrackerData?: { co2eq: number; energy: number } } | undefined;
-		}> = [];
-		for (const step of metricsResponse) {
-			if (step.type === 'Pod') {
-				const carbonResponse = await getCarbontrackerDataResponse(
-					step.metrics.cpuUsageSecondsTotal
-				);
-				carbontrackerData.push({
+		}> = await Promise.all(
+			metrics
+				.filter((step) => step.type === 'Pod')
+				.map(async (step) => ({
 					nodeId: step.id,
 					stepName: step.displayName,
-					carbonData: carbonResponse
-				});
-			}
-		}
+					carbonData: await getCarbontrackerDataResponse(step.metrics.cpuUsageSecondsTotal)
+				}))
+		);
 
 		// Merge carbontracker data with stepsList
 		$stepsList = $stepsList.map((step) => {
@@ -291,13 +302,12 @@
 		const responses = {
 			workflow: workflowResponse.project,
 			dryrun: dryrunResponse,
-			metrics: metricsResponse,
+			metrics,
 			allstepnames: allStepNames,
 			selectedDryRunName: $selectedDryRunName,
 			carbontrackerData
 		};
 
-		console.log('responses:', responses);
 		return responses;
 	};
 
@@ -386,25 +396,21 @@
 		let diagramFinished = false;
 		mermaidCode = []; // clear mermaidCode
 		mermaidCode.push(`graph ${graphOrientation};`);
-		// console.log('buildDiagram workflow:', workflow);
-		// eslint-disable-next-line @typescript-eslint/no-misused-promises
-		workflow.workflowTemplates[0]?.argoWorkflowTemplate?.spec?.templates?.forEach(
-			// eslint-disable-next-line @typescript-eslint/no-misused-promises
-			async (template) => {
-				try {
-					if (template.dag) argoDAGtoMermaid(template.dag);
-					else if (template.steps) argoStepsToMermaid(template.steps);
-				} catch (error) {
-					console.log(error);
-					const title = 'Error displaying dry run step diagram❌!';
-					const body = `${(error as Error).message}`;
-					// await displayAlert(title, body, 5000);
-					console.log(title, body);
-					// eslint-disable-next-line @typescript-eslint/no-floating-promises
-					goto(`/projects/dryruns/${selectedProject?.id}`);
-				}
+		const templates = workflow.workflowTemplates?.[0]?.argoWorkflowTemplate?.spec?.templates ?? [];
+		for (const template of templates) {
+			try {
+				if (template.dag) argoDAGtoMermaid(template.dag);
+				else if (template.steps) argoStepsToMermaid(template.steps);
+			} catch (error) {
+				await displayModal(
+					'Diagram error⚠️',
+					`Error building mermaid diagram ${error instanceof Error ? error.message : String(error)}`,
+					modalStore
+				);
+				goto(`/projects/dryruns/${selectedProject?.id}`);
+				break;
 			}
-		);
+		}
 		diagram = mermaidCode.join('\n');
 		diagramFinished = true;
 		return diagramFinished;
@@ -547,28 +553,208 @@
 	};
 
 	onMount(async () => {
-		const getDataResponse = await getData();
-		workflow = getDataResponse.workflow;
-		allStepNames = getDataResponse.allstepnames;
-		await buildDiagram();
-		computePipelineDuration();
-		loadingFinished = true;
+		try {
+			const getDataResponse = await getData();
+			workflow = getDataResponse.workflow;
+			allStepNames = getDataResponse.allstepnames;
+			await buildDiagram();
+			computePipelineDuration();
+			loadingFinished = true;
+		} catch (error) {
+			loadingError = error;
+		}
 	});
+
+	async function onAnalyze(
+		artifact: Artifact,
+		stepStartedAt: string | undefined,
+		attempt_rerun = false
+	): Promise<void> {
+		selectedArtifact = artifact;
+		let results: { entities?: MooseEntity[] }[] | undefined;
+
+		// Decide whether this call should persist the report server-side.
+		// - First run (no existing mooseReport): save by default.
+		// - Rerun: preview only (save = false); user can choose to save.
+		const shouldSaveOnServer = !attempt_rerun && !artifact.mooseReport;
+
+		if (!artifact.mooseReport || attempt_rerun) {
+			await displayModal(
+				'Calling Moose API with the artifact text✨',
+				'Awaiting response from API...',
+				modalStore
+			);
+			const response = await requestGraphQLClient<{ result: string }>(getMooseAnalysisQuery, {
+				artifactUrl: artifact.url,
+				stepStartedAt: stepStartedAt ?? undefined,
+				save: !!shouldSaveOnServer
+			});
+			latestMooseReportJson = response.result;
+			hasUnsavedMooseReport = !shouldSaveOnServer;
+			const job = JSON.parse(response.result) as {
+				status?: string;
+				error?: string;
+				result?: { entities?: MooseEntity[] };
+			};
+			mooseJobStatus = job.status ?? undefined;
+			mooseEntities = job.result?.entities ?? [];
+
+			// Refresh dry run nodes from backend so artifacts include the stored Moose report
+			try {
+				const dryrunVariables = {
+					// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+					dryRunId: data.resource
+				};
+				const dryrunResponse: { dryRun: DryRun } = await requestGraphQLClient(
+					getDryRunPhaseResultsQuery,
+					dryrunVariables
+				);
+				// update steps list and phases
+				$stepsList = dryrunResponse.dryRun.nodes;
+				$stepsList = $stepsList.filter((item) => item.type === 'Pod');
+				dryrunResponse.dryRun.nodes.forEach((node: DryRunMetrics) => {
+					dryRunPhases[node.displayName] = node.phase;
+				});
+			} catch (error) {
+				await displayModal(
+					'Error refreshing dry run after Moose analysis⚠️',
+					`Error: ${error instanceof Error ? error.message : String(error)}`,
+					modalStore
+				);
+			}
+		} else {
+			// get job from stored Moose report
+			latestMooseReportJson = artifact.mooseReport;
+			hasUnsavedMooseReport = false;
+			const job = JSON.parse(artifact.mooseReport) as {
+				status?: string;
+				error?: string;
+				result?: { entities?: MooseEntity[] };
+			};
+			mooseJobStatus = job.status ?? undefined;
+			mooseEntities = job.result?.entities ?? [];
+		}
+
+		showMooseModal = true;
+	}
+
+	async function rerunMooseAnalysis(): Promise<void> {
+		if (!selectedArtifact) return;
+		showMooseModal = false;
+		await onAnalyze(selectedArtifact, undefined, true);
+	}
+
+	async function saveMooseReport(): Promise<void> {
+		if (!selectedArtifact || !latestMooseReportJson) return;
+		try {
+			const url = new URL(selectedArtifact.url);
+			const pathParts = url.pathname.replace(/^\/+/, '').split('/');
+			const bucketName = pathParts.shift()!;
+			const objectName = pathParts.join('/');
+
+			await requestGraphQLClient(setMooseReportMutation, {
+				bucketName,
+				key: objectName,
+				report: latestMooseReportJson
+			});
+			hasUnsavedMooseReport = false;
+		} catch (error) {
+			await displayModal(
+				'Error saving Moose report⚠️',
+				`Error ${error instanceof Error ? error.message : String(error)}`,
+				modalStore
+			);
+		}
+	}
+
+	async function downloadSotwCsv(artifact: Artifact | null | undefined): Promise<void> {
+		const sotwUrl = artifact?.sotwReportUrl;
+		if (sotwUrl) {
+			try {
+				const response = await fetch(sotwUrl);
+				if (!response.ok) throw new Error('Failed to fetch SoTW CSV');
+				const blob = await response.blob();
+				const url = URL.createObjectURL(blob);
+				const link = document.createElement('a');
+				link.href = url;
+				// Use artifact name for the download filename, fallback to sotw.csv
+				let baseName = artifact?.name || 'sotw';
+				// Remove any path from name if present
+				baseName = baseName.split('/').pop() || baseName;
+				link.download = `${baseName}.sotw.csv`;
+				document.body.append(link);
+				link.click();
+				link.remove();
+				URL.revokeObjectURL(url);
+			} catch (error) {
+				await displayModal(
+					'Error downloading SoTW CSV⚠️',
+					`Error: ${error instanceof Error ? error.message : String(error)}`,
+					modalStore
+				);
+			}
+			return;
+		}
+		// if there is no sotwReportUrl, show a modal stating that the report is not available
+		await displayModal(
+			'SoTW report not available⚠️',
+			'The SoTW report for this artifact is not available.',
+			modalStore
+		);
+	}
 
 	function getPartLogs(stepName: string, nmaxlinelength: number): string {
 		const steplogs = logs[stepName];
-		// console.log('stepName:', stepName);
-		// console.log('steplogs:', steplogs);
 		// eslint-disable-next-line unicorn/prefer-ternary
 		if (steplogs.length < nmaxlinelength) return steplogs;
 		// eslint-disable-next-line no-else-return
 		else return `${steplogs.slice(0, nmaxlinelength)}...`;
 	}
+
+	// Utility to extract a short error message from a possibly large/unknown error value
+	function getShortErrorMessage(error: unknown): string {
+		if (!error) return '';
+		// Most common case
+		if (error instanceof Error) return error.message;
+		// Some libraries throw plain objects with a message
+		if (typeof error === 'object' && 'message' in error) {
+			const maybeMessage = (error as { message?: unknown }).message;
+			if (typeof maybeMessage === 'string' && maybeMessage.trim() !== '') return maybeMessage;
+		}
+		// Sometimes it is already a string (or a JSON string)
+		if (typeof error === 'string') {
+			try {
+				const match = error.match(/"message"\s*:\s*"([^"]+)"/);
+				if (match?.[1]) return match[1];
+				const obj = JSON.parse(error) as { message?: unknown };
+				if (typeof obj?.message === 'string' && obj.message.trim() !== '') return obj.message;
+			} catch {
+				// Not JSON; fall through
+			}
+			return error.length > 200 ? `${error.slice(0, 200)}...` : error;
+		}
+		// Last resort
+		try {
+			return JSON.stringify(error).slice(0, 200);
+		} catch {
+			return String(error);
+		}
+	}
 </script>
 
 <div class="flex w-full content-center p-10">
 	<div class="table-container">
-		{#if !loadingFinished}
+		{#if loadingError}
+			<div class="card p-4">
+				<h2>Failed to load data</h2>
+				<br />
+				<p>{getShortErrorMessage(loadingError)}</p>
+				<br />
+				<button type="button" class="btn btn-sm variant-filled" on:click={() => goto('/projects')}>
+					Back to projects
+				</button>
+			</div>
+		{:else if !loadingFinished}
 			<p>Loading metrics...</p>
 			<ProgressBar />
 		{:else}
@@ -593,15 +779,15 @@
 					><ZoomInIcon /></button
 				>
 			</h1>
-			<div class="grid grid-flow-rows grid-cols-1 items-center w-full p-5">
+			<div class="flex content-center grid grid-flow-rows grid-cols-1 items-center w-full p-3">
 				<div>
 					<Mermaid {diagram} />
 				</div>
 				<div>
 					<Legend />
 				</div>
-				<div class="p-5">
-					<table class="table table-interactive">
+				<div class="p-3 table-wrapper">
+					<table class="table table-interactive p-1">
 						<thead>
 							<tr>
 								<th>Name</th>
@@ -611,45 +797,68 @@
 								<th>CO2 [<span class="lowercase">g</span>]</th>
 								<th>Energy [<span class="lowercase">k</span>Wh]</th>
 								<th>Status</th>
-								<th>Output</th>
+								<th class="output-col">Output</th>
+								<th>Data Analysis</th>
 							</tr>
 						</thead>
 						<tbody>
 							{#each reactiveStepsList || [] as step}
 								<!-- eslint-disable-next-line @typescript-eslint/explicit-function-return-type -->
 								<tr on:click={() => stepOnClick(step.displayName)}>
-									<td style="width:15%">{step.displayName}</td>
-									<td style="width:15%">
+									<td>{step.displayName}</td>
+									<td>
 										{step.startedAt ?? '-'}
 									</td>
-									<td style="width:15%">
+									<td>
 										{step.finishedAt ?? '-'}
 									</td>
-									<td style="width:10%">{displayStepDuration(step)}</td>
-									<td style="width:10%">
+									<td>{displayStepDuration(step)}</td>
+									<td>
 										{#if step.carbontracker?.fetchCarbontrackerData?.co2eq}
 											{step.carbontracker.fetchCarbontrackerData.co2eq.toFixed(3)}
 										{:else}
 											-
 										{/if}
 									</td>
-									<td style="width:10%">
+									<td>
 										{#if step.carbontracker?.fetchCarbontrackerData?.energy}
 											{step.carbontracker.fetchCarbontrackerData.energy.toFixed(6)}
 										{:else}
 											-
 										{/if}
 									</td>
-									<td style="width:10%">{step.phase}</td>
-									<td style="width:15%">
+									<td>{step.phase}</td>
+									<td class="output-col">
 										{#if step.outputArtifacts?.length > 1}
 											{#each step.outputArtifacts as artifact}
 												{#if artifact.name !== 'main-logs'}
-													<a href={step.outputArtifacts[0].url}>{step.outputArtifacts[0].name}* </a>
+													<a href={artifact.url} class="output-link">{artifact.name}</a>
 												{/if}
 											{/each}
 										{:else}
 											<p>-</p>
+										{/if}
+									</td>
+									<td>
+										{#if step.outputArtifacts?.length > 1}
+											<button
+												type="button"
+												class={`px-3 py-1 rounded border text-xs font-normal cursor-pointer hover:border-slate-400 ${
+													step.outputArtifacts?.length > 1 && !step.outputArtifacts[0]?.mooseReport
+														? 'bg-amber-100 border-amber-300 text-amber-800 hover:bg-amber-150'
+														: 'bg-emerald-100 border-emerald-300 text-emerald-800 hover:bg-emerald-150'
+												}`}
+												on:click|stopPropagation={() =>
+													onAnalyze(step.outputArtifacts[0], step.startedAt)}
+											>
+												{#if step.outputArtifacts?.length > 1 && !step.outputArtifacts[0]?.mooseReport}
+													Run data analysis
+												{:else}
+													View saved report
+												{/if}
+											</button>
+										{:else}
+											-
 										{/if}
 									</td>
 								</tr>
@@ -658,21 +867,40 @@
 					</table>
 				</div>
 			</div>
-			<div class="grid grid-rows-4 grid-cols-2 gap-5 auto-rows-min">
+			<div class="grid grid-rows-4 grid-cols-2 gap-5 auto-rows-min p2">
 				<!-- if the logs are empty, remove logs sections -->
 				{#if Object.values(logs).join('') !== ''}
 					<div class="card mainlogcard row-span-4 p-5">
 						<!-- display if the dryrun has a non-empty phase message from argo (usually null if no error) -->
 						{#if dryRunPhaseMessage}
-							<div class="card logcard row-span-1 p-5">
-								<div style="display: flex; align-items: center; color: red; gap: 5px">
+							<div class="card logcard row-span-1 p-3">
+								<div style="display: flex; align-items: center; color: #b45309; gap: 5px">
+									<!-- amber-700 -->
 									<AlertTriangleIcon />
-									<h1>Error Message</h1>
+									<h1>Workflow Failure Summary</h1>
+									<br />
 								</div>
 								<section class="p-1">
-									<div class="w-full">
-										<CodeBlock language="json" code={dryRunPhaseMessage} />
-									</div>
+									{#if reactiveStepsList && reactiveStepsList.length > 0}
+										{#if reactiveStepsList.some((step) => step.phase === 'Failed')}
+											<div class="w-full">
+												<p style="color: #b45309; font-weight: bold;">
+													{reactiveStepsList.filter((step) => step.phase === 'Failed').length} out of
+													{reactiveStepsList.length} steps failed.
+												</p>
+												<p style="color: #b45309;">
+													Failed step(s): {reactiveStepsList
+														.filter((step) => step.phase === 'Failed')
+														.map((s) => s.displayName)
+														.join(', ')}
+												</p>
+											</div>
+										{:else}
+											<div class="w-full">
+												<p style="color: #b45309;">Workflow failed. See logs for details.</p>
+											</div>
+										{/if}
+									{/if}
 								</section>
 							</div>
 						{/if}
@@ -701,7 +929,7 @@
 				{/if}
 
 				<div class="card resourcecard">
-					<table class="table table-interactive">
+					<table class="table table-interactive w-full p-4">
 						<thead>
 							<tr>
 								<th>Resource</th>
@@ -766,6 +994,99 @@
 					/>
 				</div>
 			</div>
+
+			{#if showMooseModal}
+				<div
+					class="moose-modal-backdrop w-full"
+					on:click={() => {
+						showMooseModal = false;
+					}}
+					role="presentation"
+				>
+					<div class="moose-modal" on:click|stopPropagation={() => {}} role="presentation">
+						<header class="moose-modal-header">
+							<h2>Detected privacy-relevant entities</h2>
+							<div class="moose-modal-actions">
+								<button
+									type="button"
+									class="moose-btn"
+									on:click={async () => {
+										await downloadSotwCsv(selectedArtifact ?? undefined);
+									}}
+								>
+									Download SoTW
+								</button>
+								<button
+									type="button"
+									class="moose-btn"
+									on:click={async () => {
+										await rerunMooseAnalysis();
+									}}
+								>
+									Re-run analysis
+								</button>
+								{#if hasUnsavedMooseReport}
+									<button
+										type="button"
+										class="moose-btn"
+										on:click={async () => {
+											await saveMooseReport();
+										}}
+									>
+										Save report
+									</button>
+								{/if}
+								<button
+									type="button"
+									class="moose-btn"
+									on:click={() => {
+										showMooseModal = false;
+									}}
+								>
+									Close
+								</button>
+							</div>
+						</header>
+						<section class="moose-modal-body">
+							{#if mooseJobStatus === 'failed'}
+								<p class="moose-status moose-status-failed">
+									Latest data analysis check run failed; entities may be incomplete.
+								</p>
+							{/if}
+							{#if mooseEntities.length === 0}
+								<p>No entities detected in this output.</p>
+							{:else}
+								<table class="table table-interactive w-full">
+									<thead>
+										<tr>
+											<th>Text</th>
+											<th>Type</th>
+											<th>Confidence</th>
+										</tr>
+									</thead>
+									<tbody>
+										{#each mooseEntities as entity}
+											<tr>
+												<td>{entity.text}</td>
+												<td>{entity.type_id}</td>
+												<td>
+													{#if entity.confidence > 0.75}
+														High
+													{:else if entity.confidence < 0.5}
+														Low
+													{:else}
+														Medium
+													{/if}
+												</td>
+											</tr>
+										{/each}
+									</tbody>
+								</table>
+							{/if}
+						</section>
+					</div>
+				</div>
+			{/if}
 		{/if}
 	</div>
 </div>
@@ -777,8 +1098,7 @@
 		max-height: 50vh;
 	}
 	.card.resourcecard {
-		overflow-y: scroll;
-		overflow-x: scroll;
+		overflow: visible;
 		min-height: 25rem;
 		max-height: fit-content;
 	}
@@ -795,8 +1115,181 @@
 		overflow-y: scroll;
 		max-height: 50vh;
 	}
+	.moose-modal-backdrop {
+		position: fixed;
+		inset: 0;
+		background-color: rgba(0, 0, 0, 0.5);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		z-index: 50;
+		border: none;
+		padding: 0;
+		background-color: rgba(0, 0, 0, 0.5);
+	}
+	.moose-modal {
+		background-color: white;
+		border-radius: 0.5rem;
+		padding: 1.5rem;
+		max-width: 48rem;
+		width: 100%;
+		max-height: 80vh;
+		overflow-y: auto;
+		box-shadow:
+			0 10px 15px -3px rgba(0, 0, 0, 0.1),
+			0 4px 6px -2px rgba(0, 0, 0, 0.05);
+	}
+	.moose-modal-header {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		margin-bottom: 1rem;
+	}
+	.moose-modal-actions {
+		display: flex;
+		gap: 0.5rem;
+	}
+	.moose-btn {
+		padding: 0.25rem 0.75rem;
+		border-radius: 0.25rem;
+		border: 1px solid #d1d5db;
+		background-color: #f9fafb;
+		color: #111827;
+		font-size: 0.875rem;
+		cursor: pointer;
+	}
+	.moose-btn:hover {
+		background-color: #e5e7eb;
+	}
+	.moose-modal-body {
+		max-height: 60vh;
+		overflow-y: auto;
+	}
+	.moose-status {
+		margin-bottom: 0.75rem;
+		font-size: 0.875rem;
+	}
+	.moose-status-failed {
+		color: #b91c1c;
+	}
 	ul {
 		max-height: 75vh;
 		max-height: fit-content;
+	}
+
+	.table.table-interactive {
+		width: 100%;
+		border-collapse: collapse;
+		table-layout: fixed;
+	}
+
+	/* Prevent long artifact names from bleeding into the next column */
+	.output-col {
+		max-width: 12rem;
+		word-break: break-word;
+		white-space: normal;
+	}
+
+	.output-link {
+		display: inline-block;
+		max-width: 100%;
+		word-break: break-word;
+	}
+
+	/* Improved: Adjust column widths for better layout */
+	.table.table-interactive th:nth-child(1),
+	.table.table-interactive td:nth-child(1) {
+		width: 18%;
+		min-width: 14ch;
+		max-width: 32ch;
+		word-break: break-word;
+		white-space: normal;
+	}
+	.table.table-interactive th:nth-child(2),
+	.table.table-interactive td:nth-child(2) {
+		width: 10%;
+		min-width: 7ch;
+		max-width: 14ch;
+	}
+	.table.table-interactive th:nth-child(3),
+	.table.table-interactive td:nth-child(3) {
+		width: 10%;
+		min-width: 7ch;
+		max-width: 14ch;
+	}
+	.table.table-interactive th:nth-child(4),
+	.table.table-interactive td:nth-child(4) {
+		width: 8%;
+		min-width: 6ch;
+		max-width: 10ch;
+	}
+	.table.table-interactive th:nth-child(5),
+	.table.table-interactive td:nth-child(5),
+	.table.table-interactive th:nth-child(6),
+	.table.table-interactive td:nth-child(6) {
+		width: 7%;
+		min-width: 5ch;
+		max-width: 10ch;
+	}
+	.table.table-interactive th:nth-child(7),
+	.table.table-interactive td:nth-child(7) {
+		width: 8%;
+		min-width: 6ch;
+		max-width: 12ch;
+	}
+	.table.table-interactive th.output-col,
+	.table.table-interactive td.output-col {
+		width: 12%;
+		min-width: 8ch;
+		max-width: 18ch;
+	}
+	.table.table-interactive th:nth-child(9),
+	.table.table-interactive td:nth-child(9) {
+		width: 10%;
+		min-width: 7ch;
+		max-width: 14ch;
+	}
+
+	/* Make the small Resource/Metrics table use the full card width with two balanced columns */
+	.card.resourcecard .table.table-interactive th:first-child,
+	.card.resourcecard .table.table-interactive td:first-child {
+		width: 40%;
+	}
+	.card.resourcecard .table.table-interactive th:last-child,
+	.card.resourcecard .table.table-interactive td:last-child {
+		width: 60%;
+	}
+	.card.resourcecard .table.table-interactive thead {
+		position: static;
+	}
+
+	.table-wrapper {
+		width: 100%;
+		max-height: 80vh;
+		overflow-y: auto;
+		overflow-x: auto;
+	}
+
+	.table.table-interactive thead {
+		position: sticky;
+		top: 0;
+		background-color: inherit;
+		z-index: 1;
+	}
+
+	/* Make Moose entities table always span full modal width */
+	.moose-modal-body table {
+		width: 100%;
+		table-layout: fixed;
+	}
+	.moose-modal-body th:nth-child(1),
+	.moose-modal-body td:nth-child(1) {
+		width: 33.33%;
+	}
+	.moose-modal-body th:nth-child(2),
+	.moose-modal-body td:nth-child(2),
+	.moose-modal-body th:nth-child(3),
+	.moose-modal-body td:nth-child(3) {
+		width: 33.33%;
 	}
 </style>

@@ -1,10 +1,11 @@
 import { randomUUID } from 'node:crypto';
-import cpuCoresData from '../hardwaremetrics/hardwaremetrics.js';
+import { get } from 'node:http';
+
 import {
   assertDryRunNodeHasWorkflow,
   convertArgoWorkflowNode,
   convertArgoWorkflowToDryRun,
-  createDryRun, deleteDryRun, dryRunsForProject,
+  createDryRun, deleteDryRun, dryRunsForNode, dryRunsForProject,
   getDryRun, getDryRunNodeLog, resubmitDryRun, resumeDryRun,
   retryDryRun, stopDryRun, suspendDryRun,
 } from '../argo/dry-runs.js';
@@ -15,6 +16,14 @@ import {
   updateWorkflowTemplate,
   workflowTemplatesForProject,
 } from '../argo/workflow-template.js';
+import fetchCarbontrackerData from '../carbontracker/carbontracker.js';
+import {
+  aggregatedNodesMetrics,
+  computeScalingLaws,
+  extrapolateFromScalingLaws,
+} from '../curve_fitting/dry-run-data.js';
+import cpuCoresData from '../hardwaremetrics/hardwaremetrics.js';
+import { getApiTokenStates, updateApiTokenSecrets } from '../k8s/api-tokens.js';
 import assignArgoWorkflowToProject from '../k8s/assign-argoworkflow-to-project.js';
 import {
   createDockerRegistryCredential,
@@ -22,35 +31,36 @@ import {
   dockerRegistryCredentials,
   updateDockerRegistryCredential,
 } from '../k8s/docker-config-json.js';
+import { getK3sClusterSecret, updateK3sClusterSecret } from '../k8s/k3s-cluster-secret.js';
 import { SIMPIPE_PROJECT_LABEL } from '../k8s/label.js';
 import {
   createProject, deleteProject, getProject, projects, renameProject,
 } from '../k8s/projects.js';
 import {
+  cleanupStaleResource,
+  createResource,
+  deleteResource,
+  resources,
+  shutdownResource,
+} from '../k8s/resources.js';
+import {
   computePresignedGetUrl,
   computePresignedPutUrl,
-  listAllBuckets,
-  listAllObjects,
-  getObjectSize,
   createBucket,
   deleteBucket,
   deleteObjects,
+  getMooseReportForArtifact,
   getObjectMetadata,
+  getObjectSize,
+  listAllBuckets,
+  listAllObjects,
+  setMooseReportForArtifact,
 } from '../minio/minio.js';
-import { ArtifactItem } from '../minio/minio.js';
+import { getMooseAnalysis } from '../moose/moose.js';
 import { assertPrometheusIsHealthy } from '../prometheus/prometheus.js';
 import queryPrometheusResolver from '../prometheus/query-prometheus-resolver.js';
-import {
-  aggregatedNodesMetrics,
-  computeScalingLaws,
-  extrapolateFromScalingLaws,
-} from '../curve_fitting/dry-run-data.js';
-import fetchCarbontrackerData from '../carbontracker/carbontracker.js';
 import { NotFoundError, PingError } from './apollo-errors.js';
-import type { ArgoWorkflow, ArgoWorkflowTemplate } from '../argo/argo-client.js';
-import type ArgoWorkflowClient from '../argo/argo-client.js';
-import type K8sClient from '../k8s/k8s-client.js';
-import type {
+import {
   Artifact,
   DryRun,
   DryRunNode,
@@ -59,43 +69,55 @@ import type {
   DryRunNodeMetricsCpuSystemSecondsTotalArgs as DryRunNodeMetricsCpuSystemSecondsTotalArguments,
   DryRunNodePod, DryRunNodePodLogArgs as DryRunNodePodLogArguments,
   Mutation,
-  MutationCreateBucketArgs as MutationCreateBucketArguments,
   MutationAssignDryRunToProjectArgs as MutationAssignDryRunToProjectArguments,
   MutationComputeUploadPresignedUrlArgs as MutationComputeUploadPresignedUrlArguments,
+  MutationCreateBucketArgs as MutationCreateBucketArguments,
   MutationCreateDockerRegistryCredentialArgs as MutationCreateDockerRegistryCredentialArguments,
   MutationCreateDryRunArgs as MutationCreateDryRunArguments,
   MutationCreateProjectArgs as MutationCreateProjectArguments,
+  MutationCreateResourceArgs as MutationCreateResourceArguments,
   MutationCreateWorkflowTemplateArgs as MutationCreateWorkflowTemplateArguments,
+  MutationDeleteArtifactsArgs as MutationDeleteArtifactsArguments,
   MutationDeleteDockerRegistryCredentialArgs as MutationDeleteDockerRegistryCredentialArguments,
   MutationDeleteDryRunArgs as MutationDeleteDryRunArguments,
   MutationDeleteProjectArgs as MutationDeleteProjectArguments,
+  MutationCleanupStaleResourceArgs as MutationCleanupStaleResourceArguments,
+  MutationDeleteResourceArgs as MutationDeleteResourceArguments,
   MutationDeleteWorkflowTemplateArgs as MutationDeleteWorkflowTemplateArguments,
   MutationRenameProjectArgs as MutationRenameProjectArguments,
   MutationResolvers,
   MutationResubmitDryRunArgs as MutationResubmitDryRunArguments,
   MutationResumeDryRunArgs as MutationResumeDryRunArguments,
   MutationRetryDryRunArgs as MutationRetryDryRunArguments,
+  MutationSetMooseReportArgs as MutationSetMooseReportArguments,
+  MutationShutdownResourceArgs as MutationShutdownResourceArguments,
   MutationStopDryRunArgs as MutationStopDryRunArguments,
   MutationSuspendDryRunArgs as MutationSuspendDryRunArguments,
+  MutationUpdateApiTokensArgs as MutationUpdateApiTokensArguments,
   MutationUpdateDockerRegistryCredentialArgs as MutationUpdateDockerRegistryCredentialArguments,
+  MutationUpdateK3sClusterSecretArgs as MutationUpdateK3sClusterSecretArguments,
   MutationUpdateWorkflowTemplateArgs as MutationUpdateWorkflowTemplateArguments,
-  MutationDeleteArtifactsArgs as MutationDeleteArtifactsArguments,
+  NodesAggregatedNodeMetrics,
+  NodesScalingLaws,
   Project,
   Query,
   QueryArtifactArgs as QueryArtifactArguments,
   QueryArtifactsArgs as QueryArtifactsArguments,
+  QueryComputeScalingLawsFromNodesMetricsArgs as QueryComputeScalingLawsFromNodesMetricsArguments,
   QueryDryRunArgs as QueryDryRunArguments,
+  QueryFetchCarbontrackerDataArgs as QueryFetchCarbontrackerDataArguments,
+  QueryGetAggregatedNodesMetricsArgs as QueryGetAggregatedNodesMetricsArguments,
+  QueryGetMooseAnalysisArgs as QueryGetMooseAnalysisArguments,
+  QueryPredictScalingArgs as QueryPredictScalingArguments,
   QueryProjectArgs as QueryProjectArguments,
   QueryResolvers,
   QueryWorkflowTemplateArgs as QueryWorkflowTemplateArguments,
-  QueryComputeScalingLawsFromNodesMetricsArgs,
-  QueryPredictScalingArgs,
-  QueryGetAggregatedNodesMetricsArgs,
-  QueryFetchCarbontrackerDataArgs as QueryFetchCarbontrackerDataArguments,
   WorkflowTemplate,
-  NodesAggregatedNodeMetrics,
-  NodesScalingLaws,
 } from './schema.js';
+import type { ArgoWorkflow, ArgoWorkflowTemplate } from '../argo/argo-client.js';
+import type ArgoWorkflowClient from '../argo/argo-client.js';
+import type K8sClient from '../k8s/k8s-client.js';
+import type { ArtifactItem } from '../minio/minio.js';
 
 interface ContextUser {
   sub: string
@@ -163,6 +185,18 @@ const resolvers = {
 
       return 'pong';
     },
+    async apiTokens(
+      _p: EmptyParent, _a: EmptyArguments, context: AuthenticatedContext,
+    ): Promise<Query['apiTokens']> {
+      const { k8sClient, k8sNamespace } = context;
+      return await getApiTokenStates(k8sClient, k8sNamespace);
+    },
+    async k3sClusterSecret(
+      _p: EmptyParent, _a: EmptyArguments, context: AuthenticatedContext,
+    ): Promise<Query['k3sClusterSecret']> {
+      const { k8sClient, k8sNamespace } = context;
+      return await getK3sClusterSecret(k8sClient, k8sNamespace);
+    },
     async dockerRegistryCredentials(
       _p: EmptyParent, _a: EmptyArguments, context: AuthenticatedContext,
     ): Promise<Query['dockerRegistryCredentials']> {
@@ -191,6 +225,8 @@ const resolvers = {
       const { argoClient } = context;
       return await getDryRun(dryRunId, argoClient);
     },
+    dryRunsForNode: async (_p: EmptyParent,
+      arguments_: { nodeName: string }, context: AuthenticatedContext) => dryRunsForNode(arguments_.nodeName, context.argoClient),
     async workflowTemplate(
       _p: EmptyParent, arguments_: QueryWorkflowTemplateArguments, context: AuthenticatedContext,
     ): Promise<Query['workflowTemplate']> {
@@ -200,19 +236,27 @@ const resolvers = {
       return await getWorkflowTemplate(name, argoClient, sub);
     },
     async buckets(
-      _p: EmptyParent, _a: EmptyArguments, context: AuthenticatedContext,
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      _p: EmptyParent, _a: EmptyArguments,
     ): Promise<Query['buckets']> {
       const buckets = await listAllBuckets();
       return buckets.map(({ name }) => ({
         name,
       }));
     },
+    async resources(
+      _p: EmptyParent, _a: EmptyArguments, context: AuthenticatedContext,
+    ): Promise<Query['resources']> {
+      const { k8sClient, k8sNamespace, user } = context;
+      const { sub } = user;
+      return await resources(k8sClient, k8sNamespace, sub);
+    },
     async artifact(
-      _p: EmptyParent, arguments_: QueryArtifactArguments, context: AuthenticatedContext,
+      _p: EmptyParent, arguments_: QueryArtifactArguments,
     ): Promise<Query['artifact']> {
       const { key, bucketName } = arguments_;
       const object = await getObjectMetadata(key, bucketName);
-      let returnobject = {
+      const returnobject = {
         etag: object.etag,
         lastModified: object.lastModified.toISOString(),
         size: object.size,
@@ -221,38 +265,40 @@ const resolvers = {
       return returnobject;
     },
     async artifacts(
-      _p: EmptyParent, arguments_: QueryArtifactsArguments, context: AuthenticatedContext,
+      _p: EmptyParent, arguments_: QueryArtifactsArguments,
     ): Promise<Query['artifacts']> {
       const { bucketName } = arguments_;
       // console.log(bucketName);
       let objects: ArtifactItem[];
-      if (!bucketName) {
-        objects = await listAllObjects(); // will use default bucket
-      } else {
+      // eslint-disable-next-line unicorn/prefer-ternary
+      if (bucketName) {
         objects = await listAllObjects(bucketName);
+      } else {
+        objects = await listAllObjects(); // will use default bucket
       }
-      return objects.map(({ name, size }) => ({
-        name,
-        key: name,
-        size,
-        bucketName,
-      }));
+      return objects
+        .filter(({ name }) => name !== undefined)
+        .map(({ name, size }) => ({
+          name: name as string,
+          key: name as string,
+          size,
+          bucketName,
+        }));
     },
     async hardwaremetrics(
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       _p: EmptyParent, _a: EmptyArguments, context: AuthenticatedContext,
     ): Promise<Query['hardwaremetrics']> {
-
       const ncores = cpuCoresData.length;
-      const hardwaremetrics = {cpuCores: ncores, cpuCoresData: cpuCoresData};
+      const hardwaremetrics = { cpuCores: ncores, cpuCoresData };
 
       return hardwaremetrics;
-
     },
     async getAggregatedNodesMetrics(
-      _p: EmptyParent, arguments_: QueryGetAggregatedNodesMetricsArgs, context: AuthenticatedContext
+      _p: EmptyParent, arguments_: QueryGetAggregatedNodesMetricsArguments, context: AuthenticatedContext,
     ): Promise<Query['getAggregatedNodesMetrics']> {
-      const containerName = 'main'
-      let aggregateMethod = 'average' // default
+      const containerName = 'main';
+      let aggregateMethod = 'average'; // default
       if (arguments_.aggregateMethod) {
         aggregateMethod = arguments_.aggregateMethod;
       }
@@ -262,13 +308,15 @@ const resolvers = {
     },
     async computeScalingLawsFromNodesMetrics(
       _p: EmptyParent,
-      arguments_: QueryComputeScalingLawsFromNodesMetricsArgs,
+      arguments_: QueryComputeScalingLawsFromNodesMetricsArguments,
       context: AuthenticatedContext,
     ): Promise<Query['computeScalingLawsFromNodesMetrics']> {
-      const { nodesAggregatedNodeMetrics, dryRunIds, aggregateMethod, regressionMethod } = arguments_;
+      const {
+        nodesAggregatedNodeMetrics, dryRunIds, aggregateMethod, regressionMethod,
+      } = arguments_;
       const containerName = 'main';
-      let aggregateMethodUsed = aggregateMethod ? aggregateMethod : 'average';
-      let regressionMethodUsed = regressionMethod ? regressionMethod : 'linear';
+      const aggregateMethodUsed = aggregateMethod || 'average';
+      const regressionMethodUsed = regressionMethod || 'linear';
 
       let scalingLaws: NodesScalingLaws[] = [];
 
@@ -291,13 +339,15 @@ const resolvers = {
     },
     async predictScaling(
       _p: EmptyParent,
-      arguments_: QueryPredictScalingArgs,
+      arguments_: QueryPredictScalingArguments,
       context: AuthenticatedContext,
     ): Promise<Query['predictScaling']> {
-      const { nodesAggregatedNodeMetrics, dryRunIds, aggregateMethod, regressionMethod, data_x_to_predict } = arguments_;
+      const {
+        nodesAggregatedNodeMetrics, dryRunIds, aggregateMethod, regressionMethod, data_x_to_predict,
+      } = arguments_;
       const containerName = 'main';
-      let aggregateMethodUsed = aggregateMethod ? aggregateMethod : 'average';
-      let regressionMethodUsed = regressionMethod ? regressionMethod : 'linear';
+      const aggregateMethodUsed = aggregateMethod || 'average';
+      const regressionMethodUsed = regressionMethod || 'linear';
 
       let scalingLaws: NodesScalingLaws[] = [];
 
@@ -328,8 +378,39 @@ const resolvers = {
 
       return await fetchCarbontrackerData(input);
     },
+    async getMooseAnalysis(
+      _p: EmptyParent,
+      arguments_: QueryGetMooseAnalysisArguments,
+      _context: AuthenticatedContext,
+    ): Promise<Query['getMooseAnalysis']> {
+      return await getMooseAnalysis(arguments_);
+    },
   } as Required<QueryResolvers<AuthenticatedContext, EmptyParent>>,
   Mutation: {
+    async updateApiTokens(
+      _p: EmptyParent,
+      arguments_: MutationUpdateApiTokensArguments,
+      context: AuthenticatedContext,
+    ): Promise<Mutation['updateApiTokens']> {
+      const { k8sClient, k8sNamespace } = context;
+      const { mooseApiKey, openrouterApiKey } = arguments_;
+      return await updateApiTokenSecrets(k8sClient, k8sNamespace, {
+        mooseApiKey: mooseApiKey ?? undefined,
+        openrouterApiKey: openrouterApiKey ?? undefined,
+      });
+    },
+    async updateK3sClusterSecret(
+      _p: EmptyParent,
+      arguments_: MutationUpdateK3sClusterSecretArguments,
+      context: AuthenticatedContext,
+    ): Promise<Mutation['updateK3sClusterSecret']> {
+      const { k8sClient, k8sNamespace } = context;
+      const { token, serverIp } = arguments_;
+      return await updateK3sClusterSecret(k8sClient, k8sNamespace, {
+        token: token ?? undefined,
+        serverIp: serverIp ?? undefined,
+      });
+    },
     async createBucket(
       _p: EmptyParent, arguments_: MutationCreateBucketArguments, context: AuthenticatedContext,
     ): Promise<Mutation['createBucket']> {
@@ -365,6 +446,7 @@ const resolvers = {
         argoWorkflow: argoWorkflow as ArgoWorkflow,
         projectId: projectId ?? undefined,
         dryRunId: dryRunId ?? undefined,
+        nodeName: input.nodeName ?? undefined,
         argoClient,
       });
       // const { sub: userId } = context.user;
@@ -443,6 +525,43 @@ const resolvers = {
       );
       return convertArgoWorkflowToDryRun(workflow);
     },
+    async createResource(
+      _p: EmptyParent,
+      arguments_: MutationCreateResourceArguments,
+      context: AuthenticatedContext,
+    ): Promise<Mutation['createResource']> {
+      const { input } = arguments_;
+      const { k8sClient, k8sNamespace, user } = context;
+      const { sub } = user;
+      return await createResource(input, k8sClient, k8sNamespace, sub);
+    },
+    async deleteResource(
+      _p: EmptyParent,
+      arguments_: MutationDeleteResourceArguments,
+      context: AuthenticatedContext,
+    ): Promise<Mutation['deleteResource']> {
+      const { resourceId } = arguments_;
+      const { k8sClient, k8sNamespace } = context;
+      return await deleteResource(resourceId, k8sClient, k8sNamespace);
+    },
+    async cleanupStaleResource(
+      _p: EmptyParent,
+      arguments_: MutationCleanupStaleResourceArguments,
+      context: AuthenticatedContext,
+    ): Promise<Mutation['cleanupStaleResource']> {
+      const { resourceId } = arguments_;
+      const { k8sClient, k8sNamespace } = context;
+      return await cleanupStaleResource(resourceId, k8sClient, k8sNamespace);
+    },
+    async shutdownResource(
+      _p: EmptyParent,
+      arguments_: MutationShutdownResourceArguments,
+      context: AuthenticatedContext,
+    ): Promise<Mutation['shutdownResource']> {
+      const { resourceId } = arguments_;
+      const { k8sClient, k8sNamespace } = context;
+      return await shutdownResource(resourceId, k8sClient, k8sNamespace);
+    },
     async createDockerRegistryCredential(
       _p: EmptyParent,
       arguments_: MutationCreateDockerRegistryCredentialArguments,
@@ -513,9 +632,9 @@ const resolvers = {
       }
       */
       let { key, bucketName } = _arguments;
-      //console.log('key', key);
+      // console.log('key', key);
       if (key) {
-        //if (!/^[\w.-]+$/i.test(key)) {
+        // if (!/^[\w.-]+$/i.test(key)) {
         if (!isValidFilePath(key)) {
           throw new Error('Key is unsupported for files');
         }
@@ -523,15 +642,14 @@ const resolvers = {
         key = randomUUID();
       }
 
-      //const objectName = `${sub}/${key}`;
+      // const objectName = `${sub}/${key}`;
       const objectName = key;
       // console.log('bucketName', bucketName);
       // console.log('objectName', objectName);
       if (bucketName !== null) {
         return await computePresignedPutUrl(objectName, bucketName);
-      } else {
-        return await computePresignedPutUrl(objectName);
       }
+      return await computePresignedPutUrl(objectName);
     },
     async createWorkflowTemplate(
       _p: EmptyParent,
@@ -583,7 +701,18 @@ const resolvers = {
       const { bucketName, keys } = arguments_;
       const response = await deleteObjects(keys, bucketName);
       return response;
-    }
+    },
+    async setMooseReport(
+      _p: EmptyParent,
+      arguments_: MutationSetMooseReportArguments,
+      _context: AuthenticatedContext,
+    ): Promise<Mutation['setMooseReport']> {
+      const { bucketName, key, report } = arguments_;
+      // bucketName is optional; if not provided, the Minio helper
+      // will fall back to the default artifacts bucket.
+      await setMooseReportForArtifact(key, report, bucketName ?? undefined);
+      return true;
+    },
   } as Required<MutationResolvers<AuthenticatedContext, EmptyParent>>,
   Project: {
     async dryRuns(
@@ -777,8 +906,50 @@ const resolvers = {
         return undefined;
       }
       const filesize = await getObjectSize(key, bucketName as string);
-      // console.log('artifact size calc', filesize, key, bucketName, artifact)
-      return filesize
+      return filesize;
+    },
+    async mooseReport(
+      artifact: Artifact,
+    ): Promise<Artifact['mooseReport']> {
+      const { key, bucketName } = artifact;
+      if (!key) {
+        return undefined;
+      }
+
+      try {
+        const report = await getMooseReportForArtifact(key, bucketName as string | undefined);
+        return report ?? undefined;
+      } catch (error) {
+        // eslint-disable-next-line no-console
+        console.error('[Moose] Error resolving mooseReport for artifact', {
+          key,
+          bucketName,
+          error,
+        });
+        return undefined;
+      }
+    },
+    async sotwReportUrl(
+      artifact: Artifact,
+    ): Promise<Artifact['sotwReportUrl']> {
+      const { key, bucketName } = artifact;
+      if (!key) {
+        return undefined;
+      }
+      // The SoTW CSV is stored alongside the main artifact with a
+      // fixed suffix; we expose a presigned URL for download.
+      try {
+        const sotwKey = `${key}.sotw.csv`;
+        return await computePresignedGetUrl(sotwKey, bucketName as string);
+      } catch (error) {
+        // eslint-disable-next-line no-console
+        console.error('[SoTW] Error resolving sotwReportUrl for artifact', {
+          key,
+          bucketName,
+          error,
+        });
+        return undefined;
+      }
     },
   },
   WorkflowTemplate: {

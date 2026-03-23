@@ -8,7 +8,7 @@
 	import '../app.postcss';
 	import hljs from 'highlight.js';
 	import 'highlight.js/styles/github-dark.css'; // highlight.js theme
-	import { LockIcon, BookOpenIcon, FileIcon, FolderIcon, StarIcon } from 'svelte-feather-icons';
+	import { LockIcon, BookOpenIcon, FolderIcon } from 'svelte-feather-icons';
 	import {
 		AppShell,
 		AppBar,
@@ -29,6 +29,7 @@
 	import UploadFileModal from '../modals/upload-file-modal.svelte';
 	import ProvideTextInputModal from '../modals/text-input-modal.svelte';
 	import SubmitNewProjectModal from '../modals/submit-new-project-modal.svelte';
+	import SubmitNewResourceModal from '../modals/submit-new-resource-modal.svelte';
 	import SubmitNewDryRunModal from '../modals/submit-new-dry-run-modal.svelte';
 	import SubmitNewSecretModal from '../modals/submit-new-secret-modal.svelte';
 
@@ -37,6 +38,7 @@
 		uploadFileModal: { ref: UploadFileModal },
 		provideTextInputModal: { ref: ProvideTextInputModal },
 		createNewProjectModal: { ref: SubmitNewProjectModal },
+		createNewResourceModal: { ref: SubmitNewResourceModal },
 		submitNewDryRunModal: { ref: SubmitNewDryRunModal },
 		submitNewSecretModal: { ref: SubmitNewSecretModal }
 	};
@@ -129,13 +131,29 @@
 					<div>Registry</div>
 				</div>
 			</AppRailAnchor>
-			<!-- TO DO: temporary redirect to sftp go web interface; will be replaced by files manager when api is ready -->
-			<AppRailAnchor label="Sample Files" href={generateServiceUrl()} external={true}>
+			<AppRailAnchor
+				label="Manage API tokens"
+				href="/api-tokens"
+				selected={$page.url.pathname === '/api-tokens'}
+			>
 				<div class="flex flex-col items-center justify-center">
 					<div>
-						<FileIcon size="1.5x" />
+						<LockIcon size="1.5x" />
 					</div>
-					<div>Files</div>
+					<div>API tokens</div>
+				</div>
+			</AppRailAnchor>
+			<!-- new section for managing resources for emulation -->
+			<AppRailAnchor
+				label="Emulated ndoes"
+				href="/resources"
+				selected={$page.url.pathname === '/resources'}
+			>
+				<div class="flex flex-col items-center justify-center">
+					<div>
+						<BookOpenIcon size="1.5x" />
+					</div>
+					<div>VMs</div>
 				</div>
 			</AppRailAnchor>
 			<!-- 			<AppRailAnchor label="Ideas" href="/ideas" selected={$page.url.pathname === '/ideas'} >

@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { ProgressBar, getModalStore } from '@skeletonlabs/skeleton';
 	import { error } from '@sveltejs/kit';
-	import type { ModalSettings } from '@skeletonlabs/skeleton';
 	import { selectedCredential, selectedProject } from '$stores/stores';
 	import { requestGraphQLClient } from '$lib/graphqlUtils';
 	import type { Project } from '$typesdefinitions';
@@ -9,6 +8,7 @@
 	import getWorkflowQuery from '$queries/get_workflow_template.js';
 	import updateCredentialMutation from '$queries/update_workflow_template';
 	import { goto } from '$app/navigation';
+	import { displayModal } from '$utils/modal-utils.js';
 
 	const modalStore = getModalStore();
 
@@ -45,16 +45,11 @@
 			throw new Error('Project not found / project undefined');
 		}
 		const registryServer = $selectedCredential.server ?? 'undefined';
-		const workflowTemplateUpdatedMessageModal: ModalSettings = {
-			type: 'alert',
-			title: 'Secret added to project workflow! 🎉',
-			body: `<p>Project: ${projectName}</p><p>Now uses registry: ${registryServer}</p>`
-		};
-		modalStore.trigger(workflowTemplateUpdatedMessageModal);
-		await new Promise((resolve) => {
-			setTimeout(resolve, 3000);
-		});
-		modalStore.close();
+		await displayModal(
+			'Secret added to project workflow! 🎉',
+			`<p>Project: ${projectName}</p><p>Now uses registry: ${registryServer}</p>`,
+			modalStore
+		);
 		modalStore.clear();
 	}
 

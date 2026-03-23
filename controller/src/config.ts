@@ -32,3 +32,21 @@ export const prometheusServerUrl = process.env.PROMETHEUS_SERVER_URL ?? 'http://
 // For Kubernetes cluster deployment, use internal service DNS
 // For local development, use localhost
 export const carbontrackerEndpoint = process.env.CARBONTRACKER_ENDPOINT ?? 'http://localhost:8000';
+
+// Moose API endpoint and api keys
+export const mooseApiEndpoint:string = process.env.MOOSE_API_ENDPOINT ?? 'https://moose.zooverse.dev';
+export const mooseApiKey:string = process.env.MOOSE_API_KEY ?? '';
+export const openRouterApiKey:string = process.env.OPENROUTER_API_KEY ?? '';
+
+// Moose DPV LLM configuration
+export const mooseLlmProvider = 'openrouter';
+export const mooseLlmModel = 'meta-llama/llama-3.3-70b-instruct';
+// export const mooseLlmModel = 'gpt-oss-120b';
+export const mooseDpvSchema = 'dpv_pd';
+
+// K3S Cluster Secret
+export const K3S_TOKEN_SECRET = process.env.K3S_Cluster_SECRET ?? 'k3s-cluster-secret';
+
+export const CREATESCRIPTPATH_DEBIAN = './create-kube-node_qemu.sh';
+export const CREATESCRIPTPATH_WSL = './create-kube-node_wsl.sh';
+export const DELETE_SCRIPT_PATH = './shutdown-kube-node.sh';

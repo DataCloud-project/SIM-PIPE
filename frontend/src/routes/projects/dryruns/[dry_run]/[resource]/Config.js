@@ -1,3 +1,4 @@
+// eslint-disable-next-line unicorn/filename-case
 export const colors = {
 	Succeeded: '#34D399',
 	Running: '#0EA5E9',

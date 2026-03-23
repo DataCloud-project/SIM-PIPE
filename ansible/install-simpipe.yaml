@@ -9,13 +9,21 @@
         group: root
         mode: '0644'
 
-    - name: Install SIM-PIPE Helm chart
+    - name: Check if local SIM-PIPE chart exists
+      ansible.builtin.stat:
+        path: ../charts/simpipe/Chart.yaml
+      register: simpipe_chart_local
+
+    - name: Install SIM-PIPE Helm chart (local if available, else remote)
       kubernetes.core.helm:
         name: simpipe
         release_namespace: default
-        chart_ref: oci://ghcr.io/datacloud-project/simpipe
+        chart_ref: >-
+          {{ '../charts/simpipe' if simpipe_chart_local.stat.exists else 'oci://ghcr.io/datacloud-project/simpipe' }}
+        values_files: >-
+          {{ ['../charts/simpipe/values.yaml'] if simpipe_chart_local.stat.exists else omit }}
         wait: true
         state: present
       environment:
-        KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+        HELM_NO_PLUGINS: "1"
 

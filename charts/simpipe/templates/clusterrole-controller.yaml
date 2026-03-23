@@ -1,0 +1,18 @@
+# Defines a ClusterRole to grant cluster-scoped permissions for simpipe-controller(for emulation).
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ include "simpipeController.serviceAccountName" . }}-controller-clusterrole
+rules:
+- apiGroups: [""]
+  resources: ["pods", "nodes"]
+  verbs: ["get", "list", "watch", "delete", "patch"]
+- apiGroups: ["simpipe.sct.sintef.no"]
+  resources: ["resources", "projects"]
+  verbs: ["get", "list", "create", "update", "delete"]
+- apiGroups: ["apps"] 
+  resources: ["daemonsets", "deployments", "replicasets"]
+  verbs: ["get", "list", "watch", "delete", "patch"]
+- apiGroups: ["policy"]
+  resources: ["pods/eviction"]
+  verbs: ["create"]

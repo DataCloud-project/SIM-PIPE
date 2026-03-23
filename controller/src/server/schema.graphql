@@ -36,6 +36,26 @@ type HardwareMetrics {
   cpuCores: Int!
 }
 
+""" Masked/metadata view of a single API token. """
+type ApiTokenState {
+  """True if a value is currently stored."""
+  hasValue: Boolean!
+  """Partially-masked preview (never the full secret)."""
+  maskedPreview: String
+}
+
+""" API tokens used by the SIM-PIPE controller for external services. """
+type ApiTokens {
+  mooseApiKey: ApiTokenState!
+  openrouterApiKey: ApiTokenState!
+}
+
+""" K3s cluster connection details used by VM helpers. """
+type K3sClusterSecret {
+  token: String!
+  serverIp: String!
+}
+
 """ The root query type. All queries that fetch data are defined here. """
 
 type Query {
@@ -63,6 +83,9 @@ type Query {
   workflowTemplate(
     """ Name of the Argo workflow template to be fetched """
     name: String!): WorkflowTemplate @auth
+
+  """ List of all resources """
+  resources: [Resource!]! @auth
 
   """ List of all the artifacts """
   artifacts(
@@ -114,6 +137,25 @@ type Query {
   fetchCarbontrackerData(
     """ Input data containing CPU usage metrics """
     input: CarbonTrackerInput!): CarbonTrackerData! @auth
+
+  """ Fetch moose analysis results from an artifact URL.
+      By default the resulting report is stored alongside the artifact.
+      Set save to false to fetch a preview without persisting it. """
+  getMooseAnalysis(
+    """ The URL of the artifact to be analysed """
+    artifactUrl: String!,
+    """ The start time of the dry run step that produced this artifact (ISO 8601 string) """
+    stepStartedAt: String,
+    """ Whether to persist the Moose report alongside the artifact (default: true) """
+    save: Boolean = true): String! @auth
+
+  dryRunsForNode(nodeName: String!): [DryRun!]!
+
+  """ Inspect the API tokens used by the controller. """
+  apiTokens: ApiTokens! @auth
+
+  """ Inspect the k3s cluster secret used by VM helpers. """
+  k3sClusterSecret: K3sClusterSecret! @auth
 }
 
 """ Project is the high level concept for a specific pipeline in SIM-PIPE. It contains all the previous dry runs of the pipeline and its results. """
@@ -135,6 +177,15 @@ type Project {
   workflowTemplates: [WorkflowTemplate!]
 }
 
+""" Resources are nodes created to emulate pipeline execution on a specific hardware. """
+type Resource {
+  id: String!
+  name: String!
+  os: String!
+  cpus: String!
+  memory: String!
+  status: String
+}
 
 """ Dry runs are created under a project which represents an executable instance of the pipeline. """
 type DryRun {
@@ -152,6 +203,9 @@ type DryRun {
 
   """ The project to which the dry run belongs """
   project: Project
+
+  """ The name of the node the dry run is scheduled on """
+  nodeName: String
 
   """ The nodes of the dry run """
   nodes: [DryRunNode!]
@@ -498,6 +552,10 @@ type Artifact {
   size: Int
   """ The name of the bucket that holds the artifact """
   bucketName: String
+  """ The compliance check report from Moose API, if available """
+  mooseReport: String
+  """ URL to download the SoTW CSV derived from the Moose report, if available """
+  sotwReportUrl: String
 }
 
 """ Artifact metadata """
@@ -564,6 +622,21 @@ input CreateProjectInput {
   id: String
 }
 
+""" The input data to create a new resource. """
+input CreateResourceInput {
+  """ The name of the new resource """
+  name: String!
+
+  """ The os type name of the new resource """
+  os: String!
+
+  """ The cpus for the new resource """
+  cpus: String!
+
+  """ The memory for the new resource """
+  memory: String!
+}
+
 """ The input data to create a new dry run """
 input CreateDryRunInput {
   """ The project to which this dry run belongs (optional).
@@ -574,6 +647,9 @@ input CreateDryRunInput {
 
   """ The id of the dry run (optional), will be generated if not provided """
   dryRunId: String
+
+  """ The name of the node the dry run is scheduled on (optional) """
+  nodeName: String
 
   """ The raw Argo workflow document.
 
@@ -674,6 +750,26 @@ type Mutation @auth {
     """ ID of the target project """
     projectId: String!): DryRun!
 
+  """ Create a new resource """
+  createResource(
+  """ Input to create the new dry run """
+  input: CreateResourceInput!): Resource!
+
+ """ Delete an existing resource. The mutation returns true if the deletion was successful. """
+  deleteResource(
+    """ ID of the resource to be deleted """
+    resourceId: String!): Boolean!
+
+   """ Delete a stale resource when the VM is gone and mark it as shutdown. """
+   cleanupStaleResource(
+     """ ID of the resource to be cleaned """
+     resourceId: String!): Boolean!
+
+ """ Shutdown an existing resource. The mutation returns true if the shutdown was successful. """
+  shutdownResource(
+    """ ID of the resource to be shutdown """
+    resourceId: String!): Boolean!
+
   """ Create a new docker registry credential """
   createDockerRegistryCredential(
     """ Input for the new docker registry credential """
@@ -725,4 +821,25 @@ type Mutation @auth {
     """ The name of the bucket to be deleted """
     bucketName: String!,
     keys: [String!]!): Boolean!
+
+  """ Store or update the Moose compliance report for a specific artifact """
+  setMooseReport(
+    """ The name of the bucket that holds the artifact (optional, defaults to the main artifacts bucket) """
+    bucketName: String,
+    """ The key/path of the artifact object """
+    key: String!,
+    """ The Moose report JSON string """
+    report: String!): Boolean!
+
+  """ Update the API tokens used by the controller. Any omitted field keeps its current value. """
+  updateApiTokens(
+    mooseApiKey: String,
+    openrouterApiKey: String,
+  ): ApiTokens!
+
+  """ Update the k3s cluster secret used by VM helpers. Any omitted field keeps its current value. """
+  updateK3sClusterSecret(
+    token: String,
+    serverIp: String,
+  ): K3sClusterSecret!
 }

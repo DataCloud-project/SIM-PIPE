@@ -11,6 +11,7 @@ const allDryRunsQuery = gql`
 			dryRuns {
 				id
 				createdAt
+				nodeName
 				status {
 					phase
 					message
@@ -31,6 +32,7 @@ const allDryRunsQuery = gql`
 							key
 							name
 							url
+							mooseReport
 						}
 					}
 				}

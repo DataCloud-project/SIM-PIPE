@@ -7,7 +7,7 @@ import sys
 import time
 
 from checklist import check_cluster_status, check_simpipe_pods_health
-from install import install_or_upgrade_simpipe
+from install import ensure_kubeconfig_env, install_or_upgrade_simpipe
 from install import main as install_main
 
 
@@ -66,33 +66,28 @@ def main():
 
     if platform.system() == "Darwin":
         start_colima(cpu=args.cpu, memory=args.memory)
-    else:
 
-        # Check if we can read the Kubernetes config file
-        try:
-            subprocess.run(
-                ["kubectl", "config", "view"], check=True, capture_output=True
-            )
-        except subprocess.CalledProcessError:
-            print("❌ Unable to read Kubernetes config file.")
-            print("Consider logging out, logging in, and run this script again.")
-            sys.exit(1)
+    env, _ = ensure_kubeconfig_env()
 
-        kubernetes_has_started = check_cluster_status(silent=True)
-        if not kubernetes_has_started:
-            print(
-                "😫 This script only starts Kubernetes automatically on macOS for now."
-            )
-            print("Please start your Kubernetes cluster manually.")
+    # Check if we can read the Kubernetes config file via kubectl
+    try:
+        subprocess.run(
+            ["kubectl", "config", "view"], check=True, capture_output=True, env=env
+        )
+    except subprocess.CalledProcessError:
+        print("❌ Unable to read Kubernetes config file using kubectl.")
+        print("This may be due to permissions or a missing/invalid KUBECONFIG.")
+        print("Set KUBECONFIG to a valid kubeconfig and re-run.")
+        sys.exit(1)
 
-            nb_tentatives = 0
-            while not check_cluster_status(silent=True):
-                print("😴 Waiting for Kubernetes cluster to be ready...")
-                nb_tentatives += 1
-                if nb_tentatives > 8:
-                    if not check_cluster_status(silent=False):
-                        sys.exit(1)
-                time.sleep(5)
+    nb_tentatives = 0
+    while not check_cluster_status(silent=True):
+        print("😴 Waiting for Kubernetes cluster to be ready...")
+        nb_tentatives += 1
+        if nb_tentatives > 8:
+            if not check_cluster_status(silent=False):
+                sys.exit(1)
+        time.sleep(5)
     print("🎉 the kubernetes cluster is ready.")
 
     install_or_upgrade_simpipe()

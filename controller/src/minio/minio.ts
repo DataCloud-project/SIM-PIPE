@@ -119,6 +119,34 @@ export async function getObjectMetadata(
   return metadata;
 }
 
+// get full text content of an object (artifact)
+export async function getObjectText(
+  objectName: string,
+  _bucketName?: string,
+): Promise<string> {
+  const bucketName = _bucketName || minioBucketName;
+
+  const stream = await minioInternalClient.getObject(bucketName, objectName);
+
+  return await new Promise<string>((resolve, reject) => {
+    const chunks: Buffer[] = [];
+
+    stream.on('data', (chunk) => {
+      chunks.push(chunk as Buffer);
+    });
+
+    stream.on('end', () => {
+      resolve(Buffer.concat(chunks).toString('utf8'));
+    });
+
+    stream.on('error', (error) => {
+      // eslint-disable-next-line no-console
+      console.error('Error reading Minio object', error);
+      reject(error);
+    });
+  });
+}
+
 // get buckets
 export async function listAllBuckets(): Promise<BucketItemFromList[]> {
   return await minioInternalClient.listBuckets();
@@ -174,4 +202,121 @@ export async function deleteObjects(objects: string[], bucketName: string): Prom
       }
     });
   });
+}
+
+const MOOSE_REPORT_SUFFIX = '.moose-report.json';
+const SOTW_REPORT_SUFFIX = '.sotw.csv';
+
+export async function setMooseReportForArtifact(
+  objectName: string,
+  report: string,
+  _bucketName?: string,
+): Promise<void> {
+  const bucketName = _bucketName || minioBucketName;
+  const reportKey = `${objectName}${MOOSE_REPORT_SUFFIX}`;
+  try {
+    // eslint-disable-next-line no-console
+    console.log('[Moose] Saving report to Minio', {
+      bucketName,
+      objectName,
+      reportKey,
+      reportLength: report.length,
+    });
+    await minioInternalClient.putObject(bucketName, reportKey, report);
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error('[Moose] Error saving report to Minio', {
+      bucketName,
+      objectName,
+      reportKey,
+      error,
+    });
+    throw error;
+  }
+}
+
+export async function setSotwReportForArtifact(
+  objectName: string,
+  csv: string,
+  _bucketName?: string,
+): Promise<void> {
+  const bucketName = _bucketName || minioBucketName;
+  const reportKey = `${objectName}${SOTW_REPORT_SUFFIX}`;
+  try {
+    // eslint-disable-next-line no-console
+    console.log('[SoTW] Saving SoTW CSV to Minio', {
+      bucketName,
+      objectName,
+      reportKey,
+      length: csv.length,
+    });
+    await minioInternalClient.putObject(bucketName, reportKey, csv, {
+      'Content-Type': 'text/csv; charset=utf-8',
+    });
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error('[SoTW] Error saving SoTW CSV to Minio', {
+      bucketName,
+      objectName,
+      reportKey,
+      error,
+    });
+    throw error;
+  }
+}
+
+function getMinioErrorCode(error: unknown): string | undefined {
+  if (typeof error !== 'object' || error === null) return undefined;
+  if (!('code' in error)) return undefined;
+  const { code } = (error as { code?: unknown });
+  return typeof code === 'string' ? code : undefined;
+}
+
+export async function getMooseReportForArtifact(
+  objectName: string,
+  _bucketName?: string,
+): Promise<string | undefined> {
+  const bucketName = _bucketName || minioBucketName;
+  const reportKey = `${objectName}${MOOSE_REPORT_SUFFIX}`;
+
+  try {
+    const stream = await minioInternalClient.getObject(bucketName, reportKey);
+
+    return await new Promise<string>((resolve, reject) => {
+      const chunks: Buffer[] = [];
+
+      stream.on('data', (chunk) => {
+        chunks.push(chunk as Buffer);
+      });
+
+      stream.on('end', () => {
+        resolve(Buffer.concat(chunks).toString('utf8'));
+      });
+
+      stream.on('error', (error) => {
+        // eslint-disable-next-line no-console
+        console.error('[Moose] Error reading report from Minio', {
+          bucketName,
+          objectName,
+          reportKey,
+          error,
+        });
+        reject(error);
+      });
+    });
+  } catch (error: unknown) {
+    const code = getMinioErrorCode(error);
+    if (code === 'NoSuchKey' || code === 'NotFound') {
+      return undefined;
+    }
+
+    // eslint-disable-next-line no-console
+    console.error('[Moose] Error fetching report from Minio', {
+      bucketName,
+      objectName,
+      reportKey,
+      error,
+    });
+    throw error;
+  }
 }

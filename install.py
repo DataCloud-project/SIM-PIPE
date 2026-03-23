@@ -3,57 +3,183 @@
 import argparse
 import os
 import platform
-import re
 import subprocess
 import sys
+import time
 
-from checklist import (check_ansible_installed, check_debian_or_ubuntu,
-                       check_helm_diff_installed, check_if_installed,
-                       check_simpipe_deployment_presence,
-                       check_tools_installed)
+from checklist import (check_ansible_installed, check_cluster_status,
+                      check_debian_or_ubuntu, check_helm_diff_installed,
+                      check_if_installed, check_simpipe_deployment_presence,
+                      check_tools_installed)
+
+DEFAULT_KUBECONFIG_PATH = "/etc/rancher/k3s/k3s.yaml"
+
+
+def ensure_kubeconfig_env():
+    """Return an env dict that includes KUBECONFIG, preferring user-provided values.
+
+    Order of precedence:
+    1) Respect an existing KUBECONFIG in the current environment.
+    2) If unset, fall back to the k3s kubeconfig path when it exists.
+    The function exits with a helpful message when no kubeconfig is available.
+    """
+
+    env = os.environ.copy()
+    kubeconfig_value = env.get("KUBECONFIG")
+
+    if not kubeconfig_value:
+        kube_home = os.path.expanduser("~/.kube")
+        kube_config = os.path.join(kube_home, "config")
+        k3s_config = DEFAULT_KUBECONFIG_PATH
+
+        # If ~/.kube/config does not exist but k3s config does
+        if not os.path.exists(kube_config) and os.path.exists(k3s_config):
+            if os.access(k3s_config, os.R_OK):
+                os.makedirs(kube_home, exist_ok=True)
+                try:
+                    # Symlink instead of copy so ~/.kube/config always reflects
+                    # the current credentials after a k3s restart or upgrade.
+                    if os.path.islink(kube_config):
+                        os.unlink(kube_config)
+                    os.symlink(k3s_config, kube_config)
+                    print(f"✅ Linked kubeconfig: {kube_config} -> {k3s_config}")
+                except Exception as e:
+                    print(f"❌ Failed to link kubeconfig: {e}")
+                    sys.exit(1)
+            else:
+                print(f"❌ Cannot read {k3s_config} (permission denied).")
+                answer = input("Do you want to copy it using sudo? [y/N]: ").strip().lower()
+                if answer == 'y':
+                    os.makedirs(kube_home, exist_ok=True)
+                    # Use a symlink so future k3s restarts/upgrades don't leave stale credentials.
+                    chmod_cmd = f"sudo chmod 644 {k3s_config}"
+                    ln_cmd = f"sudo ln -sf {k3s_config} {kube_config}"
+                    try:
+                        subprocess.run(chmod_cmd, shell=True, check=True)
+                        subprocess.run(ln_cmd, shell=True, check=True)
+                        print(f"✅ Linked kubeconfig: {kube_config} -> {k3s_config}")
+                    except subprocess.CalledProcessError as e:
+                        print(f"❌ Failed to link kubeconfig with sudo: {e}")
+                        sys.exit(1)
+                else:
+                    print(f"You can manually run: sudo chmod 644 {k3s_config} && sudo ln -sf {k3s_config} {kube_config}")
+                    # Do not exit yet; maybe ~/.kube/config was created by Ansible
+
+        # Now prefer ~/.kube/config if it exists
+        for candidate in (kube_config, k3s_config):
+            if candidate and os.path.exists(candidate) and os.access(candidate, os.R_OK):
+                kubeconfig_value = candidate
+                env["KUBECONFIG"] = kubeconfig_value
+                break
+
+        # If neither config exists, print a clear error
+        if not kubeconfig_value:
+            print("❌ No kubeconfig detected at ~/.kube/config or /etc/rancher/k3s/k3s.yaml.")
+            print("If you installed k3s with sudo, you may need to copy the kubeconfig manually:")
+            print(f"  sudo chmod 644 {k3s_config} && sudo ln -sf {k3s_config} ~/.kube/config")
+            print("Or re-run the Ansible playbook as your user.")
+            sys.exit(1)
+
+        # Now prefer ~/.kube/config if it exists
+        for candidate in (kube_config, k3s_config):
+            if candidate and os.path.exists(candidate) and os.access(candidate, os.R_OK):
+                kubeconfig_value = candidate
+                env["KUBECONFIG"] = kubeconfig_value
+                break
+
+    if not kubeconfig_value:
+        print("❌ No kubeconfig detected. Set the KUBECONFIG environment variable to your cluster config and retry.")
+        sys.exit(1)
+
+    kubeconfig_paths = [p for p in kubeconfig_value.split(os.pathsep) if p]
+    if kubeconfig_paths and not any(os.path.exists(p) for p in kubeconfig_paths):
+        print(f"❌ KUBECONFIG points to '{kubeconfig_value}', but no listed file exists.")
+        print("Set KUBECONFIG to a valid kubeconfig path and retry.")
+        sys.exit(1)
+
+    # Propagate to the current process so downstream calls that inherit the env see it.
+    os.environ["KUBECONFIG"] = kubeconfig_value
+    return env, kubeconfig_value
 
 
 def install_tools_debian():
-
     if not check_ansible_installed():
         install_ansible_via_pip()
 
     # install galaxy requirements for ansible
     print("⏳ Installing Ansible galaxy requirements...")
+    os.makedirs("./ansible/roles", exist_ok=True)
     subprocess.run(
-        ["sudo", "ansible-galaxy", "install", "-r", "./ansible/requirements.yaml"],
+        [
+            "ansible-galaxy", "install",
+            "-r", "./ansible/requirements.yaml",
+            "--roles-path", "./ansible/roles"
+        ],
         check=True,
     )
 
-    # Get current username
-    username = os.getlogin()
-    if re.match(r"^[a-zA-Z0-9_-]+$", username) is None:
-        print(
-            "❌ Your username contains invalid characters. Please use only alphanumeric characters and underscores."
-        )
-        sys.exit(1)
+    # Install base infrastructure using Ansible (Docker, k3s, CLI tools, etc.)
+    print("⏳ Installing base SIM-PIPE dependencies (Docker, k3s, tools)...")
+    env_base = os.environ.copy()
+    env_base["ANSIBLE_ALLOW_BROKEN_CONDITIONALS"] = "True"
 
-    # install simpipe using ansible
-    print("⏳ Installing simpipe...")
+    # First, install Docker, k3s and supporting tools (no SIM-PIPE yet)
     subprocess.run(
         [
-            "sudo",
             "ansible-playbook",
             "-i",
             "localhost,",
             "-c",
             "local",
-            "-e",
-            f"docker_users=['{username}']",
+            "-b",
+            "-K",
             "./ansible/install-everything.yaml",
         ],
         check=True,
+        env=env_base,
     )
 
-    # Install helm diff for the current user
-    # (ansible will install it as well, but for root)
-    if not check_helm_diff_installed(silent=True):
-        install_helm_diff_plugin()
+    # Now ensure required Kubernetes secrets exist before installing SIM-PIPE
+    from secrets_manager import ensure_secrets
+
+    # Re-resolve kubeconfig here so we pick up ~/.kube/config written by the
+    # ansible k3s post_tasks even if KUBECONFIG wasn't set before that step.
+    env_kubeconfig, kubeconfig_path = ensure_kubeconfig_env()
+
+    nb_tentatives = 0
+    while not check_cluster_status(silent=True):
+        print("😴 Waiting for Kubernetes cluster to be ready...")
+        nb_tentatives += 1
+        if nb_tentatives > 12:
+            if not check_cluster_status(silent=False):
+                sys.exit(1)
+        time.sleep(5)
+
+    print("⏳ Ensuring SIM-PIPE secrets are configured (you may be prompted)...")
+    try:
+        ensure_secrets(env=env_kubeconfig)
+    except Exception as e:
+        print(f"⚠️ Skipping secret setup for now: {e}")
+        print("   You can set secrets later by running `python -c \"from secrets_manager import ensure_secrets; ensure_secrets()\"` once KUBECONFIG works.")
+
+    # Finally, install SIM-PIPE via its dedicated playbook
+    print("⏳ Installing SIM-PIPE Helm chart via Ansible...")
+    env_with_kubeconfig = env_base.copy()
+    env_with_kubeconfig["KUBECONFIG"] = kubeconfig_path
+    subprocess.run(
+        [
+            "ansible-playbook",
+            "-i",
+            "localhost,",
+            "-c",
+            "local",
+            "-b",
+            "-K",
+            "./ansible/install-simpipe.yaml",
+        ],
+        check=True,
+        env=env_with_kubeconfig,
+    )
 
 
 def install_tools_mac():
@@ -71,9 +197,6 @@ def install_tools_mac():
 
     subprocess.run(["brew", "install", *tools], check=True)
 
-    if not check_helm_diff_installed(silent=True):
-        install_helm_diff_plugin()
-
     if check_tools_installed():
         print("🎉 Tools installed successfully.")
     else:
@@ -82,14 +205,14 @@ def install_tools_mac():
 
 
 def install_or_upgrade_simpipe():
-
     is_deployed = check_simpipe_deployment_presence()
 
     chart = os.path.join(os.path.dirname(__file__), "charts", "simpipe")
     values = os.path.join(os.path.dirname(__file__), "charts", "simpipe", "values.yaml")
-    # chart = "oci://ghcr.io/datacloud-project/simpipe"
 
     if is_deployed:
+        env, _ = ensure_kubeconfig_env()
+        env.setdefault("HELM_NO_PLUGINS", "1")
 
         # check whether the chart needs to be updated using helm diff
         try:
@@ -108,6 +231,7 @@ def install_or_upgrade_simpipe():
                 ],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
+                env=env,
             )
         except subprocess.CalledProcessError as e:
             print(f"❌ Error while checking simpipe deployment: {e}")
@@ -120,7 +244,17 @@ def install_or_upgrade_simpipe():
             try:
                 print("⬆️ upgrading simpipe")
                 subprocess.check_call(
-                    ["helm", "upgrade", "simpipe", "--wait", chart, "-f", values, "--no-hooks"]
+                    [
+                        "helm",
+                        "upgrade",
+                        "simpipe",
+                        "--wait",
+                        chart,
+                        "-f",
+                        values,
+                        "--no-hooks",
+                    ],
+                    env=env,
                 )
             except subprocess.CalledProcessError as e:
                 print(f"❌ Error while upgrading simpipe: {e}")
@@ -128,25 +262,14 @@ def install_or_upgrade_simpipe():
     else:
         try:
             print("🌈 installing simpipe")
+            env, _ = ensure_kubeconfig_env()
+            env.setdefault("HELM_NO_PLUGINS", "1")
             subprocess.check_call(
-                ["helm", "install", "simpipe", "--wait", chart, "-f", values]
+                ["helm", "install", "simpipe", "--wait", chart, "-f", values],
+                env=env,
             )
         except subprocess.CalledProcessError as e:
             print(f"❌ Error while installing simpipe: {e}")
-
-
-def install_helm_diff_plugin():
-    try:
-        print("⏳ Installing helm-diff plugin...")
-        subprocess.run(
-            ["helm", "plugin", "install", "https://github.com/databus23/helm-diff"],
-            check=True,
-        )
-        print("🎉 helm-diff plugin installed successfully.")
-    except subprocess.CalledProcessError as e:
-        print(f"❌ Error while installing helm-diff plugin: {e}")
-        sys.exit(1)
-
 
 def install_ansible_via_pip():
     """
@@ -168,30 +291,28 @@ def install_ansible_via_pip():
         )
 
         # Install Ansible
-        subprocess.run(
+        result = subprocess.run(
             ["sudo", "pip3", "install", "ansible"],
-            check=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
         )
 
+        if result.returncode != 0:
+            stderr = result.stderr or ""
+            if "externally-managed-environment" in stderr or "PEP 668" in stderr:
+                print("ℹ️ Python environment is externally managed; retrying Ansible install with --break-system-packages.")
+                subprocess.run(
+                    ["sudo", "pip3", "install", "--break-system-packages", "ansible"],
+                    check=True,
+                )
+            else:
+                raise subprocess.CalledProcessError(result.returncode, result.args, output=result.stdout, stderr=result.stderr)
+
         print("✅ Ansible installed successfully.")
-    except subprocess.CalledProcessError:
-        print("❌ Error occurred while installing Ansible.")
+    except subprocess.CalledProcessError as e:
+        print(f"❌ Error occurred while installing Ansible: {e}")
         sys.exit(1)
-
-
-def get_current_groups():
-    """Retrieve the group names a user is a member of by parsing /etc/group."""
-    groups = set()
-    username = os.getlogin()
-    with open('/etc/group', 'r') as f:
-        for line in f:
-            parts = line.strip().split(':')
-            if len(parts) < 4:
-                continue
-            group_name, _, _, members = parts
-            if username in members.split(','):
-                groups.add(group_name)
-    return groups
 
 
 def main(force=False):
@@ -202,12 +323,7 @@ def main(force=False):
     system = platform.system()
     if system == "Linux":
         if check_debian_or_ubuntu():
-            currentuser_groups_before_install = get_current_groups()
             install_tools_debian()
-            currentuser_groups_after_install = get_current_groups()
-            if currentuser_groups_before_install != currentuser_groups_after_install:
-                print("ℹ️ You may need to logout and login again to use SIM-PIPE, Docker, and Kubernetes.")
-
         else:
             print("🫤 Sorry, only Debian or Ubuntu are supported for now.")
             print("You can use the checklist.py script to check your environment,")

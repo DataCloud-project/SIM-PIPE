@@ -46,6 +46,7 @@ export default async function startSecureServer({
   app.use(authJwtMiddleware);
   // increase size limit to allow larger file uploads (createNewDryRun)
   app.use(express.json({ limit: '5mb' }));
+
   app.use('/graphql', cors<cors.CorsRequest>(), bodyParser.json(), graphqlRequestHandler());
 
   // Start the Express server

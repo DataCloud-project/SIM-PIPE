@@ -1,4 +1,5 @@
 <script lang="ts">
+	let showDetails = false;
 	import { getModalStore, ProgressBar } from '@skeletonlabs/skeleton';
 	import type { ModalSettings } from '@skeletonlabs/skeleton';
 	import { EditIcon, FileTextIcon } from 'svelte-feather-icons';
@@ -12,27 +13,41 @@
 	import allDryRunsQuery from '../../queries/get_all_dryruns.js';
 	import deleteDryRunMutation from '../../queries/delete_dry_run.js';
 	import deleteWorkflowTemplateMutation from '../../queries/delete_workflow_template.js';
-	// import { displayAlert } from '../../utils/alerts-utils.js';
-	import Alert from '$lib/modules/alert.svelte';
+	import { displayModal } from '$utils/modal-utils.js';
 
 	const modalStore = getModalStore();
 
-	let visibleAlert: boolean = false;
-	let alertTitle: string = 'Alert!';
-	let alertMessage: string = 'Alert!';
-	let alertVariant: string = 'variant-ghost-surface';
+	const extractErrorMessage = (err: unknown): string | undefined => {
+		if (!err) return undefined;
+		if (typeof err === 'string') {
+			const jsonMessageMatch = err.match(/"message":"([^"]+)"/);
+			if (jsonMessageMatch?.[1]) return jsonMessageMatch[1];
+			const splitIdx = err.indexOf(':{');
+			return splitIdx > 0 ? err.slice(0, splitIdx) : err;
+		}
+		const maybeMessage = (err as { message?: unknown }).message;
+		if (typeof maybeMessage === 'string') return maybeMessage;
+		const gqlMessage = (err as { response?: { errors?: { message?: string }[] } }).response
+			?.errors?.[0]?.message;
+		return gqlMessage ?? undefined;
+	};
 
 	$: reactiveProjectsList = $projectsList;
+	let loadingError: string | null;
 
 	const checkboxes: Record<string, boolean> = {};
 	let dryRunCounts: Record<string, number> = {};
 
 	const getProjectsList = async (): Promise<Project[]> => {
-		const response: { projects: Project[] } = await requestGraphQLClient(allProjectsQuery);
-		return response.projects;
+		try {
+			const response: { projects: Project[] } = await requestGraphQLClient(allProjectsQuery);
+			return response.projects;
+		} catch (error) {
+			loadingError = 'Failed to load projects';
+			throw error;
+		}
 	};
 
-	// TODO: replace this when dryRuns_aggregate is ready in the api
 	// get dry run counts for each project, and reset checkboxes
 	function getDryRunCounts(projectList: Project[] | undefined): Record<string, number> {
 		dryRunCounts = {};
@@ -45,19 +60,15 @@
 
 	$: dryRunCounts = getDryRunCounts(reactiveProjectsList);
 
-	const projectsPromise = getProjectsList();
+	async function refreshProjects(): Promise<Project[]> {
+		const value = await getProjectsList();
+		$projectsList = value;
+		reactiveProjectsList = value;
+		dryRunCounts = getDryRunCounts(value);
+		return value;
+	}
 
-	// TODO: move to lib or utils
-	projectsPromise
-		.then((value) => {
-			$projectsList = value;
-			reactiveProjectsList = value;
-			dryRunCounts = getDryRunCounts($projectsList);
-		})
-		// eslint-disable-next-line unicorn/prefer-top-level-await
-		.catch(() => {
-			$projectsList = undefined;
-		});
+	const projectsPromise = refreshProjects();
 
 	/* const modal: ModalSettings = {
 		type: 'component',
@@ -68,54 +79,48 @@
 
 	async function onDeleteSelected(): Promise<void> {
 		try {
-			Object.keys(checkboxes)
-				.filter((item) => checkboxes[item])
-				// eslint-disable-next-line @typescript-eslint/no-misused-promises
-				.forEach(async (element) => {
-					const projectVariables = {
-						projectId: element
-					};
-					const responseDryRuns = await requestGraphQLClient<{
-						project: { dryRuns: Record<string, undefined>[] };
-					}>(allDryRunsQuery, projectVariables);
-					// eslint-disable-next-line @typescript-eslint/no-misused-promises
-					responseDryRuns.project.dryRuns.forEach(async (dry_run: Record<string, undefined>) => {
-						await requestGraphQLClient(deleteDryRunMutation, {
-							dryRunId: dry_run.id
-						});
-					});
-					await requestGraphQLClient(deleteWorkflowTemplateMutation, {
-						name: element
-					}).catch((error) => {
-						console.log(error);
-						visibleAlert = true;
-						alertTitle = 'Delete workflow template failed!';
-						alertMessage = error.message;
-					});
-					await requestGraphQLClient(deleteProjectMutation, projectVariables);
-				});
+			const selectedProjectIds = Object.keys(checkboxes).filter((item) => checkboxes[item]);
+			const deletePromises = selectedProjectIds.map(async (element) => {
+				const projectVariables = { projectId: element };
+				const responseDryRuns = await requestGraphQLClient<{
+					project: { dryRuns: Record<string, undefined>[] };
+				}>(allDryRunsQuery, projectVariables);
+				await Promise.all(
+					responseDryRuns.project.dryRuns.map(async (dry_run: Record<string, undefined>) => {
+						try {
+							await requestGraphQLClient(deleteDryRunMutation, { dryRunId: dry_run.id });
+						} catch (error) {
+							const message = error instanceof Error ? error.message : String(error);
+							await displayModal('Error deleting dry run⚠️', `Error: ${message}`, modalStore);
+						}
+					})
+				);
+				await requestGraphQLClient(deleteWorkflowTemplateMutation, { name: element }).catch(
+					(error) => {
+						// eslint-disable-next-line @typescript-eslint/no-floating-promises
+						displayModal(
+							'Delete workflow template failed⚠️',
+							`Error: ${error instanceof Error ? error.message : String(error)}`,
+							modalStore
+						);
+					}
+				);
+				await requestGraphQLClient(deleteProjectMutation, projectVariables);
+			});
 
-			// TODO: wait for all delete promises to complete change to Promise.all - no-misused-promises
-			// await Promise.all(deletePromises);
+			await Promise.all(deletePromises);
 
-			const title = 'Project deleted🗑️!';
-			const body = `Deleted projects: ${Object.keys(checkboxes).join(', ')}`;
-
-			// await displayAlert(title, body);
-			console.log(title, body);
-			// inserting a small delay because sometimes delete mutation returns true, but all projects query returns the deleted project as well
-			// eslint-disable-next-line no-promise-executor-return
-			await new Promise((resolve) => setTimeout(resolve, 150));
-
+			await displayModal(
+				'Project deleted🗑️!',
+				`Deleted projects: ${selectedProjectIds.join(', ')}`,
+				modalStore
+			);
 			// update the project list after deletion
-			const responseAllProjects: { projects: Project[] } =
-				await requestGraphQLClient(allProjectsQuery);
-			projectsList.set(responseAllProjects.projects);
+			await refreshProjects();
 		} catch (error) {
 			const title = 'Error deleting project❌!';
 			const body = `${(error as Error).message}`;
-			// await displayAlert(title, body, 4000);
-			console.log(title, body);
+			await displayModal(title, body, modalStore);
 		} finally {
 			// reset checkboxes
 			$projectsList?.forEach((element) => {
@@ -142,30 +147,36 @@
 	): Promise<boolean> {
 		console.log('createProjectResponse:', createProjectResponse);
 		console.log('createWorkflowResponse:', createWorkflowResponse);
-		visibleAlert = true;
-		let hasErrors = false;
-		if (createProjectResponse.status === 200) {
+
+		if (createProjectResponse.status === 200 && createProjectResponse.project.id !== 'none') {
+			await (createWorkflowResponse.status === 200 && createWorkflowResponse.name !== 'none'
+				? displayModal(
+						'Project created!🎉',
+						`Project "${createProjectResponse.project.name}" has been created successfully.`,
+						modalStore
+					)
+				: displayModal(
+						'Failed: Workflow template creation failed❌',
+						`Project "${createProjectResponse.project.name}" was created successfully, but Workflow template "${createWorkflowResponse.name}" failed to be created.`,
+						modalStore
+					));
 			await requestGraphQLClient<{ projects: Project[] }>(allProjectsQuery).then((response) => {
 				reactiveProjectsList = response.projects;
 				$projectsList = response.projects;
 			});
-			if (createWorkflowResponse.status === 200) {
-				alertVariant = 'variant-ghost-success';
-				alertTitle = 'Project created!';
-				alertMessage = `Project ${createProjectResponse.project.name} created with id ${createProjectResponse.project.id} and workflow template ${createWorkflowResponse.name} created`;
-			} else {
-				hasErrors = true;
-				alertVariant = 'variant-ghost-warning';
-				alertTitle = 'Project created! However, workflow creation failed!';
-				alertMessage = `Create template manually: ${createWorkflowResponse.error}`;
-			}
 		} else {
-			hasErrors = true;
-			alertVariant = 'variant-filled-error';
-			alertTitle = 'Project creation failed!';
-			alertMessage = `Project creation failed with status ${createProjectResponse.status}: ${createProjectResponse.error} and workflow template creation failed with status ${createWorkflowResponse.status}: ${createWorkflowResponse.error}`;
+			const errorMessages: string[] = [];
+			const projectMessage = extractErrorMessage(createProjectResponse.error);
+			const workflowMessage = extractErrorMessage(createWorkflowResponse.error);
+			console.log('Extracted project error message:', projectMessage);
+			console.log('Extracted workflow error message:', workflowMessage);
+			if (projectMessage) errorMessages.push(projectMessage);
+			if (workflowMessage) errorMessages.push(workflowMessage);
+			const errorBody =
+				errorMessages.length > 0 ? errorMessages.join('\n') : 'Project creation failed.';
+			await displayModal('Project creation failed❌', errorBody, modalStore, 5000);
 		}
-		return hasErrors;
+		return true;
 	}
 
 	function onCreateNewProject(): void {
@@ -188,11 +199,12 @@
 				}
 			};
 			modalStore.trigger(modal);
-		}).then(() => {
-			console.log('onCreateNewProject promise resolved');
+		}).then(async () => {
+			await refreshProjects();
 		});
 		modalPromise.catch((error) => {
-			console.log('onCreateNewProject promise error:', error);
+			// eslint-disable-next-line @typescript-eslint/no-floating-promises
+			displayModal('Error creating project', 'Error creating project', modalStore);
 		});
 	}
 
@@ -226,89 +238,116 @@
 			<p style="font-size:20px;">Loading projects...</p>
 			<ProgressBar />
 		{:then}
-			<h1>Projects</h1>
-			<div class="flex flex-row justify-end p-5 space-x-1">
-				<div>
+			{#if loadingError}
+				<div class="error-message">
+					<strong>Failed to load projects</strong>
 					<button
-						type="button"
-						class="btn btn-sm variant-filled"
-						on:click={() => onCreateNewProject()}
+						on:click={() => {
+							showDetails = !showDetails;
+						}}
+						style="margin-left: 1em;"
 					>
-						<span>Create</span>
+						{showDetails ? 'Hide Details' : 'Show Details'}
 					</button>
+					{#if showDetails}
+						<pre
+							style="max-height: 300px; overflow: auto; background: #f8f8f8; border: 1px solid #ccc; padding: 1em; margin-top: 1em;">
+							{loadingError}
+						</pre>
+					{/if}
 				</div>
-				<div>
-					<button
-						type="button"
-						class="btn btn-sm variant-filled-warning"
-						on:click={onDeleteSelected}
-					>
-						<span>Delete</span>
-					</button>
+			{:else}
+				<h1>Projects</h1>
+				<div class="flex flex-row justify-end p-5 space-x-1">
+					<div>
+						<button
+							type="button"
+							class="btn btn-sm variant-filled"
+							on:click={() => onCreateNewProject()}
+						>
+							<span>Create</span>
+						</button>
+					</div>
+					<div>
+						<button
+							type="button"
+							class="btn btn-sm variant-filled-warning"
+							on:click={() => onDeleteSelected()}
+						>
+							<span>Delete</span>
+						</button>
+					</div>
 				</div>
+				{#if reactiveProjectsList && reactiveProjectsList.length > 0}
+					<table class="table table-interactive">
+						<caption hidden>Projects</caption>
+						<thead>
+							<tr>
+								<th />
+								<th>Name</th>
+								<th>Created</th>
+								<th>Dry runs</th>
+								<th style="text-align:center">Template</th>
+								<th />
+							</tr>
+						</thead>
+						<tbody>
+							{#each reactiveProjectsList || [] as project}
+								<!-- eslint-disable-next-line @typescript-eslint/explicit-function-return-type -->
+								<tr on:click={() => gotodryruns(project.id)}>
+									<td style="width:25px;">
+										<input
+											type="checkbox"
+											class="checkbox"
+											bind:checked={checkboxes[project.id]}
+											on:click={(event) => handleCheckboxClick(event)}
+										/>
+									</td>
+									<td style="width:25%">{project.name}</td>
+									<td style="width:25%">
+										<div><Timestamp timestamp={project.createdAt} /></div>
+									</td>
+									<td style="width:25%">
+										{dryRunCounts[project.id]}
+									</td>
+									<!-- eslint-disable-next-line svelte/no-unused-svelte-ignore -->
+									<!-- svelte-ignore a11y-click-events-have-key-events -->
+									<!-- eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/explicit-function-return-type -->
+									<td style="width:15%" on:click|stopPropagation={(event) => gotoTemplate(project)}>
+										<div class="grid grid-rows-2 grid-cols-1 justify-items-center">
+											<div><FileTextIcon size="1x" /></div>
+											<div>
+												<p class="no-underline hover:underline">show</p>
+												<div />
+											</div>
+										</div></td
+									>
+									<td style="width:10%">
+										<button
+											type="button"
+											title="Rename project"
+											class="btn-icon btn-icon-sm variant-soft"
+											on:click={() => renameProject(project)}
+										>
+											<EditIcon size="20" />
+										</button>
+									</td>
+								</tr>
+							{/each}
+						</tbody>
+					</table>
+				{:else}
+					<p>No projects yet.</p>
+				{/if}
+			{/if}
+		{:catch error}
+			<div class="card p-4">
+				<h2>Failed to load projects</h2>
+				<p>{error.message}</p>
 			</div>
-			<table class="table table-interactive">
-				<caption hidden>Projects</caption>
-				<thead>
-					<tr>
-						<th />
-						<th>Name</th>
-						<th>Created</th>
-						<th>Dry runs</th>
-						<th style="text-align:center">Template</th>
-						<th />
-					</tr>
-				</thead>
-				<tbody>
-					{#each reactiveProjectsList || [] as project}
-						<!-- eslint-disable-next-line @typescript-eslint/explicit-function-return-type -->
-						<tr on:click={() => gotodryruns(project.id)}>
-							<td style="width:25px;">
-								<input
-									type="checkbox"
-									class="checkbox"
-									bind:checked={checkboxes[project.id]}
-									on:click={(event) => handleCheckboxClick(event)}
-								/>
-							</td>
-							<td style="width:25%">{project.name}</td>
-							<td style="width:25%">
-								<div><Timestamp timestamp={project.createdAt} /></div>
-							</td>
-							<td style="width:25%">
-								{dryRunCounts[project.id]}
-							</td>
-							<!-- eslint-disable-next-line svelte/no-unused-svelte-ignore -->
-							<!-- svelte-ignore a11y-click-events-have-key-events -->
-							<!-- eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/explicit-function-return-type -->
-							<td style="width:15%" on:click|stopPropagation={(event) => gotoTemplate(project)}>
-								<div class="grid grid-rows-2 grid-cols-1 justify-items-center">
-									<div><FileTextIcon size="1x" /></div>
-									<div>
-										<p class="no-underline hover:underline">show</p>
-										<div />
-									</div>
-								</div></td
-							>
-							<td style="width:10%">
-								<button
-									type="button"
-									title="Rename project"
-									class="btn-icon btn-icon-sm variant-soft"
-									on:click={() => renameProject(project)}
-								>
-									<EditIcon size="20" />
-								</button>
-							</td>
-						</tr>
-					{/each}
-				</tbody>
-			</table>
 		{/await}
 	</div>
 </div>
-
-<Alert bind:visibleAlert bind:alertTitle bind:alertMessage bind:alertVariant />
 
 <style>
 	.table.table {

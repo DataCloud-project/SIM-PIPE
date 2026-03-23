@@ -21,10 +21,6 @@ dependencies:
     version: "2.4.0"
     repository: https://argoproj.github.io/argo-helm
     condition: argo-events.enabled
-  - name: minio
-    version: "12.7.0"
-    repository: https://charts.bitnami.com/bitnami
-    condition: minio.enabled
   - name: docker-registry
     version: "2.2.2"
     repository: https://helm.twun.io
@@ -33,7 +29,3 @@ dependencies:
     version: "0.19.0"
     repository: https://charts.sagikazarmark.dev
     condition: sftpgo.enabled
-  - name: postgresql
-    version: "12.8.2"
-    repository: https://charts.bitnami.com/bitnami
-    condition: postgresql.enabled

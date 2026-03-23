@@ -12,6 +12,7 @@
 	import Timestamp from './timestamp.svelte';
 	import { requestGraphQLClient } from '$lib/graphqlUtils.js';
 	import { calculateDuration } from '$utils/resource-utils.js';
+	import { displayModal } from '$utils/modal-utils.js';
 
 	const modalStore = getModalStore();
 
@@ -24,22 +25,14 @@
 	export const getProjectDetails = async (): Promise<Project> => {
 		const variables = { projectId: data.dry_run };
 		const response: { project: Project } = await requestGraphQLClient(allDryRunsQuery, variables);
+		$selectedProject = response.project;
+		reactiveProjectDetails = response.project;
+		reactiveProjectDetails.dryRuns.forEach((element: DryRun) => {
+			checkboxes[element.id] = false;
+		});
 		return response.project;
 	};
 	const projectDetailsPromise = getProjectDetails();
-
-	// TODO: move to lib or utils
-	projectDetailsPromise
-		.then((value) => {
-			$selectedProject = value;
-			reactiveProjectDetails = value;
-			reactiveProjectDetails.dryRuns.forEach((element: DryRun) => {
-				checkboxes[element.id] = false;
-			});
-		})
-		.catch(() => {
-			reactiveProjectDetails = undefined;
-		});
 
 	async function onDeleteSelected(): Promise<void> {
 		const deletePromises = Object.keys(checkboxes)
@@ -48,15 +41,12 @@
 
 		await Promise.all(deletePromises);
 
-		const dryRunDeletedMessageModal: ModalSettings = {
-			type: 'alert',
-			title: 'Dry run deleted🗑️!',
-			body: `Deleted dry runs: ${Object.keys(checkboxes).join(', ')}`
-		};
-		modalStore.trigger(dryRunDeletedMessageModal);
-		// eslint-disable-next-line no-promise-executor-return
-		await new Promise((resolve) => setTimeout(resolve, 1500));
-		modalStore.close();
+		await displayModal(
+			'Dry run deleted🗑️!',
+			`Deleted dry runs: ${Object.keys(checkboxes).join(', ')}`,
+			modalStore
+		);
+
 		// reset checkboxes
 		$selectedProject?.dryRuns.forEach((element) => {
 			checkboxes[element.id] = false;
@@ -165,7 +155,13 @@
 				</div>
 				<div class="flex flex-row justify-end p-5 space-x-1">
 					<div>
-						<button type="button" class="btn btn-sm variant-filled" on:click={onCreateSelected}>
+						<button
+							type="button"
+							class="btn btn-sm variant-filled"
+							on:click={() => {
+								onCreateSelected();
+							}}
+						>
 							<span>Create</span>
 						</button>
 					</div>
@@ -202,6 +198,7 @@
 							<th>Run duration</th>
 							<th>Action</th>
 							<th style="text-align:center">Template</th>
+							<th>Node</th>
 							<th>Created</th>
 						</tr>
 					</thead>
@@ -217,16 +214,18 @@
 										on:click={(event) => handleCheckboxClick(event)}
 									/>
 								</td>
-								<td style="width:20%">{run.id}</td>
-								<td style="width:20%">
+								<td style="width:17%">{run.id}</td>
+								<td style="width:10%">
 									<div><SymbolForRunResult runResult={run.status.phase.toString()} /></div>
 								</td>
-								<td style="width:20%">
+								<td style="width:15%">
 									<div>
-										{calculateDuration(run.nodes)}
+										{['Succeeded', 'Failed', 'Error'].includes(run.status.phase.toString())
+											? calculateDuration(run.nodes)
+											: '-'}
 									</div>
 								</td>
-								<td style="width:20%">
+								<td style="width:12%">
 									<button type="button" class="btn-icon btn-icon-sm variant-soft">
 										<SymbolForAction
 											action={getDryRunAction(run.status.phase.toString())}
@@ -236,7 +235,7 @@
 								</td>
 								<!-- eslint-disable-next-line svelte/no-unused-svelte-ignore runResult
 								<!-- svelte-ignore a11y-click-events-have-key-events -->
-								<td style="width:15%" on:click|stopPropagation={(event) => gotoTemplate(run.id)}>
+								<td style="width:15%" on:click|stopPropagation={() => gotoTemplate(run.id)}>
 									<div class="grid grid-rows-2 grid-cols-1 justify-items-center">
 										<div><FileTextIcon size="1x" /></div>
 										<div>
@@ -245,12 +244,21 @@
 										</div>
 									</div></td
 								>
-								<td style="width:20%"><Timestamp timestamp={run.createdAt} /> </td>
+								<td style="width:15%">{run.nodeName ?? 'default'}</td>
+								<td style="width:15%"><Timestamp timestamp={run.createdAt} /> </td>
 							</tr>
 						{/each}
 					</tbody>
 				</table>
 			{/if}
+		{:catch error}
+			<div class="card p-4">
+				<h2>Failed to load dry runs</h2>
+				<p>{error.message}</p>
+				<button type="button" class="btn btn-sm variant-filled" on:click={() => goto('/projects')}>
+					Back to projects
+				</button>
+			</div>
 		{/await}
 	</div>
 </div>

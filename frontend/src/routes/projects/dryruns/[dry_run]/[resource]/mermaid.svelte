@@ -14,7 +14,7 @@
 		fontFamily: 'sans-serif',
 		fontSize: 20,
 		flowchart: {
-			useMaxWidth: true,
+			useMaxWidth: false,
 			htmlLabels: true,
 			curve: 'basis'
 		}
@@ -42,13 +42,29 @@
 	});
 </script>
 
-<div class="mermaid justify-self-center" bind:this={container} />
+<div class="mermaid-wrapper">
+	<div class="mermaid" bind:this={container} />
+</div>
 
 <style>
+	.mermaid-wrapper {
+		width: 100%;
+		overflow-x: auto;
+		overflow-y: visible;
+		padding: 20px;
+		display: flex;
+		justify-content: center;
+	}
+
 	.mermaid {
-		max-width: 80%;
-		max-height: 80vh;
-		width: unset;
-		height: unset;
+		width: max-content;
+		height: auto;
+	}
+
+	/* Force larger SVG size */
+	:global(.mermaid svg) {
+		width: auto !important;
+		height: auto !important;
+		max-width: none !important;
 	}
 </style>

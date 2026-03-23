@@ -21,6 +21,15 @@ export type Project = {
 	workflowTemplates: [WorkflowTemplate];
 };
 
+export type Resource = {
+	name: string;
+	id: string;
+	os: string;
+	cpus: string;
+	memory: string;
+	status: string;
+};
+
 export type WorkflowTemplate = {
 	name: string;
 	project: Project;
@@ -43,6 +52,8 @@ export type DryRun = {
 	status: DryRunStatus;
 	project: Project;
 	log: [string];
+	node: string;
+	nodeName?: string;
 	// TODO: change if needed; original type definition in graphql is
 	// log(maxLines: number, grep: string): [string];
 };
@@ -79,6 +90,10 @@ export type DryRunMetrics = {
 		key: string;
 		name: string;
 		url: string;
+		size?: number;
+		bucketName?: string;
+		mooseReport?: string;
+		sotwReportUrl?: string;
 	}[];
 };
 
@@ -168,8 +183,10 @@ export type Bucket = {
 export type Artifact = {
 	name: string;
 	url: string;
-	size: number;
-	bucketName: string;
+	size?: number;
+	bucketName?: string;
+	mooseReport?: string;
+	sotwReportUrl?: string;
 };
 
 // Bucket with artifacts
