@@ -25,8 +25,19 @@ export default async function startSecureServer({
 }): Promise<void> {
   const app = express();
 
-  // Setup security middleware with helmet
-  app.use(helmet());
+  // CORS must be applied before helmet so it sets Access-Control-Allow-Origin first.
+  // helmet() sets Cross-Origin-Resource-Policy: same-origin by default which would
+  // override CORS and block the browser from reading cross-origin responses.
+  app.use(cors({
+    origin: true,           // Reflects the request origin (supports any origin including localhost)
+    credentials: true,      // Allow Authorization header
+    methods: ['GET', 'POST', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+  }));
+
+  // Setup security middleware with helmet — disable crossOriginResourcePolicy so it
+  // doesn't conflict with CORS (CORP: same-origin blocks cross-origin reads).
+  app.use(helmet({ crossOriginResourcePolicy: false }));
 
   // Setup logging middleware with morgan
   app.use(morgan('combined'));
@@ -47,7 +58,7 @@ export default async function startSecureServer({
   // increase size limit to allow larger file uploads (createNewDryRun)
   app.use(express.json({ limit: '5mb' }));
 
-  app.use('/graphql', cors<cors.CorsRequest>(), bodyParser.json(), graphqlRequestHandler());
+  app.use('/graphql', bodyParser.json(), graphqlRequestHandler());
 
   // Start the Express server
   app.listen({ port: 9000 },

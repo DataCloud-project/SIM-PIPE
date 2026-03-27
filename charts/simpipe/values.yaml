@@ -35,6 +35,13 @@ controller:
   carbontracker:
     endpoint: http://simpipe-carbontracker:8000
 
+  keycloak:
+    # Set to the Keycloak realm issuer URL to enable authentication.
+    # Format: https://<keycloak-base-url>/realms/<realm-name>
+    # Leave empty to run in dev mode (no auth, fixed local user).
+    # Note: use the node IP (not localhost) so pods can reach the host-resident Keycloak process
+    oauth2IssuerEndpoint: "http://95.216.40.236:9093/realms/twinship-local"
+
   serviceAccount:
     # Annotations to add to the service account
     annotations: {}
@@ -182,6 +189,18 @@ frontend:
   tolerations: []
 
   affinity: {}
+
+  keycloak:
+    # Must match the public client created in this realm.
+    # Set enabled to "true" to activate Keycloak login in the browser.
+    enabled: "true"
+    url: "http://localhost:9093"
+    realm: "twinship-local"
+    clientId: "sim-pipe-web"
+
+  # Override the GraphQL controller URL seen by the browser.
+  # Leave empty to use the default auto-detection in keycloak.client.ts.
+  controllerUrl: ""
 
 kube-prometheus-stack:
   enabled: true

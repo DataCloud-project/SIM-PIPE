@@ -23,7 +23,7 @@ async function getOauth2IssuerPublicKey(): Promise<KeyObject> {
     throw new Error('No public key found');
   }
   const pem = `-----BEGIN PUBLIC KEY-----\r\n${publicKey}\r\n-----END PUBLIC KEY-----`;
-  return crypto.createPublicKey({ key: pem, format: 'pem', type: 'pkcs1' });
+  return crypto.createPublicKey({ key: pem, format: 'pem', type: 'spki' });
 }
 
 const oauth2IssuerPublicKeyCache = new ExpiryMap(authenticationExpiryTimeout);
@@ -40,9 +40,24 @@ export type Auth = {
 
 async function jwtVerifyOauth2IssuerToken(jwt: string): Promise<Auth> {
   const publicKey = await getOauth2IssuerPublicKeyWithCache();
-  const { payload } = await jwtVerify(jwt, publicKey);
+  let payload;
+  try {
+    const result = await jwtVerify(jwt, publicKey);
+    payload = result.payload;
+  } catch (verifyError) {
+    // eslint-disable-next-line no-console
+    console.error('[auth] jwtVerify failed:', verifyError instanceof Error ? verifyError.message : verifyError);
+    throw verifyError;
+  }
   if (!payload || typeof payload.sub !== 'string' || typeof payload.preferred_username !== 'string'
     || typeof payload.iat !== 'number' || typeof payload.exp !== 'number') {
+    // eslint-disable-next-line no-console
+    console.error('[auth] Invalid token payload:', JSON.stringify({
+      sub: typeof payload?.sub,
+      preferred_username: typeof payload?.preferred_username,
+      iat: typeof payload?.iat,
+      exp: typeof payload?.exp,
+    }));
     throw new Error('Invalid token');
   }
 
@@ -64,10 +79,15 @@ async function hybridAuthJwtMiddlewareAsync(
 ): Promise<void> {
   // If we are in development mode, we allow a fixed local user
   if (oauth2IssuerEndpoint === undefined) {
+    // eslint-disable-next-line no-console
+    console.log('[auth] Dev mode (OAUTH2_ISSUER_ENDPOINT not set), using fixed local user');
     (request as unknown as { auth: Auth }).auth = fixedLocalAuth;
     next();
     return;
   }
+
+  // eslint-disable-next-line no-console
+  console.log('[auth] OAUTH2_ISSUER_ENDPOINT:', oauth2IssuerEndpoint);
 
   // Load the Authorisation header
   // and that the header is a Bearer token
@@ -75,13 +95,18 @@ async function hybridAuthJwtMiddlewareAsync(
 
   // We allow anonymous access to the API
   if (!authHeader) {
+    // eslint-disable-next-line no-console
+    console.log('[auth] No authorization header, proceeding as anonymous');
     next();
     return;
   }
 
+  // eslint-disable-next-line no-console
+  console.log('[auth] Authorization header present, length:', authHeader.length);
+
   // If it's not a bearer token
   if (!authHeader.startsWith('Bearer ')) {
-    response.sendStatus(401);
+    response.status(401).json({ errors: [{ message: 'Unauthorized', extensions: { code: 'UNAUTHENTICATED' } }] });
     return;
   }
 
@@ -93,7 +118,7 @@ async function hybridAuthJwtMiddlewareAsync(
   } catch (error) {
     // eslint-disable-next-line no-console
     console.error(error);
-    response.sendStatus(401);
+    response.status(401).json({ errors: [{ message: 'Unauthorized', extensions: { code: 'UNAUTHENTICATED' } }] });
     return;
   }
 

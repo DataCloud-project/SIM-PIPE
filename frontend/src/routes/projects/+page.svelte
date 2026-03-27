@@ -41,9 +41,11 @@
 	const getProjectsList = async (): Promise<Project[]> => {
 		try {
 			const response: { projects: Project[] } = await requestGraphQLClient(allProjectsQuery);
+			console.log('Fetched projects:', response);
 			return response.projects;
 		} catch (error) {
 			loadingError = 'Failed to load projects';
+			console.log('error', error);
 			throw error;
 		}
 	};

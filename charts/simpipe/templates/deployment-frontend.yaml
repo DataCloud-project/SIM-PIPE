@@ -45,6 +45,15 @@ spec:
               port: http
           resources:
             {{- toYaml .Values.frontend.resources | nindent 12 }}
+          volumeMounts:
+            - name: env-config
+              mountPath: /app/build/client/env-config.js
+              subPath: env-config.js
+              readOnly: true
+      volumes:
+        - name: env-config
+          configMap:
+            name: {{ include "simpipeFrontend.fullname" . }}-env-config
       {{- with .Values.frontend.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}

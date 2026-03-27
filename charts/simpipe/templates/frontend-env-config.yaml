@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "simpipeFrontend.fullname" . }}-env-config
+  labels:
+    {{- include "simpipeFrontend.labels" . | nindent 4 }}
+data:
+  env-config.js: |
+    window.__ENV__ = {
+      KEYCLOAK_ENABLED: {{ .Values.frontend.keycloak.enabled | default "false" | squote }},
+      KEYCLOAK_URL: {{ .Values.frontend.keycloak.url | default "" | squote }},
+      KEYCLOAK_REALM: {{ .Values.frontend.keycloak.realm | default "" | squote }},
+      KEYCLOAK_CLIENT_ID: {{ .Values.frontend.keycloak.clientId | default "sim-pipe-web" | squote }}
+      {{- if .Values.frontend.controllerUrl }},
+      SIM_PIPE_CONTROLLER_URL: {{ .Values.frontend.controllerUrl | squote }}
+      {{- end }}
+    };
