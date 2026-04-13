@@ -1,6 +1,5 @@
 import { GraphQLClient } from 'graphql-request';
 import Keycloak from 'keycloak-js';
-import { get } from 'svelte/store';
 import * as config from '../lib/config';
 import { graphQLClient, username, usertoken } from '../stores/stores';
 import { browser } from '$app/environment';
@@ -17,17 +16,62 @@ export async function ensureFreshToken(): Promise<void> {
 			const exp = keycloakInstance.tokenParsed?.exp ?? 0;
 			window.sessionStorage.setItem('keycloak-token', token);
 			window.sessionStorage.setItem('keycloak-exp', exp.toString());
+			window.sessionStorage.setItem('keycloak-refresh-token', keycloakInstance.refreshToken ?? '');
 			usertoken.set(token);
-			get(graphQLClient)?.setHeader('authorization', `Bearer ${token}`);
 		}
 	} catch {
 		// Refresh token expired — clear cache and force re-login
 		window.sessionStorage.removeItem('keycloak-token');
 		window.sessionStorage.removeItem('keycloak-exp');
+		window.sessionStorage.removeItem('keycloak-refresh-token');
 		const cleanUri = `${window.location.origin}${window.location.pathname}`;
 		await keycloakInstance.login({ redirectUri: cleanUri });
 		await new Promise<never>(() => {});
 	}
+}
+
+// Returns a fresh access token, refreshing via Keycloak if within 30 s of expiry.
+// Falls back to sessionStorage when keycloakInstance is not yet set (non-browser or SSR).
+export async function getLatestToken(): Promise<string | undefined> {
+	if (!browser) return undefined;
+	if (keycloakInstance) {
+		try {
+			await keycloakInstance.updateToken(30);
+		} catch {
+			// Refresh token expired — force re-login
+			window.sessionStorage.removeItem('keycloak-token');
+			window.sessionStorage.removeItem('keycloak-exp');
+			window.sessionStorage.removeItem('keycloak-refresh-token');
+			const cleanUri = `${window.location.origin}${window.location.pathname}`;
+			await keycloakInstance.login({ redirectUri: cleanUri });
+			await new Promise<never>(() => {});
+		}
+		const t = keycloakInstance.token;
+		if (t) {
+			window.sessionStorage.setItem('keycloak-token', t);
+			window.sessionStorage.setItem('keycloak-exp', String(keycloakInstance.tokenParsed?.exp ?? 0));
+			window.sessionStorage.setItem('keycloak-refresh-token', keycloakInstance.refreshToken ?? '');
+		}
+		return t;
+	}
+	return window.sessionStorage.getItem('keycloak-token') ?? undefined;
+}
+
+// Creates a GraphQLClient whose every request dynamically injects a fresh Bearer token
+// via requestMiddleware — avoids stale static headers and concurrent-refresh races.
+function createGraphQLClientWithMiddleware(graphqlUrl: string): GraphQLClient {
+	return new GraphQLClient(graphqlUrl, {
+		requestMiddleware: async (request): Promise<typeof request> => {
+			const token = await getLatestToken();
+			return {
+				...request,
+				headers: {
+					...(request.headers as Record<string, string>),
+					...(token ? { authorization: `Bearer ${token}` } : {})
+				}
+			};
+		}
+	});
 }
 
 function parseSimPipeEnvironment(): {
@@ -76,7 +120,11 @@ function parseSimPipeEnvironment(): {
 
 async function internalInitKeycloak(graphqlUrl: string): Promise<void> {
 	console.log('[keycloak] internalInitKeycloak starting');
-	console.log('[keycloak] config:', { url: config.KEYCLOAK_URL, realm: config.KEYCLOAK_REALM, clientId: config.KEYCLOAK_CLIENT_ID });
+	console.log('[keycloak] config:', {
+		url: config.KEYCLOAK_URL,
+		realm: config.KEYCLOAK_REALM,
+		clientId: config.KEYCLOAK_CLIENT_ID
+	});
 	console.log('[keycloak] graphqlUrl:', graphqlUrl);
 
 	// Fast path: reuse a cached token that is still valid.
@@ -87,13 +135,24 @@ async function internalInitKeycloak(graphqlUrl: string): Promise<void> {
 			const exp = Number.parseInt(existingExp, 10);
 			if (exp - Date.now() / 1000 > 30) {
 				console.log('[keycloak] Using cached token, expires:', new Date(exp * 1000).toISOString());
+				// Restore the Keycloak instance from saved tokens so updateToken() works
+				// when the access token later expires (prevents ensureFreshToken no-op).
+				const savedRefreshToken = window.sessionStorage.getItem('keycloak-refresh-token');
+				const keycloak = new Keycloak({
+					url: config.KEYCLOAK_URL,
+					realm: config.KEYCLOAK_REALM,
+					clientId: config.KEYCLOAK_CLIENT_ID
+				});
+				await keycloak.init({
+					checkLoginIframe: false,
+					useNonce: false,
+					token: existingToken,
+					refreshToken: savedRefreshToken ?? undefined
+				});
+				keycloakInstance = keycloak;
 				usertoken.set(existingToken);
 				username.set(window.sessionStorage.getItem('keycloak-username') ?? '');
-				graphQLClient.set(
-					new GraphQLClient(graphqlUrl, {
-						headers: { authorization: `Bearer ${existingToken}` }
-					})
-				);
+				graphQLClient.set(createGraphQLClientWithMiddleware(graphqlUrl));
 				return;
 			}
 		}
@@ -113,8 +172,10 @@ async function internalInitKeycloak(graphqlUrl: string): Promise<void> {
 	const redirectCount = Number.parseInt(window.sessionStorage.getItem(redirectKey) ?? '0', 10);
 
 	const isCallback =
-		window.location.search.includes('code=') || window.location.search.includes('error=') ||
-		window.location.hash.includes('code=') || window.location.hash.includes('error=');
+		window.location.search.includes('code=') ||
+		window.location.search.includes('error=') ||
+		window.location.hash.includes('code=') ||
+		window.location.hash.includes('error=');
 
 	console.log('[keycloak] isCallback:', isCallback, 'redirectCount:', redirectCount);
 
@@ -144,11 +205,15 @@ async function internalInitKeycloak(graphqlUrl: string): Promise<void> {
 			window.sessionStorage.removeItem(redirectKey);
 			throw new Error(
 				'Authentication failed after multiple attempts. Check Keycloak client ' +
-				'settings: Web origins must include http://localhost:8088, redirect URI ' +
-				'must include http://localhost:8088/*.'
+					'settings: Web origins must include http://localhost:8088, redirect URI ' +
+					'must include http://localhost:8088/*.'
 			);
 		}
-		console.log('[keycloak] Not authenticated — redirecting to login (attempt', redirectCount + 1, ')...');
+		console.log(
+			'[keycloak] Not authenticated — redirecting to login (attempt',
+			redirectCount + 1,
+			')...'
+		);
 		window.sessionStorage.setItem(redirectKey, String(redirectCount + 1));
 		const cleanUri = `${window.location.origin}${window.location.pathname}`;
 		await keycloak.login({ redirectUri: cleanUri });
@@ -173,14 +238,17 @@ async function internalInitKeycloak(graphqlUrl: string): Promise<void> {
 
 	if (typeof preferredUsername !== 'string') {
 		console.error(
-			'[keycloak] preferred_username missing.\n' +
-			'  idTokenParsed:', JSON.stringify(keycloak.idTokenParsed), '\n' +
-			'  tokenParsed:', JSON.stringify(keycloak.tokenParsed)
+			// eslint-disable-next-line no-useless-concat
+			'[keycloak] preferred_username missing.\n' + '  idTokenParsed:',
+			JSON.stringify(keycloak.idTokenParsed),
+			// eslint-disable-next-line no-useless-concat
+			'\n' + '  tokenParsed:',
+			JSON.stringify(keycloak.tokenParsed)
 		);
 		throw new Error(
 			'preferred_username claim is missing from the Keycloak token. ' +
-			'In Keycloak Admin → Clients → sim-pipe-web → Client Scopes, ' +
-			'move the "profile" scope from Optional to Default.'
+				'In Keycloak Admin → Clients → sim-pipe-web → Client Scopes, ' +
+				'move the "profile" scope from Optional to Default.'
 		);
 	}
 
@@ -192,15 +260,12 @@ async function internalInitKeycloak(graphqlUrl: string): Promise<void> {
 	window.sessionStorage.setItem('keycloak-token', token);
 	window.sessionStorage.setItem('keycloak-exp', exp.toString());
 	window.sessionStorage.setItem('keycloak-username', preferredUsername);
+	window.sessionStorage.setItem('keycloak-refresh-token', keycloak.refreshToken ?? '');
 
 	usertoken.set(token);
 	username.set(preferredUsername);
-	graphQLClient.set(
-		new GraphQLClient(graphqlUrl, {
-			headers: { authorization: `Bearer ${token}` }
-		})
-	);
 	keycloakInstance = keycloak;
+	graphQLClient.set(createGraphQLClientWithMiddleware(graphqlUrl));
 	console.log('[keycloak] graphQLClient set successfully');
 }
 

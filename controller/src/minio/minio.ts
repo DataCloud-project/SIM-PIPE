@@ -152,6 +152,28 @@ export async function listAllBuckets(): Promise<BucketItemFromList[]> {
   return await minioInternalClient.listBuckets();
 }
 
+const SIMPIPE_USER_TAG = 'simpipe-user';
+
+// Tag a bucket with the owner's Keycloak sub so we can enforce per-user isolation.
+export async function setBucketUserTag(bucketName: string, userSub: string): Promise<void> {
+  await (minioInternalClient as unknown as {
+    setBucketTagging: (bucket: string, tags: Record<string, string>) => Promise<void>
+  }).setBucketTagging(bucketName, { [SIMPIPE_USER_TAG]: userSub });
+}
+
+// Return the owner sub stored in the bucket's tags, or undefined if none is set.
+export async function getBucketUserTag(bucketName: string): Promise<string | undefined> {
+  try {
+    const tags = await (minioInternalClient as unknown as {
+      getBucketTagging: (bucket: string) => Promise<{ Key: string; Value: string }[]>
+    }).getBucketTagging(bucketName);
+    return tags.find((t) => t.Key === SIMPIPE_USER_TAG)?.Value;
+  } catch {
+    // Bucket may not have tagging configured (e.g. system buckets) — treat as unowned.
+    return undefined;
+  }
+}
+
 // check if a bucket exists
 /* -- not currently used
 export async function bucketExists(bucketName: string): Promise<boolean> {

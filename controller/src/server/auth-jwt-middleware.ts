@@ -42,7 +42,9 @@ async function jwtVerifyOauth2IssuerToken(jwt: string): Promise<Auth> {
   const publicKey = await getOauth2IssuerPublicKeyWithCache();
   let payload;
   try {
-    const result = await jwtVerify(jwt, publicKey);
+    // clockTolerance: 60s covers minor clock drift between the K8s pod and the
+    // host-resident Keycloak process, and races between token refresh and request arrival.
+    const result = await jwtVerify(jwt, publicKey, { clockTolerance: 60 });
     payload = result.payload;
   } catch (verifyError) {
     // eslint-disable-next-line no-console

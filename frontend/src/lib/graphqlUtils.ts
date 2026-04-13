@@ -27,9 +27,6 @@ export async function requestGraphQLClient<T, V extends Variables = Variables>(
 			throw new GraphQLRequestError(`Authentication failed: ${msg}`, 401);
 		}
 	}
-	// Proactively refresh the token if it is within 30 s of expiry
-	await ensureFreshToken();
-
 	const client = get(graphQLClient);
 	if (!client) {
 		// initKeycloak triggered a login redirect; suspend until navigation completes.
@@ -37,17 +34,18 @@ export async function requestGraphQLClient<T, V extends Variables = Variables>(
 	}
 	try {
 		return await client.request<T>(query, variables);
-	} catch (err: unknown) {
+	} catch (error: unknown) {
 		// On 401, attempt one token refresh and retry before giving up
-		const errStatus = (err as { response?: { status?: number } }).response?.status;
+		const errStatus = (error as { response?: { status?: number } }).response?.status;
 		if (errStatus === 401) {
 			await ensureFreshToken();
 			const freshClient = get(graphQLClient);
 			if (freshClient) {
 				try {
 					return await freshClient.request<T>(query, variables);
-				} catch (retryErr: unknown) {
-					err = retryErr;
+				} catch (error_: unknown) {
+					// eslint-disable-next-line no-ex-assign
+					error = error_;
 				}
 			}
 		}
@@ -56,13 +54,19 @@ export async function requestGraphQLClient<T, V extends Variables = Variables>(
 		// returns a non-JSON or empty-errors-array response (e.g. plain-text 401).
 		// Normalise all such failures into a predictable GraphQLRequestError so
 		// callers can handle them cleanly without crashing.
-		if (err instanceof TypeError && (err as TypeError).message.includes("reading 'message'")) {
-			throw new GraphQLRequestError('Request failed: server returned an unexpected response (possibly 401 Unauthorized). Check controller logs.');
+		if (error instanceof TypeError && error.message.includes("reading 'message'")) {
+			throw new GraphQLRequestError(
+				'Request failed: server returned an unexpected response (possibly 401 Unauthorized). Check controller logs.'
+			);
 		}
 		// Re-extract a clean message from a well-formed ClientError
-		const clientErr = err as { response?: { status?: number; errors?: { message: string }[] }; message?: string };
+		const clientErr = error as {
+			response?: { status?: number; errors?: { message: string }[] };
+			message?: string;
+		};
 		const status = clientErr.response?.status;
-		const gqlMessage = clientErr.response?.errors?.[0]?.message ?? clientErr.message ?? 'Unknown error';
+		const gqlMessage =
+			clientErr.response?.errors?.[0]?.message ?? clientErr.message ?? 'Unknown error';
 		throw new GraphQLRequestError(gqlMessage, status);
 	}
 }

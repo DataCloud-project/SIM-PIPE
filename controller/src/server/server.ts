@@ -29,8 +29,8 @@ export default async function startSecureServer({
   // helmet() sets Cross-Origin-Resource-Policy: same-origin by default which would
   // override CORS and block the browser from reading cross-origin responses.
   app.use(cors({
-    origin: true,           // Reflects the request origin (supports any origin including localhost)
-    credentials: true,      // Allow Authorization header
+    origin: true, // Reflects the request origin (supports any origin including localhost)
+    credentials: true, // Allow Authorization header
     methods: ['GET', 'POST', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
   }));

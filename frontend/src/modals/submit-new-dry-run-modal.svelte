@@ -421,7 +421,7 @@
 				{#if loadingAvailableNodes}
 					<p>Loading nodes...</p>
 				{:else if availableNodes.filter((n) => n.status?.toLowerCase() === 'running').length === 0}
-					<p>No running nodes available</p>
+					<p></p>
 				{:else}
 					<label for="node-select">Select node to execute the dry run:</label>
 					<select id="node-select" bind:value={selectedNodeName}>

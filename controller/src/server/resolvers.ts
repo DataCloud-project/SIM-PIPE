@@ -49,18 +49,24 @@ import {
   createBucket,
   deleteBucket,
   deleteObjects,
+  getBucketUserTag,
   getMooseReportForArtifact,
   getObjectMetadata,
   getObjectSize,
   listAllBuckets,
   listAllObjects,
+  setBucketUserTag,
   setMooseReportForArtifact,
 } from '../minio/minio.js';
 import { getMooseAnalysis } from '../moose/moose.js';
 import { assertPrometheusIsHealthy } from '../prometheus/prometheus.js';
 import queryPrometheusResolver from '../prometheus/query-prometheus-resolver.js';
 import { NotFoundError, PingError } from './apollo-errors.js';
-import {
+import type { ArgoWorkflow, ArgoWorkflowTemplate } from '../argo/argo-client.js';
+import type ArgoWorkflowClient from '../argo/argo-client.js';
+import type K8sClient from '../k8s/k8s-client.js';
+import type { ArtifactItem } from '../minio/minio.js';
+import type {
   Artifact,
   DryRun,
   DryRunNode,
@@ -70,6 +76,7 @@ import {
   DryRunNodePod, DryRunNodePodLogArgs as DryRunNodePodLogArguments,
   Mutation,
   MutationAssignDryRunToProjectArgs as MutationAssignDryRunToProjectArguments,
+  MutationCleanupStaleResourceArgs as MutationCleanupStaleResourceArguments,
   MutationComputeUploadPresignedUrlArgs as MutationComputeUploadPresignedUrlArguments,
   MutationCreateBucketArgs as MutationCreateBucketArguments,
   MutationCreateDockerRegistryCredentialArgs as MutationCreateDockerRegistryCredentialArguments,
@@ -81,7 +88,6 @@ import {
   MutationDeleteDockerRegistryCredentialArgs as MutationDeleteDockerRegistryCredentialArguments,
   MutationDeleteDryRunArgs as MutationDeleteDryRunArguments,
   MutationDeleteProjectArgs as MutationDeleteProjectArguments,
-  MutationCleanupStaleResourceArgs as MutationCleanupStaleResourceArguments,
   MutationDeleteResourceArgs as MutationDeleteResourceArguments,
   MutationDeleteWorkflowTemplateArgs as MutationDeleteWorkflowTemplateArguments,
   MutationRenameProjectArgs as MutationRenameProjectArguments,
@@ -114,10 +120,6 @@ import {
   QueryWorkflowTemplateArgs as QueryWorkflowTemplateArguments,
   WorkflowTemplate,
 } from './schema.js';
-import type { ArgoWorkflow, ArgoWorkflowTemplate } from '../argo/argo-client.js';
-import type ArgoWorkflowClient from '../argo/argo-client.js';
-import type K8sClient from '../k8s/k8s-client.js';
-import type { ArtifactItem } from '../minio/minio.js';
 
 interface ContextUser {
   sub: string
@@ -236,13 +238,23 @@ const resolvers = {
       return await getWorkflowTemplate(name, argoClient, sub);
     },
     async buckets(
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      _p: EmptyParent, _a: EmptyArguments,
+      _p: EmptyParent, _a: EmptyArguments, context: AuthenticatedContext,
     ): Promise<Query['buckets']> {
-      const buckets = await listAllBuckets();
-      return buckets.map(({ name }) => ({
-        name,
-      }));
+      const { user } = context;
+      const { sub } = user;
+      const allBuckets = await listAllBuckets();
+      // System buckets are visible to all authenticated users (their contents are
+      // filtered per-user in the `artifacts` resolver).
+      const systemBuckets = new Set(['artifacts', 'logs', 'registry']);
+      const results = await Promise.all(
+        allBuckets.map(async ({ name }) => {
+          if (systemBuckets.has(name)) return { name };
+          // User-created buckets are only visible to their owner.
+          const owner = await getBucketUserTag(name);
+          return owner === sub ? { name } : null;
+        }),
+      );
+      return results.filter((b): b is { name: string } => b !== null);
     },
     async resources(
       _p: EmptyParent, _a: EmptyArguments, context: AuthenticatedContext,
@@ -265,24 +277,54 @@ const resolvers = {
       return returnobject;
     },
     async artifacts(
-      _p: EmptyParent, arguments_: QueryArtifactsArguments,
+      _p: EmptyParent, arguments_: QueryArtifactsArguments, context: AuthenticatedContext,
     ): Promise<Query['artifacts']> {
       const { bucketName } = arguments_;
-      // console.log(bucketName);
+      const {
+        user, argoClient, k8sClient, k8sNamespace,
+      } = context;
+      const { sub } = user;
+      const systemBuckets = new Set(['artifacts', 'logs', 'registry']);
+      const isSystemBucket = !bucketName || systemBuckets.has(bucketName);
       let objects: ArtifactItem[];
-      // eslint-disable-next-line unicorn/prefer-ternary
-      if (bucketName) {
-        objects = await listAllObjects(bucketName);
+      if (isSystemBucket) {
+        // For system buckets, only return artifacts that belong to the requesting
+        // user's dry runs. Argo stores artifacts at <workflow-name>/... so we
+        // filter by the set of dry-run IDs (= Argo workflow names) owned by the user.
+        const userProjects = await projects(k8sClient, k8sNamespace, sub);
+        const dryRunArrays = await Promise.all(
+          userProjects.map((project) => dryRunsForProject(project.id, argoClient)),
+        );
+        const userDryRunIds = new Set(dryRunArrays.flat().map((dr) => dr.id));
+        const allObjects = await listAllObjects(bucketName || undefined);
+        objects = allObjects.filter(
+          ({ name }) => name !== undefined
+            && (
+              [...userDryRunIds].some((id) => (name).startsWith(`${id}/`))
+              || (name).startsWith(`${sub}/`)
+            ),
+        );
       } else {
-        objects = await listAllObjects(); // will use default bucket
+        // For user-created buckets, verify the requesting user is the owner.
+        const owner = await getBucketUserTag(bucketName);
+        if (owner !== sub) {
+          throw new NotAllowedError('Access denied to this bucket');
+        }
+        objects = await listAllObjects(bucketName);
       }
+      const effectiveBucketName = bucketName || undefined;
+      const subPrefix = `${sub}/`;
       return objects
-        .filter(({ name }) => name !== undefined)
+        .filter((o): o is ArtifactItem & { name: string } => o.name !== undefined)
         .map(({ name, size }) => ({
-          name: name as string,
-          key: name as string,
+          // Strip the user-sub prefix from the display name so that files uploaded
+          // directly by the user appear as "sample1.txt" rather than
+          // "<uuid>/sample1.txt". The full MinIO key is preserved in `key` so that
+          // download presigned URLs and deletes continue to work.
+          name: isSystemBucket && name.startsWith(subPrefix) ? name.slice(subPrefix.length) : name,
+          key: name,
           size,
-          bucketName,
+          bucketName: effectiveBucketName,
         }));
     },
     async hardwaremetrics(
@@ -415,24 +457,28 @@ const resolvers = {
       _p: EmptyParent, arguments_: MutationCreateBucketArguments, context: AuthenticatedContext,
     ): Promise<Mutation['createBucket']> {
       const { name } = arguments_;
-      // eslint-disable-next-line unicorn/prefer-ternary
+      const { user } = context;
       if (['artifacts', 'logs', 'registry'].includes(name)) {
         throw new NotAllowedError('Not allowed to create bucket with this name');
-      } else {
-        const returnedBucketName = createBucket(name);
-        return returnedBucketName;
       }
+      const returnedBucketName = await createBucket(name);
+      // Tag the bucket with the owner so listing/access can be scoped per-user.
+      await setBucketUserTag(name, user.sub);
+      return returnedBucketName;
     },
     async deleteBucket(
       _p: EmptyParent, arguments_: MutationCreateBucketArguments, context: AuthenticatedContext,
     ): Promise<Mutation['deleteBucket']> {
       const { name } = arguments_;
-      // eslint-disable-next-line unicorn/prefer-ternary
+      const { user } = context;
       if (['artifacts', 'logs', 'registry'].includes(name)) {
         throw new NotAllowedError('Not allowed to delete bucket with this name');
-      } else {
-        return deleteBucket(name);
       }
+      const owner = await getBucketUserTag(name);
+      if (owner !== user.sub) {
+        throw new NotAllowedError('Not allowed to delete a bucket you do not own');
+      }
+      return deleteBucket(name);
     },
     async createDryRun(
       _p: EmptyParent,
@@ -622,19 +668,9 @@ const resolvers = {
       _arguments: MutationComputeUploadPresignedUrlArguments,
       context: AuthenticatedContext,
     ): Promise<Mutation['computeUploadPresignedUrl']> {
-      /*
-      // TODO: I uncommented this for now due to conseqenses to uploading files using the artifact browser.
       const { sub } = context.user;
-      console.log('sub', sub);
-      // Make sure the user is a filesystem safe string
-      if (!/^[\w-]+$/i.test(sub)) {
-        throw new Error('User identifier (sub) is unsupported for files');
-      }
-      */
       let { key, bucketName } = _arguments;
-      // console.log('key', key);
       if (key) {
-        // if (!/^[\w.-]+$/i.test(key)) {
         if (!isValidFilePath(key)) {
           throw new Error('Key is unsupported for files');
         }
@@ -642,10 +678,13 @@ const resolvers = {
         key = randomUUID();
       }
 
-      // const objectName = `${sub}/${key}`;
-      const objectName = key;
-      // console.log('bucketName', bucketName);
-      // console.log('objectName', objectName);
+      // For system buckets (or when no bucket is specified), scope uploaded objects
+      // under the user's sub prefix so the artifacts resolver can return them only
+      // to their owner.  User-created buckets are already isolated by ownership tag.
+      const systemBuckets = new Set(['artifacts', 'logs', 'registry']);
+      const isSystemBucket = !bucketName || systemBuckets.has(bucketName);
+      const objectName = isSystemBucket ? `${sub}/${key}` : key;
+
       if (bucketName !== null) {
         return await computePresignedPutUrl(objectName, bucketName);
       }
@@ -696,9 +735,35 @@ const resolvers = {
     async deleteArtifacts(
       _p: EmptyParent,
       arguments_: MutationDeleteArtifactsArguments,
-      _context: AuthenticatedContext,
+      context: AuthenticatedContext,
     ): Promise<Mutation['deleteArtifacts']> {
       const { bucketName, keys } = arguments_;
+      const {
+        user, argoClient, k8sClient, k8sNamespace,
+      } = context;
+      const { sub } = user;
+      const systemBuckets = new Set(['artifacts', 'logs', 'registry']);
+      if (systemBuckets.has(bucketName)) {
+        // Verify all requested keys belong to the user's dry runs.
+        const userProjects = await projects(k8sClient, k8sNamespace, sub);
+        const dryRunArrays = await Promise.all(
+          userProjects.map((project) => dryRunsForProject(project.id, argoClient)),
+        );
+        const userDryRunIds = new Set(dryRunArrays.flat().map((dr) => dr.id));
+        for (const key of keys) {
+          const ownedByUser = key.startsWith(`${sub}/`)
+            || [...userDryRunIds].some((id) => key.startsWith(`${id}/`));
+          if (!ownedByUser) {
+            throw new NotAllowedError('Access denied to one or more artifacts');
+          }
+        }
+      } else {
+        // For user-created buckets, verify ownership.
+        const owner = await getBucketUserTag(bucketName);
+        if (owner !== sub) {
+          throw new NotAllowedError('Access denied to this bucket');
+        }
+      }
       const response = await deleteObjects(keys, bucketName);
       return response;
     },
