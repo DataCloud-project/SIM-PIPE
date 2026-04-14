@@ -73,14 +73,12 @@
 
 	// Upload file using presigned url
 	function uploadFile(file: File, url: string): void {
-		console.log('url:', url);
 		fetch(url, {
 			method: 'PUT',
 			body: file
 		})
 			.then((response) => response.text())
 			.then((data) => {
-				console.log('response:', data);
 				// TODO: these messages should stack somehow in stead of replacing each other.
 				alertTitle = '👍 Success';
 				alertMessage = `Successfully uploaded file: ${file.name}`;
@@ -103,8 +101,6 @@
 		uploadPath: string
 	): Promise<void> {
 		let artifactUploadPath: string = '';
-		console.log(uploadPath);
-		console.log(artifactsToUpload);
 		for (const artifact of artifactsToUpload) {
 			// eslint did not like the tenary operator here, so sticking with if else
 			// eslint-disable-next-line unicorn/prefer-ternary
@@ -113,7 +109,6 @@
 			} else {
 				artifactUploadPath = `${uploadPath}/${artifact.name}`;
 			}
-			console.log(`Uploading ${artifact.name} to ${artifactUploadPath}`);
 			const url: { computeUploadPresignedUrl: string } = await requestGraphQLClient(
 				getUploadPresignedUrl,
 				{ bucketName: bucket, key: artifactUploadPath }
@@ -134,10 +129,6 @@
 		}
 		const bucket = $reactiveBuckets.find((b) => b.bucket === $selectedBucket);
 		const bucketsList: string[] = $reactiveBuckets.map((b) => b.bucket);
-		console.log(
-			'bucketsList: %d',
-			bucketsList.map((b) => b)
-		);
 		// TODO: is there a better way to get paths for selected artifacts?
 		const selectedPaths: ArtifactHierarchyType[] = bucket
 			? getSelectedArtifactsAllBuckets().filter((f) => f.isSelected && !f.name.includes('.'))
@@ -295,7 +286,6 @@
 	): Promise<{ message: string; status: number; bucket: string; paths: string[] }> {
 		const bucket = bucketName;
 		const paths = artifactPathsList;
-		console.log(`Request to delete ${paths.join(', ')}, in bucket: ${bucket}`);
 
 		const response = await requestGraphQLClient(deleteArtifactsMutation, {
 			bucketName: bucket,
@@ -303,7 +293,6 @@
 		});
 
 		if (response) {
-			console.log('response:', response);
 			return { message: 'Successfully deleted artifacts', status: 200, bucket, paths };
 		}
 
@@ -321,14 +310,11 @@
 				bucketsList.push(artifact.bucket);
 			}
 		}
-		console.log(`Buckets: ${bucketsList.join(', ')}`);
 		// for each bucket, delete its artifacts
 		const responses: { message: string; status: number; bucket: string; paths: string[] }[] = [];
 		for (const bucket of bucketsList) {
-			console.log(`Deleting artifacts in bucket: ${bucket}`);
 			const bucketArtifacts = artifacts.filter((artifact) => artifact.bucket === bucket);
 			const artifactsPathsList = getAllArtifactPaths(bucketArtifacts);
-			console.log(`Artifacts: ${artifactsPathsList.join(', ')}`);
 			// I think we have to await here.
 			// eslint-disable-next-line no-await-in-loop
 			responses.push(await deleteArtifacts(bucket, artifactsPathsList));
@@ -338,9 +324,7 @@
 
 	// On delete artifacts
 	async function onDeleteArtifacts(): Promise<void> {
-		console.log('Delete Artifacts');
 		const selected = getSelectedArtifactsAllBuckets();
-		console.log('selected:', selected);
 		if (selected.length > 0) {
 			const responses = await deleteArtifactsPerBucket(selected);
 			alertVisible = true; // make the alert visible
@@ -374,7 +358,6 @@
 
 	// Create a new bucket
 	async function createNewBucket(name: string): Promise<void> {
-		console.log(`Creating bucket: ${name} ...`);
 
 		try {
 			const createNewBucketResponse: { createBucket: string } = await requestGraphQLClient(
@@ -383,13 +366,11 @@
 					bucketName: name
 				}
 			);
-			console.log('Bucket created:', createNewBucketResponse.createBucket);
 			alertTitle = '👍 Success';
 			alertMessage = `Bucket created: ${createNewBucketResponse.createBucket}`;
 			alertVariant = 'variant-ghost-success';
 			alertVisible = true;
 		} catch (error) {
-			console.error('Error creating bucket:', error);
 			alertTitle = `👎 Error creating bucket ${name}`;
 			alertMessage = `${(error as any).response.errors[0].message || ''}`;
 			alertVariant = 'variant-filled-error';
@@ -399,7 +380,6 @@
 
 	// On create new bucket
 	async function onCreateNewBucket(): Promise<void> {
-		console.log('Trigger Create New Bucket modal');
 		const modal: ModalSettings = {
 			type: 'component',
 			title: 'Create New Bucket',
@@ -441,7 +421,6 @@
 
 	// unselect all buckets and all artifacts
 	function unselectAll(): void {
-		console.log('Unselect All');
 		unselectBuckets();
 		for (const bucket of $reactiveBuckets) {
 			unselectArtifacts(bucket.artifacts);

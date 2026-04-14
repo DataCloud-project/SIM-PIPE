@@ -48,14 +48,12 @@
 	): Promise<AggregatedNodesMetrics[]> {
 		const variables = { dryRunIds, dataX, regressionMethod };
 		const response = await requestGraphQLClient(getScalingLawsFromNodesMetricsQuery, variables);
-		// console.log('response', response);
 		return response.computeScalingLawsFromNodesMetrics;
 	}
 
 	onMount(async (): Promise<void> => {
 		// TODO: continue here!
 		const workflow = await getWorkflowTemplate(workflowName);
-		console.log('workflow', workflow.workflowTemplate);
 		({ nodes, links } = extractNodesAndLinks2(workflow.workflowTemplate));
 
 		updatepageWidth();
@@ -73,10 +71,8 @@
 	$: if (pageWidthUpdated) {
 		// This will trigger reactivity and re-render the DAG component
 		pageWidthUpdated = false;
-		console.log('pageWidthUpdated', pageWidth);
 	}
 	$: if (nodesMetricsLoaded) {
-		console.log('nodesMetrics', nodesMetrics);
 	}
 </script>
 

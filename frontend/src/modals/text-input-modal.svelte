@@ -11,7 +11,6 @@
 	function onFormSubmit(): void {
 		// eslint-disable-next-line unicorn/prefer-query-selector
 		const textInput = document.getElementById('text-input') as HTMLInputElement;
-		console.log(textInput);
 		const text = textInput.value;
 
 		if (text && text.length > 0) {

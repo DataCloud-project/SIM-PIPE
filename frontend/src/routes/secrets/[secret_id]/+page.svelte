@@ -135,7 +135,6 @@
 	}
 
 	async function onSubmitForm(): Promise<void> {
-		console.log('submitting form');
 
 		if (!$selectedProject) {
 			// eslint-disable-next-line @typescript-eslint/no-throw-literal
@@ -159,7 +158,6 @@
 				const { image } = template.container;
 				// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
 				const newImageFullName = getNewImageFullNameFromImageRef(image, $selectedCredential.server);
-				console.log('newImageFullName', newImageFullName);
 				// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, no-param-reassign
 				template.container.image = newImageFullName;
 			}

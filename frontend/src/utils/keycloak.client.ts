@@ -119,14 +119,6 @@ function parseSimPipeEnvironment(): {
 }
 
 async function internalInitKeycloak(graphqlUrl: string): Promise<void> {
-	console.log('[keycloak] internalInitKeycloak starting');
-	console.log('[keycloak] config:', {
-		url: config.KEYCLOAK_URL,
-		realm: config.KEYCLOAK_REALM,
-		clientId: config.KEYCLOAK_CLIENT_ID
-	});
-	console.log('[keycloak] graphqlUrl:', graphqlUrl);
-
 	// Fast path: reuse a cached token that is still valid.
 	const existingToken = window.sessionStorage.getItem('keycloak-token');
 	if (existingToken) {
@@ -177,8 +169,6 @@ async function internalInitKeycloak(graphqlUrl: string): Promise<void> {
 		window.location.hash.includes('code=') ||
 		window.location.hash.includes('error=');
 
-	console.log('[keycloak] isCallback:', isCallback, 'redirectCount:', redirectCount);
-
 	// keycloak-js init options:
 	// - No onLoad: we manage redirect logic ourselves (avoids loops and iframe errors)
 	// - useNonce: false — keycloak-js v23 validates nonce across access, refresh, AND
@@ -186,7 +176,6 @@ async function internalInitKeycloak(graphqlUrl: string): Promise<void> {
 	//   PKCE (S256) already provides equivalent replay protection, so nonce is redundant.
 	// - responseMode: 'query' — SvelteKit's router can interfere with fragment-based
 	//   callbacks; query params are safer.
-	console.log('[keycloak] Calling keycloak.init (no onLoad, useNonce=false)...');
 	await keycloak.init({
 		checkLoginIframe: false,
 		pkceMethod: 'S256',
@@ -194,11 +183,6 @@ async function internalInitKeycloak(graphqlUrl: string): Promise<void> {
 		useNonce: false,
 		enableLogging: true
 	});
-
-	console.log('[keycloak] init complete — authenticated:', keycloak.authenticated);
-	console.log('[keycloak] token present:', !!keycloak.token);
-	console.log('[keycloak] idTokenParsed:', JSON.stringify(keycloak.idTokenParsed));
-	console.log('[keycloak] tokenParsed:', JSON.stringify(keycloak.tokenParsed));
 
 	if (!keycloak.authenticated) {
 		if (redirectCount >= 2) {

@@ -37,8 +37,6 @@
 
 			const title = 'Project renamed &#10024;!';
 			const body = `New name: ${formData.name}`;
-			// await displayAlert(title, body);
-			console.log(title, body);
 			alertModal = true;
 
 			// update the project list after addition
@@ -47,8 +45,6 @@
 		} catch (error) {
 			const title = 'Error renaming project❌!';
 			const body = (error as Error).message;
-			// await displayAlert(title, body);
-			console.log(title, body);
 			alertModal = true;
 		}
 	}

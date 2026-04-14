@@ -237,13 +237,6 @@ export async function setMooseReportForArtifact(
   const bucketName = _bucketName || minioBucketName;
   const reportKey = `${objectName}${MOOSE_REPORT_SUFFIX}`;
   try {
-    // eslint-disable-next-line no-console
-    console.log('[Moose] Saving report to Minio', {
-      bucketName,
-      objectName,
-      reportKey,
-      reportLength: report.length,
-    });
     await minioInternalClient.putObject(bucketName, reportKey, report);
   } catch (error) {
     // eslint-disable-next-line no-console
@@ -265,13 +258,6 @@ export async function setSotwReportForArtifact(
   const bucketName = _bucketName || minioBucketName;
   const reportKey = `${objectName}${SOTW_REPORT_SUFFIX}`;
   try {
-    // eslint-disable-next-line no-console
-    console.log('[SoTW] Saving SoTW CSV to Minio', {
-      bucketName,
-      objectName,
-      reportKey,
-      length: csv.length,
-    });
     await minioInternalClient.putObject(bucketName, reportKey, csv, {
       'Content-Type': 'text/csv; charset=utf-8',
     });

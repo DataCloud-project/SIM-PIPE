@@ -35,20 +35,17 @@
 
 	// unselect all buckets and all artifacts
 	function unselectOtherArtifacts(except_artifact_name: string): void {
-		console.log('Unselect all except latest selected artifact.');
 		for (const bucket of $reactiveBuckets) {
 			unselectArtifacts(except_artifact_name, bucket.artifacts);
 		}
 	}
 
 	function cancel(): void {
-		console.log('cancel');
 		close();
 	}
 
 	selectedArtifact.subscribe((value) => {
 		const artifactName = value?.name;
-		console.log('subscribe selectedArtifact', value);
 		if ($selectedArtifact) {
 			isActiveButton = true;
 			unselectOtherArtifacts(artifactName as string);

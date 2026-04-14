@@ -14,7 +14,6 @@ export async function getWorkflowTemplate(
 		getWorkflowQuery,
 		variables
 	);
-	// console.log(response);
 	return response;
 }
 
@@ -29,6 +28,5 @@ export async function getWorkflowTemplateFromDryRun(
 		getWorkflowFromDryRunQuery,
 		variables
 	);
-	// console.log(response);
 	return response;
 }

@@ -41,7 +41,6 @@
 	const getProjectsList = async (): Promise<Project[]> => {
 		try {
 			const response: { projects: Project[] } = await requestGraphQLClient(allProjectsQuery);
-			console.log('Fetched projects:', response);
 			return response.projects;
 		} catch (error) {
 			loadingError = 'Failed to load projects';
@@ -147,8 +146,6 @@
 		createProjectResponse: { status: number; project: { name: string; id: string }; error: string },
 		createWorkflowResponse: { status: number; name: string; error: string }
 	): Promise<boolean> {
-		console.log('createProjectResponse:', createProjectResponse);
-		console.log('createWorkflowResponse:', createWorkflowResponse);
 
 		if (createProjectResponse.status === 200 && createProjectResponse.project.id !== 'none') {
 			await (createWorkflowResponse.status === 200 && createWorkflowResponse.name !== 'none'
@@ -170,8 +167,6 @@
 			const errorMessages: string[] = [];
 			const projectMessage = extractErrorMessage(createProjectResponse.error);
 			const workflowMessage = extractErrorMessage(createWorkflowResponse.error);
-			console.log('Extracted project error message:', projectMessage);
-			console.log('Extracted workflow error message:', workflowMessage);
 			if (projectMessage) errorMessages.push(projectMessage);
 			if (workflowMessage) errorMessages.push(workflowMessage);
 			const errorBody =
@@ -182,7 +177,6 @@
 	}
 
 	function onCreateNewProject(): void {
-		console.log('onCreateNewProject');
 		const modalPromise = new Promise<boolean>((resolve) => {
 			const modal: ModalSettings = {
 				type: 'component',
@@ -227,7 +221,6 @@
 		const template = project.workflowTemplates[0].argoWorkflowTemplate;
 		const templateName = template?.metadata.name;
 		const url = `/templates/${templateName}`;
-		console.log(`Navigating to: ${url}`);
 		// eslint-disable-next-line @typescript-eslint/no-floating-promises
 		goto(url);
 	}

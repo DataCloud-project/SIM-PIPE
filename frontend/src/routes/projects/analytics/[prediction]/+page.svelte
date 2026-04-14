@@ -144,7 +144,6 @@
 		}
 
 		const fileSizeData = (await Promise.all(fileSizeDataPromise)) as number[];
-		console.log('fileSizeData', fileSizeData);
 		// await isFileSizeValid(fileSizeData);
 		// initialize var to store prediction estimates
 		maxCpuPredictions = Array<number>(allStepNames.length + 1).fill(0);

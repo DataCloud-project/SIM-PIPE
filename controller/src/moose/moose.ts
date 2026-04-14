@@ -196,8 +196,6 @@ async function getDPVJobResultPolling(
   const { bucketName, objectName } = parseArtifactUrl(artifactUrl);
 
   const artifactText = await getObjectText(objectName, bucketName);
-  // eslint-disable-next-line no-console
-  console.log('Fetched artifact text for DPV processing:', artifactText);
 
   // Start Moose DPV job with the artifact text
   const jobId = await makeDPVCall(artifactText);
@@ -207,8 +205,6 @@ async function getDPVJobResultPolling(
   const poll = async (attempt: number): Promise<MooseJobResult> => {
     const result = await getDPVJobResult(jobId);
     if (result.status === 'completed' || result.status === 'failed') {
-      // eslint-disable-next-line no-console
-      console.log('DPV job polling result:', result);
       return result;
     }
 

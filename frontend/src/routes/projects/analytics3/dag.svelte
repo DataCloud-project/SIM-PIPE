@@ -62,7 +62,6 @@
 		const popupElement = document.querySelector(`[data-popup="popupHover"]`);
 		if (popupElement) {
 			popupElement.classList.remove('show');
-			console.log('Popup hidden');
 		} else {
 			console.error('Popup element not found');
 		}

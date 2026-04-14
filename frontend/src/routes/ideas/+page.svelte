@@ -4,12 +4,10 @@
 	let isOverlayOpen = false;
 
 	const openOverlay = () => {
-		console.log('openOverlay');
 		isOverlayOpen = true;
 	};
 
 	const closeOverlay = () => {
-		console.log('closeOverlay');
 		isOverlayOpen = false;
 	};
 </script>
