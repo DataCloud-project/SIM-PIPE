@@ -123,6 +123,92 @@ In practice, SIM-PIPE is better to run on your local machine. When port forwardi
 make sure you do not expose the SIM-PIPE API to an untrusted network.
 The defaults are set to localhost only.
 
+## Keycloak Authentication
+
+SIM-PIPE uses [Keycloak](https://www.keycloak.org/) for user authentication. The controller verifies JWTs on every GraphQL request; the frontend performs an OIDC PKCE login flow in the browser.
+
+### What happens without Keycloak
+
+If `controller.keycloak.oauth2IssuerEndpoint` is left **empty** in `values.yaml`, the controller runs in **dev mode**: all requests are accepted without a token and are attributed to a fixed local user (`sub = "local"`). The frontend automatically skips the login screen — `KEYCLOAK_ENABLED` is derived from `oauth2IssuerEndpoint` by the Helm template, so there is no separate toggle to forget.
+
+### Required Keycloak clients
+
+Create two clients in your realm:
+
+| Client | Type | Grant | Purpose |
+|---|---|---|---|
+| `sim-pipe-web` | Public | Standard flow + PKCE | Browser login via the frontend |
+| `sim-pipe` | Confidential | Client Credentials | API/script access (curl, Apollo Sandbox) |
+
+**`sim-pipe-web` settings:**
+- Client authentication: Off (public)
+- Standard flow: ✅ Enabled
+- Valid Redirect URIs: `<frontend-url>/*` (e.g. `http://localhost:8088/*`)
+- Web Origins: `<frontend-url>` (e.g. `http://localhost:8088`)
+- PKCE: `S256` or blank (the frontend always sends a code challenge)
+
+**Token claims required** (both clients): the access token must contain `sub` (UUID, valid Kubernetes label value) and `preferred_username` (string). Add a `preferred_username` mapper to `sim-pipe` if Client Credentials tokens omit it.
+
+### The one place to configure everything — `values.yaml`
+
+All Keycloak settings flow from [`charts/simpipe/values.yaml`](charts/simpipe/values.yaml). **`oauth2IssuerEndpoint` is the single on/off switch** — setting it enables auth on the controller and automatically enables the login screen in the frontend. Edit these blocks and run `helm upgrade`:
+
+```yaml
+controller:
+  keycloak:
+    # Single on/off switch
+    # Leave empty for dev mode (no auth).
+    # Format: https://<keycloak-host>/realms/<realm-name>
+    oauth2IssuerEndpoint: "https://keycloak.example.com/realms/myrealm"
+
+frontend:
+  keycloak:
+    url: "https://keycloak.example.com"
+    realm: "myrealm"
+    clientId: "sim-pipe-web"
+```
+
+After editing, apply with:
+```bash
+helm upgrade --install simpipe ./charts/simpipe
+```
+
+> **Note:** `oauth2IssuerEndpoint` must be reachable by the controller pod. `localhost` inside a pod refers to the pod's own loopback, not the host machine. If Keycloak runs on the host (e.g. local development), use the node/host IP: `http://<node-ip>:9093/realms/<realm>`.
+
+### Fallback defaults baked into the frontend build
+
+[`frontend/src/lib/config.ts`](frontend/src/lib/config.ts) has fallback defaults used when the runtime ConfigMap values are absent:
+
+| Variable | Fallback default |
+|---|---|
+| `KEYCLOAK_REALM` | `user-authentication` |
+| `KEYCLOAK_CLIENT_ID` | `sim-pipe-web` |
+| `KEYCLOAK_URL` | *(none — must be set via Helm or env)* |
+
+These fallbacks are only relevant when running the frontend outside Kubernetes (e.g. `npm run dev`). For Kubernetes deployments, `values.yaml` is the authoritative source.
+
+### Accessing the GraphQL API with a token (curl / Apollo Sandbox)
+
+Use the `sim-pipe` confidential client (Client Credentials grant) to get a token for direct API access:
+
+```bash
+# 1. Get a token
+TOKEN=$(curl -s -X POST \
+  https://keycloak.example.com/realms/myrealm/protocol/openid-connect/token \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -d "grant_type=client_credentials" \
+  -d "client_id=sim-pipe" \
+  -d "client_secret=<your-secret>" \
+  | jq -r .access_token)
+
+# 2. Call the GraphQL API
+curl -X POST http://localhost:8087/graphql \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{"query":"{ ping }"}'
+```
+
+
 ## Contributing
 
 Before raising a pull request, please read our [contributing guide](CONTRIBUTING.md).

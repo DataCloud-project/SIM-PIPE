@@ -409,7 +409,7 @@
 	let selectedNodeName = 'default';
 	let dryRunNamePrefix = '';
 
-	$: console.log('inputdata', inputdata);
+	// $: console.log('inputdata', inputdata);
 </script>
 
 {#if $modalStore[0]}
