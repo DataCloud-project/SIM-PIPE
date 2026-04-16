@@ -20,17 +20,11 @@
 	import type { DryRunMetrics, DryRun, MetricsWithTimeStamps, Artifact } from '$typesdefinitions';
 	import getMooseAnalysisQuery from '$queries/get_moose_analysis.js';
 	import setMooseReportMutation from '$queries/set_moose_report.js';
+	import storeCarbontrackerDataMutation from '$queries/store_carbontracker_data.js';
 	import { displayModal } from '$utils/modal-utils.js';
 
-	// Extended type to include carbontracker data
-	interface ExtendedDryRunMetrics extends DryRunMetrics {
-		carbontracker?: {
-			fetchCarbontrackerData?: {
-				co2eq: number;
-				energy: number;
-			};
-		};
-	}
+	// DryRunMetrics already includes carbontracker; this alias keeps downstream refs unchanged.
+	type ExtendedDryRunMetrics = DryRunMetrics;
 
 	type MooseEntity = { text: string; type_id: string; confidence: number };
 
@@ -138,12 +132,12 @@
 
 		if (reactiveStepsList) {
 			reactiveStepsList.forEach((step) => {
-				if (step.carbontracker?.fetchCarbontrackerData) {
-					if (step.carbontracker.fetchCarbontrackerData.co2eq) {
-						co2Sum += step.carbontracker.fetchCarbontrackerData.co2eq;
+				if (step.carbontracker) {
+					if (step.carbontracker.co2eq) {
+						co2Sum += step.carbontracker.co2eq;
 					}
-					if (step.carbontracker.fetchCarbontrackerData.energy) {
-						energySum += step.carbontracker.fetchCarbontrackerData.energy;
+					if (step.carbontracker.energy) {
+						energySum += step.carbontracker.energy;
 					}
 				}
 			});
@@ -530,24 +524,54 @@
 	};
 
 	async function loadCarbontrackerData(metrics: DryRunMetrics[]): Promise<void> {
+		// Only fetch for steps that don't already have cached annotation data
+		const stepsNeedingFetch = metrics
+			.filter((step) => step.type === 'Pod')
+			.filter((step) => {
+				const existing = ($stepsList as DryRunMetrics[])?.find((s) => s.id === step.id);
+				return !existing?.carbontracker;
+			});
+
+		if (stepsNeedingFetch.length === 0) return;
+
 		carbontrackerLoading = true;
 		try {
 			const carbontrackerData = await Promise.all(
-				metrics
-					.filter((step) => step.type === 'Pod')
-					.map(async (step) => ({
-						nodeId: step.id,
-						stepName: step.displayName,
-						carbonData: await getCarbontrackerDataResponse(step.metrics.cpuUsageSecondsTotal)
-					}))
+				stepsNeedingFetch.map(async (step) => ({
+					nodeId: step.id,
+					stepName: step.displayName,
+					carbonData: await getCarbontrackerDataResponse(step.metrics.cpuUsageSecondsTotal)
+				}))
 			);
+
+			// Normalise to the flat { co2eq, energy } shape used by the annotation
+			const toStore = carbontrackerData
+				.filter((item) => item.carbonData?.fetchCarbontrackerData)
+				.map((item) => ({
+					nodeId: item.nodeId,
+					co2eq: item.carbonData!.fetchCarbontrackerData!.co2eq,
+					energy: item.carbonData!.fetchCarbontrackerData!.energy
+				}));
+
+			// Update the in-memory stepsList
 			$stepsList = $stepsList?.map((step) => {
-				const carbonData = carbontrackerData.find((carbon) => carbon.nodeId === step.id);
-				return {
-					...step,
-					carbontracker: carbonData ? carbonData.carbonData : undefined
-				};
+				const match = toStore.find((item) => item.nodeId === step.id);
+				if (!match) return step;
+				return { ...step, carbontracker: { co2eq: match.co2eq, energy: match.energy } };
 			});
+
+			// Persist to the Argo Workflow annotation so future loads skip this step
+			if (toStore.length > 0) {
+				const dryRunId = data.resource as string;
+				try {
+					await requestGraphQLClient(storeCarbontrackerDataMutation, {
+						dryRunId,
+						data: toStore
+					});
+				} catch {
+					// Persistence failure is non-fatal; values are still shown in the UI
+				}
+			}
 		} finally {
 			carbontrackerLoading = false;
 		}
@@ -818,8 +842,8 @@
 									</td>
 									<td>{displayStepDuration(step)}</td>
 									<td>
-										{#if step.carbontracker?.fetchCarbontrackerData?.co2eq}
-											{step.carbontracker.fetchCarbontrackerData.co2eq.toFixed(3)}
+										{#if step.carbontracker?.co2eq}
+											{step.carbontracker.co2eq.toFixed(3)}
 										{:else if carbontrackerLoading}
 											<span
 												class="inline-block w-3 h-3 border-2 border-current border-t-transparent rounded-full opacity-50 animate-[spin_2s_linear_infinite]"
@@ -830,8 +854,8 @@
 										{/if}
 									</td>
 									<td>
-										{#if step.carbontracker?.fetchCarbontrackerData?.energy}
-											{step.carbontracker.fetchCarbontrackerData.energy.toFixed(6)}
+										{#if step.carbontracker?.energy}
+											{step.carbontracker.energy.toFixed(6)}
 										{:else if carbontrackerLoading}
 											<span
 												class="inline-block w-3 h-3 border-2 border-current border-t-transparent rounded-full opacity-50 animate-[spin_2s_linear_infinite]"
@@ -987,7 +1011,7 @@
 							<tr>
 								<td>Total Energy</td>
 								<td>
-									{#if carbontrackerLoading}
+								{#if carbontrackerLoading}
 										<span
 											class="inline-block w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-[spin_2s_linear_infinite] opacity-50"
 											title="Calculating..."></span

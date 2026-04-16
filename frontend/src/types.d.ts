@@ -95,6 +95,7 @@ export type DryRunMetrics = {
 		mooseReport?: string;
 		sotwReportUrl?: string;
 	}[];
+	carbontracker?: { co2eq: number; energy: number } | null;
 };
 
 export type ArgoWorkflow = {

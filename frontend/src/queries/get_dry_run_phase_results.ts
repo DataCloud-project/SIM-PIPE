@@ -23,6 +23,10 @@ const getDryRunPhaseResultsQuery = gql`
 						mooseReport
 						sotwReportUrl
 					}
+					carbontracker {
+						co2eq
+						energy
+					}
 				}
 			}
 		}

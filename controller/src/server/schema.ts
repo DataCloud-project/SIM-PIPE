@@ -692,6 +692,8 @@ export enum DryRunNodePhase {
 
 export type DryRunNodePod = DryRunNode & {
   __typename?: 'DryRunNodePod';
+  /**  Stored carbontracker metrics (CO2 and energy), cached in the workflow annotation.  */
+  carbontracker?: Maybe<NodeCarbontracker>;
   children?: Maybe<Array<DryRunNode>>;
   displayName?: Maybe<Scalars['String']['output']>;
   duration?: Maybe<Scalars['Int']['output']>;
@@ -860,6 +862,8 @@ export type Mutation = {
   shutdownResource: Scalars['Boolean']['output'];
   /**  Stop an active dry run.  */
   stopDryRun: DryRun;
+  /**  Store carbontracker CO2 and energy metrics for dry run nodes in the workflow annotation  */
+  storeCarbontrackerData: Scalars['Boolean']['output'];
   /**  Suspend an active dry run.  */
   suspendDryRun: DryRun;
   /**  Update the API tokens used by the controller. Any omitted field keeps its current value.  */
@@ -995,6 +999,12 @@ export type MutationStopDryRunArgs = {
 };
 
 
+export type MutationStoreCarbontrackerDataArgs = {
+  data: Array<StoreCarbontrackerNodeInput>;
+  dryRunId: Scalars['String']['input'];
+};
+
+
 export type MutationSuspendDryRunArgs = {
   dryRunId: Scalars['String']['input'];
 };
@@ -1019,6 +1029,15 @@ export type MutationUpdateK3sClusterSecretArgs = {
 
 export type MutationUpdateWorkflowTemplateArgs = {
   update: UpdateWorkflowTemplateInput;
+};
+
+/**  Stored carbontracker metrics for a dry run node  */
+export type NodeCarbontracker = {
+  __typename?: 'NodeCarbontracker';
+  /**  CO2 equivalent in grams  */
+  co2eq?: Maybe<Scalars['Float']['output']>;
+  /**  Energy consumption in kWh  */
+  energy?: Maybe<Scalars['Float']['output']>;
 };
 
 export type NodesAggregatedNodeMetrics = {
@@ -1220,6 +1239,16 @@ export type ScalingPredictions = {
   mem: Scalars['Float']['output'];
 };
 
+/**  Input type for storing carbontracker results for a single dry run node  */
+export type StoreCarbontrackerNodeInput = {
+  /**  CO2 equivalent in grams  */
+  co2eq: Scalars['Float']['input'];
+  /**  Energy consumption in kWh  */
+  energy: Scalars['Float']['input'];
+  /**  The Argo node ID  */
+  nodeId: Scalars['String']['input'];
+};
+
 /**  The input data to update a workflow template  */
 export type UpdateWorkflowTemplateInput = {
   /**  The raw Argo workflow document  */
@@ -1371,6 +1400,7 @@ export type ResolversTypes = {
   Int: ResolverTypeWrapper<Scalars['Int']['output']>;
   K3sClusterSecret: ResolverTypeWrapper<K3sClusterSecret>;
   Mutation: ResolverTypeWrapper<{}>;
+  NodeCarbontracker: ResolverTypeWrapper<NodeCarbontracker>;
   NodesAggregatedNodeMetrics: ResolverTypeWrapper<NodesAggregatedNodeMetrics>;
   NodesAggregatedNodeMetricsInput: NodesAggregatedNodeMetricsInput;
   NodesScalingLaws: ResolverTypeWrapper<NodesScalingLaws>;
@@ -1382,6 +1412,7 @@ export type ResolversTypes = {
   Resource: ResolverTypeWrapper<Resource>;
   ScalingLawData: ResolverTypeWrapper<ScalingLawData>;
   ScalingPredictions: ResolverTypeWrapper<ScalingPredictions>;
+  StoreCarbontrackerNodeInput: StoreCarbontrackerNodeInput;
   String: ResolverTypeWrapper<Scalars['String']['output']>;
   TimeStamp: ResolverTypeWrapper<Scalars['TimeStamp']['output']>;
   UpdateWorkflowTemplateInput: UpdateWorkflowTemplateInput;
@@ -1426,6 +1457,7 @@ export type ResolversParentTypes = {
   Int: Scalars['Int']['output'];
   K3sClusterSecret: K3sClusterSecret;
   Mutation: {};
+  NodeCarbontracker: NodeCarbontracker;
   NodesAggregatedNodeMetrics: NodesAggregatedNodeMetrics;
   NodesAggregatedNodeMetricsInput: NodesAggregatedNodeMetricsInput;
   NodesScalingLaws: NodesScalingLaws;
@@ -1437,6 +1469,7 @@ export type ResolversParentTypes = {
   Resource: Resource;
   ScalingLawData: ScalingLawData;
   ScalingPredictions: ScalingPredictions;
+  StoreCarbontrackerNodeInput: StoreCarbontrackerNodeInput;
   String: Scalars['String']['output'];
   TimeStamp: Scalars['TimeStamp']['output'];
   UpdateWorkflowTemplateInput: UpdateWorkflowTemplateInput;
@@ -1611,6 +1644,7 @@ export type DryRunNodeMiscResolvers<ContextType = any, ParentType extends Resolv
 };
 
 export type DryRunNodePodResolvers<ContextType = any, ParentType extends ResolversParentTypes['DryRunNodePod'] = ResolversParentTypes['DryRunNodePod']> = {
+  carbontracker?: Resolver<Maybe<ResolversTypes['NodeCarbontracker']>, ParentType, ContextType>;
   children?: Resolver<Maybe<Array<ResolversTypes['DryRunNode']>>, ParentType, ContextType>;
   displayName?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   duration?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
@@ -1685,11 +1719,18 @@ export type MutationResolvers<ContextType = any, ParentType extends ResolversPar
   setMooseReport?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationSetMooseReportArgs, 'key' | 'report'>>;
   shutdownResource?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationShutdownResourceArgs, 'resourceId'>>;
   stopDryRun?: Resolver<ResolversTypes['DryRun'], ParentType, ContextType, RequireFields<MutationStopDryRunArgs, 'dryRunId'>>;
+  storeCarbontrackerData?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationStoreCarbontrackerDataArgs, 'data' | 'dryRunId'>>;
   suspendDryRun?: Resolver<ResolversTypes['DryRun'], ParentType, ContextType, RequireFields<MutationSuspendDryRunArgs, 'dryRunId'>>;
   updateApiTokens?: Resolver<ResolversTypes['ApiTokens'], ParentType, ContextType, Partial<MutationUpdateApiTokensArgs>>;
   updateDockerRegistryCredential?: Resolver<ResolversTypes['DockerRegistryCredential'], ParentType, ContextType, RequireFields<MutationUpdateDockerRegistryCredentialArgs, 'credential'>>;
   updateK3sClusterSecret?: Resolver<ResolversTypes['K3sClusterSecret'], ParentType, ContextType, Partial<MutationUpdateK3sClusterSecretArgs>>;
   updateWorkflowTemplate?: Resolver<ResolversTypes['WorkflowTemplate'], ParentType, ContextType, RequireFields<MutationUpdateWorkflowTemplateArgs, 'update'>>;
+};
+
+export type NodeCarbontrackerResolvers<ContextType = any, ParentType extends ResolversParentTypes['NodeCarbontracker'] = ResolversParentTypes['NodeCarbontracker']> = {
+  co2eq?: Resolver<Maybe<ResolversTypes['Float']>, ParentType, ContextType>;
+  energy?: Resolver<Maybe<ResolversTypes['Float']>, ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
 export type NodesAggregatedNodeMetricsResolvers<ContextType = any, ParentType extends ResolversParentTypes['NodesAggregatedNodeMetrics'] = ResolversParentTypes['NodesAggregatedNodeMetrics']> = {
@@ -1821,6 +1862,7 @@ export type Resolvers<ContextType = any> = {
   HardwareMetrics?: HardwareMetricsResolvers<ContextType>;
   K3sClusterSecret?: K3sClusterSecretResolvers<ContextType>;
   Mutation?: MutationResolvers<ContextType>;
+  NodeCarbontracker?: NodeCarbontrackerResolvers<ContextType>;
   NodesAggregatedNodeMetrics?: NodesAggregatedNodeMetricsResolvers<ContextType>;
   NodesScalingLaws?: NodesScalingLawsResolvers<ContextType>;
   Project?: ProjectResolvers<ContextType>;

@@ -1,6 +1,9 @@
 import { randomUUID } from 'node:crypto';
-import { get } from 'node:http';
 
+import {
+  parseCarbontrackerAnnotation,
+  storeCarbontrackerAnnotation,
+} from '../argo/carbontracker-annotation.js';
 import {
   assertDryRunNodeHasWorkflow,
   convertArgoWorkflowNode,
@@ -98,6 +101,7 @@ import type {
   MutationSetMooseReportArgs as MutationSetMooseReportArguments,
   MutationShutdownResourceArgs as MutationShutdownResourceArguments,
   MutationStopDryRunArgs as MutationStopDryRunArguments,
+  MutationStoreCarbontrackerDataArgs as MutationStoreCarbontrackerDataArguments,
   MutationSuspendDryRunArgs as MutationSuspendDryRunArguments,
   MutationUpdateApiTokensArgs as MutationUpdateApiTokensArguments,
   MutationUpdateDockerRegistryCredentialArgs as MutationUpdateDockerRegistryCredentialArguments,
@@ -339,14 +343,12 @@ const resolvers = {
     async getAggregatedNodesMetrics(
       _p: EmptyParent, arguments_: QueryGetAggregatedNodesMetricsArguments, context: AuthenticatedContext,
     ): Promise<Query['getAggregatedNodesMetrics']> {
-      const containerName = 'main';
-      let aggregateMethod = 'average'; // default
-      if (arguments_.aggregateMethod) {
-        aggregateMethod = arguments_.aggregateMethod;
-      }
-      const dryRynIds: string[] = arguments_.dryRunIds as string[];
-      const nodesAggregatedNodeMetrics = await aggregatedNodesMetrics(dryRynIds, containerName, context.argoClient, aggregateMethod);
-      return nodesAggregatedNodeMetrics;
+      return aggregatedNodesMetrics(
+        arguments_.dryRunIds as string[],
+        'main',
+        context.argoClient,
+        arguments_.aggregateMethod || 'average',
+      );
     },
     async computeScalingLawsFromNodesMetrics(
       _p: EmptyParent,
@@ -354,30 +356,19 @@ const resolvers = {
       context: AuthenticatedContext,
     ): Promise<Query['computeScalingLawsFromNodesMetrics']> {
       const {
-        nodesAggregatedNodeMetrics, dryRunIds, aggregateMethod, regressionMethod,
+        nodesAggregatedNodeMetrics, dryRunIds, aggregateMethod, regressionMethod, data_x,
       } = arguments_;
-      const containerName = 'main';
       const aggregateMethodUsed = aggregateMethod || 'average';
       const regressionMethodUsed = regressionMethod || 'linear';
 
-      let scalingLaws: NodesScalingLaws[] = [];
-
-      // TODO: This is a bit of a mess, we should probably refactor this
-
       if (dryRunIds && !nodesAggregatedNodeMetrics) {
-        const dryRunIds: string[] = arguments_.dryRunIds as string[];
-        const data_x: number[] = arguments_.data_x as number[];
-        const nodesAggregatedNodeMetrics = await aggregatedNodesMetrics(dryRunIds, containerName, context.argoClient, aggregateMethodUsed);
-        scalingLaws = await computeScalingLaws(nodesAggregatedNodeMetrics, data_x, regressionMethodUsed);
-      } else if (!dryRunIds && nodesAggregatedNodeMetrics) {
-        const nodesAggregatedNodeMetrics = arguments_.nodesAggregatedNodeMetrics as NodesAggregatedNodeMetrics[];
-        const data_x: number[] = arguments_.data_x as number[];
-        scalingLaws = await computeScalingLaws(nodesAggregatedNodeMetrics, data_x, regressionMethodUsed);
-      } else {
-        throw new Error('Provide either dryRunIds or nodesAggregatedNodeMetrics, and data_x.');
+        const metrics = await aggregatedNodesMetrics(dryRunIds as string[], 'main', context.argoClient, aggregateMethodUsed);
+        return computeScalingLaws(metrics, data_x as number[], regressionMethodUsed);
       }
-
-      return scalingLaws;
+      if (!dryRunIds && nodesAggregatedNodeMetrics) {
+        return computeScalingLaws(nodesAggregatedNodeMetrics as NodesAggregatedNodeMetrics[], data_x as number[], regressionMethodUsed);
+      }
+      throw new Error('Provide either dryRunIds or nodesAggregatedNodeMetrics, and data_x.');
     },
     async predictScaling(
       _p: EmptyParent,
@@ -385,35 +376,28 @@ const resolvers = {
       context: AuthenticatedContext,
     ): Promise<Query['predictScaling']> {
       const {
-        nodesAggregatedNodeMetrics, dryRunIds, aggregateMethod, regressionMethod, data_x_to_predict,
+        // eslint-disable-next-line @typescript-eslint/naming-convention
+        nodesAggregatedNodeMetrics, dryRunIds, aggregateMethod, regressionMethod, data_x_to_predict, data_x,
       } = arguments_;
-      const containerName = 'main';
       const aggregateMethodUsed = aggregateMethod || 'average';
       const regressionMethodUsed = regressionMethod || 'linear';
 
-      let scalingLaws: NodesScalingLaws[] = [];
-
-      // TODO: This is a bit of a mess, we should probably refactor this
-
+      let scalingLaws: NodesScalingLaws[];
       if (dryRunIds && !nodesAggregatedNodeMetrics) {
-        const dryRunIds: string[] = arguments_.dryRunIds as string[];
-        const data_x: number[] = arguments_.data_x as number[];
-        const nodesAggregatedNodeMetrics = await aggregatedNodesMetrics(dryRunIds, containerName, context.argoClient, aggregateMethodUsed);
-        scalingLaws = await computeScalingLaws(nodesAggregatedNodeMetrics, data_x, regressionMethodUsed);
+        const metrics = await aggregatedNodesMetrics(dryRunIds as string[], 'main', context.argoClient, aggregateMethodUsed);
+        scalingLaws = await computeScalingLaws(metrics, data_x as number[], regressionMethodUsed);
       } else if (!dryRunIds && nodesAggregatedNodeMetrics) {
-        const nodesAggregatedNodeMetrics = arguments_.nodesAggregatedNodeMetrics as NodesAggregatedNodeMetrics[];
-        const data_x: number[] = arguments_.data_x as number[];
-        scalingLaws = await computeScalingLaws(nodesAggregatedNodeMetrics, data_x, regressionMethodUsed);
+        scalingLaws = await computeScalingLaws(nodesAggregatedNodeMetrics as NodesAggregatedNodeMetrics[], data_x as number[], regressionMethodUsed);
       } else {
         throw new Error('Provide either dryRunIds or nodesAggregatedNodeMetrics, and data_x.');
       }
 
-      const scalingPredictions = await extrapolateFromScalingLaws(scalingLaws, data_x_to_predict);
-      return scalingPredictions;
+      return extrapolateFromScalingLaws(scalingLaws, data_x_to_predict);
     },
     async fetchCarbontrackerData(
       _p: EmptyParent,
       arguments_: QueryFetchCarbontrackerDataArguments,
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       _context: AuthenticatedContext,
     ): Promise<Query['fetchCarbontrackerData']> {
       const { input } = arguments_;
@@ -423,6 +407,7 @@ const resolvers = {
     async getMooseAnalysis(
       _p: EmptyParent,
       arguments_: QueryGetMooseAnalysisArguments,
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       _context: AuthenticatedContext,
     ): Promise<Query['getMooseAnalysis']> {
       return await getMooseAnalysis(arguments_);
@@ -486,13 +471,13 @@ const resolvers = {
       context: AuthenticatedContext,
     ): Promise<Mutation['createDryRun']> {
       const { input } = arguments_;
-      const { argoWorkflow, dryRunId, projectId } = input;
+      const { argoWorkflow, dryRunId, projectId, nodeName } = input;
       const { argoClient } = context;
       return await createDryRun({
         argoWorkflow: argoWorkflow as ArgoWorkflow,
         projectId: projectId ?? undefined,
         dryRunId: dryRunId ?? undefined,
-        nodeName: input.nodeName ?? undefined,
+        nodeName: nodeName ?? undefined,
         argoClient,
       });
       // const { sub: userId } = context.user;
@@ -669,6 +654,7 @@ const resolvers = {
       context: AuthenticatedContext,
     ): Promise<Mutation['computeUploadPresignedUrl']> {
       const { sub } = context.user;
+      // eslint-disable-next-line prefer-const
       let { key, bucketName } = _arguments;
       if (key) {
         if (!isValidFilePath(key)) {
@@ -770,12 +756,27 @@ const resolvers = {
     async setMooseReport(
       _p: EmptyParent,
       arguments_: MutationSetMooseReportArguments,
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       _context: AuthenticatedContext,
     ): Promise<Mutation['setMooseReport']> {
       const { bucketName, key, report } = arguments_;
       // bucketName is optional; if not provided, the Minio helper
       // will fall back to the default artifacts bucket.
       await setMooseReportForArtifact(key, report, bucketName ?? undefined);
+      return true;
+    },
+    async storeCarbontrackerData(
+      _p: EmptyParent,
+      arguments_: MutationStoreCarbontrackerDataArguments,
+      context: AuthenticatedContext,
+    ): Promise<Mutation['storeCarbontrackerData']> {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      const { dryRunId, data } = arguments_;
+      const { argoClient, k8sClient, k8sNamespace } = context;
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+      const argoWorkflow = await argoClient.getWorkflow(dryRunId);
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+      await storeCarbontrackerAnnotation(dryRunId, data, argoWorkflow, k8sClient, k8sNamespace);
       return true;
     },
   } as Required<MutationResolvers<AuthenticatedContext, EmptyParent>>,
@@ -901,6 +902,13 @@ const resolvers = {
       dryRunNode: DryRunNodePod,
     ): DryRunNodePod['metrics'] & { dryRunNode: DryRunNodePod } {
       return { dryRunNode };
+    },
+    carbontracker(
+      dryRunNode: DryRunNodePod,
+    ): DryRunNodePod['carbontracker'] {
+      assertDryRunNodeHasWorkflow(dryRunNode);
+      const data = parseCarbontrackerAnnotation(dryRunNode.workflow);
+      return data[dryRunNode.id] ?? null;
     },
   },
   DryRunNodeMetrics: {

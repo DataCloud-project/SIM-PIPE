@@ -328,6 +328,14 @@ interface DryRunNode {
   children: [DryRunNode!]
 }
 
+""" Stored carbontracker metrics for a dry run node """
+type NodeCarbontracker {
+  """ CO2 equivalent in grams """
+  co2eq: Float
+  """ Energy consumption in kWh """
+  energy: Float
+}
+
 type DryRunNodePod implements DryRunNode {
   id: String!
   type: DryRunNodeType!
@@ -362,6 +370,9 @@ type DryRunNodePod implements DryRunNode {
 
   """ Output artifacts of the node. """
   outputArtifacts: [Artifact!]
+
+  """ Stored carbontracker metrics (CO2 and energy), cached in the workflow annotation. """
+  carbontracker: NodeCarbontracker
 }
 
 type DryRunNodeMisc implements DryRunNode {
@@ -455,6 +466,16 @@ input CarbonTrackerCpuUsageInput {
 input PrometheusSampleInput {
   timestamp: TimeStamp!
   value: PrometheusStringNumber!
+}
+
+""" Input type for storing carbontracker results for a single dry run node """
+input StoreCarbontrackerNodeInput {
+  """ The Argo node ID """
+  nodeId: String!
+  """ CO2 equivalent in grams """
+  co2eq: Float!
+  """ Energy consumption in kWh """
+  energy: Float!
 }
 
 """ Carbon tracker data response """
@@ -830,6 +851,13 @@ type Mutation @auth {
     key: String!,
     """ The Moose report JSON string """
     report: String!): Boolean!
+
+  """ Store carbontracker CO2 and energy metrics for dry run nodes in the workflow annotation """
+  storeCarbontrackerData(
+    """ The dry run ID (Argo Workflow name) """
+    dryRunId: String!,
+    """ Per-node carbontracker results to store """
+    data: [StoreCarbontrackerNodeInput!]!): Boolean!
 
   """ Update the API tokens used by the controller. Any omitted field keeps its current value. """
   updateApiTokens(
