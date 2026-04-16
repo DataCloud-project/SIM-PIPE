@@ -146,7 +146,6 @@
 		createProjectResponse: { status: number; project: { name: string; id: string }; error: string },
 		createWorkflowResponse: { status: number; name: string; error: string }
 	): Promise<boolean> {
-
 		if (createProjectResponse.status === 200 && createProjectResponse.project.id !== 'none') {
 			await (createWorkflowResponse.status === 200 && createWorkflowResponse.name !== 'none'
 				? displayModal(

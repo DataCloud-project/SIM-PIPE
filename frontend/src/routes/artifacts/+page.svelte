@@ -358,7 +358,6 @@
 
 	// Create a new bucket
 	async function createNewBucket(name: string): Promise<void> {
-
 		try {
 			const createNewBucketResponse: { createBucket: string } = await requestGraphQLClient(
 				createBucketMutation,

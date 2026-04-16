@@ -135,7 +135,6 @@
 	}
 
 	async function onSubmitForm(): Promise<void> {
-
 		if (!$selectedProject) {
 			// eslint-disable-next-line @typescript-eslint/no-throw-literal
 			throw error(404, 'Project not found / project undefined');

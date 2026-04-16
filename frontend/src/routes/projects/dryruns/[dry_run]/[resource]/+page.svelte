@@ -45,6 +45,7 @@
 	export let data;
 
 	let loadingFinished = false;
+	let carbontrackerLoading = false;
 	// eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
 	let loadingError: unknown | undefined;
 	let workflow: { workflowTemplates: { argoWorkflowTemplate: { spec: { templates: any[] } } }[] };
@@ -276,36 +277,12 @@
 		currentNetworkData = result.currentNetworkData;
 		logs = result.logs;
 
-		const carbontrackerData: Array<{
-			nodeId: string;
-			stepName: string;
-			carbonData: { fetchCarbontrackerData?: { co2eq: number; energy: number } } | undefined;
-		}> = await Promise.all(
-			metrics
-				.filter((step) => step.type === 'Pod')
-				.map(async (step) => ({
-					nodeId: step.id,
-					stepName: step.displayName,
-					carbonData: await getCarbontrackerDataResponse(step.metrics.cpuUsageSecondsTotal)
-				}))
-		);
-
-		// Merge carbontracker data with stepsList
-		$stepsList = $stepsList.map((step) => {
-			const carbonData = carbontrackerData.find((carbon) => carbon.nodeId === step.id);
-			return {
-				...step,
-				carbontracker: carbonData ? carbonData.carbonData : undefined
-			};
-		});
-
 		const responses = {
 			workflow: workflowResponse.project,
 			dryrun: dryrunResponse,
 			metrics,
 			allstepnames: allStepNames,
-			selectedDryRunName: $selectedDryRunName,
-			carbontrackerData
+			selectedDryRunName: $selectedDryRunName
 		};
 
 		return responses;
@@ -552,6 +529,30 @@
 			: { title: `${selectedStep}`, data };
 	};
 
+	async function loadCarbontrackerData(metrics: DryRunMetrics[]): Promise<void> {
+		carbontrackerLoading = true;
+		try {
+			const carbontrackerData = await Promise.all(
+				metrics
+					.filter((step) => step.type === 'Pod')
+					.map(async (step) => ({
+						nodeId: step.id,
+						stepName: step.displayName,
+						carbonData: await getCarbontrackerDataResponse(step.metrics.cpuUsageSecondsTotal)
+					}))
+			);
+			$stepsList = $stepsList?.map((step) => {
+				const carbonData = carbontrackerData.find((carbon) => carbon.nodeId === step.id);
+				return {
+					...step,
+					carbontracker: carbonData ? carbonData.carbonData : undefined
+				};
+			});
+		} finally {
+			carbontrackerLoading = false;
+		}
+	}
+
 	onMount(async () => {
 		try {
 			const getDataResponse = await getData();
@@ -560,6 +561,9 @@
 			await buildDiagram();
 			computePipelineDuration();
 			loadingFinished = true;
+			// Load carbontracker data in the background after the page is visible
+			// eslint-disable-next-line no-void
+			void loadCarbontrackerData(getDataResponse.metrics);
 		} catch (error) {
 			loadingError = error;
 		}
@@ -816,6 +820,11 @@
 									<td>
 										{#if step.carbontracker?.fetchCarbontrackerData?.co2eq}
 											{step.carbontracker.fetchCarbontrackerData.co2eq.toFixed(3)}
+										{:else if carbontrackerLoading}
+											<span
+												class="inline-block w-3 h-3 border-2 border-current border-t-transparent rounded-full opacity-50 animate-[spin_2s_linear_infinite]"
+												title="Calculating..."
+											></span>
 										{:else}
 											-
 										{/if}
@@ -823,6 +832,11 @@
 									<td>
 										{#if step.carbontracker?.fetchCarbontrackerData?.energy}
 											{step.carbontracker.fetchCarbontrackerData.energy.toFixed(6)}
+										{:else if carbontrackerLoading}
+											<span
+												class="inline-block w-3 h-3 border-2 border-current border-t-transparent rounded-full opacity-50 animate-[spin_2s_linear_infinite]"
+												title="Calculating..."
+											></span>
 										{:else}
 											-
 										{/if}
@@ -959,11 +973,29 @@
 							</tr>
 							<tr>
 								<td>Total CO2</td>
-								<td> {totalCO2} g </td>
+								<td>
+									{#if carbontrackerLoading}
+										<span
+											class="inline-block w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-[spin_2s_linear_infinite] opacity-50"
+											title="Calculating..."></span
+										>
+									{:else}
+										{totalCO2} g
+									{/if}
+								</td>
 							</tr>
 							<tr>
 								<td>Total Energy</td>
-								<td> {totalEnergy} kWh </td>
+								<td>
+									{#if carbontrackerLoading}
+										<span
+											class="inline-block w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-[spin_2s_linear_infinite] opacity-50"
+											title="Calculating..."></span
+										>
+									{:else}
+										{totalEnergy} kWh
+									{/if}
+								</td>
 							</tr>
 						</tbody>
 					</table>
