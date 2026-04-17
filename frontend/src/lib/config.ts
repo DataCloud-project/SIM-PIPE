@@ -17,5 +17,3 @@ export const KEYCLOAK_REALM =
 
 export const KEYCLOAK_CLIENT_ID =
 	import.meta.env.VITE_KEYCLOAK_CLIENT_ID ?? runtimeEnv.KEYCLOAK_CLIENT_ID ?? 'sim-pipe-web';
-
-export const SFTPGO_URL = import.meta.env.VITE_SFTPGO_URL;

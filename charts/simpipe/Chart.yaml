@@ -25,7 +25,3 @@ dependencies:
     version: "2.2.2"
     repository: https://helm.twun.io
     condition: docker-registry.enabled
-  - name: sftpgo
-    version: "0.19.0"
-    repository: https://charts.sagikazarmark.dev
-    condition: sftpgo.enabled

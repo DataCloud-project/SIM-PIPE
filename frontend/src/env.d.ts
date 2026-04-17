@@ -7,7 +7,6 @@ interface ImportMetaEnv {
 	readonly VITE_KEYCLOAK_URL: string | undefined;
 	readonly VITE_KEYCLOAK_REALM: string | undefined;
 	readonly VITE_KEYCLOAK_CLIENT_ID: string | undefined;
-	readonly VITE_SFTPGO_URL: string | undefined;
 }
 
 interface ImportMeta {
