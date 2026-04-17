@@ -111,7 +111,7 @@
 					<div>API tokens</div>
 				</div>
 			</AppRailAnchor>
-			<!-- new section for managing resources for emulation -->
+			<!-- new section for managing resources for virtualization -->
 			<AppRailAnchor
 				label="Emulated ndoes"
 				href="/resources"

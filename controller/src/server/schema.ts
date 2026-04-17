@@ -1214,7 +1214,7 @@ export type QueryWorkflowTemplateArgs = {
   name: Scalars['String']['input'];
 };
 
-/**  Resources are nodes created to emulate pipeline execution on a specific hardware.  */
+/**  Resources are nodes created to virtualize pipeline execution on specific hardware.  */
 export type Resource = {
   __typename?: 'Resource';
   cpus: Scalars['String']['output'];

@@ -8,6 +8,7 @@
 	import deleteResourceMutation from '$queries/delete_resource.js';
 	import shutdownResourceMutation from '$queries/shutdown_resource.js';
 	import { displayModal } from '$utils/modal-utils.js';
+	import { VIRTUALIZATION_ENABLED } from '$lib/config';
 
 	const modalStore = getModalStore();
 
@@ -159,6 +160,17 @@
 <div class="flex w-full justify-center p-10">
 	<div class="table-container w-full">
 		<h1>VM Nodes</h1>
+		{#if !VIRTUALIZATION_ENABLED}
+		<br />
+	<div class="card variant-ghost-warning w-fit p-3 mt-2 text-sm">
+		<h3 class="text-base font-semibold">VM node virtualization is disabled</h3>
+		<p class="mt-1">
+			Requires KVM support. Enable with
+			<code>controller.virtualization.enabled: true</code>
+			in <code>values.yaml</code>.
+		</p>
+	</div>
+{:else}
 		<div class="flex flex-row justify-end p-5 space-x-1">
 			<div>
 				<button type="button" class="btn btn-sm variant-filled" on:click={() => onCreate1()}>
@@ -241,10 +253,10 @@
 				<p>{error.message}</p>
 			</div>
 		{/await}
+		{/if}
 	</div>
 </div>
 
-<!-- <Alert bind:visibleAlert bind:alertTitle bind:alertMessage bind:alertVariant /> -->
 
 <style>
 	.table.table {

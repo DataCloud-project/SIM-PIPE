@@ -7,6 +7,9 @@ const runtimeEnv: Record<string, string | undefined> =
 export const KEYCLOAK_ENABLED =
 	import.meta.env.VITE_KEYCLOAK_ENABLED ?? runtimeEnv.KEYCLOAK_ENABLED;
 
+export const VIRTUALIZATION_ENABLED =
+	(import.meta.env.VITE_VIRTUALIZATION_ENABLED ?? runtimeEnv.VIRTUALIZATION_ENABLED) !== 'false';
+
 export const SIM_PIPE_CONTROLLER_URL =
 	import.meta.env.VITE_SIM_PIPE_CONTROLLER_URL ?? runtimeEnv.SIM_PIPE_CONTROLLER_URL;
 

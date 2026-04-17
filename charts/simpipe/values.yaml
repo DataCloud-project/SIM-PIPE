@@ -50,14 +50,17 @@ controller:
     # If not set and create is true, a name is generated using the fullname template
     name: ""
 
+  virtualization:
+    # Set to true to enable QEMU-based VM node virtualization (VMNode resources).
+    # Requires a bare-metal node with hardware KVM support (/dev/kvm) and /dev/net/tun.
+    # When enabled: controller runs privileged with NET_ADMIN/NET_RAW capabilities,
+    # and hostPath mounts for KVM/TUN/proc/vm-files.
+    # When disabled: controller runs with minimal permissions (no privileged, no host access).
+    enabled: false
+
   podAnnotations: {}
 
   podSecurityContext: {}
-
-  securityContext:
-    privileged: true
-    capabilities:
-      add: ["NET_ADMIN", "NET_RAW"]
 
   service:
     type: ClusterIP
@@ -81,41 +84,6 @@ controller:
   tolerations: []
 
   affinity: {}
-
-  # emulation
-  volumeMounts:
-    - name: host-tmp-vm
-      mountPath: /host-tmp-vm
-    - name: kvm
-      mountPath: /dev/kvm
-    - name: dev-net-tun
-      mountPath: /dev/net/tun
-    - name: qemu-conf
-      mountPath: /etc
-    - name: host-proc
-      mountPath: /host/proc
-      readOnly: true
-
-  volumes:
-    - name: host-tmp-vm
-      hostPath:
-        path: /tmp/vm-files
-        type: DirectoryOrCreate
-    - name: kvm
-      hostPath:
-        path: /dev/kvm
-    - name: dev-net-tun
-      hostPath:
-        path: /dev/net/tun
-    - name: qemu-conf
-      hostPath:
-        path: /etc
-    - name: host-proc
-      hostPath:
-        path: /proc
-        type: Directory
-  hostNetwork: true
-  hostPID: true
 
 frontend:
   replicaCount: 1

@@ -19,10 +19,10 @@ WAN_IF="${DEBIAN_WAN_IF:-}"
 # If running inside a container with host namespaces available, enter both the
 # host mount namespace (to pick up the host's iptables binary, e.g. iptables-nft
 # on Debian 12+) and the host network namespace.
-# The controller pod sets hostPID=true, so PID 1 is the host init process.
+# /host/proc is a read-only hostPath mount of the host's /proc.
 NSENTER=""
 if [ -e /host/proc/1/ns/net ]; then
-  NSENTER="nsenter -t 1 -m -n --"
+  NSENTER="nsenter --net=/host/proc/1/ns/net --"
 fi
 
 # Auto-detect WAN_IF if not provided (uses default route in the

@@ -3,6 +3,7 @@
 // eslint-disable-next-line unicorn/prevent-abbreviations
 interface ImportMetaEnv {
 	readonly VITE_KEYCLOAK_ENABLED: string | undefined;
+	readonly VITE_VIRTUALIZATION_ENABLED: string | undefined;
 	readonly VITE_SIM_PIPE_CONTROLLER_URL: string | undefined;
 	readonly VITE_KEYCLOAK_URL: string | undefined;
 	readonly VITE_KEYCLOAK_REALM: string | undefined;

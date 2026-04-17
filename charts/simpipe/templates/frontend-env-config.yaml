@@ -8,6 +8,7 @@ data:
   env-config.js: |
     window.__ENV__ = {
       KEYCLOAK_ENABLED: {{ if .Values.controller.keycloak.oauth2IssuerEndpoint }}'true'{{ else }}'false'{{ end }},
+      VIRTUALIZATION_ENABLED: {{ if .Values.controller.virtualization.enabled }}'true'{{ else }}'false'{{ end }},
       KEYCLOAK_URL: {{ .Values.frontend.keycloak.url | default "" | squote }},
       KEYCLOAK_REALM: {{ .Values.frontend.keycloak.realm | default "" | squote }},
       KEYCLOAK_CLIENT_ID: {{ .Values.frontend.keycloak.clientId | default "sim-pipe-web" | squote }}

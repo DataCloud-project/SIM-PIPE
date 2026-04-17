@@ -61,7 +61,7 @@ function detectHostOS(): 'wsl-ubuntu' | 'debian13' | 'unknown' {
 
   // Debug info to understand what the controller actually sees
   // eslint-disable-next-line no-console
-  console.log('[EMULATION] Host OS detection', {
+  console.log('[VIRTUALIZATION] Host OS detection', {
     ID: osInfo.ID,
     VERSION_ID: osInfo.VERSION_ID,
     VERSION_CODENAME: osInfo.VERSION_CODENAME,
@@ -79,7 +79,7 @@ function detectHostOS(): 'wsl-ubuntu' | 'debian13' | 'unknown' {
   }
 
   // Prefer structured fields from /etc/os-release when available
-  // For our purposes, any Debian host should use the Debian emulation script,
+  // For our purposes, any Debian host should use the Debian virtualization script,
   // we don't need to distinguish specific major versions.
   if (osInfo.ID === 'debian') {
     return 'debian13';
@@ -95,13 +95,13 @@ function getScriptPath(): string {
   switch (osType) {
     case 'wsl-ubuntu': {
       // eslint-disable-next-line no-console
-      console.log('[INFO] Host detected: WSL Ubuntu  → using script1');
+      console.log('[INFO] Host detected: WSL Ubuntu');
       return CREATESCRIPTPATH_WSL;
     }
 
     case 'debian13': {
       // eslint-disable-next-line no-console
-      console.log('[INFO] Host detected: Debian 13 → using script2');
+      console.log('[INFO] Host detected: Debian 13');
       return CREATESCRIPTPATH_DEBIAN;
     }
 

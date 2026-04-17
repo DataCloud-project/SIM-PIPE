@@ -8,12 +8,14 @@ rules:
   - apiGroups: ["simpipe.sct.sintef.no"]
     resources: ["projects"]
     verbs: ["get", "list", "create", "update", "delete"]
+  {{- if .Values.controller.virtualization.enabled }}
   - apiGroups: ["simpipe.sct.sintef.no"]
     resources: ["vmnodes"]
     verbs: ["get","list","watch","create","update","patch","delete"]
   - apiGroups: ["simpipe.sct.sintef.no"]
     resources: ["vmnodes/status"]
     verbs: ["get","update","patch"]
+  {{- end }}
   - apiGroups: [""]
     resources: ["secrets"]
     verbs: ["get", "list", "create", "update", "delete"]
@@ -22,7 +24,7 @@ rules:
     verbs: ["get", "list", "create", "update", "patch", "delete"]
   - apiGroups: [""]
     resources: ["pods"]
-    verbs: ["get", "list", "watch", "create", "drain", "update", "delete"]
+    verbs: ["get", "list", "watch", "create", "update", "delete"]
   - apiGroups: [""]
     resources: ["pods/eviction"]
     verbs: ["create"]

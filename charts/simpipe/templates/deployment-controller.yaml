@@ -28,7 +28,15 @@ spec:
       containers:
         - name: {{ .Chart.Name }}
           securityContext:
-            {{- toYaml .Values.controller.securityContext | nindent 12 }}
+            {{- if .Values.controller.virtualization.enabled }}
+            privileged: true
+            capabilities:
+              add: ["NET_ADMIN", "NET_RAW"]
+            {{- else }}
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+            {{- end }}
           image: "{{ .Values.controller.image.repository }}:{{ .Values.controller.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.controller.image.pullPolicy }}
           env:
@@ -92,10 +100,35 @@ spec:
               port: http
           resources:
             {{- toYaml .Values.controller.resources | nindent 12 }}
+          {{- if .Values.controller.virtualization.enabled }}
           volumeMounts:
-            {{- toYaml .Values.controller.volumeMounts | nindent 12 }}
+            - name: host-tmp-vm
+              mountPath: /host-tmp-vm
+            - name: kvm
+              mountPath: /dev/kvm
+            - name: dev-net-tun
+              mountPath: /dev/net/tun
+            - name: host-proc
+              mountPath: /host/proc
+              readOnly: true
+          {{- end }}
+      {{- if .Values.controller.virtualization.enabled }}
       volumes:
-        {{- toYaml .Values.controller.volumes | nindent 8 }}
+        - name: host-tmp-vm
+          hostPath:
+            path: /tmp/vm-files
+            type: DirectoryOrCreate
+        - name: kvm
+          hostPath:
+            path: /dev/kvm
+        - name: dev-net-tun
+          hostPath:
+            path: /dev/net/tun
+        - name: host-proc
+          hostPath:
+            path: /proc
+            type: Directory
+      {{- end }}
       {{- with .Values.controller.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}

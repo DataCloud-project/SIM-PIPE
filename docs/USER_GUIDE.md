@@ -16,7 +16,7 @@ Pipeline steps authored and configured by other DataPact tools can be submitted 
 
 SIM-PIPE is composed of the following orchestration, monitoring, storage, and interface components:
 
-- **Controller (GraphQL API)**: A Node.js/Express service exposing a GraphQL API that coordinates all platform operations. It manages pipeline dry runs, project lifecycle, VM node emulation, and metric retrieval. All mutations and most queries are protected by the `@auth` directive and enforced per-user via Kubernetes labels.
+- **Controller (GraphQL API)**: A Node.js/Express service exposing a GraphQL API that coordinates all platform operations. It manages pipeline dry runs, project lifecycle, VM node virtualization, and metric retrieval. All mutations and most queries are protected by the `@auth` directive and enforced per-user via Kubernetes labels.
 
 - **Frontend (SvelteKit GUI)**: A browser-based graphical user interface accessible at `http://localhost:8088` after installation. It enables users to create projects, submit and monitor dry runs, browse pipeline artifacts, and inspect hardware metrics through an interactive dashboard.
 
