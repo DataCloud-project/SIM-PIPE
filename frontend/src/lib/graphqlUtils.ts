@@ -1,7 +1,7 @@
 import { get } from 'svelte/store';
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 import type { RequestDocument, Variables } from 'graphql-request';
-import initKeycloak, { ensureFreshToken } from '../utils/keycloak.client';
+import initKeycloak, { forceRefreshToken } from '../utils/keycloak.client';
 import { graphQLClient } from '$stores/stores';
 
 export class GraphQLRequestError extends Error {
@@ -35,10 +35,12 @@ export async function requestGraphQLClient<T, V extends Variables = Variables>(
 	try {
 		return await client.request<T>(query, variables);
 	} catch (error: unknown) {
-		// On 401, attempt one token refresh and retry before giving up
+		// On 401, attempt one token refresh and retry before giving up.
+		// Use forceRefreshToken (updateToken(-1)) so the server-rejected token is
+		// replaced unconditionally, not just when it is locally near-expiry.
 		const errStatus = (error as { response?: { status?: number } }).response?.status;
 		if (errStatus === 401) {
-			await ensureFreshToken();
+			await forceRefreshToken();
 			const freshClient = get(graphQLClient);
 			if (freshClient) {
 				try {

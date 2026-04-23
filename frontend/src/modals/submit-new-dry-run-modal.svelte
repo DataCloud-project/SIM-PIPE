@@ -454,7 +454,7 @@
 								</span></label
 							>
 						{/if}
-						{#if Object.keys(templateContainerInputs[task.template] || {}).length > 0}
+						{#if Object.keys(templateContainerInputs[task.template]?.artifacts || {}).length > 0}
 							<br />
 							<!-- svelte-ignore a11y-label-has-associated-control -->
 							<label>Upload Input files </label>

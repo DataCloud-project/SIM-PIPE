@@ -8,13 +8,18 @@ rules:
   - apiGroups: ["simpipe.sct.sintef.no"]
     resources: ["projects"]
     verbs: ["get", "list", "create", "update", "delete"]
+  # vmnodes read access is always required: the resources() GraphQL query lists vmnodes
+  # unconditionally even when QEMU virtualization is disabled.
+  - apiGroups: ["simpipe.sct.sintef.no"]
+    resources: ["vmnodes"]
+    verbs: ["get", "list", "watch"]
   {{- if .Values.controller.virtualization.enabled }}
   - apiGroups: ["simpipe.sct.sintef.no"]
     resources: ["vmnodes"]
-    verbs: ["get","list","watch","create","update","patch","delete"]
+    verbs: ["create", "update", "patch", "delete"]
   - apiGroups: ["simpipe.sct.sintef.no"]
     resources: ["vmnodes/status"]
-    verbs: ["get","update","patch"]
+    verbs: ["get", "update", "patch"]
   {{- end }}
   - apiGroups: [""]
     resources: ["secrets"]

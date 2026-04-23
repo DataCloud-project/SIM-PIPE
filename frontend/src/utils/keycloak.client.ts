@@ -7,6 +7,32 @@ import { browser } from '$app/environment';
 let initKeycloakPromise: Promise<void> | undefined;
 let keycloakInstance: Keycloak | undefined;
 
+// Forces an unconditional token refresh regardless of local expiry.
+// Call this when the server has explicitly rejected the current token (e.g. 401).
+export async function forceRefreshToken(): Promise<void> {
+	if (!keycloakInstance || !browser) return;
+	try {
+		// updateToken(-1) forces a refresh even if the token is still locally valid.
+		const refreshed = await keycloakInstance.updateToken(-1);
+		if (refreshed && keycloakInstance.token) {
+			const { token } = keycloakInstance;
+			const exp = keycloakInstance.tokenParsed?.exp ?? 0;
+			window.sessionStorage.setItem('keycloak-token', token);
+			window.sessionStorage.setItem('keycloak-exp', exp.toString());
+			window.sessionStorage.setItem('keycloak-refresh-token', keycloakInstance.refreshToken ?? '');
+			usertoken.set(token);
+		}
+	} catch {
+		// Refresh token expired — clear cache and force re-login
+		window.sessionStorage.removeItem('keycloak-token');
+		window.sessionStorage.removeItem('keycloak-exp');
+		window.sessionStorage.removeItem('keycloak-refresh-token');
+		const cleanUri = `${window.location.origin}${window.location.pathname}`;
+		await keycloakInstance.login({ redirectUri: cleanUri });
+		await new Promise<never>(() => {});
+	}
+}
+
 export async function ensureFreshToken(): Promise<void> {
 	if (!keycloakInstance || !browser) return;
 	try {
