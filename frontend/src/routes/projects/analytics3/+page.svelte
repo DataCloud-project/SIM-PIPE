@@ -52,20 +52,24 @@
 	}
 
 	onMount(async (): Promise<void> => {
-		// TODO: continue here!
-		const workflow = await getWorkflowTemplate(workflowName);
-		({ nodes, links } = extractNodesAndLinks2(workflow.workflowTemplate));
+		try {
+			// TODO: continue here!
+			const workflow = await getWorkflowTemplate(workflowName);
+			({ nodes, links } = extractNodesAndLinks2(workflow.workflowTemplate));
 
-		updatepageWidth();
+			updatepageWidth();
 
-		nodesMetrics = await getAggregatedNodesMetrics(dryRunIds, dataX, regressionMethod);
-		nodesMetricsLoaded = true;
+			nodesMetrics = await getAggregatedNodesMetrics(dryRunIds, dataX, regressionMethod);
+			nodesMetricsLoaded = true;
 
-		window.addEventListener('resize', updatepageWidth);
+			window.addEventListener('resize', updatepageWidth);
 
-		onDestroy(() => {
-			window.removeEventListener('resize', updatepageWidth);
-		});
+			onDestroy(() => {
+				window.removeEventListener('resize', updatepageWidth);
+			});
+		} catch (error) {
+			console.error('Failed to load analytics data:', error);
+		}
 	});
 
 	$: if (pageWidthUpdated) {

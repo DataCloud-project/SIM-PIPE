@@ -15,11 +15,15 @@ export default async function refreshProjectDetails(): Promise<void> {
 	refreshActiveRunsPromise = (async function waitForCompletion(): Promise<void> {
 		let activeDryRuns: boolean | undefined = false;
 		do {
-			const responseProjectDetails: { project: Project } = await requestGraphQLClient(
-				allDryRunsQuery,
-				{ projectId: get(selectedProject)?.id }
-			);
-			selectedProject.set(responseProjectDetails.project);
+			try {
+				const responseProjectDetails: { project: Project } = await requestGraphQLClient(
+					allDryRunsQuery,
+					{ projectId: get(selectedProject)?.id }
+				);
+				selectedProject.set(responseProjectDetails.project);
+			} catch (error) {
+				console.error('Failed to refresh dry runs:', error);
+			}
 			// check if updating can be stopped
 			// eslint-disable-next-line @typescript-eslint/no-loop-func
 			get(selectedProject)?.dryRuns.forEach((item) => {

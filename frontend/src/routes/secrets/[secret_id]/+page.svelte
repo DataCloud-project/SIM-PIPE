@@ -37,6 +37,9 @@
 	// eslint-disable-next-line @typescript-eslint/no-floating-promises, unicorn/prefer-top-level-await
 	getDataPromise.then((data) => {
 		projectsList.push(...data);
+	// eslint-disable-next-line unicorn/prefer-top-level-await
+	}).catch((error) => {
+		console.error('Failed to load projects list:', error);
 	});
 
 	async function triggerWorkflowUpdatedMessageModal(): Promise<void> {
@@ -140,42 +143,51 @@
 			throw error(404, 'Project not found / project undefined');
 		}
 
-		const response: ResponseType = await requestGraphQLClient(getWorkflowQuery, {
-			name: $selectedProject.name
-		});
-
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
-		const template = response.workflowTemplate.argoWorkflowTemplate;
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-		template.spec.imagePullSecrets = [{ name: $selectedCredential.name }];
-		// update path of template images:
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
-		template.spec.templates.forEach((template: any) => {
-			// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-			if (template.container) {
-				// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
-				const { image } = template.container;
-				// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-				const newImageFullName = getNewImageFullNameFromImageRef(image, $selectedCredential.server);
-				// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, no-param-reassign
-				template.container.image = newImageFullName;
-			}
-		});
-
-		const input = {
-			update: {
-				// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-				argoWorkflowTemplate: template,
+		try {
+			const response: ResponseType = await requestGraphQLClient(getWorkflowQuery, {
 				name: $selectedProject.name
-			}
-		};
+			});
 
-		await requestGraphQLClient(updateCredentialMutation, input);
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+			const template = response.workflowTemplate.argoWorkflowTemplate;
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+			template.spec.imagePullSecrets = [{ name: $selectedCredential.name }];
+			// update path of template images:
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+			template.spec.templates.forEach((template: any) => {
+				// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+				if (template.container) {
+					// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+					const { image } = template.container;
+					// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+					const newImageFullName = getNewImageFullNameFromImageRef(image, $selectedCredential.server);
+					// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, no-param-reassign
+					template.container.image = newImageFullName;
+				}
+			});
 
-		await triggerWorkflowUpdatedMessageModal();
+			const input = {
+				update: {
+					// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+					argoWorkflowTemplate: template,
+					name: $selectedProject.name
+				}
+			};
 
-		// eslint-disable-next-line @typescript-eslint/no-floating-promises
-		goto(`/templates/${$selectedProject.name}`);
+			await requestGraphQLClient(updateCredentialMutation, input);
+
+			await triggerWorkflowUpdatedMessageModal();
+
+			// eslint-disable-next-line @typescript-eslint/no-floating-promises
+			goto(`/templates/${$selectedProject.name}`);
+		} catch (error_) {
+			console.error('Failed to submit form:', error_);
+			await displayModal(
+				'Error updating project❌',
+				`Failed to add secret to project: ${(error_ as Error).message}`,
+				modalStore
+			);
+		}
 	}
 </script>
 
@@ -205,13 +217,11 @@
 						>
 					</div>
 					<br />
-					<!-- eslint-disable-next-line  @typescript-eslint/no-floating-promises @typescript-eslint/explicit-function-return-type -->
+					<!-- eslint-disable-next-line @typescript-eslint/explicit-function-return-type, @typescript-eslint/no-floating-promises -->
 					<button
 						type="button"
 						class="btn btn-sm variant-filled-warning"
-						on:click={() => {
-							onSubmitForm();
-						}}>Submit</button
+						on:click={() => onSubmitForm()}>Submit</button
 					>
 				</div>
 			</div>

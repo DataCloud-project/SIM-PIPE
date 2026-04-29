@@ -9,6 +9,7 @@
 	import allCredentialsQuery from '../queries/get_all_credentials.js';
 	import type { DockerRegistryCredential } from '../types.js';
 	import { requestGraphQLClient } from '$lib/graphqlUtils.js';
+	import { displayModal } from '$utils/modal-utils.js';
 
 	// Props - Exposes parent props to this component
 	export let parent: SvelteComponent;
@@ -147,16 +148,20 @@
 		try {
 			await requestGraphQLClient(createCredentialMutation, variables);
 		} catch (error: any) {
-			console.log(error);
-			alert(`Error: ${error.message}`);
-			throw error(500, error);
+			console.error(error);
+			await displayModal('Error creating secret', `Error: ${(error as Error).message}`, modalStore);
+			throw new Error((error as Error).message);
 		}
 
 		modalStore.close();
 		// refresh credentials list
-		const newcredentialsPromise: { dockerRegistryCredentials: DockerRegistryCredential[] } =
-			await requestGraphQLClient(allCredentialsQuery);
-		$credentialsList = newcredentialsPromise.dockerRegistryCredentials;
+		try {
+			const newcredentialsPromise: { dockerRegistryCredentials: DockerRegistryCredential[] } =
+				await requestGraphQLClient(allCredentialsQuery);
+			$credentialsList = newcredentialsPromise.dockerRegistryCredentials;
+		} catch (error) {
+			console.error('Failed to refresh credentials list:', error);
+		}
 	}
 </script>
 

@@ -44,7 +44,7 @@
 			return response.projects;
 		} catch (error) {
 			loadingError = 'Failed to load projects';
-			console.log('error', error);
+			console.error('error', error);
 			throw error;
 		}
 	};
@@ -161,6 +161,8 @@
 			await requestGraphQLClient<{ projects: Project[] }>(allProjectsQuery).then((response) => {
 				reactiveProjectsList = response.projects;
 				$projectsList = response.projects;
+			}).catch((error) => {
+				console.error('Failed to refresh projects after creation:', error);
 			});
 		} else {
 			const errorMessages: string[] = [];
@@ -197,9 +199,9 @@
 		}).then(async () => {
 			await refreshProjects();
 		});
-		modalPromise.catch((error) => {
-			// eslint-disable-next-line @typescript-eslint/no-floating-promises
-			displayModal('Error creating project', 'Error creating project', modalStore);
+		modalPromise.catch(async (error) => {
+			console.error('Error creating project:', error);
+			await displayModal('Error creating project', `Error creating project: ${(error as Error).message}`, modalStore);
 		});
 	}
 

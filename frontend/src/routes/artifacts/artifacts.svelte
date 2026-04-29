@@ -16,29 +16,36 @@
 	const alertVariant: string = 'variant-filled-error';
 
 	async function loadData2(): Promise<void> {
-		const bucketsResponse: { buckets: Bucket[] } = await requestGraphQLClient(allBucketsQuery);
-		const requests = bucketsResponse.buckets.map(async (bucket) => {
-			const artifacts: { artifacts: Artifact[] } = await requestGraphQLClient(allArtifactsQuery, {
-				bucketName: bucket.name
+		try {
+			const bucketsResponse: { buckets: Bucket[] } = await requestGraphQLClient(allBucketsQuery);
+			const requests = bucketsResponse.buckets.map(async (bucket) => {
+				const artifacts: { artifacts: Artifact[] } = await requestGraphQLClient(allArtifactsQuery, {
+					bucketName: bucket.name
+				});
+				return { bucket, artifacts };
 			});
-			return { bucket, artifacts };
-		});
-		Promise.all(requests)
-			.then((results) => {
-				buckets.set(
-					results.map((result) => ({
-						bucket: result.bucket,
-						artifacts: result.artifacts.artifacts
-					})) as BucketWithArtifacts[]
-				);
-				requestsComplete = true;
-			})
-			.catch((error) => {
-				// console.error('A promise was rejected:', error);
-				alertVisible = true;
-				alertTitle = 'Request Error';
-				alertMessage = `${error}`;
-			});
+			Promise.all(requests)
+				.then((results) => {
+					buckets.set(
+						results.map((result) => ({
+							bucket: result.bucket,
+							artifacts: result.artifacts.artifacts
+						})) as BucketWithArtifacts[]
+					);
+					requestsComplete = true;
+				})
+				.catch((error) => {
+					// console.error('A promise was rejected:', error);
+					alertVisible = true;
+					alertTitle = 'Request Error';
+					alertMessage = `${error}`;
+				});
+		} catch (error) {
+			console.error('Failed to load buckets:', error);
+			alertVisible = true;
+			alertTitle = 'Request Error';
+			alertMessage = `${(error as Error).message}`;
+		}
 	}
 
 	// TODO: implement the downloadArtifacts function

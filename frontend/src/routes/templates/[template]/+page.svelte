@@ -26,7 +26,7 @@
 			// project = data.workflowTemplate.project;
 			requestsComplete = true;
 		} catch (error) {
-			console.log('failed to fetch workflow template data from project:', error);
+			console.error('failed to fetch workflow template data from project:', error);
 			try {
 				const response = await getWorkflowTemplateFromDryRun(templateName);
 				// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
@@ -35,7 +35,7 @@
 				// project = data.dryRun.project;
 				requestsComplete = true;
 			} catch (error) {
-				console.log('failed to fetch workflow template data from dry run:', error);
+				console.error('failed to fetch workflow template data from dry run:', error);
 				// eslint-disable-next-line @typescript-eslint/no-floating-promises
 				goto('/404');
 			}

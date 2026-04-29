@@ -44,7 +44,7 @@
 		};
 
 		try {
-			requestGraphQLClient(createResourceMutation, createResourceMutationVariables);
+			await requestGraphQLClient(createResourceMutation, createResourceMutationVariables);
 
 			modalStore.close();
 

@@ -3,6 +3,7 @@
 	import type { SvelteComponent } from 'svelte';
 
 	import { requestGraphQLClient } from '$lib/graphqlUtils.js';
+	import { displayModal } from '$utils/modal-utils.js';
 
 	import allProjectsQuery from '$queries/get_all_projects.js';
 	import renameProjectMutation from '$queries/rename_project.js';
@@ -24,7 +25,7 @@
 	const formData = {
 		name: ''
 	};
-	let alertModal = false;
+	let alertModal = false; // eslint-disable-line @typescript-eslint/no-unused-vars
 
 	async function onRenameProjectSubmit(): Promise<void> {
 		const variables = {
@@ -38,14 +39,17 @@
 			const title = 'Project renamed &#10024;!';
 			const body = `New name: ${formData.name}`;
 			alertModal = true;
+			await displayModal(title, body, modalStore);
 
 			// update the project list after addition
 			const responseAllProjects: AllProjectsResponse = await requestGraphQLClient(allProjectsQuery);
 			$projectsList = responseAllProjects.projects;
 		} catch (error) {
+			console.error('Failed to rename project:', error);
 			const title = 'Error renaming project❌!';
 			const body = (error as Error).message;
 			alertModal = true;
+			await displayModal(title, body, modalStore);
 		}
 	}
 </script>

@@ -39,20 +39,24 @@
 	} = {};
 
 	async function gotoDryRuns(): Promise<void> {
-		let projectId = '';
-		if ($selectedProject?.id) projectId = $selectedProject?.id;
-		// if selectedproject in store is null, get the project id from any of the selected runs
-		else {
-			const dryRunId = dryrunsForPrediction[0];
-			const result: {
-				dryRun: {
-					project: { id: string };
-				};
-			} = await requestGraphQLClient(getDryRunProjectIDQuery, { dryRunId });
-			projectId = result.dryRun.project.id;
+		try {
+			let projectId = '';
+			if ($selectedProject?.id) projectId = $selectedProject?.id;
+			// if selectedproject in store is null, get the project id from any of the selected runs
+			else {
+				const dryRunId = dryrunsForPrediction[0];
+				const result: {
+					dryRun: {
+						project: { id: string };
+					};
+				} = await requestGraphQLClient(getDryRunProjectIDQuery, { dryRunId });
+				projectId = result.dryRun.project.id;
+			}
+			// eslint-disable-next-line @typescript-eslint/no-floating-promises
+			goto(`/projects/dryruns/${projectId}`);
+		} catch (error) {
+			console.error('Failed to navigate to dry runs:', error);
 		}
-		// eslint-disable-next-line @typescript-eslint/no-floating-promises
-		goto(`/projects/dryruns/${projectId}`);
 	}
 
 	// for each selected dry run, get the resource analytics (avg, max) per step and per dry run level
@@ -107,11 +111,11 @@
 				// return Number(response.dryRun.argoWorkflow.metadata.annotations.filesize); // There is no filesize in annotations!
 				return totalFileSize;
 			} catch (error) {
-				console.log(error);
+				console.error(error);
 				const title = `Error reading input filesizes for dry run - ${dryRunId}`;
 				const body = 'You will be taken back to the dry runs list on close';
 				//await displayAlert(title, body, 3500);
-				console.log(title, body);
+				console.error(title, body);
 				// eslint-disable-next-line @typescript-eslint/no-floating-promises
 				goto(`/projects/dryruns/${$selectedProject?.id}`);
 			}

@@ -524,9 +524,11 @@
 	};
 
 	async function loadCarbontrackerData(metrics: DryRunMetrics[]): Promise<void> {
-		// Only fetch for steps that don't already have cached annotation data
+		const terminalPhases = new Set(['Succeeded', 'Failed', 'Error', 'Omitted', 'Skipped']);
+		// Only fetch for completed steps that don't already have cached annotation data
 		const stepsNeedingFetch = metrics
 			.filter((step) => step.type === 'Pod')
+			.filter((step) => terminalPhases.has(step.phase))
 			.filter((step) => {
 				const existing = ($stepsList as DryRunMetrics[])?.find((s) => s.id === step.id);
 				return !existing?.carbontracker;
@@ -612,11 +614,22 @@
 				'Awaiting response from API...',
 				modalStore
 			);
-			const response = await requestGraphQLClient<{ result: string }>(getMooseAnalysisQuery, {
-				artifactUrl: artifact.url,
-				stepStartedAt: stepStartedAt ?? undefined,
-				save: !!shouldSaveOnServer
-			});
+			let response: { result: string };
+			try {
+				response = await requestGraphQLClient<{ result: string }>(getMooseAnalysisQuery, {
+					artifactUrl: artifact.url,
+					stepStartedAt: stepStartedAt ?? undefined,
+					save: !!shouldSaveOnServer
+				});
+			} catch (error) {
+				console.error('Moose analysis request failed:', error);
+				await displayModal(
+					'Moose API request failed⚠️',
+					`Error: ${error instanceof Error ? error.message : String(error)}`,
+					modalStore
+				);
+				return;
+			}
 			latestMooseReportJson = response.result;
 			hasUnsavedMooseReport = !shouldSaveOnServer;
 			const job = JSON.parse(response.result) as {

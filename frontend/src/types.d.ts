@@ -183,6 +183,7 @@ export type Bucket = {
 // graphql minio artifacts
 export type Artifact = {
 	name: string;
+	key?: string;
 	url: string;
 	size?: number;
 	bucketName?: string;

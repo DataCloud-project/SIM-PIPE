@@ -19,9 +19,16 @@
 			let currentLevel = structure;
 			const parts = entry.name.split('/');
 
-			parts.forEach((part) => {
+			parts.forEach((part, index) => {
 				if (!currentLevel.children[part]) {
-					currentLevel.children[part] = { path: `${currentLevel.path}/${part}`, children: {} };
+					const isLeaf = index === parts.length - 1;
+					const pathSoFar = currentLevel.path ? `${currentLevel.path}/${part}` : part;
+					// Leaf nodes use the actual MinIO key so Argo receives the correct S3 object path.
+					// Folder nodes use the display path (without a leading slash).
+					currentLevel.children[part] = {
+						path: isLeaf ? (entry.key ?? pathSoFar) : pathSoFar,
+						children: {}
+					};
 				}
 				currentLevel = currentLevel.children[part];
 			});

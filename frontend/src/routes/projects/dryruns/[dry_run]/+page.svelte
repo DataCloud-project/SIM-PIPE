@@ -39,30 +39,39 @@
 			.filter((item) => checkboxes[item])
 			.map((element) => requestGraphQLClient(deleteDryRunMutation, { dryRunId: element }));
 
-		await Promise.all(deletePromises);
+		try {
+			await Promise.all(deletePromises);
 
-		await displayModal(
-			'Dry run deleted🗑️!',
-			`Deleted dry runs: ${Object.keys(checkboxes).join(', ')}`,
-			modalStore
-		);
+			await displayModal(
+				'Dry run deleted🗑️!',
+				`Deleted dry runs: ${Object.keys(checkboxes).join(', ')}`,
+				modalStore
+			);
 
-		// reset checkboxes
-		$selectedProject?.dryRuns.forEach((element) => {
-			checkboxes[element.id] = false;
-		});
-		// inserting a small delay because sometimes delete mutation returns true, but the deleted dry run is also returned in the query
-		// eslint-disable-next-line no-promise-executor-return
-		await new Promise((resolve) => setTimeout(resolve, 100));
+			// reset checkboxes
+			$selectedProject?.dryRuns.forEach((element) => {
+				checkboxes[element.id] = false;
+			});
+			// inserting a small delay because sometimes delete mutation returns true, but the deleted dry run is also returned in the query
+			// eslint-disable-next-line no-promise-executor-return
+			await new Promise((resolve) => setTimeout(resolve, 100));
 
-		// update the project list after deletion
-		const responseProjectDetails: { project: Project } = await requestGraphQLClient(
-			allDryRunsQuery,
-			{
-				projectId: $clickedProjectId
-			}
-		);
-		$selectedProject = responseProjectDetails.project;
+			// update the project list after deletion
+			const responseProjectDetails: { project: Project } = await requestGraphQLClient(
+				allDryRunsQuery,
+				{
+					projectId: $clickedProjectId
+				}
+			);
+			$selectedProject = responseProjectDetails.project;
+		} catch (error) {
+			console.error('Failed to delete dry run(s):', error);
+			await displayModal(
+				'Failed to delete dry run(s)❌',
+				`Error: ${(error as Error).message}`,
+				modalStore
+			);
+		}
 	}
 
 	async function onPredictSelected(): Promise<void> {

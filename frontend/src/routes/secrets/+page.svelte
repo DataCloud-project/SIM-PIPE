@@ -40,7 +40,8 @@
 				checkboxes[element.name] = false;
 			});
 		})
-		.catch(() => {
+		.catch((error) => {
+			console.error('Error loading credentials:', error);
 			$credentialsList = undefined;
 		});
 
@@ -54,17 +55,21 @@
 				return requestGraphQLClient(deleteCredentialMutation, variables);
 			});
 
-		// wait for all promises to resolve
-		await Promise.all(deletePromises);
-		// reset checkboxes
-		$credentialsList?.forEach((element) => {
-			checkboxes[element.name] = false;
-		});
-		const newcredentialsPromise: { dockerRegistryCredentials: DockerRegistryCredential[] } =
-			await requestGraphQLClient(allCredentialsQuery);
-		// Update credentialsList
-		credentialsList.set(newcredentialsPromise.dockerRegistryCredentials);
-		reactiveCredentialsList = $credentialsList;
+		try {
+			// wait for all promises to resolve
+			await Promise.all(deletePromises);
+			// reset checkboxes
+			$credentialsList?.forEach((element) => {
+				checkboxes[element.name] = false;
+			});
+			const newcredentialsPromise: { dockerRegistryCredentials: DockerRegistryCredential[] } =
+				await requestGraphQLClient(allCredentialsQuery);
+			// Update credentialsList
+			credentialsList.set(newcredentialsPromise.dockerRegistryCredentials);
+			reactiveCredentialsList = $credentialsList;
+		} catch (error) {
+			console.error('Failed to delete credential(s):', error);
+		}
 	}
 
 	// to disable onclick propogation for checkbox input

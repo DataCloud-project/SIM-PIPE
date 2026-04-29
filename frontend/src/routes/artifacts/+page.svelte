@@ -109,11 +109,19 @@
 			} else {
 				artifactUploadPath = `${uploadPath}/${artifact.name}`;
 			}
-			const url: { computeUploadPresignedUrl: string } = await requestGraphQLClient(
-				getUploadPresignedUrl,
-				{ bucketName: bucket, key: artifactUploadPath }
-			);
-			uploadFile(artifact, url.computeUploadPresignedUrl);
+			try {
+				const url: { computeUploadPresignedUrl: string } = await requestGraphQLClient(
+					getUploadPresignedUrl,
+					{ bucketName: bucket, key: artifactUploadPath }
+				);
+				uploadFile(artifact, url.computeUploadPresignedUrl);
+			} catch (error) {
+				console.error('Failed to get upload URL:', error);
+				alertTitle = '👎 Error';
+				alertMessage = `Failed to upload ${artifact.name}: ${(error as Error).message}`;
+				alertVariant = 'variant-filled-error';
+				alertVisible = true;
+			}
 		}
 	}
 
@@ -266,7 +274,7 @@
 			} catch (error) {
 				console.error('Error deleting bucket:', error);
 				alertTitle = `👎 Error deleting bucket ${selectedBucket.bucket}`;
-				alertMessage = `${(error as any).response.errors[0].message || ''}`;
+				alertMessage = `${(error as any)?.response?.errors?.[0]?.message ?? (error as Error).message ?? ''}`;
 				alertVariant = 'variant-filled-error';
 				alertVisible = true;
 			}
@@ -371,7 +379,7 @@
 			alertVisible = true;
 		} catch (error) {
 			alertTitle = `👎 Error creating bucket ${name}`;
-			alertMessage = `${(error as any).response.errors[0].message || ''}`;
+			alertMessage = `${(error as any)?.response?.errors?.[0]?.message ?? (error as Error).message ?? ''}`;
 			alertVariant = 'variant-filled-error';
 			alertVisible = true;
 		}
@@ -391,7 +399,7 @@
 			// Returns the updated response value
 			response: (response: string) => {
 				createNewBucket(response).catch((error) => {
-					console.log(' error', error);
+					console.error(' error', error);
 				});
 			}
 		};
