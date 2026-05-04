@@ -688,10 +688,20 @@
 	async function saveMooseReport(): Promise<void> {
 		if (!selectedArtifact || !latestMooseReportJson) return;
 		try {
-			const url = new URL(selectedArtifact.url);
-			const pathParts = url.pathname.replace(/^\/+/, '').split('/');
-			const bucketName = pathParts.shift()!;
-			const objectName = pathParts.join('/');
+			// Prefer key+bucketName from the artifact object if available (avoids URL parsing)
+			let bucketName: string;
+			let objectName: string;
+			if (selectedArtifact.key && selectedArtifact.bucketName) {
+				bucketName = selectedArtifact.bucketName;
+				objectName = selectedArtifact.key;
+			} else if (selectedArtifact.url) {
+				const url = new URL(selectedArtifact.url);
+				const pathParts = url.pathname.replace(/^\/+/, '').split('/');
+				bucketName = pathParts.shift()!;
+				objectName = pathParts.join('/');
+			} else {
+				throw new Error('Artifact has no key or URL; cannot save report');
+			}
 
 			await requestGraphQLClient(setMooseReportMutation, {
 				bucketName,
@@ -838,8 +848,9 @@
 								<th>CO2 [<span class="lowercase">g</span>]</th>
 								<th>Energy [<span class="lowercase">k</span>Wh]</th>
 								<th>Status</th>
+								<th class="output-col">Input</th>
 								<th class="output-col">Output</th>
-								<th>Data Analysis</th>
+								<th class="output-col data-analysis-col">Data Analysis</th>
 							</tr>
 						</thead>
 						<tbody>
@@ -879,6 +890,19 @@
 										{/if}
 									</td>
 									<td>{step.phase}</td>
+									<td class="output-col" on:click|stopPropagation={() => {}}>
+										{#if step.inputArtifacts?.length}
+											{#each step.inputArtifacts ?? [] as artifact}
+												{#if artifact.url}
+													<a href={artifact.url} class="output-link">{artifact.name}</a>
+												{:else}
+													<span class="output-link">{artifact.name}</span>
+												{/if}
+											{/each}
+										{:else}
+											<p>-</p>
+										{/if}
+									</td>
 									<td class="output-col">
 										{#if step.outputArtifacts?.length > 1}
 											{#each step.outputArtifacts as artifact}
@@ -890,27 +914,66 @@
 											<p>-</p>
 										{/if}
 									</td>
-									<td>
-										{#if step.outputArtifacts?.length > 1}
-											<button
-												type="button"
-												class={`px-3 py-1 rounded border text-xs font-normal cursor-pointer hover:border-slate-400 ${
-													step.outputArtifacts?.length > 1 && !step.outputArtifacts[0]?.mooseReport
-														? 'bg-amber-100 border-amber-300 text-amber-800 hover:bg-amber-150'
-														: 'bg-emerald-100 border-emerald-300 text-emerald-800 hover:bg-emerald-150'
-												}`}
-												on:click|stopPropagation={() =>
-													onAnalyze(step.outputArtifacts[0], step.startedAt)}
-											>
-												{#if step.outputArtifacts?.length > 1 && !step.outputArtifacts[0]?.mooseReport}
-													Run data analysis
-												{:else}
-													View saved report
-												{/if}
-											</button>
-										{:else}
-											-
-										{/if}
+									<td class="output-col data-analysis-col" on:click|stopPropagation={() => {}}>
+										{#each [step] as s}
+											{@const inputAnalysable = (s.inputArtifacts ?? []).filter(
+												(a) => a.url || a.key
+											)}
+											{@const outputAnalysable =
+												s.outputArtifacts?.length > 1
+													? s.outputArtifacts.filter((a) => a.name !== 'main-logs')
+													: []}
+											{#if inputAnalysable.length === 0 && outputAnalysable.length === 0}
+												-
+											{:else}
+												<div class="flex gap-2">
+													{#if inputAnalysable.length > 0}
+														<div class="flex-1 min-w-0">
+															<p
+																class="text-[10px] font-semibold uppercase tracking-wide opacity-50 mb-1"
+															>
+																Input
+															</p>
+															{#each inputAnalysable as artifact}
+																<button
+																	type="button"
+																	class={`mb-1 w-full text-left px-2 py-1 rounded border text-xs font-normal cursor-pointer hover:border-slate-400 ${
+																		artifact.mooseReport
+																			? 'bg-emerald-100 border-emerald-300 text-emerald-800'
+																			: 'bg-amber-100 border-amber-300 text-amber-800'
+																	}`}
+																	on:click|stopPropagation={() => onAnalyze(artifact, s.startedAt)}
+																>
+																	{artifact.mooseReport ? '✓ ' : ''}{artifact.name}
+																</button>
+															{/each}
+														</div>
+													{/if}
+													{#if outputAnalysable.length > 0}
+														<div class="flex-1 min-w-0">
+															<p
+																class="text-[10px] font-semibold uppercase tracking-wide opacity-50 mb-1"
+															>
+																Output
+															</p>
+															{#each outputAnalysable as artifact}
+																<button
+																	type="button"
+																	class={`mb-1 w-full text-left px-2 py-1 rounded border text-xs font-normal cursor-pointer hover:border-slate-400 ${
+																		artifact.mooseReport
+																			? 'bg-emerald-100 border-emerald-300 text-emerald-800'
+																			: 'bg-amber-100 border-amber-300 text-amber-800'
+																	}`}
+																	on:click|stopPropagation={() => onAnalyze(artifact, s.startedAt)}
+																>
+																	{artifact.mooseReport ? '✓ ' : ''}{artifact.name}
+																</button>
+															{/each}
+														</div>
+													{/if}
+												</div>
+											{/if}
+										{/each}
 									</td>
 								</tr>
 							{/each}
@@ -1014,8 +1077,8 @@
 									{#if carbontrackerLoading}
 										<span
 											class="inline-block w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-[spin_2s_linear_infinite] opacity-50"
-											title="Calculating..."></span
-										>
+											title="Calculating..."
+										></span>
 									{:else}
 										{totalCO2} g
 									{/if}
@@ -1024,11 +1087,11 @@
 							<tr>
 								<td>Total Energy</td>
 								<td>
-								{#if carbontrackerLoading}
+									{#if carbontrackerLoading}
 										<span
 											class="inline-block w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-[spin_2s_linear_infinite] opacity-50"
-											title="Calculating..."></span
-										>
+											title="Calculating..."
+										></span>
 									{:else}
 										{totalEnergy} kWh
 									{/if}
@@ -1308,15 +1371,15 @@
 	}
 	.table.table-interactive th.output-col,
 	.table.table-interactive td.output-col {
-		width: 12%;
-		min-width: 8ch;
-		max-width: 18ch;
-	}
-	.table.table-interactive th:nth-child(9),
-	.table.table-interactive td:nth-child(9) {
 		width: 10%;
-		min-width: 7ch;
-		max-width: 14ch;
+		min-width: 8ch;
+		max-width: 16ch;
+	}
+	.table.table-interactive th.data-analysis-col,
+	.table.table-interactive td.data-analysis-col {
+		width: 22%;
+		min-width: 14ch;
+		max-width: 28ch;
 	}
 
 	/* Make the small Resource/Metrics table use the full card width with two balanced columns */

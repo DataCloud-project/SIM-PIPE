@@ -387,7 +387,11 @@
 						'Input file size exceeded limit (90KB)!',
 						modalStore
 					)
-				: displayModal('Failed to create dry run❌', `Error: ${(error as Error).message}`, modalStore));
+				: displayModal(
+						'Failed to create dry run❌',
+						`Error: ${(error as Error).message}`,
+						modalStore
+					));
 		}
 	}
 

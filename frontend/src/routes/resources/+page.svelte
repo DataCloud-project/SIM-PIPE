@@ -161,102 +161,105 @@
 	<div class="table-container w-full">
 		<h1>VM Nodes</h1>
 		{#if !VIRTUALIZATION_ENABLED}
-		<br />
-	<div class="card variant-ghost-warning w-fit p-3 mt-2 text-sm">
-		<h3 class="text-base font-semibold">VM node virtualization is disabled</h3>
-		<p class="mt-1">
-			Requires KVM support. Enable with
-			<code>controller.virtualization.enabled: true</code>
-			in <code>values.yaml</code>.
-		</p>
-	</div>
-{:else}
-		<div class="flex flex-row justify-end p-5 space-x-1">
-			<div>
-				<button type="button" class="btn btn-sm variant-filled" on:click={() => onCreate1()}>
-					<span>Create</span>
-				</button>
+			<br />
+			<div class="card variant-ghost-warning w-fit p-3 mt-2 text-sm">
+				<h3 class="text-base font-semibold">VM node virtualization is disabled</h3>
+				<p class="mt-1">
+					Requires KVM support. Enable with
+					<code>controller.virtualization.enabled: true</code>
+					in <code>values.yaml</code>.
+				</p>
 			</div>
-			<div>
-				<button
-					type="button"
-					class="btn btn-sm variant-filled-surface"
-					on:click={() => onShutdown()}
-				>
-					<span>Shutdown</span>
-				</button>
+		{:else}
+			<div class="flex flex-row justify-end p-5 space-x-1">
+				<div>
+					<button type="button" class="btn btn-sm variant-filled" on:click={() => onCreate1()}>
+						<span>Create</span>
+					</button>
+				</div>
+				<div>
+					<button
+						type="button"
+						class="btn btn-sm variant-filled-surface"
+						on:click={() => onShutdown()}
+					>
+						<span>Shutdown</span>
+					</button>
+				</div>
+				<div>
+					<button
+						type="button"
+						class="btn btn-sm variant-filled-warning"
+						on:click={() => onDelete()}
+					>
+						<span>Delete</span>
+					</button>
+				</div>
 			</div>
-			<div>
-				<button type="button" class="btn btn-sm variant-filled-warning" on:click={() => onDelete()}>
-					<span>Delete</span>
-				</button>
-			</div>
-		</div>
-		{#await resourcesPromise}
-			<p style="font-size:20px;">Loading VM nodes...</p>
-			<ProgressBar />
-		{:then}
-			{#if loadingError}
+			{#await resourcesPromise}
+				<p style="font-size:20px;">Loading VM nodes...</p>
+				<ProgressBar />
+			{:then}
+				{#if loadingError}
+					<div class="card p-4">
+						<h2>Failed to load resources</h2>
+						<p>{loadingError}</p>
+					</div>
+				{:else if reactiveResourcesList?.length}
+					<table class="table table-interactive w-full">
+						<caption hidden>Resources</caption>
+						<thead>
+							<tr>
+								<th class="w-10" />
+								<th class="w-1/5">Name</th>
+								<th class="w-1/5">OS</th>
+								<th class="w-1/5">CPUs</th>
+								<th class="w-1/5">Memory (in mb)</th>
+								<th class="w-1/5">Status</th>
+								<th class="w-1/5">Logs</th>
+							</tr>
+						</thead>
+						<tbody>
+							{#each reactiveResourcesList || [] as resource}
+								<tr>
+									<td class="w-10">
+										<input
+											type="checkbox"
+											class="checkbox"
+											bind:checked={checkboxes[resource.id]}
+											on:click={(event) => handleCheckboxClick(event)}
+										/>
+									</td>
+									<td style="w-1/5">{resource.name}</td>
+									<td style="w-1/5">{resource.os}</td>
+									<td style="w-1/6">{resource.cpus}</td>
+									<td style="w-1/5">{resource.memory}</td>
+									<td style="w-1/5">{resource.status}</td>
+									<td style="w-1/4">
+										<button
+											type="button"
+											class="btn btn-sm variant-filled"
+											on:click={() => onOpenLogs(resource.name)}
+										>
+											Get VM console logs
+										</button>
+									</td>
+								</tr>
+							{/each}
+						</tbody>
+					</table>
+				{:else}
+					<p>No resources yet.</p>
+				{/if}
+			{:catch error}
 				<div class="card p-4">
 					<h2>Failed to load resources</h2>
-					<p>{loadingError}</p>
+					<p>{error.message}</p>
 				</div>
-			{:else if reactiveResourcesList?.length}
-				<table class="table table-interactive w-full">
-					<caption hidden>Resources</caption>
-					<thead>
-						<tr>
-							<th class="w-10" />
-							<th class="w-1/5">Name</th>
-							<th class="w-1/5">OS</th>
-							<th class="w-1/5">CPUs</th>
-							<th class="w-1/5">Memory (in mb)</th>
-							<th class="w-1/5">Status</th>
-							<th class="w-1/5">Logs</th>
-						</tr>
-					</thead>
-					<tbody>
-						{#each reactiveResourcesList || [] as resource}
-							<tr>
-								<td class="w-10">
-									<input
-										type="checkbox"
-										class="checkbox"
-										bind:checked={checkboxes[resource.id]}
-										on:click={(event) => handleCheckboxClick(event)}
-									/>
-								</td>
-								<td style="w-1/5">{resource.name}</td>
-								<td style="w-1/5">{resource.os}</td>
-								<td style="w-1/6">{resource.cpus}</td>
-								<td style="w-1/5">{resource.memory}</td>
-								<td style="w-1/5">{resource.status}</td>
-								<td style="w-1/4">
-									<button
-										type="button"
-										class="btn btn-sm variant-filled"
-										on:click={() => onOpenLogs(resource.name)}
-									>
-										Get VM console logs
-									</button>
-								</td>
-							</tr>
-						{/each}
-					</tbody>
-				</table>
-			{:else}
-				<p>No resources yet.</p>
-			{/if}
-		{:catch error}
-			<div class="card p-4">
-				<h2>Failed to load resources</h2>
-				<p>{error.message}</p>
-			</div>
-		{/await}
+			{/await}
 		{/if}
 	</div>
 </div>
-
 
 <style>
 	.table.table {

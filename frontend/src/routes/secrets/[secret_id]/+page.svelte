@@ -35,12 +35,14 @@
 	const projectsList: Project[] = [];
 
 	// eslint-disable-next-line @typescript-eslint/no-floating-promises, unicorn/prefer-top-level-await
-	getDataPromise.then((data) => {
-		projectsList.push(...data);
-	// eslint-disable-next-line unicorn/prefer-top-level-await
-	}).catch((error) => {
-		console.error('Failed to load projects list:', error);
-	});
+	getDataPromise
+		.then((data) => {
+			projectsList.push(...data);
+			// eslint-disable-next-line unicorn/prefer-top-level-await
+		})
+		.catch((error) => {
+			console.error('Failed to load projects list:', error);
+		});
 
 	async function triggerWorkflowUpdatedMessageModal(): Promise<void> {
 		const projectName = $selectedProject ? $selectedProject.name : 'undefined';
@@ -160,7 +162,10 @@
 					// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
 					const { image } = template.container;
 					// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-					const newImageFullName = getNewImageFullNameFromImageRef(image, $selectedCredential.server);
+					const newImageFullName = getNewImageFullNameFromImageRef(
+						image,
+						$selectedCredential.server
+					);
 					// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, no-param-reassign
 					template.container.image = newImageFullName;
 				}

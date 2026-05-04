@@ -26,7 +26,7 @@
 					// Leaf nodes use the actual MinIO key so Argo receives the correct S3 object path.
 					// Folder nodes use the display path (without a leading slash).
 					currentLevel.children[part] = {
-						path: isLeaf ? (entry.key ?? pathSoFar) : pathSoFar,
+						path: isLeaf ? entry.key ?? pathSoFar : pathSoFar,
 						children: {}
 					};
 				}

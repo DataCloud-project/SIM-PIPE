@@ -158,12 +158,14 @@
 						`Project "${createProjectResponse.project.name}" was created successfully, but Workflow template "${createWorkflowResponse.name}" failed to be created.`,
 						modalStore
 					));
-			await requestGraphQLClient<{ projects: Project[] }>(allProjectsQuery).then((response) => {
-				reactiveProjectsList = response.projects;
-				$projectsList = response.projects;
-			}).catch((error) => {
-				console.error('Failed to refresh projects after creation:', error);
-			});
+			await requestGraphQLClient<{ projects: Project[] }>(allProjectsQuery)
+				.then((response) => {
+					reactiveProjectsList = response.projects;
+					$projectsList = response.projects;
+				})
+				.catch((error) => {
+					console.error('Failed to refresh projects after creation:', error);
+				});
 		} else {
 			const errorMessages: string[] = [];
 			const projectMessage = extractErrorMessage(createProjectResponse.error);
@@ -201,7 +203,11 @@
 		});
 		modalPromise.catch(async (error) => {
 			console.error('Error creating project:', error);
-			await displayModal('Error creating project', `Error creating project: ${(error as Error).message}`, modalStore);
+			await displayModal(
+				'Error creating project',
+				`Error creating project: ${(error as Error).message}`,
+				modalStore
+			);
 		});
 	}
 

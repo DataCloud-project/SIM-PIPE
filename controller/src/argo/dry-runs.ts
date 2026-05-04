@@ -132,12 +132,29 @@ export function convertArgoWorkflowNode(node: ArgoNode, argoWorkflow: ArgoWorkfl
 
   if (type === DryRunNodeType.Pod) {
     podName = getPodName(node, argoWorkflow);
-    // node.inputs?.artifacts?.map(({ name, s3 }) => (console.log(`${name} s3`, s3)));
-    // console.log('node', node);
+
+    // Build a lookup of output artifact S3 coordinates from all nodes in the workflow.
+    // Argo does not always populate s3.key in a receiving node's inputs.artifacts when
+    // the artifact was passed via a `from:` reference — only the name is set. By scanning
+    // all nodes' outputs we can resolve the key as a fallback.
+    const outputArtifactByName = new Map<string, { key: string | undefined; bucket: string | undefined }>();
+    if (argoWorkflow.status?.nodes) {
+      for (const n of Object.values(argoWorkflow.status.nodes)) {
+        for (const artifact of n.outputs?.artifacts ?? []) {
+          if (artifact.s3?.key && !outputArtifactByName.has(artifact.name)) {
+            outputArtifactByName.set(artifact.name, {
+              key: artifact.s3.key,
+              bucket: artifact.s3.bucket,
+            });
+          }
+        }
+      }
+    }
+
     inputArtifacts = node.inputs?.artifacts?.map(({ name, s3 }) => ({
       name,
-      key: s3?.key,
-      bucketName: s3?.bucket,
+      key: s3?.key ?? outputArtifactByName.get(name)?.key,
+      bucketName: s3?.bucket ?? outputArtifactByName.get(name)?.bucket,
     }));
     outputArtifacts = node.outputs?.artifacts?.map(({ name, s3 }) => ({
       name,
