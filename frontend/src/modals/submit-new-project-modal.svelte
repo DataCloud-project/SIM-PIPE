@@ -49,7 +49,9 @@
 			const result = validateYAML(yamlEditorContent);
 			yamlError = result.valid
 				? ''
-				: (result.message instanceof Error ? result.message.message : String(result.message ?? ''));
+				: result.message instanceof Error
+					? result.message.message
+					: String(result.message ?? '');
 		} else {
 			yamlError = '';
 		}
@@ -188,41 +190,43 @@
 		<header class={cHeader}>{$modalStore[0].title ?? '(title missing)'}</header>
 
 		<!-- Step indicator -->
-		<div class="grid grid-cols-2 overflow-hidden rounded-container-token border border-surface-300-600-token">
-  <div
-    class="flex items-center justify-center gap-2 py-3 px-4 text-sm font-medium transition-colors"
-    class:variant-filled-primary={step === 1}
-    class:variant-soft-primary={step > 1}
-  >
-    <span
-      class="inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold shrink-0"
-      class:bg-primary-100={step === 1}
-      class:text-primary-600={step === 1}
-      class:bg-primary-500={step > 1}
-      class:text-white={step > 1}
-    >
-      {step > 1 ? '✓' : '1'}
-    </span>
-    Upload template
-  </div>
+		<div
+			class="grid grid-cols-2 overflow-hidden rounded-container-token border border-surface-300-600-token"
+		>
+			<div
+				class="flex items-center justify-center gap-2 py-3 px-4 text-sm font-medium transition-colors"
+				class:variant-filled-primary={step === 1}
+				class:variant-soft-primary={step > 1}
+			>
+				<span
+					class="inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold shrink-0"
+					class:bg-primary-100={step === 1}
+					class:text-primary-600={step === 1}
+					class:bg-primary-500={step > 1}
+					class:text-white={step > 1}
+				>
+					{step > 1 ? '✓' : '1'}
+				</span>
+				Upload template
+			</div>
 
-  <div
-    class="flex items-center justify-center gap-2 py-3 px-4 text-sm font-medium transition-colors border-l border-surface-300-600-token"
-    class:variant-filled-primary={step === 2}
-    class:variant-soft-primary={step < 2}
-  >
-    <span
-      class="inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold shrink-0"
-      class:bg-primary-100={step === 2}
-      class:text-primary-600={step === 2}
-      class:bg-surface-200-700-token={step < 2}
-      class:text-surface-600-300-token={step < 2}
-    >
-      2
-    </span>
-    Review &amp; create
-  </div>
-</div>
+			<div
+				class="flex items-center justify-center gap-2 py-3 px-4 text-sm font-medium transition-colors border-l border-surface-300-600-token"
+				class:variant-filled-primary={step === 2}
+				class:variant-soft-primary={step < 2}
+			>
+				<span
+					class="inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold shrink-0"
+					class:bg-primary-100={step === 2}
+					class:text-primary-600={step === 2}
+					class:bg-surface-200-700-token={step < 2}
+					class:text-surface-600-300-token={step < 2}
+				>
+					2
+				</span>
+				Review &amp; create
+			</div>
+		</div>
 
 		<!-- Step 1: project name + file upload -->
 		{#if step === 1}
@@ -243,7 +247,9 @@
 					{/if}
 				</label>
 				<label class="label">
-					<span>Upload workflow template <span class="text-xs opacity-60">(YAML or JSON)</span></span>
+					<span
+						>Upload workflow template <span class="text-xs opacity-60">(YAML or JSON)</span></span
+					>
 					<input class="input" type="file" accept=".yaml,.yml,.json" bind:files={inputFilesList} />
 				</label>
 				{#if step1Error}
@@ -258,7 +264,7 @@
 				<button class="btn {parent.buttonPositive}" on:click={goToStep2}>Next →</button>
 			</footer>
 
-		<!-- Step 2: review / edit YAML -->
+			<!-- Step 2: review / edit YAML -->
 		{:else}
 			<div class="modal-form {cForm}">
 				<p class="text-sm">
