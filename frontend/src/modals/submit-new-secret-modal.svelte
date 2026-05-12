@@ -8,7 +8,7 @@
 	import { credentialsList } from '../stores/stores.js';
 	import allCredentialsQuery from '../queries/get_all_credentials.js';
 	import type { DockerRegistryCredential } from '../types.js';
-	import { requestGraphQLClient } from '$lib/graphqlUtils.js';
+	import { requestGraphQLClient } from '$lib/graphql-utils.js';
 	import { displayModal } from '$utils/modal-utils.js';
 
 	// Props - Exposes parent props to this component

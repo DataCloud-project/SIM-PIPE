@@ -1,5 +1,5 @@
 import type { Resource } from '$typesdefinitions';
-import { requestGraphQLClient } from './graphqlUtils.js';
+import { requestGraphQLClient } from './graphql-utils.js';
 import allResourcesQuery from '$queries/get_all_resources.js';
 
 let refreshProvisioningVMsPromise: Promise<void> | undefined;

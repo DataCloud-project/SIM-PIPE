@@ -7,7 +7,7 @@
 	import type { Project } from '../../types.js';
 	import { goto } from '$app/navigation';
 	import Timestamp from './dryruns/[dry_run]/timestamp.svelte';
-	import { requestGraphQLClient } from '$lib/graphqlUtils';
+	import { requestGraphQLClient } from '$lib/graphql-utils.js';
 	import allProjectsQuery from '../../queries/get_all_projects.js';
 	import deleteProjectMutation from '../../queries/delete_project.js';
 	import allDryRunsQuery from '../../queries/get_all_dryruns.js';

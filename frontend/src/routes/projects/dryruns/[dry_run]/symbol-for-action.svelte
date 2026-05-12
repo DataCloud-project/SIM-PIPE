@@ -12,7 +12,7 @@
 	import suspendDryRunMutation from '$queries/suspend_dry_run.js';
 	import resumeDryRunMutation from '$queries/resume_dry_run.js';
 	import { pausedDryRuns } from '$stores/stores.js';
-	import { requestGraphQLClient } from '$lib/graphqlUtils.js';
+	import { requestGraphQLClient } from '$lib/graphql-utils.js';
 	// import { displayAlert } from '$utils/alerts-utils.js';
 
 	// const modalStore = getModalStore();

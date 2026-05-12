@@ -10,7 +10,7 @@
 	import deleteDryRunMutation from '$queries/delete_dry_run.js';
 	import { goto } from '$app/navigation';
 	import Timestamp from './timestamp.svelte';
-	import { requestGraphQLClient } from '$lib/graphqlUtils.js';
+	import { requestGraphQLClient } from '$lib/graphql-utils.js';
 	import { calculateDuration } from '$utils/resource-utils.js';
 	import { displayModal } from '$utils/modal-utils.js';
 

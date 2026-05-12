@@ -1,5 +1,5 @@
 // eslint-disable-next-line unicorn/filename-case
-import { requestGraphQLClient } from '$lib/graphqlUtils';
+import { requestGraphQLClient } from '$lib/graphql-utils';
 import getWorkflowQuery from '$queries/get_workflow_template';
 import getWorkflowFromDryRunQuery from '$queries/get_workflow_template_from_dry_run';
 import type { WorkflowTemplate, WorkflowTemplateFromDryRun } from '$typesdefinitions';

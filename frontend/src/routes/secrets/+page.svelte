@@ -5,7 +5,7 @@
 	import deleteCredentialMutation from '../../queries/delete_credential.js';
 	import type { DockerRegistryCredential } from '../../types.js';
 	import { credentialsList, selectedCredential } from '../../stores/stores.js';
-	import { requestGraphQLClient } from '$lib/graphqlUtils';
+	import { requestGraphQLClient } from '$lib/graphql-utils.js';
 	import { goto } from '$app/navigation';
 
 	const modalStore = getModalStore();

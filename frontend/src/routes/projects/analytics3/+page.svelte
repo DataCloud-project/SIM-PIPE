@@ -63,20 +63,18 @@
 			nodesMetricsLoaded = true;
 
 			window.addEventListener('resize', updatepageWidth);
-
-			onDestroy(() => {
-				window.removeEventListener('resize', updatepageWidth);
-			});
 		} catch (error) {
 			console.error('Failed to load analytics data:', error);
 		}
 	});
 
+	onDestroy(() => {
+		window.removeEventListener('resize', updatepageWidth);
+	});
+
 	$: if (pageWidthUpdated) {
 		// This will trigger reactivity and re-render the DAG component
 		pageWidthUpdated = false;
-	}
-	$: if (nodesMetricsLoaded) {
 	}
 </script>
 

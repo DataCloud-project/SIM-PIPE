@@ -4,7 +4,7 @@
 	import { ArrowRightIcon } from 'svelte-feather-icons';
 	import { onMount } from 'svelte';
 	import { clickedProjectId } from '$stores/stores';
-	import { getWorkflowTemplate, getWorkflowTemplateFromDryRun } from '$lib/getWorkflowTemplate';
+	import { getWorkflowTemplate, getWorkflowTemplateFromDryRun } from '$lib/get-workflow-template.js';
 	import { goto } from '$app/navigation';
 
 	export let data;

@@ -2,7 +2,7 @@
 	import { getModalStore } from '@skeletonlabs/skeleton';
 	import type { SvelteComponent } from 'svelte';
 
-	import { requestGraphQLClient } from '$lib/graphqlUtils.js';
+	import { requestGraphQLClient } from '$lib/graphql-utils.js';
 	import { displayModal } from '$utils/modal-utils.js';
 
 	import allProjectsQuery from '$queries/get_all_projects.js';

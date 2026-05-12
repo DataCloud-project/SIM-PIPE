@@ -42,16 +42,16 @@ function determinationCoefficient(data_y: number[], data_y_predicted: number[]):
   return 1 - (sse / ssyy);
 }
 
-function power(data_x: number[], data_y: number[], precision: number): CurveFitReturnType {
+function power(dataX: number[], dataY: number[], precision: number): CurveFitReturnType {
   // Power law regression a * x ^ b
   const sum = [0, 0, 0, 0, 0];
-  const nvalues = data_x.length;
+  const nvalues = dataX.length;
   for (let n = 0; n < nvalues; n += 1) {
-    if (data_y[n] !== null) {
-      sum[0] += Math.log(data_x[n]);
-      sum[1] += Math.log(data_y[n]) * Math.log(data_x[n]);
-      sum[2] += Math.log(data_y[n]);
-      sum[3] += (Math.log(data_x[n]) ** 2);
+    if (dataY[n] !== null) {
+      sum[0] += Math.log(dataX[n]);
+      sum[1] += Math.log(dataY[n]) * Math.log(dataX[n]);
+      sum[2] += Math.log(dataY[n]);
+      sum[3] += (Math.log(dataX[n]) ** 2);
     }
   }
   const b = ((nvalues * sum[1]) - (sum[0] * sum[2])) / ((nvalues * sum[3]) - (sum[0] ** 2));
@@ -59,23 +59,23 @@ function power(data_x: number[], data_y: number[], precision: number): CurveFitR
   const coeffA = round(Math.exp(a), precision);
   const coeffB = round(b, precision);
 
-  const predictedY = data_x.map((x) => powerFunction(x, coeffA, coeffB, precision));
+  const predictedY = dataX.map((x) => powerFunction(x, coeffA, coeffB, precision));
 
   return {
     coeffs: [coeffA, coeffB],
     type: 'power',
-    r2: round(determinationCoefficient(data_y, predictedY), precision),
+    r2: round(determinationCoefficient(dataY, predictedY), precision),
   };
 }
 
 function linear(
-  data_x: number[],
-  data_y: number[]): CurveFitReturnType {
+  dataX: number[],
+  dataY: number[]): CurveFitReturnType {
   // Linear regression a + (b * x)
-  const x1 = data_x[0];
-  const x2 = data_x[1];
-  const y1 = data_y[0];
-  const y2 = data_y[1];
+  const x1 = dataX[0];
+  const x2 = dataX[1];
+  const y1 = dataY[0];
+  const y2 = dataY[1];
   const b = (y2 - y1) / (x2 - x1);
   const a = y1 - b * x1;
   return {
@@ -86,8 +86,8 @@ function linear(
 }
 
 export function curveFitting(
-  data_x: number[],
-  data_y: number[],
+  dataX: number[],
+  dataY: number[],
   method = 'linear',
   precision = 4): CurveFitReturnType {
   // Curve fitting
@@ -96,29 +96,29 @@ export function curveFitting(
     coeffs: [0, 0], type: '', r2: 0,
   };
 
-  if (data_x.length !== data_y.length) {
+  if (dataX.length !== dataY.length) {
     throw new Error('Input data arrays must have the same length');
   }
 
-  if (data_x.length === 0) {
+  if (dataX.length === 0) {
     throw new Error('Input data arrays must have at least one element');
   }
 
-  let dataX: number[];
-  let dataY: number[];
-  if (data_x.length === 1) {
+  let inputX: number[];
+  let inputY: number[];
+  if (dataX.length === 1) {
     // single data point, use origo (0,0) as base.
-    dataX = [0, data_x[0]];
-    dataY = [0, data_y[0]];
+    inputX = [0, dataX[0]];
+    inputY = [0, dataY[0]];
   } else {
-    dataX = data_x;
-    dataY = data_y;
+    inputX = dataX;
+    inputY = dataY;
   }
 
   if (method === 'power') {
-    results = power(dataX, dataY, precision);
+    results = power(inputX, inputY, precision);
   } else if (method === 'linear') {
-    results = linear(dataX, dataY);
+    results = linear(inputX, inputY);
   }
   return results;
 }

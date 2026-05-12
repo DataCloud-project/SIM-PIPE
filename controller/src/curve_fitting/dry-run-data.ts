@@ -168,23 +168,23 @@ export async function aggregatedNodesMetrics(
 }
 
 export async function computeScalingLaws(
-  nodesData: NodesAggregatedNodeMetrics[], data_x: number[], regression_method = 'linear'): Promise<NodesScalingLaws[]> {
+  nodesData: NodesAggregatedNodeMetrics[], dataX: number[], regressionMethod = 'linear'): Promise<NodesScalingLaws[]> {
   // compute scaling laws for each node.
   const nodesScalingLaws: NodesScalingLaws[] = [];
 
-  if (regression_method !== 'linear' && regression_method !== 'power') {
-    throw new Error(`Invalid regression method: ${regression_method}. Must be one of 'linear', 'power'`);
+  if (regressionMethod !== 'linear' && regressionMethod !== 'power') {
+    throw new Error(`Invalid regression method: ${regressionMethod}. Must be one of 'linear', 'power'`);
   }
   for (const node of nodesData) {
     nodesScalingLaws.push({
       // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
       nodeName: node.nodeName,
       // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
-      cpu: curveFitting(data_x, node.data.cpu, regression_method),
+      cpu: curveFitting(dataX, node.data.cpu, regressionMethod),
       // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
-      mem: curveFitting(data_x, node.data.mem, regression_method),
+      mem: curveFitting(dataX, node.data.mem, regressionMethod),
       // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
-      duration: curveFitting(data_x, node.data.duration, regression_method),
+      duration: curveFitting(dataX, node.data.duration, regressionMethod),
       data: {
         cpu: node.data.cpu,
         mem: node.data.mem,
@@ -200,12 +200,12 @@ export async function computeScalingLaws(
 
 export async function extrapolateFromScalingLaws(
   nodesScalingLaws: NodesScalingLaws[],
-  data_x: number): Promise<{ cpu: number, mem: number, duration: number }> {
+  dataX: number): Promise<{ cpu: number, mem: number, duration: number }> {
   const predictedValues = { cpu: 0, mem: 0, duration: 0 };
   for (const node of nodesScalingLaws) {
-    predictedValues.cpu += extrapolate(node.cpu.type, node.cpu.coeffs, data_x);
-    predictedValues.mem += extrapolate(node.mem.type, node.mem.coeffs, data_x);
-    predictedValues.duration += extrapolate(node.duration.type, node.duration.coeffs, data_x);
+    predictedValues.cpu += extrapolate(node.cpu.type, node.cpu.coeffs, dataX);
+    predictedValues.mem += extrapolate(node.mem.type, node.mem.coeffs, dataX);
+    predictedValues.duration += extrapolate(node.duration.type, node.duration.coeffs, dataX);
   }
   // eslint-disable-next-line  @typescript-eslint/no-unsafe-return
   return predictedValues;

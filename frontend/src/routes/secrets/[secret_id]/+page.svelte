@@ -2,7 +2,7 @@
 	import { ProgressBar, getModalStore } from '@skeletonlabs/skeleton';
 	import { error } from '@sveltejs/kit';
 	import { selectedCredential, selectedProject } from '$stores/stores';
-	import { requestGraphQLClient } from '$lib/graphqlUtils';
+	import { requestGraphQLClient } from '$lib/graphql-utils';
 	import type { Project } from '$typesdefinitions';
 	import allProjectsQuery from '$queries/get_all_projects.js';
 	import getWorkflowQuery from '$queries/get_workflow_template.js';

@@ -3,9 +3,9 @@
 	import type { SvelteComponent } from 'svelte';
 
 	import { onMount } from 'svelte';
-	import { requestGraphQLClient } from '$lib/graphqlUtils.js';
+	import { requestGraphQLClient } from '$lib/graphql-utils.js';
 
-	import refreshProjectDetails from '$lib/refresh_runs.js';
+	import refreshProjectDetails from '$lib/refresh-runs.js';
 	import createDryRunMutation from '$queries/create_dry_run.js';
 	import allDryRunsQuery from '$queries/get_all_dryruns.js';
 	import { selectedArtifact, selectedProject } from '$stores/stores.js';

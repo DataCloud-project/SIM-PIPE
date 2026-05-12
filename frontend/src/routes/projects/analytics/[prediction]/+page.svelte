@@ -13,8 +13,8 @@
 	import { selectedProject } from '$stores/stores.js';
 	import { goto } from '$app/navigation';
 	import getDryRunInputFilesizeQuery from '$queries/get_dry_run_input_filesizes.js';
-	import { requestGraphQLClient } from '$lib/graphqlUtils';
-	import { readable_time } from '$lib/time_difference.js';
+	import { requestGraphQLClient } from '$lib/graphql-utils.js';
+	import { readable_time } from '$lib/time-difference.js';
 	import { cForm } from '$styles/styles.js';
 	import type { MetricsWithTimeStamps } from '$typesdefinitions';
 	import getDryRunProjectIDQuery from '$queries/get_dry_run_project_id.js';

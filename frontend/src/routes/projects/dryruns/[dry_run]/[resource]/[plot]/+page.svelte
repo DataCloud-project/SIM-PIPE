@@ -4,9 +4,9 @@
 	import { gql } from 'graphql-request';
 	import { selectedProjectName, selectedDryRunName, selectedMetricsType } from '$stores/stores';
 	import { goto } from '$app/navigation';
-	import { requestGraphQLClient } from '$lib/graphqlUtils';
+	import { requestGraphQLClient } from '$lib/graphql-utils';
 	import Plot from '../plot.svelte';
-	// import { displayAlert } from '$utils/alerts-utils';
+	import { truncateString } from '$utils/resource-utils';
 	import { displayModal } from '$utils/modal-utils.js';
 
 	const datefmt = 'yyyy-MM-dd HH:mm:ss';
@@ -14,19 +14,9 @@
 	selectedMetricsType.set(defaultMetricsType);
 	const modalStore = getModalStore();
 
-	// TODO: These functions are the same as in [resource].svelte
-	// should be merged and moved into lib?
 	// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-	function isEmpty(obj: any) {
+	function isEmpty(obj: object) {
 		return Object.keys(obj).length === 0;
-	}
-
-	// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-	function truncateString(word: string, maxLength: number) {
-		if (word.length > maxLength) {
-			return `${word.slice(0, maxLength)}..`;
-		}
-		return word;
 	}
 
 	// eslint-disable-next-line @typescript-eslint/explicit-function-return-type

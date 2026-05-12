@@ -2,7 +2,7 @@ import { get } from 'svelte/store';
 import allDryRunsQuery from '../queries/get_all_dryruns.js';
 import { selectedProject } from '$stores/stores.js';
 import type { Project } from '$typesdefinitions';
-import { requestGraphQLClient } from './graphqlUtils.js';
+import { requestGraphQLClient } from './graphql-utils.js';
 
 let refreshActiveRunsPromise: Promise<void> | undefined;
 
@@ -25,12 +25,6 @@ export default async function refreshProjectDetails(): Promise<void> {
 				console.error('Failed to refresh dry runs:', error);
 			}
 			// check if updating can be stopped
-			// eslint-disable-next-line @typescript-eslint/no-loop-func
-			get(selectedProject)?.dryRuns.forEach((item) => {
-				if (item.status.phase.toString() === 'Running') {
-					activeDryRuns = true;
-				}
-			});
 			activeDryRuns = !get(selectedProject)?.dryRuns.every(
 				(run) =>
 					run.status.phase.toString() !== 'Running' && run.status.phase.toString() !== 'Pending'

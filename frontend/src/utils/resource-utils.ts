@@ -2,7 +2,7 @@ import { format } from 'date-fns';
 import { filesize } from 'filesize';
 import { get } from 'svelte/store';
 import getDryRunNoLogsMetricsQuery from '$queries/get_dry_run_all_metrics_no_logs';
-import { requestGraphQLClient } from '$lib/graphqlUtils';
+import { requestGraphQLClient } from '$lib/graphql-utils';
 import type { DryRunMetrics, MetricsWithTimeStamps } from '$typesdefinitions';
 import { goto } from '$app/navigation';
 import { selectedProject } from '$stores/stores';
@@ -10,7 +10,7 @@ import { selectedProject } from '$stores/stores';
 
 const datefmt = 'yyyy-MM-dd HH:mm:ss';
 
-function truncateString(word: string, maxLength: number): string {
+export function truncateString(word: string, maxLength: number): string {
 	if (word.length > maxLength) {
 		return `${word.slice(0, maxLength)}..`;
 	}

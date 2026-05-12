@@ -9,22 +9,19 @@
 	import getDryRunPhaseResultsQuery from '$queries/get_dry_run_phase_results';
 	import getDryRunQuery from '$queries/get_selected_project';
 	import getCarbontrackerDataQuery from '$queries/get_carbontracker_metrics';
-	import { requestGraphQLClient } from '$lib/graphqlUtils';
+	import { requestGraphQLClient } from '$lib/graphql-utils';
 	import { goto } from '$app/navigation';
 	import Plot from './plot.svelte';
 	import Mermaid from './mermaid.svelte';
 	import { colors } from './Config.js';
 	import { stepsList, selectedProjectName, selectedDryRunName } from '$stores/stores';
 	import Legend from './legend.svelte';
-	import { getMetricsUsageUtils, displayStepDuration } from '$utils/resource-utils';
+	import { getMetricsUsageUtils, displayStepDuration, truncateString } from '$utils/resource-utils';
 	import type { DryRunMetrics, DryRun, MetricsWithTimeStamps, Artifact } from '$typesdefinitions';
 	import getMooseAnalysisQuery from '$queries/get_moose_analysis.js';
 	import setMooseReportMutation from '$queries/set_moose_report.js';
 	import storeCarbontrackerDataMutation from '$queries/store_carbontracker_data.js';
 	import { displayModal } from '$utils/modal-utils.js';
-
-	// DryRunMetrics already includes carbontracker; this alias keeps downstream refs unchanged.
-	type ExtendedDryRunMetrics = DryRunMetrics;
 
 	type MooseEntity = { text: string; type_id: string; confidence: number };
 
@@ -48,8 +45,7 @@
 
 	let mermaidCode = [];
 	let diagram: string;
-	$: diagram = diagram;
-	let selectedProject: { name: string; id: string };
+	let selectedProject: { name: string; id: string } | undefined;
 	let logs: { [x: string]: string } = {};
 
 	let cumulativeCpuData: { [key: string]: MetricsWithTimeStamps } = {};
@@ -65,8 +61,8 @@
 	let allStepNames: string[] = [];
 
 	$: selectedStep = 'Total';
-	let reactiveStepsList: ExtendedDryRunMetrics[];
-	$: reactiveStepsList = ($stepsList as ExtendedDryRunMetrics[]) || [];
+	let reactiveStepsList: DryRunMetrics[];
+	$: reactiveStepsList = ($stepsList as DryRunMetrics[]) || [];
 
 	function gotoOverview(): void {
 		selectedStep = 'Total';
@@ -232,16 +228,19 @@
 		);
 
 		const selectedProjectResponse = await dryRunPromise;
-		if (!selectedProjectResponse.dryRun?.project) {
-			throw new Error('Project not found');
+		selectedProject = selectedProjectResponse.dryRun?.project ?? undefined;
+		if (selectedProject) {
+			selectedProjectName.set(selectedProject.name);
 		}
-		selectedProject = selectedProjectResponse.dryRun.project;
-		selectedProjectName.set(selectedProject.name);
 		selectedDryRunName.set(dryRunId);
 
-		const workflowPromise = requestGraphQLClient<any>(getProjectQuery, {
-			projectId: selectedProject.id
-		});
+		// Only fetch workflow templates when the project is accessible; a missing
+		// project should not prevent metrics from loading.
+		const workflowPromise = selectedProject
+			? requestGraphQLClient<any>(getProjectQuery, { projectId: selectedProject.id }).catch(
+					() => undefined
+				)
+			: Promise.resolve(undefined);
 
 		const [workflowResponse, dryrunResponse, metricsResponse] = await Promise.all([
 			workflowPromise,
@@ -272,7 +271,7 @@
 		logs = result.logs;
 
 		const responses = {
-			workflow: workflowResponse.project,
+			workflow: workflowResponse?.project ?? undefined,
 			dryrun: dryrunResponse,
 			metrics,
 			allstepnames: allStepNames,
@@ -281,13 +280,6 @@
 
 		return responses;
 	};
-
-	function truncateString(word: string, maxLength: number): string {
-		if (word.length > maxLength) {
-			return `${word.slice(0, maxLength)}..`;
-		}
-		return word;
-	}
 
 	function generateRandomString(): string {
 		let result = '';
@@ -366,6 +358,10 @@
 	async function buildDiagram(): Promise<boolean> {
 		let diagramFinished = false;
 		mermaidCode = []; // clear mermaidCode
+		if (!workflow) {
+			diagramFinished = true;
+			return diagramFinished;
+		}
 		mermaidCode.push(`graph ${graphOrientation};`);
 		const templates = workflow.workflowTemplates?.[0]?.argoWorkflowTemplate?.spec?.templates ?? [];
 		for (const template of templates) {
@@ -927,8 +923,8 @@
 												-
 											{:else}
 												<div class="flex gap-2">
-													{#if inputAnalysable.length > 0}
-														<div class="flex-1 min-w-0">
+													<div class="w-1/2 min-w-0">
+														{#if inputAnalysable.length > 0}
 															<p
 																class="text-[10px] font-semibold uppercase tracking-wide opacity-50 mb-1"
 															>
@@ -947,10 +943,10 @@
 																	{artifact.mooseReport ? '✓ ' : ''}{artifact.name}
 																</button>
 															{/each}
-														</div>
-													{/if}
-													{#if outputAnalysable.length > 0}
-														<div class="flex-1 min-w-0">
+														{/if}
+													</div>
+													<div class="w-1/2 min-w-0">
+														{#if outputAnalysable.length > 0}
 															<p
 																class="text-[10px] font-semibold uppercase tracking-wide opacity-50 mb-1"
 															>
@@ -969,8 +965,8 @@
 																	{artifact.mooseReport ? '✓ ' : ''}{artifact.name}
 																</button>
 															{/each}
-														</div>
-													{/if}
+														{/if}
+													</div>
 												</div>
 											{/if}
 										{/each}
@@ -1257,7 +1253,6 @@
 		z-index: 50;
 		border: none;
 		padding: 0;
-		background-color: rgba(0, 0, 0, 0.5);
 	}
 	.moose-modal {
 		background-color: white;
@@ -1276,6 +1271,9 @@
 		align-items: center;
 		justify-content: space-between;
 		margin-bottom: 1rem;
+	}
+	.moose-modal-header h2 {
+		color: #111827;
 	}
 	.moose-modal-actions {
 		display: flex;

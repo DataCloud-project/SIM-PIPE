@@ -58,6 +58,7 @@ import {
   getObjectSize,
   listAllBuckets,
   listAllObjects,
+  objectExists,
   setBucketUserTag,
   setMooseReportForArtifact,
 } from '../minio/minio.js';
@@ -148,13 +149,6 @@ class NotAllowedError extends Error {
     this.name = 'NotAllowedError';
   }
 }
-
-// Create an assertion method for TypeScript that check that user is defined
-/* function assertAuthenticated(context: Context): asserts context is AuthenticatedContext {
-  if (context.user === undefined) {
-    throw new Error('🎌 User is not defined');
-  }
-} */
 
 function isValidFilePath(key: string): boolean {
   return /^[\w-/.]+$/i.test(key);
@@ -1011,8 +1005,14 @@ const resolvers = {
       }
       // The SoTW CSV is stored alongside the main artifact with a
       // fixed suffix; we expose a presigned URL for download.
+      // Guard against returning a presigned URL for a non-existent object:
+      // MinIO responds with 403 on presigned GETs for missing objects on
+      // private buckets, which surfaces as a confusing browser error.
       try {
         const sotwKey = `${key}.sotw.csv`;
+        if (!(await objectExists(sotwKey, bucketName as string))) {
+          return undefined;
+        }
         return await computePresignedGetUrl(sotwKey, bucketName as string);
       } catch (error) {
         // eslint-disable-next-line no-console

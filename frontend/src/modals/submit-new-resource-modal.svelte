@@ -2,11 +2,11 @@
 	import { getModalStore, type ModalSettings } from '@skeletonlabs/skeleton';
 	import type { SvelteComponent } from 'svelte';
 
-	import { requestGraphQLClient } from '$lib/graphqlUtils.js';
+	import { requestGraphQLClient } from '$lib/graphql-utils.js';
 
 	import { cBase, cForm, cHeader } from '$styles/styles.js';
 	import createResourceMutation from '$queries/create_resource.js';
-	import refreshVMNodesDetails from '$lib/refresh_vmnodes.js';
+	import refreshVMNodesDetails from '$lib/refresh-vmnodes.js';
 	import { resourcesList } from '$stores/stores.js';
 	import type { Resource } from '$typesdefinitions';
 	import allResourcesQuery from '$queries/get_all_resources.js';

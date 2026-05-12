@@ -55,6 +55,17 @@ export async function computePresignedGetUrl(
   return await minioPublicClient.presignedGetObject(bucketName, objectName, expire);
 }
 
+// check if an object (artifact) exists — avoids returning a presigned URL for missing objects
+export async function objectExists(objectName: string, _bucketName?: string): Promise<boolean> {
+  const bucketName = _bucketName || minioBucketName;
+  try {
+    await minioInternalClient.statObject(bucketName, objectName);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 // get the object (artifact) size
 export async function getObjectSize(objectName: string, _bucketName: string): Promise<number> {
   const bucketName = _bucketName || minioBucketName;
@@ -62,30 +73,6 @@ export async function getObjectSize(objectName: string, _bucketName: string): Pr
   return stat.size;
 }
 
-// get all objects (artifacts) in a bucket -- default bucket is minioBucketName
-/*
-export async function listAllObjects(
-  _bucketName: string): Promise<BucketItem[]> {
-  const bucketName = _bucketName || minioBucketName;
-  // console.log("bucketName: ",bucketName);
-  const stream = minioInternalClient.listObjectsV2(bucketName, '', true);
-  // const stream = minioInternalClient.listObjects(bucketName, '', true);
-  const objects: BucketItem[] = [];
-  return new Promise((resolve, reject) => {
-    stream.on('data', (object) => {
-      objects.push(object);
-    });
-    stream.on('end', () => {
-      resolve(objects);
-    });
-    stream.on('error', (error) => {
-      // eslint-disable-next-line no-console
-      console.error(error);
-      reject(error);
-    });
-  });
-}
-*/
 // get all objects (artifacts) in a bucket -- default bucket is minioBucketName
 export async function listAllObjects(
   _bucketName?: string): Promise<ArtifactItem[]> {
@@ -173,13 +160,6 @@ export async function getBucketUserTag(bucketName: string): Promise<string | und
     return undefined;
   }
 }
-
-// check if a bucket exists
-/* -- not currently used
-export async function bucketExists(bucketName: string): Promise<boolean> {
-  return await minioInternalClient.bucketExists(bucketName);
-}
-*/
 
 // create bucket
 export async function createBucket(bucketName: string): Promise<string> {

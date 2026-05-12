@@ -7,7 +7,7 @@
 	import { buckets as bucketsStore, reactiveBuckets, selectedBucket } from '$stores/stores';
 	import type { ArtifactHierarchyType } from '$typesdefinitions';
 	import Alert from '$lib/modules/alert.svelte';
-	import { requestGraphQLClient } from '$lib/graphqlUtils';
+	import { requestGraphQLClient } from '$lib/graphql-utils';
 	import getUploadPresignedUrl from '$queries/get_presigned_url_upload';
 	import deleteArtifactsMutation from '$queries/delete_artifacts';
 	import createBucketMutation from '$queries/create_bucket';
@@ -71,27 +71,25 @@
 		return match?.url;
 	}
 
-	// Upload file using presigned url
+	// Upload file using presigned url (fire-and-forget)
 	function uploadFile(file: File, url: string): void {
-		fetch(url, {
-			method: 'PUT',
-			body: file
-		})
-			.then((response) => response.text())
-			.then((data) => {
-				// TODO: these messages should stack somehow in stead of replacing each other.
+		// eslint-disable-next-line no-void
+		void (async () => {
+			try {
+				const response = await fetch(url, { method: 'PUT', body: file });
+				await response.text();
+				// TODO: these messages should stack somehow instead of replacing each other.
 				alertTitle = '👍 Success';
 				alertMessage = `Successfully uploaded file: ${file.name}`;
 				alertVariant = 'variant-ghost-success';
 				alertVisible = true;
-			})
-			.catch((error) => {
-				console.error('error', error);
+			} catch {
 				alertTitle = '👎 Error';
 				alertMessage = `Error uploading file: ${file.name}`;
 				alertVariant = 'variant-filled-error';
 				alertVisible = true;
-			});
+			}
+		})();
 	}
 
 	// Upload artifacts to a given path and a given bucket
@@ -162,27 +160,22 @@
 			alertVisible = true;
 			return;
 		}
-		const modalPromise = new Promise((resolve) => {
-			const modal: ModalSettings = {
-				type: 'component',
-				component: 'uploadFileModal',
-				title: 'Upload Artifacts',
-				meta: {
-					path: selectedPaths[0].path,
-					bucket: $selectedBucket as string,
-					buckets: bucketsList
-				},
-				response: (r: { bucket: string; path: string; files: FileList }) => {
-					resolve(uploadArtifactsToPath(r.bucket, r.files, r.path));
-				}
-			};
-			modalStore.trigger(modal);
-		}).then(() => {
-			console.log('uploadFile promise resolved');
-		});
-		modalPromise.catch((error) => {
-			console.log('uploadFile promise error:', error);
-		});
+		const modal: ModalSettings = {
+			type: 'component',
+			component: 'uploadFileModal',
+			title: 'Upload Artifacts',
+			meta: {
+				path: selectedPaths[0].path,
+				bucket: $selectedBucket as string,
+				buckets: bucketsList
+			},
+			response: (r: { bucket: string; path: string; files: FileList }) => {
+				uploadArtifactsToPath(r.bucket, r.files, r.path).catch((error) => {
+					console.error('Upload failed:', error);
+				});
+			}
+		};
+		modalStore.trigger(modal);
 	}
 
 	async function onDownloadArtifacts(): Promise<void> {

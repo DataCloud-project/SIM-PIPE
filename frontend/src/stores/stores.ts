@@ -11,9 +11,6 @@ import type {
 	ArtifactHierarchyType
 } from '../types.js';
 
-// raw buckets
-// import type { Bucket } from '$lib/folders_types'; // TODO: consolidate types to types.d.ts
-// export const buckets = writable<Bucket[]>([]);
 import type { BucketWithArtifacts } from '$typesdefinitions';
 
 export const graphQLClient = writable<GraphQLClient>();

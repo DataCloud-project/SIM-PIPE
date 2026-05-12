@@ -1,10 +1,10 @@
 <script lang="ts">
 	import { ProgressBar } from '@skeletonlabs/skeleton';
 	import { onMount } from 'svelte';
-	import { requestGraphQLClient } from '$lib/graphqlUtils';
+	import { requestGraphQLClient } from '$lib/graphql-utils';
 	import allBucketsQuery from '$queries/get_all_buckets';
 	import allArtifactsQuery from '$queries/get_all_artifacts';
-	import { selectedBucket, buckets } from '$stores/stores';
+	import { buckets } from '$stores/stores';
 	import Alert from '$lib/modules/alert.svelte';
 	import type { Bucket, Artifact, BucketWithArtifacts } from '$typesdefinitions';
 	import FolderStructure from './artifact-structure.svelte';

@@ -2,7 +2,7 @@
 	import { getModalStore, ProgressBar } from '@skeletonlabs/skeleton';
 	import type { ModalSettings } from '@skeletonlabs/skeleton';
 	import { resourcesList } from '../../stores/stores.js';
-	import { requestGraphQLClient } from '$lib/graphqlUtils';
+	import { requestGraphQLClient } from '$lib/graphql-utils.js';
 	import allResourcesQuery from '../../queries/get_all_resources.js';
 	import type { Resource } from '../../types.js';
 	import deleteResourceMutation from '$queries/delete_resource.js';

@@ -3,7 +3,7 @@
 	import { onMount, type SvelteComponent } from 'svelte';
 	import { FileDropzone } from '@skeletonlabs/skeleton';
 	import { FilePlusIcon } from 'svelte-feather-icons';
-	import { formatBytes } from '$lib/formatBytes';
+	import { formatBytes } from '$lib/format-bytes';
 
 	// Props - Exposes parent props to this component
 	export let parent: SvelteComponent;
