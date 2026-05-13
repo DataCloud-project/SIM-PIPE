@@ -9,8 +9,8 @@
 	import Alert from '$lib/modules/alert.svelte';
 	import { requestGraphQLClient } from '$lib/graphql-utils';
 	import getUploadPresignedUrl from '$queries/get_presigned_url_upload';
-	import deleteArtifactsMutation from '$queries/delete_artifacts';
-	import createBucketMutation from '$queries/create_bucket';
+	import deleteArtifactsMutation from '$queries/delete-artifacts';
+	import createBucketMutation from '$queries/create-bucket';
 	import deleteBucketMutation from '$queries/delete_bucket';
 
 	let alertTitle: string = '';
@@ -399,8 +399,7 @@
 		modalStore.trigger(modal);
 	}
 
-	// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-	function unselectArtifacts(artifacts: ArtifactHierarchyType[]) {
+	function unselectArtifacts(artifacts: ArtifactHierarchyType[]): void {
 		artifacts.forEach((artifact) => {
 			// this is needed to traverse subfolders. Disable eslint rule for this line.
 			// eslint-disable-next-line no-param-reassign
@@ -437,39 +436,31 @@
 			<div class="grid grid-cols-2">
 				<div class="header flex space-x-2 place-self-start">
 					<div>
-						<button on:click={() => onDeleteArtifacts()} title="Delete Artifacts">
+						<button on:click={onDeleteArtifacts} title="Delete Artifacts">
 							<Trash2Icon size="1.5x" />
 						</button>
 					</div>
 					<div>
-						<button on:click={() => unselectAll()} title="Unselect All">
+						<button on:click={unselectAll} title="Unselect All">
 							<XSquareIcon size="1.5x" />
 						</button>
 					</div>
 					<div>
-						<button on:click={() => onUploadArtifact()} title="Upload Artifact">
+						<button on:click={onUploadArtifact} title="Upload Artifact">
 							<UploadIcon size="1.5x" />
 						</button>
 					</div>
 					<div>
-						<button on:click={() => onDownloadArtifacts()} title="Download selected artifacts">
+						<button on:click={onDownloadArtifacts} title="Download selected artifacts">
 							<DownloadIcon size="1.5x" />
 						</button>
 					</div>
 				</div>
 				<div class="place-self-end">
-					<button
-						type="button"
-						class="btn btn-sm variant-filled"
-						on:click={() => onCreateNewBucket()}
-					>
+					<button type="button" class="btn btn-sm variant-filled" on:click={onCreateNewBucket}>
 						<span>Create new bucket</span>
 					</button>
-					<button
-						type="button"
-						class="btn btn-sm variant-filled-warning"
-						on:click={() => onDeleteBucket()}
-					>
+					<button type="button" class="btn btn-sm variant-filled-warning" on:click={onDeleteBucket}>
 						<span>Delete bucket</span>
 					</button>
 				</div>

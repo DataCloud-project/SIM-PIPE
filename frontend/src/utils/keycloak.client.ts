@@ -189,12 +189,6 @@ async function internalInitKeycloak(graphqlUrl: string): Promise<void> {
 	const redirectKey = 'keycloak-redirect-count';
 	const redirectCount = Number.parseInt(window.sessionStorage.getItem(redirectKey) ?? '0', 10);
 
-	const isCallback =
-		window.location.search.includes('code=') ||
-		window.location.search.includes('error=') ||
-		window.location.hash.includes('code=') ||
-		window.location.hash.includes('error=');
-
 	// keycloak-js init options:
 	// - No onLoad: we manage redirect logic ourselves (avoids loops and iframe errors)
 	// - useNonce: false — keycloak-js v23 validates nonce across access, refresh, AND

@@ -51,7 +51,7 @@
 		event.stopPropagation();
 	};
 
-	async function onCreate1(): Promise<void> {
+	async function onCreate(): Promise<void> {
 		try {
 			const modal: ModalSettings = {
 				type: 'component',
@@ -173,7 +173,7 @@
 		{:else}
 			<div class="flex flex-row justify-end p-5 space-x-1">
 				<div>
-					<button type="button" class="btn btn-sm variant-filled" on:click={() => onCreate1()}>
+					<button type="button" class="btn btn-sm variant-filled" on:click={onCreate}>
 						<span>Create</span>
 					</button>
 				</div>
@@ -181,7 +181,7 @@
 					<button
 						type="button"
 						class="btn btn-sm variant-filled-surface"
-						on:click={() => onShutdown()}
+						on:click={onShutdown}
 					>
 						<span>Shutdown</span>
 					</button>
@@ -190,7 +190,7 @@
 					<button
 						type="button"
 						class="btn btn-sm variant-filled-warning"
-						on:click={() => onDelete()}
+						on:click={onDelete}
 					>
 						<span>Delete</span>
 					</button>

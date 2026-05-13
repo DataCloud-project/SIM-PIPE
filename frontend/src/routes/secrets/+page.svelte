@@ -91,16 +91,12 @@
 		{#await credentialsPromise}
 			<p style="font-size:20px;">Loading credentials...</p>
 			<ProgressBar />
-		{:then credentialsList}
+		{:then}
 			<h1>Secrets</h1>
 			<div class="flex flex-row justify-end p-5 space-x-1">
 				<div>
 					<!-- eslint-disable-next-line @typescript-eslint/explicit-function-return-type -->
-					<button
-						type="button"
-						class="btn btn-sm variant-filled"
-						on:click={() => onSubmitNewSecret()}
-					>
+					<button type="button" class="btn btn-sm variant-filled" on:click={onSubmitNewSecret}>
 						<span>Create</span>
 					</button>
 				</div>
@@ -109,7 +105,7 @@
 					<button
 						type="button"
 						class="btn btn-sm variant-filled-warning"
-						on:click={() => onDeleteSelected()}
+						on:click={onDeleteSelected}
 					>
 						<span>Delete</span>
 					</button>

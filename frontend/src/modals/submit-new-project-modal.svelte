@@ -5,8 +5,8 @@
 
 	import { requestGraphQLClient } from '$lib/graphql-utils.js';
 
-	import createProjectMutation from '$queries/create_project.js';
-	import createWorkflowTemplateMutation from '$queries/create_workflow_template.js';
+	import createProjectMutation from '$queries/create-project.js';
+	import createWorkflowTemplateMutation from '$queries/create-workflow-template.js';
 	import { cBase, cForm, cHeader } from '$styles/styles.js';
 	import { validateYAML } from '$utils/argo-utils.js';
 

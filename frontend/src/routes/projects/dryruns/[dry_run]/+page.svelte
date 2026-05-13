@@ -164,13 +164,7 @@
 				</div>
 				<div class="flex flex-row justify-end p-5 space-x-1">
 					<div>
-						<button
-							type="button"
-							class="btn btn-sm variant-filled"
-							on:click={() => {
-								onCreateSelected();
-							}}
-						>
+						<button type="button" class="btn btn-sm variant-filled" on:click={onCreateSelected}>
 							<span>Create</span>
 						</button>
 					</div>

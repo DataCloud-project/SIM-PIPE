@@ -3,7 +3,6 @@
 	import { ProgressBar, CodeBlock, getModalStore } from '@skeletonlabs/skeleton';
 	import { AlertTriangleIcon, ZoomInIcon } from 'svelte-feather-icons';
 	import { filesize } from 'filesize';
-	import type { ModalSettings } from '@skeletonlabs/skeleton';
 	import getDryRunMetricsQuery from '$queries/get_dry_run_metrics.js';
 	import getProjectQuery from '$queries/get_project';
 	import getDryRunPhaseResultsQuery from '$queries/get_dry_run_phase_results';
@@ -597,7 +596,6 @@
 		attempt_rerun = false
 	): Promise<void> {
 		selectedArtifact = artifact;
-		let results: { entities?: MooseEntity[] }[] | undefined;
 
 		// Decide whether this call should persist the report server-side.
 		// - First run (no existing mooseReport): save by default.

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { colors } from './Config';
+
 	type Status = keyof typeof colors;
 
 	const statusLabels: Status[] = Object.keys(colors) as Status[];

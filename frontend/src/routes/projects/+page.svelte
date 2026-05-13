@@ -132,7 +132,7 @@
 
 	// to disable onclick propogation for checkbox input
 	// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-	const handleCheckboxClick = (event: any) => {
+	const handleCheckboxClick = (event: MouseEvent) => {
 		event.stopPropagation();
 	};
 
@@ -262,11 +262,7 @@
 				<h1>Projects</h1>
 				<div class="flex flex-row justify-end p-5 space-x-1">
 					<div>
-						<button
-							type="button"
-							class="btn btn-sm variant-filled"
-							on:click={() => onCreateNewProject()}
-						>
+						<button type="button" class="btn btn-sm variant-filled" on:click={onCreateNewProject}>
 							<span>Create</span>
 						</button>
 					</div>
@@ -274,7 +270,7 @@
 						<button
 							type="button"
 							class="btn btn-sm variant-filled-warning"
-							on:click={() => onDeleteSelected()}
+							on:click={onDeleteSelected}
 						>
 							<span>Delete</span>
 						</button>

@@ -1,10 +1,8 @@
 <script lang="ts">
-	import { error } from '@sveltejs/kit';
 	import { getModalStore } from '@skeletonlabs/skeleton';
 	import type { SvelteComponent } from 'svelte';
-	import type { PopupSettings } from '@skeletonlabs/skeleton';
 	import { cBase, cHeader, cForm } from '../styles/styles.js';
-	import createCredentialMutation from '../queries/create_credential.js';
+	import createCredentialMutation from '../queries/create-credential.js';
 	import { credentialsList } from '../stores/stores.js';
 	import allCredentialsQuery from '../queries/get_all_credentials.js';
 	import type { DockerRegistryCredential } from '../types.js';

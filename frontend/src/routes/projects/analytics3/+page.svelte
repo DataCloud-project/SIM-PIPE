@@ -2,8 +2,8 @@
 	import { onMount, onDestroy } from 'svelte';
 	import DAG from './dag.svelte';
 	import Plot from './plot.svelte';
-	import { requestGraphQLClient } from '$lib/graphqlUtils';
-	import { getWorkflowTemplate } from '$lib/getWorkflowTemplate';
+	import { requestGraphQLClient } from '$lib/graphql-utils';
+	import { getWorkflowTemplate } from '$lib/get-workflow-template';
 	import getScalingLawsFromNodesMetricsQuery from '$queries/get_scaling_laws_from_nodes_metrics';
 	import { extractNodesAndLinks2 } from './helpers';
 	import type { Node, Link } from './helpers';

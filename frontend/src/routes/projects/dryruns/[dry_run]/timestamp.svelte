@@ -1,6 +1,5 @@
 <script>
-	import { onMount } from 'svelte';
-	import { onDestroy } from 'svelte';
+	import { onMount , onDestroy } from 'svelte';
 
 	/**
 	 * @type {string}
