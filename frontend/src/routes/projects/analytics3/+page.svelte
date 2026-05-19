@@ -4,7 +4,7 @@
 	import Plot from './plot.svelte';
 	import { requestGraphQLClient } from '$lib/graphql-utils';
 	import { getWorkflowTemplate } from '$lib/get-workflow-template';
-	import getScalingLawsFromNodesMetricsQuery from '$queries/get_scaling_laws_from_nodes_metrics';
+	import getScalingLawsFromNodesMetricsQuery from '$queries/get-scaling-laws-from-nodes-metrics';
 	import { extractNodesAndLinks2 } from './helpers';
 	import type { Node, Link } from './helpers';
 	import type { AggregatedNodesMetrics } from '$typesdefinitions';
@@ -14,7 +14,6 @@
 	let links: Link[] = [];
 	const dataX = [1, 2]; // TODO: temporary data - to be replaced with fileSize as default.
 	const regressionMethod = 'linear';
-	// const regressionMethod = 'power';
 	let nodesMetrics: AggregatedNodesMetrics[] = [];
 	const dryRunIds = ['health-data-pipeline-tsz25', 'health-data-pipeline-lgd6s'];
 

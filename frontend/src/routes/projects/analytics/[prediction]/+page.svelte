@@ -12,13 +12,12 @@
 	} from '$utils/resource-utils.js';
 	import { selectedProject } from '$stores/stores.js';
 	import { goto } from '$app/navigation';
-	import getDryRunInputFilesizeQuery from '$queries/get_dry_run_input_filesizes.js';
+	import getDryRunInputFilesizeQuery from '$queries/get-dry-run-input-filesizes.js';
 	import { requestGraphQLClient } from '$lib/graphql-utils.js';
 	import { readable_time } from '$lib/time-difference.js';
 	import { cForm } from '$styles/styles.js';
 	import type { MetricsWithTimeStamps } from '$typesdefinitions';
-	import getDryRunProjectIDQuery from '$queries/get_dry_run_project_id.js';
-	// import { displayAlert } from '$utils/alerts-utils.js';
+	import getDryRunProjectIDQuery from '$queries/get-dry-run-project-id.js';
 
 	export let data;
 

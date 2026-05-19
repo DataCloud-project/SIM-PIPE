@@ -3,11 +3,11 @@
 	import { ProgressBar, CodeBlock, getModalStore } from '@skeletonlabs/skeleton';
 	import { AlertTriangleIcon, ZoomInIcon } from 'svelte-feather-icons';
 	import { filesize } from 'filesize';
-	import getDryRunMetricsQuery from '$queries/get_dry_run_metrics.js';
-	import getProjectQuery from '$queries/get_project';
-	import getDryRunPhaseResultsQuery from '$queries/get_dry_run_phase_results';
-	import getDryRunQuery from '$queries/get_selected_project';
-	import getCarbontrackerDataQuery from '$queries/get_carbontracker_metrics';
+	import getDryRunMetricsQuery from '$queries/get-dry-run-metrics.js';
+	import getProjectQuery from '$queries/get-project';
+	import getDryRunPhaseResultsQuery from '$queries/get-dry-run-phase-results';
+	import getDryRunQuery from '$queries/get-selected-project';
+	import getCarbontrackerDataQuery from '$queries/get-carbontracker-metrics';
 	import { requestGraphQLClient } from '$lib/graphql-utils';
 	import { goto } from '$app/navigation';
 	import Plot from './plot.svelte';
@@ -17,9 +17,9 @@
 	import Legend from './legend.svelte';
 	import { getMetricsUsageUtils, displayStepDuration, truncateString } from '$utils/resource-utils';
 	import type { DryRunMetrics, DryRun, MetricsWithTimeStamps, Artifact } from '$typesdefinitions';
-	import getMooseAnalysisQuery from '$queries/get_moose_analysis.js';
-	import setMooseReportMutation from '$queries/set_moose_report.js';
-	import storeCarbontrackerDataMutation from '$queries/store_carbontracker_data.js';
+	import getMooseAnalysisQuery from '$queries/get-moose-analysis.js';
+	import setMooseReportMutation from '$queries/set-moose-report.js';
+	import storeCarbontrackerDataMutation from '$queries/store-carbontracker-data.js';
 	import { displayModal } from '$utils/modal-utils.js';
 
 	type MooseEntity = { text: string; type_id: string; confidence: number };

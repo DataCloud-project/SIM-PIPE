@@ -7,15 +7,11 @@
 		RepeatIcon,
 		AlertCircleIcon
 	} from 'svelte-feather-icons';
-	// import { getModalStore } from '@skeletonlabs/skeleton';
-	import stopDryRunMutation from '$queries/stop_dry_run.js';
-	import suspendDryRunMutation from '$queries/suspend_dry_run.js';
-	import resumeDryRunMutation from '$queries/resume_dry_run.js';
+	import stopDryRunMutation from '$queries/stop-dry-run.js';
+	import suspendDryRunMutation from '$queries/suspend-dry-run.js';
+	import resumeDryRunMutation from '$queries/resume-dry-run.js';
 	import { pausedDryRuns } from '$stores/stores.js';
 	import { requestGraphQLClient } from '$lib/graphql-utils.js';
-	// import { displayAlert } from '$utils/alerts-utils.js';
-
-	// const modalStore = getModalStore();
 
 	export let action: string;
 	export let dryRunId: string;
@@ -47,12 +43,10 @@
 			$pausedDryRuns.push(dryRunId);
 			const title = 'Pausing dry run..';
 			const body = `ID: ${dryRunId}`;
-			// await displayAlert(title, body);
 			console.log(title, body);
 		} catch (error) {
 			const title = 'Error pausing dry run❌!';
 			const body = `${(error as Error).message}`;
-			// await displayAlert(title, body, 10_000);
 			console.log(title, body);
 		}
 	}

@@ -8,11 +8,11 @@
 	import { goto } from '$app/navigation';
 	import Timestamp from './dryruns/[dry_run]/timestamp.svelte';
 	import { requestGraphQLClient } from '$lib/graphql-utils.js';
-	import allProjectsQuery from '../../queries/get_all_projects.js';
-	import deleteProjectMutation from '../../queries/delete_project.js';
-	import allDryRunsQuery from '../../queries/get_all_dryruns.js';
-	import deleteDryRunMutation from '../../queries/delete_dry_run.js';
-	import deleteWorkflowTemplateMutation from '../../queries/delete_workflow_template.js';
+	import allProjectsQuery from '../../queries/get-all-projects.js';
+	import deleteProjectMutation from '../../queries/delete-project.js';
+	import allDryRunsQuery from '../../queries/get-all-dryruns.js';
+	import deleteDryRunMutation from '../../queries/delete-dry-run.js';
+	import deleteWorkflowTemplateMutation from '../../queries/delete-workflow-template.js';
 	import { displayModal } from '$utils/modal-utils.js';
 
 	const modalStore = getModalStore();

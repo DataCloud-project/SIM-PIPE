@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { getModalStore, ProgressBar } from '@skeletonlabs/skeleton';
 	import type { ModalSettings } from '@skeletonlabs/skeleton';
-	import allCredentialsQuery from '../../queries/get_all_credentials.js';
-	import deleteCredentialMutation from '../../queries/delete_credential.js';
+	import allCredentialsQuery from '../../queries/get-all-credentials.js';
+	import deleteCredentialMutation from '../../queries/delete-credential.js';
 	import type { DockerRegistryCredential } from '../../types.js';
 	import { credentialsList, selectedCredential } from '../../stores/stores.js';
 	import { requestGraphQLClient } from '$lib/graphql-utils.js';

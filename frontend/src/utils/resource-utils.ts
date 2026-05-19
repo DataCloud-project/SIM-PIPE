@@ -1,12 +1,11 @@
 import { format } from 'date-fns';
 import { filesize } from 'filesize';
 import { get } from 'svelte/store';
-import getDryRunNoLogsMetricsQuery from '$queries/get_dry_run_all_metrics_no_logs';
+import getDryRunNoLogsMetricsQuery from '$queries/get-dry-run-all-metrics-no-logs';
 import { requestGraphQLClient } from '$lib/graphql-utils';
 import type { DryRunMetrics, MetricsWithTimeStamps } from '$typesdefinitions';
 import { goto } from '$app/navigation';
 import { selectedProject } from '$stores/stores';
-// import { displayAlert } from './alerts-utils';
 
 const datefmt = 'yyyy-MM-dd HH:mm:ss';
 

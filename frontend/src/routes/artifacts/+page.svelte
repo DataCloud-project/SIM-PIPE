@@ -8,10 +8,10 @@
 	import type { ArtifactHierarchyType } from '$typesdefinitions';
 	import Alert from '$lib/modules/alert.svelte';
 	import { requestGraphQLClient } from '$lib/graphql-utils';
-	import getUploadPresignedUrl from '$queries/get_presigned_url_upload';
+	import getUploadPresignedUrl from '$queries/get-presigned-url-upload';
 	import deleteArtifactsMutation from '$queries/delete-artifacts';
 	import createBucketMutation from '$queries/create-bucket';
-	import deleteBucketMutation from '$queries/delete_bucket';
+	import deleteBucketMutation from '$queries/delete-bucket';
 
 	let alertTitle: string = '';
 	let alertMessage: string = '';

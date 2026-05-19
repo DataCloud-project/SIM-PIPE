@@ -3,10 +3,10 @@
 	import { onDestroy } from 'svelte';
 	import { browser } from '$app/environment';
 	import { requestGraphQLClient } from '$lib/graphql-utils';
-	import getApiTokensQuery from '../../queries/get_api_tokens';
-	import updateApiTokensMutation from '../../queries/update_api_tokens';
-	import getK3sClusterSecretQuery from '../../queries/get_k3s_cluster_secret';
-	import updateK3sClusterSecretMutation from '../../queries/update_k3s_cluster_secret';
+	import getApiTokensQuery from '../../queries/get-api-tokens';
+	import updateApiTokensMutation from '../../queries/update-api-tokens';
+	import getK3sClusterSecretQuery from '../../queries/get-k3s-cluster-secret';
+	import updateK3sClusterSecretMutation from '../../queries/update-k3s-cluster-secret';
 
 	type ApiTokenState = {
 		hasValue: boolean;

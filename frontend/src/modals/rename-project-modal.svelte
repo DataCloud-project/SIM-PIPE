@@ -5,11 +5,10 @@
 	import { requestGraphQLClient } from '$lib/graphql-utils.js';
 	import { displayModal } from '$utils/modal-utils.js';
 
-	import allProjectsQuery from '$queries/get_all_projects.js';
-	import renameProjectMutation from '$queries/rename_project.js';
+	import allProjectsQuery from '$queries/get-all-projects.js';
+	import renameProjectMutation from '$queries/rename-project.js';
 	import { projectsList } from '$stores/stores.js';
 	import { cBase, cForm, cHeader } from '$styles/styles.js';
-	// import { displayAlert } from '$utils/alerts-utils.js';
 	import type { AllProjectsResponse } from '$typesdefinitions';
 
 	// Props - Exposes parent props to this component

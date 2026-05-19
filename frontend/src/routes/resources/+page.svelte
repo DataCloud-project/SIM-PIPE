@@ -3,10 +3,10 @@
 	import type { ModalSettings } from '@skeletonlabs/skeleton';
 	import { resourcesList } from '../../stores/stores.js';
 	import { requestGraphQLClient } from '$lib/graphql-utils.js';
-	import allResourcesQuery from '../../queries/get_all_resources.js';
+	import allResourcesQuery from '../../queries/get-all-resources.js';
 	import type { Resource } from '../../types.js';
-	import deleteResourceMutation from '$queries/delete_resource.js';
-	import shutdownResourceMutation from '$queries/shutdown_resource.js';
+	import deleteResourceMutation from '$queries/delete-resource.js';
+	import shutdownResourceMutation from '$queries/shutdown-resource.js';
 	import { displayModal } from '$utils/modal-utils.js';
 	import { VIRTUALIZATION_ENABLED } from '$lib/config';
 
@@ -178,20 +178,12 @@
 					</button>
 				</div>
 				<div>
-					<button
-						type="button"
-						class="btn btn-sm variant-filled-surface"
-						on:click={onShutdown}
-					>
+					<button type="button" class="btn btn-sm variant-filled-surface" on:click={onShutdown}>
 						<span>Shutdown</span>
 					</button>
 				</div>
 				<div>
-					<button
-						type="button"
-						class="btn btn-sm variant-filled-warning"
-						on:click={onDelete}
-					>
+					<button type="button" class="btn btn-sm variant-filled-warning" on:click={onDelete}>
 						<span>Delete</span>
 					</button>
 				</div>

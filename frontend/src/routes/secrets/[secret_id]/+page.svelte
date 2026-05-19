@@ -4,17 +4,13 @@
 	import { selectedCredential, selectedProject } from '$stores/stores';
 	import { requestGraphQLClient } from '$lib/graphql-utils';
 	import type { Project } from '$typesdefinitions';
-	import allProjectsQuery from '$queries/get_all_projects.js';
-	import getWorkflowQuery from '$queries/get_workflow_template.js';
-	import updateCredentialMutation from '$queries/update_workflow_template';
+	import allProjectsQuery from '$queries/get-all-projects.js';
+	import getWorkflowQuery from '$queries/get-workflow-template.js';
+	import updateCredentialMutation from '$queries/update-workflow-template';
 	import { goto } from '$app/navigation';
 	import { displayModal } from '$utils/modal-utils.js';
 
 	const modalStore = getModalStore();
-
-	// argo workflow template
-	// let template: any;
-
 	interface ResponseType {
 		workflowTemplate: {
 			argoWorkflowTemplate: any; // Replace 'any' with the actual type

@@ -1,7 +1,7 @@
 import { GraphQLClient } from 'graphql-request';
 import type { PageServerLoad } from './$types';
-import allArtifactsQuery from '$queries/get_all_artifacts';
-import allBucketsQuery from '$queries/get_all_buckets';
+import allArtifactsQuery from '$queries/get-all-artifacts';
+import allBucketsQuery from '$queries/get-all-buckets';
 import * as config from '$lib/config';
 
 const simpipeEndpoint = config.SIM_PIPE_CONTROLLER_URL as string;

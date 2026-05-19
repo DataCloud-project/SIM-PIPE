@@ -9,7 +9,7 @@
 	import refreshVMNodesDetails from '$lib/refresh-vmnodes.js';
 	import { resourcesList } from '$stores/stores.js';
 	import type { Resource } from '$typesdefinitions';
-	import allResourcesQuery from '$queries/get_all_resources.js';
+	import allResourcesQuery from '$queries/get-all-resources.js';
 	import { displayModal } from '$utils/modal-utils.js';
 
 	export let parent: SvelteComponent;

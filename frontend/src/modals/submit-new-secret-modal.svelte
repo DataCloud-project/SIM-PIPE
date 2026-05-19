@@ -4,7 +4,7 @@
 	import { cBase, cHeader, cForm } from '../styles/styles.js';
 	import createCredentialMutation from '../queries/create-credential.js';
 	import { credentialsList } from '../stores/stores.js';
-	import allCredentialsQuery from '../queries/get_all_credentials.js';
+	import allCredentialsQuery from '../queries/get-all-credentials.js';
 	import type { DockerRegistryCredential } from '../types.js';
 	import { requestGraphQLClient } from '$lib/graphql-utils.js';
 	import { displayModal } from '$utils/modal-utils.js';

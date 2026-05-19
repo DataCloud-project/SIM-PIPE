@@ -7,12 +7,12 @@
 
 	import refreshProjectDetails from '$lib/refresh-runs.js';
 	import createDryRunMutation from '$queries/create-dry-run.js';
-	import allDryRunsQuery from '$queries/get_all_dryruns.js';
+	import allDryRunsQuery from '$queries/get-all-dryruns.js';
 	import { selectedArtifact, selectedProject } from '$stores/stores.js';
 	import { cBase, cForm, cHeader } from '../styles/styles.js';
 	import type { ArtifactHierarchyType, Project, Resource } from '$typesdefinitions';
 	import ArtifactBrowser from './artifact-browser.svelte';
-	import allResourcesQuery from '$queries/get_all_resources.js';
+	import allResourcesQuery from '$queries/get-all-resources.js';
 	import { displayModal } from '$utils/modal-utils.js';
 
 	let isOverlayOpen = false;

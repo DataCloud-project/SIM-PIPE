@@ -6,8 +6,8 @@
 	import SymbolForRunResult from './symbol-for-run-result.svelte';
 	import SymbolForAction from './symbol-for-action.svelte';
 	import type { DryRun, Project } from '$typesdefinitions';
-	import allDryRunsQuery from '$queries/get_all_dryruns.js';
-	import deleteDryRunMutation from '$queries/delete_dry_run.js';
+	import allDryRunsQuery from '$queries/get-all-dryruns.js';
+	import deleteDryRunMutation from '$queries/delete-dry-run.js';
 	import { goto } from '$app/navigation';
 	import Timestamp from './timestamp.svelte';
 	import { requestGraphQLClient } from '$lib/graphql-utils.js';
