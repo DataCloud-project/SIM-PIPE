@@ -7,6 +7,7 @@
 
 	import createProjectMutation from '$queries/create-project.js';
 	import createWorkflowTemplateMutation from '$queries/create-workflow-template.js';
+	import inlumenPipelinesQuery from '$queries/get-inlumen-pipelines.js';
 	import { cBase, cForm, cHeader } from '$styles/styles.js';
 	import { validateYAML } from '$utils/argo-utils.js';
 
@@ -19,13 +20,61 @@
 	// Keep a reference to the modal response handler before the modal is closed
 	let responseHandler: ((response: any) => void) | undefined;
 
-	// Step: 1 = upload, 2 = review/edit YAML
+	// Step: 1 = select source, 2 = review/edit YAML
 	let step = 1;
+
+	// Source mode within step 1
+	let sourceMode: 'upload' | 'inlumen' = 'upload';
 
 	// Step 1 fields
 	let projectName: string = '';
 	let inputFilesList: FileList;
 	let step1Error: string = '';
+
+	// inLUMEN import state
+	type InlumenPipeline = {
+		name: string;
+		uid: string;
+		yaml: string;
+		description?: string | null;
+		version?: string;
+		created_at?: string;
+		updated_at?: string;
+	};
+
+	function formatDate(iso?: string): string {
+		if (!iso) return '—';
+		return new Date(iso).toLocaleString(undefined, {
+			year: 'numeric',
+			month: 'short',
+			day: 'numeric',
+			hour: '2-digit',
+			minute: '2-digit'
+		});
+	}
+	let inlumenPipelines: InlumenPipeline[] = [];
+	let inlumenLoading = false;
+	let inlumenError = '';
+	let selectedVersionUid = '';
+
+	async function fetchInlumenPipelines(): Promise<void> {
+		inlumenLoading = true;
+		inlumenError = '';
+		inlumenPipelines = [];
+		selectedVersionUid = '';
+		try {
+			const response = await requestGraphQLClient<{ inlumenPipelines: string }>(inlumenPipelinesQuery);
+			const parsed = JSON.parse(response.inlumenPipelines) as { versions: InlumenPipeline[] };
+			inlumenPipelines = parsed.versions ?? [];
+			if (inlumenPipelines.length === 0) {
+				inlumenError = 'No pipeline versions found in inLUMEN.';
+			}
+		} catch (error) {
+			inlumenError = error instanceof Error ? error.message : 'Failed to fetch from inLUMEN.';
+		} finally {
+			inlumenLoading = false;
+		}
+	}
 
 	// Step 2 fields
 	let yamlEditorContent: string = '';
@@ -57,7 +106,7 @@
 		}
 	}
 
-	// Move to step 2: validate inputs and parse the uploaded file into YAML
+	// Move to step 2: validate inputs and produce YAML content from whichever source
 	async function goToStep2(): Promise<void> {
 		step1Error = '';
 
@@ -65,17 +114,17 @@
 			step1Error = 'Project name is required.';
 			return;
 		}
+
+		if (sourceMode === 'upload') {
 		if (!inputFilesList || inputFilesList.length === 0) {
 			step1Error = 'Please upload a workflow template file.';
 			return;
 		}
-
 		const fileText = await inputFilesList[0].text();
 		if (!fileText.trim()) {
 			step1Error = 'The uploaded file is empty.';
 			return;
 		}
-
 		// Parse as JSON first, then YAML; normalise to YAML for the editor
 		try {
 			const parsed = JSON.parse(fileText);
@@ -88,6 +137,19 @@
 				step1Error = `Could not parse file: ${error instanceof Error ? error.message : 'Invalid YAML/JSON'}`;
 				return;
 			}
+			}
+		} else {
+			// inLUMEN mode
+			if (!selectedVersionUid) {
+				step1Error = 'Please select a pipeline version from inLUMEN.';
+				return;
+			}
+			const version = inlumenPipelines.find((v) => v.uid === selectedVersionUid);
+			if (!version?.yaml) {
+				step1Error = 'Selected version has no YAML content.';
+				return;
+			}
+			yamlEditorContent = version.yaml;
 		}
 
 		step = 2;
@@ -189,46 +251,7 @@
 	<div class="modal-example-form {cBase}">
 		<header class={cHeader}>{$modalStore[0].title ?? '(title missing)'}</header>
 
-		<!-- Step indicator -->
-		<div
-			class="grid grid-cols-2 overflow-hidden rounded-container-token border border-surface-300-600-token"
-		>
-			<div
-				class="flex items-center justify-center gap-2 py-3 px-4 text-sm font-medium transition-colors"
-				class:variant-filled-primary={step === 1}
-				class:variant-soft-primary={step > 1}
-			>
-				<span
-					class="inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold shrink-0"
-					class:bg-primary-100={step === 1}
-					class:text-primary-600={step === 1}
-					class:bg-primary-500={step > 1}
-					class:text-white={step > 1}
-				>
-					{step > 1 ? '✓' : '1'}
-				</span>
-				Upload template
-			</div>
-
-			<div
-				class="flex items-center justify-center gap-2 py-3 px-4 text-sm font-medium transition-colors border-l border-surface-300-600-token"
-				class:variant-filled-primary={step === 2}
-				class:variant-soft-primary={step < 2}
-			>
-				<span
-					class="inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold shrink-0"
-					class:bg-primary-100={step === 2}
-					class:text-primary-600={step === 2}
-					class:bg-surface-200-700-token={step < 2}
-					class:text-surface-600-300-token={step < 2}
-				>
-					2
-				</span>
-				Review &amp; create
-			</div>
-		</div>
-
-		<!-- Step 1: project name + file upload -->
+		<!-- Step 1: project name + source selection -->
 		{#if step === 1}
 			<form class="modal-form {cForm}" on:submit|preventDefault={goToStep2}>
 				<label class="label">
@@ -246,12 +269,108 @@
 						</p>
 					{/if}
 				</label>
+
+				<hr class="!border-surface-300-600-token" />
+
+				<!-- Source mode tabs -->
+				<div class="label">
+					<span>Template source</span>
+					<div
+						class="mt-1 grid grid-cols-2 overflow-hidden rounded-container-token border border-surface-300-600-token"
+					>
+						<button
+							type="button"
+							class="py-2 px-3 text-sm font-medium transition-colors"
+							class:variant-filled-primary={sourceMode === 'upload'}
+							on:click={() => (sourceMode = 'upload')}
+						>
+							Upload file
+						</button>
+						<button
+							type="button"
+							class="py-2 px-3 text-sm font-medium transition-colors border-l border-surface-300-600-token"
+							class:variant-filled-primary={sourceMode === 'inlumen'}
+							on:click={() => (sourceMode = 'inlumen')}
+						>
+							Import from inLUMEN
+						</button>
+					</div>
+				</div>
+
+				{#if sourceMode === 'upload'}
 				<label class="label">
 					<span
 						>Upload workflow template <span class="text-xs opacity-60">(YAML or JSON)</span></span
 					>
-					<input class="input" type="file" accept=".yaml,.yml,.json" bind:files={inputFilesList} />
+						<input
+							class="input"
+							type="file"
+							accept=".yaml,.yml,.json"
+							bind:files={inputFilesList}
+						/>
 				</label>
+				{:else}
+					<!-- inLUMEN import panel -->
+					<div class="label">
+						<span>Available pipeline versions</span>
+						<div class="mt-1 flex flex-col gap-2">
+							<button
+								type="button"
+								class="btn variant-soft-primary w-fit"
+								disabled={inlumenLoading}
+								on:click={fetchInlumenPipelines}
+							>
+								{inlumenLoading ? 'Fetching…' : 'Fetch from inLUMEN'}
+							</button>
+
+							{#if inlumenError}
+								<p class="text-error-500 text-sm">{inlumenError}</p>
+							{/if}
+
+							{#if inlumenPipelines.length > 0}
+								<div
+									class="border border-surface-300-600-token rounded-container-token overflow-hidden"
+								>
+									<table class="table table-compact w-full text-sm">
+										<thead>
+											<tr>
+												<th class="w-6"></th>
+												<th>Name</th>
+												<th>Version</th>
+												<th>Updated</th>
+											</tr>
+										</thead>
+										<tbody>
+											{#each inlumenPipelines as version (version.uid)}
+												<tr
+													class="cursor-pointer hover:variant-soft-primary transition-colors"
+													class:variant-filled-primary={selectedVersionUid === version.uid}
+													on:click={() => (selectedVersionUid = version.uid)}
+												>
+													<td>
+														<input
+															type="radio"
+															class="radio"
+															name="inlumen-version"
+															value={version.uid}
+															bind:group={selectedVersionUid}
+														/>
+													</td>
+													<td class="font-medium">{version.name}</td>
+													<td class="text-surface-500-400-token">{version.version ?? '—'}</td>
+													<td class="text-surface-500-400-token text-xs"
+														>{formatDate(version.updated_at)}</td
+													>
+												</tr>
+											{/each}
+										</tbody>
+									</table>
+								</div>
+							{/if}
+						</div>
+					</div>
+				{/if}
+
 				{#if step1Error}
 					<p class="text-error-500 text-sm">{step1Error}</p>
 				{/if}

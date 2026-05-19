@@ -22,7 +22,7 @@
 			// eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
 			event.stopPropagation();
 			// eslint-disable-next-line object-shorthand
-			await requestGraphQLClient(stopDryRunMutation, { dryRunId, terminate: false });
+			await requestGraphQLClient(stopDryRunMutation, { dryRunId, terminate: true });
 			const title = 'Stopping dry run..';
 			const body = `ID: ${dryRunId}`;
 			// await displayAlert(title, body);

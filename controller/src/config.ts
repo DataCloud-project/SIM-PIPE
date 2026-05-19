@@ -33,6 +33,9 @@ export const prometheusServerUrl = process.env.PROMETHEUS_SERVER_URL ?? 'http://
 // For local development, use localhost
 export const carbontrackerEndpoint = process.env.CARBONTRACKER_ENDPOINT ?? 'http://localhost:8000';
 
+// inLUMEN endpoint (LLM/agent API, port 5002 by default)
+export const inlumenEndpoint = process.env.INLUMEN_ENDPOINT ?? 'http://localhost:5002';
+
 // Moose API endpoint and api keys
 export const mooseApiEndpoint:string = process.env.MOOSE_API_ENDPOINT ?? 'https://moose.zooverse.dev';
 export const mooseApiKey:string = process.env.MOOSE_API_KEY ?? '';

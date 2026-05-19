@@ -151,6 +151,9 @@ type Query {
 
   dryRunsForNode(nodeName: String!): [DryRun!]!
 
+  """ Fetch pipeline versions from inLUMEN. Returns raw JSON string with versions array. """
+  inlumenPipelines: String! @auth
+
   """ Inspect the API tokens used by the controller. """
   apiTokens: ApiTokens! @auth
 

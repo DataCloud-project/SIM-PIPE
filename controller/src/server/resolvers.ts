@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto';
+import { createRequire } from 'node:module';
 
 import {
   parseCarbontrackerAnnotation,
@@ -125,6 +126,8 @@ import type {
   QueryWorkflowTemplateArgs as QueryWorkflowTemplateArguments,
   WorkflowTemplate,
 } from './schema.js';
+
+const requireJson = createRequire(import.meta.url);
 
 interface ContextUser {
   sub: string
@@ -405,6 +408,21 @@ const resolvers = {
       _context: AuthenticatedContext,
     ): Promise<Query['getMooseAnalysis']> {
       return await getMooseAnalysis(arguments_);
+    },
+    async inlumenPipelines(
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      _p: EmptyParent,
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      _a: EmptyArguments,
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      _context: AuthenticatedContext,
+    ): Promise<Query['inlumenPipelines']> {
+      // TODO: Replace with real inLUMEN API call once endpoint is reachable:
+      // const response = await fetch(`${inlumenEndpoint}/agentic_generate_version_yamls`);
+      // if (!response.ok) throw new Error(`inLUMEN API error: ${response.status}`);
+      // return response.text();
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      return JSON.stringify(requireJson('../placeholder-inlumen-output.json'));
     },
   } as Required<QueryResolvers<AuthenticatedContext, EmptyParent>>,
   Mutation: {

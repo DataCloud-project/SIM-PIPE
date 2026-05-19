@@ -1117,6 +1117,8 @@ export type Query = {
    */
   getMooseAnalysis: Scalars['String']['output'];
   /**  Get hardware metrics server-side */
+  /**  Fetch pipeline versions from inLUMEN. Returns raw JSON string with versions array.  */
+  inlumenPipelines: Scalars['String']['output'];
   hardwaremetrics: HardwareMetrics;
   /**  Inspect the k3s cluster secret used by VM helpers.  */
   k3sClusterSecret: K3sClusterSecret;
@@ -1779,6 +1781,7 @@ export type QueryResolvers<ContextType = any, ParentType extends ResolversParent
   fetchCarbontrackerData?: Resolver<ResolversTypes['CarbonTrackerData'], ParentType, ContextType, RequireFields<QueryFetchCarbontrackerDataArgs, 'input'>>;
   getAggregatedNodesMetrics?: Resolver<Array<Maybe<ResolversTypes['NodesAggregatedNodeMetrics']>>, ParentType, ContextType, RequireFields<QueryGetAggregatedNodesMetricsArgs, 'dryRunIds'>>;
   getMooseAnalysis?: Resolver<ResolversTypes['String'], ParentType, ContextType, RequireFields<QueryGetMooseAnalysisArgs, 'artifactUrl' | 'save'>>;
+  inlumenPipelines?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   hardwaremetrics?: Resolver<ResolversTypes['HardwareMetrics'], ParentType, ContextType>;
   k3sClusterSecret?: Resolver<ResolversTypes['K3sClusterSecret'], ParentType, ContextType>;
   ping?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
