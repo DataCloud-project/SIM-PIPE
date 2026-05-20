@@ -88,9 +88,6 @@ async function hybridAuthJwtMiddlewareAsync(
     return;
   }
 
-  // eslint-disable-next-line no-console
-  console.log('[auth] OAUTH2_ISSUER_ENDPOINT:', oauth2IssuerEndpoint);
-
   // Load the Authorisation header
   // and that the header is a Bearer token
   const authHeader = request.headers.authorization;
@@ -102,9 +99,6 @@ async function hybridAuthJwtMiddlewareAsync(
     next();
     return;
   }
-
-  // eslint-disable-next-line no-console
-  console.log('[auth] Authorization header present, length:', authHeader.length);
 
   // If it's not a bearer token
   if (!authHeader.startsWith('Bearer ')) {

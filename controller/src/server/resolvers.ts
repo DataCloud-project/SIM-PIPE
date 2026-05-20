@@ -21,12 +21,15 @@ import {
   workflowTemplatesForProject,
 } from '../argo/workflow-template.js';
 import fetchCarbontrackerData from '../carbontracker/carbontracker.js';
+import { inlumenEndpoint } from '../config.js';
 import {
   aggregatedNodesMetrics,
   computeScalingLaws,
   extrapolateFromScalingLaws,
 } from '../curve_fitting/dry-run-data.js';
 import cpuCoresData from '../hardwaremetrics/hardwaremetrics.js';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import { getInlumenAccessToken } from '../inlumen/inlumen-token.js';
 import { getApiTokenStates, updateApiTokenSecrets } from '../k8s/api-tokens.js';
 import assignArgoWorkflowToProject from '../k8s/assign-argoworkflow-to-project.js';
 import {
@@ -127,6 +130,8 @@ import type {
   WorkflowTemplate,
 } from './schema.js';
 
+// temporary - will remove when removing inlUMEN placeholder
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const requireJson = createRequire(import.meta.url);
 
 interface ContextUser {
@@ -229,7 +234,9 @@ const resolvers = {
       return await getDryRun(dryRunId, argoClient);
     },
     dryRunsForNode: async (_p: EmptyParent,
-      arguments_: { nodeName: string }, context: AuthenticatedContext) => dryRunsForNode(arguments_.nodeName, context.argoClient),
+      arguments_: { nodeName: string },
+      context: AuthenticatedContext) => dryRunsForNode(arguments_.nodeName,
+      context.argoClient),
     async workflowTemplate(
       _p: EmptyParent, arguments_: QueryWorkflowTemplateArguments, context: AuthenticatedContext,
     ): Promise<Query['workflowTemplate']> {
@@ -338,7 +345,8 @@ const resolvers = {
       return hardwaremetrics;
     },
     async getAggregatedNodesMetrics(
-      _p: EmptyParent, arguments_: QueryGetAggregatedNodesMetricsArguments, context: AuthenticatedContext,
+      _p: EmptyParent, arguments_: QueryGetAggregatedNodesMetricsArguments,
+      context: AuthenticatedContext,
     ): Promise<Query['getAggregatedNodesMetrics']> {
       return aggregatedNodesMetrics(
         arguments_.dryRunIds as string[],
@@ -374,7 +382,8 @@ const resolvers = {
     ): Promise<Query['predictScaling']> {
       const {
         // eslint-disable-next-line @typescript-eslint/naming-convention
-        nodesAggregatedNodeMetrics, dryRunIds, aggregateMethod, regressionMethod, data_x_to_predict, data_x,
+        nodesAggregatedNodeMetrics, dryRunIds, aggregateMethod,
+        regressionMethod, data_x_to_predict: dataXToPredict, data_x: dataX,
       } = arguments_;
       const aggregateMethodUsed = aggregateMethod || 'average';
       const regressionMethodUsed = regressionMethod || 'linear';
@@ -382,14 +391,14 @@ const resolvers = {
       let scalingLaws: NodesScalingLaws[];
       if (dryRunIds && !nodesAggregatedNodeMetrics) {
         const metrics = await aggregatedNodesMetrics(dryRunIds as string[], 'main', context.argoClient, aggregateMethodUsed);
-        scalingLaws = await computeScalingLaws(metrics, data_x as number[], regressionMethodUsed);
+        scalingLaws = await computeScalingLaws(metrics, dataX as number[], regressionMethodUsed);
       } else if (!dryRunIds && nodesAggregatedNodeMetrics) {
-        scalingLaws = await computeScalingLaws(nodesAggregatedNodeMetrics as NodesAggregatedNodeMetrics[], data_x as number[], regressionMethodUsed);
+        scalingLaws = await computeScalingLaws(nodesAggregatedNodeMetrics as NodesAggregatedNodeMetrics[], dataX as number[], regressionMethodUsed);
       } else {
         throw new Error('Provide either dryRunIds or nodesAggregatedNodeMetrics, and data_x.');
       }
 
-      return extrapolateFromScalingLaws(scalingLaws, data_x_to_predict);
+      return extrapolateFromScalingLaws(scalingLaws, dataXToPredict);
     },
     async fetchCarbontrackerData(
       _p: EmptyParent,
@@ -417,12 +426,16 @@ const resolvers = {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       _context: AuthenticatedContext,
     ): Promise<Query['inlumenPipelines']> {
-      // TODO: Replace with real inLUMEN API call once endpoint is reachable:
-      // const response = await fetch(`${inlumenEndpoint}/agentic_generate_version_yamls`);
-      // if (!response.ok) throw new Error(`inLUMEN API error: ${response.status}`);
-      // return response.text();
+      const token = await getInlumenAccessToken();
+      const headers: Record<string, string> = {};
+      if (token) headers.Authorization = `Bearer ${token}`;
+      const response = await fetch(
+        `${inlumenEndpoint}/agentic_generate_version_yamls`, { headers });
+      if (!response.ok) throw new Error(`inLUMEN API error: ${response.status}`);
+      return response.text();
+      // remove when inLUMEN placeholder is removed
       // eslint-disable-next-line @typescript-eslint/no-require-imports
-      return JSON.stringify(requireJson('../placeholder-inlumen-output.json'));
+      // return JSON.stringify(requireJson('../placeholder-inlumen-output.json'));
     },
   } as Required<QueryResolvers<AuthenticatedContext, EmptyParent>>,
   Mutation: {

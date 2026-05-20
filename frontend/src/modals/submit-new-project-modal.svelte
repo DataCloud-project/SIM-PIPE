@@ -63,7 +63,9 @@
 		inlumenPipelines = [];
 		selectedVersionUid = '';
 		try {
-			const response = await requestGraphQLClient<{ inlumenPipelines: string }>(inlumenPipelinesQuery);
+			const response = await requestGraphQLClient<{ inlumenPipelines: string }>(
+				inlumenPipelinesQuery
+			);
 			const parsed = JSON.parse(response.inlumenPipelines) as { versions: InlumenPipeline[] };
 			inlumenPipelines = parsed.versions ?? [];
 			if (inlumenPipelines.length === 0) {
@@ -116,27 +118,27 @@
 		}
 
 		if (sourceMode === 'upload') {
-		if (!inputFilesList || inputFilesList.length === 0) {
-			step1Error = 'Please upload a workflow template file.';
-			return;
-		}
-		const fileText = await inputFilesList[0].text();
-		if (!fileText.trim()) {
-			step1Error = 'The uploaded file is empty.';
-			return;
-		}
-		// Parse as JSON first, then YAML; normalise to YAML for the editor
-		try {
-			const parsed = JSON.parse(fileText);
-			yamlEditorContent = yaml.dump(parsed, { lineWidth: -1 });
-		} catch {
-			try {
-				const parsed = yaml.load(fileText);
-				yamlEditorContent = yaml.dump(parsed, { lineWidth: -1 });
-			} catch (error) {
-				step1Error = `Could not parse file: ${error instanceof Error ? error.message : 'Invalid YAML/JSON'}`;
+			if (!inputFilesList || inputFilesList.length === 0) {
+				step1Error = 'Please upload a workflow template file.';
 				return;
 			}
+			const fileText = await inputFilesList[0].text();
+			if (!fileText.trim()) {
+				step1Error = 'The uploaded file is empty.';
+				return;
+			}
+			// Parse as JSON first, then YAML; normalise to YAML for the editor
+			try {
+				const parsed = JSON.parse(fileText);
+				yamlEditorContent = yaml.dump(parsed, { lineWidth: -1 });
+			} catch {
+				try {
+					const parsed = yaml.load(fileText);
+					yamlEditorContent = yaml.dump(parsed, { lineWidth: -1 });
+				} catch (error) {
+					step1Error = `Could not parse file: ${error instanceof Error ? error.message : 'Invalid YAML/JSON'}`;
+					return;
+				}
 			}
 		} else {
 			// inLUMEN mode
@@ -282,7 +284,9 @@
 							type="button"
 							class="py-2 px-3 text-sm font-medium transition-colors"
 							class:variant-filled-primary={sourceMode === 'upload'}
-							on:click={() => (sourceMode = 'upload')}
+							on:click={() => {
+								sourceMode = 'upload';
+							}}
 						>
 							Upload file
 						</button>
@@ -290,7 +294,9 @@
 							type="button"
 							class="py-2 px-3 text-sm font-medium transition-colors border-l border-surface-300-600-token"
 							class:variant-filled-primary={sourceMode === 'inlumen'}
-							on:click={() => (sourceMode = 'inlumen')}
+							on:click={() => {
+								sourceMode = 'inlumen';
+							}}
 						>
 							Import from inLUMEN
 						</button>
@@ -298,17 +304,17 @@
 				</div>
 
 				{#if sourceMode === 'upload'}
-				<label class="label">
-					<span
-						>Upload workflow template <span class="text-xs opacity-60">(YAML or JSON)</span></span
-					>
+					<label class="label">
+						<span
+							>Upload workflow template <span class="text-xs opacity-60">(YAML or JSON)</span></span
+						>
 						<input
 							class="input"
 							type="file"
 							accept=".yaml,.yml,.json"
 							bind:files={inputFilesList}
 						/>
-				</label>
+					</label>
 				{:else}
 					<!-- inLUMEN import panel -->
 					<div class="label">
@@ -345,7 +351,9 @@
 												<tr
 													class="cursor-pointer hover:variant-soft-primary transition-colors"
 													class:variant-filled-primary={selectedVersionUid === version.uid}
-													on:click={() => (selectedVersionUid = version.uid)}
+													on:click={() => {
+														selectedVersionUid = version.uid;
+													}}
 												>
 													<td>
 														<input

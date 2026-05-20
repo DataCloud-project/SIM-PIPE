@@ -84,6 +84,16 @@ spec:
                   name: simpipe-openrouter-api
                   key: OPENROUTER_API_KEY
                   optional: true
+            - name: INLUMEN_CLIENT_ID
+              value: {{ .Values.controller.inlumen.clientId | default "" | quote }}
+            - name: INLUMEN_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: simpipe-inlumen
+                  key: INLUMEN_CLIENT_SECRET
+                  optional: true
+            - name: INLUMEN_ENDPOINT
+              value: {{ .Values.controller.inlumen.endpoint | default "http://localhost:5002" | quote }}
             - name: NODE_ENV
               value: development
           ports:

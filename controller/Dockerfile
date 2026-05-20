@@ -24,6 +24,7 @@ COPY --from=builder /usr/bin/kubectl /usr/bin/kubectl
 COPY --from=builder /usr/bin/cloud-localds /usr/bin/cloud-localds
 COPY --from=builder /usr/bin/genisoimage /usr/bin/genisoimage
 COPY --from=builder /app/dist/ ./
+COPY src/placeholder-inlumen-output.json ./
 
 COPY src/emulation/scripts/shutdown-kube-node.sh /app/shutdown-kube-node.sh
 COPY src/emulation/scripts/create-kube-node_qemu.sh /app/create-kube-node_qemu.sh

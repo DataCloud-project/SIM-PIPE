@@ -35,6 +35,15 @@ controller:
   carbontracker:
     endpoint: http://simpipe-carbontracker:8000
 
+  inlumen:
+    # Set clientId to enable SIM-PIPE → inLUMEN service-to-service calls via Keycloak
+    # client credentials grant. The client secret is stored in a separate K8s secret:
+    #   kubectl create secret generic simpipe-inlumen \
+    #     --from-literal=INLUMEN_CLIENT_SECRET=<secret>
+    # Leave clientId empty to disable (inlumenPipelines resolver skips auth).
+    clientId: "inlumen"
+    endpoint: "http://95.216.40.236:5002"
+
   keycloak:
     # Set to the Keycloak realm issuer URL to enable authentication.
     # Format: https://<keycloak-host>/realms/<realm-name>
