@@ -42,12 +42,15 @@ type ApiTokenState {
   hasValue: Boolean!
   """Partially-masked preview (never the full secret)."""
   maskedPreview: String
+  """Stored token value, returned only to authenticated users."""
+  value: String
 }
 
 """ API tokens used by the SIM-PIPE controller for external services. """
 type ApiTokens {
   mooseApiKey: ApiTokenState!
   openrouterApiKey: ApiTokenState!
+  inlumenLlmApiKey: ApiTokenState!
 }
 
 """ K3s cluster connection details used by VM helpers. """
@@ -866,6 +869,7 @@ type Mutation @auth {
   updateApiTokens(
     mooseApiKey: String,
     openrouterApiKey: String,
+    inlumenLlmApiKey: String,
   ): ApiTokens!
 
   """ Update the k3s cluster secret used by VM helpers. Any omitted field keeps its current value. """

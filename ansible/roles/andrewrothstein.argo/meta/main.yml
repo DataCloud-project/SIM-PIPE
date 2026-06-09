@@ -1,0 +1,34 @@
+---
+galaxy_info:
+  author: Andrew Rothstein
+  description: installs the argo cli
+  company: BlackRock Financial Management
+  license:
+    - MIT
+  min_ansible_version: 2.0
+  platforms:
+    - name: Alpine
+      versions:
+        - all
+    - name: Archlinux
+      versions:
+        - all
+    - name: Debian
+      versions:
+        - bookworm
+        - bullseye
+    - name: EL
+      versions:
+        - 8
+        - 9
+    - name: Fedora
+      versions:
+        - 37
+        - 38
+    - name: Ubuntu
+      versions:
+        - focal
+        - jammy
+  galaxy_tags:
+    - development
+  role_name: argo

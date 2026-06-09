@@ -1,0 +1,10 @@
+---
+- hosts: all
+  roles:
+  - role: '{{ playbook_dir }}'
+  tasks:
+  - command: /usr/local/bin/argo version
+    register: argo_test_output
+  - name: argo version
+    debug:
+      msg: '{{ argo_test_output.stdout }}'

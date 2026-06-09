@@ -57,7 +57,7 @@ spec:
             - name: MINIO_PUBLIC_URL
               value: {{ .Values.controller.minio.publicUrl | quote }}
             - name: MINIO_INTERNAL_URL
-              value: {{ .Values.controller.minio.internalUrl | quote }}
+              value: {{ tpl .Values.controller.minio.internalUrl . | quote }}
             - name: MINIO_BUCKET_NAME
               value: {{ .Values.controller.minio.bucketName | quote }}
             - name: MINIO_REGION
@@ -94,8 +94,22 @@ spec:
                   optional: true
             - name: INLUMEN_ENDPOINT
               value: {{ .Values.controller.inlumen.endpoint | default "http://localhost:5002" | quote }}
+            - name: INLUMEN_LLM_PROVIDER
+              value: {{ .Values.controller.inlumen.llmProvider | default "" | quote }}
+            - name: INLUMEN_LLM_MODEL
+              value: {{ .Values.controller.inlumen.llmModel | default "" | quote }}
+            - name: INLUMEN_LLM_BASE_URL
+              value: {{ .Values.controller.inlumen.llmBaseUrl | default "" | quote }}
+            - name: INLUMEN_LLM_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: simpipe-inlumen-llm
+                  key: INLUMEN_LLM_API_KEY
+                  optional: true
             - name: NODE_ENV
               value: development
+            - name: VIRTUALIZATION_ENABLED
+              value: {{ .Values.controller.virtualization.enabled | quote }}
           ports:
             - name: http
               containerPort: {{ .Values.controller.service.port }}

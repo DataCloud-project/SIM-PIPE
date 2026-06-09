@@ -21,7 +21,7 @@ import {
   workflowTemplatesForProject,
 } from '../argo/workflow-template.js';
 import fetchCarbontrackerData from '../carbontracker/carbontracker.js';
-import { inlumenEndpoint } from '../config.js';
+import { inlumenEndpoint, inlumenLlmProvider, inlumenLlmModel, inlumenLlmBaseUrl, inlumenLlmApiKey } from '../config.js';
 import {
   aggregatedNodesMetrics,
   computeScalingLaws,
@@ -30,7 +30,7 @@ import {
 import cpuCoresData from '../hardwaremetrics/hardwaremetrics.js';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { getInlumenAccessToken } from '../inlumen/inlumen-token.js';
-import { getApiTokenStates, updateApiTokenSecrets } from '../k8s/api-tokens.js';
+import { getApiTokenStates, getApiTokenSecrets, updateApiTokenSecrets } from '../k8s/api-tokens.js';
 import assignArgoWorkflowToProject from '../k8s/assign-argoworkflow-to-project.js';
 import {
   createDockerRegistryCredential,
@@ -423,15 +423,34 @@ const resolvers = {
       _p: EmptyParent,
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       _a: EmptyArguments,
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      _context: AuthenticatedContext,
+      context: AuthenticatedContext,
     ): Promise<Query['inlumenPipelines']> {
+      if (!inlumenLlmProvider || !inlumenLlmModel || !inlumenLlmBaseUrl) {
+        return JSON.stringify({ versions: [] });
+      }
+      // Prefer API key from K8s secret; fall back to env var
+      const secrets = await getApiTokenSecrets(context.k8sClient, context.k8sNamespace);
+      const apiKey = (secrets.inlumenLlmApiKey.trim() || inlumenLlmApiKey).trim();
+      if (!apiKey) {
+        return JSON.stringify({ versions: [] });
+      }
       const token = await getInlumenAccessToken();
-      const headers: Record<string, string> = {};
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
       if (token) headers.Authorization = `Bearer ${token}`;
+      const llmConfig = {
+        provider: inlumenLlmProvider,
+        model: inlumenLlmModel,
+        base_url: inlumenLlmBaseUrl,
+        api_key: apiKey,
+      };
       const response = await fetch(
-        `${inlumenEndpoint}/agentic_generate_version_yamls`, { headers });
-      if (!response.ok) throw new Error(`inLUMEN API error: ${response.status}`);
+        `${inlumenEndpoint}/agentic_generate_version_yamls`,
+        { method: 'POST', headers, body: JSON.stringify({ llm_config: llmConfig }) },
+      );
+      if (!response.ok) {
+        const errorBody = await response.text().catch(() => '');
+        throw new Error(`inLUMEN API error: ${response.status}${errorBody ? ` — ${errorBody}` : ''}`);
+      }
       return response.text();
       // remove when inLUMEN placeholder is removed
       // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -445,10 +464,11 @@ const resolvers = {
       context: AuthenticatedContext,
     ): Promise<Mutation['updateApiTokens']> {
       const { k8sClient, k8sNamespace } = context;
-      const { mooseApiKey, openrouterApiKey } = arguments_;
+      const { mooseApiKey, openrouterApiKey, inlumenLlmApiKey } = arguments_;
       return await updateApiTokenSecrets(k8sClient, k8sNamespace, {
         mooseApiKey: mooseApiKey ?? undefined,
         openrouterApiKey: openrouterApiKey ?? undefined,
+        inlumenLlmApiKey: inlumenLlmApiKey ?? undefined,
       });
     },
     async updateK3sClusterSecret(

@@ -4,6 +4,7 @@ import slugify from 'slugify';
 import type { V1ListMeta, V1ObjectMeta } from '@kubernetes/client-node';
 
 import createKubeNode, { deleteKubeNode } from '../argo/emulation-utils.js';
+import { virtualizationEnabled } from '../config.js';
 import { InputValidationError } from '../server/apollo-errors.js';
 import { SIMPIPE_USER_LABEL } from './label.js';
 import { assertIsValidKubernetesLabel } from './valid-kubernetes-label.js';
@@ -196,6 +197,12 @@ export async function resources(
   k8sNamespace = 'default',
   user?: string,
 ): Promise<Resource[]> {
+  // When virtualization is disabled there are no VM nodes and the controller
+  // must not call listNode() — that would require a cluster-level ClusterRole.
+  if (!virtualizationEnabled) {
+    return [];
+  }
+
   let labelSelector: string | undefined;
   if (user) {
     try {

@@ -122,6 +122,7 @@ export default function createKubeNode(
 ): Promise<string> {
   return new Promise((resolve, reject) => {
     const scriptPath = getScriptPath();
+    let stdoutData = '';
     let stderrData = '';
 
     const script = spawn('sh', [
@@ -134,8 +135,10 @@ export default function createKubeNode(
     ]);
 
     script.stdout.on('data', (data: Buffer) => {
+      const line = data.toString().trim();
+      stdoutData += `${line}\n`;
       // eslint-disable-next-line no-console
-      console.log(data.toString().trim());
+      console.log(line);
     });
 
     script.stderr.on('data', (data: Buffer) => {
@@ -149,9 +152,13 @@ export default function createKubeNode(
       if (code === 0) {
         resolve(`Node ${nodeName} created successfully.`);
       } else {
+        const output = [
+          stderrData.trim() ? `STDERR:\n${stderrData.trim()}` : '',
+          stdoutData.trim() ? `STDOUT:\n${stdoutData.trim()}` : '',
+        ].filter(Boolean).join('\n');
         reject(
           new Error(
-            `[ERROR] Script exited with code ${code ?? 'unknown'}. STDERR:\n${stderrData}`,
+            `Script exited with code ${code ?? 'unknown'}.\n${output}`,
           ),
         );
       }

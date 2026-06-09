@@ -11,23 +11,27 @@
 	type ApiTokenState = {
 		hasValue: boolean;
 		maskedPreview?: string | null;
+		value?: string | null;
 	};
 
 	type ApiTokens = {
 		mooseApiKey: ApiTokenState;
 		openrouterApiKey: ApiTokenState;
+		inlumenLlmApiKey: ApiTokenState;
 	};
 
-	type TokenField = 'mooseApiKey' | 'openrouterApiKey';
+	type TokenField = 'mooseApiKey' | 'openrouterApiKey' | 'inlumenLlmApiKey';
 
 	const tokens: Record<TokenField, string> = {
 		mooseApiKey: '',
-		openrouterApiKey: ''
+		openrouterApiKey: '',
+		inlumenLlmApiKey: ''
 	};
 
 	let tokenStates: ApiTokens = {
 		mooseApiKey: { hasValue: false },
-		openrouterApiKey: { hasValue: false }
+		openrouterApiKey: { hasValue: false },
+		inlumenLlmApiKey: { hasValue: false }
 	};
 
 	let k3sSecret: { token: string; serverIp: string } = {
@@ -43,6 +47,7 @@
 	let k3sSuccessMessage: string | undefined;
 	let showMoose = false;
 	let showOpenrouter = false;
+	let showInlumenLlm = false;
 	let showK3sToken = false;
 
 	const safeErrorMessage = (error: unknown, fallback: string): string => {
@@ -54,6 +59,17 @@
 		tokens[field] = '';
 		if (field === 'mooseApiKey') showMoose = false;
 		if (field === 'openrouterApiKey') showOpenrouter = false;
+		if (field === 'inlumenLlmApiKey') showInlumenLlm = false;
+	};
+
+	const toggleTokenVisibility = (field: TokenField): void => {
+		if (field === 'mooseApiKey') showMoose = !showMoose;
+		if (field === 'openrouterApiKey') showOpenrouter = !showOpenrouter;
+		if (field === 'inlumenLlmApiKey') showInlumenLlm = !showInlumenLlm;
+
+		if (!tokens[field].trim()) {
+			tokens[field] = tokenStates[field].value ?? '';
+		}
 	};
 
 	async function loadData(): Promise<void> {
@@ -83,8 +99,10 @@
 			if (tokens.mooseApiKey.trim()) variables.mooseApiKey = tokens.mooseApiKey.trim();
 			if (tokens.openrouterApiKey.trim())
 				variables.openrouterApiKey = tokens.openrouterApiKey.trim();
+			if (tokens.inlumenLlmApiKey.trim())
+				variables.inlumenLlmApiKey = tokens.inlumenLlmApiKey.trim();
 
-			if (!variables.mooseApiKey && !variables.openrouterApiKey) {
+			if (!variables.mooseApiKey && !variables.openrouterApiKey && !variables.inlumenLlmApiKey) {
 				successMessage = 'No changes to save. Leave a field blank to keep its stored value.';
 				return;
 			}
@@ -97,6 +115,7 @@
 			tokenStates = response.updateApiTokens;
 			clearTokenField('mooseApiKey');
 			clearTokenField('openrouterApiKey');
+			clearTokenField('inlumenLlmApiKey');
 			successMessage =
 				'API tokens updated. Stored values stay hidden; blanks leave them unchanged.';
 		} catch (error) {
@@ -130,6 +149,7 @@
 		// Clear transient token values when leaving the page
 		clearTokenField('mooseApiKey');
 		clearTokenField('openrouterApiKey');
+		clearTokenField('inlumenLlmApiKey');
 	});
 
 	if (browser) {
@@ -191,9 +211,7 @@
 						<button
 							class="btn btn-xs variant-soft"
 							type="button"
-							on:click={() => {
-								showMoose = !showMoose;
-							}}
+							on:click={() => toggleTokenVisibility('mooseApiKey')}
 						>
 							{showMoose ? 'Hide' : 'Show'}
 						</button>
@@ -233,11 +251,49 @@
 						<button
 							class="btn btn-xs variant-soft"
 							type="button"
-							on:click={() => {
-								showOpenrouter = !showOpenrouter;
-							}}
+							on:click={() => toggleTokenVisibility('openrouterApiKey')}
 						>
 							{showOpenrouter ? 'Hide' : 'Show'}
+						</button>
+					</div>
+				</label>
+				<label class="label">
+					<span>INLUMEN_LLM_API_KEY</span>
+					<p class="text-xs text-surface-500-300-token">
+						{#if tokenStates.inlumenLlmApiKey.hasValue}
+							Stored (hidden): {tokenStates.inlumenLlmApiKey.maskedPreview ?? '********'}. Enter a
+							new value only if you want to replace it.
+						{:else}
+							Set a value if you want to enable this token.
+						{/if}
+					</p>
+					<p class="text-xs text-surface-500-300-token">
+						Leave blank to keep using the current token.
+					</p>
+					<div class="flex flex-wrap items-center gap-2">
+						{#if showInlumenLlm}
+							<input
+								class="input flex-1 min-w-[200px]"
+								type="text"
+								bind:value={tokens.inlumenLlmApiKey}
+								placeholder="Enter new value to replace"
+								autocomplete="off"
+							/>
+						{:else}
+							<input
+								class="input flex-1 min-w-[200px]"
+								type="password"
+								bind:value={tokens.inlumenLlmApiKey}
+								placeholder="Enter new value to replace"
+								autocomplete="off"
+							/>
+						{/if}
+						<button
+							class="btn btn-xs variant-soft"
+							type="button"
+							on:click={() => toggleTokenVisibility('inlumenLlmApiKey')}
+						>
+							{showInlumenLlm ? 'Hide' : 'Show'}
 						</button>
 					</div>
 				</label>

@@ -41,6 +41,13 @@ export const inlumenEndpoint = process.env.INLUMEN_ENDPOINT ?? 'http://localhost
 export const inlumenClientId = process.env.INLUMEN_CLIENT_ID ?? 'inlumen';
 export const inlumenClientSecret = process.env.INLUMEN_CLIENT_SECRET;
 
+// LLM config forwarded to inLUMEN when fetching pipeline versions.
+// inLUMEN requires an LLM provider to generate Argo YAML from pipeline graphs.
+export const inlumenLlmProvider = process.env.INLUMEN_LLM_PROVIDER ?? '';
+export const inlumenLlmModel = process.env.INLUMEN_LLM_MODEL ?? '';
+export const inlumenLlmBaseUrl = process.env.INLUMEN_LLM_BASE_URL ?? '';
+export const inlumenLlmApiKey = process.env.INLUMEN_LLM_API_KEY ?? '';
+
 // Moose API endpoint and api keys
 export const mooseApiEndpoint:string = process.env.MOOSE_API_ENDPOINT ?? 'https://moose.zooverse.dev';
 export const mooseApiKey:string = process.env.MOOSE_API_KEY ?? '';
@@ -54,6 +61,10 @@ export const mooseDpvSchema = 'dpv_pd';
 
 // K3S Cluster Secret
 export const K3S_TOKEN_SECRET = process.env.K3S_Cluster_SECRET ?? 'k3s-cluster-secret';
+
+// Virtualization (QEMU VM nodes). When false the controller skips all
+// cluster-node API calls and requires no ClusterRole permissions.
+export const virtualizationEnabled = process.env.VIRTUALIZATION_ENABLED === 'true';
 
 export const CREATESCRIPTPATH_DEBIAN = './create-kube-node_qemu.sh';
 export const CREATESCRIPTPATH_WSL = './create-kube-node_wsl.sh';

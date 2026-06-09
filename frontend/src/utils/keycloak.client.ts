@@ -152,7 +152,6 @@ async function internalInitKeycloak(graphqlUrl: string): Promise<void> {
 		if (existingExp) {
 			const exp = Number.parseInt(existingExp, 10);
 			if (exp - Date.now() / 1000 > 30) {
-				console.log('[keycloak] Using cached token, expires:', new Date(exp * 1000).toISOString());
 				// Restore the Keycloak instance from saved tokens so updateToken() works
 				// when the access token later expires (prevents ensureFreshToken no-op).
 				const savedRefreshToken = window.sessionStorage.getItem('keycloak-refresh-token');
@@ -176,7 +175,6 @@ async function internalInitKeycloak(graphqlUrl: string): Promise<void> {
 		}
 	}
 
-	console.log('[keycloak] No valid cached token, creating Keycloak instance...');
 	const keycloak = new Keycloak({
 		url: config.KEYCLOAK_URL,
 		realm: config.KEYCLOAK_REALM,
@@ -213,11 +211,6 @@ async function internalInitKeycloak(graphqlUrl: string): Promise<void> {
 					'must include http://localhost:8088/*.'
 			);
 		}
-		console.log(
-			'[keycloak] Not authenticated — redirecting to login (attempt',
-			redirectCount + 1,
-			')...'
-		);
 		window.sessionStorage.setItem(redirectKey, String(redirectCount + 1));
 		const cleanUri = `${window.location.origin}${window.location.pathname}`;
 		await keycloak.login({ redirectUri: cleanUri });
@@ -238,8 +231,6 @@ async function internalInitKeycloak(graphqlUrl: string): Promise<void> {
 		(keycloak.idTokenParsed?.preferred_username as string | undefined) ??
 		(keycloak.tokenParsed?.preferred_username as string | undefined);
 
-	console.log('[keycloak] preferredUsername:', preferredUsername);
-
 	if (typeof preferredUsername !== 'string') {
 		console.error(
 			// eslint-disable-next-line no-useless-concat
@@ -259,8 +250,6 @@ async function internalInitKeycloak(graphqlUrl: string): Promise<void> {
 	const { token } = keycloak;
 	const exp = keycloak.tokenParsed?.exp ?? 0;
 
-	console.log('[keycloak] Token expires at', new Date(exp * 1000).toISOString());
-
 	window.sessionStorage.setItem('keycloak-token', token);
 	window.sessionStorage.setItem('keycloak-exp', exp.toString());
 	window.sessionStorage.setItem('keycloak-username', preferredUsername);
@@ -270,7 +259,6 @@ async function internalInitKeycloak(graphqlUrl: string): Promise<void> {
 	username.set(preferredUsername);
 	keycloakInstance = keycloak;
 	graphQLClient.set(createGraphQLClientWithMiddleware(graphqlUrl));
-	console.log('[keycloak] graphQLClient set successfully');
 }
 
 export default async function initKeycloak(): Promise<void> {

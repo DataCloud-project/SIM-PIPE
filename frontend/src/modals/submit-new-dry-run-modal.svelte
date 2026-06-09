@@ -425,7 +425,10 @@
 				{#if loadingAvailableNodes}
 					<p>Loading nodes...</p>
 				{:else if availableNodes.filter((n) => n.status?.toLowerCase() === 'running').length === 0}
-					<p></p>
+					<p class="text-sm text-surface-400">
+						Node virtualization is not enabled. The dry run will execute on the default cluster
+						node.
+					</p>
 				{:else}
 					<label for="node-select">Select node to execute the dry run:</label>
 					<select id="node-select" bind:value={selectedNodeName}>

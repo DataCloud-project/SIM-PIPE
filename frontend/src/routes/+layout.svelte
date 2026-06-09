@@ -30,6 +30,7 @@
 	import SubmitNewResourceModal from '../modals/submit-new-resource-modal.svelte';
 	import SubmitNewDryRunModal from '../modals/submit-new-dry-run-modal.svelte';
 	import SubmitNewSecretModal from '../modals/submit-new-secret-modal.svelte';
+	import ErrorDetailModal from '../modals/error-detail-modal.svelte';
 
 	const modalRegistry: Record<string, ModalComponent> = {
 		// Set a unique modal ID, then pass the component reference
@@ -38,7 +39,8 @@
 		createNewProjectModal: { ref: SubmitNewProjectModal },
 		createNewResourceModal: { ref: SubmitNewResourceModal },
 		submitNewDryRunModal: { ref: SubmitNewDryRunModal },
-		submitNewSecretModal: { ref: SubmitNewSecretModal }
+		submitNewSecretModal: { ref: SubmitNewSecretModal },
+		errorDetailModal: { ref: ErrorDetailModal }
 	};
 
 	storeHighlightJs.set(hljs);

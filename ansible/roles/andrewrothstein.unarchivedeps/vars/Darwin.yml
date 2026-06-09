@@ -1,0 +1,4 @@
+---
+unarchivedeps_privilege_escalation: false
+unarchivedeps_tar_pkgs:
+  - gnu-tar

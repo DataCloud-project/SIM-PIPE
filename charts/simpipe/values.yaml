@@ -20,10 +20,16 @@ controller:
   nameOverride: ""
   fullnameOverride: ""
 
+  clusterRole:
+    # Set to false if the cluster admin pre-creates the ClusterRole/ClusterRoleBinding
+    # (required when you only have namespace-scoped deploy permissions).
+    create: true
+
   minio:
     # Configured by default for the localhost port forwarding in forwarding.py
     publicUrl: http://localhost:8085
-    internalUrl: http://simpipe-minio.default.svc.cluster.local:9000
+    # Uses tpl rendering — you can reference {{ .Release.Namespace }} and {{ .Release.Name }} here.
+    internalUrl: "http://{{ .Release.Name }}-minio.{{ .Release.Namespace }}.svc.cluster.local:9000"
     accessKey: simpipe
     secretKey: simpipe1234
     bucketName: artifacts
@@ -43,6 +49,13 @@ controller:
     # Leave clientId empty to disable (inlumenPipelines resolver skips auth).
     clientId: "inlumen"
     endpoint: "http://95.216.40.236:5002"
+    # LLM config forwarded to inLUMEN when fetching pipeline versions.
+    # inLUMEN requires an LLM provider to generate Argo YAML from pipeline graphs.
+    llmProvider: "openrouter"
+    llmModel: "gpt-oss-120b"
+    llmBaseUrl: "https://openrouter.ai/api/v1"
+    # llmApiKey is stored as a K8s secret (simpipe-inlumen-llm / INLUMEN_LLM_API_KEY)
+    # and managed via the API Tokens page. Do not set it here.
 
   keycloak:
     # Set to the Keycloak realm issuer URL to enable authentication.
@@ -65,7 +78,7 @@ controller:
     # When enabled: controller runs privileged with NET_ADMIN/NET_RAW capabilities,
     # and hostPath mounts for KVM/TUN/proc/vm-files.
     # When disabled: controller runs with minimal permissions (no privileged, no host access).
-    enabled: false
+    enabled: true
 
   podAnnotations: {}
 
@@ -245,7 +258,8 @@ argo-workflows:
       secretKeySecret:
         name: simpipe-minio
         key: root-password
-      endpoint: simpipe-minio.default.svc.cluster.local:9000
+      # Short DNS name — resolves within the release namespace automatically (no hardcoded namespace).
+      endpoint: simpipe-minio:9000
       insecure: true
       useSDKCreds: false
   controller:
@@ -264,7 +278,8 @@ argo-workflows:
       archive: true
       clusterName: simpipe
       postgresql:
-        host: simpipe-postgresql.default.svc.cluster.local
+        # Short DNS name — resolves within the release namespace automatically (no hardcoded namespace).
+        host: simpipe-postgresql
         port: 5432
         database: postgres
         tableName: simpipe
@@ -319,7 +334,7 @@ docker-registry:
   s3:
     bucket: registry
     region: us-east-1
-    regionEndpoint: http://simpipe-minio.default.svc.cluster.local:9000/
+    regionEndpoint: http://simpipe-minio:9000/
 
 postgresql:
   enabled: true

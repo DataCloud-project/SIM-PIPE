@@ -53,12 +53,10 @@
 		});
 	}
 	let inlumenPipelines: InlumenPipeline[] = [];
-	let inlumenLoading = false;
 	let inlumenError = '';
 	let selectedVersionUid = '';
 
 	async function fetchInlumenPipelines(): Promise<void> {
-		inlumenLoading = true;
 		inlumenError = '';
 		inlumenPipelines = [];
 		selectedVersionUid = '';
@@ -72,9 +70,8 @@
 				inlumenError = 'No pipeline versions found in inLUMEN.';
 			}
 		} catch (error) {
+			console.error('error fetching inLUMEN pipelines', error);
 			inlumenError = error instanceof Error ? error.message : 'Failed to fetch from inLUMEN.';
-		} finally {
-			inlumenLoading = false;
 		}
 	}
 
@@ -323,10 +320,9 @@
 							<button
 								type="button"
 								class="btn variant-soft-primary w-fit"
-								disabled={inlumenLoading}
 								on:click={fetchInlumenPipelines}
 							>
-								{inlumenLoading ? 'Fetching…' : 'Fetch from inLUMEN'}
+								Fetch from inLUMEN
 							</button>
 
 							{#if inlumenError}

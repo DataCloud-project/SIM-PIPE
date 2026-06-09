@@ -10,7 +10,7 @@
 	import { resourcesList } from '$stores/stores.js';
 	import type { Resource } from '$typesdefinitions';
 	import allResourcesQuery from '$queries/get-all-resources.js';
-	import { displayModal } from '$utils/modal-utils.js';
+	import { displayModal, displayErrorDetailModal } from '$utils/modal-utils.js';
 
 	export let parent: SvelteComponent;
 
@@ -59,9 +59,10 @@
 			await displayModal('New node ready!', 'New node is ready to be used!', modalStore);
 			modalStore.clear();
 		} catch (error) {
-			await displayModal(
-				'Error',
-				`An error occurred while creating the new node: ${(error as Error).message}`,
+			modalStore.close();
+			await displayErrorDetailModal(
+				'Error creating node ⚠️',
+				`An error occurred while creating the new node:\n${(error as Error).message}`,
 				modalStore
 			);
 			modalStore.clear();

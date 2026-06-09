@@ -1,0 +1,11 @@
+---
+unarchivedeps_privilege_escalation: true
+unarchivedeps_privilege_escalation_user: '{{ (ansible_os_family == "Windows") | ternary("System", "root") }}'
+unarchivedeps_all_pkgs:
+  - unzip
+  - gzip
+  - bzip2
+unarchivedeps_tar_pkgs:
+  - tar
+unarchivedeps_xz_pkgs:
+  - xz

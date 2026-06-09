@@ -6,10 +6,17 @@ const getApiTokensQuery = gql`
 			mooseApiKey {
 				hasValue
 				maskedPreview
+				value
 			}
 			openrouterApiKey {
 				hasValue
 				maskedPreview
+				value
+			}
+			inlumenLlmApiKey {
+				hasValue
+				maskedPreview
+				value
 			}
 		}
 	}

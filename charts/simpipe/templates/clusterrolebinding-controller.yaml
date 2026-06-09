@@ -1,5 +1,7 @@
+{{- if and .Values.controller.clusterRole.create .Values.controller.virtualization.enabled }}
 # Binds the ClusterRole to the simpipe-controller service account for cluster-scoped access.
-# Always created because nodes list/watch is required even without QEMU virtualization.
+# Only created when virtualization is enabled (mirrors clusterrole-controller.yaml condition).
+# Set controller.clusterRole.create=false if the cluster admin pre-creates this.
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
@@ -12,3 +14,4 @@ subjects:
 - kind: ServiceAccount
   name: {{ include "simpipeController.serviceAccountName" . }}
   namespace: {{ .Release.Namespace }}
+{{- end }}

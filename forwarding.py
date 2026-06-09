@@ -8,18 +8,18 @@ import time
 
 services = [
     {
-        "name": "cadvisor", 
-        "ports": [8081, 8080], 
+        "name": "cadvisor",
+        "ports": [8081, 8080],
         "enabled": False
     },
     {
-        "name": "grafana", 
-        "ports": [8082, 80], 
+        "name": "grafana",
+        "ports": [8082, 80],
         "enabled": False
     },
     {
-        "name": "sftpgo", 
-        "ports": [8083, 80], 
+        "name": "sftpgo",
+        "ports": [8083, 80],
         "enabled": False
     },
     {
@@ -62,7 +62,7 @@ services = [
 ]
 
 
-def port_forward(service, prefix, delay):
+def port_forward(service, prefix, namespace, delay):
     prefix = service["prefix"] if "prefix" in service else prefix
     name = service["fullname"] if "fullname" in service else service["name"]
 
@@ -76,6 +76,7 @@ def port_forward(service, prefix, delay):
                     f"{service['ports'][0]}:{service['ports'][1]}",
                     # Strong hate towards IPv6
                     # "--address=127.0.0.1",
+                    "-n", namespace,
                 ],
                 check=True,
                 stdout=subprocess.DEVNULL,
@@ -110,11 +111,15 @@ if __name__ == "__main__":
     parser.add_argument(
         "--prefix", type=str, default="simpipe-", help="prefix for service name"
     )
+    parser.add_argument(
+        "--namespace", type=str, default="simpipe", help="Kubernetes namespace where simpipe is installed"
+    )
     args = parser.parse_args()
 
     disabled = args.disable if args.disable is not None else []
     enabled = args.enable if args.enable is not None else []
     prefix = args.prefix
+    namespace = args.namespace
 
     signal.signal(signal.SIGINT, handle_exit)
     signal.signal(signal.SIGTERM, handle_exit)
@@ -125,7 +130,7 @@ if __name__ == "__main__":
             service.get("enabled", True) or service["name"] in enabled
         ):
             print(f"{service['name']}: http://localhost:{service['ports'][0]}")
-            thread = threading.Thread(target=port_forward, args=(service, prefix, 3))
+            thread = threading.Thread(target=port_forward, args=(service, prefix, namespace, 3))
             thread.start()
             threads.append(thread)
 

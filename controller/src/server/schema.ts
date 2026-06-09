@@ -55,6 +55,8 @@ export type ApiTokenState = {
   hasValue: Scalars['Boolean']['output'];
   /** Partially-masked preview (never the full secret). */
   maskedPreview?: Maybe<Scalars['String']['output']>;
+  /** Stored token value, returned only to authenticated users. */
+  value?: Maybe<Scalars['String']['output']>;
 };
 
 /**  API tokens used by the SIM-PIPE controller for external services.  */
@@ -62,6 +64,7 @@ export type ApiTokens = {
   __typename?: 'ApiTokens';
   mooseApiKey: ApiTokenState;
   openrouterApiKey: ApiTokenState;
+  inlumenLlmApiKey: ApiTokenState;
 };
 
 /**  Contains information about files produced during a dry run execution  */
@@ -1013,6 +1016,7 @@ export type MutationSuspendDryRunArgs = {
 export type MutationUpdateApiTokensArgs = {
   mooseApiKey?: InputMaybe<Scalars['String']['input']>;
   openrouterApiKey?: InputMaybe<Scalars['String']['input']>;
+  inlumenLlmApiKey?: InputMaybe<Scalars['String']['input']>;
 };
 
 
@@ -1492,12 +1496,14 @@ export type AggregatedNodeMetricsResolvers<ContextType = any, ParentType extends
 export type ApiTokenStateResolvers<ContextType = any, ParentType extends ResolversParentTypes['ApiTokenState'] = ResolversParentTypes['ApiTokenState']> = {
   hasValue?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
   maskedPreview?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  value?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
 export type ApiTokensResolvers<ContextType = any, ParentType extends ResolversParentTypes['ApiTokens'] = ResolversParentTypes['ApiTokens']> = {
   mooseApiKey?: Resolver<ResolversTypes['ApiTokenState'], ParentType, ContextType>;
   openrouterApiKey?: Resolver<ResolversTypes['ApiTokenState'], ParentType, ContextType>;
+  inlumenLlmApiKey?: Resolver<ResolversTypes['ApiTokenState'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
