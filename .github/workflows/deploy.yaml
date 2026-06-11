@@ -1,0 +1,138 @@
+name: Build and deploy to Vessel-AI
+
+on:
+  push:
+    branches: [main]
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  HARBOR_REGISTRY: harbor.vessel-ai.eu
+  HARBOR_PROJECT: sintef
+  NAMESPACE: simpipe
+  CONTROLLER_IMAGE: sim-pipe-controller
+  FRONTEND_IMAGE: sim-pipe-frontend
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4.2.2
+
+      - name: Validate Harbor username format
+        env:
+          USERNAME: ${{ secrets.HARBOR_USERNAME }}
+        run: |
+          if [[ "$USERNAME" != robot\$* ]]; then
+            echo "❌ ERROR: HARBOR_USERNAME is wrong."
+            echo "   Current value: $USERNAME"
+            echo "   Expected format: robot\$<project>+github-actions"
+            echo "   The dollar sign and project name are required."
+            echo "   Go to: Settings → Secrets and variables → Actions → HARBOR_USERNAME → Update"
+            exit 1
+          fi
+          echo "✓ Harbor username format is correct: $USERNAME"
+
+      - name: Log in to Harbor
+        env:
+          HARBOR_USERNAME: ${{ secrets.HARBOR_USERNAME }}
+          HARBOR_PASSWORD: ${{ secrets.HARBOR_PASSWORD }}
+        run: |
+          echo "$HARBOR_PASSWORD" | \
+          docker login ${{ env.HARBOR_REGISTRY }} \
+            -u "$HARBOR_USERNAME" \
+            --password-stdin
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push controller image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./controller/
+          push: true
+          tags: |
+            ${{ env.HARBOR_REGISTRY }}/${{ env.HARBOR_PROJECT }}/${{ env.CONTROLLER_IMAGE }}:${{ github.sha }}
+            ${{ env.HARBOR_REGISTRY }}/${{ env.HARBOR_PROJECT }}/${{ env.CONTROLLER_IMAGE }}:latest
+
+      - name: Build and push frontend image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./frontend/
+          push: true
+          tags: |
+            ${{ env.HARBOR_REGISTRY }}/${{ env.HARBOR_PROJECT }}/${{ env.FRONTEND_IMAGE }}:${{ github.sha }}
+            ${{ env.HARBOR_REGISTRY }}/${{ env.HARBOR_PROJECT }}/${{ env.FRONTEND_IMAGE }}:latest
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build-and-push
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4.2.2
+
+      - name: Set up kubeconfig
+        run: |
+          mkdir -p ~/.kube
+          echo "${{ secrets.KUBECONFIG }}" > ~/.kube/config
+          chmod 600 ~/.kube/config
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v3
+
+      - name: Create Harbor pull secret
+        env:
+          HARBOR_USERNAME: ${{ secrets.HARBOR_USERNAME }}
+          HARBOR_PASSWORD: ${{ secrets.HARBOR_PASSWORD }}
+        run: |
+          kubectl create secret docker-registry harbor-pull-secret \
+            --docker-server=${{ env.HARBOR_REGISTRY }} \
+            --docker-username="$HARBOR_USERNAME" \
+            --docker-password="$HARBOR_PASSWORD" \
+            --namespace ${{ env.NAMESPACE }} \
+            --dry-run=client -o yaml | kubectl apply -f -
+
+      - name: Deploy with Helm
+        run: |
+          helm upgrade --install simpipe ./charts/simpipe \
+            --namespace ${{ env.NAMESPACE }} \
+            --set controller.image.repository=${{ env.HARBOR_REGISTRY }}/${{ env.HARBOR_PROJECT }}/${{ env.CONTROLLER_IMAGE }} \
+            --set controller.image.tag=${{ github.sha }} \
+            --set 'controller.imagePullSecrets[0].name=harbor-pull-secret' \
+            --set frontend.image.repository=${{ env.HARBOR_REGISTRY }}/${{ env.HARBOR_PROJECT }}/${{ env.FRONTEND_IMAGE }} \
+            --set frontend.image.tag=${{ github.sha }} \
+            --set 'frontend.imagePullSecrets[0].name=harbor-pull-secret' \
+            --wait \
+            --timeout 5m
+
+      - name: Verify rollout
+        run: |
+          kubectl rollout status deployment/simpipe-controller \
+            -n ${{ env.NAMESPACE }} \
+            --timeout=3m
+          kubectl rollout status deployment/simpipe-frontend \
+            -n ${{ env.NAMESPACE }} \
+            --timeout=3m
+
+      - name: Summary — success
+        if: success()
+        run: |
+          echo "## ✅ Deployment successful" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Field | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| App | simpipe |" >> $GITHUB_STEP_SUMMARY
+          echo "| Namespace | ${{ env.NAMESPACE }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Image tag | \`${{ github.sha }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| Commit | ${{ github.event.head_commit.message }} |" >> $GITHUB_STEP_SUMMARY
+
+      - name: Summary — failure
+        if: failure()
+        run: |
+          echo "## ❌ Deployment failed" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Field | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| App | simpipe |" >> $GITHUB_STEP_SUMMARY
+          echo "| Namespace | ${{ env.NAMESPACE }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Logs | ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }} |" >> $GITHUB_STEP_SUMMARY

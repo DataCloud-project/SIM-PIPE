@@ -81,8 +81,6 @@ async function hybridAuthJwtMiddlewareAsync(
 ): Promise<void> {
   // If we are in development mode, we allow a fixed local user
   if (oauth2IssuerEndpoint === undefined) {
-    // eslint-disable-next-line no-console
-    console.log('[auth] Dev mode (OAUTH2_ISSUER_ENDPOINT not set), using fixed local user');
     (request as unknown as { auth: Auth }).auth = fixedLocalAuth;
     next();
     return;

@@ -130,7 +130,6 @@
 
 	function gotoTemplate(dryRunId: string): void {
 		const url = `/templates/${dryRunId}`;
-		console.log(`Navigating to: ${url}`);
 		// eslint-disable-next-line @typescript-eslint/no-floating-promises
 		goto(url);
 	}

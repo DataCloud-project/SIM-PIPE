@@ -78,8 +78,6 @@ async function makeDPVCall(text: string): Promise<string> {
         'Content-Type': 'application/json',
       },
     });
-    // eslint-disable-next-line no-console
-    console.log('DPV response:', response.body);
     return response.body.job_id;
   } catch (error) {
     // eslint-disable-next-line no-console
@@ -199,17 +197,12 @@ async function getDPVJobResultPolling(
 
   // Start Moose DPV job with the artifact text
   const jobId = await makeDPVCall(artifactText);
-  // eslint-disable-next-line no-console
-  console.log('Started DPV job with ID:', jobId);
 
   const poll = async (attempt: number): Promise<MooseJobResult> => {
     const result = await getDPVJobResult(jobId);
     if (result.status === 'completed' || result.status === 'failed') {
       return result;
     }
-
-    // eslint-disable-next-line no-console
-    console.log('Polling attempt', attempt);
 
     if (attempt + 1 >= maxAttempts) {
       const message = `DPV job ${jobId} did not reach status 'completed' or 'failed' after `
