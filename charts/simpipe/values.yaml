@@ -37,7 +37,7 @@ controller:
   argo:
     endpoint: http://simpipe-argo-workflows-server:2746/
   prometheus:
-    serverUrl: http://prometheus-operated:9090
+    serverUrl: http://simpipe-kube-prometheus-st-prometheus:9090
   carbontracker:
     endpoint: http://simpipe-carbontracker:8000
 
@@ -62,8 +62,8 @@ controller:
     # Format: https://<keycloak-host>/realms/<realm-name>
     # Leave empty to run in dev mode (no auth — all requests use a fixed local user).
     # When changing Keycloak instance, update this AND frontend.keycloak below together.
-    # oauth2IssuerEndpoint: ""
-    oauth2IssuerEndpoint: "http://95.216.40.236:9093/realms/twinship-local"
+    oauth2IssuerEndpoint: ""
+    # oauth2IssuerEndpoint: "http://95.216.40.236:9093/realms/twinship-local"
 
   serviceAccount:
     # Annotations to add to the service account
@@ -214,6 +214,118 @@ kube-prometheus-stack:
   prometheus-node-exporter:
     hostRootFsMount:
       enabled: false
+  # Recording rules: map kubelet/cAdvisor container_* metrics in the simpipe
+  # namespace to simpipe_* metrics with pod_name / container_name labels that
+  # the SIM-PIPE controller queries.  This replaces the cadvisor-bridge label
+  # propagation which relied on Docker propagating pod labels to container
+  # labels (not available with containerd).
+  additionalPrometheusRulesMap:
+    simpipe-cadvisor-rules:
+      groups:
+        - name: simpipe.cadvisor.rules
+          interval: 15s
+          rules:
+            - record: simpipe_cpu_usage_seconds_total
+              expr: |
+                label_replace(
+                  label_replace(
+                    sum without(cpu, endpoint, instance, job, metrics_path, node, service) (
+                      container_cpu_usage_seconds_total{job="kubelet", namespace="simpipe", container!=""}
+                    ),
+                    "pod_name", "$1", "pod", "(.+)"
+                  ),
+                  "container_name", "$1", "container", "(.+)"
+                )
+            - record: simpipe_cpu_system_seconds_total
+              expr: |
+                label_replace(
+                  label_replace(
+                    sum without(cpu, endpoint, instance, job, metrics_path, node, service) (
+                      container_cpu_system_seconds_total{job="kubelet", namespace="simpipe", container!=""}
+                    ),
+                    "pod_name", "$1", "pod", "(.+)"
+                  ),
+                  "container_name", "$1", "container", "(.+)"
+                )
+            - record: simpipe_cpu_user_seconds_total
+              expr: |
+                label_replace(
+                  label_replace(
+                    sum without(cpu, endpoint, instance, job, metrics_path, node, service) (
+                      container_cpu_user_seconds_total{job="kubelet", namespace="simpipe", container!=""}
+                    ),
+                    "pod_name", "$1", "pod", "(.+)"
+                  ),
+                  "container_name", "$1", "container", "(.+)"
+                )
+            - record: simpipe_memory_usage_bytes
+              expr: |
+                label_replace(
+                  label_replace(
+                    sum without(endpoint, instance, job, metrics_path, node, service) (
+                      container_memory_usage_bytes{job="kubelet", namespace="simpipe", container!=""}
+                    ),
+                    "pod_name", "$1", "pod", "(.+)"
+                  ),
+                  "container_name", "$1", "container", "(.+)"
+                )
+            - record: simpipe_memory_working_set_bytes
+              expr: |
+                label_replace(
+                  label_replace(
+                    sum without(endpoint, instance, job, metrics_path, node, service) (
+                      container_memory_working_set_bytes{job="kubelet", namespace="simpipe", container!=""}
+                    ),
+                    "pod_name", "$1", "pod", "(.+)"
+                  ),
+                  "container_name", "$1", "container", "(.+)"
+                )
+            # Network metrics are pod-level; use container_name="POD" to match
+            # the controller's query pattern for network.
+            - record: simpipe_network_receive_bytes_total
+              expr: |
+                label_replace(
+                  label_replace(
+                    sum without(endpoint, instance, interface, job, metrics_path, node, service) (
+                      container_network_receive_bytes_total{job="kubelet", namespace="simpipe"}
+                    ),
+                    "pod_name", "$1", "pod", "(.+)"
+                  ),
+                  "container_name", "POD", "", ""
+                )
+            - record: simpipe_network_transmit_bytes_total
+              expr: |
+                label_replace(
+                  label_replace(
+                    sum without(endpoint, instance, interface, job, metrics_path, node, service) (
+                      container_network_transmit_bytes_total{job="kubelet", namespace="simpipe"}
+                    ),
+                    "pod_name", "$1", "pod", "(.+)"
+                  ),
+                  "container_name", "POD", "", ""
+                )
+            - record: simpipe_network_receive_errors_total
+              expr: |
+                label_replace(
+                  label_replace(
+                    sum without(endpoint, instance, interface, job, metrics_path, node, service) (
+                      container_network_receive_errors_total{job="kubelet", namespace="simpipe"}
+                    ),
+                    "pod_name", "$1", "pod", "(.+)"
+                  ),
+                  "container_name", "POD", "", ""
+                )
+            - record: simpipe_network_transmit_errors_total
+              expr: |
+                label_replace(
+                  label_replace(
+                    sum without(endpoint, instance, interface, job, metrics_path, node, service) (
+                      container_network_transmit_errors_total{job="kubelet", namespace="simpipe"}
+                    ),
+                    "pod_name", "$1", "pod", "(.+)"
+                  ),
+                  "container_name", "POD", "", ""
+                )
   prometheus:
     prometheusSpec:
       retention: 10y
@@ -263,6 +375,11 @@ argo-workflows:
       insecure: true
       useSDKCreds: false
   controller:
+    # namespaced: true makes Argo only watch workflows in this namespace and
+    # generates Role/RoleBinding instead of ClusterRole/ClusterRoleBinding.
+    # CRDs (Workflow, WorkflowTemplate, …) must still be pre-installed cluster-wide
+    # by a cluster admin before deploying (helm install --skip-crds).
+    namespaced: true
     workflowDefaults:
       spec:
         parallelism: 1
@@ -370,13 +487,15 @@ cadvisor:
     additionalArgs:
       - --housekeeping_interval=3s
       - --max_housekeeping_interval=6s
-      #- --docker_only
       - --event_storage_event_limit=default=0
       - --event_storage_age_limit=default=0
       - --enable_metrics=memory,cpu,process,network
       # Replace with the following line to enable disk metrics,
       # at the cost of a significant performance hit.
       #- --enable_metrics=memory,cpu,process,network,diskIO,disk
+      # k3s containerd socket and namespace
+      - --containerd=/run/k3s/containerd/containerd.sock
+      - --containerd-namespace=k8s.io
     hostPaths:
       - name: rootfs
         path: "/"
@@ -385,8 +504,9 @@ cadvisor:
         path: "/var/run"
       - name: sys
         path: "/sys"
-      - name: docker
-        path: "/var/lib/docker"
+      - name: containerd
+        path: "/run/k3s/containerd"
+        mount: "/run/k3s/containerd"
       - name: disk
         path: "/dev/disk"
 

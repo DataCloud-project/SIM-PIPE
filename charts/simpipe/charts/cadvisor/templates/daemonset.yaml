@@ -4,7 +4,7 @@ metadata:
   name: {{ template "cadvisor.name" . }}
   namespace: {{ .Release.Namespace }}
   annotations:
-      seccomp.security.alpha.kubernetes.io/pod: 'docker/default'
+      seccomp.security.alpha.kubernetes.io/pod: 'runtime/default'
   labels:
     app: {{ template "cadvisor.name" . }}
     chart: {{ template "cadvisor.chart" . }}

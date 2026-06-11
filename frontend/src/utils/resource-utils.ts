@@ -122,15 +122,16 @@ function findMax(input: number[]): number {
 }
 
 function cumulativeToCurrent(
-	inputData: { timestamp: number; value: number }[]
+	inputData: { timestamp: number; value: number }[],
+	skipZeros = false
 ): { timestamp: number; value: number }[] {
 	let previousValue = 0;
 	const current: { timestamp: number; value: number }[] = [];
 	inputData.forEach((entry) => {
 		const updatedValue = entry.value - previousValue;
-		if (updatedValue) {
+		if (!skipZeros || updatedValue) {
 			previousValue = entry.value;
-			current.push({ timestamp: entry.timestamp, value: updatedValue });
+			current.push({ timestamp: entry.timestamp, value: Math.max(0, updatedValue) });
 		}
 	});
 	return current;
@@ -201,7 +202,8 @@ export async function getMetricsUsageUtils(metrics: DryRunMetrics[]): Promise<{
 				}
 				// HOTFIX (a.k.a. hack) to display absolute CPU usage instead of cumulative usage in seconds
 				const cpuCurrent: { timestamp: number; value: number }[] = cumulativeToCurrent(
-					node.metrics.cpuUsageSecondsTotal
+					node.metrics.cpuUsageSecondsTotal,
+					true
 				);
 
 				currentCpuData[node.displayName] = changeResourceFormat(
