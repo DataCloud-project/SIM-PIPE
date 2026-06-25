@@ -226,7 +226,6 @@ def check_tools_installed(silent=False):
     return all(
         [
             check_kubectl_installed(silent),
-            check_docker_installed(silent),
             check_helm_installed(silent),
             check_argo_installed(silent),
         ]

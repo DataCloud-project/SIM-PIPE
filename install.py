@@ -118,12 +118,12 @@ def install_tools_debian():
         check=True,
     )
 
-    # Install base infrastructure using Ansible (Docker, k3s, CLI tools, etc.)
-    print("⏳ Installing base SIM-PIPE dependencies (Docker, k3s, tools)...")
+    # Install base infrastructure using Ansible (k3s and supporting CLI tools)
+    print("⏳ Installing base SIM-PIPE dependencies (k3s, tools)...")
     env_base = os.environ.copy()
     env_base["ANSIBLE_ALLOW_BROKEN_CONDITIONALS"] = "True"
 
-    # First, install Docker, k3s and supporting tools (no SIM-PIPE yet)
+    # First, install k3s and supporting tools (no SIM-PIPE yet)
     subprocess.run(
         [
             "ansible-playbook",
