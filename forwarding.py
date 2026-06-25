@@ -112,7 +112,7 @@ if __name__ == "__main__":
         "--prefix", type=str, default="simpipe-", help="prefix for service name"
     )
     parser.add_argument(
-        "--namespace", type=str, default="simpipe", help="Kubernetes namespace where simpipe is installed"
+        "--namespace", type=str, default="default", help="Kubernetes namespace where simpipe is installed"
     )
     args = parser.parse_args()
 
