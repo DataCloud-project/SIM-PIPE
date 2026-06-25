@@ -28,6 +28,27 @@ What these do:
 Important:
 - Set `KUBECONFIG` to point to your cluster. The scripts will fall back to `~/.kube/config` or `/etc/rancher/k3s/k3s.yaml` if they exist, but they no longer change kubeconfig permissions or add you to `docker`.
 
+### Local startup without Keycloak
+If you want to run SIM-PIPE locally without Keycloak, set the following in [charts/simpipe/values.yaml](charts/simpipe/values.yaml):
+
+```yaml
+controller:
+  keycloak:
+    # Use an empty string (or remove the field) to run in dev mode.
+    oauth2IssuerEndpoint: ""
+```
+
+This disables authentication for the controller.
+
+### Local setup without virtualization support
+If you want to run SIM-PIPE without virtualization support, disable it separately with:
+
+```yaml
+controller:
+  virtualization:
+    enabled: false
+```
+
 Port-forward helper (optional, local dev):
 ```bash
 python3 forwarding.py
@@ -208,6 +229,22 @@ curl -X POST http://localhost:8087/graphql \
   -d '{"query":"{ ping }"}'
 ```
 
+
+## Secrets and API tokens
+SIM-PIPE reads a small set of Kubernetes secrets from the `default` namespace. Create them when you want to enable the related integrations.
+
+| Purpose | Secret name | Secret key(s) | Example command |
+|---|---|---|---|
+| Moose API access | `simpipe-moose-api` | `MOOSE_API_KEY` | `kubectl create secret generic simpipe-moose-api --from-literal=MOOSE_API_KEY='<your-moose-api-key>'` |
+| OpenRouter API access | `simpipe-openrouter-api` | `OPENROUTER_API_KEY` | `kubectl create secret generic simpipe-openrouter-api --from-literal=OPENROUTER_API_KEY='<your-openrouter-key>'` |
+| inLUMEN client credentials | `simpipe-inlumen` | `INLUMEN_CLIENT_SECRET` | `kubectl create secret generic simpipe-inlumen --from-literal=INLUMEN_CLIENT_SECRET='<your-inlumen-client-secret>'` |
+| inLUMEN LLM API key | `simpipe-inlumen-llm` | `INLUMEN_LLM_API_KEY` | `kubectl create secret generic simpipe-inlumen-llm --from-literal=INLUMEN_LLM_API_KEY='<your-llm-api-key>'` |
+| K3s cluster credentials for virtualization | `k3s-cluster-secret` | `token`, `K3S_SERVER_IP` | `kubectl create secret generic k3s-cluster-secret --from-literal=token='<k3s-node-token>' --from-literal=K3S_SERVER_IP='<k3s-server-ip>'` |
+
+Notes:
+- The helper script [secrets_manager.py](secrets_manager.py) can create the Moose/OpenRouter secrets for you and also tries to create `k3s-cluster-secret` after K3s is installed.
+- The inLUMEN client ID is configured in [charts/simpipe/values.yaml](charts/simpipe/values.yaml); the secret value itself belongs in the Kubernetes secret above.
+- If you do not need a feature, you can skip the corresponding secret and the related functionality remains disabled.
 
 ## Contributing
 
